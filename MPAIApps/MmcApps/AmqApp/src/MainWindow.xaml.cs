@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private NorthApi?     _north;
     private AvatarUaHost? _avatar;
     private byte[]?       _imageBytes;
+    private string?       _lastQuestion;
     private string?       _imagePath;
 
     private static void Diag(string s)
@@ -61,7 +62,10 @@ public partial class MainWindow : Window
             await Task.Run(() => _north = new NorthApi(AmdDir, SettingsPath, store => new AmqProvider(store)));
             LoadButton.IsEnabled = true;
             SetStatus("Ready.");
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
+            Diag("welcome: speaking");
             await SpeakWelcomeAsync();
+            Diag("welcome: done");
         }
         catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
     }
@@ -120,13 +124,21 @@ public partial class MainWindow : Window
     private const string RsrModule = "PAF-RSR-V1.6";
 
     // Speak a line through PAF-RSR (text -> machine speech + face), presented on the avatar.
+    private bool _rsrStarted = false;
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null || _avatar is null) return;
+        if (!_rsrStarted)
+        {
+            var s = await Task.Run(() => _north!.StartFlow(RsrModule));
+            Diag("StartFlow RSR -> " + s);
+            _rsrStarted = (s == AifError.OK);
+        }
         var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok) { Diag("welcome RSR err=" + r.Error); return; }
+        if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
         byte[] wav = SpeechOf(r.ByType(BSO));
+        Diag("RSR spoke words=[" + (words.Length>40?words.Substring(0,40):words) + "] wavBytes=" + wav.Length);
         var fdoJson = r.ByType("PAF-FDO-V1.6");
         Mpai.Core.OSD.FaceDescriptorsObject? fdo = null;
         try { if (!string.IsNullOrWhiteSpace(fdoJson)) fdo = MpaiJson.FromJson<Mpai.Core.OSD.FaceDescriptorsObject>(fdoJson); } catch { }
@@ -143,9 +155,51 @@ public partial class MainWindow : Window
         try { await RenderPromptAsync(Welcome); } catch (Exception ex) { Diag("welcome ex=" + ex.Message); }
     }
 
+    // Compose a natural sentence from the question and BLIP's short answer, so the
+    // lady says "This animal is a deer." rather than just "deer".
+    private static string Phrase(string? question, string? answer)
+    {
+        var a = (answer ?? "").Trim().TrimEnd('.').Trim();
+        if (a.Length == 0) return "I am not sure.";
+        var q = (question ?? "").Trim().ToLowerInvariant();
+        var al = a.ToLowerInvariant();
+
+        // yes/no answers
+        if (al == "yes") return "Yes.";
+        if (al == "no")  return "No.";
+
+        string Art(string w)  // a / an
+            => (w.Length > 0 && "aeiou".IndexOf(char.ToLowerInvariant(w[0])) >= 0) ? "an " : "a ";
+        bool numeric = int.TryParse(a, out _);
+
+        // "how many ..."
+        if (q.StartsWith("how many"))
+        {
+            var noun = q.Length > 8 ? q.Substring(8).Trim().TrimEnd('?').Trim() : "";
+            return noun.Length > 0 ? $"There are {a} {noun}." : $"There are {a}.";
+        }
+        // "what color ..." / "what colour ..."
+        if (q.Contains("color") || q.Contains("colour"))
+            return $"It is {a}.";
+        // "where ..."
+        if (q.StartsWith("where"))
+            return $"It is {a}.";
+        // "what animal is this" / "what kind of animal ..."
+        if (q.Contains("animal"))
+            return numeric ? $"There are {a}." : $"This animal is {Art(a)}{a}.";
+        // "what is this / what is in the image / what do you see"
+        if (q.StartsWith("what is") || q.Contains("what is in") || q.Contains("what do you see") || q.StartsWith("what's"))
+            return numeric ? $"There are {a}." : $"This is {Art(a)}{a}.";
+        // generic "what ..." -> "It is a X."
+        if (q.StartsWith("what"))
+            return numeric ? $"There are {a}." : $"It is {Art(a)}{a}.";
+        // fallback
+        return $"The answer is {a}.";
+    }
     private async Task RunAsync(BasicSpeechObject? spokenQuestion, string? typedQuestion)
     {
         if (_north is null || _imageBytes is null) return;
+        _lastQuestion = typedQuestion;   // typed questions phrase precisely; spoken phrase generically
         SetStatus("thinking...");
 
         var image = BasicVisualObject.FromFile(_imagePath ?? "image.jpg", _imageBytes, "Image");
@@ -169,12 +223,13 @@ public partial class MainWindow : Window
         var replyWav = SpeechOf(r.ByType(BSO));
         Diag("answer='" + (answer ?? "") + "' replyWav=" + replyWav.Length);
 
-        AnswerText.Text = answer ?? "(no text answer)";
+        var spoken = Phrase(_lastQuestion, answer);
+        AnswerText.Text = spoken;
         SetStatus("done.");
 
-        // speak the answer through the avatar with a face (via PAF-RSR).
-        if (!string.IsNullOrWhiteSpace(answer))
-            await RenderPromptAsync(answer!);
+        // speak the composed sentence through the avatar with a face (via PAF-RSR).
+        if (!string.IsNullOrWhiteSpace(spoken))
+            await RenderPromptAsync(spoken);
     }
 
     private static string? TextOf(string? json)
