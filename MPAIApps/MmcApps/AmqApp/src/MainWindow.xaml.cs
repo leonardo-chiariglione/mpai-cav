@@ -12,6 +12,7 @@ using AIF.Store;        // AmdStore
 using Mpai.Core;
 using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
 using Mpai.Hci.Api;     // NorthApi, SpeakingAvatar
+using Mpai.Mas.Client;
 
 namespace MmcAmq;
 
@@ -34,7 +35,7 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private NorthApi?     _north;
+    private INorthApi?    _north;
     private AvatarUaHost? _avatar;
     private byte[]?       _imageBytes;
     private string?       _lastQuestion;
@@ -59,7 +60,36 @@ public partial class MainWindow : Window
             SetStatus("loading...");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            await Task.Run(() => _north = new NorthApi(AmdDir, SettingsPath, store => new AmqProvider(store)));
+            await Task.Run(() =>
+            {
+                // LOCAL UNLESS TOLD OTHERWISE. Set MPAI_MAS_SERVER to a URL and
+                // this same window drives a Module on another machine; unset, it
+                // runs the Module in process exactly as before. One codebase,
+                // two modes - no copied MainWindow to drift out of step.
+                var server = Environment.GetEnvironmentVariable("MPAI_MAS_SERVER");
+
+#if REMOTE_ONLY
+                // THE CLIENT PACKAGE CARRIES NO FRAMEWORK. AmqProvider and the
+                // AIM projects are absent from AmqClient.csproj, so there is no
+                // in-process branch to fall back to - and a client that quietly
+                // ran the Module locally would be carrying the models it was
+                // built to do without.
+                if (string.IsNullOrWhiteSpace(server))
+                    throw new InvalidOperationException(
+                        "MPAI_MAS_SERVER is not set. This is the client package: " +
+                        "it drives a Module over MPAI-MAS and holds no models.");
+
+                _north = new RemoteNorthApi(
+                    server!,
+                    Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN"));
+#else
+                _north = string.IsNullOrWhiteSpace(server)
+                    ? new NorthApi(AmdDir, SettingsPath, store => new AmqProvider(store))
+                    : new RemoteNorthApi(
+                          server!,
+                          Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN"));
+#endif
+            });
             LoadButton.IsEnabled = true;
             SetStatus("Ready.");
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking

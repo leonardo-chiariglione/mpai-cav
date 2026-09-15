@@ -32,7 +32,7 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private NorthApi?     _north;
+    private INorthApi?    _north;
     private AvatarUaHost? _avatar;
     private volatile bool _running = false;
 
@@ -63,7 +63,22 @@ public partial class MainWindow : Window
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // scene settle
 
             await Task.Run(() =>
-                _north = new NorthApi(AmdDir, SettingsPath, store => new MadProvider(store)));
+            {
+                var server = Environment.GetEnvironmentVariable("MPAI_MAS_SERVER");
+#if REMOTE_ONLY
+                if (string.IsNullOrWhiteSpace(server))
+                    throw new InvalidOperationException(
+                        "MPAI_MAS_SERVER is not set. This is the client package: " +
+                        "it drives a Module over MPAI-MAS and holds no models.");
+                _north = new Mpai.Mas.Client.RemoteNorthApi(
+                    server!, Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN"));
+#else
+                _north = string.IsNullOrWhiteSpace(server)
+                    ? new NorthApi(AmdDir, SettingsPath, store => new MadProvider(store))
+                    : new Mpai.Mas.Client.RemoteNorthApi(
+                          server!, Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN"));
+#endif
+            });
 
             InstructionText.Text = "Press Start to begin.";
             SetStatus("Ready.");

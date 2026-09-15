@@ -30,3 +30,18 @@ MPAIApps/HCIApps/MatApp/src/*.bak*
 MPAIApps/HCIApps/MatApp/src/*.allbak
 MPAIApps/HCIApps/MatApp/src/*.flowbak
 MPAIApps/HCIApps/MatApp/src/*.langbak
+
+# transient
+mas-server*.json
+tree.txt
+_stale/
+*.bak
+*.bak2
+*.premas
+*.preclient
+*.fdotest
+*.hangbak
+*.north
+*.northbak
+*.removed
+testcerts/

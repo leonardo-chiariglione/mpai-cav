@@ -13,7 +13,7 @@ namespace Mpai.Hci.Api;
 // typed key "DataType#PortNumber": NorthApi neither knows nor uses any port
 // NAME. Outcomes are the standard AifError, surfaced faithfully; no application
 // semantics, no content, no state (memory lives in the Module).
-public sealed class NorthApi : IDisposable
+public sealed class NorthApi : INorthApi, IDisposable
 {
     private readonly UserAgent    _ua;
     private readonly IAimProvider _provider;
