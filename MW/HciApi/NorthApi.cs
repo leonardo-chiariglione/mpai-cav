@@ -15,6 +15,15 @@ namespace Mpai.Hci.Api;
 // semantics, no content, no state (memory lives in the Module).
 public sealed class NorthApi : INorthApi, IDisposable
 {
+    // THE FRAMEWORK OFFERS THE PLACE; THIS KNOWS WHAT TO LOOK FOR. AIF.Controller
+    // routes Data Types and payloads and does not know what an MPAI Object is.
+    // MW knows both, so the inspector is installed here - once, for every
+    // application and both servers, since all of them construct a NorthApi.
+    static NorthApi()
+    {
+        AIF.Controller.MachineExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
+    }
+
     private readonly UserAgent    _ua;
     private readonly IAimProvider _provider;
     private readonly AimSettings  _settings;
