@@ -45,3 +45,7 @@ _stale/
 *.northbak
 *.removed
 testcerts/
+
+# transient - the rule, not a list of instances
+*.pre*
+_removed/
