@@ -13,5 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
+  </ItemGroup>
 
 </Project>

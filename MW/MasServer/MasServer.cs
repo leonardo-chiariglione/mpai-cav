@@ -361,7 +361,7 @@ public sealed class MasServer
         // Port accepts. The boundary key comes from the PORT, because that is
         // what the Controller routes on - the Port''s own DataType, the first of
         // its declared set. This is the one place the two conventions meet.
-        module.Inputs[port.Key] = codecs.For(dataType).ToInternal(wire);
+        module.Inputs[port.Key] = codecs.ToInternal(dataType, wire);
 
         // The first input after a completed run begins a new round. Over MAS the
         // inputs arrive one request at a time and nothing in the API says when a
@@ -442,7 +442,7 @@ public sealed class MasServer
             return;
         }
 
-        var wire = codecs.For(dataType).ToWire(internalJson);
+        var wire = codecs.ToWire(dataType, internalJson);
 
         ctx.Response.StatusCode    = 200;
         ctx.Response.ContentType   = "MPAI/port-data";

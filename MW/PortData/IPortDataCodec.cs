@@ -72,6 +72,24 @@ public sealed class PortDataCodecs
     // into 415 Unsupported Media Type: the peer asked for a Data Type this build
     // cannot carry, and saying so is more useful than delivering bytes that
     // happen to be shaped like something else.
+    // EVERY CROSSING IS CHECKED AGAINST THE PUBLISHED SCHEMA. The serialisers
+    // convert between the internal representation and the schema instance, and
+    // nothing verified the second half of that claim until now. Checked here
+    // rather than at each call site so that the server, the client and the
+    // round-trip test are all covered by one place.
+    public byte[] ToWire(string dataType, string internalJson)
+    {
+        var wire = For(dataType).ToWire(internalJson);
+        PortDataSchema.Check(dataType, "produced", wire);
+        return wire;
+    }
+
+    public string ToInternal(string dataType, byte[] wire)
+    {
+        PortDataSchema.Check(dataType, "received", wire);
+        return For(dataType).ToInternal(wire);
+    }
+
     public IPortDataCodec For(
         string dataType) =>
         byDataType.TryGetValue(dataType, out var codec)

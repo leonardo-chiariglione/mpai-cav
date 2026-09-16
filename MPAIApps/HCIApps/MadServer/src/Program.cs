@@ -118,6 +118,16 @@ internal static class Program
 
         Console.WriteLine();
 
+        // WHAT CROSSES THE WIRE, CHECKED AGAINST THE PUBLISHED SCHEMA. Reports
+        // only: a Module stopped because a schema was revised would be worse than
+        // one that says so.
+        PortDataSchema.Sink = (dataType, direction, complaint) =>
+            Console.WriteLine($"[SCHEMA] {dataType} {direction} {complaint}");
+
+        Console.WriteLine(PortDataSchema.Root is null
+            ? "  Schemas:      NOT FOUND - port data will not be validated"
+            : $"  Schemas:      {PortDataSchema.Root}");
+
         var store = new AmdStore(amdDir);
         store.Scan();
         Console.WriteLine($"  AMDs found: {store.Count}");

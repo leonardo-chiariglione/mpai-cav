@@ -146,7 +146,7 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
             if (!codecsKnow(datum.DataType))
                 return new NorthApi.Result(AifError.Failed, Array.Empty<NorthApi.Datum>(), false);
 
-            var wire = Codecs.For(datum.DataType).ToWire(datum.Json);
+            var wire = Codecs.ToWire(datum.DataType, datum.Json);
 
             var content = new ByteArrayContent(wire);
             content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
@@ -188,7 +188,7 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
 
                 var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
                 outputs.Add(new NorthApi.Datum(
-                    dataType, portNumber, Codecs.For(dataType).ToInternal(wire)));
+                    dataType, portNumber, Codecs.ToInternal(dataType, wire)));
             }
         }
 
