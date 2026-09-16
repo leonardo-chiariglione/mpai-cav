@@ -275,6 +275,21 @@ public sealed class BasicSpeechObject
     // for a container header finds nothing - silently, because the header was
     // never there to find. Whoever creates an Object knows what the bytes are;
     // this is the point at which they must say so.
+    // DERIVATION CARRIES OR RESTATES - AND WHICH ONE DEPENDS ON THE DATA.
+    //
+    // An AIM that produces an Object from another either keeps the Data, in which
+    // case it carries the format across, or changes the Data, in which case it
+    // states a new one describing what it produced. CAE-QCV is the model: it
+    // resamples and rebuilds the Qualifier to describe its own output. CVE-VSI is
+    // the other model: it keeps the bytes, carries the format, and changes only
+    // the object type.
+    //
+    // The failure the compiler cannot catch is changing the Data and carrying the
+    // format anyway. The result is a Qualifier that lies, and a consumer that obeys
+    // it decodes at the wrong rate - silently, because the numbers are plausible.
+    // CAE-ASI did this in reverse for months, asserting 16 kHz over whatever it was
+    // given. Only a conformance check catches it; see Level 5.
+
     // AND THE QUALIFIER MUST SAY SOMETHING. A Qualifier carrying a language, a
     // speaker and a capture time, and nothing about the bytes, is decoration: it
     // satisfies the requirement of Level 1 and leaves every consumer guessing at
