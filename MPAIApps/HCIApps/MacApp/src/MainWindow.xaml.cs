@@ -139,8 +139,14 @@ public partial class MainWindow : Window
             await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.4));
 
-            bool granted = responseText is not null &&
-                           responseText.IndexOf("granted", System.StringComparison.OrdinalIgnoreCase) >= 0;
+            // THE VERDICT IS READ, NOT INFERRED. This searched the avatar's own
+            // sentence for the word "granted" - so rewording the utterance, or
+            // translating it, or enrolling somebody whose name contained the word,
+            // would have changed who was admitted. MMC-MAC now declares the verdict
+            // at its boundary as a Boolean, decided by OSD-IDR where it always was.
+            var ij = result.ByType("Boolean");
+            bool granted = !string.IsNullOrWhiteSpace(ij) &&
+                           ij.Trim().Equals("true", System.StringComparison.OrdinalIgnoreCase);
             string banner = string.IsNullOrWhiteSpace(responseText)
                 ? (granted ? "Access granted" : "Not identified")
                 : responseText;
