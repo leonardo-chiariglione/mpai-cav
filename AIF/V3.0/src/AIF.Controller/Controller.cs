@@ -195,7 +195,40 @@ public sealed class Controller
                 : (node.Children.FirstOrDefault(c => c.AIMName == aim)?.Ports
                    ?? Enumerable.Empty<RuntimePort>());
 
-        var port = ports.FirstOrDefault(rp => rp.Name == name);
+        // A NAME IS A LABEL, AND A LABEL MAY NOT ROUTE. A composite can declare a
+        // Port more than once - PAF-RSR declares TextObject twice, #1 feeding
+        // Text-To-Speech and #2 feeding Generative Face Description - and a lookup
+        // by name alone returns the first every time. Both connections then collapse
+        // onto one Endpoint, one datum satisfies two consumers, and a Port that was
+        // never supplied is never reported missing. That is a label doing routing
+        // work, badly, and it defeats the Port Number the AMD declares, the wire
+        // carries and the executor honours.
+        //
+        // So an ambiguous name is a MALFORMED L3, not a first match. Where a name
+        // names more than one Port, the Topology must say which by PortNumber, or
+        // the Module does not load. This is a fence, not the destination: eventually
+        // a Topology connection should be two typed endpoints - (AimName, DataType,
+        // PortNumber) - with no name in it at all, and then a name cannot be used
+        // for routing because there is none to use.
+        var named  = ports.Where(rp => rp.Name == name).ToList();
+        var wanted = side.TryGetProperty("PortNumber", out var n) && n.ValueKind == JsonValueKind.Number
+            ? n.GetInt32()
+            : (int?)null;
+
+        if (named.Count > 1 && wanted is null)
+            throw new InvalidOperationException(
+                $"{node.AIMName}: Topology endpoint AIM='{aim}' Port='{name}' is ambiguous - " +
+                $"{named.Count} Ports carry that name. The connection must state which by " +
+                "PortNumber. A port name is a label for the reader; it does not address a Port.");
+
+        var port = wanted is not null
+            ? named.FirstOrDefault(rp => (rp.PortNumber ?? 1) == wanted.Value)
+            : named.FirstOrDefault();
+
+        if (port is null && wanted is not null && named.Count > 0)
+            throw new InvalidOperationException(
+                $"{node.AIMName}: Topology endpoint AIM='{aim}' Port='{name}' asks for " +
+                $"PortNumber {wanted.Value}, which that name does not declare.");
         if (port is not null)
             return new Endpoint(
                 string.IsNullOrEmpty(aim) ? null : aim,

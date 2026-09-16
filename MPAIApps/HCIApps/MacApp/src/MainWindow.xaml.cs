@@ -104,7 +104,7 @@ public partial class MainWindow : Window
             var faceIn = new List<NorthApi.Datum>();
             if (face is not null) faceIn.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
             var r1 = await Task.Run(() => _north!.Advance(MacModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended" : " completed"));
+            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended waiting for " + (r1.WaitingPort ?? "?") : " completed"));
             if (!r1.Ok) { SetStatus("run error"); return; }
 
             var result = r1;
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
                 var speechIn = new List<NorthApi.Datum>();
                 if (speech is not null) speechIn.Add(new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)));
                 var r2 = await Task.Run(() => _north!.Advance(MacModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended" : " completed"));
+                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended waiting for " + (r2.WaitingPort ?? "?") : " completed"));
                 if (!r2.Ok) { SetStatus("resume error"); return; }
                 result = r2;
             }
@@ -183,7 +183,11 @@ public partial class MainWindow : Window
         if (_north is null) return;
         var inputs = new List<NorthApi.Datum>
         {
-            new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
+            // Generative Face Description, which turns the words into visemes.
+            // Sending only #1 leaves the mouth with nothing to shape itself to.
+            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new NorthApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));

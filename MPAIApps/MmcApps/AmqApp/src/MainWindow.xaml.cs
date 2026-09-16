@@ -164,7 +164,11 @@ public partial class MainWindow : Window
             Diag("StartFlow RSR -> " + s);
             _rsrStarted = (s == AifError.OK);
         }
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
+            // Generative Face Description, which turns the words into visemes.
+            // Sending only #1 leaves the mouth with nothing to shape itself to.
+            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
         byte[] wav = SpeechOf(r.ByType(BSO));

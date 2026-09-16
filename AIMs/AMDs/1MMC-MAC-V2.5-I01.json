@@ -25,6 +25,7 @@
                        { "Output": { "AIMName": "MMC-SIR-V2.5",  "PortName": "OutputSpeakerID" }            , "Input": { "AIMName": "OSD-IDR-V1.5",  "PortName": "SpeakerID", "PortNumber": 2 } },
                        { "Output": { "AIMName": "OSD-IDR-V1.5",  "PortName": "PersonalStatus" }             , "Input": { "AIMName": "PAF-RSR-V1.6",  "PortName": "PersonalStatus" } },
                        { "Output": { "AIMName": "OSD-IDR-V1.5",  "PortName": "Response" }                   , "Input": { "AIMName": "PAF-RSR-V1.6",  "PortName": "TextObject", "PortNumber": 1 } },
+                       { "Output": { "AIMName": "OSD-IDR-V1.5",  "PortName": "Response" }                   , "Input": { "AIMName": "PAF-RSR-V1.6",  "PortName": "TextObject", "PortNumber": 2 } },
                        { "Output": { "AIMName": "OSD-IDR-V1.5",  "PortName": "Response" }                   , "Input": { "AIMName": "",              "PortName": "Response" } },
                        { "Output": { "AIMName": "PAF-RSR-V1.6",  "PortName": "MachineSpeech" }              , "Input": { "AIMName": "",              "PortName": "VocalResponse" } },
                        { "Output": { "AIMName": "PAF-RSR-V1.6",  "PortName": "MachineFaceDescriptors" }     , "Input": { "AIMName": "",              "PortName": "FaceDescriptors" } }],

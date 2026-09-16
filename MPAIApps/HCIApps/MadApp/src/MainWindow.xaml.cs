@@ -197,7 +197,11 @@ public partial class MainWindow : Window
         if (_north is null) return;
         var inputs = new List<NorthApi.Datum>
         {
-            new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words)))
+            new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
+            // Generative Face Description, which turns the words into visemes.
+            // Sending only #1 leaves the mouth with nothing to shape itself to.
+            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words)))
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
