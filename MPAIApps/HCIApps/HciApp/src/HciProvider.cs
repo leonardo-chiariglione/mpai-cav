@@ -80,7 +80,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
         _gallery = SubjectGallery.Load(shared);
     }
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
             // ---- scene front-end -------------------------------------------

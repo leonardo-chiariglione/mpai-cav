@@ -27,7 +27,7 @@ internal sealed class AmqProvider : IAimProvider
 
     public AmqProvider(AmdStore store) => _store = store;
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
             "MMC-ASR-V2.5" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),

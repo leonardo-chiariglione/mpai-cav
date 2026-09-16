@@ -36,7 +36,7 @@ public sealed class NorthApi : INorthApi, IDisposable
         _settings = AimSettings.Load(settingsPath);
         _provider = provider;
         var store = new AmdStore(amdDir); store.Scan();
-        _ua = new UserAgent(store);
+        _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
     }
 
@@ -47,7 +47,7 @@ public sealed class NorthApi : INorthApi, IDisposable
         _settings = AimSettings.Load(settingsPath);
         var store = new AmdStore(amdDir); store.Scan();
         _provider = providerFactory(store);
-        _ua = new UserAgent(store);
+        _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
     }
 

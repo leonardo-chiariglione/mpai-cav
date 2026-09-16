@@ -51,7 +51,7 @@ internal sealed class MacProvider : IAimProvider, IDisposable
         _gallery = SubjectGallery.Load(shared);
     }
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
             "PAF-FIR-V1.6" => new FirAimProcessor(aimName, Scrfd(settings), ArcFace(settings), _gallery, AimPortReader.Load(_store, aimName)),

@@ -14,7 +14,9 @@ namespace AIF.SharedStorage;
 public sealed class FileSharedStorage : ISharedStorage
 {
     private readonly string rootPath;
-    private readonly string topAim;       // Top AIM stamped into every Put (Section 2.4)
+    private readonly string writer;       // Module, and the AIM within it, stamped into
+                                          // every Put. The Controller binds this; a writer
+                                          // cannot supply its own identity.
     private readonly string requestedBy;  // UA / RCA identity stamped into every Put (Section 2.5)
 
     // Per-key locks so two writers to the same key cannot interleave. Ordering
@@ -22,10 +24,10 @@ public sealed class FileSharedStorage : ISharedStorage
     private readonly ConcurrentDictionary<string, object> locks = new(StringComparer.Ordinal);
     private object LockFor(string key) => locks.GetOrAdd(key, _ => new object());
 
-    public FileSharedStorage(string rootPath, string topAim, string requestedBy)
+    public FileSharedStorage(string rootPath, string writer, string requestedBy)
     {
         this.rootPath = rootPath;
-        this.topAim = topAim;
+        this.writer = writer;
         this.requestedBy = requestedBy;
         Directory.CreateDirectory(rootPath);
     }
@@ -38,7 +40,7 @@ public sealed class FileSharedStorage : ISharedStorage
 
         var info = new KeyInfo
         {
-            StoredBy = topAim, RequestedBy = requestedBy,
+            StoredBy = writer, RequestedBy = requestedBy,
             StoredAt = DateTime.UtcNow, Length = data.LongLength
         };
         var infoJson = JsonSerializer.SerializeToUtf8Bytes(info);

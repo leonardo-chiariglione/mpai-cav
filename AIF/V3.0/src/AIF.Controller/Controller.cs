@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AIF.SharedStorage;
 using AIF.Store;
 
 namespace AIF.Controller;
@@ -6,6 +7,24 @@ namespace AIF.Controller;
 public sealed class Controller
 {
     private readonly AmdStore store;
+
+    // WHERE SHARED STORAGE LIVES, AND NOTHING ABOUT WHAT GOES IN IT. Supplied by
+    // the User Agent through MPAI_AIFU_SharedStorage_Init; null when no scope is
+    // configured, in which case AIMs are handed no storage at all.
+    private string? storageRoot;
+
+    public void SetSharedStorageRoot(string? root) => storageRoot = root;
+
+    // THE HANDLE AN AIM IS GIVEN IS STAMPED WITH WHO IT IS. Accountability is the
+    // point of the provenance record: if data is written it must be possible to
+    // know who wrote it. A handle an AIM or its provider constructed would carry
+    // whatever identity they chose, which proves nothing. The Module names the
+    // context and the AIM names the writer within it, because an AIM name without
+    // its Module identifies nothing.
+    private ISharedStorage? StorageFor(string moduleName, string aimName) =>
+        storageRoot is null
+            ? null
+            : new FileSharedStorage(storageRoot, $"{moduleName}/{aimName}", "local");
 
     public Controller(AmdStore store)
     {
@@ -251,7 +270,11 @@ public sealed class Controller
         AimHost host)
     {
         var instantiated = new List<string>();
-        InstantiateNode(graph.Root, provider, settings, host, instantiated);
+
+        // The Module names the context for every provenance stamp made inside it.
+        var moduleName = graph.Root?.AIMName ?? "";
+
+        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName);
         return instantiated;
     }
 
@@ -260,13 +283,14 @@ public sealed class Controller
         IAimProvider provider,
         AimSettings settings,
         AimHost host,
-        List<string> instantiated)
+        List<string> instantiated,
+        string moduleName)
     {
         foreach (var child in node.Children)
         {
             if (child.IsComposite)
             {
-                InstantiateNode(child, provider, settings, host, instantiated);
+                InstantiateNode(child, provider, settings, host, instantiated, moduleName);
                 continue;
             }
 
@@ -275,7 +299,8 @@ public sealed class Controller
                 continue;
 
             CheckResources(child);
-            host.RegisterRuntime(provider.Create(aimName, settings.For(aimName)));
+            host.RegisterRuntime(
+                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName)));
             instantiated.Add(aimName);
         }
     }
