@@ -72,7 +72,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
         // gallery.json if the store is empty. FIR and SIR share this instance.
         var shared = new AIF.SharedStorage.FileSharedStorage(
             Mpai.Core.MpaiPaths.SharedStorage, "MMC-MAC-V2.5", "local");
-        if (shared.List(SubjectGallery.SubjectKeyPrefix).Count == 0 &&
+        if (shared.MPAI_AIFM_SharedStorage_List(SubjectGallery.SubjectKeyPrefix).Count == 0 &&
             !string.IsNullOrWhiteSpace(galleryJsonPath) && File.Exists(galleryJsonPath))
         {
             SubjectGallery.Load(galleryJsonPath).Save(shared);

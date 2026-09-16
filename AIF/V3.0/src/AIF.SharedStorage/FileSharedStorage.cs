@@ -32,7 +32,7 @@ public sealed class FileSharedStorage : ISharedStorage
         Directory.CreateDirectory(rootPath);
     }
 
-    public void Put(string key, byte[] data)
+    public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data)
     {
         if (string.IsNullOrEmpty(key)) throw new ArgumentException("key must be non-empty", nameof(key));
         data ??= Array.Empty<byte>();
@@ -60,7 +60,7 @@ public sealed class FileSharedStorage : ISharedStorage
         }
     }
 
-    public byte[] Get(string key)
+    public byte[] MPAI_AIFM_SharedStorage_Get(string key)
     {
         var (dataPath, _) = PathsFor(key);
         if (!File.Exists(dataPath))
@@ -68,7 +68,7 @@ public sealed class FileSharedStorage : ISharedStorage
         return File.ReadAllBytes(dataPath);
     }
 
-    public void Delete(string key)
+    public void MPAI_AIFM_SharedStorage_Delete(string key)
     {
         var (dataPath, infoPath) = PathsFor(key);
         lock (LockFor(key))
@@ -78,7 +78,7 @@ public sealed class FileSharedStorage : ISharedStorage
         }
     }
 
-    public IReadOnlyList<string> List(string prefix)
+    public IReadOnlyList<string> MPAI_AIFM_SharedStorage_List(string prefix)
     {
         if (!Directory.Exists(rootPath)) return Array.Empty<string>();
         return Directory.GetFiles(rootPath, "*.data", SearchOption.TopDirectoryOnly)
@@ -88,13 +88,13 @@ public sealed class FileSharedStorage : ISharedStorage
             .ToList();
     }
 
-    public bool Exists(string key)
+    public bool MPAI_AIFM_SharedStorage_Exists(string key)
     {
         var (dataPath, _) = PathsFor(key);
         return File.Exists(dataPath);
     }
 
-    public KeyInfo GetKeyInfo(string key)
+    public KeyInfo MPAI_AIFM_SharedStorage_GetKeyInfo(string key)
     {
         var (dataPath, infoPath) = PathsFor(key);
         if (!File.Exists(infoPath))

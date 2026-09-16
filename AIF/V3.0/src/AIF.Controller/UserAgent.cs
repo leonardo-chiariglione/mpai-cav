@@ -121,7 +121,7 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         foreach (var p in module.Graph.Root.Children)
-            module.Host.PauseAim(p.AIMName);
+            module.Host.MPAI_AIFM_AIM_Pause(p.AIMName);
         return AifError.OK;
     }
 
@@ -130,7 +130,7 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         foreach (var p in module.Graph.Root.Children)
-            module.Host.ResumeAim(p.AIMName);
+            module.Host.MPAI_AIFM_AIM_Resume(p.AIMName);
         return AifError.OK;
     }
 
