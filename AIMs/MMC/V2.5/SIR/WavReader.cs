@@ -49,8 +49,15 @@ public static class WavReader
         return ReadMono16k(stream, Path.GetFileName(path));
     }
 
-    // Decode an in-memory WAV (e.g. the bytes carried in a BasicSpeechObject.Data).
-    public static float[] ReadMono16k(byte[] wavBytes)
+    // PRIVATE, AND DELIBERATELY SO. This parses a RIFF container from bytes alone,
+    // which is the right thing to do to a WAV and the wrong thing to do to a Speech
+    // Object: the Object declares its format, and headerless PCM handed to this
+    // method throws 'Not RIFF' with nothing to say why. Entity Speech Description
+    // called it for weeks and the voice half of every enrolment failed silently.
+    //
+    // Reachable only from the Object-taking overload above, which reaches it only
+    // after finding a RIFF signature. A consumer with an Object passes the Object.
+    private static float[] ReadMono16k(byte[] wavBytes)
     {
         using var stream = new MemoryStream(wavBytes, writable: false);
         return ReadMono16k(stream, "<memory>");
