@@ -275,7 +275,23 @@ public sealed class BasicSpeechObject
     // for a container header finds nothing - silently, because the header was
     // never there to find. Whoever creates an Object knows what the bytes are;
     // this is the point at which they must say so.
-    public static BasicSpeechObject FromData(byte[] data, SpeechQualifier qualifier) => new()
+    // AND THE QUALIFIER MUST SAY SOMETHING. A Qualifier carrying a language, a
+    // speaker and a capture time, and nothing about the bytes, is decoration: it
+    // satisfies the requirement of Level 1 and leaves every consumer guessing at
+    // the one thing it cannot recover from the Data. Speech Object Acquisition
+    // built exactly such a Qualifier for weeks, and the voice half of every
+    // enrolment failed silently because of it.
+    //
+    // Refused at construction rather than reported later: by the time a consumer
+    // notices, the Object has travelled and whoever knew what the bytes were is no
+    // longer on the stack.
+    public static BasicSpeechObject FromData(byte[] data, SpeechQualifier qualifier) =>
+        !qualifier.StatesFormat()
+            ? throw new ArgumentException(
+                "The Speech Qualifier states no format. Set Format.ContentFormats.RawData " +
+                "(sampling frequency and precision) for raw samples, or " +
+                "Format.TransportFormats.FileFormat for a container.", nameof(qualifier))
+            : new()
     {
         BasicSpeechObjectID = Guid.NewGuid().ToString(),
         Data = data,
@@ -367,7 +383,15 @@ public sealed class BasicAudioObject
     // had captured and the values were then reinterpreted. The two Qualifiers are
     // separate now, each complete in itself, and nothing converts.
     // Required, and required non-null - see BasicSpeechObject.FromData above.
-    public static BasicAudioObject FromData(byte[] data, AudioQualifier qualifier) => new()
+    // The Qualifier must say something - see BasicSpeechObject.FromData above.
+    public static BasicAudioObject FromData(byte[] data, AudioQualifier qualifier) =>
+        !qualifier.StatesFormat()
+            ? throw new ArgumentException(
+                "The Audio Qualifier states no format. Set " +
+                "Formats.ContentFormat.RawData.SampleSpace (sampling frequency and " +
+                "precision) for raw samples, or Formats.TransportFormat.FileFormats " +
+                "for a container.", nameof(qualifier))
+            : new()
     {
         BasicAudioObjectID = Guid.NewGuid().ToString(),
         BasicAudioObjectData = new() { new InlineAudioData(Convert.ToBase64String(data)) },
