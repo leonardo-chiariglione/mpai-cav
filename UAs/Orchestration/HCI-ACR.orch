@@ -1,61 +1,52 @@
 # =============================================================================
-#  HCI-ACR.orch  -  User-Agent orchestration for the MMC-ACR Module
+#  HCI-ACR.orch - Access Control Registration
+#  Workflow Description Language, AIF V3.0
 #
-#  Workflow Description (WDL v0.1). UA-side only: real-world I/O
-#  (prompt/present/capture/type), timing (wait), the boundary exchange with the
-#  Controller (start / capture->module / await / stop), and persistence of the
-#  result to Shared Storage via the Controller's storage API.
+#  The User Agent never addresses a Module: it asks the Controller. See
+#  HCI-MAD.orch for the mapping of each request onto the Controller API.
 #
-#  The UA DRIVES the Module through the Controller. The Module (a black box here)
-#  computes the Face Descriptors and Speech Descriptors and renders the
-#  confirmation; the UA never names an AIM. The User Name is the UA's own datum
-#  (typed characters), NOT a Module port: the UA writes {UserName -> descriptors,
-#  times} to Shared Storage - the same gallery MMC-MAC reads. Routing among the
-#  Module's AIMs is by data type per the Module's L3 (1MMC-ACR-V2.5-I01.json).
-#  Chain of command: User <-> UserAgent -> Controller -> AIMs -> Controller.
+#  The user gives a name, a face and a voice; the Module computes the Face and
+#  Speech Descriptors and writes them to the Subject Gallery in Shared Storage,
+#  which MMC-MAC later reads. The writing is done by the Module's own AIMs -
+#  Entity Face Description and Entity Speech Description - and the User Agent
+#  neither performs nor witnesses it. It gives the name at a boundary Port and
+#  receives the confirmation the Module renders.
+#
+#  MMC-ACR declares OSD-BTO twice - #1 the Response the avatar is to speak, #2
+#  the name the descriptors are keyed by - and OSD-STM twice, #1 for the face
+#  and #2 for the speech.
 # =============================================================================
 
-workflow HCI-ACR  over module MMC-ACR-V2.5
-{
-    start module MMC-ACR-V2.5
+workflow HCI-ACR over MMC-ACR-V2.5
 
-    # --- Name: typed characters (ASR is unreliable for bare names) ---
-    prompt  "Welcome to the CAV Access Control Registration Service. Please type your name."
-    type    UserName                                   # UA text box -> UserName (UA datum, not a Module port)
+on Start:
+    ask Controller to start MMC-ACR-V2.5
 
-    # --- Face: prompt, give the human ~1s to turn, then supply face + time ---
+    prompt  "Welcome to the CAV Access Control Registration Service.
+             Please type your name."
+    type    UserName (OSD-BTO-V1.5)
+
     prompt  "Look at the camera."
     wait    1s
-    capture FaceObject   (OSD-BVO-V1.5) -> module
-    supply  FaceTime     (OSD-STM-V1.5) -> module      # from the UA clock
+    acquire UserFace (OSD-BVO-V1.5)
 
-    # --- Speech: prompt, capture a short sample, supply speech + time ---
     prompt  "Please speak a short sentence so I can learn your voice."
-    capture SpeechObject (OSD-BSO-V1.5) -> module
-    supply  SpeechTime   (OSD-STM-V1.5) -> module      # from the UA clock
+    acquire UserSpeech (OSD-BSO-V1.5) via VAD
 
-    # --- Confirmation utterance: UA supplies fixed Response text + a light smile ---
-    supply  Response       (OSD-BTO-V1.5) -> module    # "{UserName}, thank you..." (see below)
-    supply  PersonalStatus (MMC-EPS-V2.5) -> module    # light smile (low-intensity HAPPINESS)
+    ask Controller to take UserFace       (OSD-BVO-V1.5)   for MMC-ACR-V2.5
+    ask Controller to take UserFaceTime   (OSD-STM-V1.5:1) for MMC-ACR-V2.5
+    ask Controller to take UserSpeech     (OSD-BSO-V1.5)   for MMC-ACR-V2.5
+    ask Controller to take UserSpeechTime (OSD-STM-V1.5:2) for MMC-ACR-V2.5
+    ask Controller to take UserName       (OSD-BTO-V1.5:2) for MMC-ACR-V2.5
+    ask Controller to take Response       (OSD-BTO-V1.5:1) = "{UserName}, thank
+        you for joining the Service. Speak your passphrase when you enter."
+        for MMC-ACR-V2.5
+    ask Controller to take Warmth         (MMC-EPS-V2.5)   for MMC-ACR-V2.5
 
-    # --- Read the Module's outputs (by data type) ---
-    await   module outputs FaceDescriptors        (PAF-FDO-V1.6),
-                           SpeechDescriptors       (MMC-SDO-V2.5),
-                           VocalResponse           (OSD-BSO-V1.5),
-                           MachineFaceDescriptors  (PAF-FDO-V1.6)
+    ask Controller to give from MMC-ACR-V2.5:
+        VocalResponse (OSD-BSO-V1.5),
+        MachineFace   (PAF-FDO-V1.6)
+    present VocalResponse, MachineFace
 
-    # --- Persist the enrolment to Shared Storage (UA limb, via the Controller) ---
-    #   subject:<UserName> -> { FaceDescriptors content, SpeechDescriptors content,
-    #                           FaceTime, SpeechTime, FaceContentFormat, SpeechContentFormat }
-    #   The times are read from the descriptors the Module produced (they carry
-    #   FaceDescriptorsObjectTime / SpeechDescriptorsObjectTime). MMC-MAC reads
-    #   this same gallery to recognise.
-    store   gallery subject:UserName <- FaceDescriptors, SpeechDescriptors
-
-    # --- Present the confirmation (avatar speaks with a light smile) ---
-    present VocalResponse
-    present MachineFaceDescriptors
-    present "{UserName}, thank you for joining the CAV Access Control Registration Service. You should speak your passphrase when you enter the service."
-
-    stop module
-}
+on Stop:
+    ask Controller to stop MMC-ACR-V2.5

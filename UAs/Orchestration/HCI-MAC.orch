@@ -1,42 +1,55 @@
 # =============================================================================
-#  HCI-MAC.orch  -  User-Agent orchestration for the MMC-MAC Module
+#  HCI-MAC.orch - Multimodal Access Control
+#  Workflow Description Language, AIF V3.0
 #
-#  Workflow Description (WDL v0.1). Describes ONLY what the User Agent does:
-#  real-world I/O (prompt/present/capture), timing (wait), and the boundary
-#  exchange with the Controller (start / capture->module / await / stop).
+#  The User Agent never addresses a Module: it asks the Controller. See
+#  HCI-MAD.orch for the mapping of each request onto the Controller API.
 #
-#  The UA DRIVES the Module - through the Controller. The UA acts only on the
-#  Controller (Start/Stop the Module, write boundary inputs, read boundary
-#  outputs); it never touches a Module's AIMs. The Controller runs the Module's
-#  AIMs and routes data among them BY DATA TYPE per the Module's L3
-#  (1MMC-MAC-V2.5-I01.json). Chain of command: User <-> UserAgent -> Controller
-#  -> AIMs -> Controller. This file names no AIM and no internal routing.
+#  The user presents a face and a passphrase; the Module matches both against
+#  the Subject Gallery that MMC-ACR wrote and renders its verdict.
+#
+#  PENDING - THE VERDICT IS NOT AT THE BOUNDARY. MMC-MAC-V2.5 today declares
+#  Response, VocalResponse and FaceDescriptors: the verdict rendered in words
+#  and in a face, and not the verdict itself. A User Agent therefore cannot
+#  learn whether the person was admitted; it can only play a recording of the
+#  avatar saying so, and a User Agent that must read meaning from an utterance
+#  cannot be generated from Metadata.
+#
+#  OSD-IDR-V1.5 now emits Identification, a Boolean, beside UserID. MMC-MAC
+#  should carry both to its own boundary. The branch below is written as it will
+#  read once it does, and marked so that it is not mistaken for something the
+#  current Metadata supports.
 # =============================================================================
 
-workflow HCI-MAC  over module MMC-MAC-V2.5
-{
-    start module MMC-MAC-V2.5
+workflow HCI-MAC over MMC-MAC-V2.5
 
-    prompt  "Welcome to the HCI Multimodal Access Control Service. Look at the camera."
+on Start:
+    ask Controller to start MMC-MAC-V2.5
+
+    prompt  "Welcome to the HCI Multimodal Access Control Service.
+             Look at the camera."
     wait    1s
-    capture FaceObject (OSD-BVO-V1.5) -> module
-    #   FaceTime supplied from the UA clock as OSD-STM-V1.5 with the face.
+    acquire UserFace (OSD-BVO-V1.5)
 
     prompt  "Speak your passphrase."
-    capture SpeechObject (OSD-BSO-V1.5) -> module
-    #   SpeechTime supplied from the UA clock as OSD-STM-V1.5 with the speech.
+    acquire UserSpeech (OSD-BSO-V1.5) via VAD
 
-    await   module outputs UserID          (OSD-IID-V1.5),
-                           VocalResponse    (OSD-BSO-V1.5),
-                           FaceDescriptors  (PAF-FDO-V1.6)
+    ask Controller to take UserFace   (OSD-BVO-V1.5) for MMC-MAC-V2.5
+    ask Controller to take UserSpeech (OSD-BSO-V1.5) for MMC-MAC-V2.5
 
-    branch on UserID {
-        present VocalResponse
-        present FaceDescriptors
-        present "<name>, welcome."
+    ask Controller to give from MMC-MAC-V2.5:
+        Identification (Boolean),                 # PENDING: not yet declared
+        UserID         (OSD-IID-V1.5),            # PENDING: not yet declared
+        VocalResponse  (OSD-BSO-V1.5),
+        MachineFace    (PAF-FDO-V1.6)
+
+    branch on Identification {
+        present VocalResponse, MachineFace
+        display "{UserID}, welcome."
     } else {
-        present "I am sorry, you have not been identified."
+        present VocalResponse, MachineFace
+        display "You have not been identified."
     }
 
-    stop module
-}
+on Stop:
+    ask Controller to stop MMC-MAC-V2.5
