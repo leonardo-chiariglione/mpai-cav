@@ -50,6 +50,16 @@ public sealed class MasServerConfig
     // For an encrypted PFX. Omitted for PEM and for an unencrypted PFX.
     public string? CertificatePassword { get; init; }
 
+    // THE CHAIN THE SERVER PRESENTS, not a store of things it trusts. A server
+    // offers its own certificate and, with it, the intermediates a client needs
+    // to build a path to a root it already has. Omit those and a client that
+    // trusts the root still refuses the connection - and refuses before sending
+    // anything, so the server sees no request and reports nothing.
+    //
+    // Harmless if the platform supplies a root here instead of intermediates:
+    // presenting a certificate the client already trusts costs nothing.
+    public string? AuthorityPath { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }
@@ -96,6 +106,21 @@ public sealed class MasServerConfig
 
         return config
             ?? throw new FormatException($"{path} is not a JSON object.");
+    }
+
+    // The intermediates to present, or null when none are configured. A PEM file
+    // may hold several certificates; all are loaded.
+    public System.Security.Cryptography.X509Certificates.X509Certificate2Collection? LoadAuthority()
+    {
+        if (string.IsNullOrWhiteSpace(AuthorityPath)) return null;
+
+        if (!File.Exists(AuthorityPath))
+            throw new FileNotFoundException(
+                $"The authority file does not exist: {AuthorityPath}");
+
+        var chain = new System.Security.Cryptography.X509Certificates.X509Certificate2Collection();
+        chain.ImportFromPemFile(AuthorityPath!);
+        return chain.Count > 0 ? chain : null;
     }
 
     // The certificate this configuration names, or null when none is named.

@@ -54,6 +54,10 @@ public sealed class MasServer
     // creates nor renews: it presents what the platform placed on disk.
     private readonly X509Certificate2? certificate;
 
+    // The intermediates presented WITH the certificate, so a client can build a
+    // path to a root it already trusts. Not a store of what this server trusts.
+    private readonly X509Certificate2Collection? authority;
+
     // One SCI per Controller Instance created by the RCA.
     private readonly ConcurrentDictionary<string, Sci> instances = new();
 
@@ -62,13 +66,15 @@ public sealed class MasServer
         PortDataCodecs codecs,
         string listenUrl,
         string? bearerToken = null,
-        X509Certificate2? certificate = null)
+        X509Certificate2? certificate = null,
+        X509Certificate2Collection? authority = null)
     {
         this.runner      = runner;
         this.codecs      = codecs;
         this.listenUrl   = listenUrl;
         this.bearerToken = bearerToken;
         this.certificate = certificate;
+        this.authority   = authority;
     }
 
     private sealed class Sci
@@ -111,8 +117,17 @@ public sealed class MasServer
         // write. Here the platform difference is reduced to a file path.
         if (certificate is not null)
             builder.WebHost.ConfigureKestrel(
-                options => options.ConfigureHttpsDefaults(
-                    https => https.ServerCertificate = certificate));
+                options => options.ConfigureHttpsDefaults(https =>
+                {
+                    https.ServerCertificate = certificate;
+
+                    // A CLIENT THAT CANNOT BUILD THE CHAIN REFUSES BEFORE ASKING.
+                    // It sends no request, so the server sees nothing and reports
+                    // nothing - the failure is visible only at the client, as a
+                    // trust error. Presenting the intermediates is what prevents it.
+                    if (authority is not null && authority.Count > 0)
+                        https.ServerCertificateChain = authority;
+                }));
 
         var app = builder.Build();
         app.Run(HandleAsync);

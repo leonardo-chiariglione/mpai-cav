@@ -73,9 +73,11 @@ internal static class Program
         }
 
         System.Security.Cryptography.X509Certificates.X509Certificate2? certificate;
+        System.Security.Cryptography.X509Certificates.X509Certificate2Collection? authority;
         try
         {
             certificate = config.LoadCertificate();
+            authority   = config.LoadAuthority();
         }
         catch (Exception ex)
         {
@@ -141,7 +143,8 @@ internal static class Program
             PortDataCodecs.Default(),
             config.ListenUrl,
             string.IsNullOrWhiteSpace(config.BearerToken) ? null : config.BearerToken,
-            certificate);
+            certificate,
+            authority);
 
         await server.RunAsync();
         return 0;
