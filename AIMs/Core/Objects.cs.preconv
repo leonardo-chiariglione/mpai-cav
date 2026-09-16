@@ -293,12 +293,7 @@ public sealed class BasicSpeechObject
     // holds, as MMC-SOA does in the other direction - it asserts a Speech
     // Qualifier and says in its own comments why an assertion is the honest
     // thing and a conversion is not.
-    // AsAudio() and AsSpeech() are gone. Reclassifying a medium is the business of
-    // ONE AIM - CAE-ASI - and nature forces it there: a scene is captured as sound
-    // waves, and only on classification is it known that an object is speech. ASI
-    // keeps the Data and states a Qualifier describing it. These helpers let any
-    // code do the same thing anywhere, silently and with no Qualifier at all, which
-    // is how a 48 kHz capture came to be described as 16 kHz.
+    public BasicAudioObject AsAudio() => BasicAudioObject.FromData(Data);
 }
 
 // ---------------------------------------------------------------------------
@@ -383,7 +378,7 @@ public sealed class BasicAudioObject
     // sound is speech is what that AIM is FOR. A conversion records nothing
     // about where the sound came from or why anyone should believe it contains
     // speech.
-    // AsSpeech() is gone - see the note on BasicAudioObject above.
+    public BasicSpeechObject AsSpeech() => BasicSpeechObject.FromData(Data);
 
     // Returns a copy with a different BasicAudioObjectID. Used by AOE to
     // correct the stored object's own ID to match the Repository AssetId at

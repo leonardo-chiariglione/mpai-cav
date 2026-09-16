@@ -219,39 +219,22 @@ public partial class MainWindow : Window
     {
         try
         {
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            if (speech is null || speech.Data.Length == 0) return null;
+            var wav = await Task.Run(() => _avatar!.CaptureSpeech()?.Data);
+            if (wav is not { Length: > 0 }) return null;
             // Stamp the captured speech with its SOURCE language so ASR (Whisper)
             // decodes it as that language, not auto-detect / the static default.
-            // STATE THE LANGUAGE, CARRY EVERYTHING ELSE. Speech Object Acquisition
-            // determined the sampling frequency and the precision from the device and
-            // recorded them; building a fresh Qualifier to hold the language alone
-            // discarded that, leaving raw headerless PCM with nothing to describe it.
-            // The language is added to the Qualifier that came with the capture.
-            var captured = speech!.SpeechQualifier;
-
             var qualifier = new SpeechQualifier
             {
                 SpeechQualifierID = Guid.NewGuid().ToString(),
-                MInstanceID       = captured?.MInstanceID,
-                UEnvironmentID    = captured?.UEnvironmentID,
-                SubType           = captured?.SubType,
-                Format            = captured?.Format,
                 Attributes = new SpeechAttributes
                 {
-                    Source                = captured?.Attributes?.Source,
-                    SpeechCharacteristics = captured?.Attributes?.SpeechCharacteristics,
-                    Structure             = captured?.Attributes?.Structure,
-                    Device                = captured?.Attributes?.Device,
                     Metadata = new SpeechMetadata
                     {
-                        SpeakerProperties = captured?.Attributes?.Metadata?.SpeakerProperties,
                         Language = new Language { LanguageCode = sourceLanguage, LanguageFormat = LanguageFormat.Iso639_1 }
                     }
                 }
             };
-
-            return BasicSpeechObject.FromData(speech.Data, qualifier);
+            return BasicSpeechObject.FromData(wav, qualifier);
         }
         catch { return null; }
     }
@@ -271,11 +254,7 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
-            // Generative Face Description, which turns the words into visemes.
-            // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
         byte[] wav = Array.Empty<byte>();

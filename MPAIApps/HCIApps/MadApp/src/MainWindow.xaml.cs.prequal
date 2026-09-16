@@ -171,14 +171,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            // THE CAPTURE ALREADY RETURNS AN OBJECT, QUALIFIER AND ALL. Speech
-            // Object Acquisition determined the sampling frequency and the precision
-            // from the device and recorded them; taking .Data out and rebuilding from
-            // bytes threw that away and declared nothing in its place. The Data is raw
-            // PCM with no header, so the Qualifier was the only statement of what the
-            // bytes were - and every consumer downstream had to guess.
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            return (speech is not null && speech.Data.Length > 0) ? speech : null;
+            var wav = await Task.Run(() => _avatar!.CaptureSpeech()?.Data);
+            return (wav is { Length: > 0 }) ? BasicSpeechObject.FromData(wav, null) : null;
         }
         catch { return null; }
     }
