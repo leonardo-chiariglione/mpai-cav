@@ -72,7 +72,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            SetStatus("loading...");
+            SetStatus("Wait while the avatar loads");
             foreach (var (code, name) in Languages)
             {
                 FromLang.Items.Add(new ComboBoxItem { Content = name, Tag = code });
@@ -106,7 +106,7 @@ public partial class MainWindow : Window
             PrimaryButton.IsEnabled = false;
             SetStatus("welcome...");
             await RenderPromptAsync(WelcomeLoading);
-            SetStatus("loading models...");
+            SetStatus("Wait while the avatar loads");
             var started = await Task.Run(() => _north!.StartFlow(MatModule));
             if (started != AifError.OK) { SetStatus("could not start " + MatModule); return; }
             _matStarted = true;

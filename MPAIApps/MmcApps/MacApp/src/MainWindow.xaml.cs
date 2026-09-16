@@ -53,7 +53,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            SetStatus("loading...");
+            SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
 

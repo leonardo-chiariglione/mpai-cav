@@ -60,7 +60,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            SetStatus("loading...");
+            SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
 
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
             faceIn.Add(new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
             Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+STM#1+BTO#2(name)");
             var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended" : " completed"));
+            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended, waiting for " + (r1.WaitingPort ?? "?") : " completed"));
             if (!r1.Ok) { SetStatus("run error"); return; }
 
             var result = r1;
@@ -141,7 +141,7 @@ public partial class MainWindow : Window
                 speechIn.Add(new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
                 Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+STM#2+BTO#1(resp)+EPS+BTO#2(name)");
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended" : " completed"));
+                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended, waiting for " + (r2.WaitingPort ?? "?") : " completed"));
                 if (!r2.Ok) { SetStatus("resume error"); return; }
                 result = r2;
             }
@@ -177,7 +177,10 @@ public partial class MainWindow : Window
                     .GetAwaiter().GetResult().Data);
             return (frame is { Length: > 0 }) ? BasicVisualObject.FromFile("probe.jpg", frame, "Face") : null;
         }
-        catch { return null; }
+        // A CAPTURE THAT FAILS SAYS SO. This returned null on any exception,
+        // so a camera in use, a driver fault and a rejected construction all looked
+        // alike: no face, no reason.
+        catch (Exception ex) { Diag("face capture failed: " + ex); Program.Record("face", ex); return null; }
     }
 
     private async Task<BasicSpeechObject?> CaptureSpeechAsync()

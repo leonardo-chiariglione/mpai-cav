@@ -68,7 +68,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            SetStatus("loading...");
+            SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
             _avatar.RunningChanged += running => Dispatcher.Invoke(() =>
@@ -99,7 +99,7 @@ public partial class MainWindow : Window
             ListenButton.IsEnabled = false;                 // Start grays while loading
             SetStatus("welcome...");
             await RenderPromptAsync(Welcome);               // audio unlocked by this click
-            SetStatus("loading models...");
+            SetStatus("Wait while the avatar loads");
             var started = await Task.Run(() => _north!.StartFlow(MpdModule));
             if (started != AifError.OK) { SetStatus("could not start " + MpdModule); ListenButton.IsEnabled = true; return; }
             _loaded = true;
