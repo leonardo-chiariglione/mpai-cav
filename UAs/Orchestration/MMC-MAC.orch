@@ -1,5 +1,5 @@
 # =============================================================================
-#  HCI-MAC.orch - Multimodal Access Control
+#  MMC-MAC.orch - Multimodal Access Control
 #  Workflow Description Language, AIF V3.0
 #
 #  The User Agent never addresses a Module: it asks the Controller. See
@@ -21,7 +21,7 @@
 #  current Metadata supports.
 # =============================================================================
 
-workflow HCI-MAC over MMC-MAC-V2.5
+workflow MMC-MAC over MMC-MAC-V2.5
 
 on Start:
     ask Controller to start MMC-MAC-V2.5

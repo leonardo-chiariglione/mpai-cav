@@ -1,5 +1,5 @@
 # =============================================================================
-#  HCI-ACR.orch - Access Control Registration
+#  MMC-ACR.orch - Access Control Registration
 #  Workflow Description Language, AIF V3.0
 #
 #  The User Agent never addresses a Module: it asks the Controller. See
@@ -17,7 +17,7 @@
 #  and #2 for the speech.
 # =============================================================================
 
-workflow HCI-ACR over MMC-ACR-V2.5
+workflow MMC-ACR over MMC-ACR-V2.5
 
 on Start:
     ask Controller to start MMC-ACR-V2.5

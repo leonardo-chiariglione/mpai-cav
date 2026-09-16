@@ -1,5 +1,5 @@
 # =============================================================================
-#  HCI-MAD.orch - Multimodal Anonymous Dialogue
+#  MMC-MAD.orch - Multimodal Anonymous Dialogue
 #  Workflow Description Language, AIF V3.0
 #
 #  THE USER AGENT NEVER ADDRESSES A MODULE. It asks the Controller to start one,
@@ -19,7 +19,7 @@
 #  reader and does not route.
 # =============================================================================
 
-workflow HCI-MAD over MMC-MAD-V2.5, PAF-RSR-V1.6
+workflow MMC-MAD over MMC-MAD-V2.5, PAF-RSR-V1.6
 
 on Start:
 
