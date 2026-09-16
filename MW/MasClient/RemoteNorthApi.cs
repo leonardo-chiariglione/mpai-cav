@@ -167,14 +167,29 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
 
         foreach (var dataType in Codecs.KnownDataTypes)
         {
-            var response = http.GetAsync(
-                $"{Root}/{mid}/Output/{dataType}").GetAwaiter().GetResult();
+            // AND AT WHICH PORT NUMBER. A Module may declare two outputs of one
+            // Data Type - MMC-HCI emits OSD-BTO at #1 and #2, the machine's
+            // response and the user's recognised text - and asking only at #1
+            // would deliver the first and lose the second, silently. That is the
+            // defect this client was written to avoid on the input side, and had
+            // on the output side.
+            //
+            // MAS offers no way to ask which Ports a Module declares, so the
+            // client probes: #1, then upwards while each answers. A Port that
+            // produced nothing this run answers 404, which is not an error - it
+            // simply did not fire - and ends the probe for that type.
+            for (int portNumber = 1; ; portNumber++)
+            {
+                var response = http.GetAsync(
+                    $"{Root}/{mid}/Output/{Segment(dataType, portNumber)}")
+                    .GetAwaiter().GetResult();
 
-            if (!response.IsSuccessStatusCode) continue;
+                if (!response.IsSuccessStatusCode) break;
 
-            var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-            outputs.Add(new NorthApi.Datum(
-                dataType, 1, Codecs.For(dataType).ToInternal(wire)));
+                var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+                outputs.Add(new NorthApi.Datum(
+                    dataType, portNumber, Codecs.For(dataType).ToInternal(wire)));
+            }
         }
 
         return new NorthApi.Result(AifError.OK, outputs, false);
