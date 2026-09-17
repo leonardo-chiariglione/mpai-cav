@@ -171,7 +171,10 @@ public partial class MainWindow : Window
             if (frame is { Length: > 0 }) { try { System.IO.File.WriteAllBytes(@"C:\Users\Leonardo\Downloads\last-face.jpg", frame); } catch { } }
             return (frame is { Length: > 0 }) ? BasicVisualObject.FromFile("webcam.jpg", frame, "Face") : null;
         }
-        catch { return null; }
+        // A CAPTURE THAT FAILS SAYS SO - see AcrApp. Returning null on any
+        // exception made a camera in use, a driver fault and a rejected
+        // construction all look alike: no face, no reason.
+        catch (Exception ex) { Diag("face capture failed: " + ex); Program.Record("face", ex); return null; }
     }
 
     private async Task<BasicSpeechObject?> CaptureSpeechAsync()

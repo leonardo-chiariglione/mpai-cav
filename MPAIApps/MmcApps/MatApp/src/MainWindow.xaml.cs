@@ -201,6 +201,13 @@ public partial class MainWindow : Window
         var r = _north.Advance(MatModule, inputs);
         if (!r.Ok) { Diag("MAT run err=" + r.Error); return null; }
 
+        // A SUSPENSION RETURNS OK. The Module has not failed - it is waiting for
+        // a boundary input that was never supplied, and the Port it waits for is
+        // the whole diagnosis. Reported here because a suspended run otherwise
+        // falls through and produces nothing, silently.
+        if (r.Suspended)
+            Diag("MAT suspended, waiting for " + (r.WaitingPort ?? "a Port the Controller did not name"));
+
         byte[] wav = Array.Empty<byte>();
         var sj = r.ByType(BSO);
         if (!string.IsNullOrWhiteSpace(sj)) wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? Array.Empty<byte>();
@@ -220,7 +227,7 @@ public partial class MainWindow : Window
         try
         {
             var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            if (speech is null || speech.Data.Length == 0) return null;
+            if (speech is null || speech.Data.Length == 0) { Diag("speech capture produced nothing"); return null; }
             // Stamp the captured speech with its SOURCE language so ASR (Whisper)
             // decodes it as that language, not auto-detect / the static default.
             // STATE THE LANGUAGE, CARRY EVERYTHING ELSE. Speech Object Acquisition
@@ -253,7 +260,10 @@ public partial class MainWindow : Window
 
             return BasicSpeechObject.FromData(speech.Data, qualifier);
         }
-        catch { return null; }
+        // A REFUSED CONSTRUCTION IS NOT A MISSING MICROPHONE. This caught every
+        // exception and returned null, so a Qualifier the construction rejected
+        // looked exactly like silence - no bytes, no AIM reached, nothing said.
+        catch (Exception ex) { Diag("speech capture failed: " + ex.Message); return null; }
     }
 
     private static SimpleTime NowSimpleTime()
