@@ -59,7 +59,7 @@ one key and merges with any half already stored - it does not rewrite the whole
 gallery. The gallery scope is `"MMC-MAC-V2.5"` - the same scope MAC reads.
 
 ## 3. The User Agent
-`MPAIApps/HCIApps/AcrApp/src/` - provider `AcrProvider.cs`, UA
+`MPAIApps/MmcApps/AcrApp/src/` - provider `AcrProvider.cs`, UA
 `MainWindow.xaml.cs` (namespace `AcrApp`), realising `UAs/Orchestration/HCI-ACR.orch`.
 It drives the Module through the **North API** (`NorthApi`), addressing data only
 by type:
@@ -78,7 +78,7 @@ capture is tagged `VisualObjectType = "Face"`; visual acquisition uses **native
 Windows Media Capture** (no OpenCV). Real-world limbs come from `UAs/Lib/UaKit`.
 
 ## 4. Files this app needs (build closure)
-- **App:** `MPAIApps/HCIApps/AcrApp/*`
+- **App:** `MPAIApps/MmcApps/AcrApp/*`
 - **AIF:** `AIF/V3.0/src/{AIF.Controller, AIF.Store, AIF.SharedStorage, AIF.GlobalStorage}`
 - **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi` (`NorthApi`)
 - **AIMs:** `AIMs/Core`; leaves `PAF/V1.6/EFD`, `MMC/V2.5/ESD`, `PAF/V1.6/PSD`,
@@ -94,8 +94,8 @@ Windows Media Capture** (no OpenCV). Real-world limbs come from `UAs/Lib/UaKit`.
 
 ## 5. Build & run
 ```
-D:\BI\MPAIApps\HCIApps\AcrApp\AcrAppBuild.bat
-D:\BI\MPAIApps\HCIApps\AcrApp\AcrApp.exe
+MPAIApps\MmcApps\AcrApp\AcrAppBuild.bat
+MPAIApps\MmcApps\AcrApp\src\bin\Release\net10.0-windows10.0.19041.0\AcrApp.exe
 ```
 The application root is resolved at runtime from the executable location
 (`MpaiPaths`, first ancestor holding both `AIMs` and `UAs`), so a clone runs in
@@ -122,3 +122,11 @@ path under `Models\`, or set the corresponding key in `AIMs\aim-settings.json`.
 | Piper voice config | `VoiceConfig` / `VoiceConfig:en` | `en_US-amy-medium.onnx.json` | 0.005 MB | `95A23EB4D42909D38DF73BB9AC7F45F597DBFCDE2D1BF9526FDEAF5466977D77` | Hugging Face `rhasspy/piper-voices` |
 
 Install the Piper voice under `Models\Piper\voices\en_US-amy-medium\`. The Piper executable (`PiperExecutable`) is the Piper Windows release (`piper.exe`).
+
+## The package
+
+ACR is also offered as **ACR.zip**: the application, the 28 projects it references transitively, the Module descriptors, the schemas, the avatar assets and these guides - and nothing belonging to another application. No models, no gallery, no credentials. Unzip it anywhere, place the models under `Models\`, and run `AcrAppBuild.bat`.
+
+**A setting that names a path is resolved against the application's own root** - the directory holding `AIMs\` and `UAs\`, found from the executable's location. A relative setting therefore works wherever the folder is placed; an absolute one binds the installation to one machine.
+
+**An ONNX model is often two files.** The `.onnx` holds the network's structure and may be a megabyte; an `.onnx.data` beside it holds the weights and may be hundreds. A copy bringing one and not the other produces a model that loads and fails at first use.
