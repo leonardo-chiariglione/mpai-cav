@@ -1,8 +1,8 @@
 @echo off
 setlocal
 echo Building AmqApp.exe...
-set SRC=D:\BI\MPAIApps\MmcApps\AmqApp\src\AmqApp.csproj
-set HERE=D:\BI\MPAIApps\MmcApps\AmqApp
+set SRC=%HERE%src\AmqApp.csproj
+set HERE=%~dp0
 set TMP=%HERE%\_build
 taskkill /IM AmqApp.exe /F >nul 2>&1
 dotnet publish "%SRC%" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -o "%TMP%"

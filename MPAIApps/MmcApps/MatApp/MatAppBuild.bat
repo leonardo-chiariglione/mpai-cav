@@ -1,8 +1,8 @@
 @echo off
 setlocal
 echo Building MatApp.exe (Multimodal Anonymous Translation)
-set SRC=D:\BI\MPAIApps\HCIApps\MatApp\src\MatApp.csproj
-set HERE=D:\BI\MPAIApps\HCIApps\MatApp
+set SRC=%HERE%src\MatApp.csproj
+set HERE=%~dp0
 set TMP=%HERE%\_build
 taskkill /IM MatApp.exe /F >nul 2>&1
 dotnet publish "%SRC%" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -o "%TMP%"

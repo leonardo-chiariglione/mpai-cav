@@ -1,8 +1,8 @@
 @echo off
 setlocal
 echo Building MadApp.exe...
-set SRC=D:\BI\MPAIApps\HCIApps\MadApp\src\MadApp.csproj
-set HERE=D:\BI\MPAIApps\HCIApps\MadApp
+set SRC=%HERE%src\MadApp.csproj
+set HERE=%~dp0
 set TMP=%HERE%\_build
 taskkill /IM MadApp.exe /F >nul 2>&1
 dotnet publish "%SRC%" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -o "%TMP%"
