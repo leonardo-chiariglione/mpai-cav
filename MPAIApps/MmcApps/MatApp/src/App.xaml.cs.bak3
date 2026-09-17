@@ -1,0 +1,3 @@
+using System.Windows;
+namespace HciMat;
+public partial class App : Application { }

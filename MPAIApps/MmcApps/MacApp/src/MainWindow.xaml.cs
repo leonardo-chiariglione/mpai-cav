@@ -101,6 +101,19 @@ public partial class MainWindow : Window
             await speakLook;
             Diag("face bytes=" + (face?.Data?.Length ?? 0));
 
+            // NO FACE IS NOT A VERDICT. Carrying on with nothing supplied gave a
+            // suspended Module, an empty result and a banner reading 'not
+            // identified' - which says a person was not recognised when in truth
+            // none was ever seen. A camera held by another application is the
+            // commonest failure there is, and it was reported as a rejection.
+            if (face is null || face.Data.Length == 0)
+            {
+                InstructionText.Text = "The camera is not available. Another application may be using it.";
+                SetStatus("no image from the camera");
+                SetFace("");
+                return;
+            }
+
             var faceIn = new List<NorthApi.Datum>();
             if (face is not null) faceIn.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
             var r1 = await Task.Run(() => _north!.Advance(MacModule, faceIn));
