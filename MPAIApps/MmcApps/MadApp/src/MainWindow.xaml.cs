@@ -11,6 +11,8 @@ using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
 using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
 
+using Mpai.Providers;
+
 namespace HciMad;
 
 // HCI-MAD User Agent - drives MMC-MAD through the type-addressed North API.

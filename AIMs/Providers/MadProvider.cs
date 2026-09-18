@@ -11,7 +11,7 @@ using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;    // GfdAimProcessor
 
-namespace HciMad;
+namespace Mpai.Providers;
 
 // Leaf provider for the MMC-MAD-V2.5 Module (Multimodal Anonymous Dialogue).
 // The Controller builds the MMC-MAD composite from its L3; this provider supplies
@@ -20,13 +20,17 @@ namespace HciMad;
 //   MMC-EDP - dialogue (local LLM via Ollama), using the running Summary as memory
 //   PAF-PSD, MMC-TTS, PAF-GFD - the Response and Scene Rendering leaves
 // No orchestration here; the User Agent drives the Module through the Controller.
-internal sealed class MadProvider : IAimProvider, IDisposable
+public sealed class MadProvider : IAimProvider, IDisposable
 {
     private readonly AmdStore _store;
     private OllamaClient? _llm;
 
     public MadProvider(AmdStore store) => _store = store;
 
+    // WHAT THIS PROVIDER CAN MAKE. A Service composed of several providers asks
+    // before it builds, and says at startup which Apps it cannot run.
+    public bool CanCreate(string aimName) =>
+        aimName is "MMC-ASR-V2.5" or "MMC-EDP-V2.5" or "MMC-TTS-V2.5" or "PAF-PSD-V1.6" or "PAF-GFD-V1.6";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {

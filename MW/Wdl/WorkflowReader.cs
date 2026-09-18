@@ -161,11 +161,27 @@ public sealed class WorkflowReader
             {
                 var viaVad = rest.EndsWith("via VAD", StringComparison.OrdinalIgnoreCase);
                 if (viaVad) rest = rest.Substring(0, rest.Length - "via VAD".Length).Trim();
+
+                // 'as <qualifier>' states the format wanted.
+                string? qualifier = null;
+                var at = rest.LastIndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+                if (at > 0)
+                {
+                    qualifier = rest.Substring(at + 4).Trim();
+                    rest      = rest.Substring(0, at).Trim();
+                }
+
                 return new Step { Kind = StepKind.Acquire, Port = ReadDatum(n, rest).Port,
-                                  ViaVad = viaVad, Line = n };
+                                  ViaVad = viaVad, Qualifier = qualifier, Line = n };
             }
             case "type":
                 return new Step { Kind = StepKind.Type, Port = ReadDatum(n, rest).Port, Line = n };
+
+            // A STEP THAT WAITS FOR THE PERSON. The word is the App's, and the
+            // client shows it on a button: an App decides what a person is invited
+            // to do, because only the App knows what is about to happen.
+            case "await":
+                return new Step { Kind = StepKind.Await, Text = Unquote(rest), Line = n };
 
             case "prompt":
                 return new Step { Kind = StepKind.Prompt, Text = Unquote(rest), Line = n };
@@ -277,7 +293,7 @@ public sealed class WorkflowReader
     private static readonly string[] Starters =
     {
         "workflow ", "on Start:", "on Stop:", "ask ", "acquire ", "type ", "prompt ",
-        "display ", "present ", "wait ", "set ", "loop ", "branch "
+        "display ", "present ", "wait ", "set ", "loop ", "branch ", "await "
     };
 
     // A brace stands on its own: it closes a block and is not a continuation

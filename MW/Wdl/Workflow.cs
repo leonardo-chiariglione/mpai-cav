@@ -40,6 +40,7 @@ public enum StepKind
     Present,          // present L [, L...]
     Wait,             // wait 1s
     Set,              // set V = ...
+    Await,            // await "Ask"  - show a button and wait for it
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }
@@ -57,6 +58,17 @@ public sealed class Step
     public string?  Value         { get; init; }   // Set
     public TimeSpan Duration      { get; init; }   // Wait
     public bool     ViaVad        { get; init; }   // Acquire
+
+    // WHAT IS WANTED, NOT WHERE IT COMES FROM. A workflow names a Qualifier -
+    // 'as image/png' - and never a device. Two Visual Objects may be a webcam
+    // frame and a file chosen from disk; the Data Type cannot tell them apart
+    // because the difference is not in the data, and the Qualifier can.
+    //
+    // A client holding no source that produces the named Qualifier refuses the
+    // step and says what it does have, so that an App can be corrected rather
+    // than guessed at. Unstated, and with more than one possible, the client
+    // asks the person.
+    public string?  Qualifier     { get; init; }   // Acquire, Type
     public IReadOnlyList<Step> Body { get; init; } = Array.Empty<Step>();  // Loop, Branch
     public IReadOnlyList<Step> Else { get; init; } = Array.Empty<Step>();  // Branch
     public int      Line          { get; init; }   // so a message can name the place

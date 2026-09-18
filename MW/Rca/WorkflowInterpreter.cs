@@ -171,7 +171,16 @@ public sealed class WorkflowInterpreter
             case StepKind.Acquire:
             {
                 var port = step.Port!;
-                var json = await devices.AcquireAsync(port.DataType, step.ViaVad);
+                // WHAT THE WORKFLOW ASKED FOR, IF IT SAID. A client that cannot
+                // produce it refuses and names what it can, which is a fault in the
+                // App rather than in the run.
+                string? json;
+                try { json = await devices.AcquireAsync(port.DataType, step.ViaVad, step.Qualifier); }
+                catch (NotSupportedException ex)
+                {
+                    say($"line {step.Line}: {ex.Message}");
+                    throw;
+                }
                 if (json is null)
                 {
                     say($"acquire {port}: nothing");
@@ -185,7 +194,7 @@ public sealed class WorkflowInterpreter
             case StepKind.Type:
             {
                 var port = step.Port!;
-                var json = await devices.AcquireAsync(port.DataType, false);
+                var json = await devices.AcquireAsync(port.DataType, false, step.Qualifier);
                 if (json is not null) { data[port.Label] = (port.DataType, json); say($"type {port}"); }
                 break;
             }
@@ -215,6 +224,11 @@ public sealed class WorkflowInterpreter
                 say("present " + string.Join(", ", step.Labels));
                 break;
             }
+
+            case StepKind.Await:
+                if (devices.Await is not null)
+                    await devices.Await(step.Text ?? "Continue");
+                break;
 
             case StepKind.Wait:
                 await Task.Delay(step.Duration, stop);

@@ -46,16 +46,32 @@ public sealed class AppCatalogue
 
     // Read once, at startup. An App added later needs a restart, which is honest
     // for a Service that states what it has when it starts.
-    public static AppCatalogue Scan(string? root)
+    // THE SERVICE IS TOLD WHICH APPS IT OFFERS. A folder under the directory is
+    // where an App's files happen to be, not a declaration that this Service
+    // serves it: an App appears here because an operator named it.
+    public static AppCatalogue Scan(string? root, IEnumerable<string>? named = null)
     {
         var catalogue = new AppCatalogue(root);
         if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) return catalogue;
 
-        foreach (var folder in Directory.EnumerateDirectories(root))
+        var wanted = named?.Where(s => !string.IsNullOrWhiteSpace(s))
+                           .Select(s => s.Trim()).ToList();
+        if (wanted is null || wanted.Count == 0) return catalogue;   // told nothing, offers nothing
+
+        foreach (var id in wanted)
         {
-            var id   = Path.GetFileName(folder);
+            var folder = Path.Combine(root, id);
+            if (!Directory.Exists(folder))
+            {
+                Console.WriteLine($"  App '{id}' was named but there is no folder for it.");
+                continue;
+            }
             var orch = Directory.EnumerateFiles(folder, "*.orch").FirstOrDefault();
-            if (orch is null) continue;          // a folder with no workflow is not an App
+            if (orch is null)
+            {
+                Console.WriteLine($"  App '{id}' has no Workflow Description.");
+                continue;
+            }
 
             string name = id, description = "", icon = "";
             var manifest = Path.Combine(folder, "app.json");

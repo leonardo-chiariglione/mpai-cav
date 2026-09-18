@@ -11,7 +11,7 @@ using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Paf.Gfd;    // GfdAimProcessor
 
-namespace MmcAmq;
+namespace Mpai.Providers;
 
 // Leaf provider for the MMC-AMQ-V2.5 Module (Answer to Multimodal Question).
 // The Controller builds the MMC-AMQ composite from its L3; this provider supplies
@@ -21,12 +21,16 @@ namespace MmcAmq;
 //   MMC-TTS - text to speech (Piper)               (the spoken answer)
 //   PAF-PSD, PAF-GFD - RSR leaves, so the avatar can SPEAK with a face
 // Acquisition and delivery (image, mic, speaker) are the User Agent, not sub-AIMs.
-internal sealed class AmqProvider : IAimProvider
+public sealed class AmqProvider : IAimProvider
 {
     private readonly AmdStore _store;
 
     public AmqProvider(AmdStore store) => _store = store;
 
+    // WHAT THIS PROVIDER CAN MAKE. A Service composed of several providers asks
+    // before it builds, and says at startup which Apps it cannot run.
+    public bool CanCreate(string aimName) =>
+        aimName is "MMC-ASR-V2.5" or "MMC-TIQ-V2.5" or "MMC-TTS-V2.5" or "PAF-PSD-V1.6" or "PAF-GFD-V1.6";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {

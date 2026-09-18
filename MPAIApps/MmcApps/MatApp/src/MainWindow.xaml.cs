@@ -13,6 +13,8 @@ using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
 using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
 
+using Mpai.Providers;
+
 namespace HciMat;
 
 // HCI-MAT User Agent - drives MMC-MAT through the type-addressed North API.

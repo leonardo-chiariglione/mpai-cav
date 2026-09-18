@@ -66,6 +66,11 @@ public sealed class MasServerConfig
     // with it can hand an application to a client that holds none.
     public string? AppDirectory { get; init; }
 
+    // WHICH APPS THIS SERVICE OFFERS. The Service is told; it does not decide.
+    // A folder appearing under AppDirectory is where an App's files happen to
+    // be, not a declaration that this Service serves it.
+    public string[]? Apps { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }

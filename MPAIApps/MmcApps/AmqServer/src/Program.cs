@@ -9,6 +9,9 @@ using Mpai.Hci.Api;
 using Mpai.Mas.PortData;
 using Mpai.Mas.Server;
 
+using AIF.Controller;
+using Mpai.Providers;
+
 namespace MmcAmq.Server;
 
 // AmqServer - MMC-AMQ behind the MPAI-MAS API.
@@ -158,7 +161,13 @@ internal static class Program
         store.Scan();
         Console.WriteLine($"  AMDs found: {store.Count}");
 
-        using var north = new NorthApi(amdDir, settingsPath, s => new AmqProvider(s));
+        // A SERVICE OFFERS SEVERAL APPS, SO IT HOLDS SEVERAL PROVIDERS. Adding an
+        // App to this Service is adding its provider here - the providers live
+        // with the Modules they build, not with the windows that drive them.
+        using var north = new NorthApi(amdDir, settingsPath, s => new CompositeProvider(
+            new AmqProvider(s),
+            new MadProvider(s),
+            new MatProvider(s)));
         var runner = new NorthApiRunner(north, store);
 
         Console.WriteLine();
@@ -184,8 +193,14 @@ internal static class Program
         {
             // WHAT THIS SERVICE OFFERS. Empty unless a catalogue is configured, in
             // which case a client holding no application can ask what is here.
-            Catalogue = AppCatalogue.Scan(config.AppDirectory)
+            Catalogue = AppCatalogue.Scan(config.AppDirectory, config.Apps)
         };
+
+        // WHAT THIS SERVICE CAN ACTUALLY RUN. An App is listed only if the Service
+        // was told to offer it; whether its Modules can be built is a separate
+        // question, and one worth answering at startup rather than at the click.
+        foreach (var app in server.Catalogue.Apps)
+            Console.WriteLine($"    {app.Id,-6} {app.Name}");
 
         Console.WriteLine(server.Catalogue.Root is null
             ? "  Apps:         none configured"

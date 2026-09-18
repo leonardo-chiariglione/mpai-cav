@@ -13,6 +13,8 @@ using Mpai.Core;
 using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
 using Mpai.Hci.Api;     // NorthApi, SpeakingAvatar
 
+using Mpai.Providers;
+
 namespace MmcAmq;
 
 // MMC-AMQ User Agent - Answer to Multimodal Question, driven through the

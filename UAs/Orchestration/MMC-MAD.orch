@@ -28,11 +28,11 @@ on Start:
     #     Generative Face Description. Both are given or the face has nothing of
     #     the words to shape itself to.
     ask Controller to start PAF-RSR-V1.6
-    ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the HCI
-        Multimodal Dialogue Service. Press Start to begin, Stop to close."
+    ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI
+        Multimodal Conversation Service."
         for PAF-RSR-V1.6
-    ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the HCI
-        Multimodal Dialogue Service. Press Start to begin, Stop to close."
+    ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the MPAI
+        Multimodal Conversation Service."
         for PAF-RSR-V1.6
     ask Controller to give  from PAF-RSR-V1.6:
         WelcomeSpeech (OSD-BSO-V1.5),
@@ -44,11 +44,17 @@ on Start:
     #     Dialogue Processing keeps the conversation's memory for the session.
     #     That memory is the Module's own: it is not a boundary datum and the
     #     User Agent neither holds it nor sees it.
+    # THE WAIT IS THE APP'S TO EXPLAIN. Starting the Module loads speech
+    # recognition and a language model on the Service, which takes a few seconds.
+    # A person told nothing assumes a fault.
+    prompt  "Loading the speech recogniser and the language model. This takes a
+        few seconds."
     ask Controller to start MMC-MAD-V2.5
+    prompt  "Ready. Please begin - speak when you like."
 
     loop until Stop:
-        prompt  "Speak when you are ready."
-        acquire UserSpeech (OSD-BSO-V1.5) via VAD
+        acquire UserSpeech     (OSD-BSO-V1.5) via VAD
+        acquire UserSpeechTime (OSD-STM-V1.5)
 
         ask Controller to take UserSpeech     (OSD-BSO-V1.5) for MMC-MAD-V2.5
         ask Controller to take UserSpeechTime (OSD-STM-V1.5) for MMC-MAD-V2.5

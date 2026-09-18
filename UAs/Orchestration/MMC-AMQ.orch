@@ -28,10 +28,9 @@ on Start:
     ask Controller to start MMC-AMQ-V2.5
 
     loop until Stop:
-        prompt  "Choose a picture."
-        acquire Picture (OSD-BVO-V1.5)
+        acquire Picture (OSD-BVO-V1.5) as image/png
+        present Picture
 
-        prompt  "Now ask your question."
         acquire Question (OSD-BSO-V1.5) via VAD
 
         ask Controller to take Picture  (OSD-BVO-V1.5) for MMC-AMQ-V2.5
