@@ -60,6 +60,12 @@ public sealed class MasServerConfig
     // presenting a certificate the client already trusts costs nothing.
     public string? AuthorityPath { get; init; }
 
+    // WHERE THE APPS ARE. One folder per App, each holding a Workflow
+    // Description, a manifest naming it, and an icon. A Service without this
+    // serves Modules to clients that already know which they want; a Service
+    // with it can hand an application to a client that holds none.
+    public string? AppDirectory { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }

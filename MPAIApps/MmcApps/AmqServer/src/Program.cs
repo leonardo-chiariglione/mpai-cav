@@ -180,7 +180,16 @@ internal static class Program
             config.ListenUrl,
             string.IsNullOrWhiteSpace(config.BearerToken) ? null : config.BearerToken,
             certificate,
-            authority);
+            authority)
+        {
+            // WHAT THIS SERVICE OFFERS. Empty unless a catalogue is configured, in
+            // which case a client holding no application can ask what is here.
+            Catalogue = AppCatalogue.Scan(config.AppDirectory)
+        };
+
+        Console.WriteLine(server.Catalogue.Root is null
+            ? "  Apps:         none configured"
+            : $"  Apps:         {server.Catalogue.Apps.Count} in {server.Catalogue.Root}");
 
         await server.RunAsync();
         return 0;

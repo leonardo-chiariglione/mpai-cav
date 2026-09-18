@@ -1,0 +1,49 @@
+# =============================================================================
+#  MMC-AMQ.orch - Audio-Visual Multimodal Question Answering
+#  Workflow Description Language, AIF V3.0
+#
+#  The user shows a picture and asks a question about it; the avatar answers.
+#
+#  The User Agent never addresses a Module: it asks the Controller. See
+#  MMC-MAD.orch for the mapping of each request onto the Controller API.
+# =============================================================================
+
+workflow MMC-AMQ over MMC-AMQ-V2.5, PAF-RSR-V1.6
+
+on Start:
+
+    ask Controller to start PAF-RSR-V1.6
+    ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI
+        Question Answering Service. Show me a picture and ask me about it."
+        for PAF-RSR-V1.6
+    ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the MPAI
+        Question Answering Service. Show me a picture and ask me about it."
+        for PAF-RSR-V1.6
+    ask Controller to give  from PAF-RSR-V1.6:
+        WelcomeSpeech (OSD-BSO-V1.5),
+        WelcomeFace   (PAF-FDO-V1.6)
+    present WelcomeSpeech, WelcomeFace
+    ask Controller to stop  PAF-RSR-V1.6
+
+    ask Controller to start MMC-AMQ-V2.5
+
+    loop until Stop:
+        prompt  "Choose a picture."
+        acquire Picture (OSD-BVO-V1.5)
+
+        prompt  "Now ask your question."
+        acquire Question (OSD-BSO-V1.5) via VAD
+
+        ask Controller to take Picture  (OSD-BVO-V1.5) for MMC-AMQ-V2.5
+        ask Controller to take Question (OSD-BSO-V1.5) for MMC-AMQ-V2.5
+
+        # MMC-AMQ returns the answer as text and as speech. It declares no Face
+        # Descriptors: the mouth is not driven from this Module's boundary.
+        ask Controller to give from MMC-AMQ-V2.5:
+            Answer       (OSD-BTO-V1.5),
+            SpokenAnswer (OSD-BSO-V1.5)
+        present SpokenAnswer
+        display Answer
+
+on Stop:
+    ask Controller to stop MMC-AMQ-V2.5
