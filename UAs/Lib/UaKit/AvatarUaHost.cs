@@ -162,6 +162,16 @@ public sealed class AvatarUaHost
         // or the prompt's echo) that would trip the voice-activity START immediately
         // and end the next capture on a fragment. One capture, one fresh device.
         var mic = new WasapiAudioAcquisition(16000);   // speech to Whisper must be 16 kHz mono
+
+        // LET THE DEVICE SETTLE BEFORE ANYTHING IS RECORDED. A freshly created WASAPI
+        // device takes a few hundred milliseconds to start, and a person answering
+        // promptly speaks into that gap: "Yes, please" was reaching the recogniser as
+        // "Please", and a workflow branching on the answer read the wrong one.
+        //
+        // The wait is before the recording begins, so nothing spoken is lost - only
+        // the moment of silence that used to swallow the first syllable.
+        System.Threading.Thread.Sleep(400);
+
         var soa = new SoaAimProcessor(SoaModule, mic, AimPortReader.Load(store, SoaModule), vadAutoStop: true);
         var msg = new Message
         {
