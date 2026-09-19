@@ -17,10 +17,10 @@
 #  and #2 for the speech.
 # =============================================================================
 
-workflow MMC-ACR over MMC-ACR-V2.5
+workflow MMC-ACR over 1MMC-ACR-V2.5-I01
 
 on Start:
-    ask Controller to start MMC-ACR-V2.5
+    ask Controller to start 1MMC-ACR-V2.5-I01
 
     prompt  "Welcome to the CAV Access Control Registration Service.
              Please type your name."
@@ -33,20 +33,20 @@ on Start:
     prompt  "Please speak a short sentence so I can learn your voice."
     acquire UserSpeech (OSD-BSO-V1.5) via VAD
 
-    ask Controller to take UserFace       (OSD-BVO-V1.5)   for MMC-ACR-V2.5
-    ask Controller to take UserFaceTime   (OSD-STM-V1.5:1) for MMC-ACR-V2.5
-    ask Controller to take UserSpeech     (OSD-BSO-V1.5)   for MMC-ACR-V2.5
-    ask Controller to take UserSpeechTime (OSD-STM-V1.5:2) for MMC-ACR-V2.5
-    ask Controller to take UserName       (OSD-BTO-V1.5:2) for MMC-ACR-V2.5
+    ask Controller to take UserFace       (OSD-BVO-V1.5)   for 1MMC-ACR-V2.5-I01
+    ask Controller to take UserFaceTime   (OSD-STM-V1.5:1) for 1MMC-ACR-V2.5-I01
+    ask Controller to take UserSpeech     (OSD-BSO-V1.5)   for 1MMC-ACR-V2.5-I01
+    ask Controller to take UserSpeechTime (OSD-STM-V1.5:2) for 1MMC-ACR-V2.5-I01
+    ask Controller to take UserName       (OSD-BTO-V1.5:2) for 1MMC-ACR-V2.5-I01
     ask Controller to take Response       (OSD-BTO-V1.5:1) = "{UserName}, thank
         you for joining the Service. Speak your passphrase when you enter."
-        for MMC-ACR-V2.5
-    ask Controller to take Warmth         (MMC-EPS-V2.5)   for MMC-ACR-V2.5
+        for 1MMC-ACR-V2.5-I01
+    ask Controller to take Warmth         (MMC-EPS-V2.5)   for 1MMC-ACR-V2.5-I01
 
-    ask Controller to give from MMC-ACR-V2.5:
+    ask Controller to give from 1MMC-ACR-V2.5-I01:
         VocalResponse (OSD-BSO-V1.5),
         MachineFace   (PAF-FDO-V1.6)
     present VocalResponse, MachineFace
 
 on Stop:
-    ask Controller to stop MMC-ACR-V2.5
+    ask Controller to stop 1MMC-ACR-V2.5-I01

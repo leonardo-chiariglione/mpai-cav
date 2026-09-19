@@ -32,7 +32,7 @@ namespace Mpai.UaKit;
 // This removes the duplicated WebView/capture/present code from each UA app.
 public sealed class AvatarUaHost
 {
-    private const string SoaModule = "MMC-SOA-V2.5";
+    private const string SoaModule = "1MMC-SOA-V2.5-I01";
 
     private readonly WebView2   _web;
     private readonly Dispatcher _ui;

@@ -28,7 +28,7 @@ namespace HciApp;
 public partial class MainWindow : Window
 {
     private const string HciModule = "MMC-HCI-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private const string BAO = "OSD-BAO-V1.5";
     private const string BVO = "OSD-BVO-V1.5";

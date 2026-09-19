@@ -1,4 +1,4 @@
-{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-UOA-V1.5-I01",     "AIMName": "OSD-UOA-V1.5"},
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-UOA-V1.5-I01",     "AIMName": "1OSD-UOA-V1.5-I01"},
 
   "APIProfile":           "Basic",
   "Description":          "Ultrasound Object Acquisition: receives a Basic Ultrasound Object and provides a Basic Ultrasound Object.",

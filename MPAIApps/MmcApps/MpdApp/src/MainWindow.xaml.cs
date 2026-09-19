@@ -26,8 +26,8 @@ namespace MpdApp;
 // the Listen/Stop toggle (the rest is like MAD).
 public partial class MainWindow : Window
 {
-    private const string MpdModule = "MMC-MPD-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string MpdModule = "1MMC-MPD-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private const string BSO = "OSD-BSO-V1.5";   // speech object
     private const string STM = "OSD-STM-V1.5";   // acquisition time

@@ -1,8 +1,8 @@
-﻿{
+{
     "Identifier":  {
-                       "ImplementerID":  "1",
+                       "ImplementerID": "1",
                        "ImplementationID":  "MMC-MAC-V2.5-I01",
-                       "AIMName":  "MMC-MAC-V2.5"
+                       "AIMName": "1MMC-MAC-V2.5-I01"
                    },
     "APIProfile":  "Basic",
     "Description":  "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent\u0027s clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs.",
@@ -77,30 +77,30 @@
     "SubAIMs":  [
                     {
                         "Identifier":  {
-                                           "ImplementerID":  "1",
+                                           "ImplementerID": "1",
                                            "ImplementationID":  "PAF-FIR-V1.6-I01",
-                                           "AIMName":  "PAF-FIR-V1.6"
+                                           "AIMName": "1PAF-FIR-V1.6-I01"
                                        }
                     },
                     {
                         "Identifier":  {
-                                           "ImplementerID":  "1",
+                                           "ImplementerID": "1",
                                            "ImplementationID":  "MMC-SIR-V2.5-I01",
-                                           "AIMName":  "MMC-SIR-V2.5"
+                                           "AIMName": "1MMC-SIR-V2.5-I01"
                                        }
                     },
                     {
                         "Identifier":  {
-                                           "ImplementerID":  "1",
+                                           "ImplementerID": "1",
                                            "ImplementationID":  "OSD-IDR-V1.5-I01",
-                                           "AIMName":  "OSD-IDR-V1.5"
+                                           "AIMName": "1OSD-IDR-V1.5-I01"
                                        }
                     },
                     {
                         "Identifier":  {
-                                           "ImplementerID":  "1",
+                                           "ImplementerID": "1",
                                            "ImplementationID":  "PAF-RSR-V1.6-I01",
-                                           "AIMName":  "PAF-RSR-V1.6"
+                                           "AIMName": "1PAF-RSR-V1.6-I01"
                                        }
                     }
                 ],
@@ -111,7 +111,7 @@
                                         "PortName":  "FaceObject"
                                     },
                          "Input":  {
-                                       "AIMName":  "PAF-FIR-V1.6",
+                                       "AIMName": "1PAF-FIR-V1.6-I01",
                                        "PortName":  "InputVisual"
                                    }
                      },
@@ -121,67 +121,67 @@
                                         "PortName":  "SpeechObject"
                                     },
                          "Input":  {
-                                       "AIMName":  "MMC-SIR-V2.5",
+                                       "AIMName": "1MMC-SIR-V2.5-I01",
                                        "PortName":  "InputSpeech"
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "PAF-FIR-V1.6",
+                                        "AIMName": "1PAF-FIR-V1.6-I01",
                                         "PortName":  "FaceID"
                                     },
                          "Input":  {
-                                       "AIMName":  "OSD-IDR-V1.5",
+                                       "AIMName": "1OSD-IDR-V1.5-I01",
                                        "PortName":  "FaceID",
                                        "PortNumber":  1
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "MMC-SIR-V2.5",
+                                        "AIMName": "1MMC-SIR-V2.5-I01",
                                         "PortName":  "OutputSpeakerID"
                                     },
                          "Input":  {
-                                       "AIMName":  "OSD-IDR-V1.5",
+                                       "AIMName": "1OSD-IDR-V1.5-I01",
                                        "PortName":  "SpeakerID",
                                        "PortNumber":  2
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "OSD-IDR-V1.5",
+                                        "AIMName": "1OSD-IDR-V1.5-I01",
                                         "PortName":  "PersonalStatus"
                                     },
                          "Input":  {
-                                       "AIMName":  "PAF-RSR-V1.6",
+                                       "AIMName": "1PAF-RSR-V1.6-I01",
                                        "PortName":  "PersonalStatus"
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "OSD-IDR-V1.5",
+                                        "AIMName": "1OSD-IDR-V1.5-I01",
                                         "PortName":  "Response"
                                     },
                          "Input":  {
-                                       "AIMName":  "PAF-RSR-V1.6",
+                                       "AIMName": "1PAF-RSR-V1.6-I01",
                                        "PortName":  "TextObject",
                                        "PortNumber":  1
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "OSD-IDR-V1.5",
+                                        "AIMName": "1OSD-IDR-V1.5-I01",
                                         "PortName":  "Response"
                                     },
                          "Input":  {
-                                       "AIMName":  "PAF-RSR-V1.6",
+                                       "AIMName": "1PAF-RSR-V1.6-I01",
                                        "PortName":  "TextObject",
                                        "PortNumber":  2
                                    }
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "OSD-IDR-V1.5",
+                                        "AIMName": "1OSD-IDR-V1.5-I01",
                                         "PortName":  "Response"
                                     },
                          "Input":  {
@@ -191,7 +191,7 @@
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "PAF-RSR-V1.6",
+                                        "AIMName": "1PAF-RSR-V1.6-I01",
                                         "PortName":  "MachineSpeech"
                                     },
                          "Input":  {
@@ -201,7 +201,7 @@
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "PAF-RSR-V1.6",
+                                        "AIMName": "1PAF-RSR-V1.6-I01",
                                         "PortName":  "MachineFaceDescriptors"
                                     },
                          "Input":  {
@@ -211,7 +211,7 @@
                      },
                      {
                          "Output":  {
-                                        "AIMName":  "OSD-IDR-V1.5",
+                                        "AIMName": "1OSD-IDR-V1.5-I01",
                                         "PortName":  "Identification"
                                     },
                          "Input":  {

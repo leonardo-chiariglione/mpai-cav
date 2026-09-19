@@ -30,15 +30,15 @@ public sealed class AmqProvider : IAimProvider
     // WHAT THIS PROVIDER CAN MAKE. A Service composed of several providers asks
     // before it builds, and says at startup which Apps it cannot run.
     public bool CanCreate(string aimName) =>
-        aimName is "MMC-ASR-V2.5" or "MMC-TIQ-V2.5" or "MMC-TTS-V2.5" or "PAF-PSD-V1.6" or "PAF-GFD-V1.6";
+        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-TIQ-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1PAF-GFD-V1.6-I01";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
-            "MMC-ASR-V2.5" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
-            "MMC-TIQ-V2.5" => new TiqAimProcessor(aimName, TiqFactory.Create(settings), AimPortReader.Load(_store, aimName)),
-            "MMC-TTS-V2.5" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
-            "PAF-PSD-V1.6" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "PAF-GFD-V1.6" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1MMC-ASR-V2.5-I01" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
+            "1MMC-TIQ-V2.5-I01" => new TiqAimProcessor(aimName, TiqFactory.Create(settings), AimPortReader.Load(_store, aimName)),
+            "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
+            "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"AmqProvider does not provide '{aimName}'.")
         };
 }

@@ -1,4 +1,4 @@
-{ "Identifier":       { "ImplementerID": "1", "ImplementationID": "PAF-EFD-V1.6-I01", "AIMName": "PAF-EFD-V1.6" },
+{ "Identifier":       { "ImplementerID": "1", "ImplementationID": "PAF-EFD-V1.6-I01", "AIMName": "1PAF-EFD-V1.6-I01" },
 
   "APIProfile":       "Basic",
   "Description":      "Entity Face Description: computes the Face Descriptors of an Entity from its Face Object. Detects the most prominent face, crops it, and produces a Face Descriptors Object carrying the ArcFace embedding. UserName (the User Agent's typed datum) keys the enrolment written to the Shared Storage gallery.",

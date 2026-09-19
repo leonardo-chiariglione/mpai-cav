@@ -41,6 +41,8 @@ public enum StepKind
     Wait,             // wait 1s
     Set,              // set V = ...
     Await,            // await "Ask"  - show a button and wait for it
+    EndLoop,          // end  - leave the enclosing loop
+    Say,              // say (T:n) "..." give (T), (T) - words in, speech and face out
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }
@@ -69,6 +71,11 @@ public sealed class Step
     // than guessed at. Unstated, and with more than one possible, the client
     // asks the person.
     public string?  Qualifier     { get; init; }   // Acquire, Type
+
+    // A BRANCH MAY TEST WHAT WAS SAID. A Boolean means one thing and is the
+    // better test; but a person answering yes or no gives words, and an App that
+    // asks a question must be able to read the answer.
+    public string?  Contains      { get; init; }   // Branch
     public IReadOnlyList<Step> Body { get; init; } = Array.Empty<Step>();  // Loop, Branch
     public IReadOnlyList<Step> Else { get; init; } = Array.Empty<Step>();  // Branch
     public int      Line          { get; init; }   // so a message can name the place

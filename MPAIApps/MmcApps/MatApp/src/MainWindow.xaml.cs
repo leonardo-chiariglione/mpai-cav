@@ -25,8 +25,8 @@ namespace HciMat;
 // Two-press Start -> Select -> (type+Enter => see text | Speak => hear it) -> Stop.
 public partial class MainWindow : Window
 {
-    private const string MatModule = "MMC-MAT-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string MatModule = "1MMC-MAT-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private const string BSO = "OSD-BSO-V1.5";   // speech object
     private const string STM = "OSD-STM-V1.5";   // acquisition time

@@ -26,8 +26,8 @@ namespace AcrApp;
 // The name is TYPED (ASR is unreliable for bare names) and is the enrolment key.
 public partial class MainWindow : Window
 {
-    private const string AcrModule = "MMC-ACR-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string AcrModule = "1MMC-ACR-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     // data types the UA speaks at the boundary
     private const string BVO = "OSD-BVO-V1.5";   // visual object (face)

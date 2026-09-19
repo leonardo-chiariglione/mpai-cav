@@ -1,4 +1,4 @@
-{ "Identifier":       { "ImplementerID": "1", "ImplementationID": "OSD-VII-V1.5-I01", "AIMName": "OSD-VII-V1.5" },
+{ "Identifier":       { "ImplementerID": "1", "ImplementationID": "OSD-VII-V1.5-I01", "AIMName": "1OSD-VII-V1.5-I01" },
 
   "APIProfile":       "Basic",
   "Description":      "Visual Instance Identification: receives a Target Visual Object and produces its Visual Instance Identifier (OSD-IID). Runs a YOLOX object classifier on the object image and emits the highest-confidence class as the instance identity against a flat [visual, object, class] taxonomy.",

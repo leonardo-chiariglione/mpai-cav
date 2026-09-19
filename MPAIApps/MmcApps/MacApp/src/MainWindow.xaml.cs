@@ -20,8 +20,8 @@ namespace HciMac;
 // OSD-BSO (VocalResponse, speak), PAF-FDO (FaceDescriptors, avatar). No names.
 public partial class MainWindow : Window
 {
-    private const string MacModule = "MMC-MAC-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string MacModule = "1MMC-MAC-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private const string BVO = "OSD-BVO-V1.5";
     private const string BSO = "OSD-BSO-V1.5";

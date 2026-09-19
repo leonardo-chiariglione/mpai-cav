@@ -1,4 +1,4 @@
-{ "Identifier":           {"ImplementerID": "MPAI", "ImplementationID": "OSD-AVA-V1.5-I01", "AIMName": "OSD-AVA-V1.5"},
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-AVA-V1.5-I01", "AIMName": "1OSD-AVA-V1.5-I01"},
 
   "APIProfile":           "Basic",
   "Description":          "Audio-Visual Alignment: aligns the Basic Audio, Visual and LiDAR Scene Descriptors sharing the same spatial attitude. It emits the aligned Audio and Visual Scene Descriptors and the Basic Audio and Visual Scene Geometries; the LiDAR Scene Descriptors are consumed to give the visual objects their points of view and are not re-emitted. Front-end alignment of MMC-HCI. (Front-end record: L3 from the L2, extended with the two Scene Geometry outputs; processor to be provided.)",

@@ -1,4 +1,4 @@
-{ "Identifier":           { "ImplementerID": "MPAI", "ImplementationID": "CAE-AII-V2.5-I01", "AIMName": "CAE-AII-V2.5" },
+{ "Identifier":           { "ImplementerID": "1", "ImplementationID": "CAE-AII-V2.5-I01", "AIMName": "1CAE-AII-V2.5-I01" },
 
   "APIProfile":           "Basic",
   "Description":          "Audio Instance Identification: identifies a (generic, non-speech) Basic Audio Object against the AudioSet taxonomy, producing an Audio Object Identifier (OSD-IID). The audio analogue of Visual Instance Identification. Engine: YAMNet. The audio arrives already mono, 16 kHz, 16-bit PCM (from Audio Qualifier Conversion), so the samples are read directly.",

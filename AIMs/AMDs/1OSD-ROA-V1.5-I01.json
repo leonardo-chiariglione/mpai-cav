@@ -1,4 +1,4 @@
-{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-ROA-V1.5-I01",     "AIMName": "OSD-ROA-V1.5"},
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-ROA-V1.5-I01",     "AIMName": "1OSD-ROA-V1.5-I01"},
 
   "APIProfile":           "Basic",
   "Description":          "RADAR Object Acquisition: receives a Basic RADAR Object and provides a Basic RADAR Object.",

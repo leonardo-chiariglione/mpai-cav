@@ -1,4 +1,4 @@
-{ "Identifier":           {"ImplementerID": "MPAI", "ImplementationID": "OSD-BLS-V1.5-I01", "AIMName": "OSD-BLS-V1.5"},
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-BLS-V1.5-I01", "AIMName": "1OSD-BLS-V1.5-I01"},
 
   "APIProfile":           "Basic",
   "Description":          "Basic LiDAR Scene Description: describes the acquired LiDAR as a Basic LiDAR Scene - its Basic LiDAR Objects, each with its point of view. In MMC-HCI its Basic LiDAR Scene Descriptors are aligned with the visual scene to give the visual objects their points of view. Front-end describer. (Front-end record: L3 from the L2; processor to be provided.)",

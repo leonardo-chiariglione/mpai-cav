@@ -30,8 +30,8 @@ namespace MmcAmq.Server;
 // those conditions stops the server with a message naming what was missing.
 internal static class Program
 {
-    private const string AmqModule = "MMC-AMQ-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string AmqModule = "1MMC-AMQ-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private static async Task<int> Main(string[] args)
     {
@@ -173,7 +173,10 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Loading models. This is the slow part.");
 
-        foreach (var module in new[] { AmqModule, RsrModule })
+        // ONE CONTROLLER, ONE MODULE. PAF-RSR-V1.6 is an AIM of MMC-AMQ-V2.5 and
+        // is built with it; starting it separately would put a second Module under
+        // this Controller, which cannot be.
+        foreach (var module in new[] { AmqModule })
         {
             var failure = runner.Start(module);
             Console.WriteLine(failure is null

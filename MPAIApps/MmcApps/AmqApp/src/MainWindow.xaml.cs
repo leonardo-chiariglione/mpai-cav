@@ -26,7 +26,7 @@ namespace MmcAmq;
 // Acquisition/presentation are the UA's; the Module is ASR + TIQ + TTS.
 public partial class MainWindow : Window
 {
-    private const string AmqModule = "MMC-AMQ-V2.5";
+    private const string AmqModule = "1MMC-AMQ-V2.5-I01";
 
     private const string BVO = "OSD-BVO-V1.5";   // visual object (image)
     private const string BSO = "OSD-BSO-V1.5";   // speech object (spoken q / spoken answer)
@@ -131,7 +131,7 @@ public partial class MainWindow : Window
         "Welcome to the M P A I Answer to Multimodal Question Service. " +
         "Select an image, then ask a question about it by typing or by speaking.";
 
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     // Speak a line through PAF-RSR (text -> machine speech + face), presented on the avatar.
     private bool _rsrStarted = false;

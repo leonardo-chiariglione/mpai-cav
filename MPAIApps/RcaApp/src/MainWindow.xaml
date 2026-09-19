@@ -63,7 +63,7 @@
       <Border Grid.Column="2" CornerRadius="8" Background="#12161C" Margin="12,0,0,0">
         <DockPanel Margin="14">
           <TextBlock DockPanel.Dock="Top" x:Name="StageTitle" Foreground="#EAF1FB"
-                     FontSize="15" FontWeight="SemiBold" Text="Nothing yet"
+                     FontSize="15" FontWeight="SemiBold" Text="No image displayed"
                      Margin="0,0,0,10"/>
           <TextBlock DockPanel.Dock="Bottom" x:Name="StageText" Foreground="#9FB0C6"
                      FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0"/>

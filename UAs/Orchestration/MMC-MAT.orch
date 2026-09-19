@@ -11,35 +11,35 @@
 #  nowhere here.
 # =============================================================================
 
-workflow MMC-MAT over MMC-MAT-V2.5, PAF-RSR-V1.6
+workflow MMC-MAT over 1MMC-MAT-V2.5-I01, 1PAF-RSR-V1.6-I01
 
 on Start:
 
-    ask Controller to start PAF-RSR-V1.6
+    ask Controller to start 1PAF-RSR-V1.6-I01
     ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the HCI
         Multimodal Translation Service. Choose a language and speak."
-        for PAF-RSR-V1.6
+        for 1PAF-RSR-V1.6-I01
     ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the HCI
         Multimodal Translation Service. Choose a language and speak."
-        for PAF-RSR-V1.6
-    ask Controller to give  from PAF-RSR-V1.6:
+        for 1PAF-RSR-V1.6-I01
+    ask Controller to give  from 1PAF-RSR-V1.6-I01:
         WelcomeSpeech (OSD-BSO-V1.5),
         WelcomeFace   (PAF-FDO-V1.6)
     present WelcomeSpeech, WelcomeFace
-    ask Controller to stop  PAF-RSR-V1.6
+    ask Controller to stop  1PAF-RSR-V1.6-I01
 
-    ask Controller to start MMC-MAT-V2.5
+    ask Controller to start 1MMC-MAT-V2.5-I01
 
     loop until Stop:
         acquire TargetLanguage (OSD-SEL-V1.5)          # the user's choice
         prompt  "Speak when you are ready."
         acquire UserSpeech     (OSD-BSO-V1.5) via VAD
 
-        ask Controller to take TargetLanguage (OSD-SEL-V1.5) for MMC-MAT-V2.5
-        ask Controller to take UserSpeech     (OSD-BSO-V1.5) for MMC-MAT-V2.5
-        ask Controller to take UserSpeechTime (OSD-STM-V1.5) for MMC-MAT-V2.5
+        ask Controller to take TargetLanguage (OSD-SEL-V1.5) for 1MMC-MAT-V2.5-I01
+        ask Controller to take UserSpeech     (OSD-BSO-V1.5) for 1MMC-MAT-V2.5-I01
+        ask Controller to take UserSpeechTime (OSD-STM-V1.5) for 1MMC-MAT-V2.5-I01
 
-        ask Controller to give from MMC-MAT-V2.5:
+        ask Controller to give from 1MMC-MAT-V2.5-I01:
             MachineSpeech  (OSD-BSO-V1.5),
             MachineFace    (PAF-FDO-V1.6),
             TranslatedText (OSD-BTO-V1.5)
@@ -47,4 +47,4 @@ on Start:
         display TranslatedText
 
 on Stop:
-    ask Controller to stop MMC-MAT-V2.5
+    ask Controller to stop 1MMC-MAT-V2.5-I01

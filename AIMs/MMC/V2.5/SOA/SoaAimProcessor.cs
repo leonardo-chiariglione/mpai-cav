@@ -45,8 +45,8 @@ public sealed class SoaAimProcessor : IAimProcessor
         _duration    = duration ?? System.TimeSpan.FromSeconds(5);
         _pressToStop = pressToStop;
         _vadAutoStop = vadAutoStop;
-        _inputPort  = ports.InputOrDefault("OSD-SPO-V1.5", "InputSpeech");
-        _outputPort = ports.Output("OSD-SPO-V1.5");
+        _inputPort  = ports.InputOrDefault("OSD-BSO-V1.5", "InputSpeech");
+        _outputPort = ports.Output("OSD-BSO-V1.5");
     }
 
     // Voice-activity-detection capture: record until the speaker finishes. Watches
@@ -121,7 +121,7 @@ public sealed class SoaAimProcessor : IAimProcessor
             {
                 MessageId   = message.MessageId,
                 MessageType = "BasicSpeechObject",
-                DataType    = "OSD-SPO-V1.5",
+                DataType    = "OSD-BSO-V1.5",
                 // suppliedJson is provably non-null here: 'supplied' was parsed
                 // from it. The compiler lost that when the test moved from the
                 // string to the parsed object, hence the two CS8601 warnings.
@@ -318,7 +318,7 @@ public sealed class SoaAimProcessor : IAimProcessor
         {
             MessageId   = message.MessageId,
             MessageType = "BasicSpeechObject",
-            DataType    = "OSD-SPO-V1.5",
+            DataType    = "OSD-BSO-V1.5",
             Payload     = json,
             Ports       = new Dictionary<string, string> { [_outputPort] = json }
         };

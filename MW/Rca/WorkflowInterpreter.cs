@@ -51,6 +51,7 @@ public sealed class WorkflowInterpreter
 
     public async Task RunAsync(Workflow workflow, CancellationToken stop)
     {
+        current = workflow;
         say($"workflow {workflow.Name} over {string.Join(", ", workflow.Modules)}");
         try
         {
@@ -103,37 +104,38 @@ public sealed class WorkflowInterpreter
     private void Take(Step step, string json)
     {
         var port = step.Port!;
-        if (!pending.TryGetValue(step.Module!, out var list))
-            pending[step.Module!] = list = new List<NorthApi.Datum>();
+        if (!pending.TryGetValue(Module, out var list))
+            pending[Module] = list = new List<NorthApi.Datum>();
 
         list.Add(new NorthApi.Datum(port.DataType, port.PortNumber, json));
-        say($"[C] take {port} for {step.Module}");
+        say($"[C] take {port.DataType}{(port.PortNumber is int n ? ":" + n : "")}");
     }
 
     private void Give(Step step)
     {
-        pending.TryGetValue(step.Module!, out var inputs);
-        var result = north.Advance(step.Module!, inputs ?? new List<NorthApi.Datum>());
-        pending.Remove(step.Module!);
+        pending.TryGetValue(Module, out var inputs);
+        var result = north.Advance(Module, inputs ?? new List<NorthApi.Datum>());
+        pending.Remove(Module);
 
         if (!result.Ok)
-            throw new InvalidOperationException($"{step.Module} returned {result.Error}.");
+            throw new InvalidOperationException($"{Module} returned {result.Error}.");
 
         if (result.Suspended)
             throw new InvalidOperationException(
-                $"{step.Module} is waiting for {result.WaitingPort ?? "something the Controller did not name"}, " +
+                $"{Module} is waiting for {result.WaitingPort ?? "something the Controller did not name"}, " +
                 "which this workflow did not give it.");
 
+        say($"[C] returned: {string.Join(", ", result.Outputs.Select(d => d.DataType + ":" + d.PortNumber))}");
         foreach (var want in step.Ports)
         {
             var json = result.ByType(want.DataType, want.PortNumber);
             if (string.IsNullOrWhiteSpace(json))
             {
-                say($"[C] give {want} from {step.Module}: nothing");
+                say($"[C] give {want}: nothing");
                 continue;
             }
             data[want.Label] = (want.DataType, json);
-            say($"[C] give {want} from {step.Module}");
+            say($"[C] give {want}");
         }
     }
     // ---- what the User Agent does itself -----------------------------------
@@ -142,8 +144,8 @@ public sealed class WorkflowInterpreter
     {
         switch (step.Kind)
         {
-            case StepKind.StartModule:  StartModule(step.Module!); break;
-            case StepKind.StopModule:   StopModule(step.Module!);  break;
+            case StepKind.StartModule:  StartModule(Module); break;
+            case StepKind.StopModule:   StopModule(Module);  break;
 
             // The Controller has MPAI_AIFU_MODULE_Pause and _Resume and the North
             // API does not expose them. No reference workflow asks, so this refuses
@@ -239,18 +241,71 @@ public sealed class WorkflowInterpreter
                 break;
 
             case StepKind.Loop:
-                while (!stop.IsCancellationRequested)
-                    await WalkAsync(step.Body, stop);
+                // 'end' inside the body leaves the loop, and only this loop: a
+                // conversation a person has ended should not go round again.
+                try
+                {
+                    while (!stop.IsCancellationRequested)
+                        await WalkAsync(step.Body, stop);
+                }
+                catch (LoopEnded) { say("the App ended its loop"); }
                 break;
 
             case StepKind.Branch:
-                await WalkAsync(Truth(step.Variable!) ? step.Body : step.Else, stop);
+            {
+                // A TEXT TEST READS WHAT WAS SAID. 'contains' matches case-blind on
+                // the datum's text; without it the test is a Boolean, which means
+                // one thing and is the better test where a Module offers one.
+                bool taken;
+                if (step.Contains is null) taken = Truth(step.Variable!);
+                else
+                {
+                    var said = data.TryGetValue(step.Variable!, out var d)
+                        ? Plain(d.Json) : "";
+                    taken = said.Contains(step.Contains, StringComparison.OrdinalIgnoreCase);
+                    say($"branch on {step.Variable} contains \"{step.Contains}\": {(taken ? "yes" : "no")} ({said})");
+                }
+                await WalkAsync(taken ? step.Body : step.Else, stop);
                 break;
+            }
+
+            // LEAVE THE ENCLOSING LOOP. Thrown rather than returned, so that it
+            // unwinds out of whatever block it was in.
+            // SAY IT AND WAIT. The words go to the Controller at the Port the
+            // Module declares for them; the Speech Object and the Face Descriptors
+            // come back and the User Agent renders them. The step does not finish
+            // until she has finished speaking: a workflow says one thing after
+            // another, and an implementation that overlapped them would not be
+            // doing what the workflow says.
+            case StepKind.Say:
+            {
+                var words = Literal(step.Port!.DataType, Fill(step.Literal ?? ""));
+                say($"[C] say {step.Port.DataType}:{step.Port.PortNumber}");
+                var said = north.Advance(Module, new List<NorthApi.Datum>
+                    { new NorthApi.Datum(step.Port.DataType, step.Port.PortNumber, words) });
+                if (!said.Ok) throw new InvalidOperationException($"{Module} returned {said.Error}.");
+
+                var spoken = new Dictionary<string, string>();
+                foreach (var want in step.Ports!)
+                {
+                    var got = said.ByType(want.DataType, want.PortNumber);
+                    if (string.IsNullOrWhiteSpace(got)) { say($"[C] give {want.DataType}: nothing"); continue; }
+                    spoken[want.DataType] = got;
+                    say($"[C] give {want.DataType}");
+                }
+                if (spoken.Count > 0) await devices.PresentAsync(spoken);
+                break;
+            }
+
+            case StepKind.EndLoop:
+                throw new LoopEnded();
 
             default:
                 throw new NotSupportedException($"line {step.Line}: {step.Kind} is not executed.");
         }
     }
+
+    private sealed class LoopEnded : Exception { }
 
     // ---- the small helpers -------------------------------------------------
 
@@ -277,6 +332,12 @@ public sealed class WorkflowInterpreter
                   $"line {line}: '{label}' was never acquired or received.");
 
     // "{UserName}, welcome." with what is known put in place of the braces.
+    // ONE CONTROLLER, ONE MODULE. The workflow declares it once; no step carries
+    // it, because a User Agent that named a Module in every request would be
+    // saying something the Controller already knows.
+    private Workflow? current;
+    private string Module => current?.Modules.FirstOrDefault() ?? "";
+
     private string Fill(string text)
     {
         foreach (var kv in variables)

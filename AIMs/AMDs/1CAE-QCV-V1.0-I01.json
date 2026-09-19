@@ -1,4 +1,4 @@
-{ "Identifier":           { "ImplementerID": "MPAI", "ImplementationID": "CAE-QCV-V1.0-I01", "AIMName": "CAE-QCV-V1.0" },
+{ "Identifier":           { "ImplementerID": "1", "ImplementationID": "CAE-QCV-V1.0-I01", "AIMName": "1CAE-QCV-V1.0-I01" },
 
   "APIProfile":           "Basic",
   "Description":          "Audio Qualifier Conversion: converts a Basic Audio Object from its current Audio Qualifier (format A) to a target Audio Qualifier (format B), rewriting both the audio data and the qualifier. This implementation performs one conversion - any 16-bit PCM (rate/channels) to mono, 16 kHz, 16-bit PCM - and is structured to be extended with further conversions.",

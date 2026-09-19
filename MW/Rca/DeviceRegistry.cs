@@ -26,40 +26,33 @@ public sealed class DeviceRegistry
     // Gets a datum of this Data Type from the real world. The flag is the
     // workflow's "via VAD": wait for the speaker to stop, rather than for a fixed
     // interval or a button.
-    public delegate Task<string?> Acquire(bool viaVad);
+    // THE REQUEST IS A QUALIFIER, AND THE SOURCE ANSWERS IT. The User Agent says
+    // what it wants by writing the Qualifier fields it cares about; the source
+    // returns the Object it made, or - when it cannot make that - an Object with
+    // no data and a Qualifier saying what it does have. The User Agent then
+    // decides: abandon, or ask again naming what was offered.
+    //
+    // A Qualifier describes. It never chooses: the source reads the request and
+    // answers it, and nothing here matches one against another.
+    public delegate Task<string?> Acquire(bool viaVad, string? wanted);
 
     // Renders a datum of this Data Type. Several may be presented together - an
     // OSD-BSO and a PAF-FDO are one utterance, not two - so a presenter receives
     // everything being presented at once and takes what it recognises.
     public delegate Task Present(IReadOnlyDictionary<string, string> byDataType);
 
-    private readonly Dictionary<string, List<(string Qualifier, Acquire How)>> sources =
+    private readonly Dictionary<string, Acquire> sources =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly List<(string Name, Present Render)> presenters = new();
 
-    // A DATA TYPE MAY HAVE SEVERAL SOURCES, AND THE QUALIFIER TELLS THEM APART.
-    // A Visual Object may be a webcam frame or a file chosen from disk: the same
-    // Data Type, different formats, and the difference is not in the data.
-    //
-    // The qualifier named here is what this source produces.
-    public DeviceRegistry RegisterAcquire(string dataType, string qualifier, Acquire how)
+    // ONE SOURCE PER DATA TYPE. Which device serves a Data Type is the User
+    // Agent's own business; the request that reaches it says what is wanted.
+    public DeviceRegistry RegisterAcquire(string dataType, Acquire how)
     {
-        if (!sources.TryGetValue(dataType, out var list))
-            sources[dataType] = list = new List<(string, Acquire)>();
-        list.Add((qualifier, how));
+        sources[dataType] = how;
         return this;
     }
-
-    public DeviceRegistry RegisterAcquire(string dataType, Acquire how) =>
-        RegisterAcquire(dataType, "", how);
-
-    // What this client can produce for a Data Type. A refusal says this, so that
-    // an App naming a format nobody has can be corrected rather than guessed at.
-    public IReadOnlyList<string> QualifiersFor(string dataType) =>
-        sources.TryGetValue(dataType, out var list)
-            ? list.Select(s => s.Qualifier).Where(q => q.Length > 0).ToList()
-            : new List<string>();
 
     // A presenter is not keyed by Data Type, because rendering is not one datum at
     // a time. The avatar wants the speech and the face descriptors together; a
@@ -81,43 +74,10 @@ public sealed class DeviceRegistry
     // button; a client that cannot wait proceeds, which is what a console does.
     public Func<string, Task>? Await { get; set; }
 
-    public async Task<string?> AcquireAsync(string dataType, bool viaVad, string? qualifier = null)
-    {
-        if (!sources.TryGetValue(dataType, out var list) || list.Count == 0)
-            throw new NotSupportedException(
-                $"This client acquires no {dataType}.");
-
-        // NAMED, AND EITHER SATISFIED OR REFUSED WITH WHAT IS AVAILABLE. A
-        // workflow that asks for a format nobody has should be correctable,
-        // which means the refusal must say what there is.
-        if (!string.IsNullOrWhiteSpace(qualifier))
-        {
-            foreach (var s in list)
-                if (string.Equals(s.Qualifier, qualifier, StringComparison.OrdinalIgnoreCase))
-                    return await s.How(viaVad);
-
-            var have = QualifiersFor(dataType);
-            throw new NotSupportedException(
-                $"This client cannot acquire a {dataType} as {qualifier}. " +
-                (have.Count == 0
-                    ? "It states no format for what it can acquire."
-                    : "It can acquire: " + string.Join(", ", have) + "."));
-        }
-
-        if (list.Count == 1) return await list[0].How(viaVad);
-
-        // Unstated, and more than one possible: the person decides.
-        if (Ask is not null)
-        {
-            var chosen = await Ask(dataType, QualifiersFor(dataType));
-            foreach (var s in list)
-                if (string.Equals(s.Qualifier, chosen, StringComparison.OrdinalIgnoreCase))
-                    return await s.How(viaVad);
-            return null;                       // the person declined
-        }
-
-        return await list[0].How(viaVad);
-    }
+    public Task<string?> AcquireAsync(string dataType, bool viaVad, string? wanted = null) =>
+        sources.TryGetValue(dataType, out var how)
+            ? how(viaVad, wanted)
+            : throw new NotSupportedException($"This client acquires no {dataType}.");
 
     public async Task PresentAsync(IReadOnlyDictionary<string, string> byDataType)
     {

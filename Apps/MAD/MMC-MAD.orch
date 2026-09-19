@@ -19,7 +19,7 @@
 #  reader and does not route.
 # =============================================================================
 
-workflow MMC-MAD over MMC-MAD-V2.5, PAF-RSR-V1.6
+workflow MMC-MAD over 1MMC-MAD-V2.5-I01, 1PAF-RSR-V1.6-I01
 
 on Start:
 
@@ -27,18 +27,18 @@ on Start:
     #     PAF-RSR declares TextObject twice: #1 feeds Text-To-Speech, #2 feeds
     #     Generative Face Description. Both are given or the face has nothing of
     #     the words to shape itself to.
-    ask Controller to start PAF-RSR-V1.6
+    ask Controller to start 1PAF-RSR-V1.6-I01
     ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI
         Multimodal Conversation Service."
-        for PAF-RSR-V1.6
+        for 1PAF-RSR-V1.6-I01
     ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the MPAI
         Multimodal Conversation Service."
-        for PAF-RSR-V1.6
-    ask Controller to give  from PAF-RSR-V1.6:
+        for 1PAF-RSR-V1.6-I01
+    ask Controller to give  from 1PAF-RSR-V1.6-I01:
         WelcomeSpeech (OSD-BSO-V1.5),
         WelcomeFace   (PAF-FDO-V1.6)
     present WelcomeSpeech, WelcomeFace
-    ask Controller to stop  PAF-RSR-V1.6
+    ask Controller to stop  1PAF-RSR-V1.6-I01
 
     # --- The dialogue. The Module lives from Start to Stop, so that Entity
     #     Dialogue Processing keeps the conversation's memory for the session.
@@ -49,20 +49,20 @@ on Start:
     # A person told nothing assumes a fault.
     prompt  "Loading the speech recogniser and the language model. This takes a
         few seconds."
-    ask Controller to start MMC-MAD-V2.5
+    ask Controller to start 1MMC-MAD-V2.5-I01
     prompt  "Ready. Please begin - speak when you like."
 
     loop until Stop:
         acquire UserSpeech     (OSD-BSO-V1.5) via VAD
         acquire UserSpeechTime (OSD-STM-V1.5)
 
-        ask Controller to take UserSpeech     (OSD-BSO-V1.5) for MMC-MAD-V2.5
-        ask Controller to take UserSpeechTime (OSD-STM-V1.5) for MMC-MAD-V2.5
+        ask Controller to take UserSpeech     (OSD-BSO-V1.5) for 1MMC-MAD-V2.5-I01
+        ask Controller to take UserSpeechTime (OSD-STM-V1.5) for 1MMC-MAD-V2.5-I01
 
-        ask Controller to give from MMC-MAD-V2.5:
+        ask Controller to give from 1MMC-MAD-V2.5-I01:
             MachineSpeech (OSD-BSO-V1.5),
             MachineFace   (PAF-FDO-V1.6)
         present MachineSpeech, MachineFace
 
 on Stop:
-    ask Controller to stop MMC-MAD-V2.5
+    ask Controller to stop 1MMC-MAD-V2.5-I01

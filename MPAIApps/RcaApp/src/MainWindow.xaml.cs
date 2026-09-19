@@ -48,6 +48,7 @@ public partial class MainWindow : Window
     private Workflow?             _workflow;
     private string?               _workflowPath;
     private CancellationTokenSource? _stopping;
+    private Task?                    _running;
     private TaskCompletionSource?    _awaiting;
 
     // What the workflow is waiting for the user to type, if anything.
@@ -104,7 +105,7 @@ public partial class MainWindow : Window
     // collect the speech and the face descriptors, present them, stop - which is
     // exactly what a workflow's welcome does. That this is possible with no App
     // chosen is the point: the client holds nothing but the means to render.
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private Task SpeakWelcomeAsync() =>
         SpeakAsync("Welcome to MPAI as a Service. Select an app and enjoy.");
@@ -134,7 +135,7 @@ public partial class MainWindow : Window
                 ? null : MpaiJson.FromJson<FaceDescriptorsObject>(face);
 
             await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo, null));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
         }
         catch (Exception ex)
         {
@@ -205,6 +206,16 @@ public partial class MainWindow : Window
     // which it was given.
     private async Task ChosenAsync(Offered chosen)
     {
+        // ONE APP AT A TIME. Choosing a second while the first is still in its loop
+        // left both running: two workflows prompting, two listening, and a file
+        // dialog appearing in the middle of another App's conversation.
+        if (_running is { IsCompleted: false })
+        {
+            Status("stopping the App that is running...");
+            _stopping?.Cancel();
+            try { await _running; } catch { /* it was asked to stop */ }
+        }
+
 
         try
         {
@@ -223,7 +234,8 @@ public partial class MainWindow : Window
             // Service offers for as long as it is running; choosing one App does
             // not hide the others. AppColumn.Width = new GridLength(0);
             Status("App obtained");
-            await RunAsync();
+            _running = RunAsync();
+            await _running;
         }
         catch (Exception ex)
         {
@@ -330,11 +342,35 @@ public partial class MainWindow : Window
         }
         finally
         {
-            StopButton.IsEnabled  = false;
+            // ONLY IF NOTHING ELSE HAS STARTED. Choosing a second App cancels the
+            // first and starts the next; the first's cleanup would otherwise put out
+            // the Stop button the second had just lit, leaving a running App with
+            // no way to end it.
+            if (_running is null || _running.IsCompleted)
+                StopButton.IsEnabled = false;
             TypedBox.IsEnabled = SendButton.IsEnabled = false;
         }
     }
     // ---- the devices -------------------------------------------------------
+
+    // WHAT FORMAT THE REQUEST ASKED FOR, if it said. The request is the
+    // Qualifier's own JSON, so the field is read where the schema puts it and
+    // nothing is invented around it.
+    private static string? FormatWanted(string? qualifierJson)
+    {
+        if (string.IsNullOrWhiteSpace(qualifierJson)) return null;
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(qualifierJson);
+            if (doc.RootElement.TryGetProperty("Formats", out var f) &&
+                f.TryGetProperty("Content", out var c) &&
+                c.TryGetProperty("2D", out var d) &&
+                d.TryGetProperty("Static", out var s))
+                return s.GetString();
+        }
+        catch { /* a request that will not parse asks for nothing in particular */ }
+        return null;
+    }
 
     private DeviceRegistry Devices()
     {
@@ -352,7 +388,7 @@ public partial class MainWindow : Window
         // the precision the device determined. Taking the bytes out and rebuilding
         // is what four User Agents did until this week, and it is why the voice
         // half of every enrolment failed in silence.
-        devices.RegisterAcquire("OSD-BSO-V1.5", async viaVad =>
+        devices.RegisterAcquire("OSD-BSO-V1.5", async (viaVad, wanted) =>
         {
             Instruct("Speak when you are ready.");
             var speech = await Task.Run(() => _avatar!.CaptureSpeech());
@@ -361,58 +397,51 @@ public partial class MainWindow : Window
                 : MpaiJson.ToJson(speech);
         });
 
-        // A PICTURE, CHOSEN FROM DISK. The same Data Type as a webcam frame and a
-        // different Qualifier: the difference is not in the data, and the format
-        // is where it is recorded. A workflow asks for one or the other by
-        // naming the format, and never by naming a device.
-        devices.RegisterAcquire("OSD-BVO-V1.5", "image/png", async _ =>
+        // A PICTURE. The request is a Qualifier saying what the User Agent wants;
+        // this source reads the format asked for and answers it.
+        //
+        // Asked for a format it can supply, it returns the Object complete. Asked
+        // for one it cannot - the person chose a PNG where JPEG was wanted - it
+        // returns an Object with NO DATA and a Qualifier saying what it does have,
+        // so the User Agent can abandon the acquisition or ask again naming that.
+        // A source that silently substituted would leave a consumer to discover
+        // the difference by failing.
+        devices.RegisterAcquire("OSD-BVO-V1.5", async (_, wanted) =>
         {
+            var askedFor = FormatWanted(wanted);          // e.g. "JPEG", or null
+
             Instruct("Choose a picture.");
             var chosen = await Dispatcher.InvokeAsync(() =>
             {
                 var dialog = new OpenFileDialog
                 {
                     Title  = "Choose a picture",
-                    Filter = "Pictures (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|All files (*.*)|*.*"
+                    Filter = "Pictures (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|All files (*.*)|*.*"
                 };
                 return dialog.ShowDialog() == true ? dialog.FileName : null;
             });
             if (chosen is null) return null;
 
             var bytes = await File.ReadAllBytesAsync(chosen);
-            return MpaiJson.ToJson(
-                BasicVisualObject.FromFile(Path.GetFileName(chosen), bytes, "Picture"));
+            var got   = BasicVisualObject.FromFile(Path.GetFileName(chosen), bytes, "Picture");
+            var have  = Path.GetExtension(chosen).ToLowerInvariant() is ".jpg" or ".jpeg" ? "JPEG"
+                      : Path.GetExtension(chosen).ToLowerInvariant() is ".png"            ? "PNG"
+                      : Path.GetExtension(chosen).ToLowerInvariant() is ".bmp"            ? "BMP"
+                      : "";
+
+            if (askedFor is not null && have.Length > 0 &&
+                !string.Equals(askedFor, have, StringComparison.OrdinalIgnoreCase))
+            {
+                Status($"asked for {askedFor}; that file is {have}");
+                return MpaiJson.ToJson(
+                    BasicVisualObject.FromFile(Path.GetFileName(chosen), Array.Empty<byte>(), "Picture"));
+            }
+
+            return MpaiJson.ToJson(got);
         });
-
-        // A FACE, FROM THE CAMERA.
-        devices.RegisterAcquire("OSD-BVO-V1.5", "image/jpeg", async _ =>
-        {
-            Instruct("Look at the camera.");
-            var frame = await Task.Run(() =>
-                new WebcamVisualAcquisition()
-                    .AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
-                    .GetAwaiter().GetResult().Data);
-
-            return frame is { Length: > 0 }
-                ? MpaiJson.ToJson(BasicVisualObject.FromFile("webcam.jpg", frame, "Face"))
-                : null;
-        });
-
-        // WORDS, FROM THE KEYBOARD. The window opens its text box and waits.
-        devices.RegisterAcquire("OSD-BTO-V1.5", async _ =>
-        {
-            var words = await TypedAsync();
-            return string.IsNullOrWhiteSpace(words)
-                ? null
-                : MpaiJson.ToJson(BasicTextObject.FromText(words));
-        });
-
-        // A TIME, FROM THE CLOCK.
-        devices.RegisterAcquire("OSD-STM-V1.5", _ =>
-            Task.FromResult<string?>(MpaiJson.ToJson(Now())));
-
-        // THE AVATAR. Speech and face descriptors are one utterance, not two, so a
-        // presenter is offered everything being presented and takes what it knows.
+        // THE AVATAR. Speech and Face Descriptors are one utterance: the audio is
+        // played and the face is driven from the same clock, and the step does not
+        // finish until she has finished speaking.
         devices.RegisterPresent("avatar", async data =>
         {
             byte[] wav = Array.Empty<byte>();
@@ -427,9 +456,10 @@ public partial class MainWindow : Window
             if (wav.Length == 0 && fdo is null) return;
 
             await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo, null));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
         });
 
+        // THE STAGE.
         // THE STAGE. What the App is working with - a picture the person chose, a
         // document it was given - shown so they can see what they handed over.
         devices.RegisterPresent("stage", data =>

@@ -1,48 +1,76 @@
 # =============================================================================
-#  MMC-AMQ.orch - Audio-Visual Multimodal Question Answering
-#  Workflow Description Language, AIF V3.0
+#  MMC-AMQ.orch - MPAI Picture Question Answering Service
+#  Workflow Description Language v0.3, AIF V3.0
 #
-#  The user shows a picture and asks a question about it; the avatar answers.
+#  One Controller, one Module. The User Agent offers the Controller data
+#  identified by Data Type and Port Number, and asks for data identified the
+#  same way. It names no AIM.
 #
-#  The User Agent never addresses a Module: it asks the Controller. See
-#  MMC-MAD.orch for the mapping of each request onto the Controller API.
+#  A step completes before the next begins.
 # =============================================================================
 
-workflow MMC-AMQ over MMC-AMQ-V2.5, PAF-RSR-V1.6
+workflow MMC-AMQ over 1MMC-AMQ-V2.5-I01
 
 on Start:
 
-    ask Controller to start PAF-RSR-V1.6
-    ask Controller to take  Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI
-        Question Answering Service. Show me a picture and ask me about it."
-        for PAF-RSR-V1.6
-    ask Controller to take  Welcome (OSD-BTO-V1.5:2) = "Welcome to the MPAI
-        Question Answering Service. Show me a picture and ask me about it."
-        for PAF-RSR-V1.6
-    ask Controller to give  from PAF-RSR-V1.6:
-        WelcomeSpeech (OSD-BSO-V1.5),
-        WelcomeFace   (PAF-FDO-V1.6)
-    present WelcomeSpeech, WelcomeFace
-    ask Controller to stop  PAF-RSR-V1.6
+    ask Controller to start
 
-    ask Controller to start MMC-AMQ-V2.5
+    # --- the welcome, in two parts with a pause between them ---
+
+    offer Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI Picture Question
+        Answering Service."
+    ask   WelcomeSpeech (OSD-BSO-V1.5), WelcomeFaceDescriptors (PAF-FDO-V1.6)
+    present WelcomeSpeech, WelcomeFaceDescriptors
+
+    wait 1s
+
+    offer Invitation (OSD-BTO-V1.5:1) = "Do you want to ask a question about a
+        picture?"
+    ask   InvitationSpeech (OSD-BSO-V1.5), InvitationFaceDescriptors (PAF-FDO-V1.6)
+    present InvitationSpeech, InvitationFaceDescriptors
+
+    # --- what the person answers decides what follows ---
 
     loop until Stop:
-        acquire Picture (OSD-BVO-V1.5) as image/png
-        present Picture
 
-        acquire Question (OSD-BSO-V1.5) via VAD
+        acquire Reply (OSD-BSO-V1.5) via VAD
+        offer Reply (OSD-BSO-V1.5:2)
+        ask   ReplyText (OSD-BTO-V1.5:2)
 
-        ask Controller to take Picture  (OSD-BVO-V1.5) for MMC-AMQ-V2.5
-        ask Controller to take Question (OSD-BSO-V1.5) for MMC-AMQ-V2.5
+        branch on ReplyText contains "yes" {
 
-        # MMC-AMQ returns the answer as text and as speech. It declares no Face
-        # Descriptors: the mouth is not driven from this Module's boundary.
-        ask Controller to give from MMC-AMQ-V2.5:
-            Answer       (OSD-BTO-V1.5),
-            SpokenAnswer (OSD-BSO-V1.5)
-        present SpokenAnswer
-        display Answer
+            offer Choose (OSD-BTO-V1.5:1) = "Please select a picture."
+            ask   ChooseSpeech (OSD-BSO-V1.5), ChooseFaceDescriptors (PAF-FDO-V1.6)
+            present ChooseSpeech, ChooseFaceDescriptors
+
+            acquire Picture (OSD-BVO-V1.5) = { "Formats": { "Content": { "2D": { "Static": "JPEG" } } } }
+            present Picture
+
+            acquire UserQuestion (OSD-BSO-V1.5) via VAD
+
+            offer Picture      (OSD-BVO-V1.5)
+            offer UserQuestion (OSD-BSO-V1.5:1)
+            ask   Answer                 (OSD-BTO-V1.5:1),
+                  MachineSpeech          (OSD-BSO-V1.5),
+                  MachineFaceDescriptors (PAF-FDO-V1.6)
+            present MachineSpeech, MachineFaceDescriptors
+            display Answer
+
+            wait 2s
+
+            offer Again (OSD-BTO-V1.5:1) = "Do you want to ask a question about
+                another picture?"
+            ask   AgainSpeech (OSD-BSO-V1.5), AgainFaceDescriptors (PAF-FDO-V1.6)
+            present AgainSpeech, AgainFaceDescriptors
+
+        } else {
+
+            offer Farewell (OSD-BTO-V1.5:1) = "Maybe another time."
+            ask   FarewellSpeech (OSD-BSO-V1.5), FarewellFaceDescriptors (PAF-FDO-V1.6)
+            present FarewellSpeech, FarewellFaceDescriptors
+            end
+
+        }
 
 on Stop:
-    ask Controller to stop MMC-AMQ-V2.5
+    ask Controller to stop

@@ -1,20 +1,20 @@
 {
-    "MMC-SOA-V2.5":  {
+    "1MMC-SOA-V2.5-I01":  {
                          "DurationSeconds":  "5",
                          "QuestionAudio":  "D:\\AI\\MPAIApps\\AudioIn\\question-spoken.wav"
                      },
-    "MMC-SOD-V2.5":  {
+    "1MMC-SOD-V2.5-I01":  {
                          "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut"
                      },
-    "CVE-VOA-V1.0":  {
+    "1CVE-VOA-V1.0-I01":  {
                          "SourceHint":  "D:\\AI\\MPAIApps\\VisualIn",
                          "ImageFile":  "D:\\AI\\MPAIApps\\VisualIn\\zebra.jpg"
                      },
-    "CAE-AOA-V1.0":  {
+    "1CAE-AOA-V1.0-I01":  {
                          "DurationSeconds":  "5",
                          "QuestionAudio":  "D:\\AI\\MPAIApps\\AudioIn\\question-spoken.wav"
                      },
-    "MMC-TTT-V2.5":  {
+    "1MMC-TTT-V2.5-I01":  {
                          "TttEncoderModel":  "Models\\Whisper\\M2M100\\encoder_model.onnx",
                          "TttDecoderModel":  "Models\\Whisper\\M2M100\\decoder_model_merged_quantized.onnx",
                          "TttDecoderFirstModel":  "Models\\Whisper\\M2M100\\decoder_model.onnx",
@@ -23,13 +23,13 @@
                          "TttSpecialTokens":  "Models\\Whisper\\M2M100\\special_tokens_map.json",
                          "TttVocab":  "Models\\Whisper\\M2M100\\vocab.json"
                      },
-    "MMC-TIQ-V2.5":  {
+    "1MMC-TIQ-V2.5-I01":  {
                          "VisionModel":  "Models\\BLIP\\onnx\\blip_vision_model.onnx",
                          "EncoderModel":  "Models\\BLIP\\onnx\\blip_text_encoder_wrapper.onnx",
                          "DecoderModel":  "Models\\BLIP\\onnx\\blip_decoder_context_dynamic.onnx",
                          "VocabFile":  "Models\\BLIP\\blip-vqa-base\\vocab.txt"
                      },
-    "MMC-TTS-V2.5":  {
+    "1MMC-TTS-V2.5-I01":  {
                          "PiperExecutable":  "Models\\Piper\\piper_windows_amd64\\piper\\piper.exe",
                          "VoiceModel":  "Models\\Piper\\voices\\en_US-amy-medium\\en_US-amy-medium.onnx",
                          "VoiceConfig":  "Models\\Piper\\voices\\en_US-amy-medium\\en_US-amy-medium.onnx.json",
@@ -50,34 +50,34 @@
                          "Voice:it":  "Models\\Piper\\voices\\it_IT-paola-medium\\it_IT-paola-medium.onnx",
                          "VoiceConfig:it":  "Models\\Piper\\voices\\it_IT-paola-medium\\it_IT-paola-medium.onnx.json"
                      },
-    "CAE-AOD-V1.0":  {
+    "1CAE-AOD-V1.0-I01":  {
                          "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut"
                      },
-    "MMC-OCR-V2.5":  {
+    "1MMC-OCR-V2.5-I01":  {
                          "DetModel":  "Models\\OCR\\ch_PP-OCRv5_server_det.onnx",
                          "ClsModel":  "Models\\OCR\\ch_ppocr_mobile_v2.0_cls_infer.onnx",
                          "RecModel":  "Models\\OCR\\latin_PP-OCRv5_rec_mobile_infer.onnx",
                          "KeysFile":  "Models\\OCR\\ppocrv5_latin_dict.txt"
                      },
-    "MMC-ASR-V2.5":  {
+    "1MMC-ASR-V2.5-I01":  {
                          "ExecutablePath":  "Models\\Whisper\\bin\\whisper-cli.exe",
                          "ModelPath":  "Models\\Whisper\\models\\ggml-small.bin",
                          "LanguageCode":  "en"
                      },
-    "MMC-EDP-V2.5":  {
+    "1MMC-EDP-V2.5-I01":  {
                          "OllamaModel":  "llama3.2:3b"
                      },
-    "MMC-ESI-V2.5":  {
+    "1MMC-ESI-V2.5-I01":  {
                          "W2v2Model":  "Models\\w2v2-emotion\\model.onnx"
                      },
-    "MMC-EFI-V2.5":  {
+    "1MMC-EFI-V2.5-I01":  {
                          "HseModel":  "Models\\hsemotion_enet_b0_8_va_mtl.onnx"
                      },
-    "CAE-ASI-V2.5":  {
+    "1CAE-ASI-V2.5-I01":  {
                          "YamnetModel":  "Models\\yamnet.onnx",
                          "YamnetClassMap":  "Models\\yamnet_class_map.csv"
                      },
-    "CAE-AII-V2.5":  {
+    "1CAE-AII-V2.5-I01":  {
                          "YamnetModel":  "Models\\yamnet.onnx",
                          "YamnetClassMap":  "Models\\yamnet_class_map.csv"
                      }

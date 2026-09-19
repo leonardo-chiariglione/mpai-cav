@@ -26,8 +26,8 @@ namespace MmcMad.Server;
 // See MasServerConfig.cs for the configuration file's shape.
 internal static class Program
 {
-    private const string MadModule = "MMC-MAD-V2.5";
-    private const string RsrModule = "PAF-RSR-V1.6";
+    private const string MadModule = "1MMC-MAD-V2.5-I01";
+    private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private static async Task<int> Main(string[] args)
     {
