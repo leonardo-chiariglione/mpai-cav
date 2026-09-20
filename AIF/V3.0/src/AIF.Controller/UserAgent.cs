@@ -78,6 +78,29 @@ public sealed class UserAgent
 
     // â”€â”€ 3.2 Start/Pause/Resume/Stop the Module (composite AIM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    private readonly Dictionary<string, IAimProcessor> _retained = new();
+
+    private sealed class Retaining : IAimProvider
+    {
+        private readonly IAimProvider inner;
+        private readonly Dictionary<string, IAimProcessor> kept;
+
+        public Retaining(IAimProvider inner, Dictionary<string, IAimProcessor> kept)
+        { this.inner = inner; this.kept = kept; }
+
+        public bool CanCreate(string aimName) => inner.CanCreate(aimName);
+
+        public IAimProcessor Create(string aimName,
+            IReadOnlyDictionary<string, string> settings,
+            AIF.SharedStorage.ISharedStorage? storage)
+        {
+            if (kept.TryGetValue(aimName, out var already)) return already;
+            var made = inner.Create(aimName, settings, storage);
+            kept[aimName] = made;
+            return made;
+        }
+    }
+
     // MPAI_AIFU_MODULE_Start(name, out MODULE_ID)
     public AifError MPAI_AIFU_MODULE_Start(
         string name, IAimProvider provider, AimSettings settings, out int moduleId)
@@ -97,7 +120,16 @@ public sealed class UserAgent
 
         var graph = _controller.RegisterAim(identifier);
         var host  = new AimHost();
-        _controller.Instantiate(graph, provider, settings, host);
+
+        // THE CONTROLLER KEEPS WHAT IT HAS BUILT. Stopping a Module releases the
+        // Module; it does not throw away the models its AIMs loaded. A person who
+        // tries one App, then another, then returns to the first should not wait
+        // for the same models to load twice.
+        //
+        // What is retained is the AIM implementation, so anything it holds is
+        // retained with it. An AIM that keeps state between runs - a dialogue
+        // memory, say - will carry that state into the next Module that uses it.
+        _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host);
 
         // Declare the composite's boundary Ports from its ExternalPorts.
         var ports = new PortRegistry();

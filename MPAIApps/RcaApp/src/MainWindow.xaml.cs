@@ -50,6 +50,8 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _stopping;
     private Task?                    _running;
     private TaskCompletionSource?    _awaiting;
+    private string?                  _appId;
+    private readonly Dictionary<string, RemoteNorthApi> _controllers = new(StringComparer.Ordinal);
 
     // What the workflow is waiting for the user to type, if anything.
     private TaskCompletionSource<string>? _typed;
@@ -266,6 +268,7 @@ public partial class MainWindow : Window
         if (AppList.SelectedItem is not Offered chosen) return;
         AppList.SelectedItem = null;
         Status($"chose {chosen.Name}");
+        _appId = chosen.App.Id;
         _ = ChosenAsync(chosen);
     }
 
@@ -329,7 +332,12 @@ public partial class MainWindow : Window
 
         try
         {
-            using var north = new RemoteNorthApi(ServiceUrl, ServiceToken);
+            // ONE CONTROLLER PER APP, KEPT. Stopping a Module releases the Module;
+            // the Controller keeps the models its AIMs loaded, so returning to an App
+            // already tried does not load them again. The Controller Instances are
+            // released when this client closes.
+            if (!_controllers.TryGetValue(_appId!, out var north))
+                _controllers[_appId!] = north = new RemoteNorthApi(ServiceUrl, ServiceToken);
 
             var interpreter = new WorkflowInterpreter(north, Devices(), Status);
             await interpreter.RunAsync(_workflow, _stopping.Token);
@@ -342,6 +350,27 @@ public partial class MainWindow : Window
         }
         finally
         {
+            // BACK TO REST. An App that has ended leaves the client as it was
+            // before one was chosen: a client that holds no application shows what
+            // the Service offers, and a person who has finished with one App can
+            // choose another without restarting anything.
+            //
+            // The stage and the text box are cleared with it: what the last App was
+            // working with is not what the next one is.
+            if (_running is null || _running.IsCompleted)
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    _workflow            = null;
+                    _appId               = null;
+                    WorkflowText.Text    = $"Service: {ServiceUrl}";
+                    InstructionText.Text = "";
+                    StageImage.Source    = null;
+                    StageTitle.Text      = "No image displayed";
+                    StageText.Text       = "";
+                    TypedBox.Text        = "";
+                    AppList.SelectedItem = null;
+                });
+
             // ONLY IF NOTHING ELSE HAS STARTED. Choosing a second App cancels the
             // first and starts the next; the first's cleanup would otherwise put out
             // the Stop button the second had just lit, leaving a running App with
