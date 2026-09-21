@@ -54,6 +54,11 @@ public partial class MainWindow : Window
     // ends MPAI-MAS itself.
     private CancellationTokenSource? _appStopping;
 
+    // TYPING CLAIMS THE TURN. While the person may speak or type, the microphone
+    // listens - and hears the keys. The first character typed ends the listening,
+    // so the turn is the typed one.
+    private CancellationTokenSource? _typingClaims;
+
     // THE LANGUAGE THE PERSON WILL SPEAK, once an App has asked for a Language
     // Selector. Captured speech is stamped with it, so the recogniser decodes that
     // language instead of guessing. Cleared when an App starts.
@@ -88,6 +93,7 @@ public partial class MainWindow : Window
         StopButton.Click  += (_, _) => (_appStopping ?? _stopping)?.Cancel();
         SendButton.Click  += (_, _) => SendTyped();
         TypedBox.KeyDown  += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) SendTyped(); };
+        TypedBox.TextChanged += (_, _) => { if (_typed is not null && TypedBox.Text.Length > 0) try { _typingClaims?.Cancel(); } catch { } };
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -556,7 +562,9 @@ public partial class MainWindow : Window
             var capture = Task.Run(() => _avatar!.CaptureSpeech());
             var stop    = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
             // ...nor, when the person typed instead, for the speech that did not come.
-            using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon);
+            using var claims = new CancellationTokenSource();
+            _typingClaims = claims;
+            using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon, claims.Token);
             if (await Task.WhenAny(capture, Task.Delay(Timeout.Infinite, either.Token)) != capture)
                 return null;
             var speech = await capture;

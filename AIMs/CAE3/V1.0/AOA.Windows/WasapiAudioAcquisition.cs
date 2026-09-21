@@ -185,7 +185,7 @@ public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcq
             var said = $"[AOA] recording from '{capabilities.ProductName}'" +
                        $" ({WaveInEvent.DeviceCount} available: {all})";
             Console.WriteLine(said);
-            try { System.IO.File.AppendAllText(@"D:\AI\hci-diag.log",
+            try { Mpai.Core.MpaiDiag.Append("hci-diag.log",
                  System.DateTime.Now.ToString("HH:mm:ss.fff") + "  " + said + "\n"); } catch { }
         }
         catch (Exception failure)

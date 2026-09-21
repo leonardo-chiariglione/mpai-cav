@@ -25,16 +25,15 @@ public sealed class EdpAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly OllamaClient _llm;
-    // THE DIALOGUE MEMORY, KEPT INSIDE THE AIM. Bounded: only the last few
-    // exchanges are kept, because a small language model given a long transcript
-    // loses the thread and breaks the reply format. And forgotten after a pause:
-    // this AIM is shared by every App and every client of a Service, and a person
-    // coming back after a while is starting a new conversation, not continuing
-    // someone else's.
-    private readonly List<string> _recent = new();
-    private DateTime _lastTurn = DateTime.MinValue;
+    // THE DIALOGUE MEMORY IS NOT KEPT HERE. It arrives on the Summary input and
+    // leaves, updated, on the EditedSummary output; the workflow carries it from
+    // one turn to the next. This AIM is shared by every App and every client of a
+    // Service, so nothing one person says may stay in it: a conversation's memory
+    // belongs to that conversation, begins empty with it and ends with it.
+    //
+    // Bounded: only the last few exchanges are carried, because a small language
+    // model given a long transcript loses the thread and breaks the reply format.
     private const int RecentExchanges = 6;
-    private static readonly TimeSpan ForgetAfter = TimeSpan.FromMinutes(3);
 
     private readonly string _summaryPort;    // MMC-SUM
     private readonly string _textPort;       // OSD-BTO
@@ -80,8 +79,10 @@ public sealed class EdpAimProcessor : IAimProcessor
         string userStatus = affect ? VerbalisePersonalStatus(psIn) : "";
         string userId     = ReadInstanceLabel(message, _userIdPort);
         string sceneClause = VerbaliseScene(message);
-        if (DateTime.UtcNow - _lastTurn > ForgetAfter) _recent.Clear();
-        string summaryIn   = string.Join("\n", _recent);   // memory is internal; UA does not supply Summary
+        var memory = (Read<Summary>(message, _summaryPort)?.Text() ?? "")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+        while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
+        string summaryIn   = string.Join("\n", memory);   // the memory the workflow carried in
 
         // System prompt. EDP INPUT->OUTPUT RULE: the machine produces a Personal
         // Status ONLY when a Personal Status was provided as input. With no EPS in
@@ -148,14 +149,11 @@ public sealed class EdpAimProcessor : IAimProcessor
         }
 
         var machineText = BasicTextObject.FromText(responseText);
-        var transcript = string.IsNullOrWhiteSpace(summaryIn)
-            ? $"User: {userText}\nCAV: {responseText}"
-            : $"{summaryIn}\nUser: {userText}\nCAV: {responseText}";
-        var editedSummary = Summary.Of(transcript);
-        _recent.Add($"User: {userText}");            // keep the last exchanges for the next turn
-        _recent.Add($"CAV: {responseText}");
-        while (_recent.Count > RecentExchanges * 2) _recent.RemoveAt(0);
-        _lastTurn = DateTime.UtcNow;
+        // The memory goes back out with this exchange added, one line per turn.
+        memory.Add("User: " + userText.Replace('\n', ' ').Trim());
+        memory.Add("CAV: " + responseText.Replace('\n', ' ').Trim());
+        while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
+        var editedSummary = Summary.Of(string.Join("\n", memory));
 
         var ports = new Dictionary<string, string>
         {

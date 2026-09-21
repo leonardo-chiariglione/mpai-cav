@@ -36,8 +36,13 @@ on Start:
         } else {
             offer UserSpeech (OSD-BSO-V1.5:1)
         }
-        ask   MachineSpeech (OSD-BSO-V1.5), MachineFaceDescriptors (PAF-FDO-V1.6)
+        ask   MachineSpeech (OSD-BSO-V1.5), MachineFaceDescriptors (PAF-FDO-V1.6),
+              Memory (MMC-SUM-V2.5)
         present MachineSpeech, MachineFaceDescriptors
+
+        # The conversation's memory goes back with the next turn and nowhere
+        # else: it starts empty with this conversation and ends with it.
+        offer Memory (MMC-SUM-V2.5)
 
 on Stop:
 

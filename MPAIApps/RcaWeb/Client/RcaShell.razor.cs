@@ -28,6 +28,11 @@ public partial class RcaShell : ComponentBase
 
     private bool started, stopEnabled;
     private CancellationTokenSource? _stopping, _appStopping;
+
+    // TYPING CLAIMS THE TURN. While the person may speak or type, the microphone
+    // listens - and hears the keys. The first character typed ends the listening,
+    // so the turn is the typed one.
+    private CancellationTokenSource? _typingClaims;
     private readonly Dictionary<string, IAsyncNorthApi> _controllers = new();
 
     private IReadOnlyList<WebAppDirectory.App> apps = Array.Empty<WebAppDirectory.App>();
@@ -131,7 +136,9 @@ public partial class RcaShell : ComponentBase
         {
             Instruct("Speak when you are ready.");
             var stop = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
-            using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon);
+            using var claims = new CancellationTokenSource();
+            _typingClaims = claims;
+            using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon, claims.Token);
             using var onEnd  = either.Token.Register(() => _ = Js.InvokeVoidAsync("rca.abandonCapture"));
             var b64 = await Js.InvokeAsync<string?>("rca.captureSpeech");
             if (either.IsCancellationRequested || string.IsNullOrEmpty(b64)) return null;
@@ -278,6 +285,12 @@ public partial class RcaShell : ComponentBase
         await stream.CopyToAsync(memory);
         var waiting = picture; picture = null;
         waiting?.TrySetResult((file.Name, memory.ToArray()));
+    }
+
+    private void OnTypedInput()
+    {
+        if (typed is not null && !string.IsNullOrEmpty(typedText))
+            try { _typingClaims?.Cancel(); } catch { }
     }
 
     private void OnTypedKey(KeyboardEventArgs e)

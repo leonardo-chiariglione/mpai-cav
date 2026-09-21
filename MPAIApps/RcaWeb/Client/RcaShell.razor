@@ -60,7 +60,7 @@
     {
       <button class="stop" disabled="@(!stopEnabled)" @onclick="Stop">Stop</button>
     }
-    <textarea id="typed" rows="3" disabled="@(!typing)" @bind="typedText" @bind:event="oninput"
+    <textarea id="typed" rows="3" disabled="@(!typing)" @bind="typedText" @bind:event="oninput" @bind:after="OnTypedInput"
               @onkeydown="OnTypedKey"></textarea>
     <button class="enter" disabled="@(!typing)" @onclick="SendTyped">Enter</button>
   </div>

@@ -5,58 +5,85 @@ window.rca = (() => {
   let ctx = null;        // one AudioContext, opened by the Start click
   let mic = null;        // the microphone stream, asked for once
   let capture = null;    // the capture in progress, so it can be abandoned
+  let hear = null;       // where the running microphone sends each block, while listening
+
+  // THE MICROPHONE RUNS FROM START ON, keeping the last second heard. A person
+  // who answers the moment the avatar stops speaks before listening has begun;
+  // with that second kept, the first word ("yes") is not lost.
+  const RING_MS = 1000;
+  const ring = [];
+
+  const START = 0.015, QUIET = 0.012, PAUSE_MS = 900, MAX_MS = 20000, PREROLL_MS = 1000;
+
+  function level(x) {
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) sum += x[i] * x[i];
+    return Math.sqrt(sum / x.length);
+  }
+
+  function trim(list, ms) {
+    let total = list.reduce((a, c) => a + c.length, 0);
+    while (list.length > 1 && total - list[0].length >= ctx.sampleRate * ms / 1000) {
+      total -= list[0].length;
+      list.shift();
+    }
+  }
 
   // THE CLICK THAT OPENS THE WAY: sound may play and the microphone may open
   // only after the person has done something.
   async function unlock() {
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') await ctx.resume();
-    mic = mic || await navigator.mediaDevices.getUserMedia(
-      { audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    if (!mic) {
+      mic = await navigator.mediaDevices.getUserMedia(
+        { audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      const source = ctx.createMediaStreamSource(mic);
+      const node = ctx.createScriptProcessor(4096, 1, 1);
+      node.onaudioprocess = e => {
+        const block = new Float32Array(e.inputBuffer.getChannelData(0));
+        ring.push(block);
+        trim(ring, RING_MS);
+        if (hear) hear(block);
+      };
+      source.connect(node);
+      node.connect(ctx.destination);   // a processor runs only when connected; its output is silence
+    }
   }
 
-  // ONE SPOKEN TURN. Waits for speech to start, keeps a moment from before it
-  // so the first syllable is not lost, and ends after a pause. Returned as
-  // 16 kHz, 16-bit mono PCM, base64 - what Speech Object Acquisition produces.
+  // ONE SPOKEN TURN. Begins with the second just heard, waits for speech if none
+  // has started, keeps a moment from before it so the first syllable is not lost,
+  // and ends after a pause. Returned as 16 kHz, 16-bit mono PCM, base64 - what
+  // Speech Object Acquisition produces.
   function captureSpeech() {
     return new Promise(async resolve => {
       try { await unlock(); } catch (e) { resolve(null); return; }
-      const source = ctx.createMediaStreamSource(mic);
-      const node = ctx.createScriptProcessor(4096, 1, 1);
       const rate = ctx.sampleRate;
-      const START = 0.020, QUIET = 0.012, PAUSE_MS = 900, MAX_MS = 20000, PREROLL = 3;
-      const before = [], kept = [];
-      let speaking = false, quietMs = 0, spokenMs = 0, done = false;
+      const before = ring.slice(), kept = [];
+      let speaking = before.some(b => level(b) > START), quietMs = 0, spokenMs = 0, done = false;
+      if (speaking) kept.push(...before);
 
       function finish(keep) {
         if (done) return;
         done = true;
-        node.onaudioprocess = null;
-        try { node.disconnect(); source.disconnect(); } catch (e) {}
+        hear = null;
         capture = null;
         resolve(keep && speaking ? toPcm16k(kept, rate) : null);
       }
       capture = { abandon: () => finish(false) };
 
-      node.onaudioprocess = e => {
-        const x = e.inputBuffer.getChannelData(0);
-        let sum = 0;
-        for (let i = 0; i < x.length; i++) sum += x[i] * x[i];
-        const rms = Math.sqrt(sum / x.length), ms = x.length * 1000 / rate;
-        const copy = new Float32Array(x);
+      hear = block => {
+        const rms = level(block), ms = block.length * 1000 / rate;
         if (!speaking) {
-          before.push(copy);
-          if (before.length > PREROLL) before.shift();
+          before.push(block);
+          trim(before, PREROLL_MS);
           if (rms > START) { speaking = true; kept.push(...before); }
           return;
         }
-        kept.push(copy);
+        kept.push(block);
         spokenMs += ms;
         quietMs = rms < QUIET ? quietMs + ms : 0;
         if (quietMs >= PAUSE_MS || spokenMs >= MAX_MS) finish(true);
       };
-      source.connect(node);
-      node.connect(ctx.destination);   // a processor runs only when connected; its output is silence
     });
   }
 
