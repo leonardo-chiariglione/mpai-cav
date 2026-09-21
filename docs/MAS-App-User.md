@@ -26,20 +26,20 @@ built, see the [Developer Guide](MAS-App-Developer.md).
 
 ## 2. The models
 
-The models are not in the repository. Obtain each from its source - listed in
-[Models - Provenance](models-provenance.md) - and place it under `Models\` at
-the path the settings file (`aim-settings.json`) names:
+The models are not in the repository. Obtain each from its source - listed, with
+its size and SHA-256, in [MAS-App - Models](MAS-App-Models.md) - and place it under
+`Models\` at the path the settings file (`AIMs\aim-settings.json`) names:
 
 | Used for | Files under `Models\` | Needed by |
 |---|---|---|
 | Speech recognition (Whisper) | `Whisper\bin\whisper-cli.exe`, `Whisper\models\ggml-small.bin` | all four Apps |
 | Speech synthesis (Piper) | `Piper\piper_windows_amd64\piper\piper.exe`, and the voices under `Piper\voices\` (one `.onnx` and its `.onnx.json` per language) | all four Apps |
-| Picture question answering (BLIP) | `BLIP\onnx\blip_vision_model.onnx`, `blip_text_encoder_wrapper.onnx`, `blip_decoder_context_dynamic.onnx`, `BLIP\blip-vqa-base\vocab.txt` | AMQ |
-| Translation (M2M100) | the files under `Whisper\M2M100\` named in `aim-settings.json` | MAT |
+| Picture question answering (BLIP) | `BLIP\onnx\blip_vision_model.onnx` with `blip_vision_model.onnx.data`, `blip_text_encoder_wrapper.onnx`, `blip_decoder_context_dynamic.onnx`, `BLIP\blip-vqa-base\vocab.txt` | AMQ |
+| Translation (M2M100) | the files under `Whisper\M2M100\` named in `AIMs\aim-settings.json` | MAT |
 | Emotion in the voice (wav2vec2) | `w2v2-emotion\model.onnx` | MPD |
 | Emotion in the face (HSEmotion) | `hsemotion_enet_b0_8_va_mtl.onnx` | MPD |
 
-If a model is missing or misplaced, the Service reports an error while it loads the models; check the path against `aim-settings.json`.
+If a model is missing or misplaced, the Service reports an error while it loads the models; check the path against `AIMs\aim-settings.json`.
 
 ## 3. Once, before the first start
 
@@ -58,7 +58,7 @@ folder where you put the software:
   "AppDirectory": "D:\\MPAI\\Apps",
   "Apps":         [ "MAD", "AMQ", "MAT", "MPD" ],
   "AmdDirectory": "D:\\MPAI\\AIMs\\AMDs",
-  "SettingsPath": "D:\\MPAI\\aim-settings.json"
+  "SettingsPath": "D:\\MPAI\\AIMs\\aim-settings.json"
 }
 ```
 
@@ -142,7 +142,7 @@ something happy, and she smiles.
 
 - **Small models.** The language model (`llama3.2:3b`) and the picture model are
   small. Answers can be vague, and in MPD she may avoid personal questions such
-  as "What is my name?". A larger Ollama model can be set in `aim-settings.json`
+  as "What is my name?". A larger Ollama model can be set in `AIMs\aim-settings.json`
   (`OllamaModel`).
 - **One Service, one machine.** The Service is meant to run on the machine it
   serves. It can be reached from elsewhere (for example through a tunnel), but

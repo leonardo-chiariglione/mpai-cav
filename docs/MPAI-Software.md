@@ -18,7 +18,7 @@ a 3-D Speaking Avatar that listens, looks, answers and shows expression.
 
 - **To install and use it:** [MAS-App User Guide](MAS-App-User.md)
 - **To build on it:** [MAS-App Developer Guide](MAS-App-Developer.md)
-- **Where the AI models come from:** [Models - Provenance](models-provenance.md)
+- **The AI models it needs:** [MAS-App - Models](MAS-App-Models.md)
 
 ## The standards it implements
 
@@ -71,8 +71,8 @@ icon. The work is done by the Module on the Service.
 ## What is not in the repository
 
 **AI models** are not distributed here. They are obtained separately, by name,
-size and source, and placed under `Models/` - see the User Guide and
-[Models - Provenance](models-provenance.md). Nor are there any credentials,
+size, SHA-256 and source, and placed under `Models/` - see
+[MAS-App - Models](MAS-App-Models.md). Nor are there any credentials,
 certificates, server configurations or personal data.
 
 ## Privacy, by design
