@@ -2,8 +2,9 @@
 #  MPAI-MAS.orch - MPAI as a Service
 #  Workflow Description Language v0.3, AIF V3.0
 #
-#  This is an App like any other. It welcomes a person, offers what the Service
-#  has, runs the App they choose, and asks whether they want another.
+#  This is not an App: it is the container the Apps run in, and it belongs to
+#  the client. It welcomes a person, offers what the Service has, runs the App
+#  they choose, and asks whether they want another.
 #
 #  It runs over 1MAS-APP-V1.0-I01 and nothing else: it speaks, and the Apps it
 #  runs do the work. Each of those runs under a Controller of its own.
