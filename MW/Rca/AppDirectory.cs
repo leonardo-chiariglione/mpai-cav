@@ -31,7 +31,7 @@ public sealed class AppDirectory : IDisposable
     private readonly HttpClient http;
     private readonly string     root;
 
-    public AppDirectory(string serviceUrl, string? bearerToken = null)
+    public AppDirectory(string serviceUrl, string? bearerToken = null, string? clientId = null)
     {
         root = serviceUrl.TrimEnd('/');
         var handler = new HttpClientHandler
@@ -47,6 +47,27 @@ public sealed class AppDirectory : IDisposable
         if (!string.IsNullOrWhiteSpace(bearerToken))
             http.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", bearerToken);
+        if (!string.IsNullOrWhiteSpace(clientId))
+            http.DefaultRequestHeaders.Add("MPAI-Client", clientId);
+    }
+
+    // THIS CLIENT IS CLOSING: the Service stops counting it at once.
+    public async Task LeaveAsync()
+    {
+        try { await http.PostAsync($"{root}/MPAI/AIFU/Leave", null); }
+        catch { }
+    }
+
+    // HOW MANY CLIENTS ARE USING THE SERVICE NOW, this one included; null when the
+    // Service does not say.
+    public async Task<int?> ActiveClientsAsync()
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(await http.GetStringAsync($"{root}/MPAI/AIFU/Status"));
+            return doc.RootElement.GetProperty("activeClients").GetInt32();
+        }
+        catch { return null; }
     }
 
     // The Apps this Service offers. An empty list is an answer, not a failure:

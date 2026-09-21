@@ -36,4 +36,16 @@ public sealed class WebAppDirectory
     }
 
     public Task<string> WorkflowAsync(string appId) => http.GetStringAsync($"MPAI/AIFU/Apps/{appId}");
+
+    // How many clients are using the Service now, this one included; null when the
+    // Service does not say.
+    public async Task<int?> ActiveClientsAsync()
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(await http.GetStringAsync("MPAI/AIFU/Status"));
+            return doc.RootElement.GetProperty("activeClients").GetInt32();
+        }
+        catch { return null; }
+    }
 }

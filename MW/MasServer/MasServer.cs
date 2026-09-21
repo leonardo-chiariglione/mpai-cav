@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -66,6 +67,16 @@ public sealed class MasServer
 
     // One SCI per Controller Instance created by the RCA.
     private readonly ConcurrentDictionary<string, Sci> instances = new();
+
+    // WHO IS USING THE SERVICE NOW. A client names itself with a random
+    // identifier, made when it starts, on every request (header MPAI-Client); one
+    // person's client uses several Controller Instances - one for MPAI-MAS, one
+    // per App - so they are counted by that identifier, not by instance. A client
+    // counts while it is open: it says goodbye when it closes (POST /Leave), and
+    // while open it makes a request at least every 30 seconds, so one that crashes
+    // or loses its connection drops out after 90.
+    private readonly ConcurrentDictionary<string, DateTimeOffset> clients = new();
+    private static readonly TimeSpan ActiveWindow = TimeSpan.FromSeconds(90);
 
     public MasServer(
         IModuleRunner runner,
@@ -163,6 +174,9 @@ public sealed class MasServer
             var path   = (ctx.Request.Path.Value ?? string.Empty).TrimEnd('/');
             var method = ctx.Request.Method;
 
+            var client = ctx.Request.Headers["MPAI-Client"].ToString();
+            if (client.Length is > 0 and <= 64) clients[client] = DateTimeOffset.UtcNow;
+
             if (!path.StartsWith(Prefix, StringComparison.Ordinal))
             {
                 await Write(ctx, 404, "text/plain", "Not an MPAI AIFU route.");
@@ -174,6 +188,24 @@ public sealed class MasServer
             var segs = rest.Length == 0
                 ? Array.Empty<string>()
                 : rest.Split('/');
+
+            // POST /Leave - the caller is closing: it no longer counts
+            if (method == "POST" && segs.Length == 1 && segs[0] == "Leave")
+            {
+                if (client.Length > 0) clients.TryRemove(client, out _);
+                await Write(ctx, 200, "text/plain", "Goodbye.");
+                return;
+            }
+
+            // GET /Status - how many clients are active now, the caller included
+            if (method == "GET" && segs.Length == 1 && segs[0] == "Status")
+            {
+                var since = DateTimeOffset.UtcNow - ActiveWindow;
+                foreach (var old in clients.Where(c => c.Value < since).Select(c => c.Key).ToList())
+                    clients.TryRemove(old, out _);
+                await Write(ctx, 200, "application/json", $"{{\"activeClients\":{clients.Count}}}");
+                return;
+            }
 
             // GET /Apps - the catalogue
             if (method == "GET" && segs.Length == 1 && segs[0] == "Apps")

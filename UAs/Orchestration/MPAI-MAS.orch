@@ -21,6 +21,14 @@ on Start:
     ask   WelcomeSpeech (OSD-BSO-V1.5), WelcomeFaceDescriptors (PAF-FDO-V1.6)
     present WelcomeSpeech, WelcomeFaceDescriptors
 
+    # With others using the Service now, she says so; alone, she says nothing.
+    acquire Company (OSD-BTO-V1.5) = { "Attributes": { "TextRole": "Concurrency" } }
+    branch on Company {
+        offer Company (OSD-BTO-V1.5:1)
+        ask   CompanySpeech (OSD-BSO-V1.5), CompanyFaceDescriptors (PAF-FDO-V1.6)
+        present CompanySpeech, CompanyFaceDescriptors
+    }
+
     loop until Stop:
 
         acquire Chosen (OSD-BTO-V1.5) = { "Attributes": { "TextRole": "AppName" } }

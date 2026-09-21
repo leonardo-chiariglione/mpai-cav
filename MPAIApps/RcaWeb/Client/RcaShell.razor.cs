@@ -67,6 +67,10 @@ public partial class RcaShell : ComponentBase
         started = true;
         try { await Js.InvokeVoidAsync("rca.unlock"); }
         catch (Exception ex) { Status("microphone: " + ex.Message); }
+
+        // PRESENT WHILE OPEN, GONE WHEN CLOSED: see rca.presence.
+        if (Http.DefaultRequestHeaders.TryGetValues("MPAI-Client", out var ids))
+            try { await Js.InvokeVoidAsync("rca.presence", ids.First()); } catch { }
         _stopping = new CancellationTokenSource();
         await RunAppAsync("MAS");
         started = false;
@@ -150,6 +154,15 @@ public partial class RcaShell : ComponentBase
         devices.RegisterAcquire("OSD-BTO-V1.5", async (viaVad, wanted, abandon) =>
         {
             var stop = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+
+            // HOW MANY ARE HERE: a sentence when others use the Service now; else nothing.
+            if ((wanted ?? "").Contains("Concurrency", StringComparison.OrdinalIgnoreCase))
+            {
+                var count = await new WebAppDirectory(Http).ActiveClientsAsync();
+                return count is int n && n > 1
+                    ? MpaiJson.ToJson(BasicTextObject.FromText($"You are the {Ordinal(n)} concurrent user of the MPAI as a Service App."))
+                    : null;
+            }
 
             if (!(wanted ?? "").Contains("AppName", StringComparison.OrdinalIgnoreCase))
             {
@@ -317,6 +330,11 @@ public partial class RcaShell : ComponentBase
         waiting.TrySetResult("");
         Refresh();
     }
+
+    // "You are the 2nd concurrent user ..." - the ordinal of a count.
+    private static string Ordinal(int n) =>
+        (n % 100) is 11 or 12 or 13 ? n + "th"
+        : (n % 10) switch { 1 => n + "st", 2 => n + "nd", 3 => n + "rd", _ => n + "th" };
 
     private static string Words(string json)
     {

@@ -94,6 +94,20 @@ public partial class MainWindow : Window
         SendButton.Click  += (_, _) => SendTyped();
         TypedBox.KeyDown  += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) SendTyped(); };
         TypedBox.TextChanged += (_, _) => { if (_typed is not null && TypedBox.Text.Length > 0) try { _typingClaims?.Cancel(); } catch { } };
+
+        // PRESENT WHILE OPEN, GONE WHEN CLOSED. The Service counts this client while
+        // it hears from it; a request every 30 seconds keeps it counted, and closing
+        // the window says goodbye.
+        _ = KeepPresentAsync();
+        Closing += (_, _) =>
+        {
+            try
+            {
+                using var leaving = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+                Task.Run(() => leaving.LeaveAsync()).Wait(TimeSpan.FromSeconds(2));
+            }
+            catch { }
+        };
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -187,7 +201,7 @@ public partial class MainWindow : Window
         try
         {
             Status("asking the Service what it offers...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
             var apps = await directory.ListAsync();
 
             if (apps.Count == 0)
@@ -256,7 +270,7 @@ public partial class MainWindow : Window
         try
         {
             Status($"fetching {chosen.Name}...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
             var text = await directory.WorkflowAsync(chosen.App);
 
             _workflow = new WorkflowReader().Read(text);
@@ -482,7 +496,7 @@ public partial class MainWindow : Window
         try
         {
             Status($"obtaining {appId}...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
             // A Service holds Apps it does not offer, so the App is fetched by name
             // rather than looked for in the catalogue. Its name and the room it wants
             // are taken from the catalogue when it is there.
@@ -591,6 +605,19 @@ public partial class MainWindow : Window
         // what it wants; how a person is asked is the User Agent's own affair.
         devices.RegisterAcquire("OSD-BTO-V1.5", async (_, wanted, abandon) =>
         {
+            // HOW MANY ARE HERE. Asked for a Text whose role is Concurrency, the client
+            // asks the Service how many clients are using it now. With others present
+            // it answers a sentence saying so; alone, or when the Service does not
+            // say, it answers nothing, and the workflow says nothing.
+            if ((wanted ?? "").Contains("Concurrency", StringComparison.OrdinalIgnoreCase))
+            {
+                using var status = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+                var count = await status.ActiveClientsAsync();
+                return count is int n && n > 1
+                    ? MpaiJson.ToJson(BasicTextObject.FromText($"You are the {Ordinal(n)} concurrent user of the MPAI as a Service App."))
+                    : null;
+            }
+
             // TEXT THE PERSON TYPES. Any Text Object asked for without the role of an
             // App name is typed: the text box opens, and Enter - the key or the
             // button - gives it. When the workflow waits for speech or text,
@@ -845,6 +872,22 @@ public partial class MainWindow : Window
         };
         return BasicSpeechObject.FromData(speech.Data, qualifier);
     }
+
+
+    private async Task KeepPresentAsync()
+    {
+        using var presence = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+        while (true)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30));
+            await presence.ActiveClientsAsync();
+        }
+    }
+
+    // "You are the 2nd concurrent user ..." - the ordinal of a count.
+    private static string Ordinal(int n) =>
+        (n % 100) is 11 or 12 or 13 ? n + "th"
+        : (n % 10) switch { 1 => n + "st", 2 => n + "nd", 3 => n + "rd", _ => n + "th" };
 
     // ---- the window --------------------------------------------------------
 
