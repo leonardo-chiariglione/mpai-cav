@@ -9,7 +9,7 @@ using Mpai.Hci.Api;
 using Mpai.Mas.PortData;
 using Mpai.Mas.Server;
 
-using HciMad;   // MadProvider, compiled in from MadApp
+using Mpai.Providers;
 
 namespace MmcMad.Server;
 
@@ -27,7 +27,7 @@ namespace MmcMad.Server;
 internal static class Program
 {
     private const string MadModule = "1MMC-MAD-V2.5-I01";
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
+    private const string MasModule = "1MAS-APP-V1.0-I01";
 
     private static async Task<int> Main(string[] args)
     {
@@ -138,7 +138,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("Loading models. This is the slow part.");
 
-        foreach (var module in new[] { MadModule, RsrModule })
+        foreach (var module in new[] { MadModule, MasModule })
         {
             var failure = runner.Start(module);
             Console.WriteLine(failure is null
@@ -158,7 +158,7 @@ internal static class Program
         {
             // WHAT THIS SERVICE OFFERS. Empty unless a catalogue is configured, in
             // which case a client holding no application can ask what is here.
-            Catalogue = AppCatalogue.Scan(config.AppDirectory)
+            Catalogue = AppCatalogue.Scan(config.AppDirectory, config.Apps)
         };
 
         Console.WriteLine(server.Catalogue.Root is null

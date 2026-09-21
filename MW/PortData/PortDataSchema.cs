@@ -43,6 +43,7 @@ public static class PortDataSchema
         ["OSD-BTO-V1.5"] = "OSD/V1.5/data/BasicTextObject.json",
         ["OSD-BVO-V1.5"] = "OSD/V1.5/data/BasicVisualObject.json",
         ["OSD-STM-V1.5"] = "OSD/V1.5/data/SimpleTime.json",
+        ["OSD-SEL-V1.5"] = "OSD/V1.5/data/Selector.json",
         ["PAF-FDO-V1.6"] = "PAF/V1.6/data/FaceDescriptorsObject.json"
     };
 

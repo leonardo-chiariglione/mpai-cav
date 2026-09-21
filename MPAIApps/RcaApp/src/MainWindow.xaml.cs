@@ -48,9 +48,28 @@ public partial class MainWindow : Window
     private Workflow?             _workflow;
     private string?               _workflowPath;
     private CancellationTokenSource? _stopping;
+
+    // THE APP MPAI-MAS IS RUNNING, if any. Stop ends that App and MPAI-MAS goes
+    // on - it asks whether the person wants another. With no App running, Stop
+    // ends MPAI-MAS itself.
+    private CancellationTokenSource? _appStopping;
+
+    // THE LANGUAGE THE PERSON WILL SPEAK, once an App has asked for a Language
+    // Selector. Captured speech is stamped with it, so the recogniser decodes that
+    // language instead of guessing. Cleared when an App starts.
+    private string? _sourceLanguage;
+    private string  _lastFrom = "en";
+    private string  _lastTo   = "it";
+
+    // MPAI-MAS IS THE CLIENT'S OWN WORKFLOW. It is the container the Apps run in,
+    // chosen before any App is: it is read from this client's Orchestration
+    // folder, and the Service does not offer it as an App.
+    private static readonly string MasWorkflowPath =
+        Path.Combine(MpaiPaths.Root, "UAs", "Orchestration", "MPAI-MAS.orch");
     private Task?                    _running;
     private TaskCompletionSource?    _awaiting;
     private string?                  _appId;
+    private TaskCompletionSource<string?>? _choosing;
     private readonly Dictionary<string, RemoteNorthApi> _controllers = new(StringComparer.Ordinal);
 
     // What the workflow is waiting for the user to type, if anything.
@@ -66,7 +85,7 @@ public partial class MainWindow : Window
         // the Service offers, always, and an App is started by naming it.
         // CHOOSING IS AN ACT, NOT A SELECTION. A list that runs an App the moment
         // a row is touched gives no chance to read the next line.
-        StopButton.Click  += (_, _) => _stopping?.Cancel();
+        StopButton.Click  += (_, _) => (_appStopping ?? _stopping)?.Cancel();
         SendButton.Click  += (_, _) => SendTyped();
         TypedBox.KeyDown  += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) SendTyped(); };
     }
@@ -90,8 +109,12 @@ public partial class MainWindow : Window
 
             // A CLIENT THAT HOLDS NO APPLICATION HAS NOTHING ELSE TO SHOW.
             // Asking the Service what it offers is the first thing it does.
-            await SpeakWelcomeAsync();
-            await ShowAppsAsync();
+            // THIS CLIENT RUNS AN APP LIKE ANY OTHER. MPAI as a Service welcomes the
+            // person, offers what the Service has, runs what they choose and asks
+            // whether they want another - and all of that is in its Workflow
+            // Description, not in this executable.
+            _stopping = new CancellationTokenSource();
+            await RunAppAsync("MAS");
         }
         catch (Exception fatal)
         {
@@ -102,12 +125,16 @@ public partial class MainWindow : Window
 
     // ---- the workflow ------------------------------------------------------
 
-    // THE CLIENT SPEAKS BEFORE IT HAS AN APPLICATION. It drives PAF-RSR on the
-    // Service directly - start, give the words at both Text Object Ports,
-    // collect the speech and the face descriptors, present them, stop - which is
-    // exactly what a workflow's welcome does. That this is possible with no App
-    // chosen is the point: the client holds nothing but the means to render.
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
+    // THE CLIENT SPEAKS BEFORE IT HAS AN APPLICATION. It drives the MPAI-MAS
+    // Module on the Service - start, offer the words at its Text Port, ask for
+    // the speech and the face descriptors, present them, stop - which is exactly
+    // what a workflow's welcome does. That this is possible with no App chosen
+    // is the point: the client holds nothing but the means to render.
+    //
+    // It offers one Text datum and names no AIM. That the Module renders it with
+    // Response and Scene Rendering, and that RSR sends it on to both Text-To-
+    // Speech and Generative Face Description, is the Module's business.
+    private const string MasModule = "1MAS-APP-V1.0-I01";
 
     private Task SpeakWelcomeAsync() =>
         SpeakAsync("Welcome to MPAI as a Service. Select an app and enjoy.");
@@ -117,14 +144,13 @@ public partial class MainWindow : Window
         try
         {
             using var north = new RemoteNorthApi(ServiceUrl, ServiceToken);
-            if (north.StartFlow(RsrModule) != AifError.OK) return;
+            if (north.StartFlow(MasModule) != AifError.OK) return;
 
-            var said = await Task.Run(() => north.Advance(RsrModule, new List<NorthApi.Datum>
+            var said = await Task.Run(() => north.Advance(MasModule, new List<NorthApi.Datum>
             {
-                new NorthApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-                new NorthApi.Datum("OSD-BTO-V1.5", 2, MpaiJson.ToJson(BasicTextObject.FromText(words)))
+                new NorthApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words)))
             }));
-            north.StopFlow(RsrModule);
+            north.StopFlow(MasModule);
 
             if (!said.Ok) return;
 
@@ -168,7 +194,9 @@ public partial class MainWindow : Window
             }
 
             var shown = new List<Offered>();
-            foreach (var a in apps)
+            // MPAI-MAS IS NOT AN APP. It is the container the Apps run in; the client
+            // fetches it by name and does not offer it to the person.
+            foreach (var a in apps.Where(a => !string.Equals(a.Id, "MAS", StringComparison.OrdinalIgnoreCase)))
             {
                 object? icon = null;
                 var bytes = await directory.IconAsync(a);
@@ -268,6 +296,11 @@ public partial class MainWindow : Window
         if (AppList.SelectedItem is not Offered chosen) return;
         AppList.SelectedItem = null;
         Status($"chose {chosen.Name}");
+
+        // CHOOSING COMPLETES AN ACQUISITION. A workflow asked for the name of an
+        // Application; this is the person answering it.
+        if (_choosing is { } waiting) { _choosing = null; waiting.TrySetResult(chosen.App.Id); return; }
+
         _appId = chosen.App.Id;
         _ = ChosenAsync(chosen);
     }
@@ -385,6 +418,19 @@ public partial class MainWindow : Window
     // WHAT FORMAT THE REQUEST ASKED FOR, if it said. The request is the
     // Qualifier's own JSON, so the field is read where the schema puts it and
     // nothing is invented around it.
+    private string? _lastPicture;
+
+    // The format a file is, by its extension - which is how a Visual Object
+    // Acquisition states what it has read.
+    private static string FormatOf(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "JPEG",
+            ".png"            => "PNG",
+            ".bmp"            => "BMP",
+            _                  => ""
+        };
+
     private static string? FormatWanted(string? qualifierJson)
     {
         if (string.IsNullOrWhiteSpace(qualifierJson)) return null;
@@ -399,6 +445,90 @@ public partial class MainWindow : Window
         }
         catch { /* a request that will not parse asks for nothing in particular */ }
         return null;
+    }
+
+    private void ShowStage(string pane)
+    {
+        var width = pane.ToLowerInvariant() switch
+        {
+            "none"   => 0,
+            "wide"   => 560,
+            _        => 360        // normal, and anything this client does not know
+        };
+        StagePanel.Visibility = width > 0 ? Visibility.Visible : Visibility.Collapsed;
+        StageColumn.Width     = new GridLength(width);
+    }
+
+    private void ShowApps(bool show)
+    {
+        AppPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        AppColumn.Width     = new GridLength(show ? 380 : 0);
+    }
+
+    // AN APP RUNS UNDER A CONTROLLER OF ITS OWN. One Controller, one Module: the
+    // Controller that speaks for this client is not the Controller that runs an
+    // App, and an App that fails cannot take the client with it.
+    //
+    // The Controller is kept after the App ends, so returning to an App already
+    // tried does not load its models again.
+    private async Task RunAppAsync(string appId)
+    {
+        try
+        {
+            Status($"obtaining {appId}...");
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken);
+            // A Service holds Apps it does not offer, so the App is fetched by name
+            // rather than looked for in the catalogue. Its name and the room it wants
+            // are taken from the catalogue when it is there.
+            var offered = await directory.ListAsync();
+            var app     = offered.FirstOrDefault(a => a.Id == appId);
+
+            var text = appId == "MAS"
+                ? await File.ReadAllTextAsync(MasWorkflowPath)
+                : await directory.WorkflowAsync(appId);
+            var workflow = new WorkflowReader().Read(text);
+            if (appId != "MAS") _sourceLanguage = null;
+
+            if (!_controllers.TryGetValue(appId, out var north))
+                _controllers[appId] = north = new RemoteNorthApi(ServiceUrl, ServiceToken);
+
+            // THE ROOM AN APP ASKED FOR. An App that shows nothing gets no pane; one
+            // that shows a picture gets it wide. The App says so in its manifest and
+            // the Service carries it in the catalogue: how much room a thing needs to
+            // be seen is the App's business, and belongs nowhere in its workflow.
+            var pane = app?.Pane ?? "none";
+            await Dispatcher.InvokeAsync(() =>
+            {
+                WorkflowText.Text = $"{app?.Name ?? appId}   \u2014   {ServiceUrl}";
+                StopButton.IsEnabled = true;
+                ShowStage(pane);
+            });
+
+            var interpreter = new WorkflowInterpreter(north, Devices(), Status);
+            using var appStop = appId == "MAS" ? null : new CancellationTokenSource();
+            _appStopping = appStop;
+            try     { await interpreter.RunAsync(workflow, appStop?.Token ?? _stopping?.Token ?? default); }
+            finally { _appStopping = null; }
+            Status($"{app?.Name ?? appId} finished");
+        }
+        catch (Exception ex)
+        {
+            Program.Record("app", ex);
+            Status($"{appId}: {ex.Message}");
+        }
+        finally
+        {
+            await Dispatcher.InvokeAsync(() =>
+            {
+                WorkflowText.Text    = $"Service: {ServiceUrl}";
+                InstructionText.Text = "";
+                StageImage.Source    = null;
+                StageTitle.Text      = "No image displayed";
+                StageText.Text       = "";
+                TypedBox.Text        = "";
+                ShowStage("none");
+            });
+        }
     }
 
     private DeviceRegistry Devices()
@@ -420,11 +550,57 @@ public partial class MainWindow : Window
         devices.RegisterAcquire("OSD-BSO-V1.5", async (viaVad, wanted) =>
         {
             Instruct("Speak when you are ready.");
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            return speech is null || speech.Data.Length == 0
-                ? null
-                : MpaiJson.ToJson(speech);
+            // STOP DOES NOT WAIT FOR THE MICROPHONE. A capture ends only when the
+            // person stops speaking; a Stop pressed while listening is answered at
+            // once, and the capture is left to end on its own, its words dropped.
+            var capture = Task.Run(() => _avatar!.CaptureSpeech());
+            var stop    = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+            if (await Task.WhenAny(capture, Task.Delay(Timeout.Infinite, stop)) != capture)
+                return null;
+            var speech = await capture;
+            if (speech is null || speech.Data.Length == 0) return null;
+            if (_sourceLanguage is { } language) speech = WithLanguage(speech, language);
+            return MpaiJson.ToJson(speech);
         });
+
+        // THE LANGUAGES, CHOSEN BY THE PERSON. A Language Selector names two: the
+        // one the person will speak or write, and the one the answer is to be in.
+        // Both are asked for together and returned as one datum.
+        devices.RegisterAcquire("OSD-SEL-V1.5", async (_, _) =>
+        {
+            Instruct("Choose the input and output languages.");
+            var chosen = await Dispatcher.InvokeAsync(ChooseLanguages);
+            if (chosen is not { } pair) return null;
+            _sourceLanguage = pair.From;
+            return MpaiJson.ToJson(BasicSelectorObject.Languages(pair.From, pair.To));
+        });
+
+        // THE NAME OF AN APPLICATION, CHOSEN BY THE PERSON. A Text Object whose
+        // Qualifier says its role is an App name: the User Agent shows what the
+        // Service offers and returns the name of the one chosen. The workflow says
+        // what it wants; how a person is asked is the User Agent's own affair.
+        devices.RegisterAcquire("OSD-BTO-V1.5", async (_, wanted) =>
+        {
+            if (!(wanted ?? "").Contains("AppName", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            // The list is filled before it is shown: a Service may have gained or
+            // lost an App since the last time it was asked.
+            await ShowAppsAsync();
+
+            var picked = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            await Dispatcher.InvokeAsync(() => { _choosing = picked; ShowApps(true); });
+            var name = await picked.Task;
+            await Dispatcher.InvokeAsync(() => ShowApps(false));
+
+            return name is null ? null
+                 : MpaiJson.ToJson(BasicTextObject.FromText(name));
+        });
+
+        // RUNNING THE APP THAT WAS CHOSEN. Its Workflow Description is obtained from
+        // the Service and interpreted under a Controller of its own: one Controller,
+        // one Module, and this client's own Controller is untouched by it.
+        devices.Run = async app => await RunAppAsync(app);
 
         // A PICTURE. The request is a Qualifier saying what the User Agent wants;
         // this source reads the format asked for and answers it.
@@ -439,6 +615,29 @@ public partial class MainWindow : Window
         {
             var askedFor = FormatWanted(wanted);          // e.g. "JPEG", or null
 
+            // A FACE IS LOOKED AT, NOT CHOSEN. Asked for a Visual Object whose type
+            // is a Face, the User Agent takes a frame from the camera.
+            if ((wanted ?? "").Contains("\"Face\"", StringComparison.Ordinal))
+            {
+                var frame = await Task.Run(() => new WebcamVisualAcquisition()
+                    .AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
+                    .GetAwaiter().GetResult().Data);
+                return frame is { Length: > 0 }
+                    ? MpaiJson.ToJson(BasicVisualObject.FromFile("webcam.jpg", frame, "Face"))
+                    : null;
+            }
+
+            // ASKED AGAIN FOR WHAT WAS OFFERED, the person is not asked again. The
+            // first ask was answered with a Qualifier rather than data; this is the
+            // same file, now being asked for in the format it actually is.
+            if (_lastPicture is { } again && askedFor is not null && FormatOf(again) == askedFor)
+            {
+                var had = await File.ReadAllBytesAsync(again);
+                _lastPicture = null;
+                return MpaiJson.ToJson(
+                    BasicVisualObject.FromFile(Path.GetFileName(again), had, "Picture"));
+            }
+
             Instruct("Choose a picture.");
             var chosen = await Dispatcher.InvokeAsync(() =>
             {
@@ -451,6 +650,7 @@ public partial class MainWindow : Window
             });
             if (chosen is null) return null;
 
+            _lastPicture = null;
             var bytes = await File.ReadAllBytesAsync(chosen);
             var got   = BasicVisualObject.FromFile(Path.GetFileName(chosen), bytes, "Picture");
             var have  = Path.GetExtension(chosen).ToLowerInvariant() is ".jpg" or ".jpeg" ? "JPEG"
@@ -461,9 +661,17 @@ public partial class MainWindow : Window
             if (askedFor is not null && have.Length > 0 &&
                 !string.Equals(askedFor, have, StringComparison.OrdinalIgnoreCase))
             {
-                Status($"asked for {askedFor}; that file is {have}");
-                return MpaiJson.ToJson(
-                    BasicVisualObject.FromFile(Path.GetFileName(chosen), Array.Empty<byte>(), "Picture"));
+                // WHAT IT HAS, WITH NO DATA. An Object is passed either way: this one
+                // carries the Qualifier of the file that was chosen and nothing else,
+                // so the User Agent can ask again naming that format.
+                // REMEMBERED ONLY FOR THE ASK THAT FOLLOWS. A counter-offer is about
+                // to be made; the ask that answers it must reach this same file rather
+                // than asking the person a second time. Any later acquisition asks
+                // again, which is why nothing is remembered on the ordinary path.
+                _lastPicture = chosen;
+                Status($"asked for {askedFor}; this is {have}");
+                var counter = BasicVisualObject.FromFile(Path.GetFileName(chosen), Array.Empty<byte>(), "Picture");
+                return MpaiJson.ToJson(counter);
             }
 
             return MpaiJson.ToJson(got);
@@ -538,6 +746,81 @@ public partial class MainWindow : Window
         });
 
         return devices;
+    }
+
+    private static readonly (string Code, string Name)[] Languages =
+    {
+        ("en", "English"),  ("it", "Italiano"), ("es", "Espanol"), ("pt", "Portugues"),
+        ("fr", "Francais"), ("de", "Deutsch"),  ("ja", "Nihongo"), ("zh", "Zhongwen")
+    };
+
+    // A small window with the two languages, as the standalone MAT offers them.
+    // The previous choice is offered again.
+    private (string From, string To)? ChooseLanguages()
+    {
+        System.Windows.Controls.ComboBox Picker(string selected)
+        {
+            var box = new System.Windows.Controls.ComboBox { Width = 160, Margin = new Thickness(0, 4, 0, 10) };
+            foreach (var (code, name) in Languages)
+                box.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = name, Tag = code });
+            box.SelectedIndex = Math.Max(0, Array.FindIndex(Languages, l => l.Code == selected));
+            return box;
+        }
+
+        var from = Picker(_lastFrom);
+        var to   = Picker(_lastTo);
+        var ok   = new System.Windows.Controls.Button { Content = "OK", Width = 80, IsDefault = true,
+                                                        HorizontalAlignment = HorizontalAlignment.Right };
+        var panel = new System.Windows.Controls.StackPanel { Margin = new Thickness(16) };
+        panel.Children.Add(new System.Windows.Controls.TextBlock { Text = "Input language" });
+        panel.Children.Add(from);
+        panel.Children.Add(new System.Windows.Controls.TextBlock { Text = "Output language" });
+        panel.Children.Add(to);
+        panel.Children.Add(ok);
+
+        var dialog = new Window
+        {
+            Title = "Languages", Content = panel, Owner = this,
+            SizeToContent = SizeToContent.WidthAndHeight, ResizeMode = ResizeMode.NoResize,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        ok.Click += (_, _) => dialog.DialogResult = true;
+        if (dialog.ShowDialog() != true) return null;
+
+        string Code(System.Windows.Controls.ComboBox box) =>
+            (box.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string ?? "en";
+        _lastFrom = Code(from);
+        _lastTo   = Code(to);
+        return (_lastFrom, _lastTo);
+    }
+
+    // STATE THE LANGUAGE, CARRY EVERYTHING ELSE. Speech Object Acquisition
+    // recorded the sampling frequency and the precision; the language is added to
+    // the Qualifier that came with the capture, as the standalone MAT does.
+    private static BasicSpeechObject WithLanguage(BasicSpeechObject speech, string language)
+    {
+        var captured = speech.SpeechQualifier;
+        var qualifier = new SpeechQualifier
+        {
+            SpeechQualifierID = Guid.NewGuid().ToString(),
+            MInstanceID       = captured?.MInstanceID,
+            UEnvironmentID    = captured?.UEnvironmentID,
+            SubType           = captured?.SubType,
+            Format            = captured?.Format,
+            Attributes = new SpeechAttributes
+            {
+                Source                = captured?.Attributes?.Source,
+                SpeechCharacteristics = captured?.Attributes?.SpeechCharacteristics,
+                Structure             = captured?.Attributes?.Structure,
+                Device                = captured?.Attributes?.Device,
+                Metadata = new SpeechMetadata
+                {
+                    SpeakerProperties = captured?.Attributes?.Metadata?.SpeakerProperties,
+                    Language = new Language { LanguageCode = language, LanguageFormat = LanguageFormat.Iso639_1 }
+                }
+            }
+        };
+        return BasicSpeechObject.FromData(speech.Data, qualifier);
     }
 
     // ---- the window --------------------------------------------------------

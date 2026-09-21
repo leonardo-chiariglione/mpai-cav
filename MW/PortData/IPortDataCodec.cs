@@ -53,7 +53,8 @@ public sealed class PortDataCodecs
             .Register(new BasicTextObjectCodec())
             .Register(new BasicVisualObjectCodec())
             .Register(new FaceDescriptorsObjectCodec())
-            .Register(new SimpleTimeCodec());
+            .Register(new SimpleTimeCodec())
+            .Register(new SelectorCodec());
 
     public PortDataCodecs Register(
         IPortDataCodec codec)

@@ -74,6 +74,12 @@ public sealed class DeviceRegistry
     // button; a client that cannot wait proceeds, which is what a console does.
     public Func<string, Task>? Await { get; set; }
 
+    // RUNNING AN APP. The User Agent obtains the Workflow Description of the
+    // Application named, gives it a Controller of its own, interprets it, and
+    // returns when it ends. Nothing of that is the interpreter's business, which
+    // is why it is asked for rather than done here.
+    public Func<string, Task>? Run { get; set; }
+
     public Task<string?> AcquireAsync(string dataType, bool viaVad, string? wanted = null) =>
         sources.TryGetValue(dataType, out var how)
             ? how(viaVad, wanted)

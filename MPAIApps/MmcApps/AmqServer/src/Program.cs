@@ -31,7 +31,10 @@ namespace MmcAmq.Server;
 internal static class Program
 {
     private const string AmqModule = "1MMC-AMQ-V2.5-I01";
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
+    private const string MadModule = "1MMC-MAD-V2.5-I01";
+    private const string MasModule = "1MAS-APP-V1.0-I01";
+    private const string MatModule = "1MMC-MAT-V2.5-I01";
+    private const string MpdModule = "1MMC-MPD-V2.5-I01";
 
     private static async Task<int> Main(string[] args)
     {
@@ -167,7 +170,8 @@ internal static class Program
         using var north = new NorthApi(amdDir, settingsPath, s => new CompositeProvider(
             new AmqProvider(s),
             new MadProvider(s),
-            new MatProvider(s)));
+            new MatProvider(s),
+            new MpdProvider(s)));
         var runner = new NorthApiRunner(north, store);
 
         Console.WriteLine();
@@ -176,7 +180,7 @@ internal static class Program
         // ONE CONTROLLER, ONE MODULE. PAF-RSR-V1.6 is an AIM of MMC-AMQ-V2.5 and
         // is built with it; starting it separately would put a second Module under
         // this Controller, which cannot be.
-        foreach (var module in new[] { AmqModule })
+        foreach (var module in new[] { AmqModule, MadModule, MatModule, MpdModule, MasModule })
         {
             var failure = runner.Start(module);
             Console.WriteLine(failure is null
@@ -196,7 +200,7 @@ internal static class Program
         {
             // WHAT THIS SERVICE OFFERS. Empty unless a catalogue is configured, in
             // which case a client holding no application can ask what is here.
-            Catalogue = AppCatalogue.Scan(config.AppDirectory, config.Apps)
+            Catalogue = AppCatalogue.Scan(config.AppDirectory, config.Apps, config.Shell)
         };
 
         // WHAT THIS SERVICE CAN ACTUALLY RUN. An App is listed only if the Service

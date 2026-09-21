@@ -43,6 +43,7 @@ public enum StepKind
     Await,            // await "Ask"  - show a button and wait for it
     EndLoop,          // end  - leave the enclosing loop
     Say,              // say (T:n) "..." give (T), (T) - words in, speech and face out
+    Run,              // run L  - obtain the App named by that datum and run it
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }

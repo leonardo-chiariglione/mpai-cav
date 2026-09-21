@@ -34,12 +34,23 @@ public sealed class AppCatalogue
         string  Description,
         string? IconFile,
         string  WorkflowPath,
-        string  Folder);
+        string  Folder,
+        // HOW MUCH ROOM THE APP WANTS BESIDE THE AVATAR: none, normal or wide. The
+        // App knows what it needs to show; a client that does not recognise the
+        // value gives it the usual room.
+        string  Pane);
 
     private readonly Dictionary<string, Entry> byId =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public IReadOnlyCollection<Entry> Apps => byId.Values;
+    private string? shellId;
+
+    // What a person is offered: everything held, but not the shell.
+    public IReadOnlyCollection<Entry> Apps =>
+        byId.Values.Where(e => !string.Equals(e.Id, shellId, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    // Everything held, the shell included. Find serves from this.
+    public IReadOnlyCollection<Entry> Held => byId.Values;
     public string? Root { get; }
 
     private AppCatalogue(string? root) { Root = root; }
@@ -49,14 +60,20 @@ public sealed class AppCatalogue
     // THE SERVICE IS TOLD WHICH APPS IT OFFERS. A folder under the directory is
     // where an App's files happen to be, not a declaration that this Service
     // serves it: an App appears here because an operator named it.
-    public static AppCatalogue Scan(string? root, IEnumerable<string>? named = null)
+    public static AppCatalogue Scan(string? root, IEnumerable<string>? named = null, string? shell = null)
     {
         var catalogue = new AppCatalogue(root);
         if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) return catalogue;
 
         var wanted = named?.Where(s => !string.IsNullOrWhiteSpace(s))
                            .Select(s => s.Trim()).ToList();
-        if (wanted is null || wanted.Count == 0) return catalogue;   // told nothing, offers nothing
+        if (wanted is null) wanted = new List<string>();
+
+        // THE SHELL IS HELD AND SERVED, BUT NOT OFFERED. A client fetches it by
+        // name in order to offer the others; an App that offered itself would be
+        // chosen and would run inside itself.
+        if (!string.IsNullOrWhiteSpace(shell)) { catalogue.shellId = shell.Trim(); wanted.Add(catalogue.shellId); }
+        if (wanted.Count == 0) return catalogue;   // told nothing, offers nothing
 
         foreach (var id in wanted)
         {
@@ -73,7 +90,7 @@ public sealed class AppCatalogue
                 continue;
             }
 
-            string name = id, description = "", icon = "";
+            string name = id, description = "", icon = "", pane = "normal";
             var manifest = Path.Combine(folder, "app.json");
             if (File.Exists(manifest))
             {
@@ -84,6 +101,7 @@ public sealed class AppCatalogue
                     if (r.TryGetProperty("Name", out var n))        name        = n.GetString() ?? id;
                     if (r.TryGetProperty("Description", out var d)) description = d.GetString() ?? "";
                     if (r.TryGetProperty("Icon", out var i))        icon        = i.GetString() ?? "";
+                    if (r.TryGetProperty("Pane", out var w))        pane        = w.GetString() ?? "normal";
                 }
                 catch
                 {
@@ -97,7 +115,7 @@ public sealed class AppCatalogue
 
             catalogue.byId[id] = new Entry(id, name, description,
                                  iconPath is null ? null : Path.GetFileName(iconPath),
-                                 orch, folder);
+                                 orch, folder, pane);
         }
         return catalogue;
     }
@@ -108,13 +126,14 @@ public sealed class AppCatalogue
     // client showing a list fetches only the few it displays.
     public string ToJson() =>
         JsonSerializer.Serialize(
-            byId.Values.Select(a => new
+            Apps.Select(a => new
             {
                 id          = a.Id,
                 name        = a.Name,
                 description = a.Description,
                 icon        = a.IconFile is null ? null : $"Apps/{a.Id}/Icon",
-                workflow    = $"Apps/{a.Id}"
+                workflow    = $"Apps/{a.Id}",
+                pane        = a.Pane
             }),
             new JsonSerializerOptions { WriteIndented = true });
 }

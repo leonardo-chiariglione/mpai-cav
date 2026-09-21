@@ -183,6 +183,21 @@ public sealed class WorkflowInterpreter
                     say($"line {step.Line}: {ex.Message}");
                     throw;
                 }
+
+                // AN OBJECT WITH NO DATA IS A COUNTER-OFFER. A source asked for a
+                // format it has not got answers with the Qualifier of what it does
+                // have; the User Agent needs the datum, so it asks again naming
+                // what was offered. It is the User Agent's business to reach the
+                // goal it was given, and neither the workflow's nor the source's.
+                if (json is not null && step.Qualifier is not null)
+                {
+                    var counter = CounterOffer(port.DataType, json);
+                    if (counter is not null)
+                    {
+                        say("asked again, as offered");
+                        json = await devices.AcquireAsync(port.DataType, step.ViaVad, counter);
+                    }
+                }
                 if (json is null)
                 {
                     say($"acquire {port}: nothing");
@@ -297,6 +312,19 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
+            // The datum names an Application. What running one means belongs to the
+            // User Agent, and a User Agent that cannot run one carries on.
+            case StepKind.Run:
+            {
+                var named = step.Labels.FirstOrDefault();
+                if (named is null || !data.TryGetValue(named, out var d)) break;
+                var app = Plain(d.Json).Trim();
+                if (app.Length == 0) { say("run: nothing was chosen"); break; }
+                say($"run {app}");
+                if (devices.Run is not null) await devices.Run(app);
+                break;
+            }
+
             case StepKind.EndLoop:
                 throw new LoopEnded();
 
@@ -306,6 +334,28 @@ public sealed class WorkflowInterpreter
     }
 
     private sealed class LoopEnded : Exception { }
+
+    // A COUNTER-OFFER: AN OBJECT WITH A QUALIFIER AND NO DATA. What is passed is
+    // always an Object - sometimes data, sometimes a Qualifier, sometimes both.
+    // A source that cannot supply what was asked for answers with the Qualifier
+    // of what it has and no data, and the User Agent asks again naming that.
+    //
+    // The Object is deserialised into what it is and asked; no field of the
+    // serialisation is named here, because the serialisation is the standard's.
+    private static string? CounterOffer(string dataType, string json)
+    {
+        try
+        {
+            if (dataType.StartsWith("OSD-BVO", StringComparison.OrdinalIgnoreCase))
+            {
+                var o = Mpai.Core.MpaiJson.FromJson<Mpai.Core.BasicVisualObject>(json);
+                if (o is not null && o.Data.Length == 0 && o.VisualQualifier is not null)
+                    return Mpai.Core.MpaiJson.ToJson(o.VisualQualifier);
+            }
+        }
+        catch { /* an Object that will not deserialise is not a counter-offer */ }
+        return null;
+    }
 
     // ---- the small helpers -------------------------------------------------
 

@@ -58,3 +58,6 @@ _removed/
 *.northbak
 
 *.zip
+
+# backups made by the Apply/Prepare scripts
+_backup-*/

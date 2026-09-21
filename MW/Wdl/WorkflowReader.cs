@@ -276,6 +276,15 @@ public sealed class WorkflowReader
             // OFFER AND ASK. The User Agent offers the Controller data identified
             // by Data Type and Port Number, and asks for data identified the same
             // way. One Module under a Controller, so nothing names it.
+            // A WORKFLOW MAY RUN AN APP. The datum names an Application; the User
+            // Agent obtains that Application's Workflow Description, gives it a
+            // Controller of its own, interprets it, and returns here when it ends.
+            //
+            // This is neither a request of the Controller nor an act upon the real
+            // world: it directs the User Agent itself, as loop, branch and end do.
+            case "run":
+                return new Step { Kind = StepKind.Run, Labels = Names(rest), Line = n };
+
             case "offer":
             {
                 var od = ReadDatum(n, rest);
@@ -379,7 +388,7 @@ public sealed class WorkflowReader
     private static readonly string[] Starters =
     {
         "workflow ", "on Start:", "on Stop:", "ask ", "acquire ", "type ", "prompt ",
-        "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask "
+        "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run "
     };
 
     // A brace stands on its own: it closes a block and is not a continuation

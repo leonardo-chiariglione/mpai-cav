@@ -24,7 +24,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="NorthApiRunner.cs" />
     <Compile Include="MasServerConfig.cs" />
-    <Compile Include="..\..\MadApp\src\MadProvider.cs" Link="MadProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +34,7 @@
     <ProjectReference Include="..\..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
     <ProjectReference Include="..\..\..\..\MW\MasServer\Mpai.Mas.Server.csproj" />
     <ProjectReference Include="..\..\..\..\MW\PortData\Mpai.Mas.PortData.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
 
     <!-- MMC-MAD leaves, plus the RSR leaves so the avatar can speak. No device
          project: acquisition and delivery are the User Agent's and travel with

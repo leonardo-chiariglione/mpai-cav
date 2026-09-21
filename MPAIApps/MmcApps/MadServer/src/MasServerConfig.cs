@@ -71,6 +71,12 @@ public sealed class MasServerConfig
     // be, not a declaration that this Service serves it.
     public string[]? Apps { get; init; }
 
+    // THE APP A CLIENT RUNS IN ORDER TO OFFER THE OTHERS. It is held and served
+    // like any other App, and a client fetches it by name; it is not among the
+    // Apps a person is offered, because an App that offered itself would be
+    // chosen and would run inside itself.
+    public string? Shell { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }

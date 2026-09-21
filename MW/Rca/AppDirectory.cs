@@ -24,7 +24,9 @@ public sealed class AppDirectory : IDisposable
         string  Name,
         string  Description,
         string? IconPath,
-        string  WorkflowPath);
+        string  WorkflowPath,
+        // How much room the App wants beside the avatar: none, normal or wide.
+        string  Pane);
 
     private readonly HttpClient http;
     private readonly string     root;
@@ -65,7 +67,8 @@ public sealed class AppDirectory : IDisposable
             apps.Add(new App(
                 S("id"), S("name"), S("description"),
                 string.IsNullOrEmpty(icon) ? null : $"{root}/MPAI/AIFU/{icon}",
-                $"{root}/MPAI/AIFU/{S("workflow")}"));
+                $"{root}/MPAI/AIFU/{S("workflow")}",
+                S("pane") is { Length: > 0 } w ? w : "normal"));
         }
         return apps;
     }
@@ -75,6 +78,12 @@ public sealed class AppDirectory : IDisposable
     // opened from disk are the same thing, and nothing downstream can tell
     // which it was given.
     public Task<string> WorkflowAsync(App app) => http.GetStringAsync(app.WorkflowPath);
+
+    // BY IDENTIFIER, WITHOUT LISTING. A Service holds Apps it does not offer - the
+    // one a client runs in order to offer the others - and a client that looked
+    // for it in the catalogue would not find it.
+    public Task<string> WorkflowAsync(string appId) =>
+        http.GetStringAsync($"{root}/MPAI/AIFU/Apps/{appId}");
 
     public async Task<byte[]?> IconAsync(App app)
     {
