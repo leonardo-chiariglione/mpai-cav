@@ -37,6 +37,10 @@ public sealed class WorkflowInterpreter
     private readonly Dictionary<string, string> variables =
         new(StringComparer.OrdinalIgnoreCase);
 
+    // Labels an 'acquire ... or ...' waited for and did not get. 'branch on' such
+    // a label is false: it names the path that was not taken.
+    private readonly HashSet<string> absent = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly HashSet<string> running = new(StringComparer.OrdinalIgnoreCase);
 
     public WorkflowInterpreter(
@@ -169,6 +173,10 @@ public sealed class WorkflowInterpreter
             }
 
             case StepKind.Give: Give(step); break;
+
+            case StepKind.Acquire when step.Alternatives.Count > 1:
+                await FirstOfAsync(step, stop);
+                break;
 
             case StepKind.Acquire:
             {
@@ -368,11 +376,63 @@ public sealed class WorkflowInterpreter
         if (variables.TryGetValue(name, out var v))
             return v.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
 
+        // A DATUM THAT ARRIVED IS TRUE, unless it is itself a Boolean.
         if (data.TryGetValue(name, out var d))
-            return d.Json.Trim().Trim('"').Equals("true", StringComparison.OrdinalIgnoreCase);
+        {
+            var said = d.Json.Trim().Trim('"');
+            if (said.Equals("false", StringComparison.OrdinalIgnoreCase)) return false;
+            return true;
+        }
+
+        if (absent.Contains(name)) return false;
 
         throw new InvalidOperationException(
             $"'{name}' was never obtained, so there is nothing to branch on.");
+    }
+
+    // WHICHEVER COMES FIRST. Every alternative is asked for at once; the first to
+    // bring a datum is kept and the others are abandoned. A source that brings
+    // nothing - silence, an empty line - does not end the wait: another may still
+    // come. The labels of the alternatives not taken hold nothing afterwards.
+    private async Task FirstOfAsync(Step step, CancellationToken stop)
+    {
+        foreach (var a in step.Alternatives)
+        {
+            data.Remove(a.Port!.Label);
+            absent.Add(a.Port.Label);
+        }
+        say("acquire, whichever comes first: " +
+            string.Join(" or ", step.Alternatives.Select(a => a.Port!.ToString())));
+
+        using var abandon = CancellationTokenSource.CreateLinkedTokenSource(stop);
+        var asked = new Dictionary<Task<string?>, Step>();
+        foreach (var a in step.Alternatives)
+        {
+            try { asked[devices.AcquireAsync(a.Port!.DataType, a.ViaVad, a.Qualifier, abandon.Token)] = a; }
+            catch (NotSupportedException ex) { say($"line {step.Line}: {ex.Message}"); abandon.Cancel(); throw; }
+        }
+
+        Step?   taken = null;
+        string? json  = null;
+        var waiting = asked.Keys.ToList();
+        while (waiting.Count > 0 && taken is null)
+        {
+            var done = await Task.WhenAny(waiting);
+            waiting.Remove(done);
+            string? got = null;
+            try { got = await done; }
+            catch (OperationCanceledException) { }
+            if (got is not null) { taken = asked[done]; json = got; }
+        }
+
+        abandon.Cancel();
+        foreach (var left in waiting)
+            _ = left.ContinueWith(t => _ = t.Exception, TaskScheduler.Default);   // observed, dropped
+
+        if (taken is null) { say("acquire: nothing"); return; }
+        data[taken.Port!.Label] = (taken.Port.DataType, json!);
+        absent.Remove(taken.Port.Label);
+        say($"acquire {taken.Port} (first)");
     }
 
     private string Known(string label, int line) =>

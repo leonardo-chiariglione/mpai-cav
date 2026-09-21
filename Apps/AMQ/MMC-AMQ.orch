@@ -33,9 +33,13 @@ on Start:
 
     loop until Stop:
 
+        # spoken, it goes to the Module to be recognised; typed, it is already text
         acquire Reply (OSD-BSO-V1.5) via VAD
-        offer Reply (OSD-BSO-V1.5:2)
-        ask   ReplyText (OSD-BTO-V1.5:2)
+             or ReplyText (OSD-BTO-V1.5)
+        branch on Reply {
+            offer Reply (OSD-BSO-V1.5:2)
+            ask   ReplyText (OSD-BTO-V1.5:2)
+        }
 
         branch on ReplyText contains "yes" {
 
@@ -47,9 +51,14 @@ on Start:
             present Picture
 
             acquire UserQuestion (OSD-BSO-V1.5) via VAD
+                 or TypedQuestion (OSD-BTO-V1.5)
 
-            offer Picture      (OSD-BVO-V1.5)
-            offer UserQuestion (OSD-BSO-V1.5:1)
+            offer Picture (OSD-BVO-V1.5)
+            branch on TypedQuestion {
+                offer TypedQuestion (OSD-BTO-V1.5:2)
+            } else {
+                offer UserQuestion (OSD-BSO-V1.5:1)
+            }
             ask   Answer                 (OSD-BTO-V1.5:1),
                   MachineSpeech          (OSD-BSO-V1.5),
                   MachineFaceDescriptors (PAF-FDO-V1.6)

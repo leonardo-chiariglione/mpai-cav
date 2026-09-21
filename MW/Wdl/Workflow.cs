@@ -33,7 +33,7 @@ public enum StepKind
     Give,             // ask Controller to give from M: L (T:n), ...
 
     // --- the User Agent's own ---
-    Acquire,          // acquire L (T) [via VAD]
+    Acquire,          // acquire L (T) [via VAD] [or L (T) [via VAD] ...]
     Type,             // type L (T)
     Prompt,           // prompt "..."
     Display,          // display L
@@ -79,6 +79,11 @@ public sealed class Step
     public string?  Contains      { get; init; }   // Branch
     public IReadOnlyList<Step> Body { get; init; } = Array.Empty<Step>();  // Loop, Branch
     public IReadOnlyList<Step> Else { get; init; } = Array.Empty<Step>();  // Branch
+
+    // Acquire with 'or': every alternative, the first one included. The User Agent
+    // waits for all of them at once and keeps the first to arrive; the others are
+    // abandoned and their labels hold nothing.
+    public IReadOnlyList<Step> Alternatives { get; init; } = Array.Empty<Step>();
     public int      Line          { get; init; }   // so a message can name the place
 
     public bool IsControllerRequest => Kind is

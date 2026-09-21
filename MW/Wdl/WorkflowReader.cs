@@ -176,34 +176,26 @@ public sealed class WorkflowReader
         {
             case "acquire":
             {
-                var viaVad = rest.EndsWith("via VAD", StringComparison.OrdinalIgnoreCase);
-                if (viaVad) rest = rest.Substring(0, rest.Length - "via VAD".Length).Trim();
-
-                // THE REQUEST CARRIES A QUALIFIER. A Qualifier describes; it does not
-                // choose. The User Agent says what it wants - a format, a capture
-                // device, whatever the Qualifier can express - by writing the fields
-                // it cares about and leaving the rest absent.
+                // WHICHEVER COMES FIRST. 'or' names alternatives - speech or typed
+                // text, say - that the User Agent waits for together; the first to
+                // arrive is kept, and a 'branch on <label>' then follows the path
+                // it opened:
                 //
-                //     acquire Picture (OSD-BVO-V1.5) = {
-                //         "Formats": { "Content": { "2D": { "Static": "JPEG" } } }
-                //     }
-                //
-                // It is the Qualifier's own JSON, carried through untouched, so a
-                // field added to the Qualifier tomorrow can be asked for without a
-                // change to this notation.
-                string? qualifier = null;
-                var brace = rest.IndexOf('{');
-                if (brace > 0 && rest.LastIndexOf('=', brace) > 0)
+                //     acquire UserSpeech (OSD-BSO-V1.5) via VAD or UserText (OSD-BTO-V1.5)
+                //     branch on UserText { ... } else { ... }
+                var parts = SplitAlternatives(rest);
+                if (parts.Count > 1)
                 {
-                    qualifier = rest.Substring(brace).Trim();
-                    rest      = rest.Substring(0, rest.LastIndexOf('=', brace)).Trim();
+                    var alternatives = parts.Select(p => ReadAcquire(n, p)).ToList();
+                    var first = alternatives[0];
+                    return new Step { Kind = StepKind.Acquire, Port = first.Port, ViaVad = first.ViaVad,
+                                      Qualifier = first.Qualifier, Alternatives = alternatives, Line = n };
                 }
-
-                return new Step { Kind = StepKind.Acquire, Port = ReadDatum(n, rest).Port,
-                                  ViaVad = viaVad, Qualifier = qualifier, Line = n };
+                return ReadAcquire(n, rest);
             }
             case "type":
                 return new Step { Kind = StepKind.Type, Port = ReadDatum(n, rest).Port, Line = n };
+
 
             // A STEP THAT WAITS FOR THE PERSON. The word is the App's, and the
             // client shows it on a button: an App decides what a person is invited
@@ -383,6 +375,64 @@ public sealed class WorkflowReader
             else joined.Add(new SourceLine(i + 1, t, indent));
         }
         return joined;
+    }
+
+    // One acquisition: its datum, whether it waits for the speaker to stop, and
+    // the Qualifier of what is wanted.
+    private Step ReadAcquire(int n, string rest)
+    {
+        rest = rest.Trim();
+        var viaVad = rest.EndsWith("via VAD", StringComparison.OrdinalIgnoreCase);
+        if (viaVad) rest = rest.Substring(0, rest.Length - "via VAD".Length).Trim();
+
+        // THE REQUEST CARRIES A QUALIFIER. A Qualifier describes; it does not
+        // choose. The User Agent says what it wants - a format, a capture
+        // device, whatever the Qualifier can express - by writing the fields
+        // it cares about and leaving the rest absent.
+        //
+        //     acquire Picture (OSD-BVO-V1.5) = {
+        //         "Formats": { "Content": { "2D": { "Static": "JPEG" } } }
+        //     }
+        //
+        // It is the Qualifier's own JSON, carried through untouched, so a
+        // field added to the Qualifier tomorrow can be asked for without a
+        // change to this notation.
+        string? qualifier = null;
+        var brace = rest.IndexOf('{');
+        if (brace > 0 && rest.LastIndexOf('=', brace) > 0)
+        {
+            qualifier = rest.Substring(brace).Trim();
+            rest      = rest.Substring(0, rest.LastIndexOf('=', brace)).Trim();
+        }
+
+        return new Step { Kind = StepKind.Acquire, Port = ReadDatum(n, rest).Port,
+                          ViaVad = viaVad, Qualifier = qualifier, Line = n };
+    }
+
+    // 'or' separates alternatives, except inside quotes or a Qualifier's braces.
+    private static List<string> SplitAlternatives(string rest)
+    {
+        var parts = new List<string>();
+        int depth = 0, start = 0;
+        bool quoted = false;
+        for (int i = 0; i < rest.Length; i++)
+        {
+            char c = rest[i];
+            if (c == '"') quoted = !quoted;
+            else if (!quoted && c == '{') depth++;
+            else if (!quoted && c == '}') depth--;
+            else if (!quoted && depth == 0 && i + 4 <= rest.Length &&
+                     char.IsWhiteSpace(c) &&
+                     string.Compare(rest, i + 1, "or", 0, 2, StringComparison.OrdinalIgnoreCase) == 0 &&
+                     i + 3 < rest.Length && char.IsWhiteSpace(rest[i + 3]))
+            {
+                parts.Add(rest.Substring(start, i - start).Trim());
+                start = i + 4;
+                i += 3;
+            }
+        }
+        parts.Add(rest.Substring(start).Trim());
+        return parts;
     }
 
     private static readonly string[] Starters =

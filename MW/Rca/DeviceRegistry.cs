@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mpai.Rca;
@@ -36,12 +37,18 @@ public sealed class DeviceRegistry
     // answers it, and nothing here matches one against another.
     public delegate Task<string?> Acquire(bool viaVad, string? wanted);
 
+    // THE SAME, FOR A SOURCE THAT CAN BE ABANDONED. When a workflow waits for
+    // speech or typed text, whichever comes first, the one that did not come is
+    // told so and returns nothing; a source that cannot be told simply finishes
+    // later, and what it brings is dropped.
+    public delegate Task<string?> AcquireUntil(bool viaVad, string? wanted, CancellationToken abandon);
+
     // Renders a datum of this Data Type. Several may be presented together - an
     // OSD-BSO and a PAF-FDO are one utterance, not two - so a presenter receives
     // everything being presented at once and takes what it recognises.
     public delegate Task Present(IReadOnlyDictionary<string, string> byDataType);
 
-    private readonly Dictionary<string, Acquire> sources =
+    private readonly Dictionary<string, AcquireUntil> sources =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly List<(string Name, Present Render)> presenters = new();
@@ -49,6 +56,12 @@ public sealed class DeviceRegistry
     // ONE SOURCE PER DATA TYPE. Which device serves a Data Type is the User
     // Agent's own business; the request that reaches it says what is wanted.
     public DeviceRegistry RegisterAcquire(string dataType, Acquire how)
+    {
+        sources[dataType] = (viaVad, wanted, _) => how(viaVad, wanted);
+        return this;
+    }
+
+    public DeviceRegistry RegisterAcquire(string dataType, AcquireUntil how)
     {
         sources[dataType] = how;
         return this;
@@ -80,9 +93,10 @@ public sealed class DeviceRegistry
     // is why it is asked for rather than done here.
     public Func<string, Task>? Run { get; set; }
 
-    public Task<string?> AcquireAsync(string dataType, bool viaVad, string? wanted = null) =>
+    public Task<string?> AcquireAsync(string dataType, bool viaVad, string? wanted = null,
+                                      CancellationToken abandon = default) =>
         sources.TryGetValue(dataType, out var how)
-            ? how(viaVad, wanted)
+            ? how(viaVad, wanted, abandon)
             : throw new NotSupportedException($"This client acquires no {dataType}.");
 
     public async Task PresentAsync(IReadOnlyDictionary<string, string> byDataType)

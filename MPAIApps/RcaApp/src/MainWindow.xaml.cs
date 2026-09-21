@@ -547,7 +547,7 @@ public partial class MainWindow : Window
         // the precision the device determined. Taking the bytes out and rebuilding
         // is what four User Agents did until this week, and it is why the voice
         // half of every enrolment failed in silence.
-        devices.RegisterAcquire("OSD-BSO-V1.5", async (viaVad, wanted) =>
+        devices.RegisterAcquire("OSD-BSO-V1.5", async (viaVad, wanted, abandon) =>
         {
             Instruct("Speak when you are ready.");
             // STOP DOES NOT WAIT FOR THE MICROPHONE. A capture ends only when the
@@ -555,7 +555,9 @@ public partial class MainWindow : Window
             // once, and the capture is left to end on its own, its words dropped.
             var capture = Task.Run(() => _avatar!.CaptureSpeech());
             var stop    = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
-            if (await Task.WhenAny(capture, Task.Delay(Timeout.Infinite, stop)) != capture)
+            // ...nor, when the person typed instead, for the speech that did not come.
+            using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon);
+            if (await Task.WhenAny(capture, Task.Delay(Timeout.Infinite, either.Token)) != capture)
                 return null;
             var speech = await capture;
             if (speech is null || speech.Data.Length == 0) return null;
@@ -579,10 +581,23 @@ public partial class MainWindow : Window
         // Qualifier says its role is an App name: the User Agent shows what the
         // Service offers and returns the name of the one chosen. The workflow says
         // what it wants; how a person is asked is the User Agent's own affair.
-        devices.RegisterAcquire("OSD-BTO-V1.5", async (_, wanted) =>
+        devices.RegisterAcquire("OSD-BTO-V1.5", async (_, wanted, abandon) =>
         {
+            // TEXT THE PERSON TYPES. Any Text Object asked for without the role of an
+            // App name is typed: the text box opens, and Enter - the key or the
+            // button - gives it. When the workflow waits for speech or text,
+            // whichever comes first, speaking closes the box again.
             if (!(wanted ?? "").Contains("AppName", StringComparison.OrdinalIgnoreCase))
-                return null;
+            {
+                Instruct("Speak, or type and press Enter.");
+                var stop  = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+                var typed = TypedAsync();
+                using var onStop    = stop.Register(() => Dispatcher.Invoke(CancelTyped));
+                using var onAbandon = abandon.Register(() => Dispatcher.Invoke(CancelTyped));
+                var words = await typed;
+                return string.IsNullOrWhiteSpace(words) ? null
+                     : MpaiJson.ToJson(BasicTextObject.FromText(words.Trim()));
+            }
 
             // The list is filled before it is shown: a Service may have gained or
             // lost an App since the last time it was asked.
@@ -841,10 +856,23 @@ public partial class MainWindow : Window
     {
         if (_typed is null) return;
         var words = TypedBox.Text;
+        if (string.IsNullOrWhiteSpace(words)) return;      // Enter on an empty box gives nothing
         TypedBox.IsEnabled = SendButton.IsEnabled = false;
         var waiting = _typed;
         _typed = null;
         waiting.TrySetResult(words);
+    }
+
+    // The text box closes without giving anything: the person spoke instead, or
+    // pressed Stop.
+    private void CancelTyped()
+    {
+        if (_typed is null) return;
+        TypedBox.IsEnabled = SendButton.IsEnabled = false;
+        TypedBox.Clear();
+        var waiting = _typed;
+        _typed = null;
+        waiting.TrySetResult("");
     }
 
     private void Instruct(string text) =>

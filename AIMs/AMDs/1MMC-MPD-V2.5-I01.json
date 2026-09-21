@@ -10,7 +10,8 @@
                        {"Name": "MachineText",            "DataType": "OSD-BTO-V1.5", "Output": 1},
                        {"Name": "MachinePersonalStatus",  "DataType": "MMC-EPS-V2.5"}],
 
-  "ExternalPorts":    [{"Name": "UAText",                 "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Output": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "UAText",                 "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Output": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TypedText",              "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputSpeech",            "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputSpeechTime",        "Direction": "Input",  "DataType": "OSD-STM-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputFace",              "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -30,6 +31,7 @@
                        { "Output": { "AIMName": "",              "PortName": "InputSpeech" }           , "Input": { "AIMName": "1MMC-PSE-V2.5-I01",  "PortName": "SpeechObject" } },
                        { "Output": { "AIMName": "",              "PortName": "InputFace" }             , "Input": { "AIMName": "1MMC-PSE-V2.5-I01",  "PortName": "FaceObject" } },
                        { "Output": { "AIMName": "1MMC-ASR-V2.5-I01",  "PortName": "OutputText" }            , "Input": { "AIMName": "1MMC-NLU-V2.5-I01",  "PortName": "RecognisedText", "PortNumber": 2 } },
+                       { "Output": { "AIMName": "",              "PortName": "TypedText" }             , "Input": { "AIMName": "1MMC-NLU-V2.5-I01",  "PortName": "TypedText", "PortNumber": 1 } },
                        { "Output": { "AIMName": "1MMC-NLU-V2.5-I01",  "PortName": "TextPersonalStatus" }    , "Input": { "AIMName": "1MMC-PSE-V2.5-I01",  "PortName": "TextPersonalStatus" } },
                        { "Output": { "AIMName": "1MMC-NLU-V2.5-I01",  "PortName": "NLUText" }               , "Input": { "AIMName": "1MMC-EDP-V2.5-I01",  "PortName": "NLUText" } },
                        { "Output": { "AIMName": "1MMC-PSE-V2.5-I01",  "PortName": "PersonalStatus" }        , "Input": { "AIMName": "1MMC-EDP-V2.5-I01",  "PortName": "PersonalStatus" } },
