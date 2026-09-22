@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -187,11 +188,24 @@ internal static class Program
         // A SERVICE OFFERS SEVERAL APPS, SO IT HOLDS SEVERAL PROVIDERS. Adding an
         // App to this Service is adding its provider here - the providers live
         // with the Modules they build, not with the windows that drive them.
-        using var north = new NorthApi(amdDir, settingsPath, s => new CompositeProvider(
-            new AmqProvider(s),
-            new MadProvider(s),
-            new MatProvider(s),
-            new MpdProvider(s)));
+        // AIMs FROM PACKAGES, when configured: the package provider is asked first,
+        // and what it cannot build - a package missing, or for another machine - the
+        // providers compiled into this Service build, as they always have.
+        var fromPackages = string.Equals(config.AimSource, "Packages", StringComparison.OrdinalIgnoreCase);
+        var packageCache = config.PackageCache ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "Packages");
+        if (fromPackages) Console.WriteLine($"  AIMs:          from their packages, kept in {packageCache}");
+
+        using var north = new NorthApi(amdDir, settingsPath, s =>
+        {
+            var providers = new List<IAimProvider>();
+            if (fromPackages) providers.Add(new PackageAimProvider(s, packageCache, Console.WriteLine));
+            providers.Add(new AmqProvider(s));
+            providers.Add(new MadProvider(s));
+            providers.Add(new MatProvider(s));
+            providers.Add(new MpdProvider(s));
+            return new CompositeProvider(providers.ToArray());
+        });
         var runner = new NorthApiRunner(north, store);
 
         Console.WriteLine();

@@ -98,6 +98,17 @@ public sealed class MasServerConfig
     // <local application data>\MPAI\SCI\L3.
     public string? L3Cache { get; init; }
 
+    // WHERE THE AIMs COME FROM. "Packages": from the package each AIM's L3 names
+    // (MPAI-MAS actions 10-13), loaded through the plug-in it carries; an AIM
+    // whose package is missing or built for another machine is built by the
+    // providers compiled into this Service, as they all are today. Absent: those
+    // providers alone, exactly as before.
+    public string? AimSource { get; init; }
+
+    // Where packages fetched for this Service are kept. Absent means
+    // <local application data>\MPAI\SCI\Packages.
+    public string? PackageCache { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }
