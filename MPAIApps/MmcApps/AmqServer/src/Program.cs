@@ -63,6 +63,25 @@ internal static class Program
         var amdDir       = config.AmdDirectory ?? MpaiPaths.Amds;
         var settingsPath = config.SettingsPath ?? MpaiPaths.Settings;
 
+        // L3s FROM THE STORE, when so configured: the L3s of the Modules this
+        // Service serves, and of their Sub-AIMs, fetched into a cache - which is
+        // then the folder the Controller reads, in place of AmdDirectory.
+        if (string.Equals(config.L3Source, "Store", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(config.StoreUrl))
+            {
+                Console.WriteLine("FATAL: L3Source is Store, but no StoreUrl is configured.");
+                return 1;
+            }
+            amdDir = config.L3Cache ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "L3");
+            Console.WriteLine($"  L3s:           from the Store at {config.StoreUrl}, kept in {amdDir}");
+            var fetched = await StoreL3Source.FetchAsync(config.StoreUrl,
+                new[] { AmqModule, MadModule, MatModule, MpdModule, MasModule }, amdDir, Console.WriteLine);
+            Console.WriteLine($"  L3s:           {fetched.Fetched} from the Store, {fetched.FromCache} from the cache, " +
+                              $"{fetched.Missing.Count} missing{(fetched.Missing.Count > 0 ? ": " + string.Join(", ", fetched.Missing) : "")}");
+        }
+
         Console.WriteLine($"  Listen:        {config.ListenUrl}");
         Console.WriteLine($"  AMDs:          {amdDir}");
         Console.WriteLine($"  Settings:      {settingsPath}");

@@ -89,6 +89,15 @@ public sealed class MasServerConfig
     // L3 of its Module. Absent means no check, as before.
     public string? StoreUrl { get; init; }
 
+    // WHERE THE L3s COME FROM. "Store": from the Store at StoreUrl (MPAI-MAS
+    // actions 8-9), fetched with their Sub-AIMs into L3Cache, which the Controller
+    // then reads. Absent, or anything else: from AmdDirectory, as before.
+    public string? L3Source { get; init; }
+
+    // Where L3s fetched from the Store are kept. Absent means
+    // <local application data>\MPAI\SCI\L3.
+    public string? L3Cache { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }
