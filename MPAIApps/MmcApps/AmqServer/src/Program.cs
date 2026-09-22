@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Store;
@@ -190,6 +191,16 @@ internal static class Program
 
         Console.WriteLine();
 
+        // WHAT IS OFFERED, AND TO WHOM. With collections or a Store configured, the
+        // offer is built from them; without, the Apps listed are the offer, as ever.
+        var offer = (config.Collections is { Length: > 0 } || !string.IsNullOrWhiteSpace(config.StoreUrl))
+            ? await AppOffer.BuildAsync(config.AppDirectory, config.Apps, config.Shell,
+                                        config.Collections, config.DefaultCollection, config.StoreUrl,
+                                        Console.WriteLine)
+            : null;
+        var catalogue = offer?.Catalogue ?? AppCatalogue.Scan(config.AppDirectory, config.Apps, config.Shell);
+        offer ??= AppOffer.FromCatalogue(catalogue);
+
         var server = new MasServer(
             runner,
             PortDataCodecs.Default(),
@@ -200,14 +211,18 @@ internal static class Program
         {
             // WHAT THIS SERVICE OFFERS. Empty unless a catalogue is configured, in
             // which case a client holding no application can ask what is here.
-            Catalogue = AppCatalogue.Scan(config.AppDirectory, config.Apps, config.Shell)
+            Catalogue = catalogue,
+            Offer     = offer
         };
 
         // WHAT THIS SERVICE CAN ACTUALLY RUN. An App is listed only if the Service
         // was told to offer it; whether its Modules can be built is a separate
         // question, and one worth answering at startup rather than at the click.
-        foreach (var app in server.Catalogue.Apps)
+        foreach (var app in server.Offer.Default.Apps)
             Console.WriteLine($"    {app.Id,-6} {app.Name}");
+        foreach (var collection in server.Offer.Named)
+            Console.WriteLine($"  Collection {collection.Id} (/MPAI/AIFU/c/{collection.Id}): " +
+                              string.Join(", ", collection.Apps.Select(a => a.Id)));
 
         Console.WriteLine(server.Catalogue.Root is null
             ? "  Apps:         none configured"

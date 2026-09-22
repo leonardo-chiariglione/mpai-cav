@@ -21,6 +21,27 @@ public partial class RcaShell : ComponentBase
 {
     [Inject] private HttpClient Http { get; set; } = default!;
     [Inject] private IJSRuntime Js   { get; set; } = default!;
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    // WHICH COLLECTION, AND WHICH APP, THE ADDRESS NAMES: .../c/Language uses the
+    // Language collection; .../app/MAT opens MAT directly, without MPAI-MAS.
+    private string? collection, directApp;
+    private WebAppDirectory Directory() => new(Http, collection);
+
+    protected override void OnInitialized()
+    {
+        var parts = new Uri(Nav.Uri).AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        for (var i = 0; i + 1 < parts.Length; i++)
+        {
+            if (parts[i] == "c")   collection = Uri.UnescapeDataString(parts[i + 1]);
+            if (parts[i] == "app") directApp  = Uri.UnescapeDataString(parts[i + 1]);
+        }
+    }
+
+    // FINDING AN APP, and its page before it starts.
+    private string searchWords = "", searchCategory = "";
+    private IReadOnlyList<string> categories = Array.Empty<string>();
+    private WebAppDirectory.Descriptor? appPage;
 
     private string AppTitle    = "";
     private string Instruction = "Press Start. The browser will ask to use the microphone.";
@@ -72,7 +93,7 @@ public partial class RcaShell : ComponentBase
         if (Http.DefaultRequestHeaders.TryGetValues("MPAI-Client", out var ids))
             try { await Js.InvokeVoidAsync("rca.presence", ids.First()); } catch { }
         _stopping = new CancellationTokenSource();
-        await RunAppAsync("MAS");
+        await RunAppAsync(directApp ?? "MAS");
         started = false;
         Refresh();
     }
@@ -82,7 +103,7 @@ public partial class RcaShell : ComponentBase
         try
         {
             Status($"obtaining {appId}...");
-            var directory = new WebAppDirectory(Http);
+            var directory = Directory();
             var offered   = await directory.ListAsync();
             var app       = offered.FirstOrDefault(a => a.Id == appId);
 
@@ -158,7 +179,7 @@ public partial class RcaShell : ComponentBase
             // HOW MANY ARE HERE: a sentence when others use the Service now; else nothing.
             if ((wanted ?? "").Contains("Concurrency", StringComparison.OrdinalIgnoreCase))
             {
-                var count = await new WebAppDirectory(Http).ActiveClientsAsync();
+                var count = await Directory().ActiveClientsAsync();
                 return count is int n && n > 1
                     ? MpaiJson.ToJson(BasicTextObject.FromText($"You are the {Ordinal(n)} concurrent user of the MPAI as a Service App."))
                     : null;
@@ -178,8 +199,10 @@ public partial class RcaShell : ComponentBase
             }
 
             // MPAI-MAS IS NOT AN APP, so it is not offered.
-            apps = (await new WebAppDirectory(Http).ListAsync())
+            apps = (await Directory().ListAsync())
                    .Where(a => !a.Id.Equals("MAS", StringComparison.OrdinalIgnoreCase)).ToList();
+            categories = await Directory().CategoriesAsync();
+            searchWords = searchCategory = ""; appPage = null;
             var picked = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
             choosing = picked; showApps = true;
             Instruct("Choose an App.");
@@ -278,11 +301,51 @@ public partial class RcaShell : ComponentBase
 
     // ---- the page -----------------------------------------------------------
 
-    private void ChooseApp(string id)
+    // CHOOSING OPENS THE APP'S PAGE - what it asks for, what it keeps - and Open
+    // starts it: a person consents before the App begins.
+    private async Task ChooseApp(string id)
     {
+        var app = apps.FirstOrDefault(a => a.Id == id);
+        appPage = await Directory().DescriptorAsync(id)
+               ?? new WebAppDirectory.Descriptor(id, app?.Name ?? id, app?.Description ?? "", "", "",
+                                                 Array.Empty<string>(), Array.Empty<string>(), "");
+        Refresh();
+    }
+
+    private void OpenPage()
+    {
+        if (appPage is null) return;
+        var id = appPage.Id; appPage = null;
         var waiting = choosing; choosing = null;
         waiting?.TrySetResult(id);
     }
+
+    private void ClosePage() { appPage = null; Refresh(); }
+
+    private static string PageFacts(WebAppDirectory.Descriptor d) =>
+        string.Join("  -  ", new[]
+        {
+            d.Standard,
+            d.Version.Length > 0 ? "version " + d.Version : "",
+            d.Languages.Count > 0 ? "languages: " + string.Join(", ", d.Languages) : ""
+        }.Where(x => x.Length > 0));
+
+    private async Task SearchAsync()
+    {
+        try
+        {
+            var found = searchWords.Trim().Length == 0 && searchCategory.Length == 0
+                ? await Directory().ListAsync()
+                : await Directory().SearchAsync(searchWords.Trim(), searchCategory);
+            apps = found.Where(a => !a.Id.Equals("MAS", StringComparison.OrdinalIgnoreCase)).ToList();
+            Status(apps.Count == 0 ? "no App matches" : $"{apps.Count} App(s) found");
+        }
+        catch (Exception ex) { Status("the search failed: " + ex.Message); }
+    }
+
+    private async Task OnSearchKey(KeyboardEventArgs e) { if (e.Key == "Enter") await SearchAsync(); }
+
+    private async Task OnCategory(ChangeEventArgs e) { searchCategory = e.Value?.ToString() ?? ""; await SearchAsync(); }
 
     private void LanguagesChosen()
     {

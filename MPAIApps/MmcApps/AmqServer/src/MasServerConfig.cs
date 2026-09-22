@@ -77,6 +77,18 @@ public sealed class MasServerConfig
     // chosen and would run inside itself.
     public string? Shell { get; init; }
 
+    // COLLECTIONS: the Apps offered together, each a descriptor in AppDirectory
+    // listing some of the Apps, and each served at /MPAI/AIFU/c/<name>/...
+    // Absent means none: the Apps above are the offer, as they always were.
+    public string[]? Collections { get; init; }
+
+    // Which collection an address that names none receives. Absent means the Apps above.
+    public string? DefaultCollection { get; init; }
+
+    // THE STORE. When named, an App is offered only if the Store has approved the
+    // L3 of its Module. Absent means no check, as before.
+    public string? StoreUrl { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }

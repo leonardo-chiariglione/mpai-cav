@@ -50,6 +50,11 @@ public sealed class MasServer
     // application can be handed one.
     public AppCatalogue Catalogue { get; init; } = AppCatalogue.Scan(null);
 
+    // WHICH APPS EACH COLLECTION SHOWS. Unless set, the catalogue's Apps are the
+    // default collection and there are no others - today's behaviour exactly.
+    private AppOffer? offer;
+    public AppOffer Offer { get => offer ??= AppOffer.FromCatalogue(Catalogue); init => offer = value; }
+
     private readonly IModuleRunner runner;
     private readonly PortDataCodecs codecs;
     private readonly string listenUrl;
@@ -207,35 +212,11 @@ public sealed class MasServer
                 return;
             }
 
-            // GET /Apps - the catalogue
-            if (method == "GET" && segs.Length == 1 && segs[0] == "Apps")
-            {
-                await Write(ctx, 200, "application/json", Catalogue.ToJson());
+            // THE APP ROUTES: /Apps, /Apps/{id}, /Apps/{id}/Icon as always, for the
+            // default collection; /Apps?q=&category=, /Apps/{id}/Descriptor,
+            // /Categories and /Collections; and all of them under /c/{collection}.
+            if (method == "GET" && await ServeApps(ctx, segs))
                 return;
-            }
-
-            // GET /Apps/{id} - the Workflow Description itself
-            if (method == "GET" && segs.Length == 2 && segs[0] == "Apps")
-            {
-                var app = Catalogue.Find(segs[1]);
-                if (app is null) { await Write(ctx, 404, "text/plain", "No such App."); return; }
-                await Write(ctx, 200, "text/plain; charset=utf-8",
-                            await System.IO.File.ReadAllTextAsync(app.WorkflowPath));
-                return;
-            }
-
-            // GET /Apps/{id}/Icon
-            if (method == "GET" && segs.Length == 3 && segs[0] == "Apps" && segs[2] == "Icon")
-            {
-                var app = Catalogue.Find(segs[1]);
-                if (app?.IconFile is null) { await Write(ctx, 404, "text/plain", "No icon."); return; }
-                var bytes = await System.IO.File.ReadAllBytesAsync(
-                    System.IO.Path.Combine(app.Folder, app.IconFile));
-                ctx.Response.StatusCode  = 200;
-                ctx.Response.ContentType = IconType(app.IconFile);
-                await ctx.Response.Body.WriteAsync(bytes);
-                return;
-            }
 
             // POST /Controller
             if (method == "POST" && segs.Length == 1 && segs[0] == "Controller")
@@ -336,6 +317,75 @@ public sealed class MasServer
             Console.WriteLine($"[MAS] EXCEPTION: {ex}");
             await Write(ctx, 500, "text/plain", ex.Message);
         }
+    }
+
+    private async Task<bool> ServeApps(HttpContext ctx, string[] segs)
+    {
+        if (segs.Length == 1 && segs[0] == "Collections")
+        {
+            await Write(ctx, 200, "application/json", Offer.CollectionsJson());
+            return true;
+        }
+
+        // Which collection: named by /c/{id}/..., or the default.
+        AppOffer.Collection collection = Offer.Default;
+        string prefix = "";
+        var rest = segs;
+        if (segs.Length >= 3 && segs[0] == "c")
+        {
+            var named = Offer.Find(segs[1]);
+            if (named is null) { await Write(ctx, 404, "text/plain", "No such collection."); return true; }
+            collection = named; prefix = $"c/{named.Id}/"; rest = segs[2..];
+        }
+        if (rest.Length == 0) return false;
+
+        if (rest.Length == 1 && rest[0] == "Categories")
+        {
+            await Write(ctx, 200, "application/json", AppOffer.CategoriesJson(collection));
+            return true;
+        }
+        if (rest[0] != "Apps") return false;
+
+        // GET /Apps - the collection's Apps; with ?q= or ?category=, a search
+        if (rest.Length == 1)
+        {
+            var q = ctx.Request.Query["q"].ToString();
+            var category = ctx.Request.Query["category"].ToString();
+            await Write(ctx, 200, "application/json",
+                q.Length == 0 && category.Length == 0
+                    ? AppOffer.ListJson(collection.Apps, prefix)
+                    : AppOffer.ResultJson(AppOffer.Search(collection, q, category), prefix));
+            return true;
+        }
+
+        // An App of this collection - or the shell, which is served by name to any client.
+        var app = collection.Find(rest[1]) ??
+                  (string.Equals(rest[1], Catalogue.ShellId, StringComparison.OrdinalIgnoreCase) ? Catalogue.Find(rest[1]) : null);
+        if (app is null) { await Write(ctx, 404, "text/plain", "No such App."); return true; }
+
+        // GET /Apps/{id} - the Workflow Description itself
+        if (rest.Length == 2)
+        {
+            await Write(ctx, 200, "text/plain; charset=utf-8", await System.IO.File.ReadAllTextAsync(app.WorkflowPath));
+            return true;
+        }
+        // GET /Apps/{id}/Icon
+        if (rest.Length == 3 && rest[2] == "Icon")
+        {
+            if (app.IconFile is null) { await Write(ctx, 404, "text/plain", "No icon."); return true; }
+            var bytes = await System.IO.File.ReadAllBytesAsync(System.IO.Path.Combine(app.Folder, app.IconFile));
+            ctx.Response.StatusCode  = 200;
+            ctx.Response.ContentType = IconType(app.IconFile);
+            await ctx.Response.Body.WriteAsync(bytes);
+            return true;
+        }
+        // GET /Apps/{id}/Descriptor
+        if (rest.Length == 3 && rest[2] == "Descriptor")
+        {
+            await Write(ctx, 200, "application/json", AppOffer.DescriptorJson(app, prefix));
+            return true;
+        }
+        return false;
     }
 
     // The SLA chooses among BASIC, DIGEST and BEARER; this implements BEARER,

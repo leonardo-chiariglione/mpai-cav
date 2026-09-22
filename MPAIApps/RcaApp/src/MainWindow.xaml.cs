@@ -103,7 +103,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                using var leaving = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+                using var leaving = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
                 Task.Run(() => leaving.LeaveAsync()).Wait(TimeSpan.FromSeconds(2));
             }
             catch { }
@@ -133,8 +133,11 @@ public partial class MainWindow : Window
             // person, offers what the Service has, runs what they choose and asks
             // whether they want another - and all of that is in its Workflow
             // Description, not in this executable.
+            // AN APP OPENED DIRECTLY: "--app MAT" runs that App, not MPAI-MAS.
+            var direct = Array.IndexOf(args, "--app") is var at and >= 0 && at + 1 < args.Length ? args[at + 1] : null;
+
             _stopping = new CancellationTokenSource();
-            await RunAppAsync("MAS");
+            await RunAppAsync(direct ?? "MAS");
         }
         catch (Exception fatal)
         {
@@ -196,12 +199,122 @@ public partial class MainWindow : Window
     // none is answering rather than failing.
     private sealed record Offered(string Name, string Description, object? Icon, AppDirectory.App App);
 
+    // THE COLLECTION THIS CLIENT USES, from MPAI_MAS_COLLECTION; none means the
+    // Service's default offer. Only the Apps it shows depend on it.
+    private static readonly string? Collection =
+        Environment.GetEnvironmentVariable("MPAI_MAS_COLLECTION") is { Length: > 0 } c ? c.Trim() : null;
+
+    private const string AllCategories = "All categories";
+    private bool _fillingCategories;
+    private Offered? _detail;
+
+    private async Task<List<Offered>> BuildOfferedAsync(IEnumerable<AppDirectory.App> apps, AppDirectory directory)
+    {
+        var shown = new List<Offered>();
+        // MPAI-MAS IS NOT AN APP. It is the container the Apps run in; the client
+        // fetches it by name and does not offer it to the person.
+        foreach (var a in apps.Where(a => !string.Equals(a.Id, "MAS", StringComparison.OrdinalIgnoreCase)))
+        {
+            object? icon = null;
+            var bytes = await directory.IconAsync(a);
+            if (bytes is { Length: > 0 })
+            {
+                try
+                {
+                    var image = new System.Windows.Media.Imaging.BitmapImage();
+                    image.BeginInit();
+                    image.StreamSource = new MemoryStream(bytes);
+                    image.CacheOption  = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    image.EndInit();
+                    icon = image;
+                }
+                catch { /* an App without a picture is still an App */ }
+            }
+            shown.Add(new Offered(a.Name, a.Description, icon, a));
+        }
+        return shown;
+    }
+
+    // SEARCH: the words in the box and the category chosen, among this client's Apps.
+    private async Task FilterAsync()
+    {
+        try
+        {
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
+            var words    = SearchBox.Text.Trim();
+            var category = CategoryBox.SelectedItem as string;
+            if (category == AllCategories) category = null;
+            var apps = words.Length == 0 && category is null
+                ? await directory.ListAsync()
+                : await directory.SearchAsync(words, category);
+            var shown = await BuildOfferedAsync(apps, directory);
+            AppList.ItemsSource = shown;
+            Status(shown.Count == 0 ? "no App matches" : $"{shown.Count} App(s) found");
+        }
+        catch (Exception ex) { Status("the search failed: " + ex.Message); }
+    }
+
+    private void SearchBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter) _ = FilterAsync();
+    }
+
+    private void CategoryBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!_fillingCategories) _ = FilterAsync();
+    }
+
+    // AN APP'S PAGE, before it starts.
+    private async Task ShowDetailAsync(Offered chosen)
+    {
+        _detail = chosen;
+        DetailName.Text        = chosen.Name;
+        DetailDescription.Text = chosen.Description;
+        DetailFacts.Text = DetailAsks.Text = DetailKeeps.Text = "";
+        AppDetail.Visibility   = Visibility.Visible;
+        try
+        {
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
+            var d = await directory.DescriptorAsync(chosen.App.Id);
+            if (d is null || _detail != chosen) return;
+            var facts = new List<string>();
+            if (d.Standard.Length > 0) facts.Add(d.Standard);
+            if (d.Version.Length > 0)  facts.Add("version " + d.Version);
+            if (d.Languages.Count > 0) facts.Add("languages: " + string.Join(", ", d.Languages));
+            DetailFacts.Text = string.Join("  -  ", facts);
+            if (d.Asks.Count > 0)   DetailAsks.Text  = "It will ask for: " + string.Join(", ", d.Asks) + ".";
+            if (d.Keeps.Length > 0) DetailKeeps.Text = "What it keeps: " + d.Keeps;
+        }
+        catch { /* the page without its details is still the page */ }
+    }
+
+    private void OpenApp_Click(object sender, RoutedEventArgs e)
+    {
+        if (_detail is not { } chosen) return;
+        _detail = null;
+        AppDetail.Visibility = Visibility.Collapsed;
+        Status($"chose {chosen.Name}");
+
+        // CHOOSING COMPLETES AN ACQUISITION. A workflow asked for the name of an
+        // Application; this is the person answering it.
+        if (_choosing is { } waiting) { _choosing = null; waiting.TrySetResult(chosen.App.Id); return; }
+
+        _appId = chosen.App.Id;
+        _ = ChosenAsync(chosen);
+    }
+
+    private void CloseDetail_Click(object sender, RoutedEventArgs e)
+    {
+        _detail = null;
+        AppDetail.Visibility = Visibility.Collapsed;
+    }
+
     private async Task ShowAppsAsync()
     {
         try
         {
             Status("asking the Service what it offers...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
             var apps = await directory.ListAsync();
 
             if (apps.Count == 0)
@@ -213,28 +326,12 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var shown = new List<Offered>();
-            // MPAI-MAS IS NOT AN APP. It is the container the Apps run in; the client
-            // fetches it by name and does not offer it to the person.
-            foreach (var a in apps.Where(a => !string.Equals(a.Id, "MAS", StringComparison.OrdinalIgnoreCase)))
-            {
-                object? icon = null;
-                var bytes = await directory.IconAsync(a);
-                if (bytes is { Length: > 0 })
-                {
-                    try
-                    {
-                        var image = new System.Windows.Media.Imaging.BitmapImage();
-                        image.BeginInit();
-                        image.StreamSource = new MemoryStream(bytes);
-                        image.CacheOption  = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                        image.EndInit();
-                        icon = image;
-                    }
-                    catch { /* an App without a picture is still an App */ }
-                }
-                shown.Add(new Offered(a.Name, a.Description, icon, a));
-            }
+            var shown = await BuildOfferedAsync(apps, directory);
+
+            _fillingCategories = true;
+            CategoryBox.ItemsSource   = new[] { AllCategories }.Concat(await directory.CategoriesAsync()).ToList();
+            CategoryBox.SelectedIndex = 0;
+            _fillingCategories = false;
 
             AppPanelHint.Text   = "These are offered by the Service. This client holds none of them.";
             AppList.ItemsSource = shown;
@@ -270,7 +367,7 @@ public partial class MainWindow : Window
         try
         {
             Status($"fetching {chosen.Name}...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
             var text = await directory.WorkflowAsync(chosen.App);
 
             _workflow = new WorkflowReader().Read(text);
@@ -309,20 +406,13 @@ public partial class MainWindow : Window
         Width              += show ? PanelWidth + 12 : -(PanelWidth + 12);
     }
 
-    // CHOOSING IS STARTING. A person who has picked what they want should not
-    // then have to announce it, so the row is the instruction.
+    // CHOOSING OPENS THE APP'S PAGE, and Open starts it: a person sees what an App
+    // will ask for and what it keeps before it starts.
     private void AppList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (AppList.SelectedItem is not Offered chosen) return;
         AppList.SelectedItem = null;
-        Status($"chose {chosen.Name}");
-
-        // CHOOSING COMPLETES AN ACQUISITION. A workflow asked for the name of an
-        // Application; this is the person answering it.
-        if (_choosing is { } waiting) { _choosing = null; waiting.TrySetResult(chosen.App.Id); return; }
-
-        _appId = chosen.App.Id;
-        _ = ChosenAsync(chosen);
+        _ = ShowDetailAsync(chosen);
     }
 
     private void RunApp_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -496,7 +586,7 @@ public partial class MainWindow : Window
         try
         {
             Status($"obtaining {appId}...");
-            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+            using var directory = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
             // A Service holds Apps it does not offer, so the App is fetched by name
             // rather than looked for in the catalogue. Its name and the room it wants
             // are taken from the catalogue when it is there.
@@ -611,7 +701,7 @@ public partial class MainWindow : Window
             // say, it answers nothing, and the workflow says nothing.
             if ((wanted ?? "").Contains("Concurrency", StringComparison.OrdinalIgnoreCase))
             {
-                using var status = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+                using var status = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
                 var count = await status.ActiveClientsAsync();
                 return count is int n && n > 1
                     ? MpaiJson.ToJson(BasicTextObject.FromText($"You are the {Ordinal(n)} concurrent user of the MPAI as a Service App."))
@@ -876,7 +966,7 @@ public partial class MainWindow : Window
 
     private async Task KeepPresentAsync()
     {
-        using var presence = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id);
+        using var presence = new AppDirectory(ServiceUrl, ServiceToken, MasClientIdentity.Id, Collection);
         while (true)
         {
             await Task.Delay(TimeSpan.FromSeconds(30));
