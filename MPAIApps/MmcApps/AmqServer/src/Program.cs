@@ -188,6 +188,17 @@ internal static class Program
         // A SERVICE OFFERS SEVERAL APPS, SO IT HOLDS SEVERAL PROVIDERS. Adding an
         // App to this Service is adding its provider here - the providers live
         // with the Modules they build, not with the windows that drive them.
+        // MODELS FROM THE PARTIES THAT PUBLISH THEM, when configured: a model a
+        // setting names and this machine does not have is fetched and checked.
+        if (string.Equals(config.ModelSource, "Fetch", StringComparison.OrdinalIgnoreCase))
+        {
+            var modelCache = config.ModelCache ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "Models");
+            Console.WriteLine($"  Models:        fetched when missing, kept in {modelCache}");
+            AimSettings.Resolve = (aim, values) =>
+                AIF.Store.ModelSource.Resolve(aim, values, MpaiPaths.Root, modelCache, Console.WriteLine);
+        }
+
         // AIMs FROM PACKAGES, when configured: the package provider is asked first,
         // and what it cannot build - a package missing, or for another machine - the
         // providers compiled into this Service build, as they always have.

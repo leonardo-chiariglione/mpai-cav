@@ -109,6 +109,16 @@ public sealed class MasServerConfig
     // <local application data>\MPAI\SCI\Packages.
     public string? PackageCache { get; init; }
 
+    // WHERE THE MODELS COME FROM. "Fetch": a model a setting names and this machine
+    // does not have is obtained from the source the settings give (<setting>.Source)
+    // and checked against <setting>.SHA256. Absent: models must already be on disk,
+    // as before.
+    public string? ModelSource { get; init; }
+
+    // Where fetched models are kept. Absent means
+    // <local application data>\MPAI\SCI\Models.
+    public string? ModelCache { get; init; }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }
