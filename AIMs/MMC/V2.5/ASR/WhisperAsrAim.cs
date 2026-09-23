@@ -15,6 +15,14 @@ public sealed class WhisperAsrConfiguration
     public required string ExecutablePath { get; init; }   // whisper-cli(.exe)
     public required string ModelPath { get; init; }        // ggml-*.bin
     public string LanguageCode { get; init; } = "en";      // model language (e.g. base.en)
+
+    // SPEED, TRADED KNOWINGLY. Null leaves whisper-cli's own default.
+    //   Threads      - CPU threads; whisper-cli uses 4 unless told, whatever the machine has.
+    //   AudioContext - encoder window in 20 ms steps (1500 = the full 30 s). Whisper
+    //                  encodes the whole window however short the utterance, so a
+    //                  smaller one is much faster - and anything spoken beyond it is lost.
+    public int? Threads { get; init; }
+    public int? AudioContext { get; init; }
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +143,11 @@ public sealed class WhisperAsrAim : IAsrAim
     private string BuildArguments(string wav, BasicSpeechObject speech)
     {
         var arguments = $"-m \"{_config.ModelPath}\" -f \"{wav}\"";
+
+        if (_config.Threads is > 0 and var threads)
+            arguments += $" -t {threads}";
+        if (_config.AudioContext is > 0 and var context)
+            arguments += $" -ac {context}";
 
         var language =
             speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode

@@ -95,6 +95,8 @@
                               "ExecutablePath":  "Models\\Whisper\\bin\\whisper-cli.exe",
                               "ModelPath":  "Models\\Whisper\\models\\ggml-small.bin",
                               "LanguageCode":  "en",
+                              "Threads":  "8",
+                              "AudioContext":  "768",
                               "SHA256:ExecutablePath":  "800A0FD754AFA75E109C7248286AD735670FB6B23D92CA5D12604647EF638A65",
                               "SHA256:ModelPath":  "1BE3A9B2063867B937E64E2EC7483364A79917E157FA98C5D94B5C1FFFEA987B"
                           },
