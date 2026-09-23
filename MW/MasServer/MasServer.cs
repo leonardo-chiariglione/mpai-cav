@@ -474,22 +474,32 @@ public sealed class MasServer
         }
 
         var wire = await ReadBodyBytes(ctx);
+        var value = codecs.ToInternal(dataType, wire);
 
-        // The RCA names the Data Type it is SENDING, which may be any type the
-        // Port accepts. The boundary key comes from the PORT, because that is
-        // what the Controller routes on - the Port''s own DataType, the first of
-        // its declared set. This is the one place the two conventions meet.
-        module.Inputs[port.Key] = codecs.ToInternal(dataType, wire);
-
-        // The first input after a completed run begins a new round. Over MAS the
-        // inputs arrive one request at a time and nothing in the API says when a
-        // round has ended; this is the only moment that can mean it.
-        if (module.Outputs is not null)
+        // Under the Module's gate: a run in progress reads these inputs, and must
+        // not see them change beneath it.
+        await module.Gate.WaitAsync();
+        try
         {
-            var latest = module.Inputs[port.Key];
-            module.Inputs.Clear();
-            module.Inputs[port.Key] = latest;
-            module.Outputs = null;
+            // The RCA names the Data Type it is SENDING, which may be any type the
+            // Port accepts. The boundary key comes from the PORT, because that is
+            // what the Controller routes on - the Port''s own DataType, the first of
+            // its declared set. This is the one place the two conventions meet.
+            module.Inputs[port.Key] = value;
+
+            // The first input after a completed run begins a new round. Over MAS the
+            // inputs arrive one request at a time and nothing in the API says when a
+            // round has ended; this is the only moment that can mean it.
+            if (module.Outputs is not null)
+            {
+                module.Inputs.Clear();
+                module.Inputs[port.Key] = value;
+                module.Outputs = null;
+            }
+        }
+        finally
+        {
+            module.Gate.Release();
         }
 
         Console.WriteLine($"[MAS] input {port.Key} ({wire.Length:N0} bytes)");

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using AIF.Store;
 
 namespace AIF.Controller;
@@ -16,8 +17,14 @@ public sealed class UserAgent
 {
     private readonly AmdStore   _store;
     private Controller?         _controller;
-    private readonly Dictionary<int, RunningModule> _running = new();
-    private int _nextModuleId = 1;
+
+    // SEVERAL CLIENTS, ONE USER AGENT. A Service runs different Modules for
+    // different people at the same time, so the table of running Modules is read
+    // by one run while another Module starts or stops. Starting itself is one at
+    // a time: it builds the graph and fills the table of retained AIMs.
+    private readonly ConcurrentDictionary<int, RunningModule> _running = new();
+    private readonly object _startOne = new();
+    private int _nextModuleId;
 
     // Where Shared Storage lives for this User Agent's Modules. Null means no
     // scope is configured and AIMs are handed no storage.
@@ -105,6 +112,13 @@ public sealed class UserAgent
     public AifError MPAI_AIFU_MODULE_Start(
         string name, IAimProvider provider, AimSettings settings, out int moduleId)
     {
+        lock (_startOne)
+            return StartOne(name, provider, settings, out moduleId);
+    }
+
+    private AifError StartOne(
+        string name, IAimProvider provider, AimSettings settings, out int moduleId)
+    {
         moduleId = -1;
         if (_controller is null) return AifError.NotInitialized;
 
@@ -136,7 +150,7 @@ public sealed class UserAgent
         foreach (var p in graph.Root.Ports)
             ports.Declare(p.Name, p.Direction, p.DataType);
 
-        moduleId = _nextModuleId++;
+        moduleId = Interlocked.Increment(ref _nextModuleId);
         _running[moduleId] = new RunningModule
         {
             Name     = name,
@@ -171,7 +185,7 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Host.Dispose();
-        _running.Remove(moduleId);
+        _running.TryRemove(moduleId, out _);
         return AifError.OK;
     }
 

@@ -28,8 +28,12 @@ public sealed class NorthApi : INorthApi, IDisposable
     private readonly IAimProvider _provider;
     private readonly AimSettings  _settings;
 
+    // A Service calls this from many requests at once, for different Modules.
+    // The two tables are touched only under _tables; a run itself happens
+    // outside it, so one Module's run never waits for another's.
     private readonly Dictionary<string, int>  _running   = new();
     private readonly Dictionary<string, bool> _suspended = new();
+    private readonly object _tables = new();
 
     public NorthApi(string amdDir, string settingsPath, IAimProvider provider)
     {
@@ -75,16 +79,20 @@ public sealed class NorthApi : INorthApi, IDisposable
 
     public AifError StartFlow(string moduleName)
     {
-        if (_running.ContainsKey(moduleName)) return AifError.OK;
-        var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
-        if (err == AifError.OK) { _running[moduleName] = id; _suspended[moduleName] = false; }
-        return err;
+        lock (_tables)
+        {
+            if (_running.ContainsKey(moduleName)) return AifError.OK;
+            var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
+            if (err == AifError.OK) { _running[moduleName] = id; _suspended[moduleName] = false; }
+            return err;
+        }
     }
 
     public void StopFlow(string moduleName)
     {
-        if (_running.TryGetValue(moduleName, out var id))
-        { _ua.MPAI_AIFU_MODULE_Stop(id); _running.Remove(moduleName); _suspended.Remove(moduleName); }
+        lock (_tables)
+            if (_running.TryGetValue(moduleName, out var id))
+            { _ua.MPAI_AIFU_MODULE_Stop(id); _running.Remove(moduleName); _suspended.Remove(moduleName); }
     }
 
     // The boundary key the Controller routes on: DataType + PortNumber. Ports of
@@ -93,20 +101,27 @@ public sealed class NorthApi : INorthApi, IDisposable
 
     public Result Advance(string moduleName, IEnumerable<Datum> inputs)
     {
-        bool ephemeral = !_running.ContainsKey(moduleName);
+        bool ephemeral;
+        lock (_tables) ephemeral = !_running.ContainsKey(moduleName);
         if (ephemeral)
         {
             var e = StartFlow(moduleName);
             if (e != AifError.OK) return new Result(e, Array.Empty<Datum>(), false);
         }
-        int id = _running[moduleName];
+        int id;
+        bool resuming;
+        lock (_tables)
+        {
+            if (!_running.TryGetValue(moduleName, out id))
+                return new Result(AifError.NotFound, Array.Empty<Datum>(), false);
+            resuming = _suspended.TryGetValue(moduleName, out var s) && s;
+        }
 
         // Typed boundary: keyed by (DataType, PortNumber). No port name anywhere.
         var boundary = new Dictionary<string, string>();
         foreach (var d in inputs)
             boundary[Key(d.DataType, d.PortNumber)] = d.Json;
 
-        bool resuming = _suspended.TryGetValue(moduleName, out var s) && s;
         var (err, outcome) = (resuming
             ? _ua.ResumeAsync(id, boundary)
             : _ua.RunAsync(id, boundary)).GetAwaiter().GetResult();
@@ -116,10 +131,10 @@ public sealed class NorthApi : INorthApi, IDisposable
 
         if (outcome is not null && outcome.Suspended)
         {
-            _suspended[moduleName] = true;
+            lock (_tables) _suspended[moduleName] = true;
             return new Result(AifError.OK, Array.Empty<Datum>(), true, outcome.WaitingPort);
         }
-        _suspended[moduleName] = false;
+        lock (_tables) _suspended[moduleName] = false;
 
         // Outputs come back keyed by (DataType, PortNumber) too - parse the key.
         var outs = new List<Datum>();
@@ -139,8 +154,11 @@ public sealed class NorthApi : INorthApi, IDisposable
 
     public void Dispose()
     {
-        foreach (var id in _running.Values) _ua.MPAI_AIFU_MODULE_Stop(id);
-        _running.Clear(); _suspended.Clear();
+        lock (_tables)
+        {
+            foreach (var id in _running.Values) _ua.MPAI_AIFU_MODULE_Stop(id);
+            _running.Clear(); _suspended.Clear();
+        }
         (_provider as IDisposable)?.Dispose();
     }
 }

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 
 using AIF.Controller;
 using AIF.Store;
@@ -22,7 +24,20 @@ internal sealed class NorthApiRunner : IModuleRunner
     private readonly AmdStore store;
 
     // The Ports of each Module, read once from its AMD.
-    private readonly Dictionary<string, IReadOnlyList<BoundaryPort>> ports =
+    private readonly ConcurrentDictionary<string, IReadOnlyList<BoundaryPort>> ports =
+        new(StringComparer.Ordinal);
+
+    // ONE MODULE, MANY PEOPLE. The North API runs one instance of each Module,
+    // and every client that starts it shares that instance. So a Module is
+    // stopped only when the last of those who started it has stopped it - the
+    // Service's own start at load time counts as one, and is never undone, so a
+    // person pressing Stop ends their own App and nobody else's.
+    private readonly Dictionary<string, int> holders = new(StringComparer.Ordinal);
+
+    // And the shared instance runs one exchange at a time: its AIMs' lifecycles
+    // are reset at each run, so two runs of one Module overlapping would cancel
+    // each other. Different Modules still run side by side.
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> turns =
         new(StringComparer.Ordinal);
 
     public NorthApiRunner(
@@ -42,7 +57,8 @@ internal sealed class NorthApiRunner : IModuleRunner
             ?? throw new InvalidOperationException(
                    $"No AMD for Module '{moduleName}'.");
 
-        using var amd = store.GetAMD(identifier);
+        // Not disposed: the document belongs to the store, which keeps it.
+        var amd = store.GetAMD(identifier);
 
         var read = BoundaryPorts.FromAmd(amd.RootElement);
         ports[moduleName] = read;
@@ -60,7 +76,11 @@ internal sealed class NorthApiRunner : IModuleRunner
         try
         {
             var error = north.StartFlow(moduleName);
-            return error == AifError.OK ? null : error.ToString();
+            if (error != AifError.OK) return error.ToString();
+
+            lock (holders)
+                holders[moduleName] = holders.GetValueOrDefault(moduleName) + 1;
+            return null;
         }
         catch (Exception failure)
         {
@@ -69,8 +89,21 @@ internal sealed class NorthApiRunner : IModuleRunner
     }
 
     public void Stop(
-        string moduleName) =>
-        north.StopFlow(moduleName);
+        string moduleName)
+    {
+        lock (holders)
+        {
+            if (!holders.TryGetValue(moduleName, out var count)) return;
+            if (count > 1) { holders[moduleName] = count - 1; return; }
+            holders.Remove(moduleName);
+        }
+
+        // The last holder: no run of it can be in progress for anyone else.
+        var turn = turns.GetOrAdd(moduleName, _ => new SemaphoreSlim(1, 1));
+        turn.Wait();
+        try { north.StopFlow(moduleName); }
+        finally { turn.Release(); }
+    }
 
     public RunResult Run(
         string moduleName,
@@ -85,7 +118,11 @@ internal sealed class NorthApiRunner : IModuleRunner
             data.Add(new NorthApi.Datum(type, num, pair.Value));
         }
 
-        var result = north.Advance(moduleName, data);
+        var turn = turns.GetOrAdd(moduleName, _ => new SemaphoreSlim(1, 1));
+        NorthApi.Result result;
+        turn.Wait();
+        try { result = north.Advance(moduleName, data); }
+        finally { turn.Release(); }
 
         if (result.Error != AifError.OK)
             return new RunResult { Error = result.Error.ToString() };
