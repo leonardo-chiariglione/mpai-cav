@@ -412,7 +412,14 @@ public partial class MainWindow : Window
     {
         if (AppList.SelectedItem is not Offered chosen) return;
         AppList.SelectedItem = null;
-        _ = ShowDetailAsync(chosen);
+        Status($"chose {chosen.Name}");
+
+        // CHOOSING COMPLETES AN ACQUISITION. A workflow asked for the name of an
+        // Application; this is the person answering it.
+        if (_choosing is { } waiting) { _choosing = null; waiting.TrySetResult(chosen.App.Id); return; }
+
+        _appId = chosen.App.Id;
+        _ = ChosenAsync(chosen);
     }
 
     private void RunApp_Click(object sender, System.Windows.RoutedEventArgs e)

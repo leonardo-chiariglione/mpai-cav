@@ -303,13 +303,13 @@ public partial class RcaShell : ComponentBase
 
     // CHOOSING OPENS THE APP'S PAGE - what it asks for, what it keeps - and Open
     // starts it: a person consents before the App begins.
-    private async Task ChooseApp(string id)
+    // CHOOSING STARTS THE APP DIRECTLY, as it always did before its page was
+    // added; the page itself (ShowDetail's descriptor lookup, Open, Back) stays
+    // for when it is wanted again, just not on the path a click takes today.
+    private void ChooseApp(string id)
     {
-        var app = apps.FirstOrDefault(a => a.Id == id);
-        appPage = await Directory().DescriptorAsync(id)
-               ?? new WebAppDirectory.Descriptor(id, app?.Name ?? id, app?.Description ?? "", "", "",
-                                                 Array.Empty<string>(), Array.Empty<string>(), "");
-        Refresh();
+        var waiting = choosing; choosing = null;
+        waiting?.TrySetResult(id);
     }
 
     private void OpenPage()
