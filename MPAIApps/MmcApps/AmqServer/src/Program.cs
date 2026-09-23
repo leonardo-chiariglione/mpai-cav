@@ -188,6 +188,19 @@ internal static class Program
         // A SERVICE OFFERS SEVERAL APPS, SO IT HOLDS SEVERAL PROVIDERS. Adding an
         // App to this Service is adding its provider here - the providers live
         // with the Modules they build, not with the windows that drive them.
+        // SUB-AIMs ON ANOTHER MACHINE, when configured: the Controller asks for each
+        // AIM, and what is answered stands in for it - carrying its Ports over
+        // MPAI-MAS to the Service that runs it.
+        if (config.RemoteAims is { Count: > 0 } remote)
+        {
+            foreach (var (aim, where) in remote)
+                Console.WriteLine($"  Remote AIM:    {aim} at {where}");
+            AIF.Controller.Controller.RemoteAims = (aimName, relation) =>
+                remote.TryGetValue(aimName, out var where)
+                    ? new Mpai.Mas.Client.RemoteAim(aimName, store, where, config.RemoteToken, Console.WriteLine)
+                    : null;
+        }
+
         // MODELS FROM THE PARTIES THAT PUBLISH THEM, when configured: a model a
         // setting names and this machine does not have is fetched and checked.
         if (string.Equals(config.ModelSource, "Fetch", StringComparison.OrdinalIgnoreCase))

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -118,6 +119,17 @@ public sealed class MasServerConfig
     // Where fetched models are kept. Absent means
     // <local application data>\MPAI\SCI\Models.
     public string? ModelCache { get; init; }
+
+    // SUB-AIMs THAT RUN ON ANOTHER MACHINE (MPAI-MAS: a Relation other than
+    // Internal). Each names the MAS Service that runs it:
+    //
+    //   "RemoteAims": { "1MMC-EDP-V2.5-I01": "https://other.machine:5005/" }
+    //
+    // An AIM not named here is built on this machine, as they all are today.
+    public Dictionary<string, string>? RemoteAims { get; init; }
+
+    // The bearer token this Service presents to those machines.
+    public string? RemoteToken { get; init; }
 
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.

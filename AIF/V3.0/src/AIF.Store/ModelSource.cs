@@ -23,7 +23,12 @@ namespace AIF.Store;
 // checked against its SHA-256; a file that arrives as something else is deleted and
 // said to be, and the AIM that needed it will not be built here.
 //
-// A setting with no source is left exactly as it was.
+// EVERY RELATIVE PATH IS MADE ABSOLUTE, against -root-, whether or not it has a
+// Source. A setting has always been free to name a model as a plain relative path
+// - an AIM's own built-in default is often written that way - and until now such
+// a path was handed to the AIM exactly as written, so it resolved correctly only
+// from the one working directory the process happened to be started from. This
+// makes every setting correct from wherever the Service is started.
 public static class ModelSource
 {
     public static IReadOnlyDictionary<string, string> Resolve(
@@ -35,10 +40,18 @@ public static class ModelSource
         foreach (var (key, value) in settings)
         {
             if (key.StartsWith("Source:", StringComparison.Ordinal) || key.StartsWith("SHA256:", StringComparison.Ordinal)) continue;
-            if (!settings.TryGetValue("Source:" + key, out var source) || string.IsNullOrWhiteSpace(value)) continue;
+            if (string.IsNullOrWhiteSpace(value) || Path.IsPathRooted(value)) continue;
 
-            var here = Path.IsPathRooted(value) ? value : Path.Combine(root, value);
-            if (File.Exists(here)) continue;                      // already on this machine
+            var here = Path.Combine(root, value);
+            if (File.Exists(here))
+            {
+                resolved ??= new Dictionary<string, string>(settings, StringComparer.Ordinal);
+                resolved[key] = here;
+                continue;
+            }
+
+            // Relative, and not on this machine: fetch it if a source is named.
+            if (!settings.TryGetValue("Source:" + key, out var source)) continue;
 
             settings.TryGetValue("SHA256:" + key, out var expected);
             var fetched = Fetch(source, value, cache, expected, say);
