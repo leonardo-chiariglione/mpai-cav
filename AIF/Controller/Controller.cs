@@ -32,6 +32,17 @@ public sealed class Controller
                 ? null
                 : new FileSharedStorage(storageRoot, $"{moduleName}/{aimName}", "local");
 
+    // PRIVATE STORAGE (M3215 3.7): reachable only by its AIM Instance, held below
+    // its Module's scope at private/<AIM Instance>, stamped as Shared Storage is.
+    // The AIM is given no handle to any other AIM's.
+    private ISharedStorage? PrivateStorageFor(string moduleName, string aimName, Func<string?>? location)
+    {
+        string? Scope() => (location?.Invoke() ?? storageRoot) is { } root
+            ? Path.Combine(root, "private", Uri.EscapeDataString(aimName))
+            : null;
+        return Scope() is null ? null : new ModuleSharedStorage(Scope, $"{moduleName}/{aimName}", "local");
+    }
+
     public Controller(AmdStore store)
     {
         this.store = store;
@@ -468,7 +479,8 @@ public sealed class Controller
             CheckResources(graph.Root);
             var elsewhere = RemoteAims?.Invoke(aimName, graph.Root.Relation);
             host.RegisterRuntime(elsewhere ??
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation)));
+                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
             return instantiated;
         }
@@ -513,7 +525,8 @@ public sealed class Controller
             // here, as every AIM is today.
             var elsewhere = RemoteAims?.Invoke(aimName, child.Relation);
             host.RegisterRuntime(elsewhere ??
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation)));
+                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
         }
     }

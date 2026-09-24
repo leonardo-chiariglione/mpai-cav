@@ -289,12 +289,38 @@ public class ContinuousTests
         Expected.Match("continuous-payloads.json", result);
     }
 
+    // PRIVATE STORAGE (M3215 3.7): each AIM its own, below its Module's scope.
+    [Fact]
+    public async Task PrivateStorage()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mpai-phase4-" + Guid.NewGuid().ToString("N"));
+        var result = new Dictionary<string, string>();
+        try
+        {
+            var store = new AIF.Store.AmdStore(Amds);
+            store.Scan();
+            var ua = new UserAgent(store, root);
+            ua.MPAI_AIFU_Controller_Initialize();
+            ua.MPAI_AIFU_MODULE_Start("1TST-PRV-V1.0-I01", new ContinuousAims(), AIF.Store.AimSettings.Empty, out var id);
+            var (_, outcome) = await ua.RunAsync(id, new Dictionary<string, string> { [Text + "#1"] = "x" });
+            foreach (var (key, value) in outcome!.Completed.Ports.OrderBy(p => p.Key))
+                result[key == Text + "#1" ? "TST-PVA" : "TST-PVB"] = value;
+            result["held at"] = string.Join(", ", Directory.GetDirectories(Path.Combine(root, "private"))
+                .Select(d => "private/" + Uri.UnescapeDataString(Path.GetFileName(d))).OrderBy(d => d));
+            ua.MPAI_AIFU_MODULE_Stop(id);
+        }
+        finally { try { Directory.Delete(root, true); } catch { } }
+
+        Expected.Match("continuous-private.json", result);
+    }
+
     // Each test Module: whether it starts, and what one exchange on it returns.
     [Fact]
     public void Today()
     {
         var modules = new[] { "TST-LOP", "TST-PBH", "TST-TRX", "TST-PER", "TST-PEX", "TST-RST", "TST-PAY", "TST-PRV" };
         var result = new Dictionary<string, string>();
+        var storage = Path.Combine(Path.GetTempPath(), "mpai-phase4-" + Guid.NewGuid().ToString("N"));
         using var api = Api();
         foreach (var name in modules)
         {
@@ -303,6 +329,19 @@ public class ContinuousTests
             try { started = api.StartFlow(module).ToString(); }
             catch (Exception failure) { result[name] = "does not start: " + MetadataTests.Short(failure.Message, 140); continue; }
             if (started != "OK") { result[name] = "does not start: " + started; continue; }
+            api.SharedStorageInit(module, storage);             // not the repository's own Shared Storage
+
+            // A Continuous Module runs by itself: a write, and a read of its first
+            // output within a timeout. Advance would return only what is pending at
+            // that instant.
+            if (name is "TST-LOP" or "TST-PBH" or "TST-PER" or "TST-RST" or "TST-PAY")
+            {
+                api.InputWrite(module, Text, 1, "x", 1000);
+                var first = api.OutputRead(module, Text, 1, 1000);
+                result[name] = $"starts, continuous; a write, then #1: " + (first.Ok ? $"'{MetadataTests.Short(first.Json!, 40)}'" : first.Error.ToString());
+                api.StopFlow(module);
+                continue;
+            }
 
             ControllerApi.Result run;
             try { run = api.Advance(module, [new ControllerApi.Datum(Text, "x")]); }
@@ -313,6 +352,7 @@ public class ContinuousTests
             api.StopFlow(module);
         }
 
+        try { Directory.Delete(storage, true); } catch { }
         Expected.Match("continuous-today.json", result);
     }
 }
@@ -324,6 +364,26 @@ public sealed class ContinuousAims : IAimProvider
     private int accumulated, ticks, thrown;
 
     public bool CanCreate(string aimName) => aimName.StartsWith("1TST-", StringComparison.Ordinal);
+
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings,
+                                AIF.SharedStorage.ISharedStorage? storage, AIF.SharedStorage.ISharedStorage? privateStorage) =>
+        aimName switch
+        {
+            "1TST-PVA-V1.0-I01" or "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out(("Private", KeepPrivately(aimName, storage, privateStorage)))),
+            _ => Create(aimName, settings, storage)
+        };
+
+    // TST-PVA and TST-PVB: each writes key "k" in its Private Storage, as its own
+    // letter, and says what it then finds there and in the Module's Shared Storage.
+    private static string KeepPrivately(string aim, AIF.SharedStorage.ISharedStorage? shared, AIF.SharedStorage.ISharedStorage? mine)
+    {
+        if (mine is null) return "no Private Storage";
+        var letter = aim.Contains("PVA") ? "A" : "B";
+        mine.MPAI_AIFM_SharedStorage_Put("k", System.Text.Encoding.UTF8.GetBytes(letter));
+        var own = System.Text.Encoding.UTF8.GetString(mine.MPAI_AIFM_SharedStorage_Get("k"));
+        var inShared = shared?.MPAI_AIFM_SharedStorage_Exists("k") == true ? "in Shared Storage too" : "not in Shared Storage";
+        return $"finds '{own}' in its Private Storage, {inShared}; written by {mine.MPAI_AIFM_SharedStorage_GetKeyInfo("k").StoredBy}";
+    }
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage) =>
         aimName switch

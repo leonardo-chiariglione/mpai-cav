@@ -1,0 +1,5 @@
+{
+  "TST-PVA": "finds 'A' in its Private Storage, not in Shared Storage; written by 1TST-PRV-V1.0-I01/1TST-PVA-V1.0-I01",
+  "TST-PVB": "finds 'B' in its Private Storage, not in Shared Storage; written by 1TST-PRV-V1.0-I01/1TST-PVB-V1.0-I01",
+  "held at": "private/1TST-PVA-V1.0-I01, private/1TST-PVB-V1.0-I01"
+}

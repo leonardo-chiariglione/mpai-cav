@@ -147,10 +147,16 @@ public sealed class UserAgent
 
         public IAimProcessor Create(string aimName,
             IReadOnlyDictionary<string, string> settings,
-            AIF.SharedStorage.ISharedStorage? storage)
+            AIF.SharedStorage.ISharedStorage? storage) =>
+            Create(aimName, settings, storage, null);
+
+        public IAimProcessor Create(string aimName,
+            IReadOnlyDictionary<string, string> settings,
+            AIF.SharedStorage.ISharedStorage? storage,
+            AIF.SharedStorage.ISharedStorage? privateStorage)
         {
             if (kept.TryGetValue(aimName, out var already)) return already;
-            var made = inner.Create(aimName, settings, storage);
+            var made = inner.Create(aimName, settings, storage, privateStorage);
             kept[aimName] = made;
             return made;
         }

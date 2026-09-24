@@ -31,4 +31,14 @@ public interface IAimProvider
         string aimName,
         IReadOnlyDictionary<string, string> settings,
         ISharedStorage? storage);
+
+    // With the AIM's Private Storage as well (M3215 3.7), reachable by it alone.
+    // A provider whose AIMs keep private data overrides this; the default hands
+    // over the Shared handle only, as before.
+    IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage) =>
+        Create(aimName, settings, storage);
 }
