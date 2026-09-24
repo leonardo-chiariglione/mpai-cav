@@ -18,7 +18,13 @@
                        { "Output": { "AIMName": "1TST-GIN-V1.0-I01", "PortName": "Reversed", "PortNumber": 2 }, "Input": { "AIMName": "",                  "PortName": "Reversed" } },
                        { "Output": { "AIMName": "1TST-GIN-V1.0-I01", "PortName": "Echo",     "PortNumber": 3 }, "Input": { "AIMName": "",                  "PortName": "Echo"     } }],
 
-  "Implementations":  [],
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ControllerTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
   "ResourcePolicies": [],
   "DataXMData":       {},
   "Documentation":    []}

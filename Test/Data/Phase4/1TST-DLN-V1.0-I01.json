@@ -1,19 +1,20 @@
-{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-ECH-V1.0-I01", "AIMName": "1TST-ECH-V1.0-I01"},
-  "Header":           "TST-ECH-V1.0",
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-DLN-V1.0-I01", "AIMName": "1TST-DLN-V1.0-I01"},
+  "Header":           "TST-DLN-V1.0",
 
   "APIProfile":       "Basic",
-  "Description":      "Test: gives its text back.",
+  "Deadline":         20,
+  "Description":      "Test late AIM: takes 60 ms a run, against a Deadline of 20 ms.",
 
   "InternalTypes":    [],
 
   "ExternalPorts":    [{"Name": "Text", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "Echo", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "Late", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ControllerTests.cs",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Aif.Tests",
                         "Architecture":      "x86-64",

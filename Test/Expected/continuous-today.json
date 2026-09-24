@@ -1,0 +1,10 @@
+{
+  "TST-LOP": "starts; the exchange throws: The Topology of 1TST-LOP-V1.0-I01 contains a cycle; no execution order exists.",
+  "TST-PAY": "starts; an exchange: OK; #1 'x'; #2 '1'",
+  "TST-PBH": "starts; an exchange: OK; #1 'x'; #2 'x'; #3 'x'; #4 'x'",
+  "TST-PER": "starts; an exchange: OK; #2 'x'",
+  "TST-PEX": "starts; an exchange: OK; no output",
+  "TST-PRV": "starts; an exchange: OK; #1 'A'; #2 'B'",
+  "TST-RST": "starts; an exchange: OK; no output",
+  "TST-TRX": "starts; an exchange: OK; #1 'x'"
+}

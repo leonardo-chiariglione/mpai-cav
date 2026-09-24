@@ -1,0 +1,30 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-PRV-V1.0-I01", "AIMName": "1TST-PRV-V1.0-I01"},
+  "Header":           "TST-PRV-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test Module, Private Storage: two AIMs, each with its own.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Input", "Direction": "Input",  "DataType": "TST-TXT-V1.0",                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "A",     "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "B",     "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-PVA-V1.0-I01", "AIMName": "1TST-PVA-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-PVB-V1.0-I01", "AIMName": "1TST-PVB-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Input" }, "Input": { "AIMName": "1TST-PVA-V1.0-I01", "PortName": "Input" } },
+                       { "Output": { "AIMName": "",                  "PortName": "Input" }, "Input": { "AIMName": "1TST-PVB-V1.0-I01", "PortName": "Input" } },
+                       { "Output": { "AIMName": "1TST-PVA-V1.0-I01", "PortName": "A"     }, "Input": { "AIMName": "",                  "PortName": "A"     } },
+                       { "Output": { "AIMName": "1TST-PVB-V1.0-I01", "PortName": "B"     }, "Input": { "AIMName": "",                  "PortName": "B"     } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

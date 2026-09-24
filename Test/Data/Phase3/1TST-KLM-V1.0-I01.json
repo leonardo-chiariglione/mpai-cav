@@ -19,7 +19,13 @@
                        { "Output": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Upper"  }, "Input": { "AIMName": "",                  "PortName": "Upper"  } },
                        { "Output": { "AIMName": "1TST-KIL-V1.0-I01", "PortName": "Killed" }, "Input": { "AIMName": "",                  "PortName": "Killed" } }],
 
-  "Implementations":  [],
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ControllerTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
   "ResourcePolicies": [],
   "DataXMData":       {},
   "Documentation":    []}

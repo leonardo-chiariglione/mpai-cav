@@ -1,0 +1,25 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-TIK-V1.0-I01", "AIMName": "1TST-TIK-V1.0-I01"},
+  "Header":           "TST-TIK-V1.0",
+
+  "APIProfile":       "Basic",
+  "Period":           50,
+  "Description":      "Test ticker: runs every 50 ms and gives how many times it has run.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Ticks", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

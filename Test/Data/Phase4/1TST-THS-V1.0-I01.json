@@ -1,19 +1,20 @@
-{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-RPT-V1.0-I01", "AIMName": "1TST-RPT-V1.0-I01"},
-  "Header":           "TST-RPT-V1.0",
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-THS-V1.0-I01", "AIMName": "1TST-THS-V1.0-I01"},
+  "Header":           "TST-THS-V1.0",
 
   "APIProfile":       "Basic",
-  "Description":      "Test: reports that it fell back, then gives its text back.",
+  "RestartLimit":     2,
+  "Description":      "Test AIM that throws on its first two runs, then gives its text back; RestartLimit 2.",
 
   "InternalTypes":    [],
 
   "ExternalPorts":    [{"Name": "Text",     "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "Reported", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "Survived", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ControllerTests.cs",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Aif.Tests",
                         "Architecture":      "x86-64",

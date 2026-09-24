@@ -1,0 +1,24 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-PEX-V1.0-I01", "AIMName": "1TST-PEX-V1.0-I01"},
+  "Header":           "TST-PEX-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test Module, refused: a ticker at a Period in an exchange.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Ticks", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-TIK-V1.0-I01", "AIMName": "1TST-TIK-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "1TST-TIK-V1.0-I01", "PortName": "Ticks" }, "Input": { "AIMName": "", "PortName": "Ticks" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

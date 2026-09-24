@@ -13,7 +13,13 @@
 
   "Topology":         [],
 
-  "Implementations":  [],
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ControllerTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
   "ResourcePolicies": [],
   "DataXMData":       {},
   "Documentation":    []}

@@ -1,0 +1,25 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-RDO-V1.0-I01", "AIMName": "1TST-RDO-V1.0-I01"},
+  "Header":           "TST-RDO-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test slow reader, 50 ms a Message; its input DropOldest, Depth 2.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Depth": 2, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Read", "Direction": "Output", "DataType": "TST-TXT-V1.0",                                       "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}
