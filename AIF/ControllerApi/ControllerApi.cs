@@ -64,6 +64,10 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         public bool Stopped { get; set; }
         public Dictionary<string, string> Written { get; } = new();
         public Task<Result>? Run { get; set; }
+
+        // The exchange on the Module's Channels, when it runs there: a boundary
+        // Output Port settles before the whole run completes (M3215 3.4).
+        public ContinuousExecutor.ExchangeRun? Exchange { get; set; }
     }
 
     public ControllerApi(string amdDir, string settingsPath, IAimProvider provider)
@@ -197,6 +201,21 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         }
 
         if (run is null) return new Read(AifError.NotProduced, null);
+
+        // THE EXCHANGE IS FINISHED FOR WHAT THE USER AGENT ASKS (OI-12): on the
+        // Module's Channels, this Port settles as soon as it has its Message or can
+        // no longer get one, whatever the rest of the run is doing.
+        ContinuousExecutor.ExchangeRun? exchange;
+        lock (_tables) exchange = _running.TryGetValue(moduleName, out var s) ? s.Exchange : null;
+        if (exchange is not null)
+        {
+            var port = exchange.Port(dataType, portNumber);
+            if (!Completes(port, timeoutMs)) return new Read(AifError.Timeout, null);
+            if (port.Result is { } settled) return new Read(AifError.OK, settled);
+            if (!Completes(run, 0) || run.Result.Error == AifError.OK) return new Read(AifError.NotProduced, null);
+            return new Read(run.Result.Error, null);
+        }
+
         if (!Completes(run, timeoutMs)) return new Read(AifError.Timeout, null);
 
         var result = run.Result;
@@ -333,14 +352,36 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             var boundary = new Dictionary<string, string>(started.Written);
             started.Written.Clear();
-            started.Run = Task.Run(() => RunOnce(started, boundary));
+            if (_ua.ExchangesOnChannels(started.Id) && _ua.StartExchange(started.Id, boundary) is { } exchange)
+            {
+                started.Exchange = exchange;
+                started.Run = Completed(started, exchange);
+            }
+            else
+            {
+                started.Exchange = null;
+                started.Run = Task.Run(() => RunOnce(started, boundary));
+            }
         }
         return started.Run;
+    }
+
+    private async Task<Result> Completed(Started started, ContinuousExecutor.ExchangeRun exchange)
+    {
+        Message message;
+        try { message = await exchange.Completed; }
+        catch { return new Result(AifError.Failed, Array.Empty<Datum>()); }
+        return ToResult(started, AifError.OK, message);
     }
 
     private async Task<Result> RunOnce(Started started, Dictionary<string, string> boundary)
     {
         var (err, outcome) = await _ua.RunAsync(started.Id, boundary);
+        return ToResult(started, err, outcome?.Completed);
+    }
+
+    private Result ToResult(Started started, AifError err, Message? completed)
+    {
         if (_ua.ModuleStopped(started.Id))
             lock (_tables) started.Stopped = true;
         if (err != AifError.OK) return new Result(err, Array.Empty<Datum>());
@@ -349,7 +390,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         // Step 5 gives it its policy): the run's message is marked an error when
         // the last AIM to run failed, and still carries what the others produced.
         // A cancelled run - its Module stopped - produced nothing.
-        var message = outcome?.Completed;
+        var message = completed;
         if (message is null || message.IsCancelled)
             return new Result(AifError.Failed, Array.Empty<Datum>());
 

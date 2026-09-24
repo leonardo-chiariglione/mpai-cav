@@ -14,7 +14,7 @@ namespace AIF.Controller;
 // IAimProcessor is fired by the adapter: when a Message is pending on every
 // required input Port connected in the Module and on at least one input Port,
 // taking what is pending on the optional ones (M3205 5.3).
-public sealed class ContinuousExecutor
+public sealed partial class ContinuousExecutor
 {
     private readonly DescriptorGraph graph;
     private readonly AimHost host;

@@ -36,7 +36,13 @@ public sealed class UserAgent
         _store = store;
         _sharedStorageRoot = sharedStorageRoot;
         Clock = clock ?? SystemClock.Instance;
-        ControllerTransport = new ControllerTransport(Clock);
+        ControllerTransport = new ControllerTransport(Clock)
+        {
+            // What an AIM produces is looked at on the way, as it was by the
+            // exchange executor.
+            Observer = (spec, message) =>
+                MachineExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
+        };
         InProcessTransport  = new InProcessTransport(Clock);
     }
 
@@ -77,6 +83,25 @@ public sealed class UserAgent
     public InProcessTransport  InProcessTransport  { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
+    // WHICH EXECUTOR RUNS AN EXCHANGE (M3215 3.4, Step 7): "Machine", as before, or
+    // "Continuous", the exchange on the Module's Channels. Taken from
+    // MPAI_EXCHANGE_EXECUTOR, so that the whole matrix and the Service can be run
+    // on either until MachineExecutor goes.
+    public string ExchangeExecutor { get; set; } =
+        Environment.GetEnvironmentVariable("MPAI_EXCHANGE_EXECUTOR") ?? "Machine";
+
+    // True when this Module's exchanges run on its Channels.
+    public bool ExchangesOnChannels(int moduleId) =>
+        ExchangeExecutor == "Continuous" &&
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is null && module.Graph.Root.IsComposite;
+
+    // An exchange on the Module's Channels: each boundary Output Port settles as
+    // soon as it can (OI-12).
+    public ContinuousExecutor.ExchangeRun? StartExchange(int moduleId, IReadOnlyDictionary<string, string> boundaryPorts) =>
+        _running.TryGetValue(moduleId, out var module)
+            ? module.Channels.Exchange(boundaryPorts, Guid.NewGuid().ToString())
+            : null;
+
     private IReadOnlyDictionary<string, IChannelTransport> Transports => new Dictionary<string, IChannelTransport>
     {
         [ControllerTransport.Name] = ControllerTransport,
@@ -105,6 +130,10 @@ public sealed class UserAgent
         // The continuous executor, for a Module whose Metadata declares
         // Execution: Continuous (M3215 3.3); null for an exchange.
         public ContinuousExecutor? Continuous { get; init; }
+
+        // The Module's Channels, planned for every Module: an exchange runs on
+        // them when ExchangeExecutor says so (M3215 3.4).
+        public required ContinuousExecutor Channels { get; init; }
 
         // Where the User Agent initialised this Module's Shared Storage; null,
         // the User Agent's root (MPAI_AIFU_SharedStorage_Init, M3203 3.4.1).
@@ -229,7 +258,8 @@ public sealed class UserAgent
             Graph      = graph,
             Host       = host,
             Executor   = new MachineExecutor(host),
-            Continuous = graph.Root.IsContinuous ? channels : null
+            Continuous = graph.Root.IsContinuous ? channels : null,
+            Channels   = channels
         };
         return AifError.OK;
     }
@@ -360,6 +390,9 @@ public sealed class UserAgent
         int moduleId, IReadOnlyDictionary<string, string> boundaryPorts)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotFound, null);
+
+        if (ExchangesOnChannels(moduleId))
+            return (AifError.OK, new RunOutcome { Completed = await module.Channels.Exchange(boundaryPorts, Guid.NewGuid().ToString()).Completed });
 
         var result = await module.Executor.RunAsync(
             module.Graph,
