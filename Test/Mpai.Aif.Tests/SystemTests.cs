@@ -33,41 +33,71 @@ public class SystemTests
         Expected.Match("loops.json", result);
     }
 
-    // Where the CAV stands: for each subsystem, its L3, whether it loads, and
-    // whether the exchange executor could run it.
+    // Where the CAV stands, for each subsystem and for the whole CAV: whether its
+    // L2 is in this repository, which of its Sub-AIMs have any code, its L3,
+    // whether it loads, and whether the exchange executor could run it.
     [Fact]
     public void CavStatus()
     {
-        var subsystems = new (string Subsystem, string Instance)[]
+        var subsystems = new (string Subsystem, string Standard, string Instance)[]
         {
-            ("Human-CAV Interaction (HCI)",       "1MMC-HCI-V2.5-I01"),
-            ("Environment Sensing (ESS)",         "1CAV-ESS-V1.1-I01"),
-            ("Autonomous Motion (AMS)",           "1CAV-AMS-V1.1-I01"),
-            ("Motion Actuation (MAS)",            "1CAV-MAS-V1.1-I01")
+            ("CAV (Connected Autonomous Operation)", "CAV-CAO-V1.1", "1CAV-CAO-V1.1-I01"),
+            ("Human-CAV Interaction (HCI)",          "MMC-HCI-V2.5", "1MMC-HCI-V2.5-I01"),
+            ("Environment Sensing (ESS)",            "CAV-ESS-V1.1", "1CAV-ESS-V1.1-I01"),
+            ("Autonomous Motion (AMS)",              "CAV-AMS-V1.1", "1CAV-AMS-V1.1-I01"),
+            ("Motion Actuation (MAS)",               "CAV-MAS-V1.1", "1CAV-MAS-V1.1-I01")
         };
+
+        var l2s = Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
+                           .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs")
+                           .Select(MetadataTests.TryParse)
+                           .Where(n => n?["Identifier"]?["AIMName"] is not null)
+                           .ToDictionary(n => n!["Identifier"]!["AIMName"]!.GetValue<string>(), n => n!);
+        // An AIM has code if a plugin declares it: AimName => "OSD-BVS-V1.5". A mere
+        // mention of the name, in a comment or a data type, does not count.
+        var code = Directory.EnumerateFiles(Path.Combine(Repository.Root, "AIMs"), "*Plugin.cs", SearchOption.AllDirectories)
+                            .SelectMany(f => System.Text.RegularExpressions.Regex
+                                             .Matches(File.ReadAllText(f), "AimName\\s*=>\\s*\"([^\"]+)\"")
+                                             .Select(m => m.Groups[1].Value))
+                            .ToHashSet(StringComparer.Ordinal);
 
         var store = new AmdStore(Repository.Amds);
         store.Scan();
         var controller = new Controller(store);
 
         var result = new Dictionary<string, string>();
-        foreach (var (subsystem, instance) in subsystems)
+        foreach (var (subsystem, standard, instance) in subsystems)
         {
-            var file = Path.Combine(Repository.Amds, instance + ".json");
-            if (!File.Exists(file)) { result[subsystem] = $"{instance}: no L3"; continue; }
+            var parts = new List<string>();
 
-            string loads;
-            try
+            // The L2, and which of its Sub-AIMs have code.
+            if (l2s.TryGetValue(standard, out var l2))
             {
-                controller.RegisterAim(store.FindByAimName(instance) ?? throw new InvalidOperationException("not found"));
-                loads = "loads";
+                var subs = (l2["SubAIMs"]?.AsArray() ?? new JsonArray())
+                           .Select(s => s?["Identifier"]?["AIMName"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();
+                var withCode = subs.Where(code.Contains).ToList();
+                parts.Add($"L2 {standard} present; code for {withCode.Count} of {subs.Count} Sub-AIMs" +
+                          (withCode.Count > 0 ? $" ({string.Join(", ", withCode)})" : ""));
             }
-            catch { loads = "does not load"; }
+            else parts.Add($"L2 {standard} not in this repository");
 
-            var loop = FindLoop(Edges(MetadataTests.TryParse(file)!)) is not null;
-            result[subsystem] = $"{instance}: {loads}; " +
-                (loop ? "its Topology has a loop, so the exchange executor cannot run it" : "no loop") +
-                "; not run";
+            var file = Path.Combine(Repository.Amds, instance + ".json");
+            if (!File.Exists(file)) parts.Add($"no L3 {instance}");
+            else
+            {
+                try
+                {
+                    controller.RegisterAim(store.FindByAimName(instance) ?? throw new InvalidOperationException("not found"));
+                    parts.Add($"L3 {instance} loads");
+                }
+                catch { parts.Add($"L3 {instance} does not load"); }
+
+                parts.Add(FindLoop(Edges(MetadataTests.TryParse(file)!)) is not null
+                    ? "its Topology has a loop, so the exchange executor cannot run it" : "no loop");
+            }
+
+            parts.Add("not run");
+            result[subsystem] = string.Join("; ", parts);
         }
 
         Expected.Match("cav-status.json", result);
@@ -122,8 +152,6 @@ public class SystemTests
 public class ModelTests
 {
     // Every SHA256 entry of AIMs/aim-settings.json against the file its setting names.
-    // In a group of its own: hashing 7.2 GB of models takes most of a minute, and the
-    // Fast group is meant to take seconds.
     [SkippableFact]
     public void ModelHashes()
     {
