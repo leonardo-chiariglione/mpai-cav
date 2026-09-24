@@ -1,36 +1,24 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6"},
-  "Header":            "PAF-PFI-V1.6",
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PSFaceInterpretation.json",
+  "title":                "PS-Face Interpretation V1.6",
 
-  "APIProfile":       "Basic",
-  "Description":      "This AIM extracts the Face Personal Status from a Basic Visual Object whose Visual Qualifier declares its content is a face: a value for each Personal Status Factor (Cognitive State, Emotion, Social Attitude) carried by the face.",
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6"},
 
-  "InternalTypes":   [ ],
+  "APIProfile":           "Basic",
+  "Description":          "This AIM extracts the Face Personal Status from the Face Descriptors.",
 
-  "ExternalPorts":   [{"Name": "FaceObject",         "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "FacePersonalStatus", "Direction": "Output", "DataType": "MMC-FPS-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+  "ExternalPorts":        [{"Name": "FaceDescriptorsObject", "Direction": "Input",  "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "FacePersonalStatus",    "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":         [ ],
+  "SubAIMs":              [ ],
 
-  "Topology":        [ ],
+  "Topology":             [ ],
 
-  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
-                        "BinaryName":       "/* provided by implementer */",
-                        "Architecture":     "/* x86-64 | ARM64 */",
-                        "MASPort":          443,
-                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
-                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
-                        "Version":          "/* implementer version */",
-                        "Source":           "/* AIMStorage | MPAIStore */",
-                        "Destination":      "/* provided by implementer */" }],
+  "Implementations":      [ ],
 
-  "ResourcePolicies":[{ "Name": "Memory"              , "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
-                      { "Name": "CPU:Number"          , "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "CPU:Class"           , "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
-                      { "Name": "GPU:Number"          , "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "GPU:CUDA:Class"      , "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
-                      { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
-                      { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
+  "ResourcePolicies":     [ ],
 
-  "DataXMData":         { },
+  "DataXMData":           { },
 
-  "Documentation":     [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
+  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}

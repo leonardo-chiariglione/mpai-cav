@@ -9,7 +9,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace Mpai.Paf.Pfi;
+namespace Mpai.Paf.Fpe;
 
 // ---------------------------------------------------------------------------
 //  HSEmotion facial-affect estimation (EfficientNet-B0, multi-task).

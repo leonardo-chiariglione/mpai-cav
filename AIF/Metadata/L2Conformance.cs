@@ -17,7 +17,8 @@ namespace AIF.Metadata;
 //   3. a Port of the L2 that the L3 does not declare is optional in the L2;
 //   4. every Sub-AIM of a composite L3 is a Sub-AIM of its L2, or a composite whose
 //      Sub-AIMs include one, at any depth - a Module may use a composite AIM where
-//      its Standard names one of the AIMs that composite contains.
+//      its Standard names one of the AIMs that composite contains -
+//   5. or a combination of Sub-AIMs of the L2 that exposes their interface (below).
 // Ports are matched by Direction and Data Type; names are labels, but where two
 // Ports could match, the one of the same name is preferred.
 public sealed class L2Conformance
@@ -84,9 +85,67 @@ public sealed class L2Conformance
 
         var subs2 = SubAims(l2).Select(TypeOf).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var sub in SubAims(l3))
-            if (!subs2.Contains(TypeOf(sub)) && !Contains(sub, subs2, 0))
-                found.Add($"Sub-AIM {sub}: neither a Sub-AIM of the L2 nor a composite containing one.");
+            if (!subs2.Contains(TypeOf(sub)) && !Contains(sub, subs2, 0) && !Combines(TypeOf(sub), l2, subs2))
+                found.Add($"Sub-AIM {sub}: not a Sub-AIM of the L2, nor a composite containing one, nor a combination of Sub-AIMs of the L2 exposing their interface.");
         return found;
+    }
+
+    // 5. A COMBINATION. Two or more AIMs may be combined into one, provided that the
+    //    result exposes the same interface. A Sub-AIM whose own L2 is a composite of
+    //    Sub-AIMs of the parent's L2 conforms if its Ports are the interface that
+    //    group exposes in the parent: the Topology lines of the parent that cross the
+    //    group's border - in, its inputs; out, its outputs - each typed by the
+    //    parent's own labels (its ExternalPorts and InternalTypes).
+    private bool Combines(string type, JsonElement parent, HashSet<string> parentSubs)
+    {
+        if (!l2s.TryGetValue(type, out var combined)) return false;
+        var group = SubAims(combined).Select(TypeOf).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (group.Count < 2 || !group.IsSubsetOf(parentSubs)) return false;
+
+        var labels = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var p in Ports(parent)) labels.TryAdd(p.Name, p.Types);
+        if (parent.TryGetProperty("InternalTypes", out var its) && its.ValueKind == JsonValueKind.Array)
+            foreach (var it in its.EnumerateArray())
+                if (it.TryGetProperty("Name", out var n) && n.GetString() is { Length: > 0 } name)
+                    labels[name] = TypesOf(it);
+
+        var exposed = new List<(string Direction, HashSet<string> Types)>();
+        if (!parent.TryGetProperty("Topology", out var topology) || topology.ValueKind != JsonValueKind.Array) return false;
+        foreach (var line in topology.EnumerateArray())
+        {
+            var (fromAim, fromLabel) = End(line, "Output");
+            var (toAim, toLabel) = End(line, "Input");
+            bool fromIn = group.Contains(TypeOf(fromAim)), toIn = group.Contains(TypeOf(toAim));
+            if (fromIn == toIn) continue;                              // inside the group, or not touching it
+            var types = labels.GetValueOrDefault(fromLabel) ?? labels.GetValueOrDefault(toLabel);
+            if (types is null) return false;                           // a line the parent does not type
+            var direction = toIn ? "Input" : "Output";
+            if (!exposed.Any(e => e.Direction == direction && e.Types.SetEquals(types))) exposed.Add((direction, types));
+        }
+
+        var own = Ports(combined);
+        bool Covered(string d, HashSet<string> t, IEnumerable<(string Direction, HashSet<string> Types)> by) =>
+            by.Any(b => b.Direction == d && b.Types.Overlaps(t));
+        return exposed.All(e => Covered(e.Direction, e.Types, own.Select(p => (p.Direction, p.Types)))) &&
+               own.All(p => Covered(p.Direction, p.Types, exposed));
+    }
+
+    private static (string Aim, string Label) End(JsonElement line, string side)
+    {
+        if (!line.TryGetProperty(side, out var end)) return ("", "");
+        return (end.TryGetProperty("AIMName", out var a) ? a.GetString() ?? "" : "",
+                end.TryGetProperty("PortName", out var p) ? p.GetString() ?? "" : "");
+    }
+
+    private static HashSet<string> TypesOf(JsonElement x)
+    {
+        var types = new HashSet<string>(StringComparer.Ordinal);
+        if (x.TryGetProperty("DataType", out var t))
+        {
+            if (t.ValueKind == JsonValueKind.Array) foreach (var y in t.EnumerateArray()) types.Add(y.GetString() ?? "");
+            else types.Add(t.GetString() ?? "");
+        }
+        return types;
     }
 
     private bool Contains(string instance, HashSet<string> types, int depth)

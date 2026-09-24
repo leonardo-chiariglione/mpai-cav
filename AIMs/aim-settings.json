@@ -103,11 +103,11 @@
     "1MMC-EDP-V2.5-I01":  {
                               "OllamaModel":  "llama3.2:3b"
                           },
-    "1MMC-PSI-V2.5-I01":  {
+    "1MMC-SPE-V2.5-I01":  {
                               "W2v2Model":  "Models\\w2v2-emotion\\model.onnx",
                               "SHA256:W2v2Model":  "9B6E449686C0DB86F5C607B8C9FA1D87468C27198A1F0A20280C4E258239763D"
                           },
-    "1PAF-PFI-V1.6-I01":  {
+    "1PAF-FPE-V1.6-I01":  {
                               "HseModel":  "Models\\hsemotion_enet_b0_8_va_mtl.onnx",
                               "SHA256:HseModel":  "C43E056AD388D4A8DC911832B8291435B2AF537F967E5870EBD731574EC7E812"
                           },

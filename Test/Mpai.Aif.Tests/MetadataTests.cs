@@ -86,6 +86,42 @@ public class MetadataTests
         Expected.Match("conformance.json", result);
     }
 
+    // Rule 5, the combination: PSE's L3 uses SPE where its L2 has ESD and PSI, and
+    // conforms because SPE exposes the interface of the two. With SPE's L2 exposing
+    // something else - its output a Text Object - the same L3 does not conform.
+    [Fact]
+    public void Combination()
+    {
+        JsonElement? FindL3(string instance)
+        {
+            var file = Path.Combine(Repository.Amds, instance + ".json");
+            return File.Exists(file) ? JsonDocument.Parse(File.ReadAllText(file)).RootElement.Clone() : null;
+        }
+        using var pse = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-PSE-V2.5-I01.json")));
+        Assert.Empty(new L2Conformance(Repository.Schemas, FindL3).Check(pse.RootElement));
+
+        var copy = Path.Combine(Path.GetTempPath(), "mpai-schemas-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
+                                          .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
+            {
+                var target = Path.Combine(copy, Path.GetRelativePath(Repository.Schemas, file));
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.Copy(file, target);
+            }
+            var spe = Path.Combine(copy, "MMC", "V2.5", "AIMs", "SpeechPersonalStatusExtraction.json");
+            var l2 = JsonNode.Parse(File.ReadAllText(spe))!;
+            foreach (var port in l2["ExternalPorts"]!.AsArray())
+                if (port!["Direction"]!.GetValue<string>() == "Output") port["DataType"] = "OSD-BTO-V1.5";
+            File.WriteAllText(spe, l2.ToJsonString());
+
+            var found = new L2Conformance(copy, FindL3).Check(pse.RootElement);
+            Assert.Contains(found, f => f.Contains("1MMC-SPE-V2.5-I01") && f.Contains("combination"));
+        }
+        finally { Directory.Delete(copy, recursive: true); }
+    }
+
     // For every L3 with an L2, the input Ports on which they disagree about being optional.
     [Fact]
     public void OptionalAgreement()

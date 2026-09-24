@@ -7,8 +7,8 @@ using AIF.Store;
 using Mpai.Core;
 using Mpai.Aims.Asr;   // AsrAimProcessor, AsrFactory
 using Mpai.Mmc.Nlu;    // NluAimProcessor
-using Mpai.Mmc.Psi;    // PsiAimProcessor, Wav2Vec2EmotionEstimator
-using Mpai.Paf.Pfi;    // PfiAimProcessor, HSEmotionEstimator
+using Mpai.Mmc.Spe;    // SpeAimProcessor, Wav2Vec2EmotionEstimator
+using Mpai.Paf.Fpe;    // FpeAimProcessor, HSEmotionEstimator
 using Mpai.Mmc.Pmx;    // PmxAimProcessor
 using Mpai.Mmc.Edp;    // EdpAimProcessor, OllamaClient
 using Mpai.Paf.Psd;    // PsdAimProcessor
@@ -21,7 +21,7 @@ namespace Mpai.Providers;
 // AIM Instance identifier. The Controller builds MMC-MPD and its nested PSE
 // composite from their L3s; this supplies only the leaves:
 //   ASR - speech to text              NLU - meaning and Text Personal Status
-//   PSI - speech affect (wav2vec2)    PFI - face affect (HSEmotion)
+//   SPE - speech affect (wav2vec2)    FPE - face affect (HSEmotion)
 //   PMX - multiplexes the modalities into an Entity Personal Status
 //   EDP - affective dialogue (local LLM)
 //   PSD, TTS, GFD - the Response and Scene Rendering leaves
@@ -36,7 +36,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
     public MpdProvider(AmdStore store) => _store = store;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-PSI-V2.5-I01" or "1PAF-PFI-V1.6-I01"
+        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SPE-V2.5-I01" or "1PAF-FPE-V1.6-I01"
                 or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"
                 or "1PAF-GFD-V1.6-I01";
 
@@ -45,8 +45,8 @@ public sealed class MpdProvider : IAimProvider, IDisposable
         {
             "1MMC-ASR-V2.5-I01" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1MMC-NLU-V2.5-I01" => new NluAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1MMC-PSI-V2.5-I01" => new PsiAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
-            "1PAF-PFI-V1.6-I01" => new PfiAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
+            "1MMC-SPE-V2.5-I01" => new SpeAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
+            "1PAF-FPE-V1.6-I01" => new FpeAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
             "1MMC-PMX-V2.5-I01" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-EDP-V2.5-I01" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

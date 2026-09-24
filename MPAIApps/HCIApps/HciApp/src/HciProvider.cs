@@ -26,8 +26,8 @@ using Mpai.Hci.Idr;         // IdrAimProcessor
 
 // Dialogue + rendering
 using Mpai.Mmc.Nlu;         // NluAimProcessor
-using Mpai.Mmc.Psi;         // PsiAimProcessor, Wav2Vec2EmotionEstimator
-using Mpai.Paf.Pfi;         // PfiAimProcessor, HSEmotionEstimator
+using Mpai.Mmc.Spe;         // SpeAimProcessor, Wav2Vec2EmotionEstimator
+using Mpai.Paf.Fpe;         // FpeAimProcessor, HSEmotionEstimator
 using Mpai.Mmc.Pmx;         // PmxAimProcessor
 using Mpai.Mmc.Edp;         // EdpAimProcessor, OllamaClient
 using Mpai.Aims.Asr;        // AsrAimProcessor, AsrFactory
@@ -42,10 +42,10 @@ namespace HciApp;
 // supplies ONLY the 18 leaf AIMs the topology names, across three groups:
 //   scene front-end : BAS, BVS, BLS, AVA, QCV, ASI, VSI, AII, VII
 //   recognisers     : FIR, SIR, IDR  (against the shared enrolment gallery)
-//   dialogue/render : ASR, NLU, PSI, PFI, PMX, EDP, PSD, TTS, GFD
+//   dialogue/render : ASR, NLU, SPE, FPE, PMX, EDP, PSD, TTS, GFD
 // Heavy engines are built once and shared: SCRFD (FIR + VSI), ArcFace, ECAPA,
 // YOLOX (VII), the YAMNet SoundClassifier (ASI + AII), the emotion estimators
-// (PSI, PFI), one Ollama client (EDP), and the SubjectGallery (FIR/SIR/IDR).
+// (SPE, FPE), one Ollama client (EDP), and the SubjectGallery (FIR/SIR/IDR).
 // No orchestration here; the User Agent drives the Module through the Controller.
 internal sealed class HciProvider : IAimProvider, IDisposable
 {
@@ -102,8 +102,8 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             // ---- dialogue + rendering --------------------------------------
             "MMC-ASR-V2.5" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "MMC-NLU-V2.5" => new NluAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "MMC-PSI-V2.5" => new PsiAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
-            "PAF-PFI-V1.6" => new PfiAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
+            "MMC-SPE-V2.5" => new SpeAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
+            "PAF-FPE-V1.6" => new FpeAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
             "MMC-PMX-V2.5" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "MMC-EDP-V2.5" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
             "PAF-PSD-V1.6" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

@@ -7,8 +7,8 @@ using AIF.Store;
 using Mpai.Core;
 using Mpai.Aims.Asr;   // AsrAimProcessor, AsrFactory
 using Mpai.Mmc.Nlu;    // NluAimProcessor
-using Mpai.Mmc.Psi;    // PsiAimProcessor, Wav2Vec2EmotionEstimator
-using Mpai.Paf.Pfi;    // PfiAimProcessor, HSEmotionEstimator
+using Mpai.Mmc.Spe;    // SpeAimProcessor, Wav2Vec2EmotionEstimator
+using Mpai.Paf.Fpe;    // FpeAimProcessor, HSEmotionEstimator
 using Mpai.Mmc.Pmx;    // PmxAimProcessor
 using Mpai.Mmc.Edp;    // EdpAimProcessor, OllamaClient
 using Mpai.Paf.Psd;    // PsdAimProcessor
@@ -41,8 +41,8 @@ internal sealed class MpdProvider : IAimProvider, IDisposable
         {
             "MMC-ASR-V2.5" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "MMC-NLU-V2.5" => new NluAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "MMC-PSI-V2.5" => new PsiAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
-            "PAF-PFI-V1.6" => new PfiAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
+            "MMC-SPE-V2.5" => new SpeAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
+            "PAF-FPE-V1.6" => new FpeAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
             "MMC-PMX-V2.5" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "MMC-EDP-V2.5" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
             "PAF-PSD-V1.6" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

@@ -8,9 +8,9 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Mmc.Sir;   // WavReader (shared audio primitive, as ESD does)
 
-namespace Mpai.Mmc.Psi;
+namespace Mpai.Mmc.Spe;
 
-// MMC-PSI-V2.5 - Personal Status Speech Interpretation, as an AIF IAimProcessor.
+// MMC-SPE-V2.5 - Speech Personal Status Extraction, as an AIF IAimProcessor.
 //
 // Receives a Basic Speech Object (OSD-BSO) and produces the Speech Personal Status
 // (MMC-SPS): the Personal Status Factors carried by the speech, each a chosen
@@ -20,14 +20,14 @@ namespace Mpai.Mmc.Psi;
 // (audeering w2v2-L-robust-12, MSP-Podcast) - arousal, dominance, valence in ~[0,1].
 // The (valence, arousal) point maps to an MPAI Emotion (MMC-EEM) label via the
 // affective circumplex; dominance maps to a Social Attitude (MMC-ESA) reading.
-public sealed class PsiAimProcessor : IAimProcessor
+public sealed class SpeAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly Wav2Vec2EmotionEstimator _estimator;
     private readonly string _inPort;   // OSD-BSO
     private readonly string _outPort;  // MMC-SPS
 
-    public PsiAimProcessor(string instanceId, Wav2Vec2EmotionEstimator estimator, AimPortReader ports)
+    public SpeAimProcessor(string instanceId, Wav2Vec2EmotionEstimator estimator, AimPortReader ports)
     {
         _instanceId = instanceId;
         _estimator  = estimator;

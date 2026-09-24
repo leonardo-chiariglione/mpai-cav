@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
-namespace Mpai.Mmc.Psi;
+namespace Mpai.Mmc.Spe;
 
 // ---------------------------------------------------------------------------
 //  wav2vec2 dimensional speech-emotion estimation (audeering w2v2-L-robust-12).
