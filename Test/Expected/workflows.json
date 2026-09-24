@@ -1,0 +1,8 @@
+{
+  "Apps/AMQ/MMC-AMQ.orch": "Module 1MMC-AMQ-V2.5-I01: 9 offers, 14 asks; every Port declared",
+  "Apps/MAD/MMC-MAD.orch": "Module 1MMC-MAD-V2.5-I01: 6 offers, 9 asks; every Port declared",
+  "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 3 offers, 6 asks; every Port declared",
+  "Apps/MAT/MMC-MAT.orch": "Module 1MMC-MAT-V2.5-I01: 6 offers, 9 asks; every Port declared",
+  "Apps/MPD/MMC-MPD.orch": "Module 1MMC-MPD-V2.5-I01: 7 offers, 9 asks; every Port declared",
+  "UAs/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 3 offers, 6 asks; every Port declared"
+}

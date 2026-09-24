@@ -10,6 +10,7 @@ namespace Mpai.Aif.Tests;
 
 // The Metadata tests of M3207 3.3. They need the repository only, and block a step.
 [Trait("Group", "Fast")]
+[Trait("Blocks", "Yes")]
 public class MetadataTests
 {
     // Every L3, loaded through the Controller as the Service loads it.

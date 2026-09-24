@@ -16,10 +16,12 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
     <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.85" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\MW\Wdl\Mpai.Wdl.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,6 @@
+{
+  "Autonomous Motion (AMS)": "1CAV-AMS-V1.1-I01: no L3",
+  "Environment Sensing (ESS)": "1CAV-ESS-V1.1-I01: does not load; its Topology has a loop, so the exchange executor cannot run it; not run",
+  "Human-CAV Interaction (HCI)": "1MMC-HCI-V2.5-I01: does not load; no loop; not run",
+  "Motion Actuation (MAS)": "1CAV-MAS-V1.1-I01: no L3"
+}
