@@ -153,6 +153,24 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             : new Read(AifError.NotProduced, null);
     }
 
+    // MPAI_AIFU_MODULE_Pause and _Resume. A run started while the Module is
+    // paused waits, and a read observes its timeout.
+    public AifError Pause(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started)
+                ? _ua.MPAI_AIFU_MODULE_Pause(started.Id)
+                : AifError.NotStarted;
+    }
+
+    public AifError Resume(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started)
+                ? _ua.MPAI_AIFU_MODULE_Resume(started.Id)
+                : AifError.NotStarted;
+    }
+
     // Write every input, read every output: one exchange, built on the data path.
     // It is lenient where InputWrite is not - a datum for a Port the Module does
     // not declare is passed on, and meets no connection - because every client

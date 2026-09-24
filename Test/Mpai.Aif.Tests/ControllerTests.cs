@@ -142,6 +142,21 @@ public class ControllerTests
             else result[$"{module}: Stop during a run"] = "the run did not end";
         }
 
+        // Through the Controller API, paused before a write: the read observes its
+        // timeout; after Resume the run completes.
+        using (var api = Api())
+        {
+            const string module = "1TST-NST-V1.0-I01";
+            api.StartFlow(module);
+            result["Controller API: Pause"] = api.Pause(module).ToString();
+            api.InputWrite(module, Text, 1, "p");
+            result["Controller API: a read with timeout 600 while paused"] = Shown(api.OutputRead(module, Text, 1, 600));
+            result["Controller API: Resume"] = api.Resume(module).ToString();
+            result["Controller API: a read after Resume"] = Shown(api.OutputRead(module, Text, 1, 3000));
+            api.StopFlow(module);
+            result["Controller API: Pause, Module not started"] = api.Pause(module).ToString();
+        }
+
         Expected.Match("controller-lifecycle.json", result);
     }
 

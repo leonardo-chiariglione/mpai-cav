@@ -162,12 +162,12 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
-    // MPAI_AIFU_MODULE_Pause
+    // MPAI_AIFU_MODULE_Pause. Every AIM of the Module, at every depth, completes
+    // what it is doing and waits, until Resume - across runs.
     public AifError MPAI_AIFU_MODULE_Pause(int moduleId)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
-        foreach (var p in module.Graph.Root.Children)
-            module.Host.MPAI_AIFM_AIM_Pause(p.AIMName);
+        module.Host.PauseModule();
         return AifError.OK;
     }
 
@@ -175,8 +175,7 @@ public sealed class UserAgent
     public AifError MPAI_AIFU_MODULE_Resume(int moduleId)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
-        foreach (var p in module.Graph.Root.Children)
-            module.Host.MPAI_AIFM_AIM_Resume(p.AIMName);
+        module.Host.ResumeModule();
         return AifError.OK;
     }
 

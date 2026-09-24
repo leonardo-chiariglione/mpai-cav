@@ -249,6 +249,13 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         catch (OperationCanceledException) { return new ControllerApi.Read(AifError.Timeout, null); }
     }
 
+    // MPAI-MAS's Pause and Resume change a label on the Service and hold nothing,
+    // so the client refuses them rather than pretend, until MPAI-MAS is aligned
+    // to AIF V3.0 (M3206 Phase 15).
+    public AifError Pause(string moduleName) => AifError.Failed;
+
+    public AifError Resume(string moduleName) => AifError.Failed;
+
     // 0 - do not wait - cannot be offered over a network; it is the shortest wait.
     private static CancellationTokenSource Limit(int timeoutMs) =>
         timeoutMs < 0 ? new CancellationTokenSource() : new CancellationTokenSource(Math.Max(timeoutMs, 1));

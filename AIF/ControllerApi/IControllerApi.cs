@@ -20,4 +20,9 @@ public interface IControllerApi
     // negative: wait without limit).
     AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1);
     ControllerApi.Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1);
+
+    // MPAI_AIFU_MODULE_Pause and _Resume (M3213 3.4): the whole Module, at every
+    // depth, until Resume.
+    AifError Pause(string moduleName);
+    AifError Resume(string moduleName);
 }

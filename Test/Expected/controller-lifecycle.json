@@ -1,10 +1,15 @@
 {
-  "1TST-NST-V1.0-I01: Pause during a run": "the run completed: not held",
+  "1TST-NST-V1.0-I01: Pause during a run": "held",
   "1TST-NST-V1.0-I01: Resume": "the run completed",
-  "1TST-NST-V1.0-I01: Stop during a run": "the AIM was not signalled: the run completed with its output",
-  "1TST-NST-V1.0-I01: a run started while paused": "completed: not held",
+  "1TST-NST-V1.0-I01: Stop during a run": "the AIM was stopped",
+  "1TST-NST-V1.0-I01: a run started while paused": "held",
   "1TST-SLW-V1.0-I01: Pause during a run": "held",
   "1TST-SLW-V1.0-I01: Resume": "the run completed",
-  "1TST-SLW-V1.0-I01: Stop during a run": "the AIM was not signalled: the run completed with its output",
-  "1TST-SLW-V1.0-I01: a run started while paused": "completed: not held"
+  "1TST-SLW-V1.0-I01: Stop during a run": "the AIM was stopped",
+  "1TST-SLW-V1.0-I01: a run started while paused": "held",
+  "Controller API: Pause": "OK",
+  "Controller API: Pause, Module not started": "NotStarted",
+  "Controller API: Resume": "OK",
+  "Controller API: a read after Resume": "OK 'p'",
+  "Controller API: a read with timeout 600 while paused": "Timeout"
 }

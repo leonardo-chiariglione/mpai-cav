@@ -157,15 +157,19 @@ public sealed class WorkflowInterpreter
             case StepKind.StartModule:  await StartModuleAsync(Module); break;
             case StepKind.StopModule:   await StopModuleAsync(Module);  break;
 
-            // The Controller has MPAI_AIFU_MODULE_Pause and _Resume and the Controller
-            // API does not expose them. No reference workflow asks, so this refuses
-            // plainly rather than pretending: a workflow that pauses a Module and
-            // silently did not would be worse than one that stops.
+            // Where the Controller API refuses - over MPAI-MAS, until Phase 15 - the
+            // workflow stops plainly rather than pretending: a workflow that paused
+            // a Module and silently did not would be worse than one that stops.
             case StepKind.PauseModule:
             case StepKind.ResumeModule:
-                throw new NotSupportedException(
-                    $"line {step.Line}: the Controller API does not yet offer pause or resume. " +
-                    "The Controller has them; the seam has not been widened to pass them on.");
+            {
+                var pause = step.Kind == StepKind.PauseModule;
+                var done  = pause ? await north.PauseAsync(Module) : await north.ResumeAsync(Module);
+                if (done != AifError.OK)
+                    throw new NotSupportedException(
+                        $"line {step.Line}: the Controller did not {(pause ? "pause" : "resume")} {Module} ({done}).");
+                break;
+            }
 
             case StepKind.Take:
             {

@@ -13,6 +13,21 @@ public sealed class AimHost : IDisposable
     private readonly Dictionary<string, IAimProcessor> _processors = new();
     private readonly Dictionary<string, AimLifecycle>  _lifecycles = new();
 
+    // THE MODULE'S OWN PAUSE AND STOP (M3213 3.4). This host holds every AIM of
+    // one Module, at every depth, so what is done here reaches them all. The gate
+    // is held until Resume, across runs: an AIM about to run waits at it, and an
+    // AIM already running is paused through its context, if it honours one.
+    private readonly object _module = new();
+    private TaskCompletionSource _running = Open();
+    private readonly CancellationTokenSource _stopped = new();
+
+    private static TaskCompletionSource Open()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        gate.TrySetResult();
+        return gate;
+    }
+
     public void RegisterRuntime(IAimProcessor processor)
     {
         _processors[processor.InstanceId] = processor;
@@ -60,22 +75,65 @@ public sealed class AimHost : IDisposable
             lc.Resume();
     }
 
+    // MPAI_AIFU_MODULE_Pause: every AIM completes what it is doing and waits.
+    public void PauseModule()
+    {
+        lock (_module)
+        {
+            if (_running.Task.IsCompleted)
+                _running = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            foreach (var lc in _lifecycles.Values) lc.Pause();
+        }
+    }
+
+    // MPAI_AIFU_MODULE_Resume.
+    public void ResumeModule()
+    {
+        lock (_module)
+        {
+            _running.TrySetResult();
+            foreach (var lc in _lifecycles.Values) lc.Resume();
+        }
+    }
+
+    // MPAI_AIFU_MODULE_Stop: every AIM that is running is signalled, and none
+    // runs again.
+    public void StopModule()
+    {
+        lock (_module)
+        {
+            _stopped.Cancel();
+            _running.TrySetResult();
+            foreach (var lc in _lifecycles.Values) lc.Stop();
+        }
+    }
+
+    public bool IsStopped => _stopped.IsCancellationRequested;
+
     // ── Execution ─────────────────────────────────────────────────────────────
 
     // Called by MachineExecutor for normal (non-interactive) AIMs.
-    // Automatically starts and the AIM runs to completion.
-    public Task<Message> ProcessAsync(string instanceId, Message message)
+    // Waits while the Module is paused, refuses once it is stopped, then starts
+    // the AIM, which runs to completion.
+    public async Task<Message> ProcessAsync(string instanceId, Message message)
     {
         if (!_processors.TryGetValue(instanceId, out var processor))
             throw new InvalidOperationException(
                 $"No implementation is registered for {instanceId}.");
 
+        Task gate;
+        lock (_module) gate = _running.Task;
+        await gate;
+        _stopped.Token.ThrowIfCancellationRequested();
+
         // Embed an AimContext in the message so the processor can honour
         // lifecycle signals without holding a reference to AimLifecycle.
         var context = MPAI_AIFM_AIM_Start(instanceId);
+        lock (_module)
+            if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
         var msg     = message with { Context = context };
 
-        return processor.ProcessAsync(msg);
+        return await processor.ProcessAsync(msg);
     }
 
     // Called by AifAmqSession for interactive AIMs (e.g. CAE-AOA).
@@ -95,6 +153,7 @@ public sealed class AimHost : IDisposable
 
     public void Dispose()
     {
+        StopModule();
         foreach (var lc in _lifecycles.Values)
             lc.Dispose();
     }
