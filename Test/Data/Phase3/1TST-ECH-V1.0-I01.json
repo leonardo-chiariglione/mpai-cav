@@ -1,0 +1,19 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-ECH-V1.0-I01", "AIMName": "1TST-ECH-V1.0-I01"},
+  "Header":           "TST-ECH-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: gives its text back.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Echo", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

@@ -26,16 +26,19 @@ public class ControllerTests
     private static string Show(ControllerApi.Result result, params int[] numbers) =>
         $"{result.Error}; " + string.Join("; ", numbers.Select(n => $"#{n} " + (result.ByType(Text, n) is { } v ? $"'{v}'" : "absent")));
 
-    // Each of two same-typed outputs of one AIM is to reach its own destination.
+    // Each of two same-typed outputs of one AIM is to reach its own destination;
+    // a flow into an Input group, every Port of the group and no other.
     [Fact]
     public void Routing()
     {
         using var api = Api();
         var result = api.Advance("1TST-RTE-V1.0-I01", [new ControllerApi.Datum(Text, "x")]);
+        var groups = api.Advance("1TST-GRP-V1.0-I01", [new ControllerApi.Datum(Text, "x")]);
 
         Expected.Match("controller-routing.json", new Dictionary<string, string>
         {
-            ["TST-RTE: TST-SPL's first output to TST-UPP (#1), its second to TST-REV (#2)"] = Show(result, 1, 2)
+            ["TST-RTE: TST-SPL's first output to TST-UPP (#1), its second to TST-REV (#2)"] = Show(result, 1, 2),
+            ["TST-GRP: into TST-GIN's Input 1 - its Ports 1 (TST-UPP, #1) and 2 (TST-REV, #2), not 3 (TST-ECH, #3)"] = Show(groups, 1, 2, 3)
         });
     }
 
@@ -180,6 +183,7 @@ public sealed class TestAims : IAimProvider
             "1TST-SPL-V1.0-I01" => new TestAim(aimName, m => Out(("First", "A:" + In(m)), ("Second", "B:" + In(m)))),
             "1TST-UPP-V1.0-I01" => new TestAim(aimName, m => Out(("Upper", In(m).ToUpperInvariant()))),
             "1TST-REV-V1.0-I01" => new TestAim(aimName, m => Out(("Reversed", new string(In(m).Reverse().ToArray())))),
+            "1TST-ECH-V1.0-I01" => new TestAim(aimName, m => Out(("Echo", In(m)))),
             "1TST-NOP-V1.0-I01" => new TestAim(aimName, m => Out()),
             "1TST-THR-V1.0-I01" => new TestAim(aimName, (Func<Message, Message>)(m => throw new InvalidOperationException("TST-THR throws"))),
             "1TST-SLP-V1.0-I01" => new TestAim(aimName, async m =>
