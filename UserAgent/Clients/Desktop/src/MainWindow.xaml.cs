@@ -489,7 +489,7 @@ public partial class MainWindow : Window
             if (!_controllers.TryGetValue(_appId!, out var north))
                 _controllers[_appId!] = north = new RemoteControllerApi(ServiceUrl, ServiceToken);
 
-            var interpreter = new WorkflowInterpreter(north, Devices(), Status);
+            var interpreter = new WorkflowInterpreter(north.Async(), Devices(), Status);
             await interpreter.RunAsync(_workflow, _stopping.Token);
             Status("the workflow finished");
         }
@@ -621,7 +621,7 @@ public partial class MainWindow : Window
                 ShowStage(pane);
             });
 
-            var interpreter = new WorkflowInterpreter(north, Devices(), Status);
+            var interpreter = new WorkflowInterpreter(north.Async(), Devices(), Status);
             using var appStop = appId == "MAS" ? null : new CancellationTokenSource();
             _appStopping = appStop;
             try     { await interpreter.RunAsync(workflow, appStop?.Token ?? _stopping?.Token ?? default); }

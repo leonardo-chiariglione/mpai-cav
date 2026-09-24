@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Mpai.Core;
+using Mpai.Aif.Api;
 using Mpai.Mas.Client;
 using Mpai.Aif.PortData;
 using Mpai.Rca;
@@ -58,7 +59,7 @@ internal static class Program
 
         Con.CancelKeyPress += (_, e) => { e.Cancel = true; stop.Cancel(); Con.WriteLine("\n(stopping)"); };
 
-        var interpreter = new WorkflowInterpreter(north, devices, Con.WriteLine);
+        var interpreter = new WorkflowInterpreter(north.Async(), devices, Con.WriteLine);
         try
         {
             await interpreter.RunAsync(workflow, stop.Token);

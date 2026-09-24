@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <!-- THE REMOTE CLIENT APPLICATION, IN A BROWSER. The MPAI code the desktop RCA
-       uses - WDL reader, source registry, wire translation, data types - is
-       referenced unchanged. What is new here is only what a browser needs:
-       an asynchronous Controller API client and interpreter, and the media in
-       JavaScript (wwwroot/js/rca.js). -->
+       uses - WDL reader, interpreter, source registry, remote Controller API,
+       wire translation, data types - is referenced unchanged. What is new here is
+       only what a browser needs: the media in JavaScript (wwwroot/js/rca.js). -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -24,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\..\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\..\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
   </ItemGroup>

@@ -8,7 +8,8 @@ using Mpai.Core.OSD;
 using Mpai.Rca;
 using Mpai.RcaWeb.Mas;
 using Mpai.RcaWeb.Media;
-using Mpai.RcaWeb.Wdl;
+using Mpai.Aif.Api;
+using Mpai.Mas.Client;
 using Mpai.Wdl;
 
 namespace Mpai.RcaWeb;
@@ -122,7 +123,7 @@ public partial class RcaShell : ComponentBase
             stopEnabled = true;
             Refresh();
 
-            var interpreter = new AsyncWorkflowInterpreter(north, Devices(), Status);
+            var interpreter = new WorkflowInterpreter(north, Devices(), Status);
 
             // STOP ENDS THE APP THAT IS RUNNING, NOT MPAI-MAS.
             using var appStop = appId == "MAS" ? null : new CancellationTokenSource();

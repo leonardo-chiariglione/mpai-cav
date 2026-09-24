@@ -121,18 +121,20 @@ the desktop client sends the one in the environment variable `MPAI_MAS_TOKEN`.
 ## 6. The clients
 
 Both clients register **sources** (acquire) and **presenters** (present) with a
-`DeviceRegistry`, and run workflows with the interpreter.
+`DeviceRegistry`, and run workflows with the one interpreter, `UserAgent/Rca`.
+Every call it makes on the Controller API is awaited (`IAsyncControllerApi`),
+because a browser never lets WebAssembly block.
 
 - **Desktop** (`RcaApp`): sources are the microphone with voice activity
   detection (via UaKit), the text box, the App list, the language picker, a
   file or the webcam; the avatar is `UserAgent/Assets/cav-webview.html` in WebView2.
   `MPAI_MAS_SERVER` sets the Service address (default `https://localhost:5005/`).
+  It hands the interpreter `RemoteControllerApi` through `.Async()`, which makes
+  each call on a thread of the pool, so the window is never blocked.
 - **Browser** (`RcaWeb/Client`): the same sources and presenters, with the
   capture in `wwwroot/js/rca.js` (the microphone runs from Start and keeps the
-  last second heard; typing ends listening). A browser never lets WebAssembly
-  block, so this client has its own asynchronous Controller API client
-  (`Mas/AsyncControllerApi.cs`) and an asynchronous copy of the interpreter
-  (`Wdl/AsyncWorkflowInterpreter.cs`), otherwise identical to `UserAgent/Rca`'s.
+  last second heard; typing ends listening). It hands the interpreter
+  `RemoteControllerApiAsync` (`UserAgent/Remote`), which awaits the network.
 - **Host** (`RcaWeb/Host`): serves the avatar page with its asset addresses and
   messaging adapted for a browser as it is sent, and forwards `/MPAI/AIFU/...`.
 
@@ -165,8 +167,11 @@ trace; never write to a folder of your own.
   personal questions, and EDP accepts only strictly valid JSON from it.
 - The desktop client's speech capture cannot be cancelled once started; when the
   person types instead, it ends on its own and its words are dropped.
-- The browser client keeps an asynchronous copy of the interpreter; the two
-  should become one.
+- The desktop client opens the microphone afresh for each capture and waits
+  400 ms for it to settle, so a word spoken at once is lost: a prompt "yes,
+  please" reaches the recogniser as "Please", and AMQ answers "Maybe another
+  time". The browser client keeps the microphone open and the last second
+  heard, and does not lose it.
 - The Service offers no access control to the browser client.
 - `1MMC-TTS-V2.5-I01`'s Spanish voice (`es_ES-davefx-medium`) is male; no
   single-speaker female `es_ES` voice exists at medium or high quality in

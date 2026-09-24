@@ -10,20 +10,9 @@ using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Aif.PortData;
 
-namespace Mpai.RcaWeb.Mas;
+namespace Mpai.Mas.Client;
 
-// THE CONTROLLER API, WITHOUT WAITING. A browser runs WebAssembly on one thread and
-// never lets it block on the network, so the seam the interpreter calls is
-// asynchronous here. The desktop's IControllerApi is untouched; this is its twin for
-// the browser.
-public interface IAsyncControllerApi
-{
-    Task<AifError>        StartFlowAsync(string moduleName);
-    Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs);
-    Task                  StopFlowAsync(string moduleName);
-}
-
-// MPAI-MAS FROM A BROWSER. The same requests as Mpai.Mas.Client.RemoteControllerApi,
+// MPAI-MAS FROM A BROWSER. The same requests as RemoteControllerApi,
 // awaited instead of blocked on. The HttpClient is the page's own: its base
 // address is the origin that served the client, which forwards /MPAI/AIFU to
 // the Service, so the browser never makes a cross-origin call.

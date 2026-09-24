@@ -18,13 +18,19 @@ namespace Mpai.Rca;
 // names the devices; the Controller API is whichever one it was handed - in process or
 // across a network, since a workflow cannot tell and should not be able to.
 //
+// EVERY CALL ON THE CONTROLLER API IS AWAITED. A browser never lets WebAssembly
+// block, so the interpreter the browser needs is asynchronous, and it is the only
+// one: the desktop client hands it a synchronous Controller API through
+// IControllerApi.Async(), which makes each call on a thread of the pool, so its
+// window is never blocked either.
+//
 // A LABEL IS FOR THE READER AND DOES NOT ROUTE. What a datum is addressed by is
 // its Data Type and Port Number. The label is how one step refers to what an
 // earlier step obtained, and nothing else: the interpreter keeps a table from
 // label to datum, and the Controller never sees a label at all.
 public sealed class WorkflowInterpreter
 {
-    private readonly IControllerApi     north;
+    private readonly IAsyncControllerApi north;
     private readonly DeviceRegistry devices;
     private readonly Action<string> say;      // a line for whoever is watching
 
@@ -44,7 +50,7 @@ public sealed class WorkflowInterpreter
     private readonly HashSet<string> running = new(StringComparer.OrdinalIgnoreCase);
 
     public WorkflowInterpreter(
-        IControllerApi north,
+        IAsyncControllerApi north,
         DeviceRegistry devices,
         Action<string>? say = null)
     {
@@ -68,7 +74,7 @@ public sealed class WorkflowInterpreter
             try { await WalkAsync(workflow.OnStop, CancellationToken.None); }
             catch (Exception ex) { say("on Stop: " + ex.Message); }
 
-            foreach (var module in running.ToList()) StopModule(module);
+            foreach (var module in running.ToList()) await StopModuleAsync(module);
         }
     }
 
@@ -83,18 +89,18 @@ public sealed class WorkflowInterpreter
 
     // ---- what is asked of the Controller -----------------------------------
 
-    private void StartModule(string module)
+    private async Task StartModuleAsync(string module)
     {
-        var err = north.StartFlow(module);
+        var err = await north.StartFlowAsync(module);
         if (err != AifError.OK)
             throw new InvalidOperationException($"the Controller would not start {module}: {err}.");
         running.Add(module);
         say($"[C] started {module}");
     }
 
-    private void StopModule(string module)
+    private async Task StopModuleAsync(string module)
     {
-        north.StopFlow(module);
+        await north.StopFlowAsync(module);
         running.Remove(module);
         say($"[C] stopped {module}");
     }
@@ -115,10 +121,10 @@ public sealed class WorkflowInterpreter
         say($"[C] take {port.DataType}{(port.PortNumber is int n ? ":" + n : "")}");
     }
 
-    private void Give(Step step)
+    private async Task GiveAsync(Step step)
     {
         pending.TryGetValue(Module, out var inputs);
-        var result = north.Advance(Module, inputs ?? new List<ControllerApi.Datum>());
+        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>());
         pending.Remove(Module);
 
         if (!result.Ok)
@@ -148,8 +154,8 @@ public sealed class WorkflowInterpreter
     {
         switch (step.Kind)
         {
-            case StepKind.StartModule:  StartModule(Module); break;
-            case StepKind.StopModule:   StopModule(Module);  break;
+            case StepKind.StartModule:  await StartModuleAsync(Module); break;
+            case StepKind.StopModule:   await StopModuleAsync(Module);  break;
 
             // The Controller has MPAI_AIFU_MODULE_Pause and _Resume and the Controller
             // API does not expose them. No reference workflow asks, so this refuses
@@ -172,7 +178,7 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
-            case StepKind.Give: Give(step); break;
+            case StepKind.Give: await GiveAsync(step); break;
 
             case StepKind.Acquire when step.Alternatives.Count > 1:
                 await FirstOfAsync(step, stop);
@@ -308,7 +314,7 @@ public sealed class WorkflowInterpreter
             {
                 var words = Literal(step.Port!.DataType, Fill(step.Literal ?? ""));
                 say($"[C] say {step.Port.DataType}:{step.Port.PortNumber}");
-                var said = north.Advance(Module, new List<ControllerApi.Datum>
+                var said = await north.AdvanceAsync(Module, new List<ControllerApi.Datum>
                     { new ControllerApi.Datum(step.Port.DataType, step.Port.PortNumber, words) });
                 if (!said.Ok) throw new InvalidOperationException($"{Module} returned {said.Error}.");
 
