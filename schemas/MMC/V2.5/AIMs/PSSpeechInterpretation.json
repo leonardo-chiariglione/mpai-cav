@@ -1,13 +1,13 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-EFI-V2.5"},
-  "Header":            "MMC-EFI-V2.5",
+{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PSI-V2.5"},
+  "Header":            "MMC-PSI-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "This AIM extracts the Face Personal Status from a Basic Visual Object whose Visual Qualifier declares its content is a face: a value for each Personal Status Factor (Cognitive State, Emotion, Social Attitude) carried by the face.",
+  "Description":      "This AIM extracts the Speech Personal Status from a Basic Speech Object: a value for each Personal Status Factor (Cognitive State, Emotion, Social Attitude) carried by the speech.",
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "FaceObject",         "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "FacePersonalStatus", "Direction": "Output", "DataType": "MMC-FPS-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+  "ExternalPorts":   [{"Name": "SpeechObject",         "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

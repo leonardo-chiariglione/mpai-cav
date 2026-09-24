@@ -10,7 +10,7 @@ namespace Mpai.Paf.Psd;
 
 // PAF-PSD-V1.6 - Personal Status De-multiplexing, as an AIF IAimProcessor.
 //
-// The inverse of Personal Status Multiplexing (MMC-PSM). Takes one Entity Personal
+// The inverse of Personal Status Multiplexing (MMC-PMX). Takes one Entity Personal
 // Status (the machine's, from Entity Dialogue Processing) and splits it into the
 // per-modality Personal Statuses - Speech, Face, and Gesture - which the Response
 // and Scene Rendering composite then uses to render the speaking avatar (affective

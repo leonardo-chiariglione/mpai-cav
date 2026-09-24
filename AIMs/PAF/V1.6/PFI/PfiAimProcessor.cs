@@ -9,30 +9,30 @@ using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Mmc.Efi;
+namespace Mpai.Paf.Pfi;
 
-// MMC-EFI-V2.5 - Entity Face Interpretation, as an AIF IAimProcessor.
+// PAF-PFI-V1.6 - Personal Status Face Interpretation, as an AIF IAimProcessor.
 //
 // Receives a Basic Visual Object (OSD-BVO) that IS a face - a face already
-// isolated upstream (the Face Object), the visual-object mirror of ESI's Speech
+// isolated upstream (the Face Object), the visual-object mirror of PSI's Speech
 // Object - and produces the Face Personal Status (MMC-FPS): the Personal Status
 // Factors carried by the face, each a chosen label + Degree.
 //
 // It INTERPRETS the given face directly with HSEmotion (EfficientNet-B0 multi-
 // task, AffectNet); it does NOT DETECT a face in a scene. Detection is scene
-// work (locating a face in a frame) and belongs upstream; EFI, like ESI, reads
+// work (locating a face in a frame) and belongs upstream; PFI, like PSI, reads
 // affect from the object it is given. HSEmotion resizes the image to 224x224 and
 // reads eight emotion probabilities plus valence and arousal. The chosen emotion
 // maps to an MPAI Emotion label (MMC-EEM); Surprise, a Cognitive State in MPAI,
 // is emitted as a Cognitive State (MMC-ECS). The Degree is the model confidence.
-public sealed class EfiAimProcessor : IAimProcessor
+public sealed class PfiAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly HSEmotionEstimator _hse;
     private readonly string _inPort;   // OSD-BVO
     private readonly string _outPort;  // MMC-FPS
 
-    public EfiAimProcessor(string instanceId, HSEmotionEstimator hse, AimPortReader ports)
+    public PfiAimProcessor(string instanceId, HSEmotionEstimator hse, AimPortReader ports)
     {
         _instanceId = instanceId;
         _hse        = hse;

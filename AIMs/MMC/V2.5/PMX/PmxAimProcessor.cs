@@ -6,15 +6,15 @@ using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Mmc.Psm;
+namespace Mpai.Mmc.Pmx;
 
-// MMC-PSM-V2.5 - Personal Status Multiplexing, as an AIF IAimProcessor.
+// MMC-PMX-V2.5 - Personal Status Multiplexing, as an AIF IAimProcessor.
 //
 // Assembles the per-modality Personal Statuses - Text (MMC-TPS), Speech (MMC-SPS),
 // Face (MMC-FPS), and Gesture (MMC-GPS) - into a single Entity Personal Status
 // (MMC-EPS). It combines; it does not compute. Each input is optional; at least one
 // shall be present (an AIM with no input at all is skipped by the framework).
-public sealed class PsmAimProcessor : IAimProcessor
+public sealed class PmxAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly string _textPort;    // MMC-TPS
@@ -23,7 +23,7 @@ public sealed class PsmAimProcessor : IAimProcessor
     private readonly string _gesturePort; // MMC-GPS
     private readonly string _outPort;     // MMC-EPS
 
-    public PsmAimProcessor(string instanceId, AimPortReader ports)
+    public PmxAimProcessor(string instanceId, AimPortReader ports)
     {
         _instanceId  = instanceId;
         _textPort    = ports.Input("MMC-TPS-V2.5");

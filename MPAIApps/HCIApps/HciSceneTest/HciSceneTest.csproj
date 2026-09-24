@@ -37,9 +37,9 @@
     <!-- Dialogue + rendering -->
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ESI\Mpai.Mmc.Esi.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\EFI\Mpai.Mmc.Efi.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\PSM\Mpai.Mmc.Psm.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\PSI\Mpai.Mmc.Psi.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\PAF\V1.6\PFI\Mpai.Paf.Pfi.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\PMX\Mpai.Mmc.Pmx.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
     <ProjectReference Include="..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />

@@ -7,9 +7,9 @@ using AIF.Store;
 using Mpai.Core;
 using Mpai.Aims.Asr;   // AsrAimProcessor, AsrFactory
 using Mpai.Mmc.Nlu;    // NluAimProcessor
-using Mpai.Mmc.Esi;    // EsiAimProcessor, Wav2Vec2EmotionEstimator
-using Mpai.Mmc.Efi;    // EfiAimProcessor, HSEmotionEstimator
-using Mpai.Mmc.Psm;    // PsmAimProcessor
+using Mpai.Mmc.Psi;    // PsiAimProcessor, Wav2Vec2EmotionEstimator
+using Mpai.Paf.Pfi;    // PfiAimProcessor, HSEmotionEstimator
+using Mpai.Mmc.Pmx;    // PmxAimProcessor
 using Mpai.Mmc.Edp;    // EdpAimProcessor, OllamaClient
 using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
@@ -21,8 +21,8 @@ namespace Mpai.Providers;
 // AIM Instance identifier. The Controller builds MMC-MPD and its nested PSE
 // composite from their L3s; this supplies only the leaves:
 //   ASR - speech to text              NLU - meaning and Text Personal Status
-//   ESI - speech affect (wav2vec2)    EFI - face affect (HSEmotion)
-//   PSM - multiplexes the modalities into an Entity Personal Status
+//   PSI - speech affect (wav2vec2)    PFI - face affect (HSEmotion)
+//   PMX - multiplexes the modalities into an Entity Personal Status
 //   EDP - affective dialogue (local LLM)
 //   PSD, TTS, GFD - the Response and Scene Rendering leaves
 // Moved from MpdApp, where it named AIMs by their Standard names.
@@ -36,8 +36,8 @@ public sealed class MpdProvider : IAimProvider, IDisposable
     public MpdProvider(AmdStore store) => _store = store;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-ESI-V2.5-I01" or "1MMC-EFI-V2.5-I01"
-                or "1MMC-PSM-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"
+        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-PSI-V2.5-I01" or "1PAF-PFI-V1.6-I01"
+                or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"
                 or "1PAF-GFD-V1.6-I01";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
@@ -45,9 +45,9 @@ public sealed class MpdProvider : IAimProvider, IDisposable
         {
             "1MMC-ASR-V2.5-I01" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1MMC-NLU-V2.5-I01" => new NluAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1MMC-ESI-V2.5-I01" => new EsiAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
-            "1MMC-EFI-V2.5-I01" => new EfiAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
-            "1MMC-PSM-V2.5-I01" => new PsmAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1MMC-PSI-V2.5-I01" => new PsiAimProcessor(aimName, W2v2(settings), AimPortReader.Load(_store, aimName)),
+            "1PAF-PFI-V1.6-I01" => new PfiAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
+            "1MMC-PMX-V2.5-I01" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-EDP-V2.5-I01" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),

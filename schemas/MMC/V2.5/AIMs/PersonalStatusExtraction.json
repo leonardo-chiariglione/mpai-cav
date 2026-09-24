@@ -4,7 +4,9 @@
   "APIProfile":       "Basic",
   "Description":      "This composite AIM extracts the Personal Status of an Entity from Text, Speech, Face, and Gesture.",
 
-  "InternalTypes":   [ ],
+  "InternalTypes":   [{"Name": "SpeechPersonalStatus",  "DataType": "MMC-SPS-V2.5"},
+                      {"Name": "FacePersonalStatus",    "DataType": "MMC-FPS-V2.5"},
+                      {"Name": "GesturePersonalStatus", "DataType": "MMC-GPS-V2.5"}],
 
   "ExternalPorts":   [{"Name": "InputTextSelector",   "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextObject",          "Direction": "Input",  "DataType": "OSD-TXO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
