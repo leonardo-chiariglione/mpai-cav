@@ -1,4 +1,4 @@
 {
-  "TST-GRP: into TST-GIN's Input 1 - its Ports 1 (TST-UPP, #1) and 2 (TST-REV, #2), not 3 (TST-ECH, #3)": "OK; #1 'X'; #2 'X'; #3 'X'",
-  "TST-RTE: TST-SPL's first output to TST-UPP (#1), its second to TST-REV (#2)": "OK; #1 'A:X'; #2 'x:A'"
+  "TST-GRP: into TST-GIN's Input 1 - its Ports 1 (TST-UPP, #1) and 2 (TST-REV, #2), not 3 (TST-ECH, #3)": "OK; #1 'X'; #2 'x'; #3 absent",
+  "TST-RTE: TST-SPL's first output to TST-UPP (#1), its second to TST-REV (#2)": "OK; #1 'A:X'; #2 'x:B'"
 }

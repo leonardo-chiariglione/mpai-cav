@@ -2,12 +2,15 @@ namespace AIF.Controller;
 
 // Runs an AIM hierarchy.
 //
-// ROUTING IS BY DATATYPE. A Topology connection is two TYPED endpoints
-// (Endpoint = AimName?, DataType, PortNumber) - resolved by the loader from the
-// AMD's ExternalPorts / InternalTypes. Port NAMES do not exist here: nothing in
-// this class addresses a port by a name. A boundary datum is keyed by its
-// Endpoint.Key = "DataType#PortNumber"; ports of the same type are told apart
-// only by PortNumber.
+// ROUTING IS BY DATA TYPE AND PORT NUMBER, FROM OUTPUT TO INPUT. A Topology
+// connection joins two TYPED endpoints (Endpoint = AimName?, DataType,
+// PortNumber), resolved by the loader from the AMD's ExternalPorts and
+// InternalTypes, the Input and Output groups of M3194 included. What an AIM
+// produces is kept with the Data Type and Port Number of the Port it was
+// produced on, and a connection takes exactly the output its producing end
+// names - nothing is found by Data Type alone (M3213 3.1). Port NAMES do not
+// exist here: a boundary datum is keyed by its Endpoint.Key =
+// "DataType#PortNumber".
 //
 // SUSPEND / RESUME: a composite suspends when a required boundary input
 // (DataType, PortNumber) has not been supplied for a consumer, and resumes when
@@ -189,37 +192,15 @@ public sealed class MachineExecutor
                 continue;
             }
 
-            // Store each output port tagged with the DataType it carries. For a
-            // leaf, result.Ports is keyed by the leaf's own output port names, so
-            // the DataType is read from the leaf's declared Ports. For a composite
-            // child, result.Ports is keyed by the child's boundary Endpoint.Key
-            // ("DataType#n"), so the DataType is the part before '#'.
             // EVERY OBJECT EVERY AIM PRODUCES PASSES THROUGH HERE. Asked, once
             // per AIM and Data Type, whether it says what its Data is. It reports
             // and does not refuse: the defects this finds are months old, and a
             // check that stopped a Module would turn a quiet fault into an outage.
-            foreach (var produced in result.Ports)
-            {
-                var producedType = child.IsComposite
-                    ? produced.Key.Split('#')[0]
-                    : (child.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == produced.Key)?.DataType
-                       ?? result.DataType);
+            var routed = Produced(child, result);
+            foreach (var produced in routed.Values)
+                ObjectInspector?.Invoke(aimName, produced.DataType, produced.Payload);
 
-                ObjectInspector?.Invoke(aimName, producedType ?? "", produced.Value);
-            }
-
-            outputs[aimName] =
-                result.Ports.ToDictionary(
-                    port => port.Key,
-                    port => new RoutedObject
-                    {
-                        DataType = child.IsComposite
-                            ? port.Key.Split('#')[0]
-                            : (child.Ports
-                                   .FirstOrDefault(p => p.Direction == "Output" && p.Name == port.Key)?.DataType
-                               ?? result.DataType),
-                        Payload  = port.Value
-                    });
+            outputs[aimName] = routed;
 
             last = result;
         }
@@ -290,8 +271,7 @@ public sealed class MachineExecutor
         foreach (var output in result.Ports)
         {
             if (aim.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == output.Key) is not { } port) continue;
-            var sameType = aim.Ports.Where(p => p.Direction == "Output" && p.DataType == port.DataType).ToList();
-            var number   = port.PortNumber ?? (sameType.IndexOf(port) + 1);
+            var number = NumberOf(aim, port);
             produced[new Endpoint(null, port.DataType, number).Key] = output.Value;
             Console.WriteLine($"[COLLECT] {aim.AIMName}.{port.DataType} -> {port.DataType}#{number}");
         }
@@ -431,7 +411,7 @@ public sealed class MachineExecutor
             }
 
             if (outputs.TryGetValue(source.AimName, out var produced) &&
-                FindProduced(produced, source.DataType) is not null)
+                FindProduced(produced, source) is not null)
             {
                 any = true;
                 break;
@@ -464,7 +444,7 @@ public sealed class MachineExecutor
                 continue;
 
             if (outputs.TryGetValue(source.AimName, out var producedPorts) &&
-                FindProduced(producedPorts, dataType) is not null)
+                FindProduced(producedPorts, source) is not null)
                 return true;
         }
 
@@ -493,7 +473,7 @@ public sealed class MachineExecutor
             if (!outputs.TryGetValue(source.AimName, out var producedPorts))
                 continue;
 
-            var routed = FindProduced(producedPorts, dataType);
+            var routed = FindProduced(producedPorts, source);
             if (routed is null)
                 continue;
 
@@ -553,7 +533,7 @@ public sealed class MachineExecutor
 
             if (outputs.TryGetValue(source.AimName, out var producedPorts))
             {
-                var routed = FindProduced(producedPorts, source.DataType);
+                var routed = FindProduced(producedPorts, source);
                 if (routed is not null)
                     inbox[destKey] = routed.Payload;
             }
@@ -589,28 +569,66 @@ public sealed class MachineExecutor
             if (dest.AimName is not null || source.AimName is null)
                 continue;   // only AIM -> boundary
 
-            var dataType = source.DataType;
-
             var had = outputs.TryGetValue(source.AimName, out var producedPorts);
-            var routed = had ? FindProduced(producedPorts!, dataType) : null;
-            System.Console.WriteLine($"[COLLECT] {source.AimName}.{dataType} -> {dest.Key}: ran={had} found={routed is not null}");
+            var routed = had ? FindProduced(producedPorts!, source) : null;
+            System.Console.WriteLine($"[COLLECT] {source.AimName}.{source.Key} -> {dest.Key}: ran={had} found={routed is not null}");
             if (routed is not null)
                 composite[dest.Key] = routed.Payload;
         }
 
-        return composite.Count > 0
-            ? composite
-            : new Dictionary<string, string>(last.Ports);
+        return composite;
     }
 
-    // Find a produced object of the given DataType among an AIM's output ports.
+    // What an AIM produced on the Port a Topology end names: that Data Type, on
+    // that Port Number. Nothing else - not the first output of the Data Type, not
+    // an AIM's only output whatever it is.
     private static RoutedObject? FindProduced(
         Dictionary<string, RoutedObject> producedPorts,
-        string dataType)
+        Endpoint source) =>
+        producedPorts.Values.FirstOrDefault(r => r.IsFrom(source));
+
+    // What an AIM produced, each output with the Data Type and Port Number of its
+    // Port. A leaf answers by its own Output Port names, which its Metadata
+    // declares; a composite child by its boundary Endpoint.Key ("DataType#n").
+    private static Dictionary<string, RoutedObject> Produced(DescriptorNode child, Message result)
     {
-        foreach (var kv in producedPorts)
-            if (kv.Value.DataType == dataType)
-                return kv.Value;
-        return producedPorts.Count == 1 ? producedPorts.Values.First() : null;
+        var routed = new Dictionary<string, RoutedObject>();
+        foreach (var produced in result.Ports)
+        {
+            if (child.IsComposite)
+            {
+                var hash = produced.Key.LastIndexOf('#');
+                if (hash <= 0) continue;
+                routed[produced.Key] = new RoutedObject
+                {
+                    DataType   = produced.Key[..hash],
+                    PortNumber = int.TryParse(produced.Key[(hash + 1)..], out var n) ? n : 1,
+                    Payload    = produced.Value
+                };
+                continue;
+            }
+
+            var port = child.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == produced.Key);
+            if (port is null)
+            {
+                Console.WriteLine($"[AIF] {child.AIMName}: produced '{produced.Key}', which is not one of its Output Ports; dropped");
+                continue;
+            }
+
+            routed[produced.Key] = new RoutedObject
+            {
+                DataType   = port.DataType,
+                DataTypes  = port.DataTypes,
+                PortNumber = NumberOf(child, port),
+                Payload    = produced.Value
+            };
+        }
+        return routed;
     }
+
+    // A Port's number: the one its Metadata declares, else its place among the
+    // AIM's Ports of that Direction and Data Type (1 where the type occurs once).
+    private static int NumberOf(DescriptorNode aim, RuntimePort port) =>
+        port.PortNumber ??
+        aim.Ports.Where(p => p.Direction == port.Direction && p.DataType == port.DataType).ToList().IndexOf(port) + 1;
 }
