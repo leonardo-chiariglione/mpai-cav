@@ -26,6 +26,12 @@ namespace AcrApp;
 // The name is TYPED (ASR is unreliable for bare names) and is the enrolment key.
 public partial class MainWindow : Window
 {
+    // THE SPEECH STEP RAN WHEN THE MODULE SUSPENDED for its speech input. No Module
+    // suspends (M3205 5.1), and none has since the executor stopped doing so, so
+    // the step does not run - as before this was written. The two-step flow is to
+    // be redone with its Module in the HCI phase of the CAV.
+    private const bool SpeechStepAfterSuspension = false;
+
     private const string AcrModule = "1MMC-ACR-V2.5-I01";
     private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
@@ -117,14 +123,15 @@ public partial class MainWindow : Window
             faceIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
             Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+BTO#2(name)");
             var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended, waiting for " + (r1.WaitingPort ?? "?") : " completed"));
+            Diag("Advance(face) -> err=" + r1.Error);
             if (!r1.Ok) { SetStatus("run error"); return; }
 
             var result = r1;
 
             // 3) Speech - on suspension, prompt, capture, and supply OSD-BSO (which carries its time)
             //    + confirmation (OSD-BTO #1) + Personal Status + name (OSD-BTO #2).
-            if (r1.Suspended)
+#pragma warning disable CS0162 // the step is kept, and does not run: see SpeechStepAfterSuspension
+            if (SpeechStepAfterSuspension)
             {
                 InstructionText.Text = "Please speak a short sentence so I can learn your voice.";
                 await RenderPromptAsync("Please speak a short sentence so I can learn your voice.");
@@ -138,10 +145,11 @@ public partial class MainWindow : Window
                 speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
                 Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+EPS+BTO#2(name)");
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended, waiting for " + (r2.WaitingPort ?? "?") : " completed"));
+                Diag("Advance(speech) -> err=" + r2.Error);
                 if (!r2.Ok) { SetStatus("resume error"); return; }
                 result = r2;
             }
+#pragma warning restore CS0162
 
             // 4) EFD/ESD wrote the enrolment to Shared Storage via the Controller.
             //    Present the spoken confirmation (read by type).

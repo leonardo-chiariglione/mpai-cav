@@ -143,7 +143,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         {
             var started = StartFlow(moduleName);
             if (started != AifError.OK)
-                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>());
         }
 
         var mid = modules[moduleName];
@@ -154,7 +154,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         foreach (var datum in inputs)
         {
             if (!codecsKnow(datum.DataType))
-                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>());
 
             var wire = Codecs.ToWire(datum.DataType, datum.Json);
 
@@ -166,7 +166,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
                 content).GetAwaiter().GetResult();
 
             if (!posted.IsSuccessStatusCode)
-                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>());
         }
 
         // WHICH OUTPUTS TO ASK FOR. MAS delivers one Port at a time, so the RCA
@@ -206,7 +206,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
             }
         }
 
-        return new ControllerApi.Result(AifError.OK, outputs, false);
+        return new ControllerApi.Result(AifError.OK, outputs);
     }
 
     // THE DATA PATH, OVER THE ROUTES MPAI-MAS HAS. A write is one POST, a read one

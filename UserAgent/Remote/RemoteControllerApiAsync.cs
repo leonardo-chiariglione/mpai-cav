@@ -77,7 +77,7 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         {
             var started = await StartFlowAsync(moduleName);
             if (started != AifError.OK)
-                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>());
         }
         var mid  = modules[moduleName];
         var root = await RootAsync();
@@ -85,12 +85,12 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         foreach (var datum in inputs)
         {
             if (!codecs.Knows(datum.DataType))
-                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>());
             var content = new ByteArrayContent(codecs.ToWire(datum.DataType, datum.Json));
             content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
             var posted = await http.PostAsync($"{root}/{mid}/Input/{Segment(datum.DataType, datum.PortNumber)}", content);
             if (!posted.IsSuccessStatusCode)
-                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>());
         }
 
         var outputs = new List<ControllerApi.Datum>();
@@ -104,7 +104,7 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
                 outputs.Add(new ControllerApi.Datum(dataType, portNumber, codecs.ToInternal(dataType, wire)));
             }
         }
-        return new ControllerApi.Result(AifError.OK, outputs, false);
+        return new ControllerApi.Result(AifError.OK, outputs);
     }
 
     // The data path over MPAI-MAS's routes: see RemoteControllerApi.

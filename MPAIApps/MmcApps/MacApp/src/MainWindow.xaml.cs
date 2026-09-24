@@ -20,6 +20,12 @@ namespace HciMac;
 // OSD-BSO (VocalResponse, speak), PAF-FDO (FaceDescriptors, avatar). No names.
 public partial class MainWindow : Window
 {
+    // THE SPEECH STEP RAN WHEN THE MODULE SUSPENDED for its speech input. No Module
+    // suspends (M3205 5.1), and none has since the executor stopped doing so, so
+    // the step does not run - as before this was written. The two-step flow is to
+    // be redone with its Module in the HCI phase of the CAV.
+    private const bool SpeechStepAfterSuspension = false;
+
     private const string MacModule = "1MMC-MAC-V2.5-I01";
     private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
@@ -117,12 +123,13 @@ public partial class MainWindow : Window
             var faceIn = new List<ControllerApi.Datum>();
             if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
             var r1 = await Task.Run(() => _north!.Advance(MacModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended waiting for " + (r1.WaitingPort ?? "?") : " completed"));
+            Diag("Advance(face) -> err=" + r1.Error);
             if (!r1.Ok) { SetStatus("run error"); return; }
 
             var result = r1;
 
-            if (r1.Suspended)
+#pragma warning disable CS0162 // the step is kept, and does not run: see SpeechStepAfterSuspension
+            if (SpeechStepAfterSuspension)
             {
                 InstructionText.Text = "Speak your passphrase.";
                 SetVoice("acquiring speech...");
@@ -132,10 +139,11 @@ public partial class MainWindow : Window
                 var speechIn = new List<ControllerApi.Datum>();
                 if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
                 var r2 = await Task.Run(() => _north!.Advance(MacModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended waiting for " + (r2.WaitingPort ?? "?") : " completed"));
+                Diag("Advance(speech) -> err=" + r2.Error);
                 if (!r2.Ok) { SetStatus("resume error"); return; }
                 result = r2;
             }
+#pragma warning restore CS0162
 
             string? responseText = null;
             var rj = result.ByType(BTO);

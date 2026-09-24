@@ -52,18 +52,12 @@ public sealed class RuntimePort
     // advisory and cannot be used for it.
     public int? PortNumber { get; init; }
 
-    // Composite boundary INPUT ports only.
+    // An input the AIM can do without. In an exchange an AIM runs on what it has
+    // received and the flag is documentation; in continuous execution it decides
+    // whether an AIM waits for the input (M3205 5.3). Nothing waits for a User
+    // Agent: an AIM fed by nothing at all is skipped (M3205 5.1).
     //
-    // False (the default) is the AMQ behaviour: if the User Agent has not
-    // supplied this port, the run SUSPENDS and asks for it.
-    //
-    // True means the input may legitimately never arrive: the AIMs fed solely
-    // by it are SKIPPED and the run continues. That is what a workflow with
-    // alternative inputs needs - speech OR text - where suspending on the
-    // unused one would hang forever, since nobody is ever going to supply it.
-    //
-    // Declared in the AMD as "IsOptional": true. Absent means false, so no
-    // existing AMD changes behaviour.
+    // Declared in the AMD as "IsOptional": true. Absent means false.
     public bool IsOptional { get; init; }
 
     // M3194 NUMBER 4 - INPUT. Declared by a composite on its own Input

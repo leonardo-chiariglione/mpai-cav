@@ -12,9 +12,8 @@ namespace AIF.Controller;
 // exist here: a boundary datum is keyed by its Endpoint.Key =
 // "DataType#PortNumber".
 //
-// SUSPEND / RESUME: a composite suspends when a required boundary input
-// (DataType, PortNumber) has not been supplied for a consumer, and resumes when
-// the User Agent supplies it. The UA deals only in typed data.
+// A RUN COMPLETES. An AIM whose inputs are absent does not run, and nothing
+// waits for a User Agent (M3205 5.1).
 public sealed class MachineExecutor
 {
     private readonly AimHost host;
@@ -37,70 +36,18 @@ public sealed class MachineExecutor
         return planner.BuildPlan(graph.Root);
     }
 
-    // Single-pass entry point (throws if the run would suspend).
-    public async Task<Message> ExecuteAsync(
+    // Runs the Module once on the boundary inputs the message carries.
+    public Task<ExecutionResult> RunAsync(
         DescriptorGraph graph,
         Message message)
     {
         root = graph.Root;
-        var result = await ExecuteNodeResumableAsync(
-            graph.Root,
-            planner.BuildPlan(graph.Root),
-            0,
-            new Dictionary<string, Dictionary<string, RoutedObject>>(),
-            new Dictionary<string, string>(message.Ports),
-            message);
-
-        if (result.IsSuspended)
-            throw new InvalidOperationException(
-                "Composite suspended waiting for boundary input " +
-                $"'{result.Suspended!.WaitingPort}'. Use ExecuteResumableAsync.");
-
-        return result.Completed!;
+        return ExecuteNodeAsync(graph.Root, new Dictionary<string, string>(message.Ports), message);
     }
 
-    // Resumable entry point.
-    public Task<ExecutionResult> ExecuteResumableAsync(
-        DescriptorGraph graph,
-        Message message)
-    {
-        root = graph.Root;
-        return ExecuteNodeResumableAsync(
-            graph.Root,
-            planner.BuildPlan(graph.Root),
-            0,
-            new Dictionary<string, Dictionary<string, RoutedObject>>(),
-            new Dictionary<string, string>(message.Ports),
-            message);
-    }
-
-    // Resume with more boundary input, keyed by (DataType, PortNumber) i.e. the
-    // Endpoint.Key of the boundary port.
-    public Task<ExecutionResult> ResumeAsync(
-        SuspendedExecution suspended,
-        IReadOnlyDictionary<string, string> addedBoundary)
-    {
-        var boundary =
-            new Dictionary<string, string>(suspended.Boundary);
-
-        foreach (var kv in addedBoundary)
-            boundary[kv.Key] = kv.Value;
-
-        return ExecuteNodeResumableAsync(
-            suspended.Node,
-            suspended.Plan,
-            suspended.Position,
-            suspended.Outputs,
-            boundary,
-            suspended.Envelope);
-    }
-
-    // Core resumable loop.
-    private async Task<ExecutionResult> ExecuteNodeResumableAsync(
+    // One composite, its AIMs in the order of its Topology.
+    private async Task<ExecutionResult> ExecuteNodeAsync(
         DescriptorNode node,
-        IReadOnlyList<string> plan,
-        int startPosition,
-        Dictionary<string, Dictionary<string, RoutedObject>> outputs,
         Dictionary<string, string> boundary,
         Message message)
     {
@@ -118,10 +65,11 @@ public sealed class MachineExecutor
                 child => child.AIMName,
                 child => child);
 
+        var plan    = planner.BuildPlan(node);
+        var outputs = new Dictionary<string, Dictionary<string, RoutedObject>>();
         Message last = message;
 
-
-        for (int position = startPosition; position < plan.Count; position++)
+        for (int position = 0; position < plan.Count; position++)
         {
             var aimName = plan[position];
             var child   = children[aimName];
@@ -145,8 +93,8 @@ public sealed class MachineExecutor
             // been produced surfaced on the next one: every answer arrived a turn
             // late, and the welcome was heard when an answer was expected.
 
-            // Nothing suspended us, but this AIM may have nothing to work on -
-            // e.g. an optional boundary input that was not supplied. Skip it.
+            // This AIM may have nothing to work on - e.g. an optional boundary
+            // input that was not supplied. Skip it.
             System.Console.WriteLine($"[EXEC] {aimName}: boundary has {string.Join(", ", boundary.Keys)}");
             if (HasNoInputAvailable(node, child, boundary, outputs))
             {
@@ -349,20 +297,8 @@ public sealed class MachineExecutor
         DescriptorNode child,
         Message input)
     {
-        var result = await ExecuteNodeResumableAsync(
-            child,
-            planner.BuildPlan(child),
-            0,
-            new Dictionary<string, Dictionary<string, RoutedObject>>(),
-            new Dictionary<string, string>(input.Ports),
-            input);
-
-        if (result.IsSuspended)
-            throw new InvalidOperationException(
-                $"Nested composite '{child.AIMName}' suspended; " +
-                "nested suspension is not yet supported.");
-
-        return result.Completed!;
+        var result = await ExecuteNodeAsync(child, new Dictionary<string, string>(input.Ports), input);
+        return result.Completed;
     }
 
     // ---- Type-based routing helpers ----------------------------------------
@@ -373,10 +309,6 @@ public sealed class MachineExecutor
     private static string? InputPortForDataType(
         DescriptorNode aim, string dataType, int ordinal = 1) =>
         PortForDataType(aim, "Input", dataType, ordinal);
-
-    private static string? OutputPortForDataType(
-        DescriptorNode aim, string dataType, int ordinal = 1) =>
-        PortForDataType(aim, "Output", dataType, ordinal);
 
     // Routing is by DataType; when one AIM declares several ports of the same
     // Direction and DataType the PortNumber decides (the port whose AMD
@@ -398,46 +330,6 @@ public sealed class MachineExecutor
             ? candidates[ordinal - 1].Name
             : null;
     }
-
-    // The boundary (Endpoint.Key, DataType) that 'aim' requires but which is not
-    // yet present, or null if all its boundary-sourced inputs are ready.
-    private (string Key, string DataType)? MissingBoundaryInput(
-        DescriptorNode node,
-        DescriptorNode aim,
-        IReadOnlyDictionary<string, string> boundary,
-        IReadOnlyDictionary<string, Dictionary<string, RoutedObject>> outputs)
-    {
-        foreach (var connection in node.Connections)
-        {
-            if (connection.Input.AimName != aim.AIMName)
-                continue;
-
-            var source = connection.Output;
-            if (source.AimName is not null)
-                continue;   // AIM-to-AIM inputs are produced within the run
-
-            if (!boundary.ContainsKey(source.Key))
-            {
-                var dt = source.DataType;
-
-                if (InternallySatisfied(node, aim, dt, outputs))
-                    continue;   // fed by an AIM that has produced this DataType
-
-                if (BoundaryPortIsOptional(node, dt, source.PortNumber))
-                    continue;   // nobody is coming; skip rather than wait
-
-                return (source.Key, dt);
-            }
-        }
-
-        return null;
-    }
-
-    // True if the composite boundary INPUT of (dataType, portNumber) is optional.
-    private static bool BoundaryPortIsOptional(DescriptorNode node, string dataType, int portNumber) =>
-        node.Ports.Any(p =>
-            p.Direction == "Input" && p.Accepts(dataType) &&
-            (p.PortNumber ?? 1) == portNumber && p.IsOptional);
 
     // True if 'aim' would run with NO input at all: every input is either an
     // unsupplied optional boundary port, or an internal connection whose producer
@@ -471,36 +363,6 @@ public sealed class MachineExecutor
         }
 
         return !any;
-    }
-
-    // True if 'aim' has an AIM-to-AIM input connection carrying 'dataType' whose
-    // source AIM has already produced an output of that DataType.
-    private bool InternallySatisfied(
-        DescriptorNode node,
-        DescriptorNode aim,
-        string dataType,
-        IReadOnlyDictionary<string, Dictionary<string, RoutedObject>> outputs)
-    {
-        if (string.IsNullOrEmpty(dataType)) return false;
-
-        foreach (var connection in node.Connections)
-        {
-            if (connection.Input.AimName != aim.AIMName)
-                continue;
-
-            var source = connection.Output;
-            if (source.AimName is null)
-                continue;   // boundary source, not internal
-
-            if (source.DataType != dataType)
-                continue;
-
-            if (outputs.TryGetValue(source.AimName, out var producedPorts) &&
-                FindProduced(producedPorts, source) is not null)
-                return true;
-        }
-
-        return false;
     }
 
     // Structured inputs (DataObjectMessage list) for AIM-to-AIM connections.

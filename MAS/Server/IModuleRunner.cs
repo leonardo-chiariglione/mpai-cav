@@ -69,8 +69,6 @@ public interface IModuleRunner
 
 public sealed class RunResult
 {
-    public bool Suspended { get; init; }
-
     // Present when the run completed. Keyed "DataType#PortNumber".
     public IReadOnlyDictionary<string, string> Outputs { get; init; } =
         new Dictionary<string, string>();

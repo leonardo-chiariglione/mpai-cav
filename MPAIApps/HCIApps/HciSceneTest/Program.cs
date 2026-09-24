@@ -78,7 +78,7 @@ internal static class Program
 
             Console.WriteLine("Advance(MMC-HCI, [BAO, BVO, BLO])...");
             var r = north.Advance(HciModule, inputs);
-            Console.WriteLine($"  Advance -> Error={r.Error}  Suspended={r.Suspended}  Ok={r.Ok}");
+            Console.WriteLine($"  Advance -> Error={r.Error}  Ok={r.Ok}");
             Console.WriteLine();
 
             Console.WriteLine("--- outputs ---");

@@ -74,9 +74,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         public Datum(string dataType, string json) : this(dataType, 1, json) { }
     }
 
-    // What one exchange returned. Suspended and WaitingPort are always false and
-    // null: no Module suspends (M3205 5.1); they go with the rest of suspension.
-    public readonly record struct Result(AifError Error, IReadOnlyList<Datum> Outputs, bool Suspended, string? WaitingPort = null)
+    // What one exchange returned.
+    public readonly record struct Result(AifError Error, IReadOnlyList<Datum> Outputs)
     {
         public bool Ok => Error == AifError.OK;
         public string? ByType(string dataType, int portNumber = 1) =>
@@ -223,14 +222,14 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         if (ephemeral)
         {
             var e = StartFlow(moduleName);
-            if (e != AifError.OK) return new Result(e, Array.Empty<Datum>(), false);
+            if (e != AifError.OK) return new Result(e, Array.Empty<Datum>());
         }
 
         Task<Result>? run;
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started) || started.Stopped)
-                return new Result(AifError.NotStarted, Array.Empty<Datum>(), false);
+                return new Result(AifError.NotStarted, Array.Empty<Datum>());
             foreach (var d in inputs)
                 started.Written[Key(d.DataType, d.PortNumber)] = d.Json;
             run = RunIfWritten(moduleName, started, always: true)!;
@@ -259,7 +258,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         var (err, outcome) = await _ua.RunAsync(started.Id, boundary);
         if (_ua.ModuleStopped(started.Id))
             lock (_tables) started.Stopped = true;
-        if (err != AifError.OK) return new Result(err, Array.Empty<Datum>(), false);
+        if (err != AifError.OK) return new Result(err, Array.Empty<Datum>());
 
         // An AIM's error does not end the run (every Module continues, until
         // Step 5 gives it its policy): the run's message is marked an error when
@@ -267,7 +266,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         // A cancelled run - its Module stopped - produced nothing.
         var message = outcome?.Completed;
         if (message is null || message.IsCancelled)
-            return new Result(AifError.Failed, Array.Empty<Datum>(), false);
+            return new Result(AifError.Failed, Array.Empty<Datum>());
 
         // Outputs come back keyed by (DataType, PortNumber) too - parse the key.
         var outs = new List<Datum>();
@@ -279,7 +278,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             var pn = int.TryParse(kv.Key.Substring(hash + 1), out var n) ? n : 1;
             outs.Add(new Datum(dt, pn, kv.Value));
         }
-        return new Result(AifError.OK, outs, false);
+        return new Result(AifError.OK, outs);
     }
 
     private static bool Completes(Task task, int timeoutMs) =>

@@ -68,14 +68,10 @@ public sealed class UserAgent
         public required DescriptorGraph Graph       { get; init; }
         public required AimHost         Host        { get; init; }
         public required MachineExecutor Executor    { get; init; }
-        public required PortRegistry    Ports       { get; init; }
 
         // Where the User Agent initialised this Module's Shared Storage; null,
         // the User Agent's root (MPAI_AIFU_SharedStorage_Init, M3203 3.4.1).
         public string? StorageLocation { get; set; }
-
-        // The last suspension point of this Module's resumable run, if any.
-        public SuspendedExecution? Suspended { get; set; }
     }
 
     // -- 3.1 General: initialise / destroy the Controller ---------------------
@@ -162,19 +158,13 @@ public sealed class UserAgent
         _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
             () => started?.StorageLocation ?? _sharedStorageRoot);
 
-        // Declare the composite's boundary Ports from its ExternalPorts.
-        var ports = new PortRegistry();
-        foreach (var p in graph.Root.Ports)
-            ports.Declare(p.Name, p.Direction, p.DataType);
-
         moduleId = Interlocked.Increment(ref _nextModuleId);
         _running[moduleId] = started = new RunningModule
         {
             Name     = name,
             Graph    = graph,
             Host     = host,
-            Executor = new MachineExecutor(host),
-            Ports    = ports
+            Executor = new MachineExecutor(host)
         };
         return AifError.OK;
     }
@@ -243,60 +233,22 @@ public sealed class UserAgent
     public bool ModuleStopped(int moduleId) =>
         _running.TryGetValue(moduleId, out var module) && module.Host.IsStopped;
 
-    // -- Boundary Port access (section 4.6, used across the boundary) ---------
-    // The User Agent writes a data object to a composite input Port, and reads
-    // a data object from a composite output Port. This is how the folder
-    // screenshot goes in and the RecognisedText comes back out.
-
-    // MPAI_AIFM_Port_Input_Write (exercised by the User Agent via Controller)
-    public AifError PortInputWrite(int moduleId, string portName, Message message)
-    {
-        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
-        if (!module.Ports.Has(portName)) return AifError.NotFound;
-        module.Ports.InputWrite(portName, message);
-        return AifError.OK;
-    }
-
-    // MPAI_AIFM_Port_Output_Read
-    public async Task<(AifError, Message?)> PortOutputReadAsync(
-        int moduleId, string portName, CancellationToken token = default)
-    {
-        if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotFound, null);
-        if (!module.Ports.Has(portName)) return (AifError.NotFound, null);
-        var msg = await module.Ports.OutputReadAsync(portName, token);
-        return (AifError.OK, msg);
-    }
-
-    // MPAI_AIFM_Port_Probe
-    public bool PortProbe(int moduleId, string portName) =>
-        _running.TryGetValue(moduleId, out var module) &&
-        module.Ports.Has(portName) && module.Ports.Probe(portName);
-
-    // -- Resumable run: the User Agent writes boundary PORTS and reacts ------
-    // The UA supplies data on the composite's boundary input ports and reacts
-    // to the composite's requests for more input. It never names an AIM nor
-    // orders execution - the Controller/executor runs the AIMs per the Topology.
+    // -- The run: the User Agent writes boundary Ports, the Module runs --------
+    // The UA supplies data on the composite's boundary input Ports, keyed by Data
+    // Type and Port Number. It never names an AIM nor orders execution - the
+    // executor runs the AIMs per the Topology.
 
     public sealed class RunOutcome
     {
-        public required bool Suspended { get; init; }
-        // The boundary input port the composite is waiting for (if suspended).
-        public string? WaitingPort { get; init; }
-        // Partial outputs the composite can already expose (e.g. OCR listing).
-        public IReadOnlyDictionary<string, string>? PartialOutputs { get; init; }
-        // Final outputs when the run completed.
-        public Message? Completed { get; init; }
+        public required Message Completed { get; init; }
     }
 
-    // Start the Module's resumable run, writing one or more boundary input ports.
-    // The executor runs everything runnable and suspends on the first boundary
-    // port it still needs.
     public async Task<(AifError, RunOutcome?)> RunAsync(
         int moduleId, IReadOnlyDictionary<string, string> boundaryPorts)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotFound, null);
 
-        var result = await module.Executor.ExecuteResumableAsync(
+        var result = await module.Executor.RunAsync(
             module.Graph,
             new Message
             {
@@ -304,49 +256,15 @@ public sealed class UserAgent
                 // MessageType carries no meaning the framework itself relies on (the
                 // only values Message.IsError/IsCancelled compare against are the
                 // reserved ErrorType/CancelledType constants). It is the RUNNING
-                // Module's own name - never a fixed application name - so a run of MAD
-                // is never labelled as AMQ. UserAgent is shared infrastructure; it
-                // must not know which application is calling it.
+                // Module's own name - never a fixed application name.
                 MessageType = module.Name,
                 Ports       = new Dictionary<string, string>(boundaryPorts)
             });
 
-        return Outcome(module, result);
+        return (AifError.OK, new RunOutcome { Completed = result.Completed });
     }
 
-    // Resume a suspended Module, writing one or more further boundary input ports.
-    public async Task<(AifError, RunOutcome?)> ResumeAsync(
-        int moduleId, IReadOnlyDictionary<string, string> boundaryPorts)
-    {
-        if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotFound, null);
-        if (module.Suspended is null) return (AifError.Failed, null);
-
-        var result = await module.Executor.ResumeAsync(module.Suspended, boundaryPorts);
-        return Outcome(module, result);
-    }
-
-    private static (AifError, RunOutcome?) Outcome(RunningModule module, ExecutionResult result)
-    {
-        if (result.IsSuspended)
-        {
-            module.Suspended = result.Suspended;
-            return (AifError.OK, new RunOutcome
-            {
-                Suspended      = true,
-                WaitingPort    = result.Suspended!.WaitingPort,
-                PartialOutputs = result.Suspended!.PartialOutputs
-            });
-        }
-
-        module.Suspended = null;
-        return (AifError.OK, new RunOutcome
-        {
-            Suspended = false,
-            Completed = result.Completed
-        });
-    }
-
-    // TryGetRuntime USED to live here, handing an Module's AimHost and PortRegistry
+    // TryGetRuntime USED to live here, handing an Module's AimHost and its Ports
     // to whoever asked. Its own comment said "not part of the public MPAI_AIFU_*
     // surface", which was the warning: it let a User Agent register an AIM into a
     // running Module and invoke it outside the Topology that governs it. Nothing in

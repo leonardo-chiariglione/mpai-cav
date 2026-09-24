@@ -548,14 +548,6 @@ public sealed class MasServer
                     return;
                 }
 
-                if (result.Suspended)
-                {
-                    // The Module wants boundary input it has not been given.
-                    await Write(ctx, 404, "text/plain",
-                        "The Module is waiting for further input.");
-                    return;
-                }
-
                 module.Outputs = new Dictionary<string, string>(result.Outputs);
             }
         }

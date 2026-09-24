@@ -142,11 +142,6 @@ public sealed class WorkflowInterpreter
         if (!result.Ok)
             throw new InvalidOperationException($"{Module} returned {result.Error}.");
 
-        if (result.Suspended)
-            throw new InvalidOperationException(
-                $"{Module} is waiting for {result.WaitingPort ?? "something the Controller did not name"}, " +
-                "which this workflow did not give it.");
-
         say($"[C] returned: {string.Join(", ", result.Outputs.Select(d => d.DataType + ":" + d.PortNumber))}");
         foreach (var want in step.Ports)
         {

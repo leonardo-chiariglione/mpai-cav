@@ -127,9 +127,6 @@ internal sealed class ControllerApiRunner : IModuleRunner
         if (result.Error != AifError.OK)
             return new RunResult { Error = result.Error.ToString() };
 
-        if (result.Suspended)
-            return new RunResult { Suspended = true };
-
         var outputs = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var datum in result.Outputs)
             outputs[datum.DataType + "#" + datum.PortNumber] = datum.Json;
