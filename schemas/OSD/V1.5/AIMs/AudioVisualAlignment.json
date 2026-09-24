@@ -6,12 +6,14 @@
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "SpeechSceneDescriptors",        "Direction": "Input",  "DataType": "OSD-BSS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":   [{"Name": "SpeechSceneDescriptors",        "Direction": "Input",  "DataType": "OSD-BSS-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AudioSceneDescriptors",         "Direction": "Input",  "DataType": "OSD-BAS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "VisualSceneDescriptors",        "Direction": "Input",  "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "LiDARSceneDescriptors",         "Direction": "Input",  "DataType": "OSD-BLS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AlignedAudioSceneDescriptors",  "Direction": "Output", "DataType": "OSD-BAS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AlignedVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "AlignedVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicAudioSceneGeometry",       "Direction": "Output", "DataType": "OSD-BAG-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicVisualSceneGeometry",      "Direction": "Output", "DataType": "OSD-BVG-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 
@@ -27,11 +29,11 @@
                         "Source":           "/* AIMStorage | MPAIStore */",
                         "Destination":      "/* provided by implementer */" }],
 
-  "ResourcePolicies":[{ "Name": "Memory"              , "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
-                      { "Name": "CPU:Number"          , "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "CPU:Class"           , "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
-                      { "Name": "GPU:Number"          , "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "GPU:CUDA:Class"      , "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+  "ResourcePolicies":[{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
                       { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
                       { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
 

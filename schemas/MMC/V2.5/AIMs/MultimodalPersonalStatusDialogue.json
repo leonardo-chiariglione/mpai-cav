@@ -16,7 +16,9 @@
                      {"Name": "Summary",               "Direction": "Input",  "DataType": "MMC-SUM-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "OutputSpeech",          "Direction": "Output", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "OutputFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "UAText",                "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "TypedText",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "" } },
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-NLU-V2.5", "Relation": "" } },

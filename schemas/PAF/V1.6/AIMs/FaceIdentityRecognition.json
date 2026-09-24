@@ -6,11 +6,12 @@
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "AuxiliaryText",       "Direction": "Input",  "DataType": "OSD-TXO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "VisualObject",        "Direction": "Input",  "DataType": "OSD-VIO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "VisualSceneGeometry", "Direction": "Input",  "DataType": "OSD-VSG-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "FaceID",              "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "BoundingBox",         "Direction": "Output", "DataType": "OSD-BBX-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
+  "ExternalPorts":   [{"Name": "AuxiliaryText",          "Direction": "Input",  "DataType": "OSD-TXO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "VisualObject",           "Direction": "Input",  "DataType": ["OSD-BVO-V1.5", "OSD-VIO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "VisualSceneGeometry",    "Direction": "Input",  "DataType": "OSD-VSG-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "FaceID",                 "Direction": "Output", "DataType": "OSD-IID-V1.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BoundingBox",            "Direction": "Output", "DataType": "OSD-BBX-V1.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "VisualSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BVS-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

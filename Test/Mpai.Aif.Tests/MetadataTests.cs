@@ -3,8 +3,8 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 using AIF.Controller;
+using AIF.Metadata;
 using AIF.Store;
-using Json.Schema;
 
 namespace Mpai.Aif.Tests;
 
@@ -44,7 +44,7 @@ public class MetadataTests
     [Fact]
     public void Schema()
     {
-        var schema = LoadSchemas(Path.Combine(Repository.Schemas, "AIF", "V3.0", "data", "AIMMetadata.json"));
+        var schema = AimMetadataSchema.Load(Repository.Schemas);
 
         var result = new Dictionary<string, string>();
         foreach (var file in L3Files())
@@ -52,9 +52,8 @@ public class MetadataTests
             var name = Path.GetFileNameWithoutExtension(file);
             try
             {
-                using var doc = JsonDocument.Parse(File.ReadAllText(file));
-                var evaluation = schema.Evaluate(doc.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
-                result[name] = evaluation.IsValid ? "valid" : string.Join("; ", Violations(evaluation));
+                var violations = schema.Violations(File.ReadAllText(file));
+                result[name] = violations.Count == 0 ? "valid" : string.Join("; ", violations);
             }
             catch (Exception failure)
             {
@@ -63,6 +62,28 @@ public class MetadataTests
         }
 
         Expected.Match("schema.json", result);
+    }
+
+    // Every L3 against its L2 (M3211, the author): what the L2 does not allow.
+    [Fact]
+    public void Conformance()
+    {
+        JsonElement? FindL3(string instance)
+        {
+            var file = Path.Combine(Repository.Amds, instance + ".json");
+            return File.Exists(file) ? JsonDocument.Parse(File.ReadAllText(file)).RootElement.Clone() : null;
+        }
+        var conformance = new L2Conformance(Repository.Schemas, FindL3);
+
+        var result = new Dictionary<string, string>();
+        foreach (var file in L3Files())
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            var found = conformance.Check(doc.RootElement);
+            result[Path.GetFileNameWithoutExtension(file)] = found.Count == 0 ? "conforms" : string.Join("; ", found);
+        }
+
+        Expected.Match("conformance.json", result);
     }
 
     // For every L3 with an L2, the input Ports on which they disagree about being optional.
@@ -173,7 +194,7 @@ public class MetadataTests
     [Fact]
     public void NewFields()
     {
-        var schema = LoadSchemas(Path.Combine(Repository.Schemas, "AIF", "V3.0", "data", "AIMMetadata.json"));
+        var schema = AimMetadataSchema.Load(Repository.Schemas);
         var composite = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-MAD-V2.5-I01.json")))!;
         var basic     = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-ASR-V2.5-I01.json")))!;
 
@@ -239,12 +260,8 @@ public class MetadataTests
         Assert.Equal(MadConnections(composite), MadConnections(all));
     }
 
-    private static HashSet<string> Validate(JsonSchema schema, JsonNode aim)
-    {
-        using var doc = JsonDocument.Parse(aim.ToJsonString());
-        var evaluation = schema.Evaluate(doc.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
-        return evaluation.IsValid ? new HashSet<string>() : Violations(evaluation).ToHashSet();
-    }
+    private static HashSet<string> Validate(AimMetadataSchema schema, JsonNode aim) =>
+        schema.Violations(aim.ToJsonString()).ToHashSet();
 
     // The connections the Controller builds for 1MMC-MAD-V2.5-I01 from this text of
     // its L3, the other L3s being those of the repository.
@@ -290,81 +307,6 @@ public class MetadataTests
             inputs[(dataType, name)] = port["IsOptional"] is JsonValue v && v.TryGetValue<bool>(out var b) && b;
         }
         return inputs;
-    }
-
-    private static readonly object Registering = new();
-    private static Dictionary<string, JsonSchema>? loaded;
-
-    // Registers every schema of the repository under its $id, so that the
-    // https://schemas.mpai.community/... references resolve locally. Each file is
-    // built once: building a schema registers its dynamic anchors, and a second
-    // build of the same file collides with the first.
-    private static JsonSchema LoadSchemas(string main)
-    {
-        lock (Registering)
-        {
-            if (loaded is null)
-            {
-                loaded = new Dictionary<string, JsonSchema>(StringComparer.OrdinalIgnoreCase);
-                foreach (var file in Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories))
-                {
-                    try
-                    {
-                        var s = JsonSchema.FromFile(file);
-                        loaded[Path.GetFullPath(file)] = s;
-                        if (s.BaseUri is { } id) SchemaRegistry.Global.Register(id, s);
-                    }
-                    catch { /* a file that is not a schema, or not valid: the test of that schema will say so */ }
-                }
-            }
-            return loaded.TryGetValue(Path.GetFullPath(main), out var schema)
-                ? schema
-                : throw new InvalidOperationException("The AIM Metadata schema could not be built: " + main);
-        }
-    }
-
-    // Each violation once, as "location: what is wrong". Where anyOf or oneOf fails,
-    // the value matched none of its alternatives, and that is what is reported - not
-    // the failure of every alternative, which would turn one fault into a dozen.
-    // Elsewhere only the innermost failures are reported, not the "some properties
-    // did not match" of each enclosing object.
-    private static IEnumerable<string> Violations(EvaluationResults results)
-    {
-        var found = new SortedSet<string>(StringComparer.Ordinal);
-        Walk(results, found);
-        return found;
-    }
-
-    private static readonly HashSet<string> Summarising = new(StringComparer.Ordinal)
-    {
-        "properties", "patternProperties", "items", "prefixItems", "allOf", "$ref", "$dynamicRef",
-        "dependentSchemas", "then", "else", "contains", "unevaluatedProperties", "unevaluatedItems"
-    };
-
-    private static void Walk(EvaluationResults node, SortedSet<string> found)
-    {
-        if (node.IsValid) return;
-        var where = node.InstanceLocation.ToString() is { Length: > 0 } loc ? loc : "/";
-        var keyword = node.EvaluationPath.ToString().Split('/').LastOrDefault() ?? "";
-
-        var alternatives = keyword is "anyOf" or "oneOf" ? keyword
-            : node.Errors?.Keys.FirstOrDefault(k => k is "anyOf" or "oneOf");
-        if (alternatives is not null)
-        {
-            found.Add($"{where}: matches none of the alternatives ({alternatives})");
-            return;
-        }
-
-        // A keyword that only summarises its subschemas ("some properties did not
-        // match") says nothing its children do not say better; any other keyword
-        // (required, type, pattern, const, enum, a false schema...) is a violation.
-        var failing = (node.Details ?? []).Where(d => !d.IsValid).ToList();
-        if (node.Errors is { Count: > 0 })
-            foreach (var e in node.Errors)
-                if (!Summarising.Contains(e.Key) || failing.Count == 0)
-                    found.Add($"{where}: {e.Key} {Short(e.Value, 120)}");
-
-        foreach (var child in failing) Walk(child, found);
     }
 
     internal static string Short(string text, int max)

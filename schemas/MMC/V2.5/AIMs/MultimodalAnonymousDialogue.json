@@ -11,7 +11,11 @@
   "ExternalPorts":   [{"Name": "InputSpeech",            "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextObject",             "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "MachineSpeech",          "Direction": "Output", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "TypedText",              "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "Summary",                "Direction": "Input",  "DataType": "MMC-SUM-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "EditedSummary",          "Direction": "Output", "DataType": "MMC-SUM-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "UAPersonalStatus",       "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "" } },
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-EDP-V2.5", "Relation": "" } },

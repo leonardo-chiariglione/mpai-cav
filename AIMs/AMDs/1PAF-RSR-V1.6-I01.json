@@ -9,7 +9,7 @@
                        {"Name": "MachineSpeech",        "DataType": "OSD-BSO-V1.5"}],
 
   "ExternalPorts":    [{"Name": "SpeechText",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "PortNumber": 1, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "FaceText",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "PortNumber": 2, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "FaceText",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true, "PortNumber": 2, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus",         "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "IsOptional": true,                              "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "MachineSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                  "Technology": "Software", "Protocol": "", "IsRemote": false}],

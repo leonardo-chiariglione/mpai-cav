@@ -33,9 +33,18 @@ public sealed class L2Check
     public static string StandardName(string id) =>
         Regex.Replace(Regex.Replace(id, @"^[0-9]+", ""), @"-I[0-9]+$", "");
 
+    // The L2 an L3 implements is the one its Header names. An L3 with no Header is
+    // matched by its AIMName, as before Headers were written, and the Store says so.
     public IEnumerable<Finding> Check(string id, JsonElement l3)
     {
-        var standard = StandardName(id);
+        string standard;
+        if (l3.TryGetProperty("Header", out var header) && header.GetString() is { Length: > 0 } named)
+            standard = named;
+        else
+        {
+            standard = StandardName(id);
+            yield return new Finding("L2", "warning", $"The L3 has no Header: its L2 is taken from its AIMName, {standard}.");
+        }
         if (!l2s.TryGetValue(standard, out var found))
         {
             yield return new Finding("L2", "warning", $"No L2 for {standard} in the published schemas: not validated.");

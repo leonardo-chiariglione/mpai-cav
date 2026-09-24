@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AIF.Metadata;
 using Mpai.StoreService;
 
 // THE MPAI STORE SERVICE.
@@ -12,7 +13,8 @@ using Mpai.StoreService;
 //   dotnet run --project MAS\Store\Service -- --Urls https://localhost:5020 --Root <folder> --Packages <folder>
 //
 // --Root is where the Store keeps its L3s (default: <local application data>\MPAI\Store).
-// --Schemas is the published schemas folder (default: the "schemas" folder above this program).
+// --Schemas is the published schemas folder (default: the "schemas" folder above this program):
+//   the AIM Metadata schema every L3 must validate against, and the L2s.
 // --Packages is the folder holding all packages; file: URIs are inspected only inside it.
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,7 @@ var schemas = builder.Configuration["Schemas"] ?? FindSchemas() ?? "schemas";
 
 var repository = new L3Repository(root);
 var l2 = new L2Check(schemas);
+var metadata = AimMetadataSchema.Load(schemas);
 var packages = new PackageCheck(builder.Configuration["Packages"]);
 var app = builder.Build();
 
@@ -41,6 +44,20 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
             return Results.BadRequest(new { refused = "An L3 needs Identifier.AIMName: without it the Store cannot say what it is." });
         if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || id.Contains(".."))
             return Results.BadRequest(new { refused = $"'{id}' cannot name an L3 in the Store." });
+
+        // AN L3 THAT DOES NOT VALIDATE IS REFUSED: the AIM Metadata schema of AIF V3.0
+        // is what a Controller relies on when it reads the L3.
+        var violations = metadata.Violations(l3);
+        if (violations.Count > 0)
+        {
+            Console.WriteLine($"[Store] refused {id}: {violations.Count} violation(s) of the AIM Metadata schema");
+            return Results.Json(new
+            {
+                id, published = false,
+                refused = "The L3 does not validate against the AIM Metadata schema of AIF V3.0.",
+                violations
+            }, statusCode: 422);
+        }
 
         // VALIDATION SIGNALS: against the L2, and for the package the L3 names.
         var findings = new List<Finding>();

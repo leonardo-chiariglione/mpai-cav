@@ -15,13 +15,17 @@ dotnet run --project MAS\Store\Service\StoreService.csproj -- --Urls https://loc
 | `--Urls` | where it listens | `https://localhost:5020` |
 | `--Root` | where it keeps its L3s | `<local application data>\MPAI\Store` |
 | `--Packages` | the folder holding all packages; `file:` URIs are inspected only inside it | none: `file:` packages are not inspected |
-| `--Schemas` | the published schemas, for the L2s | the `schemas` folder above the program |
+| `--Schemas` | the published schemas: the AIM Metadata schema and the L2s | the `schemas` folder above the program |
 
 ## What happens to a submitted L3
 
-- **Validated against its L2**, the standard-level instance of the AIM it implements
-  (`1MMC-AMQ-V2.5-I01` against `MMC-AMQ-V2.5`, found in `schemas/*/V*/AIMs`):
-  Ports and Sub-AIMs that differ are **signalled**, not refused.
+- **Validated against the AIM Metadata schema** of AIF V3.0
+  (`schemas/AIF/V3.0/data/AIMMetadata.json`): an L3 that does not validate is
+  **refused**, with the list of its violations.
+- **Validated against its L2**, the standard-level instance of the AIM it implements,
+  the one its `Header` names (`1MMC-AMQ-V2.5-I01` against `MMC-AMQ-V2.5`, found in
+  `schemas/*/V*/AIMs`); without a Header, the L2 is taken from the AIMName, with a
+  warning. Ports and Sub-AIMs that differ are **signalled**, not refused.
 - **Its package looked for** at the `ImplementationURI` of each `Implementations`
   entry - present, with its `BinaryName`.dll: **signalled**, not refused. Whether the
   package is legitimate is checked later, with fingerprints.
@@ -34,7 +38,7 @@ A published L3 is never overwritten: submitting it again publishes version n+1.
 
 | Route | |
 |---|---|
-| `POST /MPAI/Store/L3` | submit an L3: `201` published, with `findings`; `422` refused, with `missing` |
+| `POST /MPAI/Store/L3` | submit an L3: `201` published, with `findings`; `422` refused, with `violations` or `missing` |
 | `GET /MPAI/Store/L3[?name=...]` | approved L3s, latest versions; `name` may be the standard name (`MMC-TIQ-V2.5`) |
 | `GET /MPAI/Store/L3/{id}[?version=n]` | one L3; header `MPAI-Store-Version` |
 | `GET /MPAI/Store/L3/{id}/versions` | its versions |

@@ -1,5 +1,4 @@
 {
   "1CAV-BED-V1.1-I01": "WeatherData: L2 required, L3 optional; FullEnvironmentDescriptors: L2 required, L3 optional",
-  "1CAV-ESS-V1.1-I01": "WeatherData: L2 required, L3 optional; FullEnvironmentDescriptors: L2 required, L3 optional",
-  "1OSD-IDR-V1.5-I01": "FaceID: L2 required, L3 optional; SpeakerID: L2 required, L3 optional"
+  "1CAV-ESS-V1.1-I01": "WeatherData: L2 required, L3 optional; FullEnvironmentDescriptors: L2 required, L3 optional"
 }

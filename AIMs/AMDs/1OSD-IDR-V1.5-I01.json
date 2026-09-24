@@ -6,12 +6,12 @@
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "FaceID",         "Direction": "Input",  "DataType": "OSD-IID-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SpeakerID",      "Direction": "Input",  "DataType": "OSD-IID-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "FaceID",         "Direction": "Input",  "DataType": "OSD-IID-V1.5",                     "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeakerID",      "Direction": "Input",  "DataType": "OSD-IID-V1.5",                     "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Identification", "Direction": "Output", "DataType": "boolean",                                           "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "UserID",         "Direction": "Output", "DataType": "OSD-IID-V1.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "PersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "Response",       "Direction": "Output", "DataType": "OSD-BTO-V1.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "UserID",         "Direction": "Output", "DataType": "OSD-IID-V1.5", "IsOptional": true,                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5", "IsOptional": true,                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Response",       "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true,                  "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 
