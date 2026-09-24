@@ -306,6 +306,26 @@ public sealed class UserAgent
         return await module.Continuous.ReadBoundaryAsync(dataType, portNumber, timeoutMs);
     }
 
+    // MPAI_AIFU_Payload_Put (M3215 3.6).
+    public (AifError, string?) PayloadPut(int moduleId, string dataType, int portNumber, ReadOnlyMemory<byte> data)
+    {
+        if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotStarted, null);
+        if (module.Continuous is null) return (AifError.Failed, null);   // an exchange carries its payloads inline
+        return module.Continuous.PutBoundaryPayload(dataType, portNumber, data);
+    }
+
+    // The data of a reference this Controller issued, in whichever of its Modules.
+    public byte[]? ResolvePayload(string reference)
+    {
+        foreach (var module in _running.Values)
+            if (module.Continuous is { } run && run.Payloads.TryGet(reference, out var data)) return data.ToArray();
+        return null;
+    }
+
+    // How many payloads a Continuous Module holds.
+    public int PayloadsHeld(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is not null ? module.Continuous.Payloads.Held : 0;
+
     // How many times an AIM of a Continuous Module missed its Deadline.
     public int DeadlinesMissed(int moduleId, string aim) =>
         _running.TryGetValue(moduleId, out var module) && module.Continuous is not null

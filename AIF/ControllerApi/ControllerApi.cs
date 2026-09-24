@@ -25,6 +25,24 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         AIF.Controller.MachineExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
     }
 
+    // THE CODECS RESOLVE A REFERENCE THIS CONTROLLER ISSUED (M3215 3.6), through the
+    // User Agents of the Controller APIs in this process.
+    private static readonly List<WeakReference<UserAgent>> Resolvers = new();
+
+    private static byte[]? ResolvePayload(string reference)
+    {
+        lock (Resolvers)
+            foreach (var weak in Resolvers)
+                if (weak.TryGetTarget(out var ua) && ua.ResolvePayload(reference) is { } data) return data;
+        return null;
+    }
+
+    private void OfferPayloads()
+    {
+        lock (Resolvers) Resolvers.Add(new WeakReference<UserAgent>(_ua));
+        Mpai.Aif.PortData.PayloadReferences.Resolve = ResolvePayload;
+    }
+
     private readonly UserAgent    _ua;
     private readonly IAimProvider _provider;
     private readonly AimSettings  _settings;
@@ -55,6 +73,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         var store = new AmdStore(amdDir); store.Scan();
         _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
+        OfferPayloads();
     }
 
     // Overload: caller supplies a provider FACTORY, so ControllerApi builds ONE AmdStore
@@ -66,6 +85,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         _provider = providerFactory(store);
         _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
+        OfferPayloads();
     }
 
     // A typed datum: DataType (+ PortNumber where a type repeats) + JSON payload.
@@ -220,6 +240,21 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             return _running.TryGetValue(moduleName, out var started) && !started.Stopped
                 ? _ua.MPAI_AIFU_AIM_Stop(started.Id, aimName)
                 : AifError.NotStarted;
+    }
+
+    // MPAI_AIFU_Payload_Put (M3215 3.6): a payload placed for a boundary Input
+    // Port of a Continuous Module; its Object is then written with the reference.
+    public (AifError Error, string? Reference) PayloadPut(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started)
+                ? _ua.PayloadPut(started.Id, dataType, portNumber, data)
+                : (AifError.NotStarted, null);
+    }
+
+    public int PayloadsHeld(string moduleName)
+    {
+        lock (_tables) return _running.TryGetValue(moduleName, out var started) ? _ua.PayloadsHeld(started.Id) : 0;
     }
 
     // What each Channel of a Continuous Module carried (M3215 3.8).

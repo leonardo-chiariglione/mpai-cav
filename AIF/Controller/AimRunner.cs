@@ -41,4 +41,11 @@ public interface IAimPorts
 
     // Completes at the AIM's next Period; at once where it has none.
     Task NextPeriodAsync();
+
+    // PAYLOADS BY REFERENCE (M3215 3.6): placed for the Channel of an Output Port,
+    // the reference returned going in the Object's DataURI; fetched and released
+    // by a reader at the far end of that Channel.
+    string PutPayload(string dataType, int portNumber, ReadOnlyMemory<byte> data);
+    ReadOnlyMemory<byte> GetPayload(string reference);
+    void ReleasePayload(string reference);
 }

@@ -142,10 +142,13 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
             if (o["Data"] is not null)
                 return Convert.FromBase64String((string)o["Data"]!);
 
+            if (PayloadReferences.TryResolve((string?)o["DataURI"]) is { } resolved)
+                return resolved;
+
             if (o["DataURI"] is not null || o["ID"] is not null)
                 throw new NotSupportedException(
-                    "Basic Visual Object carries its data by reference " +
-                    "(DataURI or ID); this build reads only the inline form.");
+                    "Basic Visual Object carries its data by a reference " +
+                    "this Controller did not issue (DataURI or ID); only the inline form and aif:payload references are read.");
         }
 
         return Array.Empty<byte>();

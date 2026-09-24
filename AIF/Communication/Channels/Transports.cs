@@ -12,11 +12,12 @@ internal sealed class ChannelCore
 
     public long Written => Interlocked.Read(ref sequence);
 
-    public ChannelCore(ChannelSpec spec, IClock clock)
+    public ChannelCore(ChannelSpec spec, IClock clock, Action<ChannelSpec, PortMessage>? lost)
     {
         Spec = spec;
         this.clock = clock;
-        Readers = spec.Readers.ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock));
+        Readers = spec.Readers.ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock,
+            lost is null ? null : message => lost(spec, message)));
     }
 
     // The writer's end stamps the Message; the writer supplies no stamp.
@@ -75,7 +76,10 @@ public abstract class ChannelTransport : IChannelTransport
 
     public abstract string Name { get; }
 
-    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock));
+    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m)));
+
+    // Called with every Message a reader end loses, dropped or discarded.
+    public Action<ChannelSpec, PortMessage>? Lost { get; set; }
 
     public abstract IChannelWriter OpenWriter(ChannelSpec spec);
 

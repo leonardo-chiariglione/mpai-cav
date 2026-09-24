@@ -23,10 +23,15 @@ internal sealed class ReaderQueue
     public long Discarded;
     public long Taken;
 
-    public ReaderQueue(PortBehaviour behaviour, IClock clock)
+    // Told of every Message this end loses - dropped by Overflow, discarded by
+    // MaxAge - so that what it references can be released for this reader.
+    private readonly Action<PortMessage>? lost;
+
+    public ReaderQueue(PortBehaviour behaviour, IClock clock, Action<PortMessage>? lost = null)
     {
         this.behaviour = behaviour;
         this.clock = clock;
+        this.lost = lost;
     }
 
     private static TaskCompletionSource New() => new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -52,12 +57,14 @@ internal sealed class ReaderQueue
                 switch (behaviour.Overflow)
                 {
                     case Overflow.DropOldest:
+                        lost?.Invoke(held.First!.Value);
                         held.RemoveFirst();
                         Dropped++;
                         held.AddLast(message);
                         Signal(ref arrived);
                         return true;
                     case Overflow.DropNewest:
+                        lost?.Invoke(message);
                         Dropped++;
                         return true;
                 }
@@ -134,6 +141,7 @@ internal sealed class ReaderQueue
         var any = false;
         while (held.First is { } first && first.Value.Written < oldest)
         {
+            lost?.Invoke(first.Value);
             held.RemoveFirst();
             Discarded++;
             any = true;

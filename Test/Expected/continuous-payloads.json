@@ -1,0 +1,12 @@
+{
+  "PayloadPut": "OK; an aif:payload reference",
+  "TST-PRD, given the User Agent's text by reference": "100019 bytes",
+  "a codec resolves it": "from the User Agent",
+  "a codec, a reference no Controller holds": "not resolved",
+  "held after the four": "0",
+  "held at the end": "0",
+  "text 1 (by reference)": "TST-PRD read 100002 bytes; at the boundary inline",
+  "text 2 (inline)": "TST-PRD read 100002 bytes; at the boundary inline",
+  "text 3 (by reference)": "TST-PRD read 100002 bytes; at the boundary inline",
+  "text 4 (inline)": "TST-PRD read 100002 bytes; at the boundary inline"
+}

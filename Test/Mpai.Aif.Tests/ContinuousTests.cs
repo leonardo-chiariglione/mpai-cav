@@ -250,6 +250,45 @@ public class ContinuousTests
         public long Monotonic => System.Diagnostics.Stopwatch.GetTimestamp();
     }
 
+    // PAYLOADS BY REFERENCE (M3215 3.6) on TST-PAY: TST-PWR writes 100 000 bytes by
+    // reference and inline in turn, TST-PRD reads either; the boundary gets them
+    // inlined; the User Agent writes one by reference; a codec resolves one; the
+    // store ends empty.
+    [Fact]
+    public void Payloads()
+    {
+        var result = new Dictionary<string, string>();
+        using var api = Api();
+        const string module = "1TST-PAY-V1.0-I01";
+        api.StartFlow(module);
+
+        for (var i = 1; i <= 4; i++)
+        {
+            api.InputWrite(module, Text, 1, $"t{i}", 2000);
+            var length = api.OutputRead(module, Text, 2, 2000);
+            var payload = api.OutputRead(module, Text, 1, 2000);
+            result[$"text {i} ({(i % 2 == 1 ? "by reference" : "inline")})"] =
+                $"TST-PRD read {length.Json} bytes; at the boundary " +
+                (payload.Json is { } j ? (j.Contains("DataURI") ? "a reference" : j.Contains("\"Data\"") ? "inline" : j) : payload.Error.ToString());
+        }
+        result["held after the four"] = api.PayloadsHeld(module).ToString();
+
+        // The User Agent writes by reference.
+        var (put, reference) = api.PayloadPut(module, Text, 1, System.Text.Encoding.UTF8.GetBytes("from the User Agent"));
+        result["PayloadPut"] = $"{put}; {(reference?.StartsWith("aif:payload/") == true ? "an aif:payload reference" : reference)}";
+        result["a codec resolves it"] = Mpai.Aif.PortData.PayloadReferences.TryResolve(reference) is { } bytes
+            ? System.Text.Encoding.UTF8.GetString(bytes) : "not resolved";
+        api.InputWrite(module, Text, 1, ContinuousAims.Entry(null, reference, 19), 2000);
+        var fromUa = api.OutputRead(module, Text, 2, 2000);
+        api.OutputRead(module, Text, 1, 2000);
+        result["TST-PRD, given the User Agent's text by reference"] = $"{fromUa.Json} bytes";
+        result["held at the end"] = api.PayloadsHeld(module).ToString();
+        result["a codec, a reference no Controller holds"] = Mpai.Aif.PortData.PayloadReferences.TryResolve("aif:payload/none/1") is null ? "not resolved" : "resolved";
+        api.StopFlow(module);
+
+        Expected.Match("continuous-payloads.json", result);
+    }
+
     // Each test Module: whether it starts, and what one exchange on it returns.
     [Fact]
     public void Today()
@@ -300,8 +339,8 @@ public sealed class ContinuousAims : IAimProvider
             "1TST-THS-V1.0-I01" => Aim(aimName, m => Interlocked.Increment(ref thrown) <= 2
                                                       ? throw new InvalidOperationException("TST-THS throws")
                                                       : Out(("Survived", In(m, "Text")))),
-            "1TST-PWR-V1.0-I01" => Aim(aimName, m => Out(("Payload", In(m, "Text")))),
-            "1TST-PRD-V1.0-I01" => Aim(aimName, m => Out(("Length", In(m, "Payload").Length.ToString()))),
+            "1TST-PWR-V1.0-I01" => new PayloadWriter(aimName),
+            "1TST-PRD-V1.0-I01" => new PayloadReader(aimName),
             "1TST-PVA-V1.0-I01" => Aim(aimName, m => Out(("Private", "A"))),
             "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out(("Private", "B"))),
             _ => throw new InvalidOperationException($"No test AIM {aimName}.")
@@ -315,6 +354,63 @@ public sealed class ContinuousAims : IAimProvider
     private static IAimProcessor Aim(string id, Func<Message, Message> run) => new Processor(id, m => Task.FromResult(run(m)));
 
     private static IAimProcessor Aim(string id, Func<Message, Task<Message>> run) => new Processor(id, run);
+
+    // An Object of TST-TXT-V1.0 whose data is one entry, inline or by reference,
+    // as a media Object's schema allows.
+    public static string Entry(byte[]? inline, string? reference, int length) =>
+        reference is not null
+            ? $"{{\"Entries\": [{{\"DataLength\": {length}, \"DataURI\": \"{reference}\"}}]}}"
+            : $"{{\"Entries\": [{{\"Data\": \"{Convert.ToBase64String(inline!)}\"}}]}}";
+
+    // The data of such an Object, resolving and releasing a reference.
+    public static byte[] DataOf(IAimPorts ports, string json)
+    {
+        var entry = System.Text.Json.Nodes.JsonNode.Parse(json)!["Entries"]![0]!;
+        if (entry["DataURI"] is { } uri)
+        {
+            var reference = uri.GetValue<string>();
+            var data = ports.GetPayload(reference).ToArray();
+            ports.ReleasePayload(reference);
+            return data;
+        }
+        return Convert.FromBase64String(entry["Data"]!.GetValue<string>());
+    }
+
+    // TST-PWR: for each text, a payload of 100 000 bytes and the text, written by
+    // reference and inline in turn. A text given by reference is resolved.
+    private sealed class PayloadWriter(string id) : IAimProcessor, IAimRunner
+    {
+        public string InstanceId { get; } = id;
+        public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("TST-PWR runs continuously.");
+
+        public async Task RunAsync(IAimPorts ports, AimContext context)
+        {
+            for (var n = 1; ; n++)
+            {
+                var m = await ports.ReadAsync(ContinuousTests.Text);
+                if (m is null) return;
+                var text = m.Json.Contains("Entries") ? System.Text.Encoding.UTF8.GetString(DataOf(ports, m.Json)) : m.Json;
+                var data = System.Text.Encoding.UTF8.GetBytes(new string('p', 100_000) + text);
+                var json = n % 2 == 1
+                    ? Entry(null, ports.PutPayload(ContinuousTests.Text, 1, data), data.Length)
+                    : Entry(data, null, data.Length);
+                await ports.WriteAsync(ContinuousTests.Text, 1, json);
+            }
+        }
+    }
+
+    // TST-PRD: the length of what it is given, inline or by reference.
+    private sealed class PayloadReader(string id) : IAimProcessor, IAimRunner
+    {
+        public string InstanceId { get; } = id;
+        public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("TST-PRD runs continuously.");
+
+        public async Task RunAsync(IAimPorts ports, AimContext context)
+        {
+            while (await ports.ReadAsync(ContinuousTests.Text) is { } m)
+                await ports.WriteAsync(ContinuousTests.Text, 1, DataOf(ports, m.Json).Length.ToString());
+        }
+    }
 
     private sealed class Processor(string instanceId, Func<Message, Task<Message>> run) : IAimProcessor
     {

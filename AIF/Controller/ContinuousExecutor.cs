@@ -48,8 +48,12 @@ public sealed class ContinuousExecutor
         this.transports = transports;
         this.clock = clock ?? SystemClock.Instance;
         module = moduleInstance;
+        Payloads = new PayloadStore(this.clock);
         Plan(defaultTransport);
     }
+
+    // The payload store of this Module instance (M3215 3.6).
+    public PayloadStore Payloads { get; }
 
     // The leaf AIMs, as the Controller checks them at Start (M3215 3.5).
     public IEnumerable<DescriptorNode> Aims => leaves.Values;
@@ -187,6 +191,17 @@ public sealed class ContinuousExecutor
 
     public void Start()
     {
+        // A Message a reader loses releases, for that reader, what it references.
+        foreach (var transport in transports.Values.OfType<ChannelTransport>())
+        {
+            var before = transport.Lost;
+            transport.Lost = (spec, message) =>
+            {
+                before?.Invoke(spec, message);
+                if (spec.Module == module) foreach (var reference in message.Payloads) Payloads.Release(reference);
+            };
+        }
+
         foreach (var spec in channels)
         {
             var transport = transports[spec.Transport];
@@ -219,7 +234,10 @@ public sealed class ContinuousExecutor
         if (!writers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return AifError.NoSuchPort;
         var all = true;
         foreach (var end in ends)
-            all &= await end.WriteAsync(new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json }, timeoutMs);
+            all &= await end.WriteAsync(new PortMessage
+            {
+                DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json)
+            }, timeoutMs);
         return all ? AifError.OK : AifError.Timeout;
     }
 
@@ -227,7 +245,15 @@ public sealed class ContinuousExecutor
     {
         if (!readers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return (AifError.NoSuchPort, null);
         var message = await ReadAnyAsync(ends, timeoutMs, CancellationToken.None);
-        return message is null ? (AifError.NotProduced, null) : (AifError.OK, message.Json);
+        return message is null ? (AifError.NotProduced, null) : (AifError.OK, Payloads.Inline(message.Json));
+    }
+
+    // MPAI_AIFU_Payload_Put: the User Agent places a payload for a boundary Input
+    // Port, and writes its Object with the reference returned.
+    public (AifError, string?) PutBoundaryPayload(string dataType, int portNumber, ReadOnlyMemory<byte> data)
+    {
+        var spec = channels.FirstOrDefault(c => c.Writer == new PortEnd("", dataType, portNumber));
+        return spec is null ? (AifError.NoSuchPort, null) : (AifError.OK, Payloads.Put(spec, data));
     }
 
     // What every Channel carried: written, and at each reader taken, dropped,
@@ -333,7 +359,7 @@ public sealed class ContinuousExecutor
             host.Stopping.ThrowIfCancellationRequested();
             foreach (var (port, ends) in inputs)
                 foreach (var end in ends)
-                    while (end.TryRead(out var message) && message is not null) inbox[port.Name] = message.Json;
+                    while (end.TryRead(out var message) && message is not null) inbox[port.Name] = Payloads.Inline(message.Json);
         }
         else
         {
@@ -366,7 +392,7 @@ public sealed class ContinuousExecutor
 
             foreach (var (port, ends) in inputs)
                 foreach (var end in ends)
-                    if (end.TryRead(out var message) && message is not null) { inbox[port.Name] = message.Json; break; }
+                    if (end.TryRead(out var message) && message is not null) { inbox[port.Name] = Payloads.Inline(message.Json); break; }
         }
 
         var clockAtStart = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -478,8 +504,10 @@ public sealed class ContinuousExecutor
             if (!executor.writers.TryGetValue(end, out var writers)) return true;   // connected to nothing
             var all = true;
             foreach (var writer in writers)
-                all &= await writer.WriteAsync(new PortMessage { DataType = end.DataType, PortNumber = end.PortNumber, Json = json },
-                                               timeoutMs, executor.host.Stopping);
+                all &= await writer.WriteAsync(new PortMessage
+                {
+                    DataType = end.DataType, PortNumber = end.PortNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json)
+                }, timeoutMs, executor.host.Stopping);
             return all;
         }
 
@@ -507,5 +535,20 @@ public sealed class ContinuousExecutor
         public long Dropped(string dataType, int portNumber = 1) => Readers(dataType, portNumber).Sum(r => r.Dropped + r.Discarded);
 
         public DateTimeOffset Now => executor.clock.Now;
+
+        public string PutPayload(string dataType, int portNumber, ReadOnlyMemory<byte> data)
+        {
+            var end = End("Output", dataType, portNumber);
+            var spec = executor.channels.FirstOrDefault(c => c.Writer == end)
+                ?? throw new InvalidOperationException($"{end} writes no Channel.");
+            return executor.Payloads.Put(spec, data);
+        }
+
+        public ReadOnlyMemory<byte> GetPayload(string reference) =>
+            executor.Payloads.TryGet(reference, out var data)
+                ? data
+                : throw new KeyNotFoundException($"{reference} is not held: released, past its MaxAge, or not issued by this Controller.");
+
+        public void ReleasePayload(string reference) => executor.Payloads.Release(reference);
     }
 }
