@@ -4,4 +4,6 @@
   <ItemGroup><ProjectReference Include="..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" /></ItemGroup>
   <!-- The xUnit test project lives in a subfolder of this one; its files are its own. -->
   <ItemGroup><Compile Remove="Mpai.Aif.Tests\**" /><None Remove="Mpai.Aif.Tests\**" /></ItemGroup>
+  <!-- Test\legacy holds programs of their own. -->
+  <ItemGroup><Compile Remove="legacy\**" /><None Remove="legacy\**" /></ItemGroup>
 </Project>

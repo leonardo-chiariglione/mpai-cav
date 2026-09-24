@@ -38,8 +38,8 @@ $informativeBuilds = @(
     'MPAIApps\StoreService\StoreService.csproj',
     'MPAIApps\StoreApp\StoreApp.csproj'
 )
-# Left out, and recorded: MPAIApps\RcaConsole\src\RcaConsole.csproj does not build
-# today (DeviceRegistry.Acquire changed under it).
+# The programs in legacy (and Test\legacy) are not built: MAS-App replaced them
+# (M3209). legacy\RcaConsole does not build (DeviceRegistry.Acquire changed under it).
 
 $blocking    = [System.Collections.Generic.List[string]]::new()
 $informative = [System.Collections.Generic.List[string]]::new()
@@ -58,7 +58,6 @@ foreach ($p in $blockingBuilds) {
 foreach ($p in $informativeBuilds) {
     if (Build $p) { $informative.Add("PASS  build  $p") } else { $informative.Add("FAIL  build  $p") }
 }
-$informative.Add("----  build  MPAIApps\RcaConsole\src\RcaConsole.csproj (left out: does not build today)")
 
 # Runs the tests a filter selects and returns one line per test, from the .trx report.
 function RunTests([string]$filter, [string]$name) {

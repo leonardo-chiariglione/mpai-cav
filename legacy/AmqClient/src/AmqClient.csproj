@@ -38,16 +38,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
-    <ProjectReference Include="..\..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
-    <ProjectReference Include="..\..\..\..\MW\MasClient\Mpai.Mas.Client.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
+    <ProjectReference Include="..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\AIF\V3.0\src\AIF.Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\MW\MasClient\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
   </ItemGroup>
 
 </Project>
