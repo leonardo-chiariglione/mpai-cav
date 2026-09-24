@@ -1,0 +1,9 @@
+{
+  "Machine": "development machine of the author (Windows 10 Pro, 12 cores, 32 GB)",
+  "Measured": "2026/09/24 (M3206 Section 2)",
+  "Seconds": {
+    "typed MAD turn": 1.0,
+    "spoken MAD turn": 3.1,
+    "AMQ question": 1.1
+  }
+}
