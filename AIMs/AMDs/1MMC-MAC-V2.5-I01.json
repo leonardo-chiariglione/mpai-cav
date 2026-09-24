@@ -4,6 +4,7 @@
                        "ImplementationID":  "MMC-MAC-V2.5-I01",
                        "AIMName": "1MMC-MAC-V2.5-I01"
                    },
+    "Header":      "MMC-MAC-V2.5",
     "APIProfile":  "Basic",
     "Description":  "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent\u0027s clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs.",
     "InternalTypes":  [
@@ -22,7 +23,8 @@
                           {
                               "Name":  "PersonalStatus",
                               "DataType":  "MMC-EPS-V2.5"
-                          }
+                          },
+                          {"Name": "ResponseText", "DataType": "OSD-BTO-V1.5", "Output": 1}
                       ],
     "ExternalPorts":  [
                           {
@@ -68,7 +70,7 @@
                           {
                               "Name":  "Identification",
                               "Direction":  "Output",
-                              "DataType":  "Boolean",
+                              "DataType":  "boolean",
                               "Technology":  "Software",
                               "Protocol":  "",
                               "IsRemote":  false
@@ -79,28 +81,32 @@
                         "Identifier":  {
                                            "ImplementerID": "1",
                                            "ImplementationID":  "PAF-FIR-V1.6-I01",
-                                           "AIMName": "1PAF-FIR-V1.6-I01"
+                                           "AIMName": "1PAF-FIR-V1.6-I01",
+                                           "Relation": "Internal"
                                        }
                     },
                     {
                         "Identifier":  {
                                            "ImplementerID": "1",
                                            "ImplementationID":  "MMC-SIR-V2.5-I01",
-                                           "AIMName": "1MMC-SIR-V2.5-I01"
+                                           "AIMName": "1MMC-SIR-V2.5-I01",
+                                           "Relation": "Internal"
                                        }
                     },
                     {
                         "Identifier":  {
                                            "ImplementerID": "1",
                                            "ImplementationID":  "OSD-IDR-V1.5-I01",
-                                           "AIMName": "1OSD-IDR-V1.5-I01"
+                                           "AIMName": "1OSD-IDR-V1.5-I01",
+                                           "Relation": "Internal"
                                        }
                     },
                     {
                         "Identifier":  {
                                            "ImplementerID": "1",
                                            "ImplementationID":  "PAF-RSR-V1.6-I01",
-                                           "AIMName": "1PAF-RSR-V1.6-I01"
+                                           "AIMName": "1PAF-RSR-V1.6-I01",
+                                           "Relation": "Internal"
                                        }
                     }
                 ],
@@ -160,23 +166,11 @@
                      {
                          "Output":  {
                                         "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "Response"
+                                        "PortName":  "ResponseText"
                                     },
                          "Input":  {
                                        "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "Response",
-                                       "PortNumber":  1
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "Response"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "Response",
-                                       "PortNumber":  2
+                                       "PortName":  "ResponseText"
                                    }
                      },
                      {
@@ -222,7 +216,7 @@
                  ],
     "Implementations":  [
                             {
-                                "ImplementationURI":  "file:///D:/BI/AIMs/MMC-MAC-V2.5-I01",
+                                "ImplementationURI":  "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-MAC-V2.5-I01.json",
                                 "MASPort":  443,
                                 "BinaryName":  "Mpai.Mmc.Mac",
                                 "Architecture":  "x86-64",

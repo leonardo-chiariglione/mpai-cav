@@ -1,7 +1,7 @@
 {
   "Autonomous Motion (AMS)": "L2 CAV-AMS-V1.1 not in this repository; no L3 1CAV-AMS-V1.1-I01; not run",
   "CAV (Connected Autonomous Operation)": "L2 CAV-CAO-V1.1 not in this repository; no L3 1CAV-CAO-V1.1-I01; not run",
-  "Environment Sensing (ESS)": "L2 CAV-ESS-V1.1 present; code for 0 of 8 Sub-AIMs; L3 1CAV-ESS-V1.1-I01 does not load; its Topology has a loop, so the exchange executor cannot run it; not run",
-  "Human-CAV Interaction (HCI)": "L2 MMC-HCI-V2.5 present; code for 6 of 12 Sub-AIMs (OSD-AVA-V1.5, MMC-ASR-V2.5, PAF-FIR-V1.6, MMC-SIR-V2.5, MMC-NLU-V2.5, MMC-EDP-V2.5); L3 1MMC-HCI-V2.5-I01 does not load; no loop; not run",
+  "Environment Sensing (ESS)": "L2 CAV-ESS-V1.1 present; code for 0 of 8 Sub-AIMs; L3 1CAV-ESS-V1.1-I01 loads; its Topology has a loop, so the exchange executor cannot run it; not run",
+  "Human-CAV Interaction (HCI)": "L2 MMC-HCI-V2.5 present; code for 6 of 12 Sub-AIMs (OSD-AVA-V1.5, MMC-ASR-V2.5, PAF-FIR-V1.6, MMC-SIR-V2.5, MMC-NLU-V2.5, MMC-EDP-V2.5); L3 1MMC-HCI-V2.5-I01 loads; no loop; not run",
   "Motion Actuation (MAS)": "L2 CAV-MAS-V1.1 not in this repository; no L3 1CAV-MAS-V1.1-I01; not run"
 }

@@ -56,7 +56,7 @@ public sealed class IdrAimProcessor : IAimProcessor
         // the words the avatar speaks and the expression it wears. A User Agent
         // cannot read a verdict from an utterance, and one generated from
         // Metadata cannot try.
-        _identificationPort = ports.Output("Boolean");
+        _identificationPort = ports.Output("boolean");
     }
 
     public async Task<Message> ProcessAsync(Message message)

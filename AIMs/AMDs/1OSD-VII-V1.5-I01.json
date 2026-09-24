@@ -1,4 +1,5 @@
 { "Identifier":       { "ImplementerID": "1", "ImplementationID": "OSD-VII-V1.5-I01", "AIMName": "1OSD-VII-V1.5-I01" },
+  "Header":           "OSD-VII-V1.5",
 
   "APIProfile":       "Basic",
   "Description":      "Visual Instance Identification: receives a Target Visual Object and produces its Visual Instance Identifier (OSD-IID). Runs a YOLOX object classifier on the object image and emits the highest-confidence class as the instance identity against a flat [visual, object, class] taxonomy.",
@@ -10,7 +11,7 @@
 
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/AIMs/OSD-VII-V1.5-I01",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/VII",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Osd.Vii",
                         "Architecture":      "x86-64",

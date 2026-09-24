@@ -1,4 +1,5 @@
 { "Identifier":       { "ImplementerID": "1", "ImplementationID": "PAF-PSD-V1.6-I01", "AIMName": "1PAF-PSD-V1.6-I01" },
+  "Header":           "PAF-PSD-V1.6",
 
   "APIProfile":       "Basic",
   "Description":      "Personal Status De-multiplexing: the inverse of Personal Status Multiplexing. Splits one Entity Personal Status (the machine's) into the per-modality Personal Statuses - Speech, Face, and Gesture - for the Response and Scene Rendering composite. It de-multiplexes; it does not compute.",
@@ -11,9 +12,9 @@
   "SubAIMs":          [],
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/AIMs/PAF-PSD-V1.6-I01", "MASPort": 443, "BinaryName": "Mpai.Paf.Psd", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.6", "Source": "AIMStorage"}],
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/PSD", "MASPort": 443, "BinaryName": "Mpai.Paf.Psd", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.6", "Source": "AIMStorage"}],
 
-  "ResourcePolicies": [{"Name": "Memory", "Minimum": "0.25 GB", "Request": "0.5 GB", "Maximum": "1 GB"}, {"Name": "CPU:Class", "Minimum": "Low", "Request": "Low", "Maximum": "Medium"}],
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.25 GB", "Request": "0.5 GB", "Maximum": "1 GB"}, {"Name": "CPU:Class", "Minimum": "Low",     "Request": "Low",    "Maximum": "Medium"}],
 
   "DataXMData":       {},
   "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}

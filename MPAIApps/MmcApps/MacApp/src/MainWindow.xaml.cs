@@ -156,8 +156,8 @@ public partial class MainWindow : Window
             // sentence for the word "granted" - so rewording the utterance, or
             // translating it, or enrolling somebody whose name contained the word,
             // would have changed who was admitted. MMC-MAC now declares the verdict
-            // at its boundary as a Boolean, decided by OSD-IDR where it always was.
-            var ij = result.ByType("Boolean");
+            // at its boundary as a boolean (the AIF type system), decided by OSD-IDR where it always was.
+            var ij = result.ByType("boolean");
             bool granted = !string.IsNullOrWhiteSpace(ij) &&
                            ij.Trim().Equals("true", System.StringComparison.OrdinalIgnoreCase);
             string banner = string.IsNullOrWhiteSpace(responseText)

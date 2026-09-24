@@ -1,44 +1,44 @@
 {
   "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ACR-V2.5-I01", "AIMName": "1MMC-ACR-V2.5-I01" },
+  "Header":     "MMC-ACR-V2.5",
   "APIProfile": "Basic",
   "Description": "MMC Access Control Registration (ACR) Module. Enrols a User: from the captured Face Object and Speech Object it produces the Face Descriptors (Entity Face Description) and Speech Descriptors (Entity Speech Description), which the descriptor AIMs write to the Shared Storage gallery under the User Name - the same gallery MMC-MAC reads to recognise. Response and Scene Rendering speaks the confirmation. The User Name is the User Agent's own datum (typed). Acquisition and delivery are the User Agent, not sub-AIMs. Where a data type occurs more than once at the boundary it carries a Port Number (OSD-STM: FaceTime 1 / SpeechTime 2; OSD-BTO: Response 1 / UserName 2).",
 
   "InternalTypes": [],
 
   "ExternalPorts": [
-    { "Name": "FaceObject",              "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "FaceTime",                "Direction": "Input",  "DataType": "OSD-STM-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "SpeechObject",            "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "SpeechTime",              "Direction": "Input",  "DataType": "OSD-STM-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "PersonalStatus",          "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "Response",                "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "UserName",                "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "VocalResponse",           "Direction": "Output", "DataType": "OSD-BSO-V1.5",                  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "MachineFaceDescriptors",  "Direction": "Output", "DataType": "PAF-FDO-V1.6",                  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "FaceObject",             "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                               "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "FaceTime",               "Direction": "Input",  "DataType": "OSD-STM-V1.5",              "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "SpeechObject",           "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                               "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "SpeechTime",             "Direction": "Input",  "DataType": "OSD-STM-V1.5",              "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "PersonalStatus",         "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                               "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "Response",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Output": 1, "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "UserName",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5",              "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "VocalResponse",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                               "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                               "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs": [
-    { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-EFD-V1.6-I01", "AIMName": "1PAF-EFD-V1.6-I01" } },
-    { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ESD-V2.5-I01", "AIMName": "1MMC-ESD-V2.5-I01" } },
-    { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01" } }
+    { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-EFD-V1.6-I01", "AIMName": "1PAF-EFD-V1.6-I01", "Relation": "Internal" } },
+    { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ESD-V2.5-I01", "AIMName": "1MMC-ESD-V2.5-I01", "Relation": "Internal" } },
+    { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } }
   ],
 
   "Topology": [
-    { "Output": { "AIMName": "",             "PortName": "FaceObject"   }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "FaceObject"   } },
-    { "Output": { "AIMName": "",             "PortName": "FaceTime",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "FaceTime" } },
-    { "Output": { "AIMName": "",             "PortName": "SpeechObject" }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "SpeechObject" } },
-    { "Output": { "AIMName": "",             "PortName": "SpeechTime", "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "SpeechTime" } },
-    { "Output": { "AIMName": "",             "PortName": "UserName",   "PortNumber": 2 }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "UserName" } },
-    { "Output": { "AIMName": "",             "PortName": "UserName",   "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "UserName" } },
-    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Response", "PortNumber": 1 } },
-    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Response", "PortNumber": 2 } },
-    { "Output": { "AIMName": "",             "PortName": "PersonalStatus" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "PersonalStatus" } },
+    { "Output": { "AIMName": "",                  "PortName": "FaceObject" },                             "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "FaceObject" } },
+    { "Output": { "AIMName": "",                  "PortName": "FaceTime",              "PortNumber": 1 }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "FaceTime" } },
+    { "Output": { "AIMName": "",                  "PortName": "SpeechObject" },                           "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "SpeechObject" } },
+    { "Output": { "AIMName": "",                  "PortName": "SpeechTime",            "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "SpeechTime" } },
+    { "Output": { "AIMName": "",                  "PortName": "UserName",              "PortNumber": 2 }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "UserName" } },
+    { "Output": { "AIMName": "",                  "PortName": "UserName",              "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "UserName" } },
+    { "Output": { "AIMName": "",                  "PortName": "Response",              "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Response" } },
+    { "Output": { "AIMName": "",                  "PortName": "PersonalStatus" },                         "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "PersonalStatus" } },
 
-    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "VocalResponse"          }, "Input": { "AIMName": "", "PortName": "VocalResponse" } },
-    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineFaceDescriptors" }, "Input": { "AIMName": "", "PortName": "MachineFaceDescriptors" } }
+    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "VocalResponse" },                          "Input": { "AIMName": "",                  "PortName": "VocalResponse" } },
+    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineFaceDescriptors" },                 "Input": { "AIMName": "",                  "PortName": "MachineFaceDescriptors" } }
   ],
 
-  "Implementations": [{ "ImplementationURI": "", "MASPort": 0, "BinaryName": "", "Architecture": "", "OperatingSystem": "", "Version": "V2.5", "Source": "" }],
+  "Implementations": [{ "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-ACR-V2.5-I01.json", "MASPort": 443, "BinaryName": "Mpai.Mmc.Acr", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage" }],
 
   "ResourcePolicies": [],
   "Documentation": [ { "Type": "Specification", "URI": "" } ]
