@@ -34,7 +34,7 @@
 
     <!-- The MAS client: this Service is itself a client when a Sub-AIM runs on
          another machine (RemoteAims). -->
-    <ProjectReference Include="..\..\Client\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\..\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
     <!-- MMC-AMQ leaves, plus the RSR leaves so the avatar can speak -->
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />

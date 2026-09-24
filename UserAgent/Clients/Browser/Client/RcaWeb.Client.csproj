@@ -22,10 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MW\Wdl\Mpai.Wdl.csproj" />
-    <ProjectReference Include="..\..\..\MW\Rca\Mpai.Rca.csproj" />
-    <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\..\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
   </ItemGroup>
 
 </Project>

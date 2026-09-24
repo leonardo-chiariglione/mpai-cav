@@ -65,7 +65,7 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 - A **provider** (a small switch class per app) constructs the leaf AIMs named by
   the Module's L3.
 - The UA's behaviour is described by a **WDL** guidebook, the `.orch` file under
-  `UAs/Orchestration/`, which the UA code realises.
+  `UserAgent/Orchestration/`, which the UA code realises.
 
 ### How the three apps are composed
 
@@ -93,12 +93,15 @@ AIMs/           AI Modules
   AMDs/         L3 Module descriptors (JSON)
   Core/         shared types (data objects, qualifiers, JSON, paths)
   <family>/     the AIMs (MMC, PAF, OSD, CAE3, CVE ...)
-MAS/            MPAI-MAS: Server, Client, the Service (MasService) and the Store (Service, App)
-MAS/            MPAI-MAS: Server, Client, the Service (MasService) and the Store (Service, App)
-UAs/
-  Lib/UaKit/    Speaking-Avatar host, capture/present toolkit
-  Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD)
+MAS/            MPAI-MAS: Server, the Service (MasService) and the Store (Service, App)
+UserAgent/      the User Agent
+  Wdl/          the WDL reader
+  Rca/          the workflow interpreter
+  Remote/       the Controller API across MPAI-MAS (the UA, or a Controller, reaching a remote Controller)
+  UaKit/        Speaking-Avatar host, capture/present toolkit
+  Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD, MPAI-MAS)
   Assets/       avatar assets (glb, viewer HTML)
+  Clients/      the MAS-App clients: Desktop (WPF) and Browser (Blazor Client and its Host)
 MPAIApps/HCIApps/{MacApp,AcrApp,MadApp,MatApp}/   the applications (src + docs + build)
 schemas/        JSON schemas of the AIF data types
 ```
@@ -128,7 +131,7 @@ MPAIApps\HCIApps\AcrApp\AcrAppBuild.bat     ->  AcrApp.exe
 MPAIApps\HCIApps\MadApp\MadAppBuild.bat     ->  MadApp.exe
 ```
 
-An application resolves its root (to find `AIMs/`, `Models/`, `UAs/`,
+An application resolves its root (to find `AIMs/`, `Models/`, `UserAgent/`,
 `SharedStorage/`) from the executable's location. For the full per-application
 build closure (which projects, L3s, schemas and models are required), see that
 application's **Developer** guide. MAD additionally requires Ollama running with

@@ -70,7 +70,7 @@ public partial class MainWindow : Window
     // chosen before any App is: it is read from this client's Orchestration
     // folder, and the Service does not offer it as an App.
     private static readonly string MasWorkflowPath =
-        Path.Combine(MpaiPaths.Root, "UAs", "Orchestration", "MPAI-MAS.orch");
+        Path.Combine(MpaiPaths.Root, "UserAgent", "Orchestration", "MPAI-MAS.orch");
     private Task?                    _running;
     private TaskCompletionSource?    _awaiting;
     private string?                  _appId;
@@ -444,7 +444,7 @@ public partial class MainWindow : Window
         {
             Title = "Workflow Description",
             Filter = "Workflow Description (*.orch)|*.orch|All files (*.*)|*.*",
-            InitialDirectory = Path.Combine(MpaiPaths.Root, "UAs", "Orchestration")
+            InitialDirectory = Path.Combine(MpaiPaths.Root, "UserAgent", "Orchestration")
         };
         if (dialog.ShowDialog() == true) Load(dialog.FileName);
     }

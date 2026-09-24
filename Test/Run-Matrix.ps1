@@ -33,8 +33,8 @@ $blockingBuilds = @(
 )
 $informativeBuilds = @(
     'MAS\Service\src\MasService.csproj',
-    'MPAIApps\RcaApp\src\RcaApp.csproj',
-    'MPAIApps\RcaWeb\Host\RcaWeb.Host.csproj',
+    'UserAgent\Clients\Desktop\src\RcaApp.csproj',
+    'UserAgent\Clients\Browser\Host\RcaWeb.Host.csproj',
     'MAS\Store\Service\StoreService.csproj',
     'MAS\Store\App\StoreApp.csproj'
 )

@@ -200,7 +200,7 @@ public class WorkflowTests
     public void Workflows()
     {
         var files = Directory.EnumerateFiles(Path.Combine(Repository.Root, "Apps"), "*.orch", SearchOption.AllDirectories)
-                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "UAs", "Orchestration"), "MPAI-MAS.orch"))
+                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "UserAgent", "Orchestration"), "MPAI-MAS.orch"))
                              .OrderBy(f => f, StringComparer.Ordinal);
 
         var result = new Dictionary<string, string>();

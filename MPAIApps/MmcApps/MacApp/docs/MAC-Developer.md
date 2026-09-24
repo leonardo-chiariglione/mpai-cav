@@ -47,7 +47,7 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
   (`StartFlow`, `Advance` with typed inputs, read typed outputs, `StopFlow`).
 - A **provider** (a small switch class) constructs each sub-AIM the L3 names.
 - The UA's behaviour is described by a **WDL** guidebook, the `.orch` file
-  (`UAs/Orchestration/HCI-MAC.orch`), which the UA code realises.
+  (`UserAgent/Orchestration/HCI-MAC.orch`), which the UA code realises.
 
 ## 3. The MAC Module - `MMC-MAC-V2.5`
 
@@ -88,7 +88,7 @@ compare a live probe embedding against enrolled subjects by cosine similarity.
   -> `Advance` with `(OSD-BSO)` -> read outputs by type (`OSD-BTO` verdict,
   `OSD-BSO` spoken, `PAF-FDO` avatar) -> present verdict -> `StopFlow`.
 - `MacProvider.cs` - the switch: builds FIR/SIR/IDR/PSD/TTS/GFD.
-- Real-world limbs come from `UAs/Lib/UaKit` (`AvatarUaHost`): the WebView 3-D
+- Real-world limbs come from `UserAgent/UaKit` (`AvatarUaHost`): the WebView 3-D
   avatar, microphone capture, and `PresentAsync` (speak + animate).
 
 **Face capture is tagged `VisualObjectType = "Face"`** at acquisition (the app
@@ -100,12 +100,12 @@ Visual acquisition uses **native Windows Media Capture** (no OpenCV).
 
 - **App:** `MPAIApps/MmcApps/MacApp/*`
 - **Framework (AIF):** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
-- **UA library / Controller API:** `UAs/Lib/UaKit`; `AIF/ControllerApi` (`ControllerApi`)
+- **UA library / Controller API:** `UserAgent/UaKit`; `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`, and the leaves `PAF/V1.6/FIR`, `MMC/V2.5/SIR`,
   `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices
   `CAE3/V1.0/AOA(.Windows)`, `MMC/V2.5/SOD(.Windows)`, visual `CVE/V1.0/VOA.Windows`
 - **L3s:** `AIMs/AMDs/1MMC-MAC-V2.5-I01.json` + the sub-AIM AMDs
-- **Orchestration:** `UAs/Orchestration/HCI-MAC.orch`
+- **Orchestration:** `UserAgent/Orchestration/HCI-MAC.orch`
 - **Schemas:** the JSON schemas under `schemas/` reachable from MAC's data types
 - **Settings:** `AIMs/aim-settings.json` - `MMC-TTS-V2.5` (Piper voice),
   `MMC-SOA-V2.5` (capture duration), and the FIR/SIR model settings.
@@ -121,7 +121,7 @@ MPAIApps\MmcApps\MacApp\src\bin\Release\net10.0-windows10.0.19041.0\MacApp.exe
 
 The application root is resolved at runtime from the executable location
 (`MpaiPaths.FindRoot`), so a single-file build finds its `AIMs/`, `Models/`,
-`UAs/` and `SharedStorage/` alongside the deployment.
+`UserAgent/` and `SharedStorage/` alongside the deployment.
 
 ## Models & Prerequisites
 
@@ -148,6 +148,6 @@ Install the Piper voice under `Models\Piper\voices\en_US-amy-medium\`. The Piper
 
 MAC is also offered as **MAC.zip**: the application, the 28 projects it references transitively, the Module descriptors, the schemas, the avatar assets and these guides - and nothing belonging to another application. No models, no gallery, no credentials. Unzip it anywhere, place the models under `Models\`, and run `MacAppBuild.bat`. MAC needs a gallery: enrol with ACR first.
 
-**A setting that names a path is resolved against the application's own root** - the directory holding `AIMs\` and `UAs\`, found from the executable's location. A relative setting works wherever the folder is placed; an absolute one binds the installation to one machine.
+**A setting that names a path is resolved against the application's own root** - the directory holding `AIMs\` and `UserAgent\`, found from the executable's location. A relative setting works wherever the folder is placed; an absolute one binds the installation to one machine.
 
 **An ONNX model is often two files.** The `.onnx` holds the network's structure and may be a megabyte; an `.onnx.data` beside it holds the weights and may be hundreds.

@@ -18,7 +18,7 @@
     <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
-    <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\UserAgent\UaKit\Mpai.UaKit.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\TTT\Mpai.Mmc.Ttt.csproj" />

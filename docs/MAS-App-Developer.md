@@ -11,15 +11,15 @@ using it, see the [User Guide](MAS-App-User.md); for an overview, see
 | Part | Project | Role |
 |---|---|---|
 | Service | `MAS/Service/src` | Hosts the Controller and the Modules; speaks MPAI-MAS over HTTPS; offers the Apps. |
-| Desktop client | `MPAIApps/RcaApp/src` | WPF. The User Agent: interprets workflows, captures, renders the avatar (WebView2). |
-| Browser client | `MPAIApps/RcaWeb/Client` | Blazor WebAssembly. The same User Agent, in a browser. |
-| Browser host | `MPAIApps/RcaWeb/Host` | Serves the browser client and the avatar page, and forwards `/MPAI/AIFU/...` to the Service, so the browser sees one origin. |
+| Desktop client | `UserAgent/Clients/Desktop/src` | WPF. The User Agent: interprets workflows, captures, renders the avatar (WebView2). |
+| Browser client | `UserAgent/Clients/Browser/Client` | Blazor WebAssembly. The same User Agent, in a browser. |
+| Browser host | `UserAgent/Clients/Browser/Host` | Serves the browser client and the avatar page, and forwards `/MPAI/AIFU/...` to the Service, so the browser sees one origin. |
 | Apps | `Apps/MAD`, `AMQ`, `MAT`, `MPD` | Each: a workflow (`.orch`), `app.json`, an icon. |
-| MPAI-MAS | `UAs/Orchestration/MPAI-MAS.orch` | The client's own workflow: the container the Apps run in. Not an App. |
+| MPAI-MAS | `UserAgent/Orchestration/MPAI-MAS.orch` | The client's own workflow: the container the Apps run in. Not an App. |
 
 Shared software: the Controller (`AIF/`), the AIMs and their L3s (`AIMs/`), the
-middleware (`MW/`), the desktop avatar library (`UAs/Lib/UaKit`), the avatar
-assets (`UAs/Assets`), the schemas (`schemas/`).
+User Agent (`UserAgent/`: the WDL reader, the interpreter, the remote Controller API,
+the desktop avatar library `UaKit` and the avatar assets), the schemas (`schemas/`).
 
 ## 2. How a turn travels
 
@@ -125,14 +125,14 @@ Both clients register **sources** (acquire) and **presenters** (present) with a
 
 - **Desktop** (`RcaApp`): sources are the microphone with voice activity
   detection (via UaKit), the text box, the App list, the language picker, a
-  file or the webcam; the avatar is `UAs/Assets/cav-webview.html` in WebView2.
+  file or the webcam; the avatar is `UserAgent/Assets/cav-webview.html` in WebView2.
   `MPAI_MAS_SERVER` sets the Service address (default `https://localhost:5005/`).
 - **Browser** (`RcaWeb/Client`): the same sources and presenters, with the
   capture in `wwwroot/js/rca.js` (the microphone runs from Start and keeps the
   last second heard; typing ends listening). A browser never lets WebAssembly
   block, so this client has its own asynchronous Controller API client
   (`Mas/AsyncControllerApi.cs`) and an asynchronous copy of the interpreter
-  (`Wdl/AsyncWorkflowInterpreter.cs`), otherwise identical to `MW/Rca`'s.
+  (`Wdl/AsyncWorkflowInterpreter.cs`), otherwise identical to `UserAgent/Rca`'s.
 - **Host** (`RcaWeb/Host`): serves the avatar page with its asset addresses and
   messaging adapted for a browser as it is sent, and forwards `/MPAI/AIFU/...`.
 

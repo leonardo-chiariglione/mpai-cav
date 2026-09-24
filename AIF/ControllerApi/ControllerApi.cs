@@ -17,7 +17,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 {
     // THE FRAMEWORK OFFERS THE PLACE; THIS KNOWS WHAT TO LOOK FOR. AIF.Controller
     // routes Data Types and payloads and does not know what an MPAI Object is.
-    // MW knows both, so the inspector is installed here - once, for every
+    // The Controller API knows both, so the inspector is installed here - once, for every
     // application and both servers, since all of them construct a ControllerApi.
     static ControllerApi()
     {

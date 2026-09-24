@@ -60,7 +60,7 @@ gallery. The gallery scope is `"MMC-MAC-V2.5"` - the same scope MAC reads.
 
 ## 3. The User Agent
 `MPAIApps/MmcApps/AcrApp/src/` - provider `AcrProvider.cs`, UA
-`MainWindow.xaml.cs` (namespace `AcrApp`), realising `UAs/Orchestration/HCI-ACR.orch`.
+`MainWindow.xaml.cs` (namespace `AcrApp`), realising `UserAgent/Orchestration/HCI-ACR.orch`.
 It drives the Module through the **Controller API** (`ControllerApi`), addressing data only
 by type:
 
@@ -75,18 +75,18 @@ by type:
 
 The name is **typed by the user** (ASR is unreliable for bare names). Face
 capture is tagged `VisualObjectType = "Face"`; visual acquisition uses **native
-Windows Media Capture** (no OpenCV). Real-world limbs come from `UAs/Lib/UaKit`.
+Windows Media Capture** (no OpenCV). Real-world limbs come from `UserAgent/UaKit`.
 
 ## 4. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/AcrApp/*`
 - **AIF:** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
-- **UA library / Controller API:** `UAs/Lib/UaKit`, `AIF/ControllerApi` (`ControllerApi`)
+- **UA library / Controller API:** `UserAgent/UaKit`, `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`; leaves `PAF/V1.6/EFD`, `MMC/V2.5/ESD`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`, `CVE/V1.0/VOA.Windows`
 - **L3s:** `1MMC-ACR-V2.5-I01.json` + the sub-AIM AMDs (`1PAF-EFD`, `1MMC-ESD`,
   `1PAF-RSR` and its leaves)
-- **Orchestration:** `UAs/Orchestration/HCI-ACR.orch`
+- **Orchestration:** `UserAgent/Orchestration/HCI-ACR.orch`
 - **Schemas:** the JSON schemas reachable from ACR's data types
 - **Settings:** `AIMs/aim-settings.json` (TTS voice, SOA duration, EFD/ESD models)
 - **Models (fetched separately):** SCRFD, ArcFace `glintr100.onnx`, ECAPA
@@ -98,7 +98,7 @@ MPAIApps\MmcApps\AcrApp\AcrAppBuild.bat
 MPAIApps\MmcApps\AcrApp\src\bin\Release\net10.0-windows10.0.19041.0\AcrApp.exe
 ```
 The application root is resolved at runtime from the executable location
-(`MpaiPaths`, first ancestor holding both `AIMs` and `UAs`), so a clone runs in
+(`MpaiPaths`, first ancestor holding both `AIMs` and `UserAgent`), so a clone runs in
 place. ACR **writes** the gallery; **enrolled subjects are not part of the
 distribution** (they are personal data and live only under `SharedStorage/`).
 
@@ -127,6 +127,6 @@ Install the Piper voice under `Models\Piper\voices\en_US-amy-medium\`. The Piper
 
 ACR is also offered as **ACR.zip**: the application, the 28 projects it references transitively, the Module descriptors, the schemas, the avatar assets and these guides - and nothing belonging to another application. No models, no gallery, no credentials. Unzip it anywhere, place the models under `Models\`, and run `AcrAppBuild.bat`.
 
-**A setting that names a path is resolved against the application's own root** - the directory holding `AIMs\` and `UAs\`, found from the executable's location. A relative setting therefore works wherever the folder is placed; an absolute one binds the installation to one machine.
+**A setting that names a path is resolved against the application's own root** - the directory holding `AIMs\` and `UserAgent\`, found from the executable's location. A relative setting therefore works wherever the folder is placed; an absolute one binds the installation to one machine.
 
 **An ONNX model is often two files.** The `.onnx` holds the network's structure and may be a megabyte; an `.onnx.data` beside it holds the weights and may be hundreds. A copy bringing one and not the other produces a model that loads and fails at first use.

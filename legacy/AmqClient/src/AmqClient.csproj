@@ -41,9 +41,9 @@
     <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\UserAgent\UaKit\Mpai.UaKit.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
-    <ProjectReference Include="..\..\..\MAS\Client\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\..\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />

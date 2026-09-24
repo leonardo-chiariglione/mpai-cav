@@ -27,21 +27,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MW\Rca\Mpai.Rca.csproj" />
-    <ProjectReference Include="..\..\..\MW\Wdl\Mpai.Wdl.csproj" />
-    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
-    <ProjectReference Include="..\..\..\MAS\Client\Mpai.Mas.Client.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\..\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\Remote\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\UaKit\Mpai.UaKit.csproj" />
 
     <!-- The devices. Acquisition and delivery are the User Agent's and travel
          with it; nothing here reasons about what it captures. -->
-    <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\CVE\V1.0\VOA\Mpai.Cve.Voa.csproj" />
-    <ProjectReference Include="..\..\..\AIMs\CVE\V1.0\VOA.Windows\Mpai.Cve.Voa.Windows.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CVE\V1.0\VOA\Mpai.Cve.Voa.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CVE\V1.0\VOA.Windows\Mpai.Cve.Voa.Windows.csproj" />
   </ItemGroup>
 
 </Project>

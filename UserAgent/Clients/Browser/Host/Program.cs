@@ -1,13 +1,13 @@
 // THE HOST OF THE BROWSER RCA.
 //
 //   /                   the client (Blazor WebAssembly) and its files
-//   /avatar/...         the avatar page and its model, from UAs\Assets, adapted
+//   /avatar/...         the avatar page and its model, from UserAgent\Assets, adapted
 //                       as they are served: the page was written for WebView2,
 //                       and the file itself is left as it is
-//   /mas/MPAI-MAS.orch  the client's own workflow, from UAs\Orchestration
+//   /mas/MPAI-MAS.orch  the client's own workflow, from UserAgent\Orchestration
 //   /MPAI/AIFU/...      passed on to the MPAI-MAS Service
 //
-//   dotnet run --project MPAIApps\RcaWeb\Host -- --Service https://localhost:5005/ --Urls https://localhost:5010
+//   dotnet run --project UserAgent\Clients\Browser\Host -- --Service https://localhost:5005/ --Urls https://localhost:5010
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -21,8 +21,8 @@ builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "https://localhost:5010
 
 var service = new Uri(builder.Configuration["Service"] ?? "https://localhost:5005/");
 var root    = RepositoryRoot(AppContext.BaseDirectory);
-var assets  = Path.Combine(root, "UAs", "Assets");
-var masOrch = Path.Combine(root, "UAs", "Orchestration", "MPAI-MAS.orch");
+var assets  = Path.Combine(root, "UserAgent", "Assets");
+var masOrch = Path.Combine(root, "UserAgent", "Orchestration", "MPAI-MAS.orch");
 
 var app = builder.Build();
 // _framework and the client's files are served by MapStaticAssets, the .NET 10 way,
@@ -121,11 +121,11 @@ Console.WriteLine($"  Service:  {service}");
 Console.WriteLine($"  Assets:   {assets}");
 app.Run();
 
-// The repository root is the first folder above this program holding UAs\Assets.
+// The repository root is the first folder above this program holding UserAgent\Assets.
 static string RepositoryRoot(string from)
 {
     for (var dir = new DirectoryInfo(from); dir is not null; dir = dir.Parent)
-        if (File.Exists(Path.Combine(dir.FullName, "UAs", "Assets", "cav-webview.html")))
+        if (File.Exists(Path.Combine(dir.FullName, "UserAgent", "Assets", "cav-webview.html")))
             return dir.FullName;
-    throw new DirectoryNotFoundException($"No UAs\\Assets\\cav-webview.html above {from}.");
+    throw new DirectoryNotFoundException($"No UserAgent\\Assets\\cav-webview.html above {from}.");
 }

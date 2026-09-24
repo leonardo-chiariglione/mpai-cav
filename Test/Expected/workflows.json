@@ -4,5 +4,5 @@
   "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 3 offers, 6 asks; every Port declared",
   "Apps/MAT/MMC-MAT.orch": "Module 1MMC-MAT-V2.5-I01: 6 offers, 9 asks; every Port declared",
   "Apps/MPD/MMC-MPD.orch": "Module 1MMC-MPD-V2.5-I01: 7 offers, 9 asks; every Port declared",
-  "UAs/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 3 offers, 6 asks; every Port declared"
+  "UserAgent/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 3 offers, 6 asks; every Port declared"
 }

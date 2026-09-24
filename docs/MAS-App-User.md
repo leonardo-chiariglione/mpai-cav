@@ -80,14 +80,14 @@ Then start either client, or both.
 
 **Window 2 - the browser client.**
 ```
-dotnet run --project D:\MPAI\MPAIApps\RcaWeb\Host\RcaWeb.Host.csproj -- --Service https://localhost:5005/ --Urls https://localhost:5010
+dotnet run --project D:\MPAI\UserAgent\Clients\Browser\Host\RcaWeb.Host.csproj -- --Service https://localhost:5005/ --Urls https://localhost:5010
 ```
 Open `https://localhost:5010` in Edge or Chrome and press **Start**. The browser
 asks to use the microphone - allow it.
 
 **Window 3 - the desktop client.**
 ```
-dotnet run --project D:\MPAI\MPAIApps\RcaApp\src\RcaApp.csproj
+dotnet run --project D:\MPAI\UserAgent\Clients\Desktop\src\RcaApp.csproj
 ```
 It opens its own window with the avatar.
 
