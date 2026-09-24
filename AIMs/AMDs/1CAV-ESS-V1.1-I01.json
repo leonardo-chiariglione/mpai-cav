@@ -6,8 +6,7 @@
 
   "InternalTypes":        [{"Name": "BasicVisualSceneDescriptors", "DataType": "OSD-BVS-V1.5"}],
 
-  "ExternalPorts":        [{"Name": "SpaceTime",                   "Direction": "Input",  "DataType": "OSD-SPT-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BasicVisualObject",           "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BasicVisualObject",           "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "GNSSObject",                  "Direction": "Input",  "DataType": "CAV-GNO-V1.1",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "WeatherData",                 "Direction": "Input",  "DataType": "CAV-WDT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -21,7 +20,6 @@
 
   "Topology":             [{"Output": {"AIMName": "",                  "PortName": "SpatialAttitude"},             "Input": {"AIMName": "1CAV-SAG-V1.1-I01", "PortName": "SpatialAttitude"}},
                            {"Output": {"AIMName": "",                  "PortName": "GNSSObject"},                  "Input": {"AIMName": "1CAV-SAG-V1.1-I01", "PortName": "GNSSObject"}},
-                           {"Output": {"AIMName": "",                  "PortName": "SpaceTime"},                   "Input": {"AIMName": "1OSD-BVS-V1.5-I01", "PortName": "SpaceTime"}},
                            {"Output": {"AIMName": "",                  "PortName": "BasicVisualObject"},           "Input": {"AIMName": "1OSD-BVS-V1.5-I01", "PortName": "BasicVisualObject"}},
                            {"Output": {"AIMName": "1CAV-SAG-V1.1-I01", "PortName": "SpatialAttitude"},             "Input": {"AIMName": "1OSD-BVS-V1.5-I01", "PortName": "SpatialAttitude"}},
                            {"Output": {"AIMName": "1CAV-BED-V1.1-I01", "PortName": "BasicEnvironmentDescriptors"}, "Input": {"AIMName": "1OSD-BVS-V1.5-I01", "PortName": "BasicEnvironmentDescriptors"}},

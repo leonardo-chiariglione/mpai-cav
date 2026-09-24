@@ -5,7 +5,6 @@
   "Description":      "Entity Speech Description: computes the Speech Descriptors of an Entity from its Speech Object. Produces a Speech Descriptors Object carrying the ECAPA-TDNN speaker embedding. UserName (the User Agent's typed datum) keys the enrolment written to the Shared Storage gallery.",
 
   "ExternalPorts":    [{"Name": "SpeechObject",      "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SpeechTime",        "Direction": "Input",  "DataType": "OSD-STM-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UserName",          "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeechDescriptors", "Direction": "Output", "DataType": "MMC-SDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 

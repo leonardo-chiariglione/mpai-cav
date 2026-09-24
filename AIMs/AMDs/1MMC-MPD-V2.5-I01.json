@@ -14,7 +14,6 @@
   "ExternalPorts":    [{"Name": "UAText",                "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Output": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TypedText",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,              "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputSpeech",           "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "InputSpeechTime",       "Direction": "Input",  "DataType": "OSD-STM-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputFace",             "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Summary",               "Direction": "Input",  "DataType": "MMC-SUM-V2.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "OutputSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -28,7 +27,6 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } }],
 
   "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "InputSpeech" },           "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "InputSpeech" } },
-                       { "Output": { "AIMName": "",                  "PortName": "InputSpeechTime" },       "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "InputSpeechTime" } },
                        { "Output": { "AIMName": "",                  "PortName": "InputSpeech" },           "Input": { "AIMName": "1MMC-PSE-V2.5-I01", "PortName": "InputSpeech" } },
                        { "Output": { "AIMName": "",                  "PortName": "InputFace" },             "Input": { "AIMName": "1MMC-PSE-V2.5-I01", "PortName": "InputFace" } },
                        { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "RecognisedText" },        "Input": { "AIMName": "1MMC-NLU-V2.5-I01", "PortName": "RecognisedText",       "PortNumber": 2 } },

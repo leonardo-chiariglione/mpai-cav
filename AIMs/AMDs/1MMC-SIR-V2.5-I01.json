@@ -2,14 +2,13 @@
   "Header":           "MMC-SIR-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "Speaker Identity Recognition: receives a Basic Speech Object, its Speech Time and the Basic Audio Scene Descriptors the speech was isolated from, matches the speaker against the Subject Gallery held in Shared Storage, and returns the speaker identity as an Instance Identifier. The scene descriptors are the audio counterpart of the visual scene context Face Identity Recognition receives: where several speakers are present, they place the speech within the scene it came from. They are optional, as the scene context is for the face: a Speech Object captured directly from a microphone has no scene to be placed in.",
+  "Description":      "Speaker Identity Recognition: receives a Basic Speech Object, which carries the time it was acquired, and, optionally, the Basic Audio Scene Descriptors of the scene it was isolated from; matches the speaker against the Subject Gallery held in Shared Storage; and returns the speaker identity as an Instance Identifier - the coarse \"speech\" layer when nobody matches, so that an identity is always returned for the speech received. The audio counterpart of Face Identity Recognition.",
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "InputSpeech",     "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "InputSpeechTime", "Direction": "Input",  "DataType": "OSD-STM-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SceneContext",    "Direction": "Input",  "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "OutputSpeakerID", "Direction": "Output", "DataType": "OSD-IID-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "ExternalPorts":    [{"Name": "SpeechObject",          "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AudioSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeakerID",             "Direction": "Output", "DataType": "OSD-IID-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 

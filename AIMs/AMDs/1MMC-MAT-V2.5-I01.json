@@ -8,7 +8,6 @@
                        {"Name": "TranslatedText", "DataType": "OSD-BTO-V1.5", "Output": 1}],
 
   "ExternalPorts":    [{"Name": "InputSpeech",            "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "InputSpeechTime",        "Direction": "Input",  "DataType": "OSD-STM-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "LanguageSelector",       "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UAText",                 "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Output": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextObject",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,              "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -21,7 +20,6 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } }],
 
   "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "InputSpeech" },            "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "InputSpeech" } },
-                       { "Output": { "AIMName": "",                  "PortName": "InputSpeechTime" },        "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "InputSpeechTime" } },
                        { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "RecognisedText" },         "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "RecognisedText",        "PortNumber": 2 } },
                        { "Output": { "AIMName": "",                  "PortName": "LanguageSelector" },       "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "LanguageSelector",      "PortNumber": 1 } },
                        { "Output": { "AIMName": "",                  "PortName": "TextObject" },             "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "TextObject",            "PortNumber": 1 } },

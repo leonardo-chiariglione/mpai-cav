@@ -16,7 +16,6 @@ public sealed class SpaceTime
     public string? MInstanceID { get; init; }
     public string? UEnvironmentID { get; init; }
     public string SpaceTimeID { get; init; } = "";
-    public SimpleTime? SpaceTimeTime { get; init; }
 
     public SpatialAttitude? SpatialAttitude1 { get; init; }   // at T0
     public SpatialAttitude? SpatialAttitude2 { get; init; }   // at T1
@@ -40,6 +39,26 @@ public sealed class SimpleTime
     public string SimpleTimeID { get; init; } = "";
     public List<TimeSegment> SimpleTimeData { get; init; } = new();
     public string? DescrMetadata { get; init; }
+
+    // ONE INSTANT: start and end the same, absolute (1970 epoch), in seconds.
+    // What an Object is stamped with when it is made: its time travels in it.
+    public static SimpleTime At(DateTimeOffset moment)
+    {
+        var seconds = moment.ToUnixTimeMilliseconds() / 1000.0;
+        return new SimpleTime
+        {
+            SimpleTimeID = Guid.NewGuid().ToString(),
+            SimpleTimeData =
+            {
+                new TimeSegment
+                {
+                    FlagsByte = 1, StartTime = seconds, EndTime = seconds,
+                    AccuracyMode = "single", AccuracyPlusMinus = 0.0,
+                    TimeType = true, TimeUnit = "00"
+                }
+            }
+        };
+    }
 }
 
 // One time segment. FlagsByte and the decoded TimeType/TimeUnit/Reserved are
@@ -261,6 +280,7 @@ public sealed class BasicSpeechObject
     public string? MInstanceID { get; init; }
     public string? UEnvironmentID { get; init; }
     public string BasicSpeechObjectID { get; init; } = "";
+    public SimpleTime? BasicSpeechObjectTime { get; init; }   // when the speech was acquired
     public SpaceTime? BasicSpeechObjectSpaceTime { get; init; }
 
     public byte[] Data { get; init; } = [];                    // inline speech data (e.g. WAV/PCM)
@@ -309,6 +329,7 @@ public sealed class BasicSpeechObject
             : new()
     {
         BasicSpeechObjectID = Guid.NewGuid().ToString(),
+        BasicSpeechObjectTime = SimpleTime.At(DateTimeOffset.UtcNow),
         Data = data,
         SpeechQualifier = qualifier
     };
@@ -548,6 +569,7 @@ public sealed class BasicVisualObject
 {
     public string Header { get; init; } = "OSD-BVO-V1.5";     // placeholder header
     public string BasicVisualObjectID { get; init; } = "";
+    public SpaceTime? BasicVisualObjectTime { get; init; }    // when the picture was acquired
     public string? FileName { get; init; }
     public byte[] Data { get; init; } = [];
     public VisualQualifier? VisualQualifier { get; init; }
@@ -555,6 +577,7 @@ public sealed class BasicVisualObject
     public static BasicVisualObject FromFile(string fileName, byte[] data, string? visualObjectType = null) => new()
     {
         BasicVisualObjectID = Guid.NewGuid().ToString(),
+        BasicVisualObjectTime = new SpaceTime { SpaceTimeID = Guid.NewGuid().ToString(), Time = SimpleTime.At(DateTimeOffset.UtcNow) },
         FileName = fileName,
         Data = data,
         VisualQualifier = BuildQualifier(fileName, visualObjectType)

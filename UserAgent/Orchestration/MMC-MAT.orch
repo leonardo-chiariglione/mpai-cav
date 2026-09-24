@@ -37,7 +37,6 @@ on Start:
 
         ask Controller to take TargetLanguage (OSD-SEL-V1.5) for 1MMC-MAT-V2.5-I01
         ask Controller to take UserSpeech     (OSD-BSO-V1.5) for 1MMC-MAT-V2.5-I01
-        ask Controller to take UserSpeechTime (OSD-STM-V1.5) for 1MMC-MAT-V2.5-I01
 
         ask Controller to give from 1MMC-MAT-V2.5-I01:
             MachineSpeech  (OSD-BSO-V1.5),

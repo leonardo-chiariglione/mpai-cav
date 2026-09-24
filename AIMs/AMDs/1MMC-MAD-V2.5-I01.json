@@ -12,7 +12,6 @@
                        {"Name": "TypedText",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,              "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Summary",               "Direction": "Input",  "DataType": "MMC-SUM-V2.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "UATime",                "Direction": "Input",  "DataType": "OSD-STM-V1.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UAPersonalStatus",      "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                               "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "OutputSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "OutputFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false}],
@@ -22,7 +21,6 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } }],
 
   "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "UserSpeech" },            "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "UserSpeech" } },
-                       { "Output": { "AIMName": "",                  "PortName": "UATime" },                "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "UATime" } },
                        { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "UserText" },              "Input": { "AIMName": "1MMC-EDP-V2.5-I01", "PortName": "UserText",             "PortNumber": 1 } },
                        { "Output": { "AIMName": "",                  "PortName": "TypedText" },             "Input": { "AIMName": "1MMC-EDP-V2.5-I01", "PortName": "TypedText" } },
                        { "Output": { "AIMName": "",                  "PortName": "Summary" },               "Input": { "AIMName": "1MMC-EDP-V2.5-I01", "PortName": "Summary" } },

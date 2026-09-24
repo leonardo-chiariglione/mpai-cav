@@ -10,7 +10,6 @@
                            {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpaceTime",                   "Direction": "Input",  "DataType": "OSD-SPT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Alert",                       "Direction": "Output", "DataType": "CAV-ALT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

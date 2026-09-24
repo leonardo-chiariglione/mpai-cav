@@ -6,8 +6,7 @@
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "SpaceTime",                   "Direction": "Input",  "DataType": "OSD-SPT-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "BasicLiDARObject",            "Direction": "Input",  "DataType": "OSD-BLO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":   [{"Name": "BasicLiDARObject",            "Direction": "Input",  "DataType": "OSD-BLO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "BasicLiDARSceneDescriptors",  "Direction": "Output", "DataType": "OSD-BLS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},

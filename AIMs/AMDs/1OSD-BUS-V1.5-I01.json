@@ -6,8 +6,7 @@
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "SpaceTime",                       "Direction": "Input",  "DataType": "OSD-SPT-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BasicUltrasoundObject",           "Direction": "Input",  "DataType": "OSD-BUO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BasicUltrasoundObject",           "Direction": "Input",  "DataType": "OSD-BUO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",                 "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicEnvironmentDescriptors",     "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicUltrasoundSceneDescriptors", "Direction": "Output", "DataType": "OSD-BUS-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},

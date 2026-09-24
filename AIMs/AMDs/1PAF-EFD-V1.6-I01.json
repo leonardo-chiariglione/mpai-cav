@@ -5,7 +5,6 @@
   "Description":      "Entity Face Description: computes the Face Descriptors of an Entity from its Face Object. Detects the most prominent face, crops it, and produces a Face Descriptors Object carrying the ArcFace embedding. UserName (the User Agent's typed datum) keys the enrolment written to the Shared Storage gallery.",
 
   "ExternalPorts":    [{"Name": "FaceObject",      "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "FaceTime",        "Direction": "Input",  "DataType": "OSD-STM-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UserName",        "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 

@@ -13,8 +13,8 @@
 #  receives the confirmation the Module renders.
 #
 #  MMC-ACR declares OSD-BTO twice - #1 the Response the avatar is to speak, #2
-#  the name the descriptors are keyed by - and OSD-STM twice, #1 for the face
-#  and #2 for the speech.
+#  the name the descriptors are keyed by. The face and the speech carry the
+#  time they were acquired.
 # =============================================================================
 
 workflow MMC-ACR over 1MMC-ACR-V2.5-I01
@@ -34,9 +34,7 @@ on Start:
     acquire UserSpeech (OSD-BSO-V1.5) via VAD
 
     ask Controller to take UserFace       (OSD-BVO-V1.5)   for 1MMC-ACR-V2.5-I01
-    ask Controller to take UserFaceTime   (OSD-STM-V1.5:1) for 1MMC-ACR-V2.5-I01
     ask Controller to take UserSpeech     (OSD-BSO-V1.5)   for 1MMC-ACR-V2.5-I01
-    ask Controller to take UserSpeechTime (OSD-STM-V1.5:2) for 1MMC-ACR-V2.5-I01
     ask Controller to take UserName       (OSD-BTO-V1.5:2) for 1MMC-ACR-V2.5-I01
     ask Controller to take Response       (OSD-BTO-V1.5:1) = "{UserName}, thank
         you for joining the Service. Speak your passphrase when you enter."

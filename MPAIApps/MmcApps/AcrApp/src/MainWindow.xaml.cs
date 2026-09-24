@@ -18,9 +18,9 @@ namespace AcrApp;
 // ACR User Agent - drives MMC-ACR-V2.5 through the type-addressed Controller API.
 // The UA does only real-world I/O (render avatar, capture camera+microphone,
 // TYPE the name) and orchestration; it identifies data ONLY by data type:
-//   Start -> type name -> "look at camera" -> supply OSD-BVO (face) + OSD-STM #1
+//   Start -> type name -> "look at camera" -> supply OSD-BVO (face)
 //         -> flow suspends -> "speak a sentence" -> supply OSD-BSO (speech) +
-//            OSD-STM #2 + OSD-BTO #1 (confirmation) + MMC-EPS + OSD-BTO #2 (name)
+//            OSD-BTO #1 (confirmation) + MMC-EPS + OSD-BTO #2 (name)
 //         -> EFD/ESD write the enrolment to the shared gallery via the Controller
 //         -> read OSD-BSO (spoken confirmation) + PAF-FDO (avatar) -> Stop.
 // The name is TYPED (ASR is unreliable for bare names) and is the enrolment key.
@@ -33,7 +33,6 @@ public partial class MainWindow : Window
     private const string BVO = "OSD-BVO-V1.5";   // visual object (face)
     private const string BSO = "OSD-BSO-V1.5";   // speech object
     private const string BTO = "OSD-BTO-V1.5";   // text object (Response #1, UserName #2)
-    private const string STM = "OSD-STM-V1.5";   // time (FaceTime #1, SpeechTime #2)
     private const string EPS = "MMC-EPS-V2.5";   // personal status
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
@@ -106,7 +105,7 @@ public partial class MainWindow : Window
             if (string.IsNullOrWhiteSpace(userName)) { SetStatus("no name given"); return; }
             Diag("name='" + userName + "'");
 
-            // 2) Face - prompt, ~1s to turn, capture. Supply OSD-BVO + OSD-STM #1 + name (OSD-BTO #2).
+            // 2) Face - prompt, ~1s to turn, capture. Supply OSD-BVO + name (OSD-BTO #2); the Visual Object carries its time.
             InstructionText.Text = "Look at the camera.";
             var speakLook = RenderPromptAsync("Look at the camera.");
             await Task.Delay(TimeSpan.FromSeconds(1));
@@ -115,16 +114,15 @@ public partial class MainWindow : Window
 
             var faceIn = new List<ControllerApi.Datum>();
             if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
-            faceIn.Add(new ControllerApi.Datum(STM, 1, MpaiJson.ToJson(NowSimpleTime())));
             faceIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
-            Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+STM#1+BTO#2(name)");
+            Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+BTO#2(name)");
             var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
             Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended, waiting for " + (r1.WaitingPort ?? "?") : " completed"));
             if (!r1.Ok) { SetStatus("run error"); return; }
 
             var result = r1;
 
-            // 3) Speech - on suspension, prompt, capture, and supply OSD-BSO + OSD-STM #2
+            // 3) Speech - on suspension, prompt, capture, and supply OSD-BSO (which carries its time)
             //    + confirmation (OSD-BTO #1) + Personal Status + name (OSD-BTO #2).
             if (r1.Suspended)
             {
@@ -135,11 +133,10 @@ public partial class MainWindow : Window
                 var thankYou = $"{userName}, thank you for joining the CAV Access Control Registration Service. You should speak your passphrase when you enter the service.";
                 var speechIn = new List<ControllerApi.Datum>();
                 if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
-                speechIn.Add(new ControllerApi.Datum(STM, 2, MpaiJson.ToJson(NowSimpleTime())));
                 speechIn.Add(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(thankYou))));
                 speechIn.Add(new ControllerApi.Datum(EPS, MpaiJson.ToJson(LightSmileStatus())));
                 speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
-                Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+STM#2+BTO#1(resp)+EPS+BTO#2(name)");
+                Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+EPS+BTO#2(name)");
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
                 Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended, waiting for " + (r2.WaitingPort ?? "?") : " completed"));
                 if (!r2.Ok) { SetStatus("resume error"); return; }
@@ -197,19 +194,6 @@ public partial class MainWindow : Window
             return (speech is not null && speech.Data.Length > 0) ? speech : null;
         }
         catch { return null; }
-    }
-
-    private static SimpleTime NowSimpleTime()
-    {
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
-        return new SimpleTime
-        {
-            SimpleTimeID = Guid.NewGuid().ToString("N"),
-            SimpleTimeData = new List<TimeSegment>
-            {
-                new TimeSegment { FlagsByte = 0, StartTime = now, EndTime = now, AccuracyMode = "single", AccuracyPlusMinus = 0.0, TimeType = true }
-            }
-        };
     }
 
     // --- Typed-name box (Enter or Confirm) ---

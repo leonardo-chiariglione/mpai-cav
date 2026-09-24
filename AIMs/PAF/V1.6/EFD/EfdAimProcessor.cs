@@ -34,7 +34,6 @@ public sealed class EfdAimProcessor : IAimProcessor
 
     private readonly string _inPort;
     private readonly string _outPort;
-    private readonly string _timePort;
     private readonly string _textPort;
     private readonly AIF.SharedStorage.ISharedStorage _store;
 
@@ -50,7 +49,6 @@ public sealed class EfdAimProcessor : IAimProcessor
         _recogniser = recogniser;
         _inPort     = ports.Input("OSD-BVO-V1.5");
         _outPort    = ports.Output("PAF-FDO-V1.6");
-        _timePort   = ports.Input("OSD-STM-V1.5");      // acquisition time (OSD-STM)
         _textPort   = ports.InputOrDefault("OSD-BTO-V1.5", 1, string.Empty);   // the OSD-BTO the subject is keyed by, optional
         _store      = store;
     }
@@ -80,10 +78,9 @@ public sealed class EfdAimProcessor : IAimProcessor
 
         var fdo = FaceDescriptorsObject.FromEmbedding(embedding, ContentFormat);
 
-        // Stamp the acquisition time (OSD-STM) into the Face Descriptors Object.
-        SimpleTime? faceTime = null;
-        if (message.Ports.TryGetValue(_timePort, out var stmJson) && !string.IsNullOrWhiteSpace(stmJson))
-            faceTime = MpaiJson.FromJson<SimpleTime>(stmJson);
+        // Stamp the acquisition time, which the Visual Object carries, into the
+        // Face Descriptors Object.
+        SimpleTime? faceTime = picture.BasicVisualObjectTime?.Time is { SimpleTimeData.Count: > 0 } t ? t : null;
         if (faceTime is not null)
             fdo = new FaceDescriptorsObject
             {

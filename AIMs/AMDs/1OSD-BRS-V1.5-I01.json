@@ -6,8 +6,7 @@
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "SpaceTime",                   "Direction": "Input",  "DataType": "OSD-SPT-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BasicRADARObject",            "Direction": "Input",  "DataType": "OSD-BRO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BasicRADARObject",            "Direction": "Input",  "DataType": "OSD-BRO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicRADARSceneDescriptors",  "Direction": "Output", "DataType": "OSD-BRS-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
