@@ -1,0 +1,21 @@
+{
+  "Controller: Block, Depth 2": "third write with timeout 50: timed out; a write while full waits, then passes when one is read; read 2,4; dropped 0",
+  "Controller: Close": "a waiting reader returns nothing",
+  "Controller: DropNewest, Depth 2, five written": "read 1,2; dropped 3",
+  "Controller: DropOldest, Depth 2, five written": "read 4,5; dropped 3",
+  "Controller: MaxAge 60 ms": "read fresh; discarded 1",
+  "Controller: a reader end for a Port not on the Channel": "refused",
+  "Controller: observed": "a,b; relayed 2",
+  "Controller: reads": "timeout 50 on nothing: nothing; a waiting reader gets 'late'",
+  "Controller: stamps": "sequence 1,2; monotonic rising; stamped now",
+  "Controller: two readers": "A 1,2,3; B 1,2,3; shared True",
+  "InProcess: Block, Depth 2": "third write with timeout 50: timed out; a write while full waits, then passes when one is read; read 2,4; dropped 0",
+  "InProcess: Close": "a waiting reader returns nothing",
+  "InProcess: DropNewest, Depth 2, five written": "read 1,2; dropped 3",
+  "InProcess: DropOldest, Depth 2, five written": "read 4,5; dropped 3",
+  "InProcess: MaxAge 60 ms": "read fresh; discarded 1",
+  "InProcess: a reader end for a Port not on the Channel": "refused",
+  "InProcess: reads": "timeout 50 on nothing: nothing; a waiting reader gets 'late'",
+  "InProcess: stamps": "sequence 1,2; monotonic rising; stamped now",
+  "InProcess: two readers": "A 1,2,3; B 1,2,3; shared True"
+}
