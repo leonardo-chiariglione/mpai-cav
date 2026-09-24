@@ -195,7 +195,7 @@ with a REST API (`MAS/Store/Service/README.md`). Run it once, and any
 number of Services can point at it:
 
 ```powershell
-dotnet run --project D:\BI\MAS\Store\Service\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
+dotnet run --project D:\MPAI\MAS\Store\Service\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
 Submit L3s with `MAS/Store/Service/Submit-L3s.ps1` or the `StoreApp`
@@ -208,7 +208,7 @@ working arrangement is plain HTTP throughout - the Store, and every Service
 that must be reached from elsewhere:
 
 ```powershell
-dotnet run --project D:\BI\MAS\Store\Service\StoreService.csproj -- --Urls http://0.0.0.0:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
+dotnet run --project D:\MPAI\MAS\Store\Service\StoreService.csproj -- --Urls http://0.0.0.0:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
 Every Service's `StoreUrl` (below) must then use `http://`, not `https://`,

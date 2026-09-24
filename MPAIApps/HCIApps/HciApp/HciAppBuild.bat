@@ -1,8 +1,10 @@
 @echo off
 setlocal
 echo Building HciApp.exe...
-set SRC=D:\BI\MPAIApps\HCIApps\HciApp\src\HciApp.csproj
-set HERE=D:\BI\MPAIApps\HCIApps\HciApp
+rem This script's own folder, without the trailing backslash.
+set HERE=%~dp0
+set HERE=%HERE:~0,-1%
+set SRC=%HERE%\src\HciApp.csproj
 set TMP=%HERE%\_build
 taskkill /IM HciApp.exe /F >nul 2>&1
 dotnet publish "%SRC%" -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -o "%TMP%"
