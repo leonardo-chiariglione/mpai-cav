@@ -15,7 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography.X509Certificates;
 
-using Mpai.Mas.PortData;
+using Mpai.Aif.PortData;
 
 namespace Mpai.Mas.Server;
 

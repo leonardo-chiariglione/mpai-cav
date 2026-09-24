@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 using Mpai.Core;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // OSD-SEL-V1.5 - Selector, on the wire as OSD/V1.5/data/Selector.json describes it.
 //

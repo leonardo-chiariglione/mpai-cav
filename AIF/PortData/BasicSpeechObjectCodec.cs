@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 using Mpai.Core;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // OSD-BSO-V1.5 - Basic Speech Object.
 //

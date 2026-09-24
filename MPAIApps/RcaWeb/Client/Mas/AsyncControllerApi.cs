@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using AIF.Controller;
 using Mpai.Aif.Api;
-using Mpai.Mas.PortData;
+using Mpai.Aif.PortData;
 
 namespace Mpai.RcaWeb.Mas;
 

@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 using Json.Schema;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // IS WHAT CROSSES THE WIRE WHAT THE SCHEMA SAYS IT IS?
 //

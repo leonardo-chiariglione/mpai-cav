@@ -2,7 +2,7 @@
 
   <!-- MadServer - MMC-MAD behind the MPAI-MAS API.
        THE SECOND APPLICATION ON THE SAME LAYER. Nothing in Mpai.Mas.Server,
-       Mpai.Mas.PortData or Mpai.Mas.Client changed to accommodate it: the
+       Mpai.Aif.PortData or Mpai.Mas.Client changed to accommodate it: the
        server knows Data Types and no application, so a second one contributes
        a provider and a list of Modules and nothing else.
 
@@ -33,7 +33,7 @@
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\..\MW\MasServer\Mpai.Mas.Server.csproj" />
-    <ProjectReference Include="..\..\..\MW\PortData\Mpai.Mas.PortData.csproj" />
+    <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
 
     <!-- MMC-MAD leaves, plus the RSR leaves so the avatar can speak. No device

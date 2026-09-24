@@ -88,6 +88,7 @@ uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
 ```
 AIF/            AI Framework runtime (Controller, Store, Communication/{Shared,Global}Storage)
   ControllerApi/  the Controller API (formerly the North API) and the Speaking Avatar type
+  PortData/     the wire form of each Data Type
 AIMs/           AI Modules
   AMDs/         L3 Module descriptors (JSON)
   Core/         shared types (data objects, qualifiers, JSON, paths)

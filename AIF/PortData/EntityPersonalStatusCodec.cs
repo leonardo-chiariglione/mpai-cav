@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // MMC-EPS-V2.5 - Entity Personal Status: the Cognitive State, Emotion and Social
 // Attitude of the person or the machine, split by modality (Text, Speech, Face,

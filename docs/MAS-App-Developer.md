@@ -111,7 +111,7 @@ of providers - `AmqProvider`, `MadProvider`, `MatProvider`, `MpdProvider` in
 `AIMs/Providers`. It preloads `1MMC-AMQ`, `MAD`, `MAT`, `MPD` and `1MAS-APP` so
 the first exchange of each App is fast.
 
-The Data Types it carries are those `MW/PortData` can translate between their
+The Data Types it carries are those `AIF/PortData` can translate between their
 internal form and their wire form: `OSD-BSO`, `OSD-BTO`, `OSD-BVO`, `PAF-FDO`,
 `OSD-STM`, `OSD-SEL`, `MMC-SUM`. A datum of another Data Type cannot cross.
 
@@ -143,7 +143,7 @@ Both clients register **sources** (acquire) and **presenters** (present) with a
 2. **Its AIMs:** if it needs AIMs no provider builds, add a provider in
    `AIMs/Providers` and add it to the Service's composite.
 3. **Its Data Types:** any Data Type that must cross MPAI-MAS needs a translator
-   in `MW/PortData`, registered in `PortDataCodecs.Default()`.
+   in `AIF/PortData`, registered in `PortDataCodecs.Default()`.
 4. **The App:** a folder in `Apps/` with its workflow, `app.json` and `icon.svg`.
 5. **The Service:** add the App to `Apps` in the configuration, and its Module to
    the preload list in `AmqServer/src/Program.cs`.
@@ -264,7 +264,7 @@ fatal, which 10.4 now ensures.
 ```
 
 **Every Data Type the Sub-AIM's Ports carry must have a wire translator** in
-`MW/PortData`, registered in `PortDataCodecs.Default()` - the same
+`AIF/PortData`, registered in `PortDataCodecs.Default()` - the same
 requirement as 7.3 for a new App. `MMC-SUM-V2.5` and `MMC-EPS-V2.5` (Entity
 Personal Status, needed for any AIM MPD uses remotely) exist today; a further
 AIM would need whatever its own Ports carry.

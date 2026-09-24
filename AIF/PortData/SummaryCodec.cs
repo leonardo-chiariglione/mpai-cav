@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // MMC-SUM-V2.5 - Summary, the running memory of a dialogue.
 //

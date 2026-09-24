@@ -7,6 +7,6 @@
     <AssemblyName>PortDataTest</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MW\PortData\Mpai.Mas.PortData.csproj" />
+    <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 using Mpai.Core;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // OSD-BTO-V1.5 - Basic Text Object.
 //

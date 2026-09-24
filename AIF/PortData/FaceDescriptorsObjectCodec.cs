@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // PAF-FDO-V1.6 - Face Descriptors Object.
 //

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Mpai.Core;
 using Mpai.Mas.Client;
-using Mpai.Mas.PortData;
+using Mpai.Aif.PortData;
 using Mpai.Rca;
 using Mpai.Wdl;
 

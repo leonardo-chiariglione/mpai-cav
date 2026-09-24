@@ -17,7 +17,7 @@
 
   <!-- Data Types only. No Controller, no AIMs, no application. -->
   <ItemGroup>
-    <ProjectReference Include="..\PortData\Mpai.Mas.PortData.csproj" />
+    <ProjectReference Include="..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
   </ItemGroup>
 
 </Project>

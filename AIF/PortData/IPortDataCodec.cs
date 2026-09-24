@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // MAS "port-data" codec for ONE Data Type.
 //

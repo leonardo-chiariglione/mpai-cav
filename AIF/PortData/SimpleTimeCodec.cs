@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Mas.PortData;
+namespace Mpai.Aif.PortData;
 
 // OSD-STM-V1.5 - Simple Time.
 //

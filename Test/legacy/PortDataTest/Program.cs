@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Mpai.Core;
-using Mpai.Mas.PortData;
+using Mpai.Aif.PortData;
 
 internal static class Program
 {
