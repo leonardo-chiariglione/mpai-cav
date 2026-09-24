@@ -1,0 +1,19 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-NOP-V1.0-I01", "AIMName": "1TST-NOP-V1.0-I01"},
+  "Header":           "TST-NOP-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: declares an output and never produces it.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",  "Direction": "Input",  "DataType": "TST-TXT-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Never", "Direction": "Output", "DataType": "TST-TXT-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

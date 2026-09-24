@@ -1,0 +1,28 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-DGR-V1.0-I01", "AIMName": "1TST-DGR-V1.0-I01"},
+  "Header":           "TST-DGR-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test Module, degradation: an AIM that works, one that produces nothing, one that throws.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Input",  "Direction": "Input",  "DataType": "TST-TXT-V1.0",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Upper",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1,                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Never",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Thrown", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 3,                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-UPP-V1.0-I01", "AIMName": "1TST-UPP-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-NOP-V1.0-I01", "AIMName": "1TST-NOP-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-THR-V1.0-I01", "AIMName": "1TST-THR-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Input"  }, "Input": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Input"  } },
+                       { "Output": { "AIMName": "",                  "PortName": "Input"  }, "Input": { "AIMName": "1TST-NOP-V1.0-I01", "PortName": "Input"  } },
+                       { "Output": { "AIMName": "",                  "PortName": "Input"  }, "Input": { "AIMName": "1TST-THR-V1.0-I01", "PortName": "Input"  } },
+                       { "Output": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Upper"  }, "Input": { "AIMName": "",                  "PortName": "Upper"  } },
+                       { "Output": { "AIMName": "1TST-NOP-V1.0-I01", "PortName": "Never"  }, "Input": { "AIMName": "",                  "PortName": "Never"  } },
+                       { "Output": { "AIMName": "1TST-THR-V1.0-I01", "PortName": "Thrown" }, "Input": { "AIMName": "",                  "PortName": "Thrown" } }],
+
+  "Implementations":  [],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

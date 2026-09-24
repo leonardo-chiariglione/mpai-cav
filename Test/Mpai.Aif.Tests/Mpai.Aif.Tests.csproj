@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\AIF\Metadata\AIF.Metadata.csproj" />
     <ProjectReference Include="..\..\UserAgent\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\UserAgent\Remote\Mpai.Mas.Client.csproj" />

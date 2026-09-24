@@ -1,0 +1,20 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-SPL-V1.0-I01", "AIMName": "1TST-SPL-V1.0-I01"},
+  "Header":           "TST-SPL-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: gives its text on two outputs of one Data Type, 'A:' and 'B:' followed by the text.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",   "Direction": "Input",  "DataType": "TST-TXT-V1.0",                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "First",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Second", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

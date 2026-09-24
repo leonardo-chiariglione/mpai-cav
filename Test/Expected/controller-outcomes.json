@@ -1,0 +1,8 @@
+{
+  "a Module that is not in the Store": "NotFound; #1 absent",
+  "a Port that produced (#1)": "OK; #1 'X'",
+  "a Port the Module does not declare (#9)": "OK; #9 absent",
+  "a Port whose AIM threw (#3)": "OK; #3 absent",
+  "a datum of a Data Type no Port accepts": "OK; #1 absent; #2 absent; #3 absent",
+  "a declared Port that produced nothing (#2)": "OK; #2 absent"
+}

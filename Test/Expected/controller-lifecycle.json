@@ -1,0 +1,10 @@
+{
+  "1TST-NST-V1.0-I01: Pause during a run": "the run completed: not held",
+  "1TST-NST-V1.0-I01: Resume": "the run completed",
+  "1TST-NST-V1.0-I01: Stop during a run": "the AIM was not signalled: the run completed with its output",
+  "1TST-NST-V1.0-I01: a run started while paused": "completed: not held",
+  "1TST-SLW-V1.0-I01: Pause during a run": "held",
+  "1TST-SLW-V1.0-I01: Resume": "the run completed",
+  "1TST-SLW-V1.0-I01: Stop during a run": "the AIM was not signalled: the run completed with its output",
+  "1TST-SLW-V1.0-I01: a run started while paused": "completed: not held"
+}
