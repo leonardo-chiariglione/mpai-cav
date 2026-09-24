@@ -9,7 +9,7 @@ using Mpai.StoreService;
 //   GET  /MPAI/Store/L3/{id}/versions        its published versions
 //   GET  /MPAI/Store/L3/{id}/findings[?version=n]   what the Store found in it
 //
-//   dotnet run --project MPAIApps\StoreService -- --Urls https://localhost:5020 --Root <folder> --Packages <folder>
+//   dotnet run --project MAS\Store\Service -- --Urls https://localhost:5020 --Root <folder> --Packages <folder>
 //
 // --Root is where the Store keeps its L3s (default: <local application data>\MPAI\Store).
 // --Schemas is the published schemas folder (default: the "schemas" folder above this program).

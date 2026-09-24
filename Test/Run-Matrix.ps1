@@ -32,11 +32,11 @@ $blockingBuilds = @(
     'Test\M3194Test.csproj'
 )
 $informativeBuilds = @(
-    'MPAIApps\MmcApps\AmqServer\src\AmqServer.csproj',
+    'MAS\Service\src\MasService.csproj',
     'MPAIApps\RcaApp\src\RcaApp.csproj',
     'MPAIApps\RcaWeb\Host\RcaWeb.Host.csproj',
-    'MPAIApps\StoreService\StoreService.csproj',
-    'MPAIApps\StoreApp\StoreApp.csproj'
+    'MAS\Store\Service\StoreService.csproj',
+    'MAS\Store\App\StoreApp.csproj'
 )
 # The programs in legacy (and Test\legacy) are not built: MAS-App replaced them
 # (M3209). legacy\RcaConsole does not build (DeviceRegistry.Acquire changed under it).

@@ -32,7 +32,7 @@
     <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
-    <ProjectReference Include="..\..\..\MW\MasServer\Mpai.Mas.Server.csproj" />
+    <ProjectReference Include="..\..\..\MAS\Server\Mpai.Mas.Server.csproj" />
     <ProjectReference Include="..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
 

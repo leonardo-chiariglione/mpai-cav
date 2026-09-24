@@ -10,7 +10,7 @@ using AIF.Store;
 using Mpai.Aif.Api;
 using Mpai.Mas.Server;
 
-namespace MmcAmq.Server;
+namespace Mpai.Mas.Service;
 
 // Adapts the Controller API to what the MAS server needs.
 //

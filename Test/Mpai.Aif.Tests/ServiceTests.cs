@@ -29,7 +29,7 @@ public sealed class ServiceFixture : IDisposable
     public ServiceFixture()
     {
         var root = Repository.Root;
-        var exe = Path.Combine(root, "MPAIApps", "MmcApps", "AmqServer", "src", "bin", "Debug", "net10.0", "AmqServer.exe");
+        var exe = Path.Combine(root, "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
 
         SkipReason =
             !Directory.Exists(Path.Combine(root, "Models")) ? "Models is absent: the model files are obtained separately." :

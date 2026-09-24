@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
-namespace MmcAmq.Server;
+namespace Mpai.Mas.Service;
 
 // The server''s own configuration, read from mas-server.json beside the
 // executable, or from the path given as the first argument.

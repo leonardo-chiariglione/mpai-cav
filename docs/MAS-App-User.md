@@ -50,7 +50,7 @@ dotnet dev-certs https --trust
 ```
 
 **Write the Service's configuration.** Create a file, for example
-`MPAIApps\MmcApps\AmqServer\mas-server-MAS.json`, replacing `D:\\MPAI` with the
+`MAS\Service\mas-server-MAS.json`, replacing `D:\\MPAI` with the
 folder where you put the software:
 ```json
 {
@@ -70,7 +70,7 @@ Use one PowerShell window for each program. In the commands below, replace
 **Window 1 - the Service.** Start it first, and wait: loading the models takes a
 minute or two.
 ```
-dotnet run --project D:\MPAI\MPAIApps\MmcApps\AmqServer\src\AmqServer.csproj -- D:\MPAI\MPAIApps\MmcApps\AmqServer\mas-server-MAS.json
+dotnet run --project D:\MPAI\MAS\Service\src\MasService.csproj -- D:\MPAI\MAS\Service\mas-server-MAS.json
 ```
 It is ready when it prints `[MAS] Listening on https://localhost:5005/`. Above
 that it lists the Modules it loaded, the four Apps, and the Data Types it

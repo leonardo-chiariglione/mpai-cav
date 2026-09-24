@@ -10,7 +10,7 @@ using it, see the [User Guide](MAS-App-User.md); for an overview, see
 
 | Part | Project | Role |
 |---|---|---|
-| Service | `MPAIApps/MmcApps/AmqServer/src` | Hosts the Controller and the Modules; speaks MPAI-MAS over HTTPS; offers the Apps. |
+| Service | `MAS/Service/src` | Hosts the Controller and the Modules; speaks MPAI-MAS over HTTPS; offers the Apps. |
 | Desktop client | `MPAIApps/RcaApp/src` | WPF. The User Agent: interprets workflows, captures, renders the avatar (WebView2). |
 | Browser client | `MPAIApps/RcaWeb/Client` | Blazor WebAssembly. The same User Agent, in a browser. |
 | Browser host | `MPAIApps/RcaWeb/Host` | Serves the browser client and the avatar page, and forwards `/MPAI/AIFU/...` to the Service, so the browser sees one origin. |
@@ -105,7 +105,7 @@ on Stop:
 
 ## 5. The Service
 
-`AmqServer` reads its configuration (`mas-server*.json`, path as first argument;
+`MasService` (formerly `AmqServer`) reads its configuration (`mas-server*.json`, path as first argument;
 see the User Guide) and builds one Controller whose AIMs come from a composite
 of providers - `AmqProvider`, `MadProvider`, `MatProvider`, `MpdProvider` in
 `AIMs/Providers`. It preloads `1MMC-AMQ`, `MAD`, `MAT`, `MPD` and `1MAS-APP` so
@@ -146,7 +146,7 @@ Both clients register **sources** (acquire) and **presenters** (present) with a
    in `AIF/PortData`, registered in `PortDataCodecs.Default()`.
 4. **The App:** a folder in `Apps/` with its workflow, `app.json` and `icon.svg`.
 5. **The Service:** add the App to `Apps` in the configuration, and its Module to
-   the preload list in `AmqServer/src/Program.cs`.
+   the preload list in `MAS/Service/src/Program.cs`.
 6. **Test:** the `Test` program loads every composite L3 and reports which load;
    then run the App through both clients.
 
@@ -185,15 +185,15 @@ AIM itself.
 
 ### 10.1 The Store
 
-`MPAIApps/StoreService` is a separate program, a repository of approved L3s
-with a REST API (`MPAIApps/StoreService/README.md`). Run it once, and any
+`MAS/Store/Service` is a separate program, a repository of approved L3s
+with a REST API (`MAS/Store/Service/README.md`). Run it once, and any
 number of Services can point at it:
 
 ```powershell
-dotnet run --project D:\BI\MPAIApps\StoreService\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
+dotnet run --project D:\BI\MAS\Store\Service\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
-Submit L3s with `MPAIApps/StoreService/Submit-L3s.ps1` or the `StoreApp`
+Submit L3s with `MAS/Store/Service/Submit-L3s.ps1` or the `StoreApp`
 window; build packages with `AIMs/Build-Packages.ps1`.
 
 **A Service reachable from another machine cannot use HTTPS with the
@@ -203,7 +203,7 @@ working arrangement is plain HTTP throughout - the Store, and every Service
 that must be reached from elsewhere:
 
 ```powershell
-dotnet run --project D:\BI\MPAIApps\StoreService\StoreService.csproj -- --Urls http://0.0.0.0:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
+dotnet run --project D:\BI\MAS\Store\Service\StoreService.csproj -- --Urls http://0.0.0.0:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
 Every Service's `StoreUrl` (below) must then use `http://`, not `https://`,

@@ -93,6 +93,8 @@ AIMs/           AI Modules
   AMDs/         L3 Module descriptors (JSON)
   Core/         shared types (data objects, qualifiers, JSON, paths)
   <family>/     the AIMs (MMC, PAF, OSD, CAE3, CVE ...)
+MAS/            MPAI-MAS: Server, Client, the Service (MasService) and the Store (Service, App)
+MAS/            MPAI-MAS: Server, Client, the Service (MasService) and the Store (Service, App)
 UAs/
   Lib/UaKit/    Speaking-Avatar host, capture/present toolkit
   Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD)

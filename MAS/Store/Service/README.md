@@ -7,7 +7,7 @@ Services obtain them (actions 8 and 9).
 ## Running it
 
 ```
-dotnet run --project MPAIApps\StoreService\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
+dotnet run --project MAS\Store\Service\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
 | Option | Meaning | Default |
@@ -46,5 +46,5 @@ A published L3 is never overwritten: submitting it again publishes version n+1.
 Sub-AIMs, naming in each submitted copy where its package is:
 
 ```
-powershell -ExecutionPolicy Bypass -File MPAIApps\StoreService\Submit-L3s.ps1 -Folder D:\BI\AIMs\AMDs -Ids 1MMC-TIQ-V2.5-I01,1MMC-ASR-V2.5-I01 -Packages D:\MPAI\Packages
+powershell -ExecutionPolicy Bypass -File MAS\Store\Service\Submit-L3s.ps1 -Folder D:\BI\AIMs\AMDs -Ids 1MMC-TIQ-V2.5-I01,1MMC-ASR-V2.5-I01 -Packages D:\MPAI\Packages
 ```

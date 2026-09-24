@@ -30,7 +30,7 @@
     <ProjectReference Include="..\..\..\MW\Rca\Mpai.Rca.csproj" />
     <ProjectReference Include="..\..\..\MW\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
-    <ProjectReference Include="..\..\..\MW\MasClient\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\..\MAS\Client\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
 

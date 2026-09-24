@@ -14,16 +14,16 @@ using Mpai.Mas.Server;
 using AIF.Controller;
 using Mpai.Providers;
 
-namespace MmcAmq.Server;
+namespace Mpai.Mas.Service;
 
-// AmqServer - MMC-AMQ behind the MPAI-MAS API.
+// MasService (formerly AmqServer) - the Modules of the Apps behind the MPAI-MAS API.
 //
 // FOR WHOEVER INSTALLS THIS. Everything the server needs is in mas-server.json,
 // beside the executable or at a path given as the only argument. See
 // MasServerConfig.cs for the file''s shape and the meaning of each value. You
 // should not need to change any code.
 //
-//   AmqServer [path-to-mas-server.json]
+//   MasService [path-to-mas-server.json]
 //
 // IT REFUSES RATHER THAN IMPROVISES. A server reachable from outside that
 // quietly served a development certificate, or accepted every caller because no
