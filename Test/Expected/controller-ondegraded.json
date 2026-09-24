@@ -1,0 +1,4 @@
+{
+  "context medical": "on Degraded: an AIM is not ALIVE / [C] stopped AIM 1TST-THR-V1.0-I01 / [C] stopped 1TST-DGR-V1.0-I01 / ended: on Degraded stopped 1TST-DGR-V1.0-I01; the workflow ends.",
+  "context public": "on Degraded: an AIM is not ALIVE / [C] stopped AIM 1TST-THR-V1.0-I01 / [C] give Upper (TST-TXT-V1.0) / on Degraded: an AIM is not ALIVE / [C] give UpperAgain (TST-TXT-V1.0) / [C] stopped 1TST-DGR-V1.0-I01"
+}

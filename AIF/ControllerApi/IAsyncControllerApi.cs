@@ -18,6 +18,8 @@ public interface IAsyncControllerApi
     Task<ControllerApi.Read>   OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1);
     Task<AifError>             PauseAsync(string moduleName);
     Task<AifError>             ResumeAsync(string moduleName);
+    Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName);
+    Task<AifError>             StopAimAsync(string moduleName, string aimName);
 }
 
 public static class ControllerApiAsync
@@ -49,5 +51,9 @@ public static class ControllerApiAsync
         public Task<AifError> PauseAsync(string moduleName) => Task.Run(() => api.Pause(moduleName));
 
         public Task<AifError> ResumeAsync(string moduleName) => Task.Run(() => api.Resume(moduleName));
+
+        public Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName) => Task.Run(() => api.Status(moduleName));
+
+        public Task<AifError> StopAimAsync(string moduleName, string aimName) => Task.Run(() => api.StopAim(moduleName, aimName));
     }
 }

@@ -121,11 +121,23 @@ public sealed class WorkflowInterpreter
         say($"[C] take {port.DataType}{(port.PortNumber is int n ? ":" + n : "")}");
     }
 
-    private async Task GiveAsync(Step step)
+    private async Task GiveAsync(Step step, CancellationToken stop)
     {
         pending.TryGetValue(Module, out var inputs);
         var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>());
         pending.Remove(Module);
+
+        // WHAT THE WORKFLOW DOES WHEN ITS MODULE DEGRADES (M3213 3.5). The
+        // Controller has applied the Module's own policy already; what follows
+        // depends on the context the workflow was written for, and is its own.
+        if (await DegradedAsync(result.Error, stop))
+        {
+            // A workflow that stopped its Module there has ended: nothing it asks
+            // of the Module afterwards could be answered.
+            if (!running.Contains(Module))
+                throw new OperationCanceledException($"on Degraded stopped {Module}; the workflow ends.");
+            if (!result.Ok) return;
+        }
 
         if (!result.Ok)
             throw new InvalidOperationException($"{Module} returned {result.Error}.");
@@ -182,7 +194,29 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
-            case StepKind.Give: await GiveAsync(step); break;
+            case StepKind.Give: await GiveAsync(step, stop); break;
+
+            // THE STATUS OF THE MODULE'S AIMS, as text a workflow can branch on:
+            // one line per AIM - its name, ALIVE, DEGRADED or DEAD, why, and what
+            // it reported - in the variable Status.
+            case StepKind.Status:
+            {
+                var status = await north.StatusAsync(Module);
+                if (!status.Ok)
+                    throw new NotSupportedException($"line {step.Line}: the Controller gave no status of {Module} ({status.Error}).");
+                variables["Status"] = StatusText(status);
+                say($"[C] status: {variables["Status"].Replace("\n", "; ")}");
+                break;
+            }
+
+            case StepKind.StopAim:
+            {
+                var done = await north.StopAimAsync(Module, step.Variable!);
+                if (done != AifError.OK)
+                    throw new NotSupportedException($"line {step.Line}: the Controller did not stop {step.Variable} ({done}).");
+                say($"[C] stopped AIM {step.Variable}");
+                break;
+            }
 
             case StepKind.Acquire when step.Alternatives.Count > 1:
                 await FirstOfAsync(step, stop);
@@ -297,8 +331,8 @@ public sealed class WorkflowInterpreter
                 if (step.Contains is null) taken = Truth(step.Variable!);
                 else
                 {
-                    var said = data.TryGetValue(step.Variable!, out var d)
-                        ? Plain(d.Json) : "";
+                    var said = variables.TryGetValue(step.Variable!, out var v) ? v
+                             : data.TryGetValue(step.Variable!, out var d) ? Plain(d.Json) : "";
                     taken = said.Contains(step.Contains, StringComparison.OrdinalIgnoreCase);
                     say($"branch on {step.Variable} contains \"{step.Contains}\": {(taken ? "yes" : "no")} ({said})");
                 }
@@ -474,6 +508,35 @@ public sealed class WorkflowInterpreter
     }
 
     // The words inside a Text Object, for putting into a sentence.
+    // Runs 'on Degraded:' when an exchange failed, or the Module's status shows
+    // an AIM that is not ALIVE - once, not from within itself. True when it ran.
+    // A Controller that gives no status (over MPAI-MAS, until Phase 15) is judged
+    // by the outcome of the exchange alone.
+    private bool handlingDegraded;
+
+    private async Task<bool> DegradedAsync(AifError outcome, CancellationToken stop)
+    {
+        if (current is null || current.OnDegraded.Count == 0 || handlingDegraded) return false;
+
+        var status = await north.StatusAsync(Module);
+        var degraded = outcome != AifError.OK ||
+                       (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive));
+        if (!degraded) return false;
+
+        if (status.Ok) variables["Status"] = StatusText(status);
+        say($"on Degraded: {(outcome != AifError.OK ? outcome.ToString() : "an AIM is not ALIVE")}");
+        handlingDegraded = true;
+        try { await WalkAsync(current.OnDegraded, stop); }
+        finally { handlingDegraded = false; }
+        return true;
+    }
+
+    private static string StatusText(ControllerApi.ModuleStatus status) =>
+        string.Join("\n", status.Aims.Select(a =>
+            $"{a.Aim} {a.Status.ToString().ToUpperInvariant()}" +
+            (a.Reason.Length > 0 ? $": {a.Reason}" : "") +
+            (a.Reports.Count > 0 ? $"; reported: {string.Join(" | ", a.Reports)}" : "")));
+
     private static string Plain(string json)
     {
         try

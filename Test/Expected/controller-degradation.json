@@ -1,0 +1,19 @@
+{
+  "Continue: outputs": "#1 OK 'X'; #2 NotProduced; #3 NotProduced; #4 OK 'x'",
+  "Continue: status after a run": "1TST-NOP-V1.0-I01 Alive; 1TST-RPT-V1.0-I01 Degraded (it reported) reported 'fell back to a simpler path'; 1TST-THR-V1.0-I01 Degraded (it threw: TST-THR throws); 1TST-UPP-V1.0-I01 Alive",
+  "Continue: the next run": "OK 'Y'; 1TST-THR-V1.0-I01 Degraded (it threw: TST-THR throws)",
+  "MPAI_AIFM_AIM_Stop: outputs": "#1 NotProduced; #2 OK 'x'",
+  "MPAI_AIFM_AIM_Stop: status": "1TST-UPP-V1.0-I01 Dead (stopped by 1TST-KIL-V1.0-I01)",
+  "Status, Module not started": "NotStarted",
+  "StopAIM: outputs": "#1 OK 'X'; #3 NotProduced",
+  "StopAIM: status": "1TST-THR-V1.0-I01 Dead (it threw: TST-THR throws; OnDegraded StopAIM)",
+  "StopAIM: the next run": "OK 'Y'; 1TST-THR-V1.0-I01 Dead (it threw: TST-THR throws; OnDegraded StopAIM)",
+  "StopAim 1TST-UPP-V1.0-I01": "OK",
+  "StopAim an AIM the Module does not have": "NotFound",
+  "StopModule: #1": "NotProduced",
+  "StopModule: a write after": "NotStarted",
+  "StopModule: started again": "OK, OK",
+  "StopModule: status": "1TST-NOP-V1.0-I01 Dead (its Module was stopped); 1TST-RPT-V1.0-I01 Dead (its Module was stopped); 1TST-THR-V1.0-I01 Dead (its Module was stopped); 1TST-UPP-V1.0-I01 Dead (its Module was stopped)",
+  "after StopAim, #1": "NotProduced",
+  "after StopAim, status": "1TST-UPP-V1.0-I01 Dead (stopped by the User Agent)"
+}

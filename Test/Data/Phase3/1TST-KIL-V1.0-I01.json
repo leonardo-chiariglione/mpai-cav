@@ -1,0 +1,19 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-KIL-V1.0-I01", "AIMName": "1TST-KIL-V1.0-I01"},
+  "Header":           "TST-KIL-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: asks the Controller to stop 1TST-UPP-V1.0-I01 (MPAI_AIFM_AIM_Stop), then gives its text back.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",   "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Killed", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

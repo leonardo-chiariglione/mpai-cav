@@ -29,6 +29,13 @@ public sealed class WorkflowReader
         new(@"^ask\s+Controller\s+to\s+(?<verb>start|stop|pause|resume|take|give)\b\s*(?<rest>.*)$",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // M3213 3.5: what the User Agent asks of the Controller about its Module's AIMs.
+    private static readonly Regex AskStatus =
+        new(@"^ask\s+Controller\s+for\s+status\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private static readonly Regex AskStopAim =
+        new(@"^ask\s+Controller\s+to\s+stop\s+AIM\s+(?<aim>\S+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private static readonly Regex Datum =
         new(@"^(?<label>[A-Za-z_][\w]*)\s*\(\s*(?<type>[^):]+?)\s*(?::\s*(?<pn>\d+)\s*)?\)\s*(?:=\s*(?<lit>.*))?$",
             RegexOptions.Compiled);
@@ -47,8 +54,9 @@ public sealed class WorkflowReader
         var modules = m.Groups["modules"].Value.Split(',')
                        .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
 
-        var onStart = new List<Step>();
-        var onStop  = new List<Step>();
+        var onStart    = new List<Step>();
+        var onStop     = new List<Step>();
+        var onDegraded = new List<Step>();
         List<Step>? current = null;
 
         int i = 1;
@@ -58,14 +66,15 @@ public sealed class WorkflowReader
 
             if (line.Equals("on Start:", StringComparison.OrdinalIgnoreCase)) { current = onStart; i++; continue; }
             if (line.Equals("on Stop:",  StringComparison.OrdinalIgnoreCase)) { current = onStop;  i++; continue; }
+            if (line.Equals("on Degraded:", StringComparison.OrdinalIgnoreCase)) { current = onDegraded; i++; continue; }
 
             if (current is null)
-                throw new WorkflowSyntaxError(lines[i].Line, "a step outside 'on Start:' or 'on Stop:'.");
+                throw new WorkflowSyntaxError(lines[i].Line, "a step outside 'on Start:', 'on Stop:' or 'on Degraded:'.");
 
             current.Add(ReadOne(lines, ref i));
         }
 
-        return new Workflow { Name = name, Modules = modules, OnStart = onStart, OnStop = onStop };
+        return new Workflow { Name = name, Modules = modules, OnStart = onStart, OnStop = onStop, OnDegraded = onDegraded };
     }
 
     // READS ONE STEP, AND WHERE IT IS A BLOCK, WHAT IS INSIDE IT. A block owns
@@ -137,7 +146,8 @@ public sealed class WorkflowReader
         {
             var t = lines[i].Text.Trim();
             if (t.Equals("on Start:", StringComparison.OrdinalIgnoreCase) ||
-                t.Equals("on Stop:",  StringComparison.OrdinalIgnoreCase)) break;
+                t.Equals("on Stop:",  StringComparison.OrdinalIgnoreCase) ||
+                t.Equals("on Degraded:", StringComparison.OrdinalIgnoreCase)) break;
             body.Add(ReadOne(lines, ref i));
         }
         return body;
@@ -166,6 +176,13 @@ public sealed class WorkflowReader
 
     private Step ReadStep(int n, string line)
     {
+        if (AskStatus.IsMatch(line))
+            return new Step { Kind = StepKind.Status, Line = n };
+
+        var stopAim = AskStopAim.Match(line);
+        if (stopAim.Success)
+            return new Step { Kind = StepKind.StopAim, Variable = stopAim.Groups["aim"].Value, Line = n };
+
         var ask = Ask.Match(line);
         if (ask.Success)
             return ReadRequest(n, ask.Groups["verb"].Value.ToLowerInvariant(),
@@ -437,7 +454,7 @@ public sealed class WorkflowReader
 
     private static readonly string[] Starters =
     {
-        "workflow ", "on Start:", "on Stop:", "ask ", "acquire ", "type ", "prompt ",
+        "workflow ", "on Start:", "on Stop:", "on Degraded:", "ask ", "acquire ", "type ", "prompt ",
         "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run "
     };
 

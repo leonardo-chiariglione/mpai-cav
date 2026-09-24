@@ -153,6 +153,9 @@ public sealed class Controller
                 ? n
                 : null;
 
+        if (root.TryGetProperty("OnDegraded", out var onDegraded) && onDegraded.ValueKind == JsonValueKind.String)
+            node.OnDegraded = onDegraded.GetString() ?? node.OnDegraded;
+
         // InternalTypes  (InternalType name -> DataType)
         if (root.TryGetProperty("InternalTypes", out var internalTypes))
         {

@@ -2,6 +2,7 @@
   "Header":           "MMC-MPD-V2.5",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "Multimodal Personal Status-based Dialogue: speech-only affective dialogue. Automatic Speech Recognition recognises the speech; Natural Language Understanding produces the Text Descriptors, the (refined) NLU Text and the Text Personal Status; Personal Status Extraction reads the Speech Personal Status from the Speech Object and multiplexes it with the Text Personal Status into the entity's Personal Status; Entity Dialogue Processing produces the machine's response Text and Personal Status, aware of both the meaning and the feeling; Response and Scene Rendering renders the Speaking Avatar. The running Summary threads context across turns. Acquisition and delivery are the User Agent, not sub-AIMs.",
 
   "InternalTypes":    [{"Name": "RecognisedText",        "DataType": "OSD-BTO-V1.5"},

@@ -79,25 +79,107 @@ public class ControllerTests
         Expected.Match("controller-outcomes.json", result);
     }
 
-    // The status of each AIM after a run in which one worked, one produced
-    // nothing and one threw.
+    // The status of each AIM - ALIVE, DEGRADED, DEAD - and the reports of a run;
+    // OnDegraded StopModule, StopAIM and Continue; StopAim from the User Agent and
+    // from an AIM (M3213 3.5).
     [Fact]
-    public async Task Status()
+    public void Degradation()
     {
-        var (ua, id) = Start("1TST-DGR-V1.0-I01");
-        await ua.RunAsync(id, Boundary("x"));
-
         var result = new Dictionary<string, string>();
-        foreach (var aim in new[] { "1TST-UPP-V1.0-I01", "1TST-NOP-V1.0-I01", "1TST-THR-V1.0-I01" })
-        {
-            ua.MPAI_AIFU_AIM_GetStatus(id, aim, out var status);
-            result[$"after a run: {aim}"] = status.ToString();
-        }
-        ua.MPAI_AIFU_MODULE_Stop(id);
-        ua.MPAI_AIFU_AIM_GetStatus(id, "1TST-UPP-V1.0-I01", out var afterStop);
-        result["after Stop: 1TST-UPP-V1.0-I01"] = afterStop.ToString();
+        using var api = Api();
 
-        Expected.Match("controller-status.json", result);
+        // Continue: the others run on what they have; the AIM that threw runs again.
+        const string cont = "1TST-DGR-V1.0-I01";
+        api.StartFlow(cont);
+        api.InputWrite(cont, Text, 1, "x");
+        result["Continue: outputs"] = string.Join("; ", new[] { 1, 2, 3, 4 }.Select(n => $"#{n} " + Shown(api.OutputRead(cont, Text, n))));
+        result["Continue: status after a run"] = StatusOf(api.Status(cont));
+        api.InputWrite(cont, Text, 1, "y");
+        result["Continue: the next run"] = Shown(api.OutputRead(cont, Text, 1)) + "; " + StatusOf(api.Status(cont), "1TST-THR-V1.0-I01");
+
+        // StopAim from the User Agent.
+        result["StopAim 1TST-UPP-V1.0-I01"] = api.StopAim(cont, "1TST-UPP-V1.0-I01").ToString();
+        result["StopAim an AIM the Module does not have"] = api.StopAim(cont, "1TST-XXX-V1.0-I01").ToString();
+        api.InputWrite(cont, Text, 1, "z");
+        result["after StopAim, #1"] = Shown(api.OutputRead(cont, Text, 1));
+        result["after StopAim, status"] = StatusOf(api.Status(cont), "1TST-UPP-V1.0-I01");
+        api.StopFlow(cont);
+
+        // StopAIM: the AIM that threw is stopped, and skipped from then on.
+        const string aim = "1TST-DGA-V1.0-I01";
+        api.StartFlow(aim);
+        api.InputWrite(aim, Text, 1, "x");
+        result["StopAIM: outputs"] = string.Join("; ", new[] { 1, 3 }.Select(n => $"#{n} " + Shown(api.OutputRead(aim, Text, n))));
+        result["StopAIM: status"] = StatusOf(api.Status(aim), "1TST-THR-V1.0-I01");
+        api.InputWrite(aim, Text, 1, "y");
+        result["StopAIM: the next run"] = Shown(api.OutputRead(aim, Text, 1)) + "; " + StatusOf(api.Status(aim), "1TST-THR-V1.0-I01");
+        api.StopFlow(aim);
+
+        // StopModule, the default: the run ends, its outputs are not produced, and
+        // the Module is stopped.
+        const string stop = "1TST-DGS-V1.0-I01";
+        api.StartFlow(stop);
+        api.InputWrite(stop, Text, 1, "x");
+        result["StopModule: #1"] = Shown(api.OutputRead(stop, Text, 1));
+        result["StopModule: a write after"] = api.InputWrite(stop, Text, 1, "y").ToString();
+        result["StopModule: status"] = StatusOf(api.Status(stop));
+        result["StopModule: started again"] = api.StartFlow(stop) + ", " + api.InputWrite(stop, Text, 1, "z");
+        api.StopFlow(stop);
+
+        // An AIM stopping another (MPAI_AIFM_AIM_Stop).
+        const string kill = "1TST-KLM-V1.0-I01";
+        api.StartFlow(kill);
+        api.InputWrite(kill, Text, 1, "x");
+        result["MPAI_AIFM_AIM_Stop: outputs"] = string.Join("; ", new[] { 1, 2 }.Select(n => $"#{n} " + Shown(api.OutputRead(kill, Text, n))));
+        result["MPAI_AIFM_AIM_Stop: status"] = StatusOf(api.Status(kill), "1TST-UPP-V1.0-I01");
+        api.StopFlow(kill);
+
+        result["Status, Module not started"] = api.Status(kill).Error.ToString();
+
+        Expected.Match("controller-degradation.json", result);
+    }
+
+    // The workflow's 'on Degraded:', acting according to its context (M3213 3.5).
+    [Fact]
+    public async Task OnDegraded()
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var context in new[] { "public", "medical" })
+        {
+            using var api = Api();
+            var said = new List<string>();
+            var devices = new Mpai.Rca.DeviceRegistry()
+                .RegisterAcquire(Text, (vad, wanted) => Task.FromResult<string?>("x"));
+            var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, said.Add);
+
+            var workflow = new Mpai.Wdl.WorkflowReader().Read($$"""
+                workflow TST over 1TST-DGR-V1.0-I01
+                on Start:
+                    ask Controller to start
+                    set Context = "{{context}}"
+                    acquire Words (TST-TXT-V1.0)
+                    offer Words (TST-TXT-V1.0)
+                    ask Upper (TST-TXT-V1.0:1)
+                    acquire Again (TST-TXT-V1.0)
+                    offer Again (TST-TXT-V1.0)
+                    ask UpperAgain (TST-TXT-V1.0:1)
+                on Degraded:
+                    branch on Status contains "1TST-THR-V1.0-I01 DEGRADED" {
+                        ask Controller to stop AIM 1TST-THR-V1.0-I01
+                    }
+                    branch on Context contains "medical" {
+                        ask Controller to stop
+                    }
+                """);
+
+            try { await interpreter.RunAsync(workflow, CancellationToken.None); }
+            catch (Exception failure) { said.Add("ended: " + failure.Message); }
+
+            result[$"context {context}"] = string.Join(" / ", said.Where(s =>
+                s.StartsWith("on Degraded") || s.StartsWith("[C] stopped") || s.StartsWith("[C] give") || s.StartsWith("ended")));
+        }
+
+        Expected.Match("controller-ondegraded.json", result);
     }
 
     // Pause, Resume and Stop, on an AIM that takes 300 ms and honours both, at
@@ -188,6 +270,13 @@ public class ControllerTests
 
     // ---------------------------------------------------------------------
 
+    // Each AIM's status, why, and what it reported; or one AIM's.
+    private static string StatusOf(ControllerApi.ModuleStatus status, string? aim = null) =>
+        !status.Ok ? status.Error.ToString()
+        : string.Join("; ", status.Aims.Where(a => aim is null || a.Aim == aim).Select(a =>
+            $"{a.Aim} {a.Status}" + (a.Reason.Length > 0 ? $" ({a.Reason})" : "") +
+            (a.Reports.Count > 0 ? $" reported '{string.Join("', '", a.Reports)}'" : "")));
+
     private static (UserAgent, int) Start(string module)
     {
         var store = new AmdStore(Amds);
@@ -218,6 +307,8 @@ public sealed class TestAims : IAimProvider
             "1TST-UPP-V1.0-I01" => new TestAim(aimName, m => Out(("Upper", In(m).ToUpperInvariant()))),
             "1TST-REV-V1.0-I01" => new TestAim(aimName, m => Out(("Reversed", new string(In(m).Reverse().ToArray())))),
             "1TST-ECH-V1.0-I01" => new TestAim(aimName, m => Out(("Echo", In(m)))),
+            "1TST-RPT-V1.0-I01" => new TestAim(aimName, m => { m.Context.Report("fell back to a simpler path"); return Out(("Reported", In(m))); }),
+            "1TST-KIL-V1.0-I01" => new TestAim(aimName, m => { m.Context.StopAim("1TST-UPP-V1.0-I01"); return Out(("Killed", In(m))); }),
             "1TST-NOP-V1.0-I01" => new TestAim(aimName, m => Out()),
             "1TST-THR-V1.0-I01" => new TestAim(aimName, (Func<Message, Message>)(m => throw new InvalidOperationException("TST-THR throws"))),
             "1TST-SLP-V1.0-I01" => new TestAim(aimName, async m =>

@@ -31,6 +31,8 @@ public enum StepKind
     ResumeModule,     // ask Controller to resume M
     Take,             // ask Controller to take L (T:n) [= "literal"] for M
     Give,             // ask Controller to give from M: L (T:n), ...
+    Status,           // ask Controller for status      - into the label Status
+    StopAim,          // ask Controller to stop AIM A
 
     // --- the User Agent's own ---
     Acquire,          // acquire L (T) [via VAD] [or L (T) [via VAD] ...]
@@ -57,7 +59,7 @@ public sealed class Step
     public IReadOnlyList<PortRef> Ports  { get; init; } = Array.Empty<PortRef>();  // Give
     public IReadOnlyList<string>  Labels { get; init; } = Array.Empty<string>();   // Present, Display
     public string?  Text          { get; init; }   // Prompt: the words
-    public string?  Variable      { get; init; }   // Set, Branch
+    public string?  Variable      { get; init; }   // Set, Branch; StopAim: the AIM
     public string?  Value         { get; init; }   // Set
     public TimeSpan Duration      { get; init; }   // Wait
     public bool     ViaVad        { get; init; }   // Acquire
@@ -88,14 +90,17 @@ public sealed class Step
 
     public bool IsControllerRequest => Kind is
         StepKind.StartModule or StepKind.StopModule or StepKind.PauseModule or
-        StepKind.ResumeModule or StepKind.Take or StepKind.Give;
+        StepKind.ResumeModule or StepKind.Take or StepKind.Give or
+        StepKind.Status or StepKind.StopAim;
 }
 
-// A workflow: the Modules it drives, what it does on Start, and what on Stop.
+// A workflow: the Modules it drives, what it does on Start, what on Stop, and
+// what when its Module degrades (M3213 3.5).
 public sealed class Workflow
 {
     public required string Name { get; init; }
-    public IReadOnlyList<string> Modules { get; init; } = Array.Empty<string>();
-    public IReadOnlyList<Step>   OnStart { get; init; } = Array.Empty<Step>();
-    public IReadOnlyList<Step>   OnStop  { get; init; } = Array.Empty<Step>();
+    public IReadOnlyList<string> Modules    { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<Step>   OnStart    { get; init; } = Array.Empty<Step>();
+    public IReadOnlyList<Step>   OnStop     { get; init; } = Array.Empty<Step>();
+    public IReadOnlyList<Step>   OnDegraded { get; init; } = Array.Empty<Step>();
 }

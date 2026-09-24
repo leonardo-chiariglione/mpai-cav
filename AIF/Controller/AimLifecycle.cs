@@ -1,6 +1,20 @@
 namespace AIF.Controller;
 
-// The four states an AIM can be in, per the MPAI-AIF Basic API.
+// The status of an AIM of a running Module (M3203 3.7, M3213 3.5): ALIVE;
+// DEGRADED, after it has failed or reported in a run; DEAD, when it or its
+// Module has been stopped.
+public enum AimStatus
+{
+    Alive,
+    Degraded,
+    Dead
+}
+
+// What the User Agent learns of one AIM: its status, why, and what it reported
+// in the Module's last run.
+public sealed record AimReport(string Aim, AimStatus Status, string Reason, IReadOnlyList<string> Reports);
+
+// The four states of an AIM's lifecycle, as its host drives it.
 public enum AimState
 {
     Idle,
@@ -109,6 +123,8 @@ public readonly struct AimContext
 {
     private readonly Func<Task>? _pauseGate;
     private readonly Func<int>?  _pauseRequests;
+    private readonly Action<string>?     _report;
+    private readonly Func<string, bool>? _stopAim;
 
     public static readonly AimContext None = new(CancellationToken.None, Task.CompletedTask);
 
@@ -143,6 +159,28 @@ public readonly struct AimContext
         _pauseGate     = pauseGate;
         _pauseRequests = pauseRequests;
     }
+
+    private AimContext(AimContext context, Action<string> report, Func<string, bool> stopAim)
+    {
+        StopToken      = context.StopToken;
+        _pauseGate     = context._pauseGate;
+        _pauseRequests = context._pauseRequests;
+        _report        = report;
+        _stopAim       = stopAim;
+    }
+
+    // The same context, with the two calls an AIM makes of its host.
+    public AimContext WithHost(Action<string> report, Func<string, bool> stopAim) =>
+        new(this, report, stopAim);
+
+    // MPAI_AIFM_AIM_Report (M3203 4.11): something the AIM did or could not do.
+    // The Controller conveys it, does not interpret it and takes no action on it;
+    // the AIM is DEGRADED for the run. Without a host the report is discarded.
+    public void Report(string text) => _report?.Invoke(text);
+
+    // MPAI_AIFM_AIM_Stop, as the published V3.0 provides it: this AIM asks the
+    // Controller to stop an AIM of its Module, which is then DEAD (StopAIM).
+    public bool StopAim(string aimName) => _stopAim?.Invoke(aimName) ?? false;
 
     // Convenience: await this to honour both Pause and Stop.
     // Call repeatedly at natural yield points inside ProcessAsync.

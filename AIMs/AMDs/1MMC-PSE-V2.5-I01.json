@@ -2,6 +2,7 @@
   "Header":           "MMC-PSE-V2.5",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "Personal Status Extraction: extracts the entity's Personal Status from the available modalities. PS-Speech Interpretation reads the affect in the Speech Object; PS-Face Interpretation reads the affect in the Face Object; the Text Personal Status arrives ready-made from Natural Language Understanding. Personal Status Multiplexing assembles whichever per-modality Personal Statuses are present - Text, Speech, Face - into one Entity Personal Status. It combines; it does not compute.",
 
   "InternalTypes":    [{"Name": "SpeechPersonalStatus", "DataType": "MMC-SPS-V2.5"},

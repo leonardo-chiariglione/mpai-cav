@@ -22,6 +22,9 @@ public sealed class MachineExecutor
     private readonly ExecutionPlanner planner =
         new();
 
+    // The Module being run: a run begins when its root does.
+    private DescriptorNode? root;
+
     public MachineExecutor(
         AimHost host)
     {
@@ -39,6 +42,7 @@ public sealed class MachineExecutor
         DescriptorGraph graph,
         Message message)
     {
+        root = graph.Root;
         var result = await ExecuteNodeResumableAsync(
             graph.Root,
             planner.BuildPlan(graph.Root),
@@ -60,6 +64,7 @@ public sealed class MachineExecutor
         DescriptorGraph graph,
         Message message)
     {
+        root = graph.Root;
         return ExecuteNodeResumableAsync(
             graph.Root,
             planner.BuildPlan(graph.Root),
@@ -106,6 +111,8 @@ public sealed class MachineExecutor
         if (node.Children.Count == 0)
             return await ExecuteAimAsync(node, boundary, message);
 
+        if (ReferenceEquals(node, root)) host.BeginRun();
+
         var children =
             node.Children.ToDictionary(
                 child => child.AIMName,
@@ -118,6 +125,15 @@ public sealed class MachineExecutor
         {
             var aimName = plan[position];
             var child   = children[aimName];
+
+            // A Module its policy stopped runs no further; a stopped AIM, never again.
+            if (host.IsStopped)
+                return ExecutionResult.Complete(Empty(message));
+            if (!child.IsComposite && host.IsDead(aimName))
+            {
+                Console.WriteLine($"[AIF] {aimName}: stopped, skipped");
+                continue;
+            }
 
             // AN EXCHANGE COMPLETES. The User Agent gives what it has and names what
             // it wants; it never promises to supply more, so there is nothing to wait
@@ -165,32 +181,40 @@ public sealed class MachineExecutor
             }
             catch (OperationCanceledException cancelled)
             {
+                // One AIM stopped - by a policy, by the User Agent, by another AIM
+                // - produced nothing, and the others go on. The Module stopped:
+                // the run ends.
+                if (!host.IsStopped && !child.IsComposite && host.IsDead(aimName))
+                {
+                    Console.WriteLine($"[AIF] {aimName}: stopped while running, produced no output");
+                    continue;
+                }
                 return ExecutionResult.Complete(
                     Message.Cancelled(message.MessageId, aimName, cancelled.Message));
             }
             catch (Exception failure)
             {
-                // A leaf that THROWS is isolated just like one that returns an
-                // error: log it, treat it as having produced nothing, and let the
-                // Module continue (graceful degradation, e.g. a recogniser that
-                // threw on empty/garbled input must not blank the whole graph).
-                Console.WriteLine($"[AIF] {aimName}: threw, skipped (produced no output): {failure.Message}");
+                // A leaf that THROWS is DEGRADED, and has produced nothing; what
+                // follows is the policy of the composite containing it.
+                if (Degraded(node, aimName, $"it threw: {failure.Message}"))
+                    return ExecutionResult.Complete(Empty(message));
                 continue;
             }
 
-            // A user CANCEL aborts the whole run. But a single leaf ERROR is
-            // isolated: it means that AIM produced nothing (e.g. a recogniser
-            // that saw no face or heard no speaker). The Module continues so the
-            // rest of the graph - notably ID Reconciliation - can proceed with
-            // whichever modalities DID succeed. Graceful degradation, not abort.
+            // A user CANCEL aborts the whole run. A leaf ERROR - a recogniser that
+            // saw no face or heard no speaker - is a failure like a throw: the AIM
+            // is DEGRADED, produced nothing, and the policy decides.
             if (result.IsCancelled)
                 return ExecutionResult.Complete(result);
             if (result.IsError)
             {
-                Console.WriteLine($"[AIF] {aimName}: error, skipped (produced no output): {result.Payload}");
+                if (Degraded(node, aimName, $"it returned an error: {result.Payload}"))
+                    return ExecutionResult.Complete(Empty(message));
                 last = result;
                 continue;
             }
+
+            if (!child.IsComposite) host.Succeeded(aimName);
 
             // EVERY OBJECT EVERY AIM PRODUCES PASSES THROUGH HERE. Asked, once
             // per AIM and Data Type, whether it says what its Data is. It reports
@@ -236,6 +260,7 @@ public sealed class MachineExecutor
         }
 
         Console.WriteLine($"[AIF] {aim.AIMName}: started on its own, Ports={inbox.Count}");
+        host.BeginRun();
 
         Message result;
         try
@@ -255,6 +280,9 @@ public sealed class MachineExecutor
         }
         catch (Exception failure)
         {
+            // An AIM started on its own is not in a composite and has no policy:
+            // it is DEGRADED, and what to do is the User Agent's decision.
+            host.Degrade(aim.AIMName, $"it threw: {failure.Message}");
             Console.WriteLine($"[AIF] {aim.AIMName}: threw, produced no output: {failure.Message}");
             return ExecutionResult.Complete(Empty(message));
         }
@@ -262,9 +290,11 @@ public sealed class MachineExecutor
         if (result.IsCancelled) return ExecutionResult.Complete(result);
         if (result.IsError)
         {
+            host.Degrade(aim.AIMName, $"it returned an error: {result.Payload}");
             Console.WriteLine($"[AIF] {aim.AIMName}: error, produced no output: {result.Payload}");
             return ExecutionResult.Complete(Empty(message));
         }
+        host.Succeeded(aim.AIMName);
 
         // Its outputs, back on the boundary they belong to.
         var produced = new Dictionary<string, string>();
@@ -284,6 +314,28 @@ public sealed class MachineExecutor
             Payload     = result.Payload,
             Ports       = produced
         });
+    }
+
+    // An AIM of 'node' failed. It is DEGRADED, and the composite's policy is
+    // applied (M3213 3.5): StopModule - the Module is stopped and the run ends
+    // (true); StopAIM - that AIM is stopped and the others go on; Continue - the
+    // others go on, and it runs again at the next exchange.
+    private bool Degraded(DescriptorNode node, string aimName, string reason)
+    {
+        host.Degrade(aimName, reason);
+        Console.WriteLine($"[AIF] {aimName}: DEGRADED ({reason}); {node.AIMName} OnDegraded {node.OnDegraded}");
+
+        switch (node.OnDegraded)
+        {
+            case "Continue":
+                return false;
+            case "StopAIM":
+                host.StopAim(aimName, $"{reason}; OnDegraded StopAIM");
+                return false;
+            default:
+                host.StopModule();
+                return true;
+        }
     }
 
     private static Message Empty(Message message) => new()

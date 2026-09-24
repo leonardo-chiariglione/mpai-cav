@@ -194,14 +194,37 @@ public sealed class UserAgent
 
     // -- 3.3 Inquire about AIM state ------------------------------------------
 
-    // MPAI_AIFU_AIM_GetStatus(MODULE_ID, name, out status)
-    public AifError MPAI_AIFU_AIM_GetStatus(int moduleId, string name, out AimState status)
+    // MPAI_AIFU_AIM_GetStatus(MODULE_ID, name, out status): ALIVE, DEGRADED or
+    // DEAD (M3203 3.7).
+    public AifError MPAI_AIFU_AIM_GetStatus(int moduleId, string name, out AimStatus status)
     {
-        status = AimState.Idle;
+        status = AimStatus.Dead;
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
-        status = module.Host.GetState(name);
+        if (!module.Host.Contains(name)) return AifError.NotFound;
+        status = module.Host.StatusOf(name);
         return AifError.OK;
     }
+
+    // Every AIM of the Module: status, why, and the reports of its last run.
+    public AifError MPAI_AIFU_MODULE_GetStatus(int moduleId, out IReadOnlyList<AimReport> aims)
+    {
+        aims = Array.Empty<AimReport>();
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        aims = module.Host.Status();
+        return AifError.OK;
+    }
+
+    // MPAI_AIFU_AIM_Stop (M3213 3.5): the User Agent stops one AIM of the Module,
+    // which is DEAD for the rest of the Module's life; the others go on.
+    public AifError MPAI_AIFU_AIM_Stop(int moduleId, string name)
+    {
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        return module.Host.StopAim(name, "stopped by the User Agent") ? AifError.OK : AifError.NotFound;
+    }
+
+    // True when the Module's own policy stopped it (OnDegraded StopModule).
+    public bool ModuleStopped(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && module.Host.IsStopped;
 
     // -- Boundary Port access (section 4.6, used across the boundary) ---------
     // The User Agent writes a data object to a composite input Port, and reads

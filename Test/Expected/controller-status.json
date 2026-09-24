@@ -1,6 +1,0 @@
-{
-  "after Stop: 1TST-UPP-V1.0-I01": "Idle",
-  "after a run: 1TST-NOP-V1.0-I01": "Running",
-  "after a run: 1TST-THR-V1.0-I01": "Running",
-  "after a run: 1TST-UPP-V1.0-I01": "Running"
-}

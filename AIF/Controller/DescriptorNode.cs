@@ -44,6 +44,11 @@ public sealed class DescriptorNode
     public List<DescriptorNode> Children { get; } =
         new();
 
+    // What this composite does when one of its AIMs fails (M3213 3.5):
+    // StopModule, the default; StopAIM; or Continue.
+    public string OnDegraded { get; set; } =
+        "StopModule";
+
     public List<TopologyConnection> Connections { get; } =
         new();
 

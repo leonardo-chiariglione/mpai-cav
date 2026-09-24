@@ -266,6 +266,9 @@ public class MetadataTests
             ("Execution Sometimes",           composite, a => a["Execution"] = "Sometimes",             false),
             ("Execution on a basic AIM",      basic,     a => a["Execution"] = "Exchange",              false),
             ("OnDegraded Continue",           composite, a => a["OnDegraded"] = "Continue",             true),
+            ("OnDegraded StopAIM",            composite, a => a["OnDegraded"] = "StopAIM",              true),
+            ("OnDegraded StopModule",         composite, a => a["OnDegraded"] = "StopModule",           true),
+            ("OnDegraded Stop",               composite, a => a["OnDegraded"] = "Stop",                 false),
             ("OnDegraded Maybe",              composite, a => a["OnDegraded"] = "Maybe",                false),
             ("RestartLimit 2",                basic,     a => a["RestartLimit"] = 2,                    true),
             ("RestartLimit -1",               basic,     a => a["RestartLimit"] = -1,                   false),
@@ -308,10 +311,10 @@ public class MetadataTests
         }
         Assert.True(wrong.Count == 0, "The schema judged these wrongly:\n" + string.Join("\n", wrong));
 
-        // The Controller reads the new fields and does not yet act on them: MAD with
-        // all of them loads into the same connections as MAD without them.
+        // None of the new fields changes the connections the Controller builds:
+        // MAD with all of them loads into the same connections as MAD without them.
         var all = composite.DeepClone();
-        all["Execution"] = "Exchange"; all["OnDegraded"] = "Stop"; all["RestartLimit"] = 0;
+        all["Execution"] = "Exchange"; all["OnDegraded"] = "StopModule"; all["RestartLimit"] = 0;
         foreach (var port in all["ExternalPorts"]!.AsArray())
             if (port!["Direction"]!.GetValue<string>() == "Input") { port["Depth"] = 16; port["Overflow"] = "Block"; port["AcceptedTransports"] = new JsonArray("Controller"); }
             else port["Transport"] = "Controller";

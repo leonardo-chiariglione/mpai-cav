@@ -40,6 +40,10 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     private sealed class Started
     {
         public required int Id { get; init; }
+
+        // Its policy stopped it (OnDegraded StopModule): nothing more is written
+        // to it, and its status can still be asked for, until it is started again.
+        public bool Stopped { get; set; }
         public Dictionary<string, string> Written { get; } = new();
         public Task<Result>? Run { get; set; }
     }
@@ -79,6 +83,12 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             Outputs.FirstOrDefault(o => o.DataType == dataType && o.PortNumber == portNumber).Json;
     }
 
+    // What Status returned: an outcome, and each AIM's status and reports.
+    public readonly record struct ModuleStatus(AifError Error, IReadOnlyList<AimReport> Aims)
+    {
+        public bool Ok => Error == AifError.OK;
+    }
+
     // What one OutputRead returned: an outcome, and the datum when it is OK.
     public readonly record struct Read(AifError Error, string? Json)
     {
@@ -89,7 +99,12 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         lock (_tables)
         {
-            if (_running.ContainsKey(moduleName)) return AifError.OK;
+            if (_running.TryGetValue(moduleName, out var already))
+            {
+                if (!already.Stopped) return AifError.OK;
+                _ua.MPAI_AIFU_MODULE_Stop(already.Id);
+                _running.Remove(moduleName);
+            }
             var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
             if (err == AifError.OK) _running[moduleName] = new Started { Id = id };
             return err;
@@ -117,7 +132,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         lock (_tables)
         {
-            if (!_running.TryGetValue(moduleName, out var started)) return AifError.NotStarted;
+            if (!_running.TryGetValue(moduleName, out var started) || started.Stopped) return AifError.NotStarted;
 
             var port = PortOf(started, "Input", dataType, portNumber);
             if (port is null) return AifError.NoSuchPort;
@@ -171,6 +186,24 @@ public sealed class ControllerApi : IControllerApi, IDisposable
                 : AifError.NotStarted;
     }
 
+    public ModuleStatus Status(string moduleName)
+    {
+        lock (_tables)
+        {
+            if (!_running.TryGetValue(moduleName, out var started)) return new ModuleStatus(AifError.NotStarted, Array.Empty<AimReport>());
+            var err = _ua.MPAI_AIFU_MODULE_GetStatus(started.Id, out var aims);
+            return new ModuleStatus(err, aims);
+        }
+    }
+
+    public AifError StopAim(string moduleName, string aimName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) && !started.Stopped
+                ? _ua.MPAI_AIFU_AIM_Stop(started.Id, aimName)
+                : AifError.NotStarted;
+    }
+
     // Write every input, read every output: one exchange, built on the data path.
     // It is lenient where InputWrite is not - a datum for a Port the Module does
     // not declare is passed on, and meets no connection - because every client
@@ -188,7 +221,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         Task<Result>? run;
         lock (_tables)
         {
-            if (!_running.TryGetValue(moduleName, out var started))
+            if (!_running.TryGetValue(moduleName, out var started) || started.Stopped)
                 return new Result(AifError.NotStarted, Array.Empty<Datum>(), false);
             foreach (var d in inputs)
                 started.Written[Key(d.DataType, d.PortNumber)] = d.Json;
@@ -208,14 +241,16 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             var boundary = new Dictionary<string, string>(started.Written);
             started.Written.Clear();
-            started.Run = Task.Run(() => RunOnce(started.Id, boundary));
+            started.Run = Task.Run(() => RunOnce(started, boundary));
         }
         return started.Run;
     }
 
-    private async Task<Result> RunOnce(int id, Dictionary<string, string> boundary)
+    private async Task<Result> RunOnce(Started started, Dictionary<string, string> boundary)
     {
-        var (err, outcome) = await _ua.RunAsync(id, boundary);
+        var (err, outcome) = await _ua.RunAsync(started.Id, boundary);
+        if (_ua.ModuleStopped(started.Id))
+            lock (_tables) started.Stopped = true;
         if (err != AifError.OK) return new Result(err, Array.Empty<Datum>(), false);
 
         // An AIM's error does not end the run (every Module continues, until

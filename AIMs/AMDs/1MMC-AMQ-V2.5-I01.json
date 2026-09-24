@@ -2,6 +2,7 @@
   "Header":               "MMC-AMQ-V2.5",
 
   "APIProfile":           "Basic",
+  "OnDegraded":           "Continue",
   "Description":          "Answer to Multimodal Question. Receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as Text, as Speech, and as a Visual Object. Acquisition, presentation and delivery are NOT SubAIMs: they interact with the user directly and therefore belong to the User Agent, travelling with it when it becomes a Remote Client Application. The User Agent shows the image and invites the question before this AIW is run, so the image and the question arrive together and the run completes without suspending. Every boundary Port is exchanged with the User Agent.",
 
   "InternalTypes":        [{"Name": "TextQuestion",     "DataType": "OSD-BTO-V1.5"},

@@ -25,4 +25,9 @@ public interface IControllerApi
     // depth, until Resume.
     AifError Pause(string moduleName);
     AifError Resume(string moduleName);
+
+    // The status of each AIM of the Module and the reports of its last run, and
+    // MPAI_AIFU_AIM_Stop (M3213 3.5).
+    ControllerApi.ModuleStatus Status(string moduleName);
+    AifError StopAim(string moduleName, string aimName);
 }

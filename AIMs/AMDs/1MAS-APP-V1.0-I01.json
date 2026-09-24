@@ -2,6 +2,7 @@
   "Header":           "MAS-APP-V1.0",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "MPAI as a Service App: the Module the MPAI-MAS workflow runs over. It lets a User Agent that has not yet chosen an App speak to the person through a Speaking Avatar. Response and Scene Rendering renders the Text supplied by the User Agent into the Machine Speech and the lip-synced Machine Face Descriptors; when the User Agent also supplies a Personal Status, speech and face are rendered with it, otherwise neutrally. Acquisition and delivery are the User Agent, not sub-AIMs.",
 
   "InternalTypes":    [],

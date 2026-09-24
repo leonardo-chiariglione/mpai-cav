@@ -26,8 +26,8 @@
     "Execution":          { "description": "How the Controller executes this Composite AIM: Exchange - the User Agent gives what it has and names what it wants, and each AIM runs once on what it received - or Continuous - each AIM runs from Start to Stop, reading its Input Ports as Messages arrive. Omitted means Exchange.",
                             "anyOf": [ { "enum": [ "Exchange", "Continuous" ] }, { "$dynamicRef": "#placeholder" } ] },
 
-    "OnDegraded":         { "description": "What this Composite AIM does when one of its AIMs is DEGRADED: Stop, or Continue on what the other AIMs still produce. Omitted means Stop.",
-                            "anyOf": [ { "enum": [ "Stop", "Continue" ] }, { "$dynamicRef": "#placeholder" } ] },
+    "OnDegraded":         { "description": "What this Composite AIM does when one of its AIMs fails: StopModule - the run ends and the Module is stopped; StopAIM - that AIM is stopped and the others go on without it; Continue - the others run on what they have, and that AIM runs again at the next exchange. Omitted means StopModule.",
+                            "anyOf": [ { "enum": [ "StopModule", "StopAIM", "Continue" ] }, { "$dynamicRef": "#placeholder" } ] },
 
     "RestartLimit":       { "description": "How many times the Controller restarts this AIM when it throws before leaving it DEAD. Omitted means 0.",
                             "anyOf": [ { "type": "integer", "minimum": 0 }, { "$dynamicRef": "#placeholder" } ] },

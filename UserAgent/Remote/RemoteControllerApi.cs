@@ -256,6 +256,13 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
     public AifError Resume(string moduleName) => AifError.Failed;
 
+    // Status and StopAim reach a remote User Agent when MPAI-MAS carries them
+    // (Phase 15); until then they are refused.
+    public ControllerApi.ModuleStatus Status(string moduleName) =>
+        new(AifError.Failed, Array.Empty<AimReport>());
+
+    public AifError StopAim(string moduleName, string aimName) => AifError.Failed;
+
     // 0 - do not wait - cannot be offered over a network; it is the shortest wait.
     private static CancellationTokenSource Limit(int timeoutMs) =>
         timeoutMs < 0 ? new CancellationTokenSource() : new CancellationTokenSource(Math.Max(timeoutMs, 1));

@@ -2,6 +2,7 @@
   "Header":           "PAF-RSR-V1.6",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "Response and Scene Rendering: renders the machine's response as a Speaking Avatar. When a Personal Status is supplied, Personal Status De-multiplexing splits it into a Speech Personal Status and a Face Personal Status that make the speech and face expressive; when the Personal Status is absent the avatar renders neutrally. Text-To-Speech renders the Machine Speech from the Text Object; Generative Face Description produces the Machine Face Descriptors from the Text Object and the Machine Speech. A composite AIM assembled by the Modules that speak; it is a composite AIM, not itself a Module.",
 
   "InternalTypes":    [{"Name": "SpeechPersonalStatus", "DataType": "MMC-SPS-V2.5"},

@@ -2,6 +2,7 @@
   "Header":           "MMC-MAD-V2.5",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "Multimodal Anonymous Dialogue: the HCI Module for anonymous dialogue with a Speaking Avatar (no identity, no Identity Reconciliation). Automatic Speech Recognition recognises the human's speech into text; Entity Dialogue Processing produces the machine's response Text and Personal Status, using the running Summary as memory; Response and Scene Rendering renders that response into the Machine Speech and the lip-synced Machine Face Descriptors. The affective path (the machine's Personal Status) is wired but optional; a User Agent that does not exercise affect simply supplies none, and the avatar renders neutrally. A turn may be spoken (Speech Object) or typed (Text Object). Acquisition and delivery are the User Agent, not sub-AIMs.",
 
   "InternalTypes":    [{"Name": "UserText",   "DataType": "OSD-BTO-V1.5"},

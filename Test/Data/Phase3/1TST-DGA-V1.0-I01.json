@@ -1,9 +1,9 @@
-{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-DGR-V1.0-I01", "AIMName": "1TST-DGR-V1.0-I01"},
-  "Header":           "TST-DGR-V1.0",
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-DGA-V1.0-I01", "AIMName": "1TST-DGA-V1.0-I01"},
+  "Header":           "TST-DGA-V1.0",
 
   "APIProfile":       "Basic",
-  "OnDegraded":       "Continue",
-  "Description":      "Test Module, degradation, OnDegraded Continue: an AIM that works, one that produces nothing, one that throws, one that reports.",
+  "OnDegraded":       "StopAIM",
+  "Description":      "Test Module, degradation, OnDegraded StopAIM: as TST-DGR.",
 
   "InternalTypes":    [],
 

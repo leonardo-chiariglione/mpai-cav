@@ -2,6 +2,7 @@
   "Header":           "MMC-MAT-V2.5",
 
   "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
   "Description":      "Multimodal Anonymous Translation: the HCI Module for spoken translation with a Speaking Avatar. Automatic Speech Recognition recognises the human's speech into text; Text-to-Text Translation translates it into the language named by the Language Selector; Response and Scene Rendering speaks the translation and produces the lip-synced Machine Face Descriptors in the target language. The translated text is also exposed. Non-affective; no Personal Status is supplied. Acquisition and delivery are the User Agent, not sub-AIMs.",
 
   "InternalTypes":    [{"Name": "RecognisedText", "DataType": "OSD-BTO-V1.5"},

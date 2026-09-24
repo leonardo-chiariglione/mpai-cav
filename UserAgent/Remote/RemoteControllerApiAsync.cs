@@ -143,6 +143,11 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
 
     public Task<AifError> ResumeAsync(string moduleName) => Task.FromResult(AifError.Failed);
 
+    public Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName) =>
+        Task.FromResult(new ControllerApi.ModuleStatus(AifError.Failed, Array.Empty<AimReport>()));
+
+    public Task<AifError> StopAimAsync(string moduleName, string aimName) => Task.FromResult(AifError.Failed);
+
     private static System.Threading.CancellationTokenSource Limit(int timeoutMs) =>
         timeoutMs < 0 ? new System.Threading.CancellationTokenSource() : new System.Threading.CancellationTokenSource(Math.Max(timeoutMs, 1));
 
