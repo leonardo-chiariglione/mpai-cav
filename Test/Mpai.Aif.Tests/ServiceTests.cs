@@ -5,11 +5,14 @@ using System.Text.Json.Nodes;
 
 using AIF.Controller;
 using Mpai.Core;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.Client;
 using Xunit.Abstractions;
 
 namespace Mpai.Aif.Tests;
+
+// The namespace Mpai.Aif.ControllerApi would hide its class ControllerApi here.
+using ControllerApi = Mpai.Aif.ControllerApi.ControllerApi;
 
 // Starts the MAS-App Service of this repository for the Service tests (M3207 3.4):
 // from its own build output and from the repository's root, on port 5105 - never
@@ -127,8 +130,8 @@ public class ServiceTests
     {
         Skip.If(service.SkipReason is not null, service.SkipReason);
 
-        using var a = new RemoteNorthApi(ServiceFixture.Url);
-        using var b = new RemoteNorthApi(ServiceFixture.Url);
+        using var a = new RemoteControllerApi(ServiceFixture.Url);
+        using var b = new RemoteControllerApi(ServiceFixture.Url);
         Assert.Equal(AifError.OK, a.StartFlow(AMQ));
         Assert.Equal(AifError.OK, b.StartFlow(AMQ));
 
@@ -160,8 +163,8 @@ public class ServiceTests
     {
         Skip.If(service.SkipReason is not null, service.SkipReason);
 
-        using var a = new RemoteNorthApi(ServiceFixture.Url);
-        using var b = new RemoteNorthApi(ServiceFixture.Url);
+        using var a = new RemoteControllerApi(ServiceFixture.Url);
+        using var b = new RemoteControllerApi(ServiceFixture.Url);
         Assert.Equal(AifError.OK, a.StartFlow(MAD));
         Assert.Equal(AifError.OK, b.StartFlow(MAD));
 
@@ -208,9 +211,9 @@ public class ServiceTests
 
     // ---------------------------------------------------------------------
 
-    private double Median(string module, NorthApi.Datum[] inputs)
+    private double Median(string module, ControllerApi.Datum[] inputs)
     {
-        using var client = new RemoteNorthApi(ServiceFixture.Url);
+        using var client = new RemoteControllerApi(ServiceFixture.Url);
         client.StartFlow(module);
         client.Advance(module, inputs);                      // not counted
         var times = new List<double>();
@@ -226,27 +229,27 @@ public class ServiceTests
         return times[times.Count / 2];
     }
 
-    private static NorthApi.Result Ask(RemoteNorthApi client, string picture) =>
+    private static ControllerApi.Result Ask(RemoteControllerApi client, string picture) =>
         client.Advance(AMQ, new[] { Picture(picture), Text(2, "What color is the picture?") });
 
-    private static string Answer(NorthApi.Result r)
+    private static string Answer(ControllerApi.Result r)
     {
         var json = r.ByType("OSD-BTO-V1.5");
         try { return json is null ? "" : MpaiJson.FromJson<BasicTextObject>(json).GetText(); } catch { return json ?? ""; }
     }
 
-    private static bool Spoke(NorthApi.Result r) =>
+    private static bool Spoke(ControllerApi.Result r) =>
         r.Ok && r.Outputs.Any(o => o.DataType == "OSD-BSO-V1.5" && o.Json.Length > 200);
 
     private static string Data(string file) => Path.Combine(Repository.Root, "Test", "Data", file);
 
-    private static NorthApi.Datum Text(int port, string text) =>
+    private static ControllerApi.Datum Text(int port, string text) =>
         new("OSD-BTO-V1.5", port, MpaiJson.ToJson(BasicTextObject.FromText(text)));
 
-    private static NorthApi.Datum Picture(string file) =>
+    private static ControllerApi.Datum Picture(string file) =>
         new("OSD-BVO-V1.5", 1, MpaiJson.ToJson(BasicVisualObject.FromFile(file, File.ReadAllBytes(Data(file)), "Picture")));
 
-    private static NorthApi.Datum Speech(string file) =>
+    private static ControllerApi.Datum Speech(string file) =>
         new("OSD-BSO-V1.5", 1, MpaiJson.ToJson(BasicSpeechObject.FromData(File.ReadAllBytes(Data(file)), new SpeechQualifier
         {
             SpeechQualifierID = Guid.NewGuid().ToString(),

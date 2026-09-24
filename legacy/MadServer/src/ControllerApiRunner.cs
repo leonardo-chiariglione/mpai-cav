@@ -5,28 +5,28 @@ using System.Text.Json;
 using AIF.Controller;
 using AIF.Store;
 
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.Server;
 
 namespace MmcMad.Server;
 
-// Adapts the North API to what the MAS server needs.
+// Adapts the Controller API to what the MAS server needs.
 //
-// THIS IS THE ONLY PLACE THE TWO MEET. NorthApi speaks Datum(DataType,
+// THIS IS THE ONLY PLACE THE TWO MEET. ControllerApi speaks Datum(DataType,
 // PortNumber, Json); the MAS server speaks the boundary key "DataType#Number".
 // Neither had to change: the translation is here, in one class, and it is the
 // only code in the server half that knows an application exists.
-internal sealed class NorthApiRunner : IModuleRunner
+internal sealed class ControllerApiRunner : IModuleRunner
 {
-    private readonly NorthApi north;
+    private readonly ControllerApi north;
     private readonly AmdStore store;
 
     // The Ports of each Module, read once from its AMD.
     private readonly Dictionary<string, IReadOnlyList<BoundaryPort>> ports =
         new(StringComparer.Ordinal);
 
-    public NorthApiRunner(
-        NorthApi north,
+    public ControllerApiRunner(
+        ControllerApi north,
         AmdStore store)
     {
         this.north = north;
@@ -64,13 +64,13 @@ internal sealed class NorthApiRunner : IModuleRunner
         string moduleName,
         IReadOnlyDictionary<string, string> inputs)
     {
-        var data = new List<NorthApi.Datum>();
+        var data = new List<ControllerApi.Datum>();
         foreach (var pair in inputs)
         {
             var hash = pair.Key.LastIndexOf('#');
             var type = hash > 0 ? pair.Key.Substring(0, hash) : pair.Key;
             var num  = hash > 0 && int.TryParse(pair.Key.Substring(hash + 1), out var n) ? n : 1;
-            data.Add(new NorthApi.Datum(type, num, pair.Value));
+            data.Add(new ControllerApi.Datum(type, num, pair.Value));
         }
 
         var result = north.Advance(moduleName, data);

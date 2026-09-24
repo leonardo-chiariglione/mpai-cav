@@ -3,7 +3,7 @@
   <!-- THE REMOTE CLIENT APPLICATION, IN A BROWSER. The MPAI code the desktop RCA
        uses - WDL reader, source registry, wire translation, data types - is
        referenced unchanged. What is new here is only what a browser needs:
-       an asynchronous North API client and interpreter, and the media in
+       an asynchronous Controller API client and interpreter, and the media in
        JavaScript (wwwroot/js/rca.js). -->
 
   <PropertyGroup>

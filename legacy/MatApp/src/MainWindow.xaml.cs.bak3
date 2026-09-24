@@ -10,7 +10,7 @@ using AIF.Store;
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // SpeakingAvatar
 
 namespace HciMat;
 

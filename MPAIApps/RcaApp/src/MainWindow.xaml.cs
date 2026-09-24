@@ -12,7 +12,7 @@ using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.Client;
 using Mpai.Rca;
 using Mpai.UaKit;
@@ -75,7 +75,7 @@ public partial class MainWindow : Window
     private TaskCompletionSource?    _awaiting;
     private string?                  _appId;
     private TaskCompletionSource<string?>? _choosing;
-    private readonly Dictionary<string, RemoteNorthApi> _controllers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RemoteControllerApi> _controllers = new(StringComparer.Ordinal);
 
     // What the workflow is waiting for the user to type, if anything.
     private TaskCompletionSource<string>? _typed;
@@ -166,12 +166,12 @@ public partial class MainWindow : Window
     {
         try
         {
-            using var north = new RemoteNorthApi(ServiceUrl, ServiceToken);
+            using var north = new RemoteControllerApi(ServiceUrl, ServiceToken);
             if (north.StartFlow(MasModule) != AifError.OK) return;
 
-            var said = await Task.Run(() => north.Advance(MasModule, new List<NorthApi.Datum>
+            var said = await Task.Run(() => north.Advance(MasModule, new List<ControllerApi.Datum>
             {
-                new NorthApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words)))
+                new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words)))
             }));
             north.StopFlow(MasModule);
 
@@ -487,7 +487,7 @@ public partial class MainWindow : Window
             // already tried does not load them again. The Controller Instances are
             // released when this client closes.
             if (!_controllers.TryGetValue(_appId!, out var north))
-                _controllers[_appId!] = north = new RemoteNorthApi(ServiceUrl, ServiceToken);
+                _controllers[_appId!] = north = new RemoteControllerApi(ServiceUrl, ServiceToken);
 
             var interpreter = new WorkflowInterpreter(north, Devices(), Status);
             await interpreter.RunAsync(_workflow, _stopping.Token);
@@ -607,7 +607,7 @@ public partial class MainWindow : Window
             if (appId != "MAS") _sourceLanguage = null;
 
             if (!_controllers.TryGetValue(appId, out var north))
-                _controllers[appId] = north = new RemoteNorthApi(ServiceUrl, ServiceToken);
+                _controllers[appId] = north = new RemoteControllerApi(ServiceUrl, ServiceToken);
 
             // THE ROOM AN APP ASKED FOR. An App that shows nothing gets no pane; one
             // that shows a picture gets it wide. The App says so in its manifest and

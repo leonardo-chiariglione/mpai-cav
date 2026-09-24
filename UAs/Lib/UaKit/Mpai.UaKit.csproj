@@ -15,7 +15,7 @@
     <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <ProjectReference Include="..\..\..\AIMs\OSD\V1.5\TOD\Mpai.Osd.Tod.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\SOA\Mpai.Mmc.Soa.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />

@@ -12,13 +12,13 @@
     <Compile Include="..\HciApp\src\HciProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Framework + North API -->
+    <!-- Framework + Controller API -->
     <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
     <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <!-- Scene front-end -->
     <ProjectReference Include="..\..\..\AIMs\OSD\V1.5\BAS\Mpai.Osd.Bas.csproj" />
     <ProjectReference Include="..\..\..\AIMs\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />

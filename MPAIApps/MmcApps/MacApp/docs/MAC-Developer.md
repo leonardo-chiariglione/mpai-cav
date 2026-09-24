@@ -21,7 +21,7 @@ An **AIF** application is organised around a small number of standard notions:
   data type**: a Topology edge's endpoints are resolved once, from each AIM's
   `ExternalPorts` (and the composite's `InternalTypes`), to `(DataType,
   PortNumber)` - nothing downstream reads a port name.
-- **North API** (`MW/HciApi`, `NorthApi`): the UA-facing interface. The UA
+- **Controller API** (`AIF/ControllerApi`, `ControllerApi`): the UA-facing interface. The UA
   supplies/reads data as `Datum(DataType, PortNumber, json)`; the wire key is
   `DataType#PortNumber`. No port names, no application verbs.
 - **User Agent (UA):** the application "brain with I/O limbs". It acquires and
@@ -43,7 +43,7 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
    \------------ boundary inputs / outputs --------------------/
 ```
 
-- The UA drives the Module **only** through the North API by data type
+- The UA drives the Module **only** through the Controller API by data type
   (`StartFlow`, `Advance` with typed inputs, read typed outputs, `StopFlow`).
 - A **provider** (a small switch class) constructs each sub-AIM the L3 names.
 - The UA's behaviour is described by a **WDL** guidebook, the `.orch` file
@@ -81,7 +81,7 @@ compare a live probe embedding against enrolled subjects by cosine similarity.
 
 `MPAIApps/MmcApps/MacApp/src/` - namespace `HciMac`.
 
-- `MainWindow.xaml.cs` - realises `HCI-MAC.orch` via the **North API**:
+- `MainWindow.xaml.cs` - realises `HCI-MAC.orch` via the **Controller API**:
   `StartFlow("MMC-MAC-V2.5")` -> speak *"...Look at the camera."* (a one-shot **RSR**
   render) -> capture a webcam frame -> `Advance` with `(OSD-BVO)` -> the Module
   **suspends** for speech -> speak *"Speak your passphrase."* -> capture microphone
@@ -100,7 +100,7 @@ Visual acquisition uses **native Windows Media Capture** (no OpenCV).
 
 - **App:** `MPAIApps/MmcApps/MacApp/*`
 - **Framework (AIF):** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
-- **UA library / North API:** `UAs/Lib/UaKit`; `MW/HciApi` (`NorthApi`)
+- **UA library / Controller API:** `UAs/Lib/UaKit`; `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`, and the leaves `PAF/V1.6/FIR`, `MMC/V2.5/SIR`,
   `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices
   `CAE3/V1.0/AOA(.Windows)`, `MMC/V2.5/SOD(.Windows)`, visual `CVE/V1.0/VOA.Windows`

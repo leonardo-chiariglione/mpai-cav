@@ -50,7 +50,7 @@ internal static class Program
         Con.WriteLine($"    service  {url}");
         Con.WriteLine();
 
-        using var north = new RemoteNorthApi(
+        using var north = new RemoteControllerApi(
             url, Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN"));
 
         var devices = StandIns();

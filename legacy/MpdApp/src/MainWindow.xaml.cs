@@ -10,12 +10,12 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
 
 namespace MpdApp;
 
 // UAD-MPD - the User Agent for Multimodal Personal Status-based Dialogue, driving
-// MMC-MPD through the type-addressed North API. Each turn supplies the human's
+// MMC-MPD through the type-addressed Controller API. Each turn supplies the human's
 // speech (OSD-BSO) + time (OSD-STM) + face (OSD-BVO); the Module perceives meaning
 // (NLU) and feeling (ESI + EFI, multiplexed by PSM) and EDP replies with affect,
 // spoken by the expressive avatar. Memory is EDP's running Summary; the Module
@@ -46,9 +46,9 @@ public partial class MainWindow : Window
     private const string Available =
         "The M P D Service is available.";
 
-    private NorthApi?     _north;
+    private ControllerApi?     _north;
     private AvatarUaHost? _avatar;
-    private bool _ready;       // NorthApi built (light)
+    private bool _ready;       // ControllerApi built (light)
     private bool _loaded;      // MMC-MPD started (models loaded)
     private int  _phase = 0;   // 0 = before Start, 1 = loaded / Listen toggle
 
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
             // Build the Controller/UA (light) so RSR can speak the welcome before the
             // heavy MMC-MPD models are loaded on the first Start press.
             await Task.Run(() =>
-                _north = new NorthApi(AmdDir, SettingsPath, store => new MpdProvider(store)));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new MpdProvider(store)));
 
             _ready = true;
             ListenButton.Content = "Start";
@@ -128,13 +128,13 @@ public partial class MainWindow : Window
             if (Spoke(speech))
                 Dispatcher.Invoke(() => { ListenButton.IsEnabled = true; });   // reveal Stop once the user speaks
 
-            var inputs = new List<NorthApi.Datum>
+            var inputs = new List<ControllerApi.Datum>
             {
-                new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)),
-                new NorthApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime()))
+                new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)),
+                new ControllerApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime()))
             };
             var face = CaptureFace();
-            if (face is not null) inputs.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
+            if (face is not null) inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
 
             var r = _north!.Advance(MpdModule, inputs);
             if (!r.Ok) { Diag("turn err=" + r.Error); return new SpeakingAvatar(Array.Empty<byte>(), null); }
@@ -156,11 +156,11 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
         byte[] wav = Array.Empty<byte>();

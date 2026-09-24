@@ -17,7 +17,7 @@ for developers; see the MAD Developer guide for the dialogue/rendering half.
 - **Controller** - builds the Module from its L3 and runs it, routing by data
   type (endpoints resolved once from `ExternalPorts`/`InternalTypes`). No port
   name is read at runtime.
-- **North API** (`MW/HciApi`, `NorthApi`) - the UA-facing interface: the UA
+- **Controller API** (`AIF/ControllerApi`, `ControllerApi`) - the UA-facing interface: the UA
   supplies/reads `Datum(DataType, PortNumber, json)`.
 - **User Agent (UA)** - acquires speech and a webcam face, delivers the avatar,
   and orchestrates; described by a WDL `.orch` guidebook.
@@ -54,7 +54,7 @@ declared but unsupplied optional input (not implemented).
 
 ## 3. The User Agent
 `MPAIApps/MmcApps/MpdApp/src/` - namespace `MpdApp`; provider `MpdProvider.cs`;
-UA `MainWindow.xaml.cs`. It drives the Module through the **North API** by data type:
+UA `MainWindow.xaml.cs`. It drives the Module through the **Controller API** by data type:
 
 - **Start (welcome/load):** `StartFlow("MMC-MPD-V2.5")` loads the models behind a
   spoken welcome; when ready the avatar announces the service and listening begins
@@ -81,7 +81,7 @@ being named back to the user.
 ## 5. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/MpdApp/*`
 - **AIF:** `AIF/V3.0/src/{AIF.Controller, AIF.Store, AIF.SharedStorage, AIF.GlobalStorage}`
-- **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi`
+- **UA library / Controller API:** `UAs/Lib/UaKit`, `AIF/ControllerApi`
 - **AIMs:** `AIMs/Core`; leaves `MMC/V2.5/{ASR, NLU, ESI, EFI, PSM, EDP, TTS}`,
   `PAF/V1.6/{PSD, GFD}`; audio devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`; webcam `CVE/V1.0/VOA.Windows`

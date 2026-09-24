@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using AIF.Store;
 
 using Mpai.Core;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.PortData;
 using Mpai.Mas.Server;
 
@@ -220,7 +220,7 @@ internal static class Program
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "Packages");
         if (fromPackages) Console.WriteLine($"  AIMs:          from their packages, kept in {packageCache}");
 
-        using var north = new NorthApi(amdDir, settingsPath, s =>
+        using var north = new ControllerApi(amdDir, settingsPath, s =>
         {
             var providers = new List<IAimProvider>();
             if (fromPackages) providers.Add(new PackageAimProvider(s, packageCache, Console.WriteLine));
@@ -230,7 +230,7 @@ internal static class Program
             providers.Add(new MpdProvider(s));
             return new CompositeProvider(providers.ToArray());
         });
-        var runner = new NorthApiRunner(north, store);
+        var runner = new ControllerApiRunner(north, store);
 
         Console.WriteLine();
         Console.WriteLine("Loading models. This is the slow part.");

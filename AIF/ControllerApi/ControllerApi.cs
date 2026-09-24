@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 using AIF.Controller;
 using AIF.Store;
 
-namespace Mpai.Hci.Api;
+namespace Mpai.Aif.ControllerApi;
 
-// NorthApi - the MPAI-AIF North API. The UA identifies data ONLY by
+// ControllerApi - the MPAI-AIF Controller API. The UA identifies data ONLY by
 // (DataType, PortNumber). The boundary contract with the Controller is the
-// typed key "DataType#PortNumber": NorthApi neither knows nor uses any port
+// typed key "DataType#PortNumber": ControllerApi neither knows nor uses any port
 // NAME. Outcomes are the standard AifError, surfaced faithfully; no application
 // semantics, no content, no state (memory lives in the Module).
-public sealed class NorthApi : INorthApi, IDisposable
+public sealed class ControllerApi : IControllerApi, IDisposable
 {
     // THE FRAMEWORK OFFERS THE PLACE; THIS KNOWS WHAT TO LOOK FOR. AIF.Controller
     // routes Data Types and payloads and does not know what an MPAI Object is.
     // MW knows both, so the inspector is installed here - once, for every
-    // application and both servers, since all of them construct a NorthApi.
-    static NorthApi()
+    // application and both servers, since all of them construct a ControllerApi.
+    static ControllerApi()
     {
         AIF.Controller.MachineExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
     }
@@ -35,7 +35,7 @@ public sealed class NorthApi : INorthApi, IDisposable
     private readonly Dictionary<string, bool> _suspended = new();
     private readonly object _tables = new();
 
-    public NorthApi(string amdDir, string settingsPath, IAimProvider provider)
+    public ControllerApi(string amdDir, string settingsPath, IAimProvider provider)
     {
         _settings = AimSettings.Load(settingsPath);
         _provider = provider;
@@ -44,9 +44,9 @@ public sealed class NorthApi : INorthApi, IDisposable
         _ua.MPAI_AIFU_Controller_Initialize();
     }
 
-    // Overload: caller supplies a provider FACTORY, so NorthApi builds ONE AmdStore
+    // Overload: caller supplies a provider FACTORY, so ControllerApi builds ONE AmdStore
     // and hands it to the factory (e.g. store => new MacProvider(store, galleryJson)).
-    public NorthApi(string amdDir, string settingsPath, Func<AmdStore, IAimProvider> providerFactory)
+    public ControllerApi(string amdDir, string settingsPath, Func<AmdStore, IAimProvider> providerFactory)
     {
         _settings = AimSettings.Load(settingsPath);
         var store = new AmdStore(amdDir); store.Scan();
@@ -63,7 +63,7 @@ public sealed class NorthApi : INorthApi, IDisposable
 
     // WHEN A MODULE SUSPENDS, IT IS WAITING FOR SOMETHING NAMEABLE. The executor
     // knows exactly which boundary Port was not supplied and records it; until now
-    // the North API discarded that and told the User Agent only THAT the Module was
+    // the Controller API discarded that and told the User Agent only THAT the Module was
     // waiting. A UA cannot act on a bare boolean: it can supply more data and hope,
     // or give up. WaitingPort carries the boundary key - "DataType#PortNumber" -
     // so that a UA, or an interpreter reading a workflow description, can say what

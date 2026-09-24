@@ -22,7 +22,7 @@
     <!-- The Human-CAV Interaction avatar surface (WebView renderer + present) -->
     <ProjectReference Include="..\..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
     <!-- The HCI API -->
-    <ProjectReference Include="..\..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <!-- Description AIMs (kept) -->
     <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\EFD\Mpai.Paf.Efd.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ESD\Mpai.Mmc.Esd.csproj" />

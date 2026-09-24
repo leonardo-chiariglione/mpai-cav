@@ -1,5 +1,5 @@
 // THE WORKFLOW INTERPRETER, FOR A BROWSER. A copy of Mpai.Rca.WorkflowInterpreter
-// in which every call on the North API is awaited, because a browser never lets
+// in which every call on the Controller API is awaited, because a browser never lets
 // WebAssembly block. Nothing else differs. Once the browser client is proven,
 // the two can become one asynchronous interpreter; until then the desktop RCA
 // keeps its own, untouched.
@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using AIF.Controller;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Wdl;
 using Mpai.Rca;
 using Mpai.RcaWeb.Mas;
@@ -22,7 +22,7 @@ namespace Mpai.RcaWeb.Wdl;
 // and a dictionary of what has been acquired so far.
 //
 // It knows no application. The workflow names the Modules; the device registry
-// names the devices; the North API is whichever one it was handed - in process or
+// names the devices; the Controller API is whichever one it was handed - in process or
 // across a network, since a workflow cannot tell and should not be able to.
 //
 // A LABEL IS FOR THE READER AND DOES NOT ROUTE. What a datum is addressed by is
@@ -31,7 +31,7 @@ namespace Mpai.RcaWeb.Wdl;
 // label to datum, and the Controller never sees a label at all.
 public sealed class AsyncWorkflowInterpreter
 {
-    private readonly IAsyncNorthApi north;
+    private readonly IAsyncControllerApi north;
     private readonly DeviceRegistry devices;
     private readonly Action<string> say;      // a line for whoever is watching
 
@@ -51,7 +51,7 @@ public sealed class AsyncWorkflowInterpreter
     private readonly HashSet<string> running = new(StringComparer.OrdinalIgnoreCase);
 
     public AsyncWorkflowInterpreter(
-        IAsyncNorthApi north,
+        IAsyncControllerApi north,
         DeviceRegistry devices,
         Action<string>? say = null)
     {
@@ -109,23 +109,23 @@ public sealed class AsyncWorkflowInterpreter
     // Data given to the Controller for a Module accumulate until something is
     // asked for from that Module: a Module runs when its required inputs are
     // present, so the request that asks for an output is the one that runs it.
-    private readonly Dictionary<string, List<NorthApi.Datum>> pending =
+    private readonly Dictionary<string, List<ControllerApi.Datum>> pending =
         new(StringComparer.OrdinalIgnoreCase);
 
     private void Take(Step step, string json)
     {
         var port = step.Port!;
         if (!pending.TryGetValue(Module, out var list))
-            pending[Module] = list = new List<NorthApi.Datum>();
+            pending[Module] = list = new List<ControllerApi.Datum>();
 
-        list.Add(new NorthApi.Datum(port.DataType, port.PortNumber, json));
+        list.Add(new ControllerApi.Datum(port.DataType, port.PortNumber, json));
         say($"[C] take {port.DataType}{(port.PortNumber is int n ? ":" + n : "")}");
     }
 
     private async Task GiveAsync(Step step)
     {
         pending.TryGetValue(Module, out var inputs);
-        var result = await north.AdvanceAsync(Module, inputs ?? new List<NorthApi.Datum>());
+        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>());
         pending.Remove(Module);
 
         if (!result.Ok)
@@ -158,14 +158,14 @@ public sealed class AsyncWorkflowInterpreter
             case StepKind.StartModule:  await StartModuleAsync(Module); break;
             case StepKind.StopModule:   await StopModuleAsync(Module);  break;
 
-            // The Controller has MPAI_AIFU_MODULE_Pause and _Resume and the North
+            // The Controller has MPAI_AIFU_MODULE_Pause and _Resume and the Controller
             // API does not expose them. No reference workflow asks, so this refuses
             // plainly rather than pretending: a workflow that pauses a Module and
             // silently did not would be worse than one that stops.
             case StepKind.PauseModule:
             case StepKind.ResumeModule:
                 throw new NotSupportedException(
-                    $"line {step.Line}: the North API does not yet offer pause or resume. " +
+                    $"line {step.Line}: the Controller API does not yet offer pause or resume. " +
                     "The Controller has them; the seam has not been widened to pass them on.");
 
             case StepKind.Take:
@@ -315,8 +315,8 @@ public sealed class AsyncWorkflowInterpreter
             {
                 var words = Literal(step.Port!.DataType, Fill(step.Literal ?? ""));
                 say($"[C] say {step.Port.DataType}:{step.Port.PortNumber}");
-                var said = await north.AdvanceAsync(Module, new List<NorthApi.Datum>
-                    { new NorthApi.Datum(step.Port.DataType, step.Port.PortNumber, words) });
+                var said = await north.AdvanceAsync(Module, new List<ControllerApi.Datum>
+                    { new ControllerApi.Datum(step.Port.DataType, step.Port.PortNumber, words) });
                 if (!said.Ok) throw new InvalidOperationException($"{Module} returned {said.Error}.");
 
                 var spoken = new Dictionary<string, string>();

@@ -14,7 +14,7 @@ anonymous and the machine renders neutrally. This document is for developers.
   routing **by data type**: a Topology edge's endpoints are resolved once, from
   `ExternalPorts`/`InternalTypes`, to `(DataType, PortNumber)`; no port names
   are read at runtime. Renaming a port's `Name` changes nothing.
-- **North API** (`MW/HciApi`, `NorthApi`) - the UA-facing interface: the UA
+- **Controller API** (`AIF/ControllerApi`, `ControllerApi`) - the UA-facing interface: the UA
   supplies/reads `Datum(DataType, PortNumber, json)`; the wire key is
   `DataType#PortNumber`.
 - **User Agent (UA)** - acquires speech (VAD-gated) and delivers the avatar;
@@ -50,7 +50,7 @@ avatar renders neutrally. (Absent inputs are not referenced in the LLM prompt.)
 UA `MainWindow.xaml.cs`, realising `UAs/Orchestration/MMC-MAD.orch`.
 
 Flow (turn-taking loop, bounded by the **Start** and **Stop** buttons), driven
-through the **North API** by data type:
+through the **Controller API** by data type:
 - **on Start:** `StartFlow("MMC-MAD-V2.5")` (the Module stays alive for the
   session), then speak a fixed **welcome** via a one-shot RSR render and enter
   the loop.
@@ -66,7 +66,7 @@ Microphone capture (VAD) and avatar rendering come from `UAs/Lib/UaKit`
 ## 4. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/MadApp/*`
 - **AIF:** `AIF/V3.0/src/{Controller, Store, SharedStorage, GlobalStorage}`
-- **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi` (`NorthApi`)
+- **UA library / Controller API:** `UAs/Lib/UaKit`, `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`; leaves `MMC/V2.5/ASR`, `MMC/V2.5/EDP`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`

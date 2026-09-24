@@ -9,13 +9,13 @@ using AIF.Store;        // AmdStore (provider factory)
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
 
 using Mpai.Providers;
 
 namespace HciMad;
 
-// HCI-MAD User Agent - drives MMC-MAD through the type-addressed North API.
+// HCI-MAD User Agent - drives MMC-MAD through the type-addressed Controller API.
 // The UA identifies data ONLY by data type. One dialogue turn per loop pass:
 // supply OSD-BSO (speech) + OSD-STM (time); read OSD-BSO (reply, spoken) and
 // PAF-FDO (avatar). The Module lives Start..Stop so EDP keeps the running
@@ -34,7 +34,7 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private INorthApi?    _north;
+    private IControllerApi?    _north;
     private AvatarUaHost? _avatar;
     private volatile bool _running = false;
 
@@ -68,7 +68,7 @@ public partial class MainWindow : Window
             {
                 // THIS APPLICATION RUNS ITS MODULE IN PROCESS. Driving one over a
                 // network is MadClient, a different application for a different user.
-                _north = new NorthApi(AmdDir, SettingsPath, store => new MadProvider(store));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new MadProvider(store));
             });
 
             InstructionText.Text = "Press Start to begin.";
@@ -140,10 +140,10 @@ public partial class MainWindow : Window
     private (byte[] wav, FaceDescriptorsObject? fdo)? RunTurn(BasicSpeechObject speech)
     {
         if (_north is null) return null;
-        var inputs = new List<NorthApi.Datum>
+        var inputs = new List<ControllerApi.Datum>
         {
-            new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)),
-            new NorthApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime()))
+            new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)),
+            new ControllerApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime()))
         };
         var r = _north.Advance(MadModule, inputs);
         if (!r.Ok) { Diag("MAD turn err=" + r.Error); return null; }
@@ -192,13 +192,13 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum>
+        var inputs = new List<ControllerApi.Datum>
         {
-            new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words)))
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words)))
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;

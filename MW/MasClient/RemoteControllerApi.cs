@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 using AIF.Controller;
 
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.PortData;
 
 namespace Mpai.Mas.Client;
@@ -20,18 +20,18 @@ public static class MasClientIdentity
     public static string Id { get; } = Guid.NewGuid().ToString("N");
 }
 
-// The North API over MPAI-MAS.
+// The Controller API over MPAI-MAS.
 //
-// SAME THREE METHODS, ACROSS A NETWORK. The User Agent holds an INorthApi and
+// SAME THREE METHODS, ACROSS A NETWORK. The User Agent holds an IControllerApi and
 // cannot tell which implementation it has. Everything it sends is typed data, so
 // there is nothing else to carry.
 //
-// SYNCHRONOUS ON PURPOSE. INorthApi is synchronous because NorthApi is, and
+// SYNCHRONOUS ON PURPOSE. IControllerApi is synchronous because ControllerApi is, and
 // every call site in the UA already goes through Task.Run - so the blocking
 // happens on a pool thread with no synchronisation context and cannot deadlock.
 // The exception is a UA closing down, which calls StopFlow on its own thread;
 // the timeout below keeps that from hanging a window.
-public sealed class RemoteNorthApi : INorthApi, IDisposable
+public sealed class RemoteControllerApi : IControllerApi, IDisposable
 {
     private readonly HttpClient http;
     private readonly PortDataCodecs codecs;
@@ -43,7 +43,7 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
     private readonly Dictionary<string, string> modules =
         new(StringComparer.Ordinal);
 
-    public RemoteNorthApi(
+    public RemoteControllerApi(
         string baseUrl,
         string? bearerToken = null,
         TimeSpan? timeout = null)
@@ -134,15 +134,15 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
         modules.Remove(moduleName);
     }
 
-    public NorthApi.Result Advance(
+    public ControllerApi.Result Advance(
         string moduleName,
-        IEnumerable<NorthApi.Datum> inputs)
+        IEnumerable<ControllerApi.Datum> inputs)
     {
         if (!modules.ContainsKey(moduleName))
         {
             var started = StartFlow(moduleName);
             if (started != AifError.OK)
-                return new NorthApi.Result(started, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>(), false);
         }
 
         var mid = modules[moduleName];
@@ -153,7 +153,7 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
         foreach (var datum in inputs)
         {
             if (!codecsKnow(datum.DataType))
-                return new NorthApi.Result(AifError.Failed, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
 
             var wire = Codecs.ToWire(datum.DataType, datum.Json);
 
@@ -165,14 +165,14 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
                 content).GetAwaiter().GetResult();
 
             if (!posted.IsSuccessStatusCode)
-                return new NorthApi.Result(AifError.Failed, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
         }
 
         // WHICH OUTPUTS TO ASK FOR. MAS delivers one Port at a time, so the RCA
         // asks for the Data Types it can read - every type it has a codec for.
         // A Port that produced nothing answers 404, which is not an error here:
         // it simply did not fire this run.
-        var outputs = new List<NorthApi.Datum>();
+        var outputs = new List<ControllerApi.Datum>();
 
         foreach (var dataType in Codecs.KnownDataTypes)
         {
@@ -200,12 +200,12 @@ public sealed class RemoteNorthApi : INorthApi, IDisposable
                 if (!response.IsSuccessStatusCode) continue;
 
                 var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-                outputs.Add(new NorthApi.Datum(
+                outputs.Add(new ControllerApi.Datum(
                     dataType, portNumber, Codecs.ToInternal(dataType, wire)));
             }
         }
 
-        return new NorthApi.Result(AifError.OK, outputs, false);
+        return new ControllerApi.Result(AifError.OK, outputs, false);
     }
 
     private static string Segment(string dataType, int portNumber) =>

@@ -42,7 +42,7 @@
     <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
-    <ProjectReference Include="..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <ProjectReference Include="..\..\..\MW\MasClient\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />

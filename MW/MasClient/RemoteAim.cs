@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using AIF.Controller;
 using AIF.Store;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 
 namespace Mpai.Mas.Client;
 
@@ -25,7 +25,7 @@ public sealed class RemoteAim : IAimProcessor, IDisposable
 {
     private sealed record Port(string Name, string DataType, int Number);
 
-    private readonly RemoteNorthApi north;
+    private readonly RemoteControllerApi north;
     private readonly List<Port> inputs = new();
     private readonly List<Port> outputs = new();
     private readonly Action<string> say;
@@ -38,7 +38,7 @@ public sealed class RemoteAim : IAimProcessor, IDisposable
         InstanceId = instanceId;
         Where = serviceUrl;
         this.say = say ?? (_ => { });
-        north = new RemoteNorthApi(serviceUrl, bearerToken);
+        north = new RemoteControllerApi(serviceUrl, bearerToken);
         ReadPorts(store, instanceId);
     }
 
@@ -81,10 +81,10 @@ public sealed class RemoteAim : IAimProcessor, IDisposable
 
     public async Task<Message> ProcessAsync(Message message)
     {
-        var datums = new List<NorthApi.Datum>();
+        var datums = new List<ControllerApi.Datum>();
         foreach (var port in inputs)
             if (message.Ports.TryGetValue(port.Name, out var json) && !string.IsNullOrWhiteSpace(json))
-                datums.Add(new NorthApi.Datum(port.DataType, port.Number, json));
+                datums.Add(new ControllerApi.Datum(port.DataType, port.Number, json));
 
         if (datums.Count == 0)
             return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() };

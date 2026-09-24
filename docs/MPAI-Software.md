@@ -57,9 +57,9 @@ icon. The work is done by the Module on the Service.
 
 | Folder | What it holds |
 |---|---|
-| `AIF/` | The Controller, the Store of L3s, Shared Storage. |
+| `AIF/` | The Controller, the Controller API (`ControllerApi`, formerly called the North API), the Store of L3s, and Communication (Shared and Global Storage). |
 | `AIMs/` | The AIMs, their L3s (`AIMs/AMDs/`), the shared data types (`AIMs/Core/`), and the providers that build each Module's AIMs (`AIMs/Providers/`). |
-| `MW/` | Middleware: the WDL reader (`Wdl`), the workflow interpreter (`Rca`), the MPAI-MAS server and client (`MasServer`, `MasClient`), the wire form of each Data Type (`PortData`), the North API (`HciApi`). |
+| `MW/` | Middleware: the WDL reader (`Wdl`), the workflow interpreter (`Rca`), the MPAI-MAS server and client (`MasServer`, `MasClient`), the wire form of each Data Type (`PortData`). |
 | `MPAIApps/MmcApps/AmqServer/` | The **Service**. (The name is historical: it began as the AMQ server and now offers all four Apps.) |
 | `MPAIApps/RcaApp/` | The **desktop client** (Windows). |
 | `MPAIApps/RcaWeb/` | The **browser client**: `Client` (runs in the browser) and `Host` (serves it). |

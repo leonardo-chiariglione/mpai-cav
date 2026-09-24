@@ -11,11 +11,11 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
 
 namespace AcrApp;
 
-// ACR User Agent - drives MMC-ACR-V2.5 through the type-addressed North API.
+// ACR User Agent - drives MMC-ACR-V2.5 through the type-addressed Controller API.
 // The UA does only real-world I/O (render avatar, capture camera+microphone,
 // TYPE the name) and orchestration; it identifies data ONLY by data type:
 //   Start -> type name -> "look at camera" -> supply OSD-BVO (face) + OSD-STM #1
@@ -40,7 +40,7 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private NorthApi?     _north;
+    private ControllerApi?     _north;
     private AvatarUaHost? _avatar;
     private TaskCompletionSource<string>? _typedName;
 
@@ -65,7 +65,7 @@ public partial class MainWindow : Window
             await _avatar.InitAsync();
 
             await Task.Run(() =>
-                _north = new NorthApi(AmdDir, SettingsPath, store => new AcrProvider(store)));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new AcrProvider(store)));
 
             SetStatus("Ready. Press Register to begin.");
             InstructionText.Text = "Press Register to begin.";
@@ -113,10 +113,10 @@ public partial class MainWindow : Window
             var face = await CaptureFaceAsync();
             await speakLook;
 
-            var faceIn = new List<NorthApi.Datum>();
-            if (face is not null) faceIn.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
-            faceIn.Add(new NorthApi.Datum(STM, 1, MpaiJson.ToJson(NowSimpleTime())));
-            faceIn.Add(new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
+            var faceIn = new List<ControllerApi.Datum>();
+            if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
+            faceIn.Add(new ControllerApi.Datum(STM, 1, MpaiJson.ToJson(NowSimpleTime())));
+            faceIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
             Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+STM#1+BTO#2(name)");
             var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
             Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended, waiting for " + (r1.WaitingPort ?? "?") : " completed"));
@@ -133,12 +133,12 @@ public partial class MainWindow : Window
                 var speech = await CaptureSpeechAsync();
 
                 var thankYou = $"{userName}, thank you for joining the CAV Access Control Registration Service. You should speak your passphrase when you enter the service.";
-                var speechIn = new List<NorthApi.Datum>();
-                if (speech is not null) speechIn.Add(new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)));
-                speechIn.Add(new NorthApi.Datum(STM, 2, MpaiJson.ToJson(NowSimpleTime())));
-                speechIn.Add(new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(thankYou))));
-                speechIn.Add(new NorthApi.Datum(EPS, MpaiJson.ToJson(LightSmileStatus())));
-                speechIn.Add(new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
+                var speechIn = new List<ControllerApi.Datum>();
+                if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
+                speechIn.Add(new ControllerApi.Datum(STM, 2, MpaiJson.ToJson(NowSimpleTime())));
+                speechIn.Add(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(thankYou))));
+                speechIn.Add(new ControllerApi.Datum(EPS, MpaiJson.ToJson(LightSmileStatus())));
+                speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
                 Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+STM#2+BTO#1(resp)+EPS+BTO#2(name)");
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
                 Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended, waiting for " + (r2.WaitingPort ?? "?") : " completed"));
@@ -233,14 +233,14 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum>
+        var inputs = new List<ControllerApi.Datum>
         {
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes. Sending
             // only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new NorthApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
+            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;

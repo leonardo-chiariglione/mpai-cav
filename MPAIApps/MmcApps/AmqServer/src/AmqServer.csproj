@@ -27,8 +27,8 @@
     <ProjectReference Include="..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
-    <!-- North API -->
-    <ProjectReference Include="..\..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <!-- Controller API -->
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <!-- MAS -->
     <ProjectReference Include="..\..\..\..\MW\MasServer\Mpai.Mas.Server.csproj" />
 

@@ -18,7 +18,7 @@ with no notion that this is "translation". This document is for developers.
   each AIM's `ExternalPorts` (and the composite's `InternalTypes`), to
   `(DataType, PortNumber)`. No port name is read at runtime; renaming a label
   changes nothing.
-- **North API** (`MW/HciApi`, `NorthApi`) - the UA-facing interface. The UA
+- **Controller API** (`AIF/ControllerApi`, `ControllerApi`) - the UA-facing interface. The UA
   supplies/reads `Datum(DataType, PortNumber, json)`; the wire key is
   `DataType#PortNumber`. It names no Module, function, AIM or port.
 - **User Agent (UA)** - acquires speech / typed text and delivers the avatar;
@@ -54,7 +54,7 @@ cites no numbers** - it supplies the boundary data by type and reads the result.
 ## 3. The User Agent
 `MPAIApps/MmcApps/MatApp/src/` - namespace `HciMat`; provider `MatProvider.cs`;
 UA `MainWindow.xaml.cs`, realising `UAs/Orchestration/MMC-MAT.orch`. It drives the
-Module through the **North API** by data type:
+Module through the **Controller API** by data type:
 
 - **Start (two presses):** press 1 -> `StartFlow("MMC-MAT-V2.5")` (models load) +
   spoken welcome; press 2 -> spoken instructions; the button becomes **Select**.
@@ -84,7 +84,7 @@ Real-world limbs (microphone capture, avatar rendering) come from
 ## 4. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/MatApp/*`
 - **AIF:** `AIF/V3.0/src/{AIF.Controller, AIF.Store, AIF.SharedStorage, AIF.GlobalStorage}`
-- **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi` (`NorthApi`)
+- **UA library / Controller API:** `UAs/Lib/UaKit`, `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`; leaves `MMC/V2.5/ASR`, `MMC/V2.5/TTT`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`

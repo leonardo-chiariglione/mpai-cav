@@ -130,8 +130,8 @@ Both clients register **sources** (acquire) and **presenters** (present) with a
 - **Browser** (`RcaWeb/Client`): the same sources and presenters, with the
   capture in `wwwroot/js/rca.js` (the microphone runs from Start and keeps the
   last second heard; typing ends listening). A browser never lets WebAssembly
-  block, so this client has its own asynchronous North API client
-  (`Mas/AsyncNorthApi.cs`) and an asynchronous copy of the interpreter
+  block, so this client has its own asynchronous Controller API client
+  (`Mas/AsyncControllerApi.cs`) and an asynchronous copy of the interpreter
   (`Wdl/AsyncWorkflowInterpreter.cs`), otherwise identical to `MW/Rca`'s.
 - **Host** (`RcaWeb/Host`): serves the avatar page with its asset addresses and
   messaging adapted for a browser as it is sent, and forwards `/MPAI/AIFU/...`.
@@ -291,7 +291,7 @@ accumulating turn over turn on the machine that does not hold it locally.
 
 The Service's start-up loop (`Program.cs`) always tries all five hardcoded
 Modules, regardless of `Apps`. Building an AIM can throw - most often a
-missing model file - and `NorthApiRunner.Start` catches that exception and
+missing model file - and `ControllerApiRunner.Start` catches that exception and
 reports it as that one Module's failure (`<Module>: FAILED - <message>`)
 rather than letting it end the process: every other Module still starts. This
 matters most for a machine that hosts only some AIMs, as 10.3's Sub-AIM

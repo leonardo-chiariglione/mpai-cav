@@ -86,12 +86,12 @@ uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
 ## Repository layout
 
 ```
-AIF/            AI Framework runtime (Controller, Store, Shared/Global Storage)
+AIF/            AI Framework runtime (Controller, Store, Communication/{Shared,Global}Storage)
+  ControllerApi/  the Controller API (formerly the North API) and the Speaking Avatar type
 AIMs/           AI Modules
   AMDs/         L3 Module descriptors (JSON)
   Core/         shared types (data objects, qualifiers, JSON, paths)
   <family>/     the AIMs (MMC, PAF, OSD, CAE3, CVE ...)
-MW/HciApi/      HCI middleware (Speaking Avatar API, plug-in provider host)
 UAs/
   Lib/UaKit/    Speaking-Avatar host, capture/present toolkit
   Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD)

@@ -8,7 +8,7 @@ using AIF.Store;
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Hci.Api;   // NorthApi
+using Mpai.Aif.ControllerApi;   // ControllerApi
 
 namespace HciSceneTest;
 
@@ -43,22 +43,22 @@ internal static class Program
         Console.WriteLine($"JPG      : {jpgPath}  (exists={File.Exists(jpgPath)})");
         Console.WriteLine();
 
-        NorthApi? north = null;
+        ControllerApi? north = null;
         try
         {
-            north = new NorthApi(AmdDir, SettingsPath, store => new HciApp.HciProvider(store, GalleryJson));
-            Console.WriteLine("NorthApi + HciProvider built OK.");
+            north = new ControllerApi(AmdDir, SettingsPath, store => new HciApp.HciProvider(store, GalleryJson));
+            Console.WriteLine("ControllerApi + HciProvider built OK.");
 
-            var inputs = new List<NorthApi.Datum>();
+            var inputs = new List<ControllerApi.Datum>();
 
             // --- Audio (OSD-BAO) from the WAV ---
             var bao = BuildAudioObject(File.ReadAllBytes(wavPath));
-            inputs.Add(new NorthApi.Datum(BAO, MpaiJson.ToJson(bao)));
+            inputs.Add(new ControllerApi.Datum(BAO, MpaiJson.ToJson(bao)));
             Console.WriteLine("built OSD-BAO from WAV.");
 
             // --- Visual (OSD-BVO face) from the JPG ---
             var bvo = BasicVisualObject.FromFile(Path.GetFileName(jpgPath), File.ReadAllBytes(jpgPath), "Face");
-            inputs.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(bvo)));
+            inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(bvo)));
             Console.WriteLine("built OSD-BVO from JPG.");
 
             // --- LiDAR (OSD-BLO) synthetic minimal ---
@@ -67,7 +67,7 @@ internal static class Program
                 BasicLiDARObjectID = Guid.NewGuid().ToString("N"),
                 BasicLiDARData = new List<object>()
             };
-            inputs.Add(new NorthApi.Datum(BLO, MpaiJson.ToJson(blo)));
+            inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(blo)));
             Console.WriteLine("built synthetic OSD-BLO.");
             Console.WriteLine();
 

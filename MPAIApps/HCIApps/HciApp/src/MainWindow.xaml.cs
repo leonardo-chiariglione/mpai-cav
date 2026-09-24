@@ -11,12 +11,12 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;
 using Mpai.UaKit;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 
 namespace HciApp;
 
 // Human-CAV Interaction User Agent. The UA captures the AUDIO scene (BAO) and a
-// face (BVO) and hands them to the MMC-HCI Module through the North API. The
+// face (BVO) and hands them to the MMC-HCI Module through the Controller API. The
 // Module's front end (BAS/AVA/ASI) discriminates audio from speech: ASI scans the
 // audio objects, converts a speech object (BAO -> BSO) and feeds ASR/SIR/PSE.
 // There is NO boundary speech input; the recogniser is always fed by ASI. The UA
@@ -52,7 +52,7 @@ public partial class MainWindow : Window
     private const string ConversePrompt =
         "While we have a comfortable travel, let us have a conversation. Say stop when you want to end it.";
 
-    private NorthApi?     _north;
+    private ControllerApi?     _north;
     private AvatarUaHost? _avatar;
     private bool _ready, _started, _identified;
     private string? _userName;
@@ -74,7 +74,7 @@ public partial class MainWindow : Window
             SetStatus("loading...");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            await Task.Run(() => _north = new NorthApi(AmdDir, SettingsPath, store => new HciProvider(store, GalleryJson)));
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new HciProvider(store, GalleryJson)));
             _ready = true;
             InstructionText.Text = "Press Start to meet the CAV.";
             SetStatus("Ready."); StartButton.IsEnabled = true;
@@ -200,13 +200,13 @@ public partial class MainWindow : Window
     // identity, reply speech and face descriptors from this Advance.
     private async Task<(string? recognised, bool faceSeen)> FrontEndTurnAsync()
     {
-        var inputs = new List<NorthApi.Datum>();
+        var inputs = new List<ControllerApi.Datum>();
         var audio = await Task.Run(() => _avatar!.CaptureAudio(6.0));
         try { var __ia=audio?.BasicAudioObjectData?.OfType<InlineAudioData>()?.FirstOrDefault(); int __r=(audio?.AudioQualifier?.Formats?.ContentFormat?.RawData?.SampleSpace?.SamplingFrequency is double __f && __f>0)?(int)__f:16000; Mpai.Core.MpaiDiag.DumpB64(__ia?.Data, __r, "1_AOA_out"); } catch {}   // audio scene (BAO)
-        if (audio is not null) inputs.Add(new NorthApi.Datum(BAO, MpaiJson.ToJson(audio)));
+        if (audio is not null) inputs.Add(new ControllerApi.Datum(BAO, MpaiJson.ToJson(audio)));
         var face = await Task.Run(() => CaptureFace());
-        if (face is not null) inputs.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
-        inputs.Add(new NorthApi.Datum(BLO, MpaiJson.ToJson(new BasicLiDARObject
+        if (face is not null) inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
+        inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(new BasicLiDARObject
         { BasicLiDARObjectID = Guid.NewGuid().ToString("N"), BasicLiDARData = new List<object>() })));
 
         var r = await Task.Run(() => _north!.Advance(HciModule, inputs));
@@ -234,7 +234,7 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
         byte[] wav = SpeechOf(r.ByType(BSO));

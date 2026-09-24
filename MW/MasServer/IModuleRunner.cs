@@ -45,9 +45,9 @@ public sealed class BoundaryPort
 
 // What the MAS server needs from whatever runs Modules.
 //
-// DELIBERATELY NOT THE NORTH API ITSELF. NorthApi lives in Mpai.Hci.Api, and a
+// DELIBERATELY NOT THE CONTROLLER API ITSELF. ControllerApi lives in Mpai.Aif.ControllerApi, and a
 // server that referenced it would drag an application-flavoured assembly into
-// the one layer that must know no application. The host adapts its NorthApi to
+// the one layer that must know no application. The host adapts its ControllerApi to
 // this interface in a handful of lines, and this library depends on Data Types
 // and nothing else.
 public interface IModuleRunner

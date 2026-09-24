@@ -54,7 +54,7 @@ public partial class RcaShell : ComponentBase
     // listens - and hears the keys. The first character typed ends the listening,
     // so the turn is the typed one.
     private CancellationTokenSource? _typingClaims;
-    private readonly Dictionary<string, IAsyncNorthApi> _controllers = new();
+    private readonly Dictionary<string, IAsyncControllerApi> _controllers = new();
 
     private IReadOnlyList<WebAppDirectory.App> apps = Array.Empty<WebAppDirectory.App>();
     private bool showApps;
@@ -116,7 +116,7 @@ public partial class RcaShell : ComponentBase
 
             // AN APP RUNS UNDER A CONTROLLER OF ITS OWN, kept for when it is chosen again.
             if (!_controllers.TryGetValue(appId, out var north))
-                _controllers[appId] = north = new RemoteNorthApiAsync(Http);
+                _controllers[appId] = north = new RemoteControllerApiAsync(Http);
 
             AppTitle = app?.Name ?? (appId == "MAS" ? "" : appId);
             stopEnabled = true;

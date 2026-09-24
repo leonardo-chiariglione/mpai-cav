@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using AIF.Store;
 
 using Mpai.Core;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.PortData;
 using Mpai.Mas.Server;
 
@@ -132,8 +132,8 @@ internal static class Program
         store.Scan();
         Console.WriteLine($"  AMDs found: {store.Count}");
 
-        using var north = new NorthApi(amdDir, settingsPath, s => new MadProvider(s));
-        var runner = new NorthApiRunner(north, store);
+        using var north = new ControllerApi(amdDir, settingsPath, s => new MadProvider(s));
+        var runner = new ControllerApiRunner(north, store);
 
         Console.WriteLine();
         Console.WriteLine("Loading models. This is the slow part.");

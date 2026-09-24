@@ -11,14 +11,14 @@ using AIF.Store;        // AmdStore
 
 using Mpai.Core;
 using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
-using Mpai.Hci.Api;     // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;     // ControllerApi, SpeakingAvatar
 
 using Mpai.Providers;
 
 namespace MmcAmq;
 
 // MMC-AMQ User Agent - Answer to Multimodal Question, driven through the
-// type-addressed North API. The UA presents an image and a question (typed or
+// type-addressed Controller API. The UA presents an image and a question (typed or
 // spoken); the Module answers. One run per question:
 //   supply OSD-BVO (image) + OSD-BTO (typed question) OR OSD-BSO (spoken);
 //   read OSD-BTO (answer text), OSD-BSO (spoken answer), OSD-BVO (image back).
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private INorthApi?    _north;
+    private IControllerApi?    _north;
     private AvatarUaHost? _avatar;
     private byte[]?       _imageBytes;
     private string?       _lastQuestion;
@@ -68,7 +68,7 @@ public partial class MainWindow : Window
                 // user: it holds no model and no Framework. They were one source
                 // with a compilation switch, which meant the local application
                 // carried the networked path it never used.
-                _north = new NorthApi(AmdDir, SettingsPath, store => new AmqProvider(store));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store));
             });
             LoadButton.IsEnabled = true;
             SetStatus("Ready.");
@@ -144,11 +144,11 @@ public partial class MainWindow : Window
             Diag("StartFlow RSR -> " + s);
             _rsrStarted = (s == AifError.OK);
         }
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
         byte[] wav = SpeechOf(r.ByType(BSO));
@@ -217,11 +217,11 @@ public partial class MainWindow : Window
         SetStatus("thinking...");
 
         var image = BasicVisualObject.FromFile(_imagePath ?? "image.jpg", _imageBytes, "Image");
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BVO, MpaiJson.ToJson(image)) };
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BVO, MpaiJson.ToJson(image)) };
         if (spokenQuestion is not null)
-            inputs.Add(new NorthApi.Datum(BSO, MpaiJson.ToJson(spokenQuestion)));
+            inputs.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(spokenQuestion)));
         else if (typedQuestion is not null)
-            inputs.Add(new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedQuestion))));
+            inputs.Add(new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedQuestion))));
 
         var started = await Task.Run(() => _north!.StartFlow(AmqModule));
         Diag("StartFlow AMQ -> " + started);

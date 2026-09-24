@@ -7,27 +7,27 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AIF.Controller;
-using Mpai.Hci.Api;
+using Mpai.Aif.ControllerApi;
 using Mpai.Mas.PortData;
 
 namespace Mpai.RcaWeb.Mas;
 
-// THE NORTH API, WITHOUT WAITING. A browser runs WebAssembly on one thread and
+// THE CONTROLLER API, WITHOUT WAITING. A browser runs WebAssembly on one thread and
 // never lets it block on the network, so the seam the interpreter calls is
-// asynchronous here. The desktop's INorthApi is untouched; this is its twin for
+// asynchronous here. The desktop's IControllerApi is untouched; this is its twin for
 // the browser.
-public interface IAsyncNorthApi
+public interface IAsyncControllerApi
 {
     Task<AifError>        StartFlowAsync(string moduleName);
-    Task<NorthApi.Result> AdvanceAsync(string moduleName, IEnumerable<NorthApi.Datum> inputs);
+    Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs);
     Task                  StopFlowAsync(string moduleName);
 }
 
-// MPAI-MAS FROM A BROWSER. The same requests as Mpai.Mas.Client.RemoteNorthApi,
+// MPAI-MAS FROM A BROWSER. The same requests as Mpai.Mas.Client.RemoteControllerApi,
 // awaited instead of blocked on. The HttpClient is the page's own: its base
 // address is the origin that served the client, which forwards /MPAI/AIFU to
 // the Service, so the browser never makes a cross-origin call.
-public sealed class RemoteNorthApiAsync : IAsyncNorthApi
+public sealed class RemoteControllerApiAsync : IAsyncControllerApi
 {
     private readonly HttpClient     http;
     private readonly PortDataCodecs codecs = PortDataCodecs.Default();
@@ -35,7 +35,7 @@ public sealed class RemoteNorthApiAsync : IAsyncNorthApi
     private string? controllerId;
     private readonly Dictionary<string, string> modules = new(StringComparer.Ordinal);
 
-    public RemoteNorthApiAsync(HttpClient http, string? bearerToken = null)
+    public RemoteControllerApiAsync(HttpClient http, string? bearerToken = null)
     {
         this.http = http;
         if (!string.IsNullOrWhiteSpace(bearerToken))
@@ -82,13 +82,13 @@ public sealed class RemoteNorthApiAsync : IAsyncNorthApi
     // ONE EXCHANGE. The inputs are written, then every Output Port the client can
     // read is asked for; the first read closes the exchange on the Service and
     // runs the Module on what was written.
-    public async Task<NorthApi.Result> AdvanceAsync(string moduleName, IEnumerable<NorthApi.Datum> inputs)
+    public async Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs)
     {
         if (!modules.ContainsKey(moduleName))
         {
             var started = await StartFlowAsync(moduleName);
             if (started != AifError.OK)
-                return new NorthApi.Result(started, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(started, Array.Empty<ControllerApi.Datum>(), false);
         }
         var mid  = modules[moduleName];
         var root = await RootAsync();
@@ -96,15 +96,15 @@ public sealed class RemoteNorthApiAsync : IAsyncNorthApi
         foreach (var datum in inputs)
         {
             if (!codecs.Knows(datum.DataType))
-                return new NorthApi.Result(AifError.Failed, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
             var content = new ByteArrayContent(codecs.ToWire(datum.DataType, datum.Json));
             content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
             var posted = await http.PostAsync($"{root}/{mid}/Input/{Segment(datum.DataType, datum.PortNumber)}", content);
             if (!posted.IsSuccessStatusCode)
-                return new NorthApi.Result(AifError.Failed, Array.Empty<NorthApi.Datum>(), false);
+                return new ControllerApi.Result(AifError.Failed, Array.Empty<ControllerApi.Datum>(), false);
         }
 
-        var outputs = new List<NorthApi.Datum>();
+        var outputs = new List<ControllerApi.Datum>();
         foreach (var dataType in codecs.KnownDataTypes)
         {
             for (int portNumber = 1; portNumber <= 4; portNumber++)
@@ -112,10 +112,10 @@ public sealed class RemoteNorthApiAsync : IAsyncNorthApi
                 var response = await http.GetAsync($"{root}/{mid}/Output/{Segment(dataType, portNumber)}");
                 if (!response.IsSuccessStatusCode) continue;
                 var wire = await response.Content.ReadAsByteArrayAsync();
-                outputs.Add(new NorthApi.Datum(dataType, portNumber, codecs.ToInternal(dataType, wire)));
+                outputs.Add(new ControllerApi.Datum(dataType, portNumber, codecs.ToInternal(dataType, wire)));
             }
         }
-        return new NorthApi.Result(AifError.OK, outputs, false);
+        return new ControllerApi.Result(AifError.OK, outputs, false);
     }
 
     private static string Segment(string dataType, int portNumber) =>

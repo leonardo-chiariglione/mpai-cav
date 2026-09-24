@@ -18,9 +18,9 @@
     <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <!-- Avatar surface + North API -->
+    <!-- Avatar surface + Controller API -->
     <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
-    <ProjectReference Include="..\..\..\MW\HciApi\Mpai.Hci.Api.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
     <!-- MMC-MPD affective front-end: NLU + ESI + EFI + PSM -->
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ESI\Mpai.Mmc.Esi.csproj" />

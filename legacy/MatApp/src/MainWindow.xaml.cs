@@ -11,13 +11,13 @@ using AIF.Store;        // AmdStore (provider factory)
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
 
 using Mpai.Providers;
 
 namespace HciMat;
 
-// HCI-MAT User Agent - drives MMC-MAT through the type-addressed North API.
+// HCI-MAT User Agent - drives MMC-MAT through the type-addressed Controller API.
 // The UA identifies data ONLY by data type. It provides an input language, an
 // output language (a Language Selector, OSD-SEL) and either a Text Object
 // (OSD-BTO) or a Speech Object (OSD-BSO), and reads back TranslatedText (OSD-BTO),
@@ -44,7 +44,7 @@ public partial class MainWindow : Window
         ("fr","Francais"), ("de","Deutsch"), ("ja","Nihongo"), ("zh","Zhongwen")
     };
 
-    private NorthApi?     _north;
+    private ControllerApi?     _north;
     private AvatarUaHost? _avatar;
     private volatile bool _busy = false;
     private int _phase = 0;   // 0=before first Start, 1=models loaded, 2=Select active
@@ -88,7 +88,7 @@ public partial class MainWindow : Window
             await Task.Delay(TimeSpan.FromSeconds(2.0));
 
             await Task.Run(() =>
-                _north = new NorthApi(AmdDir, SettingsPath, store => new MatProvider(store)));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new MatProvider(store)));
 
             SetStatus("Press Start.");
             PrimaryButton.IsEnabled = true;
@@ -191,13 +191,13 @@ public partial class MainWindow : Window
         if (_north is null || !_matStarted) return null;
 
         var selector = BasicSelectorObject.Languages(from, to);
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(SEL, MpaiJson.ToJson(selector)) };
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(SEL, MpaiJson.ToJson(selector)) };
         if (typedText is not null)
-            inputs.Add(new NorthApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedText))));
+            inputs.Add(new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedText))));
         else if (speech is not null)
         {
-            inputs.Add(new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)));
-            inputs.Add(new NorthApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime())));
+            inputs.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
+            inputs.Add(new ControllerApi.Datum(STM, MpaiJson.ToJson(NowSimpleTime())));
         }
 
         var r = _north.Advance(MatModule, inputs);
@@ -283,11 +283,11 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum> { new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
         byte[] wav = Array.Empty<byte>();

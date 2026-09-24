@@ -17,7 +17,7 @@ gallery that **MAC** later reads. This document is for software developers.
   once, from each AIM's `ExternalPorts` (and the composite's `InternalTypes`),
   to `(DataType, PortNumber)`; nothing downstream reads a port name. Suspends
   when a required boundary input has not been supplied and resumes when it is.
-- **North API** (`MW/HciApi`, `NorthApi`) - the UA-facing interface. The UA
+- **Controller API** (`AIF/ControllerApi`, `ControllerApi`) - the UA-facing interface. The UA
   supplies/reads data as `Datum(DataType, PortNumber, json)`; the boundary key on
   the wire is `DataType#PortNumber`. No port names, no application verbs.
 - **User Agent (UA)** - acquires/delivers real-world data and **orchestrates**;
@@ -61,7 +61,7 @@ gallery. The gallery scope is `"MMC-MAC-V2.5"` - the same scope MAC reads.
 ## 3. The User Agent
 `MPAIApps/MmcApps/AcrApp/src/` - provider `AcrProvider.cs`, UA
 `MainWindow.xaml.cs` (namespace `AcrApp`), realising `UAs/Orchestration/HCI-ACR.orch`.
-It drives the Module through the **North API** (`NorthApi`), addressing data only
+It drives the Module through the **Controller API** (`ControllerApi`), addressing data only
 by type:
 
 1. `StartFlow("MMC-ACR-V2.5")`.
@@ -80,7 +80,7 @@ Windows Media Capture** (no OpenCV). Real-world limbs come from `UAs/Lib/UaKit`.
 ## 4. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/AcrApp/*`
 - **AIF:** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
-- **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi` (`NorthApi`)
+- **UA library / Controller API:** `UAs/Lib/UaKit`, `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`; leaves `PAF/V1.6/EFD`, `MMC/V2.5/ESD`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`, `CVE/V1.0/VOA.Windows`

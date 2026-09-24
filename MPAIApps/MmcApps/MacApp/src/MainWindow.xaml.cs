@@ -10,11 +10,11 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Hci.Api;       // NorthApi, SpeakingAvatar
+using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
 
 namespace HciMac;
 
-// HCI-MAC User Agent - drives MMC-MAC through the type-addressed North API.
+// HCI-MAC User Agent - drives MMC-MAC through the type-addressed Controller API.
 // The UA identifies data ONLY by data type: supply OSD-BVO (face) -> the flow
 // suspends -> supply OSD-BSO (speech) -> read OSD-BTO (Response, banner),
 // OSD-BSO (VocalResponse, speak), PAF-FDO (FaceDescriptors, avatar). No names.
@@ -34,7 +34,7 @@ public partial class MainWindow : Window
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
     private static readonly string GalleryJson  = Mpai.Core.MpaiPaths.Gallery;
 
-    private NorthApi?     _north;
+    private ControllerApi?     _north;
     private AvatarUaHost? _avatar;
 
     private static void Diag(string s)
@@ -58,7 +58,7 @@ public partial class MainWindow : Window
             await _avatar.InitAsync();
 
             await Task.Run(() =>
-                _north = new NorthApi(AmdDir, SettingsPath, store => new MacProvider(store, GalleryJson)));
+                _north = new ControllerApi(AmdDir, SettingsPath, store => new MacProvider(store, GalleryJson)));
 
             InstructionText.Text = "Press Start to begin.";
             SetStatus("Ready.");
@@ -114,8 +114,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var faceIn = new List<NorthApi.Datum>();
-            if (face is not null) faceIn.Add(new NorthApi.Datum(BVO, MpaiJson.ToJson(face)));
+            var faceIn = new List<ControllerApi.Datum>();
+            if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
             var r1 = await Task.Run(() => _north!.Advance(MacModule, faceIn));
             Diag("Advance(face) -> err=" + r1.Error + (r1.Suspended ? " suspended waiting for " + (r1.WaitingPort ?? "?") : " completed"));
             if (!r1.Ok) { SetStatus("run error"); return; }
@@ -129,8 +129,8 @@ public partial class MainWindow : Window
                 await RenderPromptAsync("Speak your passphrase.");
                 var speech = await CaptureSpeechAsync();
 
-                var speechIn = new List<NorthApi.Datum>();
-                if (speech is not null) speechIn.Add(new NorthApi.Datum(BSO, MpaiJson.ToJson(speech)));
+                var speechIn = new List<ControllerApi.Datum>();
+                if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
                 var r2 = await Task.Run(() => _north!.Advance(MacModule, speechIn));
                 Diag("Advance(speech) -> err=" + r2.Error + (r2.Suspended ? " suspended waiting for " + (r2.WaitingPort ?? "?") : " completed"));
                 if (!r2.Ok) { SetStatus("resume error"); return; }
@@ -209,14 +209,14 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<NorthApi.Datum>
+        var inputs = new List<ControllerApi.Datum>
         {
-            new NorthApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new NorthApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new NorthApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
