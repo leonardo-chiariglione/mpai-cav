@@ -14,9 +14,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Framework -->
-    <ProjectReference Include="..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\AIF\V3.0\src\AIF.Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\..\AIF\V3.0\src\AIF.GlobalStorage\AIF.GlobalStorage.csproj" />
+    <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <!-- Avatar surface + North API -->
     <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />

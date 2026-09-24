@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\MW\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\MW\MasClient\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />

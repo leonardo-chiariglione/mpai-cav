@@ -7,8 +7,8 @@
     <RootNamespace>Mpai.Osd.Bas</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
   </ItemGroup>
 </Project>

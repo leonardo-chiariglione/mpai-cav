@@ -99,7 +99,7 @@ Visual acquisition uses **native Windows Media Capture** (no OpenCV).
 ## 5. Files this app needs (build closure)
 
 - **App:** `MPAIApps/MmcApps/MacApp/*`
-- **Framework (AIF):** `AIF/V3.0/src/{AIF.Controller, AIF.Store, AIF.SharedStorage, AIF.GlobalStorage}`
+- **Framework (AIF):** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
 - **UA library / North API:** `UAs/Lib/UaKit`; `MW/HciApi` (`NorthApi`)
 - **AIMs:** `AIMs/Core`, and the leaves `PAF/V1.6/FIR`, `MMC/V2.5/SIR`,
   `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices

@@ -15,8 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\AIF\V3.0\src\AIF.Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\AIF\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />

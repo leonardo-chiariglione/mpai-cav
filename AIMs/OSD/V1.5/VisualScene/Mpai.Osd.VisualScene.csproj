@@ -14,6 +14,6 @@
     <!-- OSD/V1.5/VisualScene -> repo depth to Core/AIF is the same as MMC/V2.5/TIQ. -->
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\CVE\V1.0\VOA\Mpai.Cve.Voa.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
   </ItemGroup>
 </Project>

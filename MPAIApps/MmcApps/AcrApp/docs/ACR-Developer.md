@@ -79,7 +79,7 @@ Windows Media Capture** (no OpenCV). Real-world limbs come from `UAs/Lib/UaKit`.
 
 ## 4. Files this app needs (build closure)
 - **App:** `MPAIApps/MmcApps/AcrApp/*`
-- **AIF:** `AIF/V3.0/src/{AIF.Controller, AIF.Store, AIF.SharedStorage, AIF.GlobalStorage}`
+- **AIF:** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
 - **UA library / North API:** `UAs/Lib/UaKit`, `MW/HciApi` (`NorthApi`)
 - **AIMs:** `AIMs/Core`; leaves `PAF/V1.6/EFD`, `MMC/V2.5/ESD`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; devices `CAE3/V1.0/AOA(.Windows)`,

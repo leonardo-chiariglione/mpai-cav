@@ -16,6 +16,6 @@
          (OSD V1.5) cross-standard. -->
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
   </ItemGroup>
 </Project>

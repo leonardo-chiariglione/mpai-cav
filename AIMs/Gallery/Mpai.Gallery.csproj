@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\AIF\V3.0\src\AIF.GlobalStorage\AIF.GlobalStorage.csproj" />
+    <ProjectReference Include="..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
   </ItemGroup>
 </Project>
