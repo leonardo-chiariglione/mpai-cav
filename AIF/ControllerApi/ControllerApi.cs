@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using AIF.Controller;
@@ -29,11 +30,19 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     private readonly AimSettings  _settings;
 
     // A Service calls this from many requests at once, for different Modules.
-    // The two tables are touched only under _tables; a run itself happens
-    // outside it, so one Module's run never waits for another's.
-    private readonly Dictionary<string, int>  _running   = new();
-    private readonly Dictionary<string, bool> _suspended = new();
+    // The table is touched only under _tables; a run itself happens outside it,
+    // so one Module's run never waits for another's.
+    private readonly Dictionary<string, Started> _running = new();
     private readonly object _tables = new();
+
+    // A started Module: its id, what has been written to it since its last run,
+    // and that run.
+    private sealed class Started
+    {
+        public required int Id { get; init; }
+        public Dictionary<string, string> Written { get; } = new();
+        public Task<Result>? Run { get; set; }
+    }
 
     public ControllerApi(string amdDir, string settingsPath, IAimProvider provider)
     {
@@ -61,20 +70,19 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         public Datum(string dataType, string json) : this(dataType, 1, json) { }
     }
 
-    // WHEN A MODULE SUSPENDS, IT IS WAITING FOR SOMETHING NAMEABLE. The executor
-    // knows exactly which boundary Port was not supplied and records it; until now
-    // the Controller API discarded that and told the User Agent only THAT the Module was
-    // waiting. A UA cannot act on a bare boolean: it can supply more data and hope,
-    // or give up. WaitingPort carries the boundary key - "DataType#PortNumber" -
-    // so that a UA, or an interpreter reading a workflow description, can say what
-    // is missing instead of guessing.
-    //
-    // Optional and last, so every existing construction still compiles.
+    // What one exchange returned. Suspended and WaitingPort are always false and
+    // null: no Module suspends (M3205 5.1); they go with the rest of suspension.
     public readonly record struct Result(AifError Error, IReadOnlyList<Datum> Outputs, bool Suspended, string? WaitingPort = null)
     {
         public bool Ok => Error == AifError.OK;
         public string? ByType(string dataType, int portNumber = 1) =>
             Outputs.FirstOrDefault(o => o.DataType == dataType && o.PortNumber == portNumber).Json;
+    }
+
+    // What one OutputRead returned: an outcome, and the datum when it is OK.
+    public readonly record struct Read(AifError Error, string? Json)
+    {
+        public bool Ok => Error == AifError.OK;
     }
 
     public AifError StartFlow(string moduleName)
@@ -83,7 +91,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             if (_running.ContainsKey(moduleName)) return AifError.OK;
             var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
-            if (err == AifError.OK) { _running[moduleName] = id; _suspended[moduleName] = false; }
+            if (err == AifError.OK) _running[moduleName] = new Started { Id = id };
             return err;
         }
     }
@@ -91,14 +99,64 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     public void StopFlow(string moduleName)
     {
         lock (_tables)
-            if (_running.TryGetValue(moduleName, out var id))
-            { _ua.MPAI_AIFU_MODULE_Stop(id); _running.Remove(moduleName); _suspended.Remove(moduleName); }
+            if (_running.Remove(moduleName, out var started))
+                _ua.MPAI_AIFU_MODULE_Stop(started.Id);
     }
 
     // The boundary key the Controller routes on: DataType + PortNumber. Ports of
     // the same type are told apart only by number; a single occurrence is #1.
     private static string Key(string dataType, int portNumber) => dataType + "#" + portNumber;
 
+    // ---- The User Agent's data path (M3203 3.3, M3213 3.2) -------------------
+
+    // MPAI_AIFU_MODULE_Input_Write. Supplies a datum at a boundary input Port,
+    // for the Module's next run. Writing never waits here, so timeoutMs is
+    // honoured trivially; it is in the signature because a Port with a Depth
+    // (Phase 4) may have to.
+    public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    {
+        lock (_tables)
+        {
+            if (!_running.TryGetValue(moduleName, out var started)) return AifError.NotStarted;
+
+            var port = PortOf(started, "Input", dataType, portNumber);
+            if (port is null) return AifError.NoSuchPort;
+            if (HeaderOf(json) is { } header && !port.Accepts(header)) return AifError.TypeNotAccepted;
+
+            started.Written[Key(dataType, portNumber)] = json;
+            return AifError.OK;
+        }
+    }
+
+    // MPAI_AIFU_MODULE_Output_Read. Collects the datum of a boundary output Port.
+    // The first read after one or more writes runs the Module on what was
+    // written; later reads return what that run produced. timeoutMs: 0, do not
+    // wait; negative, wait without limit. A run a TIMEOUT leaves behind
+    // continues, and a later read returns its result.
+    public Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    {
+        Task<Result>? run;
+        lock (_tables)
+        {
+            if (!_running.TryGetValue(moduleName, out var started)) return new Read(AifError.NotStarted, null);
+            if (PortOf(started, "Output", dataType, portNumber) is null) return new Read(AifError.NoSuchPort, null);
+            run = RunIfWritten(moduleName, started);
+        }
+
+        if (run is null) return new Read(AifError.NotProduced, null);
+        if (!Completes(run, timeoutMs)) return new Read(AifError.Timeout, null);
+
+        var result = run.Result;
+        if (result.Error != AifError.OK) return new Read(result.Error, null);
+        return result.ByType(dataType, portNumber) is { } json
+            ? new Read(AifError.OK, json)
+            : new Read(AifError.NotProduced, null);
+    }
+
+    // Write every input, read every output: one exchange, built on the data path.
+    // It is lenient where InputWrite is not - a datum for a Port the Module does
+    // not declare is passed on, and meets no connection - because every client
+    // and workflow was written against it.
     public Result Advance(string moduleName, IEnumerable<Datum> inputs)
     {
         bool ephemeral;
@@ -108,56 +166,100 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             var e = StartFlow(moduleName);
             if (e != AifError.OK) return new Result(e, Array.Empty<Datum>(), false);
         }
-        int id;
-        bool resuming;
+
+        Task<Result>? run;
         lock (_tables)
         {
-            if (!_running.TryGetValue(moduleName, out id))
-                return new Result(AifError.NotFound, Array.Empty<Datum>(), false);
-            resuming = _suspended.TryGetValue(moduleName, out var s) && s;
+            if (!_running.TryGetValue(moduleName, out var started))
+                return new Result(AifError.NotStarted, Array.Empty<Datum>(), false);
+            foreach (var d in inputs)
+                started.Written[Key(d.DataType, d.PortNumber)] = d.Json;
+            run = RunIfWritten(moduleName, started, always: true)!;
         }
 
-        // Typed boundary: keyed by (DataType, PortNumber). No port name anywhere.
-        var boundary = new Dictionary<string, string>();
-        foreach (var d in inputs)
-            boundary[Key(d.DataType, d.PortNumber)] = d.Json;
+        var result = run.GetAwaiter().GetResult();
+        if (ephemeral) StopFlow(moduleName);
+        return result;
+    }
 
-        var (err, outcome) = (resuming
-            ? _ua.ResumeAsync(id, boundary)
-            : _ua.RunAsync(id, boundary)).GetAwaiter().GetResult();
-
-        if (err != AifError.OK)
-        { if (ephemeral) StopFlow(moduleName); return new Result(err, Array.Empty<Datum>(), false); }
-
-        if (outcome is not null && outcome.Suspended)
+    // Starts a run on what was written, if anything was written since the last
+    // one; returns the Module's latest run. Called under _tables.
+    private Task<Result>? RunIfWritten(string moduleName, Started started, bool always = false)
+    {
+        if (started.Written.Count > 0 || always)
         {
-            lock (_tables) _suspended[moduleName] = true;
-            return new Result(AifError.OK, Array.Empty<Datum>(), true, outcome.WaitingPort);
+            var boundary = new Dictionary<string, string>(started.Written);
+            started.Written.Clear();
+            started.Run = Task.Run(() => RunOnce(started.Id, boundary));
         }
-        lock (_tables) _suspended[moduleName] = false;
+        return started.Run;
+    }
+
+    private async Task<Result> RunOnce(int id, Dictionary<string, string> boundary)
+    {
+        var (err, outcome) = await _ua.RunAsync(id, boundary);
+        if (err != AifError.OK) return new Result(err, Array.Empty<Datum>(), false);
+
+        // An AIM's error does not end the run (every Module continues, until
+        // Step 5 gives it its policy): the run's message is marked an error when
+        // the last AIM to run failed, and still carries what the others produced.
+        // A cancelled run - its Module stopped - produced nothing.
+        var message = outcome?.Completed;
+        if (message is null || message.IsCancelled)
+            return new Result(AifError.Failed, Array.Empty<Datum>(), false);
 
         // Outputs come back keyed by (DataType, PortNumber) too - parse the key.
         var outs = new List<Datum>();
-        if (outcome?.Completed is { IsError: false } msg)
-            foreach (var kv in msg.Ports)
-            {
-                var hash = kv.Key.LastIndexOf('#');
-                if (hash <= 0) continue;
-                var dt = kv.Key.Substring(0, hash);
-                var pn = int.TryParse(kv.Key.Substring(hash + 1), out var n) ? n : 1;
-                outs.Add(new Datum(dt, pn, kv.Value));
-            }
-
-        if (ephemeral) StopFlow(moduleName);
+        foreach (var kv in message.Ports)
+        {
+            var hash = kv.Key.LastIndexOf('#');
+            if (hash <= 0) continue;
+            var dt = kv.Key.Substring(0, hash);
+            var pn = int.TryParse(kv.Key.Substring(hash + 1), out var n) ? n : 1;
+            outs.Add(new Datum(dt, pn, kv.Value));
+        }
         return new Result(AifError.OK, outs, false);
+    }
+
+    private static bool Completes(Task task, int timeoutMs) =>
+        timeoutMs < 0 ? WaitedFor(task) : task.Wait(timeoutMs);
+
+    private static bool WaitedFor(Task task) { task.Wait(); return true; }
+
+    // The boundary Port of that Direction, Data Type and Port Number: the one
+    // declaring that number, else the n-th of its type (1 where it occurs once).
+    private RuntimePort? PortOf(Started started, string direction, string dataType, int portNumber)
+    {
+        var ports = (_ua.BoundaryPorts(started.Id) ?? Array.Empty<RuntimePort>())
+            .Where(p => p.Direction == direction && p.Accepts(dataType))
+            .ToList();
+        return ports.FirstOrDefault(p => p.PortNumber == portNumber)
+            ?? (ports.All(p => p.PortNumber is null) && portNumber >= 1 && portNumber <= ports.Count
+                ? ports[portNumber - 1]
+                : null);
+    }
+
+    // The Data Type an MPAI Object says it is: its Header. Null for a datum that
+    // is not an Object, which says nothing about its type.
+    private static string? HeaderOf(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.ValueKind == JsonValueKind.Object &&
+                   doc.RootElement.TryGetProperty("Header", out var h) && h.ValueKind == JsonValueKind.String
+                ? h.GetString()
+                : null;
+        }
+        catch (JsonException) { return null; }
     }
 
     public void Dispose()
     {
         lock (_tables)
         {
-            foreach (var id in _running.Values) _ua.MPAI_AIFU_MODULE_Stop(id);
-            _running.Clear(); _suspended.Clear();
+            foreach (var started in _running.Values) _ua.MPAI_AIFU_MODULE_Stop(started.Id);
+            _running.Clear();
         }
         (_provider as IDisposable)?.Dispose();
     }

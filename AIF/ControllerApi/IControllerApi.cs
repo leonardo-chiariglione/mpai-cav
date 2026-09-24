@@ -14,4 +14,10 @@ public interface IControllerApi
     AifError StartFlow(string moduleName);
     ControllerApi.Result Advance(string moduleName, IEnumerable<ControllerApi.Datum> inputs);
     void StopFlow(string moduleName);
+
+    // The data path of M3203 3.3 (M3213 3.2): a write and a read per boundary
+    // Port, with named outcomes and a timeout in milliseconds (0: do not wait;
+    // negative: wait without limit).
+    AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1);
+    ControllerApi.Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1);
 }

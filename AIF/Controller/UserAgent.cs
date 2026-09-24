@@ -189,6 +189,10 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
+    // The boundary Ports of a running Module, as its Metadata declares them.
+    public IReadOnlyList<RuntimePort>? BoundaryPorts(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) ? module.Graph.Root.Ports : null;
+
     // -- 3.3 Inquire about AIM state ------------------------------------------
 
     // MPAI_AIFU_AIM_GetStatus(MODULE_ID, name, out status)
@@ -316,11 +320,30 @@ public sealed class UserAgent
     // used.
 }
 
-// Standard-style error codes.
+// Standard-style error codes, and the outcomes of M3213 3.2 (the codes of
+// M3203's API Conventions: MPAI_AIF_NOT_PRODUCED, MPAI_AIF_TIMEOUT,
+// MPAI_AIF_NO_SUCH_PORT, MPAI_AIF_TYPE_NOT_ACCEPTED).
 public enum AifError
 {
     OK = 0,
     NotInitialized,
     NotFound,
-    Failed
+    Failed,
+
+    // The Port is declared, and produced nothing in the run just completed. An
+    // outcome, not an error.
+    NotProduced,
+
+    // The call waited as long as it was allowed to and could not complete.
+    Timeout,
+
+    // The Module declares no boundary Port of that Data Type and Port Number, in
+    // that Direction.
+    NoSuchPort,
+
+    // The datum's Data Type is not among those the Port accepts.
+    TypeNotAccepted,
+
+    // The Module is not started.
+    NotStarted
 }

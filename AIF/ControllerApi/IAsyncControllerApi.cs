@@ -5,7 +5,7 @@ using AIF.Controller;
 
 namespace Mpai.Aif.Api;
 
-// THE CONTROLLER API, WITHOUT WAITING. The same three calls as IControllerApi,
+// THE CONTROLLER API, WITHOUT WAITING. The same calls as IControllerApi,
 // awaited. A browser runs WebAssembly on one thread and never lets it block on the
 // network, and the workflow interpreter, which serves the browser and the desktop
 // alike, holds this type.
@@ -14,6 +14,8 @@ public interface IAsyncControllerApi
     Task<AifError>             StartFlowAsync(string moduleName);
     Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs);
     Task                       StopFlowAsync(string moduleName);
+    Task<AifError>             InputWriteAsync(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1);
+    Task<ControllerApi.Read>   OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1);
 }
 
 public static class ControllerApiAsync
@@ -35,5 +37,11 @@ public static class ControllerApiAsync
 
         public Task StopFlowAsync(string moduleName) =>
             Task.Run(() => api.StopFlow(moduleName));
+
+        public Task<AifError> InputWriteAsync(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1) =>
+            Task.Run(() => api.InputWrite(moduleName, dataType, portNumber, json, timeoutMs));
+
+        public Task<ControllerApi.Read> OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1) =>
+            Task.Run(() => api.OutputRead(moduleName, dataType, portNumber, timeoutMs));
     }
 }

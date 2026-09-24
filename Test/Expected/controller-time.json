@@ -1,3 +1,6 @@
 {
-  "Advance on an AIM that takes 300 ms": "OK; takes no timeout; returned after the AIM's 300 ms"
+  "a read with timeout 2000": "OK 'b', after the AIM's 300 ms",
+  "read with timeout 0, on an AIM that takes 300 ms": "Timeout",
+  "then a read with timeout 100": "Timeout",
+  "then a read without limit: the run continued": "OK 'a'"
 }

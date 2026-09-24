@@ -107,6 +107,40 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         return new ControllerApi.Result(AifError.OK, outputs, false);
     }
 
+    // The data path over MPAI-MAS's routes: see RemoteControllerApi.
+    public async Task<AifError> InputWriteAsync(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!codecs.Knows(dataType)) return AifError.Failed;
+        var content = new ByteArrayContent(codecs.ToWire(dataType, json));
+        content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
+        try
+        {
+            using var limit = Limit(timeoutMs);
+            var posted = await http.PostAsync($"{await RootAsync()}/{mid}/Input/{Segment(dataType, portNumber)}", content, limit.Token);
+            return posted.IsSuccessStatusCode ? AifError.OK : AifError.Failed;
+        }
+        catch (OperationCanceledException) { return AifError.Timeout; }
+    }
+
+    public async Task<ControllerApi.Read> OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
+        if (!codecs.Knows(dataType)) return new ControllerApi.Read(AifError.Failed, null);
+        try
+        {
+            using var limit = Limit(timeoutMs);
+            var response = await http.GetAsync($"{await RootAsync()}/{mid}/Output/{Segment(dataType, portNumber)}", limit.Token);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return new ControllerApi.Read(AifError.NotProduced, null);
+            if (!response.IsSuccessStatusCode) return new ControllerApi.Read(AifError.Failed, null);
+            return new ControllerApi.Read(AifError.OK, codecs.ToInternal(dataType, await response.Content.ReadAsByteArrayAsync()));
+        }
+        catch (OperationCanceledException) { return new ControllerApi.Read(AifError.Timeout, null); }
+    }
+
+    private static System.Threading.CancellationTokenSource Limit(int timeoutMs) =>
+        timeoutMs < 0 ? new System.Threading.CancellationTokenSource() : new System.Threading.CancellationTokenSource(Math.Max(timeoutMs, 1));
+
     private static string Segment(string dataType, int portNumber) =>
         portNumber == 1 ? dataType : dataType + ":" + portNumber;
 }

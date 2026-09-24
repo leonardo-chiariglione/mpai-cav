@@ -1,8 +1,15 @@
 {
-  "a Module that is not in the Store": "NotFound; #1 absent",
-  "a Port that produced (#1)": "OK; #1 'X'",
-  "a Port the Module does not declare (#9)": "OK; #9 absent",
-  "a Port whose AIM threw (#3)": "OK; #3 absent",
-  "a datum of a Data Type no Port accepts": "OK; #1 absent; #2 absent; #3 absent",
-  "a declared Port that produced nothing (#2)": "OK; #2 absent"
+  "Advance, a Module that is not in the Store": "NotFound",
+  "read again, without writing: that run's": "OK 'X'",
+  "read, Module not started": "NotStarted",
+  "read, a Data Type it has no Port for": "NoSuchPort",
+  "read, a Port it does not declare (#9)": "NoSuchPort",
+  "read, a Port that produced (#1)": "OK 'X'",
+  "read, a Port whose AIM threw (#3)": "NotProduced",
+  "read, a declared Port that produced nothing (#2)": "NotProduced",
+  "write, Module not started": "NotStarted",
+  "write, a Data Type it has no Port for": "NoSuchPort",
+  "write, a Port it declares": "OK",
+  "write, a Port it does not declare (#2)": "NoSuchPort",
+  "write, an Object of a Data Type the Port does not accept": "TypeNotAccepted"
 }

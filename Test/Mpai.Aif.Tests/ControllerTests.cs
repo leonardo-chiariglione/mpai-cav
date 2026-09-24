@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 using AIF.Controller;
 using AIF.Store;
@@ -23,6 +23,9 @@ public class ControllerTests
     private static ControllerApi Api() =>
         new(Amds, Path.Combine(Amds, "no-settings.json"), new TestAims());
 
+    private static string Shown(ControllerApi.Read read) =>
+        read.Error + (read.Json is { } v ? $" '{v}'" : "");
+
     private static string Show(ControllerApi.Result result, params int[] numbers) =>
         $"{result.Error}; " + string.Join("; ", numbers.Select(n => $"#{n} " + (result.ByType(Text, n) is { } v ? $"'{v}'" : "absent")));
 
@@ -42,29 +45,38 @@ public class ControllerTests
         });
     }
 
-    // What a User Agent is told about a Port that produced, one that produced
-    // nothing, one whose AIM threw, one that does not exist, and a Module that is
-    // not there.
+    // What a User Agent is told, writing and reading Port by Port: a Port that
+    // produced, one that produced nothing, one whose AIM threw, one that does not
+    // exist, a datum of a Data Type the Port does not accept, a Module not started.
     [Fact]
     public void Outcomes()
     {
         using var api = Api();
         const string module = "1TST-DGR-V1.0-I01";
+        var result = new Dictionary<string, string>
+        {
+            ["write, Module not started"]         = api.InputWrite(module, Text, 1, "x").ToString(),
+            ["read, Module not started"]          = api.OutputRead(module, Text, 1).Error.ToString()
+        };
+
         api.StartFlow(module);
-        var result = api.Advance(module, [new ControllerApi.Datum(Text, "x")]);
-        var wrongType = api.Advance(module, [new ControllerApi.Datum("TST-NUM-V1.0", "1")]);
-        var noModule = api.Advance("1TST-XXX-V1.0-I01", [new ControllerApi.Datum(Text, "x")]);
+        result["write, a Port it declares"]                   = api.InputWrite(module, Text, 1, "x").ToString();
+        result["write, a Port it does not declare (#2)"]      = api.InputWrite(module, Text, 2, "x").ToString();
+        result["write, a Data Type it has no Port for"]       = api.InputWrite(module, "TST-NUM-V1.0", 1, "1").ToString();
+        result["write, an Object of a Data Type the Port does not accept"] =
+            api.InputWrite(module, Text, 1, "{\"Header\": \"TST-NUM-V1.0\"}").ToString();
+        result["read, a Port that produced (#1)"]             = Shown(api.OutputRead(module, Text, 1));
+        result["read, a declared Port that produced nothing (#2)"] = Shown(api.OutputRead(module, Text, 2));
+        result["read, a Port whose AIM threw (#3)"]           = Shown(api.OutputRead(module, Text, 3));
+        result["read, a Port it does not declare (#9)"]       = Shown(api.OutputRead(module, Text, 9));
+        result["read, a Data Type it has no Port for"]        = Shown(api.OutputRead(module, "TST-NUM-V1.0", 1));
+        result["read again, without writing: that run's"]     = Shown(api.OutputRead(module, Text, 1));
         api.StopFlow(module);
 
-        Expected.Match("controller-outcomes.json", new Dictionary<string, string>
-        {
-            ["a Port that produced (#1)"]                     = Show(result, 1),
-            ["a declared Port that produced nothing (#2)"]    = Show(result, 2),
-            ["a Port whose AIM threw (#3)"]                   = Show(result, 3),
-            ["a Port the Module does not declare (#9)"]       = Show(result, 9),
-            ["a datum of a Data Type no Port accepts"]        = Show(wrongType, 1, 2, 3),
-            ["a Module that is not in the Store"]             = Show(noModule, 1)
-        });
+        result["Advance, a Module that is not in the Store"] =
+            api.Advance("1TST-XXX-V1.0-I01", [new ControllerApi.Datum(Text, "x")]).Error.ToString();
+
+        Expected.Match("controller-outcomes.json", result);
     }
 
     // The status of each AIM after a run in which one worked, one produced
@@ -133,23 +145,30 @@ public class ControllerTests
         Expected.Match("controller-lifecycle.json", result);
     }
 
-    // Whether a call can be bounded in time.
+    // Whether a call can be bounded in time: a read that does not wait, one whose
+    // time runs out, one that waits without limit; the run continuing after a
+    // TIMEOUT, and a later read returning its result.
     [Fact]
     public void Time()
     {
         using var api = Api();
         const string module = "1TST-SLW-V1.0-I01";
         api.StartFlow(module);
+        var result = new Dictionary<string, string>();
+
+        api.InputWrite(module, Text, 1, "a");
+        result["read with timeout 0, on an AIM that takes 300 ms"]   = Shown(api.OutputRead(module, Text, 1, 0));
+        result["then a read with timeout 100"]                        = Shown(api.OutputRead(module, Text, 1, 100));
+        result["then a read without limit: the run continued"]        = Shown(api.OutputRead(module, Text, 1, -1));
+
+        api.InputWrite(module, Text, 1, "b");
         var clock = Stopwatch.StartNew();
-        var result = api.Advance(module, [new ControllerApi.Datum(Text, "x")]);
+        var waited = api.OutputRead(module, Text, 1, 2000);
         clock.Stop();
+        result["a read with timeout 2000"] = Shown(waited) + (clock.ElapsedMilliseconds >= 280 ? ", after the AIM's 300 ms" : ", before the AIM's 300 ms");
         api.StopFlow(module);
 
-        Expected.Match("controller-time.json", new Dictionary<string, string>
-        {
-            ["Advance on an AIM that takes 300 ms"] =
-                $"{result.Error}; takes no timeout; returned " + (clock.ElapsedMilliseconds >= 280 ? "after the AIM's 300 ms" : "before the AIM's 300 ms")
-        });
+        Expected.Match("controller-time.json", result);
     }
 
     // ---------------------------------------------------------------------

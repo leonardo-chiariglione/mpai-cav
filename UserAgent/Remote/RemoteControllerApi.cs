@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading;
 
 using AIF.Controller;
 
@@ -207,6 +208,50 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
         return new ControllerApi.Result(AifError.OK, outputs, false);
     }
+
+    // THE DATA PATH, OVER THE ROUTES MPAI-MAS HAS. A write is one POST, a read one
+    // GET; the first GET after one or more POSTs runs the Module on the Service.
+    // MPAI-MAS answers a read of a Port that produced nothing, one that does not
+    // exist and one whose AIM failed alike (404), so over it they are all
+    // NotProduced, until MPAI-MAS carries the outcomes (M3206 Phase 15). A
+    // TIMEOUT abandons the request; the run it started continues on the Service.
+    public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return AifError.NotStarted;
+        if (!codecsKnow(dataType)) return AifError.Failed;
+
+        var content = new ByteArrayContent(Codecs.ToWire(dataType, json));
+        content.Headers.ContentType = new MediaTypeHeaderValue("MPAI/port-data");
+        try
+        {
+            using var limit = Limit(timeoutMs);
+            var posted = http.PostAsync($"{Root}/{mid}/Input/{Segment(dataType, portNumber)}", content, limit.Token)
+                             .GetAwaiter().GetResult();
+            return posted.IsSuccessStatusCode ? AifError.OK : AifError.Failed;
+        }
+        catch (OperationCanceledException) { return AifError.Timeout; }
+    }
+
+    public ControllerApi.Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
+    {
+        if (!modules.TryGetValue(moduleName, out var mid)) return new ControllerApi.Read(AifError.NotStarted, null);
+        if (!codecsKnow(dataType)) return new ControllerApi.Read(AifError.Failed, null);
+        try
+        {
+            using var limit = Limit(timeoutMs);
+            var response = http.GetAsync($"{Root}/{mid}/Output/{Segment(dataType, portNumber)}", limit.Token)
+                               .GetAwaiter().GetResult();
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return new ControllerApi.Read(AifError.NotProduced, null);
+            if (!response.IsSuccessStatusCode) return new ControllerApi.Read(AifError.Failed, null);
+            var wire = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+            return new ControllerApi.Read(AifError.OK, Codecs.ToInternal(dataType, wire));
+        }
+        catch (OperationCanceledException) { return new ControllerApi.Read(AifError.Timeout, null); }
+    }
+
+    // 0 - do not wait - cannot be offered over a network; it is the shortest wait.
+    private static CancellationTokenSource Limit(int timeoutMs) =>
+        timeoutMs < 0 ? new CancellationTokenSource() : new CancellationTokenSource(Math.Max(timeoutMs, 1));
 
     private static string Segment(string dataType, int portNumber) =>
         portNumber == 1 ? dataType : dataType + ":" + portNumber;
