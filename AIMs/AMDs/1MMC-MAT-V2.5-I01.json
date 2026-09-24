@@ -21,9 +21,9 @@
 
   "Topology":         [{ "Output": { "AIMName": "",                   "PortName": "InputSpeech" }           , "Input": { "AIMName": "1MMC-ASR-V2.5-I01",  "PortName": "InputSpeech" } },
                        { "Output": { "AIMName": "",                   "PortName": "InputSpeechTime" }       , "Input": { "AIMName": "1MMC-ASR-V2.5-I01",  "PortName": "InputSpeechTime" } },
-                       { "Output": { "AIMName": "1MMC-ASR-V2.5-I01",  "PortName": "OutputText" }            , "Input": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "RecognisedText", "PortNumber": 2 } },
+                       { "Output": { "AIMName": "1MMC-ASR-V2.5-I01",  "PortName": "RecognisedText" }            , "Input": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "RecognisedText", "PortNumber": 2 } },
                        { "Output": { "AIMName": "",                   "PortName": "LanguageSelector" }      , "Input": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "LanguageSelector", "PortNumber": 1 } },
-                       { "Output": { "AIMName": "",                   "PortName": "TextObject" }            , "Input": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "InputText", "PortNumber": 1 } },
+                       { "Output": { "AIMName": "",                   "PortName": "TextObject" }            , "Input": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "TextObject", "PortNumber": 1 } },
                        { "Output": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "TranslatedText" }        , "Input": { "AIMName": "1PAF-RSR-V1.6-I01",  "PortName": "TranslatedText" } },
                        { "Output": { "AIMName": "",                   "PortName": "UAText" }                , "Input": { "AIMName": "1PAF-RSR-V1.6-I01",  "PortName": "UAText" } },
                        { "Output": { "AIMName": "1MMC-TTT-V2.5-I01",  "PortName": "TranslatedText" }        , "Input": { "AIMName": "",              "PortName": "TranslatedText" } },

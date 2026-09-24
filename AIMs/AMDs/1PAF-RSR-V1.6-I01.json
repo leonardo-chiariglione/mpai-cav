@@ -17,13 +17,13 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I01", "AIMName": "1MMC-TTS-V2.5-I01" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-GFD-V1.6-I01", "AIMName": "1PAF-GFD-V1.6-I01" } }],
 
-  "Topology":         [{ "Output": { "AIMName": "",                   "PortName": "SpeechText", "PortNumber": 1 }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "InputText" } },
-                       { "Output": { "AIMName": "",                   "PortName": "FaceText",   "PortNumber": 2 }, "Input": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "TextObject" } },
+  "Topology":         [{ "Output": { "AIMName": "",                   "PortName": "SpeechText", "PortNumber": 1 }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "SpeechText" } },
+                       { "Output": { "AIMName": "",                   "PortName": "FaceText",   "PortNumber": 2 }, "Input": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "FaceText" } },
                        { "Output": { "AIMName": "",                   "PortName": "PersonalStatus" }             , "Input": { "AIMName": "1PAF-PSD-V1.6-I01",  "PortName": "PersonalStatus" } },
                        { "Output": { "AIMName": "1PAF-PSD-V1.6-I01",  "PortName": "SpeechPersonalStatus" }       , "Input": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "SpeechPersonalStatus" } },
                        { "Output": { "AIMName": "1PAF-PSD-V1.6-I01",  "PortName": "FacePersonalStatus" }         , "Input": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "FacePersonalStatus" } },
-                       { "Output": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "OutputSpeech" }               , "Input": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "MachineSpeech" } },
-                       { "Output": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "OutputSpeech" }               , "Input": { "AIMName": "",                   "PortName": "MachineSpeech" } },
+                       { "Output": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "MachineSpeech" }               , "Input": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "MachineSpeech" } },
+                       { "Output": { "AIMName": "1MMC-TTS-V2.5-I01",  "PortName": "MachineSpeech" }               , "Input": { "AIMName": "",                   "PortName": "MachineSpeech" } },
                        { "Output": { "AIMName": "1PAF-GFD-V1.6-I01",  "PortName": "MachineFaceDescriptors" }     , "Input": { "AIMName": "",                   "PortName": "MachineFaceDescriptors" } }],
 
   "Implementations":  [{"ImplementationURI": "file:///D:/AI/AIMs/PAF-RSR-V1.6-I01",

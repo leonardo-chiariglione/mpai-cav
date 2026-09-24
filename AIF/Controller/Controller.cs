@@ -217,8 +217,9 @@ public sealed class Controller
     // are never consulted: the composite's author need not know them, and the
     // Sub-AIM's Port is found by Data Type, Direction and Port Number alone.
     //
-    // A connection carries one Data Type. It is taken from whichever end the
-    // composite declares; the other end's name is a label only.
+    // A connection carries one Data Type. Each end names the flow by a label the
+    // composite declares, or states the Data Type itself; a label the composite
+    // does not declare is refused, and the two ends must agree.
     //
     // M3194 OUTPUT / INPUT. Where the receiving Sub-AIM is a composite that
     // declares Input groups for that Data Type, the flow must state an Output
@@ -238,44 +239,21 @@ public sealed class Controller
         var fromDecl = Declaration(node, from, boundaryDirection: "Input");
         var toDecl   = Declaration(node, to,   boundaryDirection: "Output");
 
-        var dataType = fromDecl?.DataType ?? toDecl?.DataType;
-        var legacy   = false;
+        var dataType = fromDecl.DataType;
 
-        // LEGACY. An L3 written before this rule names a Sub-AIM Port by that
-        // Sub-AIM's own name. Still read, so that Modules not yet aligned keep
-        // loading - but said, because it is what this design removes.
-        if (dataType is null)
-        {
-            var legacyType = LegacyDataType(node, from, "Output") ?? LegacyDataType(node, to, "Input");
-            if (legacyType is not null)
-            {
-                Console.WriteLine(
-                    $"[AIF] {node.AIMName}: Topology '{from}' -> '{to}' names no Port or InternalType " +
-                    $"of {node.AIMName}; resolved to {legacyType} through a Sub-AIM's own Port name (legacy).");
-                dataType = legacyType;
-                legacy   = true;
-            }
-        }
-
-        if (dataType is null)
-            throw new InvalidOperationException(
-                $"{node.AIMName}: Topology '{from}' -> '{to}' resolves to no Data Type. At least one " +
-                $"end must be a Port or InternalType that {node.AIMName} itself declares.");
-
-        if (fromDecl is not null && toDecl is not null &&
-            !fromDecl.Accepts(toDecl.DataType) && !toDecl.Accepts(fromDecl.DataType))
+        if (!fromDecl.Accepts(toDecl.DataType) && !toDecl.Accepts(fromDecl.DataType))
             throw new InvalidOperationException(
                 $"{node.AIMName}: Topology '{from}' -> '{to}' joins {fromDecl.DataType} to {toDecl.DataType}.");
 
-        if (fromDecl?.Output is int a && toDecl?.Output is int b && a != b)
+        if (fromDecl.Output is int a && toDecl.Output is int b && a != b)
             throw new InvalidOperationException(
                 $"{node.AIMName}: Topology '{from}' -> '{to}' is declared with Output {a} at one end " +
                 $"and Output {b} at the other.");
 
-        var output = fromDecl?.Output ?? toDecl?.Output;
+        var output = fromDecl.Output ?? toDecl.Output;
 
-        var fromEndpoint = EndpointOf(node, from, fromDecl, dataType, "Output", legacy);
-        var toEndpoint   = EndpointOf(node, to,   toDecl,   dataType, "Input",  legacy);
+        var fromEndpoint = EndpointOf(node, from, fromDecl, dataType, "Output");
+        var toEndpoint   = EndpointOf(node, to,   toDecl,   dataType, "Input");
 
         if (to.IsBoundary)
             return new[] { new TopologyConnection { Output = fromEndpoint, Input = toEndpoint } };
@@ -323,20 +301,22 @@ public sealed class Controller
     }
 
     // One end of a Topology line as written: an AIM (empty for the composite's
-    // own boundary), a label, and the Port Number cited, if any.
-    private sealed record Side(string Aim, string Name, int? Cited)
+    // own boundary), a label of the composite, the Data Type if the end states
+    // it, and the Port Number cited, if any.
+    private sealed record Side(string Aim, string Name, string? DataType, int? Cited)
     {
         public bool IsBoundary => string.IsNullOrEmpty(Aim);
 
         public static Side Read(JsonElement side) => new(
             side.TryGetProperty("AIMName", out var a) ? (a.GetString() ?? string.Empty) : string.Empty,
             side.TryGetProperty("PortName", out var p) ? (p.GetString() ?? string.Empty) : string.Empty,
+            side.TryGetProperty("DataType", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null,
             side.TryGetProperty("PortNumber", out var n) && n.ValueKind == JsonValueKind.Number
                 ? n.GetInt32()
                 : null);
 
         public override string ToString() =>
-            (IsBoundary ? "" : Aim + ".") + Name + (Cited is int c ? ":" + c : "");
+            (IsBoundary ? "" : Aim + ".") + (Name.Length > 0 ? Name : DataType) + (Cited is int c ? ":" + c : "");
     }
 
     // What the composite itself declares for a label: a Data Type, the declared
@@ -349,14 +329,17 @@ public sealed class Controller
             DataTypes.Count > 0 ? DataTypes.Contains(dataType) : DataType == dataType;
     }
 
-    private static Declared? Declaration(DescriptorNode node, Side side, string boundaryDirection)
+    private static Declared Declaration(DescriptorNode node, Side side, string boundaryDirection)
     {
         if (side.IsBoundary)
         {
             // The composite's own boundary: one of its ExternalPorts, of the
-            // direction this end implies. A label may repeat - PortNumber decides.
+            // direction this end implies, found by its label or by the Data Type
+            // the end states. A label may repeat - PortNumber decides.
             var named = node.Ports
-                .Where(p => p.Direction == boundaryDirection && p.Name == side.Name)
+                .Where(p => p.Direction == boundaryDirection &&
+                            (side.Name.Length > 0 ? p.Name == side.Name
+                                                  : side.DataType is not null && p.Accepts(side.DataType)))
                 .ToList();
 
             if (named.Count > 1 && side.Cited is null)
@@ -376,28 +359,45 @@ public sealed class Controller
             return new Declared(port.DataType, port.DataTypes, port.PortNumber, port.OutputGroup);
         }
 
-        // A Sub-AIM end: the label is the COMPOSITE's name for the flow.
-        if (node.InternalTypes.TryGetValue(side.Name, out var internalType))
-            return new Declared(
-                internalType, new[] { internalType }, null,
-                node.InternalTypeOutputs.TryGetValue(side.Name, out var o) ? o : null);
+        // A Sub-AIM end: the label is the COMPOSITE's name for the flow, declared in
+        // its InternalTypes or its ExternalPorts. The name the Sub-AIM gives its own
+        // Port is never read - nothing guarantees a sender and a receiver share it.
+        Declared? declared = null;
+        if (side.Name.Length > 0)
+        {
+            if (node.InternalTypes.TryGetValue(side.Name, out var internalType))
+                declared = new Declared(
+                    internalType, new[] { internalType }, null,
+                    node.InternalTypeOutputs.TryGetValue(side.Name, out var o) ? o : null);
+            else if (node.Ports.FirstOrDefault(p => p.Name == side.Name) is { } external)
+                declared = new Declared(external.DataType, external.DataTypes, null, external.OutputGroup);
+            else
+                throw new InvalidOperationException(
+                    $"{node.AIMName}: Topology end '{side}' uses the label '{side.Name}', which " +
+                    $"{node.AIMName} does not declare. Declare it in its InternalTypes (or ExternalPorts), " +
+                    "or state the end's DataType: a Sub-AIM's own Port names are not read.");
+        }
 
-        var external = node.Ports.FirstOrDefault(p => p.Name == side.Name);
-        if (external is not null)
-            return new Declared(external.DataType, external.DataTypes, null, external.OutputGroup);
+        if (side.DataType is { } stated)
+        {
+            if (declared is not null && !declared.Accepts(stated))
+                throw new InvalidOperationException(
+                    $"{node.AIMName}: Topology end '{side}' states {stated}, and its label means {declared.DataType}.");
+            declared ??= new Declared(stated, new[] { stated }, null, null);
+        }
 
-        return null;   // a label the composite does not declare: for the reader only
+        return declared ?? throw new InvalidOperationException(
+            $"{node.AIMName}: Topology end '{side}' states neither a label nor a DataType.");
     }
 
     // The typed endpoint. The boundary is identified as the User Agent addresses
     // it: by the ExternalPort's own declared PortNumber. A Sub-AIM Port by the
     // number cited on the line, absent meaning 1.
     private static Endpoint EndpointOf(
-        DescriptorNode node, Side side, Declared? declared, string dataType, string childDirection,
-        bool legacy)
+        DescriptorNode node, Side side, Declared declared, string dataType, string childDirection)
     {
         if (side.IsBoundary)
-            return new Endpoint(null, dataType, declared?.PortNumber ?? 1);
+            return new Endpoint(null, dataType, declared.PortNumber ?? 1);
 
         var child = node.Children.FirstOrDefault(c => c.AIMName == side.Aim)
             ?? throw new InvalidOperationException(
@@ -410,25 +410,9 @@ public sealed class Controller
                 $"{node.AIMName}: Topology end '{side}' - {child.AIMName} declares no " +
                 $"{childDirection} Port of {dataType}.");
 
-        var number = side.Cited ?? (legacy ? LegacyPortNumber(child, side, childDirection) : null) ?? 1;
+        var number = side.Cited ?? 1;
         return new Endpoint(child.AIMName, dataType, number);
     }
-
-    // LEGACY ONLY: a Sub-AIM Port found by that Sub-AIM's own name.
-    private static string? LegacyDataType(DescriptorNode node, Side side, string childDirection)
-    {
-        if (side.IsBoundary) return null;
-        var child = node.Children.FirstOrDefault(c => c.AIMName == side.Aim);
-        return child?.Ports
-            .FirstOrDefault(p => p.Direction == childDirection && p.Name == side.Name &&
-                                 (side.Cited is null || (p.PortNumber ?? 1) == side.Cited))
-            ?.DataType;
-    }
-
-    private static int? LegacyPortNumber(DescriptorNode child, Side side, string childDirection) =>
-        child.Ports
-            .FirstOrDefault(p => p.Direction == childDirection && p.Name == side.Name)
-            ?.PortNumber;
 
     public IReadOnlyList<string> Instantiate(
         DescriptorGraph graph,

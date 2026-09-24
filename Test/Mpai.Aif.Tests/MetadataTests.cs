@@ -99,6 +99,74 @@ public class MetadataTests
         Expected.Match("optional.json", result);
     }
 
+    // What the Controller builds from every composite L3 that loads: each connection,
+    // typed, as "AIM DataType#PortNumber -> AIM DataType#PortNumber". Labels do not
+    // appear, since nothing routes by them: renaming a label changes nothing here.
+    [Fact]
+    public void Connections()
+    {
+        var store = new AmdStore(Repository.Amds);
+        store.Scan();
+        var controller = new Controller(store);
+
+        var result = new Dictionary<string, string>();
+        foreach (var name in store.GetAimNames())
+        {
+            DescriptorGraph graph;
+            try { graph = controller.RegisterAim(store.FindByAimName(name)!); }
+            catch { continue; }                       // L3Load records why
+            if (!graph.Root.IsComposite) continue;
+            result[name] = string.Join("; ", graph.Connections
+                .Select(c => $"{Show(c.Output)} -> {Show(c.Input)}")
+                .OrderBy(s => s, StringComparer.Ordinal));
+        }
+
+        Expected.Match("connections.json", result);
+    }
+
+    private static string Show(Endpoint e) =>
+        (e.IsBoundary ? "(boundary)" : e.AimName) + " " + e.DataType + "#" + e.PortNumber;
+
+    // Names never address (M3211 3.4). A Topology label the composite does not
+    // declare stops the L3 from loading; and when every Sub-AIM of MAD names its
+    // Ports differently, MAD loads into the same connections, since the Controller
+    // reads no Sub-AIM's Port names.
+    [Fact]
+    public void Addressing()
+    {
+        JsonNode Read(string aim) => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, aim + ".json")))!;
+        var mad = Read("1MMC-MAD-V2.5-I01");
+        var baseline = MadConnections(mad);
+
+        var undeclared = mad.DeepClone();
+        var end = undeclared["Topology"]!.AsArray().Select(l => l!["Input"]!).First(e => e["AIMName"]!.GetValue<string>() != "");
+        end["PortName"] = "NoSuchLabel";
+        var failure = Assert.ThrowsAny<Exception>(() => MadConnections(undeclared));
+        Assert.Contains("does not declare", failure.Message);
+
+        var renamed = new Dictionary<string, JsonNode>();
+        foreach (var sub in mad["SubAIMs"]!.AsArray())
+        {
+            var name = sub!["Identifier"]!["AIMName"]!.GetValue<string>();
+            var l3 = Read(name);
+            // A composite's own Port names are labels of its own Topology: renamed
+            // there too, consistently. What MAD sees is only that they changed.
+            var names = new Dictionary<string, string>();
+            foreach (var port in l3["ExternalPorts"]!.AsArray())
+            {
+                var old = port!["Name"]!.GetValue<string>();
+                if (!names.TryGetValue(old, out var fresh)) names[old] = fresh = $"Renamed{names.Count + 1}";
+                port["Name"] = fresh;
+            }
+            foreach (var line in l3["Topology"]?.AsArray() ?? new JsonArray())
+                foreach (var side in new[] { "Output", "Input" })
+                    if (line![side]!["PortName"]?.GetValue<string>() is { } label && names.TryGetValue(label, out var fresh))
+                        line[side]!["PortName"] = fresh;
+            renamed[name] = l3;
+        }
+        Assert.Equal(baseline, MadConnections(renamed));
+    }
+
     // The fields the schema gained in Phase 2 (M3211 3.1): each, with a legal value,
     // adds no violation to an L3; with an illegal value, or where it may not appear,
     // adds one. An L3 carrying all of them loads exactly as it did without them.
@@ -168,7 +236,7 @@ public class MetadataTests
         foreach (var port in all["ExternalPorts"]!.AsArray())
             if (port!["Direction"]!.GetValue<string>() == "Input") { port["Depth"] = 16; port["Overflow"] = "Block"; port["AcceptedTransports"] = new JsonArray("Controller"); }
             else port["Transport"] = "Controller";
-        Assert.Equal(Connections(composite), Connections(all));
+        Assert.Equal(MadConnections(composite), MadConnections(all));
     }
 
     private static HashSet<string> Validate(JsonSchema schema, JsonNode aim)
@@ -180,14 +248,19 @@ public class MetadataTests
 
     // The connections the Controller builds for 1MMC-MAD-V2.5-I01 from this text of
     // its L3, the other L3s being those of the repository.
-    private static List<string> Connections(JsonNode mad)
+    private static List<string> MadConnections(JsonNode mad) =>
+        MadConnections(new Dictionary<string, JsonNode> { ["1MMC-MAD-V2.5-I01"] = mad });
+
+    // The connections the Controller builds for 1MMC-MAD-V2.5-I01 when the L3s named
+    // are replaced by the texts given, the others being those of the repository.
+    private static List<string> MadConnections(IReadOnlyDictionary<string, JsonNode> replaced)
     {
-        var folder = Path.Combine(Path.GetTempPath(), "mpai-newfields-" + Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(Path.GetTempPath(), "mpai-l3s-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
         {
             foreach (var file in L3Files()) File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
-            File.WriteAllText(Path.Combine(folder, "1MMC-MAD-V2.5-I01.json"), mad.ToJsonString());
+            foreach (var (name, text) in replaced) File.WriteAllText(Path.Combine(folder, name + ".json"), text.ToJsonString());
             var store = new AmdStore(folder);
             store.Scan();
             var graph = new Controller(store).RegisterAim(store.FindByAimName("1MMC-MAD-V2.5-I01")!);

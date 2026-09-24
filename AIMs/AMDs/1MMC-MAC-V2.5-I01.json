@@ -112,7 +112,7 @@
                                     },
                          "Input":  {
                                        "AIMName": "1PAF-FIR-V1.6-I01",
-                                       "PortName":  "InputVisual"
+                                       "PortName":  "FaceObject"
                                    }
                      },
                      {
@@ -122,7 +122,7 @@
                                     },
                          "Input":  {
                                        "AIMName": "1MMC-SIR-V2.5-I01",
-                                       "PortName":  "InputSpeech"
+                                       "PortName":  "SpeechObject"
                                    }
                      },
                      {
@@ -139,7 +139,7 @@
                      {
                          "Output":  {
                                         "AIMName": "1MMC-SIR-V2.5-I01",
-                                        "PortName":  "OutputSpeakerID"
+                                        "PortName":  "SpeakerID"
                                     },
                          "Input":  {
                                        "AIMName": "1OSD-IDR-V1.5-I01",
@@ -164,7 +164,7 @@
                                     },
                          "Input":  {
                                        "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "TextObject",
+                                       "PortName":  "Response",
                                        "PortNumber":  1
                                    }
                      },
@@ -175,7 +175,7 @@
                                     },
                          "Input":  {
                                        "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "TextObject",
+                                       "PortName":  "Response",
                                        "PortNumber":  2
                                    }
                      },
@@ -192,7 +192,7 @@
                      {
                          "Output":  {
                                         "AIMName": "1PAF-RSR-V1.6-I01",
-                                        "PortName":  "MachineSpeech"
+                                        "PortName":  "VocalResponse"
                                     },
                          "Input":  {
                                        "AIMName":  "",
@@ -202,7 +202,7 @@
                      {
                          "Output":  {
                                         "AIMName": "1PAF-RSR-V1.6-I01",
-                                        "PortName":  "MachineFaceDescriptors"
+                                        "PortName":  "FaceDescriptors"
                                     },
                          "Input":  {
                                        "AIMName":  "",

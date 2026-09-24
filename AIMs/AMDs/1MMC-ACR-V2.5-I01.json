@@ -30,11 +30,11 @@
     { "Output": { "AIMName": "",             "PortName": "SpeechTime", "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "SpeechTime" } },
     { "Output": { "AIMName": "",             "PortName": "UserName",   "PortNumber": 2 }, "Input": { "AIMName": "1PAF-EFD-V1.6-I01", "PortName": "UserName" } },
     { "Output": { "AIMName": "",             "PortName": "UserName",   "PortNumber": 2 }, "Input": { "AIMName": "1MMC-ESD-V2.5-I01", "PortName": "UserName" } },
-    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "TextObject", "PortNumber": 1 } },
-    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "TextObject", "PortNumber": 2 } },
+    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Response", "PortNumber": 1 } },
+    { "Output": { "AIMName": "",             "PortName": "Response",   "PortNumber": 1 }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Response", "PortNumber": 2 } },
     { "Output": { "AIMName": "",             "PortName": "PersonalStatus" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "PersonalStatus" } },
 
-    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineSpeech"          }, "Input": { "AIMName": "", "PortName": "VocalResponse" } },
+    { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "VocalResponse"          }, "Input": { "AIMName": "", "PortName": "VocalResponse" } },
     { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineFaceDescriptors" }, "Input": { "AIMName": "", "PortName": "MachineFaceDescriptors" } }
   ],
 

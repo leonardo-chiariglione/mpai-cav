@@ -3,7 +3,7 @@
   "APIProfile":           "Basic",
   "Description":          "Environment Sensing Subsystem, Stage 1: one Environment Sensing Technology end to end. Acquisition is the User Agent's. CAV-SAG produces the ego Spatial Attitude; OSD-BVS describes the acquired Basic Visual Object against it and raises the Alert, which leaves the Subsystem directly for Traffic Obstacle Avoidance without waiting for integration; CAV-BED integrates the single contribution and returns the scene as the prior for the next cycle. The Module is started once and run continuously; there is no per-cycle start.",
 
-  "InternalTypes":        [],
+  "InternalTypes":        [{"Name": "BasicVisualSceneDescriptors", "DataType": "OSD-BVS-V1.5"}],
 
   "ExternalPorts":        [{"Name": "SpaceTime",                          "Direction": "Input",    "DataType": "OSD-SPT-V1.5",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicVisualObject",                  "Direction": "Input",    "DataType": "OSD-BVO-V1.5",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -23,7 +23,7 @@
                            {"Output": {"AIMName": "",               "PortName": "SpaceTime"},                           "Input": {"AIMName": "1OSD-BVS-V1.5-I01",  "PortName": "SpaceTime"}},
                            {"Output": {"AIMName": "",               "PortName": "BasicVisualObject"},                   "Input": {"AIMName": "1OSD-BVS-V1.5-I01",  "PortName": "BasicVisualObject"}},
                            {"Output": {"AIMName": "1CAV-SAG-V1.1-I01",   "PortName": "SpatialAttitude"},                     "Input": {"AIMName": "1OSD-BVS-V1.5-I01",  "PortName": "SpatialAttitude"}},
-                           {"Output": {"AIMName": "1CAV-BED-V1.1-I01",   "PortName": "BasicEnvironmentDescriptorsPrior"},    "Input": {"AIMName": "1OSD-BVS-V1.5-I01",  "PortName": "BasicEnvironmentDescriptors"}},
+                           {"Output": {"AIMName": "1CAV-BED-V1.1-I01",   "PortName": "BasicEnvironmentDescriptors"},    "Input": {"AIMName": "1OSD-BVS-V1.5-I01",  "PortName": "BasicEnvironmentDescriptors"}},
                            {"Output": {"AIMName": "1OSD-BVS-V1.5-I01",   "PortName": "BasicVisualSceneDescriptors"},         "Input": {"AIMName": "1CAV-BED-V1.1-I01",  "PortName": "BasicVisualSceneDescriptors"}},
                            {"Output": {"AIMName": "",               "PortName": "WeatherData"},                         "Input": {"AIMName": "1CAV-BED-V1.1-I01",  "PortName": "WeatherData"}},
                            {"Output": {"AIMName": "",               "PortName": "FullEnvironmentDescriptors"},          "Input": {"AIMName": "1CAV-BED-V1.1-I01",  "PortName": "FullEnvironmentDescriptors"}},
