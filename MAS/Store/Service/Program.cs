@@ -25,7 +25,9 @@ var root    = builder.Configuration["Root"]
 var schemas = builder.Configuration["Schemas"] ?? FindSchemas() ?? "schemas";
 
 var repository = new L3Repository(root);
-var l2 = new L2Check(schemas);
+// An L3 is found for the conformance check of a composite among the L3s the Store holds.
+var l2 = new L2Conformance(schemas, id =>
+    repository.Text(id, null) is { } text ? JsonDocument.Parse(text).RootElement.Clone() : null);
 var metadata = AimMetadataSchema.Load(schemas);
 var packages = new PackageCheck(builder.Configuration["Packages"]);
 var app = builder.Build();
@@ -59,9 +61,8 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
             }, statusCode: 422);
         }
 
-        // VALIDATION SIGNALS: against the L2, and for the package the L3 names.
+        // WHAT IS SIGNALLED: the package the L3 names.
         var findings = new List<Finding>();
-        findings.AddRange(l2.Check(id, l3));
         findings.AddRange(await packages.CheckAsync(l3));
 
         // A MISSING SUB-AIM REFUSES: each Sub-AIM's L3 must be in the composite's
@@ -82,6 +83,20 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
                 id, published = false,
                 refused = $"The L3 of {string.Join(", ", missing)} is in neither this AIM's package nor the Store. Submit it first, or bundle it in the package.",
                 missing, findings
+            }, statusCode: 422);
+        }
+
+        // AN L3 THAT IS NOT AN INSTANCE OF ITS L2 IS REFUSED: the L2 its Header
+        // names is what the Standard allows (AIF.Metadata.L2Conformance).
+        var nonconformities = l2.Check(l3);
+        if (nonconformities.Count > 0)
+        {
+            Console.WriteLine($"[Store] refused {id}: {nonconformities.Count} nonconformit(ies) with its L2");
+            return Results.Json(new
+            {
+                id, published = false,
+                refused = $"The L3 is not an instance of its L2 ({L2Conformance.TypeOf(l3)}).",
+                nonconformities, findings
             }, statusCode: 422);
         }
 

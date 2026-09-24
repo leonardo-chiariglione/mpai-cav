@@ -7,8 +7,8 @@ using System.Text.Json.Nodes;
 namespace Mpai.Aif.Tests;
 
 // The MPAI Store of this repository (M3211 3.5): an L3 that does not validate
-// against the AIM Metadata schema is refused, with its violations; one that
-// validates is published, and its L2 is the one its Header names. The Store runs
+// against the AIM Metadata schema, or is not an instance of its L2, is refused;
+// one that is both is published, its L2 being the one its Header names. The Store runs
 // from its own build output, on a free port, with a Store folder of its own that
 // is deleted afterwards.
 [Trait("Group", "Fast")]
@@ -44,7 +44,7 @@ public class StoreTests
             var ok = await Submit(http, asr);
             Assert.True(ok.Status == HttpStatusCode.Created, $"a valid L3 was not published: {ok.Status} {ok.Body}\n{log}");
             Assert.DoesNotContain("has no Header", ok.Body);
-            Assert.DoesNotContain("No L2 for", ok.Body);
+            Assert.DoesNotContain("No L2 of", ok.Body);
 
             // Without its Header it does not validate: refused, and the violation said.
             var headless = asr.DeepClone();
@@ -53,6 +53,19 @@ public class StoreTests
             Assert.True(refused.Status == HttpStatusCode.UnprocessableEntity, $"an invalid L3 was not refused: {refused.Status} {refused.Body}");
             Assert.Contains("violations", refused.Body);
             Assert.Contains("Header", refused.Body);
+
+            // It validates against the schema but is not an instance of its L2 - an
+            // input the L2 of ASR does not have: refused, and the nonconformity said.
+            var extra = asr.DeepClone();
+            extra["ExternalPorts"]!.AsArray().Add(new JsonObject
+            {
+                ["Name"] = "Extra", ["Direction"] = "Input", ["DataType"] = "OSD-BVO-V1.5",
+                ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false
+            });
+            var nonconforming = await Submit(http, extra);
+            Assert.True(nonconforming.Status == HttpStatusCode.UnprocessableEntity, $"an L3 not an instance of its L2 was not refused: {nonconforming.Status} {nonconforming.Body}");
+            Assert.Contains("nonconformities", nonconforming.Body);
+            Assert.Contains("OSD-BVO-V1.5", nonconforming.Body);
         }
         finally
         {

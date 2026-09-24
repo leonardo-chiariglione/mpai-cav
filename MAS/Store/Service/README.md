@@ -24,8 +24,11 @@ dotnet run --project MAS\Store\Service\StoreService.csproj -- --Urls https://loc
   **refused**, with the list of its violations.
 - **Validated against its L2**, the standard-level instance of the AIM it implements,
   the one its `Header` names (`1MMC-AMQ-V2.5-I01` against `MMC-AMQ-V2.5`, found in
-  `schemas/*/V*/AIMs`); without a Header, the L2 is taken from the AIMName, with a
-  warning. Ports and Sub-AIMs that differ are **signalled**, not refused.
+  `schemas/*/V*/AIMs`). An L3 declares only what its Implementation supports: each of
+  its Ports is a Port of the L2, with the same optionality for an input; what it
+  leaves out is optional in the L2; each Sub-AIM of a composite is one of the L2's,
+  or a composite containing one. An L3 that is not an instance of its L2 - or has no
+  L2 - is **refused**, with its `nonconformities`.
 - **Its package looked for** at the `ImplementationURI` of each `Implementations`
   entry - present, with its `BinaryName`.dll: **signalled**, not refused. Whether the
   package is legitimate is checked later, with fingerprints.
@@ -38,7 +41,7 @@ A published L3 is never overwritten: submitting it again publishes version n+1.
 
 | Route | |
 |---|---|
-| `POST /MPAI/Store/L3` | submit an L3: `201` published, with `findings`; `422` refused, with `violations` or `missing` |
+| `POST /MPAI/Store/L3` | submit an L3: `201` published, with `findings`; `422` refused, with `violations`, `missing` or `nonconformities` |
 | `GET /MPAI/Store/L3[?name=...]` | approved L3s, latest versions; `name` may be the standard name (`MMC-TIQ-V2.5`) |
 | `GET /MPAI/Store/L3/{id}[?version=n]` | one L3; header `MPAI-Store-Version` |
 | `GET /MPAI/Store/L3/{id}/versions` | its versions |

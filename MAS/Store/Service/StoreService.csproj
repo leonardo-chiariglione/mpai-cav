@@ -3,12 +3,11 @@
   <!-- THE MPAI STORE, AS A SERVICE: actor A of MPAI-MAS V1.0, Architecture and
        Operation. A repository of approved L3s, with a REST API over HTTPS.
        Implementers submit L3s; Services' Controllers obtain them (actions 8-9).
-       A submitted L3 is VALIDATED against its L2, the standard-level instance of
-       the AIM it implements (the one its Header names), and its package is looked
-       for: what these find is signalled, and does not stop publication. It is
-       REFUSED if it does not validate against the AIM Metadata schema of AIF V3.0,
-       if a Sub-AIM's L3 is found neither in the composite's package nor in the
-       Store, or if the L3 cannot be identified. -->
+       A submitted L3 is REFUSED if it does not validate against the AIM Metadata
+       schema of AIF V3.0, if it is not an instance of its L2 (the one its Header
+       names), if a Sub-AIM's L3 is found neither in the composite's package nor in
+       the Store, or if the L3 cannot be identified. Its package is looked for, and
+       what is found is signalled. -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
