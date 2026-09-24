@@ -2,4 +2,6 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
   <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\AIF\V3.0\src\AIF.Controller\AIF.Controller.csproj" /></ItemGroup>
+  <!-- The xUnit test project lives in a subfolder of this one; its files are its own. -->
+  <ItemGroup><Compile Remove="Mpai.Aif.Tests\**" /><None Remove="Mpai.Aif.Tests\**" /></ItemGroup>
 </Project>
