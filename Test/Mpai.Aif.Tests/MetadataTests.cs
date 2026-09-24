@@ -122,6 +122,28 @@ public class MetadataTests
         finally { Directory.Delete(copy, recursive: true); }
     }
 
+    // Every L3's ResourcePolicies read as the Controller reads them when it builds a
+    // Module's AIMs: a number (CPU:Number, GPU:Number) as well as a string, and every
+    // Memory value understood. MAD and MPD failed to start in the Service when these
+    // became numbers, and loading an L3 alone does not read them.
+    [Fact]
+    public void ResourcePolicies()
+    {
+        var problems = new List<string>();
+        foreach (var file in L3Files())
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            try
+            {
+                foreach (var policy in ResourcePolicy.ReadFrom(doc.RootElement))
+                    if (policy.Name == "Memory" && ResourcePolicy.MemoryBytes(policy.Minimum) is null)
+                        problems.Add($"{Path.GetFileNameWithoutExtension(file)}: Memory minimum '{policy.Minimum}' not understood");
+            }
+            catch (Exception e) { problems.Add($"{Path.GetFileNameWithoutExtension(file)}: {e.Message}"); }
+        }
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+    }
+
     // For every L3 with an L2, the input Ports on which they disagree about being optional.
     [Fact]
     public void OptionalAgreement()

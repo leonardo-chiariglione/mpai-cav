@@ -38,12 +38,13 @@ public sealed class ResourcePolicy
         return policies;
     }
 
-    // "2_GB" and "4.5_GB" -> bytes. Returns null when not a memory value.
+    // "4 GB" (the form of the AIM Metadata schema), and "2_GB" or "4.5_GB" as
+    // written before it -> bytes. Returns null when not a memory value.
     public static long? MemoryBytes(
         string value)
     {
         if (string.IsNullOrWhiteSpace(value) ||
-            !value.EndsWith("_GB", StringComparison.Ordinal))
+            !(value.EndsWith(" GB", StringComparison.Ordinal) || value.EndsWith("_GB", StringComparison.Ordinal)))
         {
             return null;
         }
@@ -59,12 +60,15 @@ public sealed class ResourcePolicy
             : null;
     }
 
+    // A value as written: a string, or a number (CPU:Number and GPU:Number are
+    // integers in the AIM Metadata schema) as its text.
     private static string Text(
         JsonElement element,
         string property)
     {
-        return element.TryGetProperty(property, out var value)
-            ? value.GetString() ?? string.Empty
-            : string.Empty;
+        if (!element.TryGetProperty(property, out var value)) return string.Empty;
+        return value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty
+             : value.ValueKind == JsonValueKind.Number ? value.GetRawText()
+             : string.Empty;
     }
 }
