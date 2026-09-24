@@ -99,6 +99,103 @@ public class MetadataTests
         Expected.Match("optional.json", result);
     }
 
+    // The fields the schema gained in Phase 2 (M3211 3.1): each, with a legal value,
+    // adds no violation to an L3; with an illegal value, or where it may not appear,
+    // adds one. An L3 carrying all of them loads exactly as it did without them.
+    [Fact]
+    public void NewFields()
+    {
+        var schema = LoadSchemas(Path.Combine(Repository.Schemas, "AIF", "V3.0", "data", "AIMMetadata.json"));
+        var composite = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-MAD-V2.5-I01.json")))!;
+        var basic     = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-ASR-V2.5-I01.json")))!;
+
+        JsonNode Input(JsonNode aim)  => aim["ExternalPorts"]!.AsArray().First(p => p!["Direction"]!.GetValue<string>() == "Input")!;
+        JsonNode Output(JsonNode aim) => aim["ExternalPorts"]!.AsArray().First(p => p!["Direction"]!.GetValue<string>() == "Output")!;
+        JsonNode End(JsonNode aim)    => aim["Topology"]!.AsArray()[0]!["Input"]!;
+
+        var cases = new (string Name, JsonNode Base, Action<JsonNode> Change, bool Legal)[]
+        {
+            ("Execution Continuous",          composite, a => a["Execution"] = "Continuous",            true),
+            ("Execution Sometimes",           composite, a => a["Execution"] = "Sometimes",             false),
+            ("Execution on a basic AIM",      basic,     a => a["Execution"] = "Exchange",              false),
+            ("OnDegraded Continue",           composite, a => a["OnDegraded"] = "Continue",             true),
+            ("OnDegraded Maybe",              composite, a => a["OnDegraded"] = "Maybe",                false),
+            ("RestartLimit 2",                basic,     a => a["RestartLimit"] = 2,                    true),
+            ("RestartLimit -1",               basic,     a => a["RestartLimit"] = -1,                   false),
+            ("Period 33.3",                   basic,     a => a["Period"] = 33.3,                       true),
+            ("Period 0",                      basic,     a => a["Period"] = 0,                          false),
+            ("Deadline 50",                   basic,     a => a["Deadline"] = 50,                       true),
+            ("Deadline -5",                   basic,     a => a["Deadline"] = -5,                       false),
+            ("Depth 16",                      basic,     a => Input(a)["Depth"] = 16,                   true),
+            ("Depth 0",                       basic,     a => Input(a)["Depth"] = 0,                    false),
+            ("Depth on an Output Port",       basic,     a => Output(a)["Depth"] = 16,                  false),
+            ("Overflow DropOldest",           basic,     a => Input(a)["Overflow"] = "DropOldest",      true),
+            ("Overflow Drop",                 basic,     a => Input(a)["Overflow"] = "Drop",            false),
+            ("MaxAge 200",                    basic,     a => Input(a)["MaxAge"] = 200,                 true),
+            ("MaxAge 0",                      basic,     a => Input(a)["MaxAge"] = 0,                   false),
+            ("Transport InProcess",           basic,     a => Output(a)["Transport"] = "InProcess",     true),
+            ("Transport Carrier",             basic,     a => Output(a)["Transport"] = "Carrier",       false),
+            ("Transport on an Input Port",    basic,     a => Input(a)["Transport"] = "InProcess",      false),
+            ("AcceptedTransports",            basic,     a => Input(a)["AcceptedTransports"] = new JsonArray("InProcess", "Controller"), true),
+            ("AcceptedTransports Pigeon",     basic,     a => Input(a)["AcceptedTransports"] = new JsonArray("Pigeon"), false),
+            ("AcceptedTransports on Output",  basic,     a => Output(a)["AcceptedTransports"] = new JsonArray("InProcess"), false),
+            ("Input group 1",                 composite, a => Input(a)["Input"] = 1,                    true),
+            ("Input group on an Output Port", composite, a => Output(a)["Input"] = 1,                   false),
+            ("Output group 0",                composite, a => Input(a)["Output"] = 0,                   false),
+            ("DataType boolean",              basic,     a => Output(a)["DataType"] = "boolean",        true),
+            ("DataType uint8[]",              basic,     a => Output(a)["DataType"] = "uint8[]",        true),
+            ("DataType Boolean",              basic,     a => Output(a)["DataType"] = "Boolean",        false),
+            ("Topology end by DataType",      composite, a => { var e = End(a).AsObject(); e.Remove("PortName"); e["DataType"] = "OSD-BSO-V1.5"; }, true),
+            ("Topology end with neither",     composite, a => { var e = End(a).AsObject(); e.Remove("PortName"); e.Remove("PortNumber"); }, false),
+        };
+
+        var wrong = new List<string>();
+        foreach (var (name, source, change, legal) in cases)
+        {
+            var before = Validate(schema, source);
+            var changed = source.DeepClone();
+            change(changed);
+            var added = Validate(schema, changed).Except(before).ToList();
+            if (legal && added.Count > 0)   wrong.Add($"{name}: refused ({string.Join("; ", added)})");
+            if (!legal && added.Count == 0) wrong.Add($"{name}: accepted");
+        }
+        Assert.True(wrong.Count == 0, "The schema judged these wrongly:\n" + string.Join("\n", wrong));
+
+        // The Controller reads the new fields and does not yet act on them: MAD with
+        // all of them loads into the same connections as MAD without them.
+        var all = composite.DeepClone();
+        all["Execution"] = "Exchange"; all["OnDegraded"] = "Stop"; all["RestartLimit"] = 0;
+        foreach (var port in all["ExternalPorts"]!.AsArray())
+            if (port!["Direction"]!.GetValue<string>() == "Input") { port["Depth"] = 16; port["Overflow"] = "Block"; port["AcceptedTransports"] = new JsonArray("Controller"); }
+            else port["Transport"] = "Controller";
+        Assert.Equal(Connections(composite), Connections(all));
+    }
+
+    private static HashSet<string> Validate(JsonSchema schema, JsonNode aim)
+    {
+        using var doc = JsonDocument.Parse(aim.ToJsonString());
+        var evaluation = schema.Evaluate(doc.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
+        return evaluation.IsValid ? new HashSet<string>() : Violations(evaluation).ToHashSet();
+    }
+
+    // The connections the Controller builds for 1MMC-MAD-V2.5-I01 from this text of
+    // its L3, the other L3s being those of the repository.
+    private static List<string> Connections(JsonNode mad)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "mpai-newfields-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            foreach (var file in L3Files()) File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
+            File.WriteAllText(Path.Combine(folder, "1MMC-MAD-V2.5-I01.json"), mad.ToJsonString());
+            var store = new AmdStore(folder);
+            store.Scan();
+            var graph = new Controller(store).RegisterAim(store.FindByAimName("1MMC-MAD-V2.5-I01")!);
+            return graph.Connections.Select(c => $"{c.Output} -> {c.Input}").OrderBy(s => s, StringComparer.Ordinal).ToList();
+        }
+        finally { Directory.Delete(folder, recursive: true); }
+    }
+
     // ---------------------------------------------------------------------
 
     internal static IEnumerable<string> L3Files() =>
