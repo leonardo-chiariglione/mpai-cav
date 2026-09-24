@@ -26,6 +26,10 @@ public sealed class ContinuousExecutor
     private readonly Dictionary<PortEnd, List<IChannelReader>> readers = new();
     private readonly List<Task> running = new();
     private readonly Dictionary<string, int> restarts = new();
+    private readonly IClock clock;
+
+    // Deadlines missed, by AIM: in all, and in a row (M3215 3.5).
+    private readonly Dictionary<string, (int All, int InARow)> misses = new();
 
     // A boundary Output Port the User Agent does not read must not stall the
     // Module: its reader end keeps the newest Messages.
@@ -36,13 +40,23 @@ public sealed class ContinuousExecutor
         AimHost host,
         IReadOnlyDictionary<string, IChannelTransport> transports,
         string moduleInstance,
-        string defaultTransport = "Controller")
+        string defaultTransport = "Controller",
+        IClock? clock = null)
     {
         this.graph = graph;
         this.host = host;
         this.transports = transports;
+        this.clock = clock ?? SystemClock.Instance;
         module = moduleInstance;
         Plan(defaultTransport);
+    }
+
+    // The leaf AIMs, as the Controller checks them at Start (M3215 3.5).
+    public IEnumerable<DescriptorNode> Aims => leaves.Values;
+
+    public int DeadlinesMissed(string aim)
+    {
+        lock (misses) return misses.GetValueOrDefault(aim).All;
     }
 
     public IReadOnlyList<ChannelSpec> Channels => channels;
@@ -247,6 +261,8 @@ public sealed class ContinuousExecutor
                     return;                                             // it ran until Stop
                 }
                 if (!await FireOnceAsync(leaf, ports)) return;
+                lock (misses)
+                    if (misses.GetValueOrDefault(aim).InARow > 0) continue;   // a run past its Deadline is not a clean one
                 host.Succeeded(aim);
             }
             catch (OperationCanceledException) when (host.IsStopped || host.IsDead(aim))
@@ -276,6 +292,15 @@ public sealed class ContinuousExecutor
                 return true;
             }
         }
+        return Degraded(leaf, reason);
+    }
+
+    // The AIM is DEGRADED - it failed beyond its restarts, missed its Deadline three
+    // times running, or a required Port delivered nothing within its MaxAge
+    // (M3205 5.4) - and the composite's policy applies. True while it is to go on.
+    private bool Degraded(DescriptorNode leaf, string reason)
+    {
+        var aim = leaf.AIMName;
         host.Degrade(aim, reason);
         switch (parent[leaf].OnDegraded)
         {
@@ -298,31 +323,59 @@ public sealed class ContinuousExecutor
                                 .Select(p => (Port: p, Ends: ports.ReadersOf(p)))
                                 .Where(x => x.Ends.Count > 0)
                                 .ToList();
-        if (inputs.Count == 0)
-        {
-            await Task.Delay(Timeout.Infinite, host.Stopping);              // nothing will ever arrive
-            return false;
-        }
-
-        var required = inputs.Where(x => !x.Port.IsOptional).ToList();
-        while (true)
-        {
-            host.Stopping.ThrowIfCancellationRequested();
-            var emptyRequired = required.Where(x => x.Ends.All(e => e.Pending == 0)).ToList();
-            if (emptyRequired.Count == 0 && inputs.Any(x => x.Ends.Any(e => e.Pending > 0))) break;
-            var waitOn = emptyRequired.Count > 0 ? emptyRequired : inputs;
-            await Task.WhenAny(waitOn.SelectMany(x => x.Ends).Select(e => e.WaitAsync(host.Stopping)));
-        }
-
         var inbox = new Dictionary<string, string>();
-        foreach (var (port, ends) in inputs)
-            foreach (var end in ends)
-                if (end.TryRead(out var message) && message is not null) { inbox[port.Name] = message.Json; break; }
 
+        if (leaf.Period is not null)
+        {
+            // AN AIM WITH A PERIOD is fired at each Period, on the latest Message of
+            // each input, whatever has or has not arrived.
+            await ports.NextPeriodAsync();
+            host.Stopping.ThrowIfCancellationRequested();
+            foreach (var (port, ends) in inputs)
+                foreach (var end in ends)
+                    while (end.TryRead(out var message) && message is not null) inbox[port.Name] = message.Json;
+        }
+        else
+        {
+            if (inputs.Count == 0)
+            {
+                await Task.Delay(Timeout.Infinite, host.Stopping);          // nothing will ever arrive
+                return false;
+            }
+
+            var required = inputs.Where(x => !x.Port.IsOptional).ToList();
+            while (true)
+            {
+                host.Stopping.ThrowIfCancellationRequested();
+                var emptyRequired = required.Where(x => x.Ends.All(e => e.Pending == 0)).ToList();
+                if (emptyRequired.Count == 0 && inputs.Any(x => x.Ends.Any(e => e.Pending > 0))) break;
+                var waitOn = emptyRequired.Count > 0 ? emptyRequired : inputs;
+
+                // A REQUIRED PORT THAT DELIVERS NOTHING WITHIN ITS MAXAGE makes its
+                // AIM DEGRADED (M3215 3.2), once until something arrives.
+                var maxAge = emptyRequired.Where(x => x.Port.MaxAge is not null).Select(x => x.Port.MaxAge!.Value).DefaultIfEmpty(-1).Min();
+                var arrival = Task.WhenAny(waitOn.SelectMany(x => x.Ends).Select(e => e.WaitAsync(host.Stopping)));
+                if (maxAge < 0 || starved.Contains(leaf.AIMName)) { await arrival; continue; }
+                if (await Task.WhenAny(arrival, Task.Delay(TimeSpan.FromMilliseconds(maxAge), host.Stopping)) == arrival) continue;
+                var late = emptyRequired.First(x => x.Port.MaxAge is not null).Port;
+                lock (starved) starved.Add(leaf.AIMName);
+                if (!Degraded(leaf, $"its Port {late.DataType}#{NumberOf(leaf, late)} delivered nothing within its MaxAge of {late.MaxAge} ms"))
+                    return false;
+            }
+            lock (starved) starved.Remove(leaf.AIMName);
+
+            foreach (var (port, ends) in inputs)
+                foreach (var end in ends)
+                    if (end.TryRead(out var message) && message is not null) { inbox[port.Name] = message.Json; break; }
+        }
+
+        var clockAtStart = System.Diagnostics.Stopwatch.GetTimestamp();
         var result = await host.ProcessAsync(leaf.AIMName, new Message
         {
             MessageId = Guid.NewGuid().ToString(), MessageType = module, Ports = inbox
         });
+        if (leaf.Deadline is { } deadline && !Kept(leaf, deadline, System.Diagnostics.Stopwatch.GetElapsedTime(clockAtStart)))
+            return false;
 
         if (result.IsCancelled) throw new OperationCanceledException(result.Payload);
         if (result.IsError) throw new InvalidOperationException($"it returned an error: {result.Payload}");
@@ -334,6 +387,27 @@ public sealed class ContinuousExecutor
             await ports.WriteAsync(port.DataType, NumberOf(leaf, port), json, -1);
         }
         return true;
+    }
+
+    // The AIMs waiting on a required Port past its MaxAge, already DEGRADED for it.
+    private readonly HashSet<string> starved = new();
+
+    // A run against the AIM's Deadline: a miss is counted; three in a row make the
+    // AIM DEGRADED and its composite's policy applies (M3215 3.5). False when the
+    // AIM is not to go on.
+    private bool Kept(DescriptorNode leaf, double deadline, TimeSpan took)
+    {
+        var aim = leaf.AIMName;
+        int inARow;
+        lock (misses)
+        {
+            var (all, row) = misses.GetValueOrDefault(aim);
+            if (took.TotalMilliseconds <= deadline) { misses[aim] = (all, 0); return true; }
+            misses[aim] = (all + 1, row + 1);
+            inARow = row + 1;
+        }
+        Console.WriteLine($"[AIF] {aim}: missed its Deadline of {deadline} ms ({took.TotalMilliseconds:0} ms)");
+        return inARow < 3 || Degraded(leaf, $"missed its Deadline of {deadline} ms {inARow} times running");
     }
 
     private static async ValueTask<PortMessage?> ReadAnyAsync(IReadOnlyList<IChannelReader> ends, int timeoutMs, CancellationToken cancel)
@@ -363,11 +437,19 @@ public sealed class ContinuousExecutor
     {
         private readonly ContinuousExecutor executor;
         private readonly DescriptorNode leaf;
+        private readonly PeriodicTimer? period;
 
         public Ports(ContinuousExecutor executor, DescriptorNode leaf)
         {
             this.executor = executor;
             this.leaf = leaf;
+            if (leaf.Period is { } ms) period = new PeriodicTimer(TimeSpan.FromMilliseconds(ms));
+        }
+
+        public async Task NextPeriodAsync()
+        {
+            if (period is null) return;
+            await period.WaitForNextTickAsync(executor.host.Stopping);
         }
 
         private PortEnd End(string direction, string dataType, int portNumber)
@@ -424,6 +506,6 @@ public sealed class ContinuousExecutor
 
         public long Dropped(string dataType, int portNumber = 1) => Readers(dataType, portNumber).Sum(r => r.Dropped + r.Discarded);
 
-        public DateTimeOffset Now => DateTimeOffset.UtcNow;
+        public DateTimeOffset Now => executor.clock.Now;
     }
 }

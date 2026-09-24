@@ -36,6 +36,9 @@ public interface IAimPorts
     int  Pending(string dataType, int portNumber = 1);
     long Dropped(string dataType, int portNumber = 1);
 
-    // The Controller's time.
+    // The Controller's time, on the time base of the clock plugged in (M3215 3.5).
     DateTimeOffset Now { get; }
+
+    // Completes at the AIM's next Period; at once where it has none.
+    Task NextPeriodAsync();
 }

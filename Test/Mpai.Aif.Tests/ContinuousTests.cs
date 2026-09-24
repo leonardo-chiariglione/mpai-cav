@@ -176,6 +176,80 @@ public class ContinuousTests
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
     }
 
+    // TIME (M3215 3.5): the Controller stamps on the clock plugged in; a Period
+    // kept; a Deadline missed; what the Controller refuses; a required Port that
+    // delivers nothing within its MaxAge.
+    [Fact]
+    public async Task Time()
+    {
+        var result = new Dictionary<string, string>();
+
+        // A clock on another time base: Messages are stamped on it.
+        var clock = new TestClock(new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        var transport = new AIF.Channels.InProcessTransport(clock);
+        var end = new AIF.Channels.PortEnd("1TST-A-V1.0-I01", Text);
+        var spec = new AIF.Channels.ChannelSpec("TST", new AIF.Channels.PortEnd("1TST-W-V1.0-I01", Text),
+            [new AIF.Channels.ChannelReaderSpec(end, AIF.Channels.PortBehaviour.Default)], "InProcess");
+        await transport.OpenWriter(spec).WriteAsync(new AIF.Channels.PortMessage { DataType = Text, Json = "x" });
+        var stamped = await transport.OpenReader(spec, end).ReadAsync(0);
+        result["a Message stamped on a test clock of 2030"] = stamped!.Stamp.Year == 2030 ? "stamped in 2030" : $"stamped {stamped.Stamp:u}";
+
+        using (var api = Api())
+        {
+            const string module = "1TST-PER-V1.0-I01";
+            result["TST-PER starts"] = api.StartFlow(module).ToString();
+
+            // The ticker, Period 50 ms, for 1 s.
+            await Task.Delay(1000);
+            var ticks = 0;
+            while (api.OutputRead(module, Text, 1, 0).Ok) ticks++;
+            result["ticks in 1 s at a Period of 50 ms"] = ticks >= 12 && ticks <= 16 ? "between 12 and 16 (the boundary keeps the newest 16)" : ticks.ToString();
+
+            // The late AIM, 60 ms a run against a Deadline of 20 ms.
+            for (var i = 1; i <= 3; i++)
+            {
+                api.InputWrite(module, Text, 1, $"d{i}", 2000);
+                var read = api.OutputRead(module, Text, 2, 1000);
+                var late = api.Status(module).Aims.Single(a => a.Aim == "1TST-DLN-V1.0-I01");
+                result[$"late run {i}"] = (read.Ok ? $"'{read.Json}'" : read.Error.ToString()) + $"; {late.Status}" + (late.Reason.Length > 0 ? $" ({late.Reason})" : "");
+            }
+            api.StopFlow(module);
+        }
+
+        using (var api = Api())
+        {
+            result["a Period in an exchange (TST-PEX)"] = Refusal(api, "1TST-PEX-V1.0-I01");
+            api.Controller.MinimumPeriod = TimeSpan.FromMilliseconds(100);
+            result["a Period of 50 ms, the Controller keeping 100 ms at least"] = Refusal(api, "1TST-PER-V1.0-I01");
+        }
+
+        // TST-PBH, given nothing: the reader with MaxAge 100 ms is DEGRADED, the others not.
+        using (var api = Api())
+        {
+            const string module = "1TST-PBH-V1.0-I01";
+            api.StartFlow(module);
+            await Task.Delay(400);
+            foreach (var aim in api.Status(module).Aims)
+                result[$"TST-PBH given nothing for 400 ms: {aim.Aim}"] = aim.Status + (aim.Reason.Length > 0 ? $" ({aim.Reason})" : "");
+            api.StopFlow(module);
+        }
+
+        Expected.Match("continuous-time.json", result);
+    }
+
+    private static string Refusal(ControllerApi api, string module)
+    {
+        try { var started = api.StartFlow(module); api.StopFlow(module); return "started: " + started; }
+        catch (InvalidOperationException refused) { return "refused: " + refused.Message; }
+    }
+
+    private sealed class TestClock(DateTimeOffset epoch) : AIF.Channels.IClock
+    {
+        private readonly long start = System.Diagnostics.Stopwatch.GetTimestamp();
+        public DateTimeOffset Now => epoch + System.Diagnostics.Stopwatch.GetElapsedTime(start);
+        public long Monotonic => System.Diagnostics.Stopwatch.GetTimestamp();
+    }
+
     // Each test Module: whether it starts, and what one exchange on it returns.
     [Fact]
     public void Today()

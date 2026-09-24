@@ -109,7 +109,7 @@ public interface IChannelReader
 public interface IClock
 {
     DateTimeOffset Now { get; }
-    long Monotonic { get; }                       // Stopwatch ticks
+    long Monotonic { get; }                       // in Stopwatch ticks (Stopwatch.Frequency a second)
 }
 
 public sealed class SystemClock : IClock

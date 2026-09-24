@@ -1,0 +1,14 @@
+{
+  "TST-PBH given nothing for 400 ms: 1TST-RDA-V1.0-I01": "Degraded (its Port TST-TXT-V1.0#1 delivered nothing within its MaxAge of 100 ms)",
+  "TST-PBH given nothing for 400 ms: 1TST-RDB-V1.0-I01": "Alive",
+  "TST-PBH given nothing for 400 ms: 1TST-RDN-V1.0-I01": "Alive",
+  "TST-PBH given nothing for 400 ms: 1TST-RDO-V1.0-I01": "Alive",
+  "TST-PER starts": "OK",
+  "a Message stamped on a test clock of 2030": "stamped in 2030",
+  "a Period in an exchange (TST-PEX)": "refused: 1TST-PEX-V1.0-I01: 1TST-TIK-V1.0-I01 declares a Period, and 1TST-PEX-V1.0-I01 is not Execution: Continuous.",
+  "a Period of 50 ms, the Controller keeping 100 ms at least": "refused: 1TST-PER-V1.0-I01: 1TST-TIK-V1.0-I01 declares a Period of 50 ms; the shortest this Controller can keep is 100 ms.",
+  "late run 1": "'d1'; Alive",
+  "late run 2": "'d2'; Alive",
+  "late run 3": "'d3'; Degraded (missed its Deadline of 20 ms 3 times running)",
+  "ticks in 1 s at a Period of 50 ms": "between 12 and 16 (the boundary keeps the newest 16)"
+}

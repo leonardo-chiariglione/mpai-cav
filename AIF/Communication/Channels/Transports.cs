@@ -16,7 +16,7 @@ internal sealed class ChannelCore
     {
         Spec = spec;
         this.clock = clock;
-        Readers = spec.Readers.ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour));
+        Readers = spec.Readers.ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock));
     }
 
     // The writer's end stamps the Message; the writer supplies no stamp.

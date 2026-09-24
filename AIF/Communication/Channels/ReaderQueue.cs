@@ -9,6 +9,7 @@ namespace AIF.Channels;
 internal sealed class ReaderQueue
 {
     private readonly PortBehaviour behaviour;
+    private readonly IClock clock;
     private readonly LinkedList<PortMessage> held = new();
     private readonly object gate = new();
 
@@ -22,7 +23,11 @@ internal sealed class ReaderQueue
     public long Discarded;
     public long Taken;
 
-    public ReaderQueue(PortBehaviour behaviour) => this.behaviour = behaviour;
+    public ReaderQueue(PortBehaviour behaviour, IClock clock)
+    {
+        this.behaviour = behaviour;
+        this.clock = clock;
+    }
 
     private static TaskCompletionSource New() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -125,7 +130,7 @@ internal sealed class ReaderQueue
     private void Expire()
     {
         if (behaviour.MaxAge is not { } maxAge) return;
-        var oldest = Stopwatch.GetTimestamp() - (long)(maxAge.TotalSeconds * Stopwatch.Frequency);
+        var oldest = clock.Monotonic - (long)(maxAge.TotalSeconds * Stopwatch.Frequency);
         var any = false;
         while (held.First is { } first && first.Value.Written < oldest)
         {

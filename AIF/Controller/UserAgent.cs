@@ -31,11 +31,30 @@ public sealed class UserAgent
     // scope is configured and AIMs are handed no storage.
     private string? _sharedStorageRoot;
 
-    public UserAgent(AmdStore store, string? sharedStorageRoot = null)
+    public UserAgent(AmdStore store, string? sharedStorageRoot = null, IClock? clock = null)
     {
         _store = store;
         _sharedStorageRoot = sharedStorageRoot;
+        Clock = clock ?? SystemClock.Instance;
+        ControllerTransport = new ControllerTransport(Clock);
+        InProcessTransport  = new InProcessTransport(Clock);
     }
+
+    // THE CONTROLLER'S TIME BASE is whatever clock is plugged in (M3215 3.5). Every
+    // Message is stamped on it, and an AIM reads it as IAimPorts.Now.
+    public IClock Clock { get; }
+
+    // THE SHORTEST PERIOD THIS CONTROLLER CAN KEEP: what its timer can resolve on
+    // this machine, measured once (M3215 3.5). Not a number fixed in advance; a
+    // Controller that knows better may set it.
+    public TimeSpan MinimumPeriod { get; set; } = TimerResolution.Value;
+
+    private static readonly Lazy<TimeSpan> TimerResolution = new(() =>
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        for (var i = 0; i < 5; i++) Thread.Sleep(1);
+        return TimeSpan.FromTicks(Math.Max(TimeSpan.TicksPerMillisecond, clock.Elapsed.Ticks / 5));
+    });
 
     // MPAI_AIFU_SharedStorage_Init
     //
@@ -54,8 +73,8 @@ public sealed class UserAgent
     // THE TRANSPORTS OF THIS CONTROLLER (M3205 3.6.2, M3215 3.1): Controller, which
     // relays and can observe, and InProcess. The Channels of a Module use the one
     // its Output Ports declare, DefaultTransport where they declare none.
-    public ControllerTransport ControllerTransport { get; } = new();
-    public InProcessTransport  InProcessTransport  { get; } = new();
+    public ControllerTransport ControllerTransport { get; }
+    public InProcessTransport  InProcessTransport  { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
     private IReadOnlyDictionary<string, IChannelTransport> Transports => new Dictionary<string, IChannelTransport>
@@ -181,7 +200,21 @@ public sealed class UserAgent
         // Every Module's Channels are planned, so that one whose reader does not
         // accept its writer's transport refuses to load (M3215 3.1); a Continuous
         // Module runs on them from now until Stop.
-        var channels = new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport);
+        var channels = new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport, Clock);
+
+        // A PERIOD OR A DEADLINE the Controller cannot honour refuses the Module
+        // (M3215 3.5): in an exchange, which runs when the User Agent asks; or a
+        // Period shorter than this Controller can keep.
+        foreach (var aim in channels.Aims)
+        {
+            if ((aim.Period is not null || aim.Deadline is not null) && !graph.Root.IsContinuous)
+                throw new InvalidOperationException(
+                    $"{name}: {aim.AIMName} declares a {(aim.Period is not null ? "Period" : "Deadline")}, and {name} is not Execution: Continuous.");
+            if (aim.Period is { } period && TimeSpan.FromMilliseconds(period) < MinimumPeriod)
+                throw new InvalidOperationException(
+                    $"{name}: {aim.AIMName} declares a Period of {period} ms; the shortest this Controller can keep is {MinimumPeriod.TotalMilliseconds:0.#} ms.");
+        }
+
         if (graph.Root.IsContinuous) channels.Start();
 
         _running[moduleId] = started = new RunningModule
@@ -272,6 +305,11 @@ public sealed class UserAgent
         if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null);
         return await module.Continuous.ReadBoundaryAsync(dataType, portNumber, timeoutMs);
     }
+
+    // How many times an AIM of a Continuous Module missed its Deadline.
+    public int DeadlinesMissed(int moduleId, string aim) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is not null
+            ? module.Continuous.DeadlinesMissed(aim) : 0;
 
     // What each Channel of a Continuous Module carried.
     public IReadOnlyList<string> ChannelAccounts(int moduleId) =>

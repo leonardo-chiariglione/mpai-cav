@@ -3,7 +3,7 @@
   "TST-PAY": "starts; an exchange: OK; no output",
   "TST-PBH": "starts; an exchange: OK; no output",
   "TST-PER": "starts; an exchange: OK; no output",
-  "TST-PEX": "starts; an exchange: OK; no output",
+  "TST-PEX": "does not start: 1TST-PEX-V1.0-I01: 1TST-TIK-V1.0-I01 declares a Period, and 1TST-PEX-V1.0-I01 is not Execution: Continuous.",
   "TST-PRV": "starts; an exchange: OK; #1 'A'; #2 'B'",
   "TST-RST": "starts; an exchange: OK; no output",
   "TST-TRX": "does not start: 1TST-TRX-V1.0-I01#3: 1TST-TXC-V1.0-I01.TST-TXT-V1.0#1 accepts Controller; the Channel of 1TST-TXO-V1.0-I01.TST-TXT-V1.0#1 it reads uses InPr..."
