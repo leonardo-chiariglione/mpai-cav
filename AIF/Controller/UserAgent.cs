@@ -50,6 +50,17 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
+    // MPAI_AIFU_SharedStorage_Init(MODULE_ID, location) (M3203 3.4.1): the scope
+    // of one Module is held at location. Its AIMs' handles follow at their next
+    // call. The User Agent says where, and nothing about who writes.
+    public AifError MPAI_AIFU_SharedStorage_Init(int moduleId, string location)
+    {
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        if (string.IsNullOrWhiteSpace(location)) return AifError.Failed;
+        module.StorageLocation = location;
+        return AifError.OK;
+    }
+
     // A running Module (composite AIM): its graph, host, and boundary Ports.
     private sealed class RunningModule
     {
@@ -58,6 +69,10 @@ public sealed class UserAgent
         public required AimHost         Host        { get; init; }
         public required MachineExecutor Executor    { get; init; }
         public required PortRegistry    Ports       { get; init; }
+
+        // Where the User Agent initialised this Module's Shared Storage; null,
+        // the User Agent's root (MPAI_AIFU_SharedStorage_Init, M3203 3.4.1).
+        public string? StorageLocation { get; set; }
 
         // The last suspension point of this Module's resumable run, if any.
         public SuspendedExecution? Suspended { get; set; }
@@ -134,6 +149,7 @@ public sealed class UserAgent
 
         var graph = _controller.RegisterAim(identifier);
         var host  = new AimHost();
+        RunningModule? started = null;
 
         // THE CONTROLLER KEEPS WHAT IT HAS BUILT. Stopping a Module releases the
         // Module; it does not throw away the models its AIMs loaded. A person who
@@ -143,7 +159,8 @@ public sealed class UserAgent
         // What is retained is the AIM implementation, so anything it holds is
         // retained with it. An AIM that keeps state between runs - a dialogue
         // memory, say - will carry that state into the next Module that uses it.
-        _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host);
+        _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
+            () => started?.StorageLocation ?? _sharedStorageRoot);
 
         // Declare the composite's boundary Ports from its ExternalPorts.
         var ports = new PortRegistry();
@@ -151,7 +168,7 @@ public sealed class UserAgent
             ports.Declare(p.Name, p.Direction, p.DataType);
 
         moduleId = Interlocked.Increment(ref _nextModuleId);
-        _running[moduleId] = new RunningModule
+        _running[moduleId] = started = new RunningModule
         {
             Name     = name,
             Graph    = graph,

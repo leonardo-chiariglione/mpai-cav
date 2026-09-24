@@ -263,6 +263,9 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
 
     public AifError StopAim(string moduleName, string aimName) => AifError.Failed;
 
+    // Where a Service holds a Module's storage is the Service's: refused.
+    public AifError SharedStorageInit(string moduleName, string location) => AifError.Failed;
+
     // 0 - do not wait - cannot be offered over a network; it is the shortest wait.
     private static CancellationTokenSource Limit(int timeoutMs) =>
         timeoutMs < 0 ? new CancellationTokenSource() : new CancellationTokenSource(Math.Max(timeoutMs, 1));

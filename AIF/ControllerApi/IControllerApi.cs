@@ -30,4 +30,8 @@ public interface IControllerApi
     // MPAI_AIFU_AIM_Stop (M3213 3.5).
     ControllerApi.ModuleStatus Status(string moduleName);
     AifError StopAim(string moduleName, string aimName);
+
+    // MPAI_AIFU_SharedStorage_Init (M3203 3.4.1, M3213 3.6): where the Module's
+    // Shared Storage is held.
+    AifError SharedStorageInit(string moduleName, string location);
 }

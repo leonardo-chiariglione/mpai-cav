@@ -1,0 +1,16 @@
+{
+  "Get 'new' from 1, 2 bytes": "0a",
+  "Get 'new' from 3, 10 bytes": "b",
+  "Get 'new' from 4, the end": "''",
+  "Get 'new' from 5, beyond the end": "an error",
+  "GetKeyInfo 'k' Length": "2",
+  "Put 'ab' at 2 to a new key": "00ab",
+  "Put 'abc' at 0": "abc",
+  "SharedStorage_Init of a Module not started": "NotFound",
+  "SharedStorage_Init of the second Module": "OK",
+  "the default location holds": "RTE by 1TST-RTE-V1.0-I01/1TST-UPP-V1.0-I01",
+  "the second Module's location holds": "GRP by 1TST-GRP-V1.0-I01/1TST-ECH-V1.0-I01",
+  "then 'XY' at 5, beyond the end": "abc00XY",
+  "then 'Z' at 1, within": "aZc00XY",
+  "then 'hi' at 0: the value replaced": "hi"
+}

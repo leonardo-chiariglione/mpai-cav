@@ -21,10 +21,16 @@ public sealed class Controller
     // whatever identity they chose, which proves nothing. The Module names the
     // context and the AIM names the writer within it, because an AIM name without
     // its Module identifies nothing.
-    private ISharedStorage? StorageFor(string moduleName, string aimName) =>
-        storageRoot is null
-            ? null
-            : new FileSharedStorage(storageRoot, $"{moduleName}/{aimName}", "local");
+    //
+    // WHERE, THE MODULE SAYS. A Module's scope is where the User Agent initialised
+    // it (MPAI_AIFU_SharedStorage_Init with its MODULE_ID), else the Controller's
+    // root; the handle asks at each call, so an Init after Start takes effect.
+    private ISharedStorage? StorageFor(string moduleName, string aimName, Func<string?>? location) =>
+        location is not null
+            ? new ModuleSharedStorage(() => location() ?? storageRoot, $"{moduleName}/{aimName}", "local")
+            : storageRoot is null
+                ? null
+                : new FileSharedStorage(storageRoot, $"{moduleName}/{aimName}", "local");
 
     public Controller(AmdStore store)
     {
@@ -421,7 +427,8 @@ public sealed class Controller
         DescriptorGraph graph,
         IAimProvider provider,
         AimSettings settings,
-        AimHost host)
+        AimHost host,
+        Func<string?>? storageLocation = null)
     {
         var instantiated = new List<string>();
 
@@ -438,12 +445,12 @@ public sealed class Controller
             CheckResources(graph.Root);
             var elsewhere = RemoteAims?.Invoke(aimName, graph.Root.Relation);
             host.RegisterRuntime(elsewhere ??
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName)));
+                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
             return instantiated;
         }
 
-        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName);
+        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation);
         return instantiated;
     }
 
@@ -459,13 +466,14 @@ public sealed class Controller
         AimSettings settings,
         AimHost host,
         List<string> instantiated,
-        string moduleName)
+        string moduleName,
+        Func<string?>? storageLocation)
     {
         foreach (var child in node.Children)
         {
             if (child.IsComposite)
             {
-                InstantiateNode(child, provider, settings, host, instantiated, moduleName);
+                InstantiateNode(child, provider, settings, host, instantiated, moduleName, storageLocation);
                 continue;
             }
 
@@ -482,7 +490,7 @@ public sealed class Controller
             // here, as every AIM is today.
             var elsewhere = RemoteAims?.Invoke(aimName, child.Relation);
             host.RegisterRuntime(elsewhere ??
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName)));
+                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
         }
     }

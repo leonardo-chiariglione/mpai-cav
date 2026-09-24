@@ -268,6 +268,75 @@ public class ControllerTests
         Expected.Match("controller-time.json", result);
     }
 
+    // Shared Storage: offsets (M3203 4.10.1, 4.10.2) and the scope of one Module
+    // initialised where the User Agent says (3.4.1) - after its AIMs hold their
+    // handles.
+    [Fact]
+    public void SharedStorage()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "mpai-phase3-" + Guid.NewGuid().ToString("N"));
+        var result = new Dictionary<string, string>();
+        try
+        {
+            AIF.SharedStorage.ISharedStorage s = new AIF.SharedStorage.FileSharedStorage(Path.Combine(root, "plain"), "test", "local");
+            string Text(byte[] b) => string.Concat(b.Select(x => x == 0 ? "0" : ((char)x).ToString()));
+            string Value(string k) => Text(s.MPAI_AIFM_SharedStorage_Get(k));
+            byte[] B(string v) => System.Text.Encoding.ASCII.GetBytes(v);
+
+            s.MPAI_AIFM_SharedStorage_Put("k", B("abc"), 0);
+            result["Put 'abc' at 0"] = Value("k");
+            s.MPAI_AIFM_SharedStorage_Put("k", B("XY"), 5);
+            result["then 'XY' at 5, beyond the end"] = Value("k");
+            s.MPAI_AIFM_SharedStorage_Put("k", B("Z"), 1);
+            result["then 'Z' at 1, within"] = Value("k");
+            s.MPAI_AIFM_SharedStorage_Put("k", B("hi"), 0);
+            result["then 'hi' at 0: the value replaced"] = Value("k");
+            s.MPAI_AIFM_SharedStorage_Put("new", B("ab"), 2);
+            result["Put 'ab' at 2 to a new key"] = Value("new");
+            result["Get 'new' from 1, 2 bytes"] = Text(s.MPAI_AIFM_SharedStorage_Get("new", 1, 2));
+            result["Get 'new' from 3, 10 bytes"] = Text(s.MPAI_AIFM_SharedStorage_Get("new", 3, 10));
+            result["Get 'new' from 4, the end"] = "'" + Text(s.MPAI_AIFM_SharedStorage_Get("new", 4, 10)) + "'";
+            try { s.MPAI_AIFM_SharedStorage_Get("new", 5, 1); result["Get 'new' from 5, beyond the end"] = "returned"; }
+            catch (ArgumentOutOfRangeException) { result["Get 'new' from 5, beyond the end"] = "an error"; }
+            result["GetKeyInfo 'k' Length"] = s.MPAI_AIFM_SharedStorage_GetKeyInfo("k").Length.ToString();
+
+            // Two Modules; the second initialised elsewhere after it started.
+            var store = new AmdStore(Amds);
+            store.Scan();
+            var ua = new UserAgent(store, Path.Combine(root, "default"));
+            ua.MPAI_AIFU_Controller_Initialize();
+            var aimsA = new TestAims();
+            var aimsB = new TestAims();
+            ua.MPAI_AIFU_MODULE_Start("1TST-RTE-V1.0-I01", aimsA, AimSettings.Empty, out var a);
+            ua.MPAI_AIFU_MODULE_Start("1TST-GRP-V1.0-I01", aimsB, AimSettings.Empty, out var b);
+            result["SharedStorage_Init of the second Module"] =
+                ua.MPAI_AIFU_SharedStorage_Init(b, Path.Combine(root, "elsewhere")).ToString();
+            result["SharedStorage_Init of a Module not started"] =
+                ua.MPAI_AIFU_SharedStorage_Init(999, Path.Combine(root, "nowhere")).ToString();
+
+            aimsA.Storage["1TST-UPP-V1.0-I01"]!.MPAI_AIFM_SharedStorage_Put("from", B("RTE"));
+            aimsB.Storage["1TST-ECH-V1.0-I01"]!.MPAI_AIFM_SharedStorage_Put("from", B("GRP"));
+            string Held(string folder) =>
+                Directory.Exists(Path.Combine(root, folder))
+                    ? Value2(new AIF.SharedStorage.FileSharedStorage(Path.Combine(root, folder), "test", "local"))
+                    : "no scope";
+            string Value2(AIF.SharedStorage.ISharedStorage st) =>
+                st.MPAI_AIFM_SharedStorage_Exists("from")
+                    ? Text(st.MPAI_AIFM_SharedStorage_Get("from")) + " by " + st.MPAI_AIFM_SharedStorage_GetKeyInfo("from").StoredBy
+                    : "nothing";
+            result["the default location holds"] = Held("default");
+            result["the second Module's location holds"] = Held("elsewhere");
+            ua.MPAI_AIFU_MODULE_Stop(a);
+            ua.MPAI_AIFU_MODULE_Stop(b);
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); } catch { }
+        }
+
+        Expected.Match("controller-sharedstorage.json", result);
+    }
+
     // ---------------------------------------------------------------------
 
     // Each AIM's status, why, and what it reported; or one AIM's.
@@ -298,9 +367,18 @@ public class ControllerTests
 // gives them, as any implementation of an L3 does.
 public sealed class TestAims : IAimProvider
 {
+    // The Shared Storage handle the Controller gave each AIM.
+    public Dictionary<string, AIF.SharedStorage.ISharedStorage?> Storage { get; } = new();
+
     public bool CanCreate(string aimName) => aimName.StartsWith("1TST-", StringComparison.Ordinal);
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage) =>
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
+    {
+        Storage[aimName] = storage;
+        return Make(aimName);
+    }
+
+    private static IAimProcessor Make(string aimName) =>
         aimName switch
         {
             "1TST-SPL-V1.0-I01" => new TestAim(aimName, m => Out(("First", "A:" + In(m)), ("Second", "B:" + In(m)))),

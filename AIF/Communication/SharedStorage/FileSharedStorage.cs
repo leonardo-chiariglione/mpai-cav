@@ -60,6 +60,22 @@ public sealed class FileSharedStorage : ISharedStorage
         }
     }
 
+    // From an offset, atomic per key as a whole-value Put is: the read of the
+    // existing value and the write of the new one hold the key's lock.
+    public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data, long offset)
+    {
+        if (offset == 0) { MPAI_AIFM_SharedStorage_Put(key, data); return; }
+        lock (LockFor(key))
+        {
+            var (dataPath, _) = PathsFor(key);
+            var existing = File.Exists(dataPath) ? File.ReadAllBytes(dataPath) : Array.Empty<byte>();
+            MPAI_AIFM_SharedStorage_Put(key, SharedStorageRanges.Write(existing, data, offset));
+        }
+    }
+
+    public byte[] MPAI_AIFM_SharedStorage_Get(string key, long offset, long length) =>
+        SharedStorageRanges.Read(MPAI_AIFM_SharedStorage_Get(key), key, offset, length);
+
     public byte[] MPAI_AIFM_SharedStorage_Get(string key)
     {
         var (dataPath, _) = PathsFor(key);

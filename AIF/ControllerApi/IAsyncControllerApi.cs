@@ -20,6 +20,7 @@ public interface IAsyncControllerApi
     Task<AifError>             ResumeAsync(string moduleName);
     Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName);
     Task<AifError>             StopAimAsync(string moduleName, string aimName);
+    Task<AifError>             SharedStorageInitAsync(string moduleName, string location);
 }
 
 public static class ControllerApiAsync
@@ -55,5 +56,7 @@ public static class ControllerApiAsync
         public Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName) => Task.Run(() => api.Status(moduleName));
 
         public Task<AifError> StopAimAsync(string moduleName, string aimName) => Task.Run(() => api.StopAim(moduleName, aimName));
+
+        public Task<AifError> SharedStorageInitAsync(string moduleName, string location) => Task.Run(() => api.SharedStorageInit(moduleName, location));
     }
 }

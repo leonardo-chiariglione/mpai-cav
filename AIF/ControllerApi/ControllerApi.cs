@@ -204,6 +204,14 @@ public sealed class ControllerApi : IControllerApi, IDisposable
                 : AifError.NotStarted;
     }
 
+    public AifError SharedStorageInit(string moduleName, string location)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started)
+                ? _ua.MPAI_AIFU_SharedStorage_Init(started.Id, location)
+                : AifError.NotStarted;
+    }
+
     // Write every input, read every output: one exchange, built on the data path.
     // It is lenient where InputWrite is not - a datum for a Port the Module does
     // not declare is passed on, and meets no connection - because every client
