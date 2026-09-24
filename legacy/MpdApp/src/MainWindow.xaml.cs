@@ -10,7 +10,7 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
 
 namespace MpdApp;
 

@@ -18,7 +18,7 @@
     <ProjectReference Include="..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
     <ProjectReference Include="..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <!-- Scene front-end -->
     <ProjectReference Include="..\..\..\AIMs\OSD\V1.5\BAS\Mpai.Osd.Bas.csproj" />
     <ProjectReference Include="..\..\..\AIMs\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />

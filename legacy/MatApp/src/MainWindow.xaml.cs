@@ -11,7 +11,7 @@ using AIF.Store;        // AmdStore (provider factory)
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.ControllerApi;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
 
 using Mpai.Providers;
 

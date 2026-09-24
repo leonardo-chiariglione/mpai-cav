@@ -5,14 +5,11 @@ using System.Text.Json.Nodes;
 
 using AIF.Controller;
 using Mpai.Core;
-using Mpai.Aif.ControllerApi;
+using Mpai.Aif.Api;
 using Mpai.Mas.Client;
 using Xunit.Abstractions;
 
 namespace Mpai.Aif.Tests;
-
-// The namespace Mpai.Aif.ControllerApi would hide its class ControllerApi here.
-using ControllerApi = Mpai.Aif.ControllerApi.ControllerApi;
 
 // Starts the MAS-App Service of this repository for the Service tests (M3207 3.4):
 // from its own build output and from the repository's root, on port 5105 - never

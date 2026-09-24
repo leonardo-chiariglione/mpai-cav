@@ -8,7 +8,7 @@ using AIF.Store;
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aif.ControllerApi;   // ControllerApi
+using Mpai.Aif.Api;   // ControllerApi
 
 namespace HciSceneTest;
 

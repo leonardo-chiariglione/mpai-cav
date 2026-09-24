@@ -1,7 +1,7 @@
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Aif.ControllerApi;
+namespace Mpai.Aif.Api;
 
 // The Speaking Avatar payload the UA renders: the machine speech (WAV bytes) and
 // the machine Face Descriptors that drive the 3-D avatar; TranslatedText carries a

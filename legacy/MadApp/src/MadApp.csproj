@@ -21,7 +21,7 @@
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <!-- Avatar surface + HCI API -->
     <ProjectReference Include="..\..\..\UAs\Lib\UaKit\Mpai.UaKit.csproj" />
-    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <!-- MMC-MAD leaves: ASR + EDP + RSR(PSD+TTS+GFD) -->
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />

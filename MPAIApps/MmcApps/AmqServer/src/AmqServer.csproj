@@ -28,7 +28,7 @@
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <!-- Controller API -->
-    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <!-- MAS -->
     <ProjectReference Include="..\..\..\..\MW\MasServer\Mpai.Mas.Server.csproj" />
 

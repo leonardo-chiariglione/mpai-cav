@@ -8,6 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\PortData\Mpai.Mas.PortData.csproj" />
-    <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
+    <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Aims.Visual;
 using Mpai.UaKit;
-using Mpai.Aif.ControllerApi;
+using Mpai.Aif.Api;
 
 namespace HciApp;
 

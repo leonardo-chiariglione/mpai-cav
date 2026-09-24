@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using AIF.Controller;
 
-namespace Mpai.Aif.ControllerApi;
+namespace Mpai.Aif.Api;
 
 // The Controller API (formerly called the North API), as the User Agent depends on it.
 //

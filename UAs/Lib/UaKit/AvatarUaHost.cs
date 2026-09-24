@@ -12,7 +12,7 @@ using AIF.Store;
 using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aif.ControllerApi;    // SpeakingAvatar
+using Mpai.Aif.Api;    // SpeakingAvatar
 using Mpai.Osd.Tod;    // WebView3DModelDelivery
 using Mpai.Aims.Audio; // WasapiAudioAcquisition (the mic device - real-world edge)
 using Mpai.Aims.Speech;// SoaAimProcessor (Speech Object Acquisition - real-world edge)

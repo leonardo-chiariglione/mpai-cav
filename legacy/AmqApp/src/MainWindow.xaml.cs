@@ -11,7 +11,7 @@ using AIF.Store;        // AmdStore
 
 using Mpai.Core;
 using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
-using Mpai.Aif.ControllerApi;     // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;     // ControllerApi, SpeakingAvatar
 
 using Mpai.Providers;
 

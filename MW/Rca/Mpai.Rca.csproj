@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wdl\Mpai.Wdl.csproj" />
-    <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.ControllerApi.csproj" />
+    <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
   </ItemGroup>
 
 </Project>

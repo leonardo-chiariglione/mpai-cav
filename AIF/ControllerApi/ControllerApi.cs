@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using AIF.Controller;
 using AIF.Store;
 
-namespace Mpai.Aif.ControllerApi;
+namespace Mpai.Aif.Api;
 
 // ControllerApi - the MPAI-AIF Controller API. The UA identifies data ONLY by
 // (DataType, PortNumber). The boundary contract with the Controller is the
