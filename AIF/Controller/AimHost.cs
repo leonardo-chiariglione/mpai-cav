@@ -202,25 +202,40 @@ public sealed class AimHost : IDisposable
             throw new InvalidOperationException(
                 $"No implementation is registered for {instanceId}.");
 
-        Task gate;
-        lock (_module) gate = _running.Task;
-        await gate;
+        // Embed an AimContext in the message so the processor can honour
+        // lifecycle signals without holding a reference to AimLifecycle.
+        var context = await ContextAsync(instanceId);
+        return await processor.ProcessAsync(message with { Context = context });
+    }
+
+    // The implementation registered for an AIM.
+    public IAimProcessor? Processor(string instanceId) =>
+        _processors.TryGetValue(instanceId, out var processor) ? processor : null;
+
+    // An AIM about to run: waits while the Module is paused, refuses once the
+    // Module or the AIM is stopped, then starts the AIM's lifecycle and gives the
+    // context it runs with - Pause, Stop, Report, StopAim.
+    public async Task<AimContext> ContextAsync(string instanceId)
+    {
+        await WhilePausedAsync();
         _stopped.Token.ThrowIfCancellationRequested();
         if (IsDead(instanceId))
             throw new OperationCanceledException($"{instanceId} is stopped.");
 
-        // Embed an AimContext in the message so the processor can honour
-        // lifecycle signals without holding a reference to AimLifecycle.
         var context = MPAI_AIFM_AIM_Start(instanceId);
         lock (_module)
             if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
-        var msg     = message with
-        {
-            Context = context.WithHost(text => Report(instanceId, text), aim => StopAim(aim, $"stopped by {instanceId}"))
-        };
-
-        return await processor.ProcessAsync(msg);
+        return context.WithHost(text => Report(instanceId, text), aim => StopAim(aim, $"stopped by {instanceId}"));
     }
+
+    // Completes when the Module is not paused.
+    public Task WhilePausedAsync()
+    {
+        lock (_module) return _running.Task;
+    }
+
+    // Cancelled when the Module is stopped.
+    public CancellationToken Stopping => _stopped.Token;
 
     // Called by AifAmqSession for interactive AIMs (e.g. CAE-AOA).
     // The caller starts the AIM, lets it run, then calls StopAim when ready.

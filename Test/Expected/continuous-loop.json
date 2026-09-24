@@ -1,0 +1,12 @@
+{
+  "Controller: accounts": "(boundary).TST-TXT-V1.0#1 (Controller) wrote 50; 1TST-DSC-V1.0-I01.TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0 | 1TST-DSC-V1.0-I01.TST-TXT-V1.0#1 (Controller) wrote 50; 1TST-ACC-V1.0-I01.TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0 | 1TST-ACC-V1.0-I01.TST-TXT-V1.0#1 (Controller) wrote 50; (boundary).TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0; 1TST-DSC-V1.0-I01.TST-TXT-V1.0#2: taken 49, dropped 0, discarded 0, pending 1",
+  "Controller: first three outputs": "1:m1 / 2:m2|1:m1 / 3:m3|2:m2|1:m1",
+  "Controller: nothing more": "NotProduced",
+  "Controller: outputs in order": "50 of 50",
+  "Controller: start": "OK",
+  "InProcess: accounts": "(boundary).TST-TXT-V1.0#1 (InProcess) wrote 50; 1TST-DSC-V1.0-I01.TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0 | 1TST-DSC-V1.0-I01.TST-TXT-V1.0#1 (InProcess) wrote 50; 1TST-ACC-V1.0-I01.TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0 | 1TST-ACC-V1.0-I01.TST-TXT-V1.0#1 (InProcess) wrote 50; (boundary).TST-TXT-V1.0#1: taken 50, dropped 0, discarded 0, pending 0; 1TST-DSC-V1.0-I01.TST-TXT-V1.0#2: taken 49, dropped 0, discarded 0, pending 1",
+  "InProcess: first three outputs": "1:m1 / 2:m2|1:m1 / 3:m3|2:m2|1:m1",
+  "InProcess: nothing more": "NotProduced",
+  "InProcess: outputs in order": "50 of 50",
+  "InProcess: start": "OK"
+}

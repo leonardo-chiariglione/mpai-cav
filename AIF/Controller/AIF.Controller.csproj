@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\Communication\SharedStorage\AIF.SharedStorage.csproj" />
+    <ProjectReference Include="..\Communication\Channels\AIF.Channels.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

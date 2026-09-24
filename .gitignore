@@ -10,6 +10,7 @@ _macpublish/
 *.exe
 
 # diagnostics / scratch
+Test/Reports/
 *.log
 *.bak
 .backups/

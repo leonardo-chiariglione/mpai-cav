@@ -20,6 +20,7 @@ internal sealed class ReaderQueue
 
     public long Dropped;
     public long Discarded;
+    public long Taken;
 
     public ReaderQueue(PortBehaviour behaviour) => this.behaviour = behaviour;
 
@@ -76,6 +77,7 @@ internal sealed class ReaderQueue
             {
                 held.RemoveFirst();
                 message = first.Value;
+                Taken++;
                 Signal(ref left);
                 return true;
             }

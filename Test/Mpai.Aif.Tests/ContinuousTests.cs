@@ -33,6 +33,149 @@ public class ContinuousTests
         Assert.True(invalid.Count == 0, string.Join(Environment.NewLine, invalid));
     }
 
+    // A LOOP RUNS (M3215 3.8): TST-LOP, Continuous, TST-ACC's output back to
+    // TST-DSC. Fifty inputs give fifty outputs, each counted once, and every
+    // Message on every Channel is accounted for.
+    [Fact]
+    public void Loop()
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var transport in new[] { "Controller", "InProcess" })
+        {
+            using var api = Api();
+            api.Controller.DefaultTransport = transport;
+            const string module = "1TST-LOP-V1.0-I01";
+            result[$"{transport}: start"] = api.StartFlow(module).ToString();
+
+            var outputs = new List<string>();
+            for (var i = 1; i <= 50; i++)
+            {
+                api.InputWrite(module, Text, 1, $"m{i}", 2000);
+                var read = api.OutputRead(module, Text, 1, 2000);
+                outputs.Add(read.Ok ? read.Json! : read.Error.ToString());
+            }
+            result[$"{transport}: first three outputs"] = string.Join(" / ", outputs.Take(3));
+            result[$"{transport}: outputs in order"] =
+                outputs.Select((o, i) => o.StartsWith($"{i + 1}:m{i + 1}", StringComparison.Ordinal)).All(x => x) ? "50 of 50" : string.Join(" / ", outputs);
+            result[$"{transport}: accounts"] = string.Join(" | ", api.ChannelAccounts(module));
+            result[$"{transport}: nothing more"] = api.OutputRead(module, Text, 1, 100).Error.ToString();
+            api.StopFlow(module);
+        }
+        Expected.Match("continuous-loop.json", result);
+    }
+
+    // What the Channels of TST-PBH carry at each reader: the behaviour its AIM's
+    // Metadata declares (M3215 3.2).
+    [Fact]
+    public void Behaviours()
+    {
+        var store = new AIF.Store.AmdStore(Amds);
+        store.Scan();
+        var graph = new AIF.Controller.Controller(store).RegisterAim(store.FindByAimName("1TST-PBH-V1.0-I01")!);
+        var executor = new ContinuousExecutor(graph, new AimHost(), new Dictionary<string, AIF.Channels.IChannelTransport>
+        {
+            ["Controller"] = new AIF.Channels.ControllerTransport()
+        }, "TST-PBH");
+        var result = executor.Channels.ToDictionary(
+            c => c.Writer.ToString(),
+            c => $"{c.Transport}: " + string.Join("; ", c.Readers.Select(r =>
+                $"{r.Reader} {r.Behaviour.Overflow} Depth {r.Behaviour.Depth}" + (r.Behaviour.MaxAge is { } a ? $" MaxAge {a.TotalMilliseconds} ms" : ""))));
+        Expected.Match("continuous-behaviours.json", result);
+    }
+
+    // RestartLimit (M3215 3.3): TST-THS throws on its first two runs and has
+    // RestartLimit 2; the third input gets through.
+    [Fact]
+    public void Restart()
+    {
+        using var api = Api();
+        const string module = "1TST-RST-V1.0-I01";
+        api.StartFlow(module);
+        var result = new Dictionary<string, string>();
+        for (var i = 1; i <= 3; i++)
+        {
+            api.InputWrite(module, Text, 1, $"r{i}", 2000);
+            var read = api.OutputRead(module, Text, 1, 500);
+            var status = api.Status(module).Aims.Single();
+            result[$"input {i}"] = (read.Ok ? $"'{read.Json}'" : read.Error.ToString()) + $"; {status.Status}" + (status.Reason.Length > 0 ? $" ({status.Reason})" : "");
+        }
+        api.StopFlow(module);
+        Expected.Match("continuous-restart.json", result);
+    }
+
+    // CONTROLLER AND INPROCESS COMPARED on TST-LOP (M3215 3.8; M3206 Section 2,
+    // Continuous): the time from a write at the boundary to the loop's output,
+    // the throughput, CPU and memory. Recorded and reported in
+    // Test/Reports/continuous-transports.json, not judged.
+    [Fact]
+    public void Transports()
+    {
+        var report = new Dictionary<string, object>();
+        foreach (var transport in new[] { "Controller", "InProcess" })
+        {
+            using var api = Api();
+            api.Controller.DefaultTransport = transport;
+            const string module = "1TST-LOP-V1.0-I01";
+            api.StartFlow(module);
+            for (var i = 0; i < 20; i++) { api.InputWrite(module, Text, 1, "warm"); api.OutputRead(module, Text, 1, 2000); }
+
+            var process = System.Diagnostics.Process.GetCurrentProcess();
+            var cpu0 = process.TotalProcessorTime;
+            GC.Collect();
+            var memory0 = GC.GetTotalMemory(true);
+
+            // Round trips: one in, one out.
+            var latencies = new List<double>();
+            for (var i = 0; i < 500; i++)
+            {
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                api.InputWrite(module, Text, 1, $"t{i}");
+                api.OutputRead(module, Text, 1, 2000);
+                latencies.Add(clock.Elapsed.TotalMilliseconds);
+            }
+            latencies.Sort();
+
+            // Throughput: 2000 in as fast as they are taken, then all out.
+            var run = System.Diagnostics.Stopwatch.StartNew();
+            var reader = Task.Run(() => { var n = 0; while (api.OutputRead(module, Text, 1, 300).Ok) n++; return n; });
+            for (var i = 0; i < 2000; i++) api.InputWrite(module, Text, 1, $"s{i}");
+            var got = reader.Result;
+            run.Stop();
+
+            process.Refresh();
+
+            // What the boundary output kept and what it dropped: it keeps the newest
+            // Messages, so that a User Agent that does not read cannot stall the Module.
+            // The counts are read when the loop has settled: the last Message may
+            // still be on its way when the reader stops waiting.
+            System.Text.RegularExpressions.Match Boundary() => System.Text.RegularExpressions.Regex.Match(string.Join(" | ", api.ChannelAccounts(module)),
+                @"\(boundary\)\.TST-TXT-V1\.0#1: taken (\d+), dropped (\d+), discarded \d+, pending (\d+)");
+            long Sum(System.Text.RegularExpressions.Match m) => long.Parse(m.Groups[1].Value) + long.Parse(m.Groups[2].Value) + long.Parse(m.Groups[3].Value);
+            var settle = System.Diagnostics.Stopwatch.StartNew();
+            while (Sum(Boundary()) < 2520 && settle.ElapsedMilliseconds < 5000) Thread.Sleep(20);
+            var boundary = System.Text.RegularExpressions.Regex.Match(string.Join(" | ", api.ChannelAccounts(module)),
+                @"\(boundary\)\.TST-TXT-V1\.0#1: taken (\d+), dropped (\d+), discarded \d+, pending (\d+)");
+            var taken = long.Parse(boundary.Groups[1].Value);
+            var dropped = long.Parse(boundary.Groups[2].Value);
+            var pending = long.Parse(boundary.Groups[3].Value);
+            report[transport] = new
+            {
+                RoundTripMs = new { Median = latencies[latencies.Count / 2], P95 = latencies[(int)(latencies.Count * 0.95)], Max = latencies[^1] },
+                Throughput = new { Written = 2000, Read = got, DroppedAtTheBoundary = dropped, PendingAtTheEnd = pending, Seconds = run.Elapsed.TotalSeconds, WrittenPerSecond = 2000 / run.Elapsed.TotalSeconds },
+                CpuMs = (process.TotalProcessorTime - cpu0).TotalMilliseconds,
+                MemoryKiB = (GC.GetTotalMemory(false) - memory0) / 1024,
+                Accounts = api.ChannelAccounts(module)
+            };
+            api.StopFlow(module);
+            Assert.True(20 + 500 + 2000 == taken + dropped + pending,        // every output read, dropped or pending
+                        $"{transport}: {taken + dropped + pending} of 2520 accounted for: " + string.Join(" | ", ((dynamic)report[transport]).Accounts));
+        }
+
+        var path = Path.Combine(Repository.Root, "Test", "Reports", "continuous-transports.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+    }
+
     // Each test Module: whether it starts, and what one exchange on it returns.
     [Fact]
     public void Today()

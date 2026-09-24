@@ -43,6 +43,15 @@ public sealed class RuntimePort
 
     public bool IsRemote { get; init; }
 
+    // M3205 3.6.2, 3.6.3 (Phase 2 fields, acted upon from Phase 4). On an Input
+    // Port: Depth, Overflow, MaxAge (ms), the transports it accepts; on an Output
+    // Port: the transport of the Channel it writes. Null where not declared.
+    public int?    Depth    { get; init; }
+    public string? Overflow { get; init; }
+    public double? MaxAge   { get; init; }
+    public string? Transport { get; init; }
+    public IReadOnlyList<string>? AcceptedTransports { get; init; }
+
     // 1-based ordinal among this AIM's ports of the SAME Direction and
     // DataType, as declared in the AMD. Null when the AMD omitted it, which
     // per AIMMetadata V3.0 means 1.

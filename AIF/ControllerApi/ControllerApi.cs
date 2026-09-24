@@ -129,6 +129,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // (Phase 4) may have to.
     public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
+        Started? continuous = null;
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started) || started.Stopped) return AifError.NotStarted;
@@ -137,9 +138,17 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             if (port is null) return AifError.NoSuchPort;
             if (HeaderOf(json) is { } header && !port.Accepts(header)) return AifError.TypeNotAccepted;
 
-            started.Written[Key(dataType, portNumber)] = json;
-            return AifError.OK;
+            if (_ua.IsContinuous(started.Id)) continuous = started;
+            else
+            {
+                started.Written[Key(dataType, portNumber)] = json;
+                return AifError.OK;
+            }
         }
+
+        // A Continuous Module: onto its boundary Channel, under its Port's
+        // behaviour, within the timeout - outside the table's lock.
+        return _ua.ContinuousWriteAsync(continuous.Id, dataType, portNumber, json, timeoutMs).GetAwaiter().GetResult();
     }
 
     // MPAI_AIFU_MODULE_Output_Read. Collects the datum of a boundary output Port.
@@ -150,11 +159,21 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     public Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
     {
         Task<Result>? run;
+        int? continuous = null;
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started)) return new Read(AifError.NotStarted, null);
             if (PortOf(started, "Output", dataType, portNumber) is null) return new Read(AifError.NoSuchPort, null);
-            run = RunIfWritten(moduleName, started);
+            if (_ua.IsContinuous(started.Id)) { continuous = started.Id; run = null; }
+            else run = RunIfWritten(moduleName, started);
+        }
+
+        // A Continuous Module: the oldest Message pending, within the timeout;
+        // NOT_PRODUCED when none was (M3203 3.3).
+        if (continuous is int id)
+        {
+            var (error, pending) = _ua.ContinuousReadAsync(id, dataType, portNumber, timeoutMs).GetAwaiter().GetResult();
+            return new Read(error, pending);
         }
 
         if (run is null) return new Read(AifError.NotProduced, null);
@@ -203,6 +222,17 @@ public sealed class ControllerApi : IControllerApi, IDisposable
                 : AifError.NotStarted;
     }
 
+    // What each Channel of a Continuous Module carried (M3215 3.8).
+    public IReadOnlyList<string> ChannelAccounts(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.ChannelAccounts(started.Id) : Array.Empty<string>();
+    }
+
+    // The Controller's transports and the one a Channel uses when its Output Port
+    // declares none (M3215 3.1).
+    public UserAgent Controller => _ua;
+
     public AifError SharedStorageInit(string moduleName, string location)
     {
         lock (_tables)
@@ -223,6 +253,26 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             var e = StartFlow(moduleName);
             if (e != AifError.OK) return new Result(e, Array.Empty<Datum>());
+        }
+
+        // A Continuous Module: the inputs written, and what is pending at its
+        // boundary outputs now, one Message of each; nothing waits for more.
+        int? continuousId = null;
+        lock (_tables)
+            if (_running.TryGetValue(moduleName, out var s) && _ua.IsContinuous(s.Id)) continuousId = s.Id;
+        if (continuousId is int cid)
+        {
+            foreach (var d in inputs)
+                _ua.ContinuousWriteAsync(cid, d.DataType, d.PortNumber, d.Json, -1).GetAwaiter().GetResult();
+            var pending = new List<Datum>();
+            foreach (var port in (_ua.BoundaryPorts(cid) ?? Array.Empty<RuntimePort>()).Where(p => p.Direction == "Output"))
+            {
+                var number = port.PortNumber ?? 1;
+                var (error, json) = _ua.ContinuousReadAsync(cid, port.DataType, number, 0).GetAwaiter().GetResult();
+                if (error == AifError.OK && json is not null) pending.Add(new Datum(port.DataType, number, json));
+            }
+            if (ephemeral) StopFlow(moduleName);
+            return new Result(AifError.OK, pending);
         }
 
         Task<Result>? run;

@@ -10,6 +10,8 @@ internal sealed class ChannelCore
     private readonly IClock clock;
     private long sequence;
 
+    public long Written => Interlocked.Read(ref sequence);
+
     public ChannelCore(ChannelSpec spec, IClock clock)
     {
         Spec = spec;
@@ -57,6 +59,7 @@ internal sealed class ReaderEnd : IChannelReader
     public bool TryRead(out PortMessage? message) => queue.TryTake(out message);
     public Task WaitAsync(CancellationToken cancel = default) => queue.Arrival().WaitAsync(cancel);
     public int  Pending   => queue.Pending;
+    public long Taken     => Interlocked.Read(ref queue.Taken);
     public long Dropped   => Interlocked.Read(ref queue.Dropped);
     public long Discarded => Interlocked.Read(ref queue.Discarded);
 }
@@ -108,6 +111,7 @@ public sealed class InProcessTransport : ChannelTransport
     private sealed class Writer(ChannelCore core) : IChannelWriter
     {
         public ChannelSpec Spec => core.Spec;
+        public long Written => core.Written;
 
         public ValueTask<bool> WriteAsync(PortMessage message, int timeoutMs = -1, CancellationToken cancel = default)
         {
@@ -144,6 +148,7 @@ public sealed class ControllerTransport : ChannelTransport
     private sealed class Writer(Relay relay, ChannelCore core) : IChannelWriter
     {
         public ChannelSpec Spec => core.Spec;
+        public long Written => core.Written;
 
         public async ValueTask<bool> WriteAsync(PortMessage message, int timeoutMs = -1, CancellationToken cancel = default)
         {

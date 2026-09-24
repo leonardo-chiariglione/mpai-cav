@@ -49,6 +49,20 @@ public sealed class DescriptorNode
     public string OnDegraded { get; set; } =
         "StopModule";
 
+    // How the Controller executes this composite: Exchange, the default, or
+    // Continuous (M3205 Section 5).
+    public string Execution { get; set; } =
+        "Exchange";
+
+    public bool IsContinuous =>
+        Execution == "Continuous";
+
+    // How many times this AIM is started again when it throws (M3215 3.3), and its
+    // Period and Deadline in milliseconds (3.5); null where not declared.
+    public int     RestartLimit { get; set; }
+    public double? Period       { get; set; }
+    public double? Deadline     { get; set; }
+
     public List<TopologyConnection> Connections { get; } =
         new();
 

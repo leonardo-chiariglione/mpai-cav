@@ -122,7 +122,16 @@ public sealed class Controller
                     // M3194 Number 4 (Input) and Number 3 (Output). Both optional
                     // in the AMD; absent means the Port takes part in neither.
                     InputGroup  = IntOf(port, "Input"),
-                    OutputGroup = IntOf(port, "Output")
+                    OutputGroup = IntOf(port, "Output"),
+
+                    Depth     = IntOf(port, "Depth"),
+                    Overflow  = TextOf(port, "Overflow"),
+                    MaxAge    = NumberOf(port, "MaxAge"),
+                    Transport = TextOf(port, "Transport"),
+                    AcceptedTransports =
+                        port.TryGetProperty("AcceptedTransports", out var accepted) && accepted.ValueKind == JsonValueKind.Array
+                            ? accepted.EnumerateArray().Select(a => a.GetString() ?? "").ToList()
+                            : null
                 });
             }
         }
@@ -161,6 +170,20 @@ public sealed class Controller
 
         if (root.TryGetProperty("OnDegraded", out var onDegraded) && onDegraded.ValueKind == JsonValueKind.String)
             node.OnDegraded = onDegraded.GetString() ?? node.OnDegraded;
+        node.Execution    = TextOf(root, "Execution") ?? node.Execution;
+        node.RestartLimit = IntOf(root, "RestartLimit") ?? 0;
+        node.Period       = NumberOf(root, "Period");
+        node.Deadline     = NumberOf(root, "Deadline");
+
+        static string? TextOf(JsonElement element, string property) =>
+            element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+
+        static double? NumberOf(JsonElement element, string property) =>
+            element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.Number
+                ? value.GetDouble()
+                : null;
 
         // InternalTypes  (InternalType name -> DataType)
         if (root.TryGetProperty("InternalTypes", out var internalTypes))

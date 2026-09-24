@@ -79,6 +79,9 @@ public interface IChannelWriter
     // False when the write could not complete within timeoutMs (0: do not wait;
     // negative: wait without limit) - a reader Block-ing and full.
     ValueTask<bool> WriteAsync(PortMessage message, int timeoutMs = -1, CancellationToken cancel = default);
+
+    // How many Messages were written on the Channel.
+    long Written { get; }
 }
 
 public interface IChannelReader
@@ -96,6 +99,7 @@ public interface IChannelReader
     Task WaitAsync(CancellationToken cancel = default);
 
     int  Pending   { get; }
+    long Taken     { get; }   // read
     long Dropped   { get; }   // lost by Overflow
     long Discarded { get; }   // older than MaxAge
 }

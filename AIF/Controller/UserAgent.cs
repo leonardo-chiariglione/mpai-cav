@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using AIF.Channels;
 using AIF.Store;
 
 namespace AIF.Controller;
@@ -50,6 +51,19 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
+    // THE TRANSPORTS OF THIS CONTROLLER (M3205 3.6.2, M3215 3.1): Controller, which
+    // relays and can observe, and InProcess. The Channels of a Module use the one
+    // its Output Ports declare, DefaultTransport where they declare none.
+    public ControllerTransport ControllerTransport { get; } = new();
+    public InProcessTransport  InProcessTransport  { get; } = new();
+    public string DefaultTransport { get; set; } = "Controller";
+
+    private IReadOnlyDictionary<string, IChannelTransport> Transports => new Dictionary<string, IChannelTransport>
+    {
+        [ControllerTransport.Name] = ControllerTransport,
+        [InProcessTransport.Name]  = InProcessTransport
+    };
+
     // MPAI_AIFU_SharedStorage_Init(MODULE_ID, location) (M3203 3.4.1): the scope
     // of one Module is held at location. Its AIMs' handles follow at their next
     // call. The User Agent says where, and nothing about who writes.
@@ -68,6 +82,10 @@ public sealed class UserAgent
         public required DescriptorGraph Graph       { get; init; }
         public required AimHost         Host        { get; init; }
         public required MachineExecutor Executor    { get; init; }
+
+        // The continuous executor, for a Module whose Metadata declares
+        // Execution: Continuous (M3215 3.3); null for an exchange.
+        public ContinuousExecutor? Continuous { get; init; }
 
         // Where the User Agent initialised this Module's Shared Storage; null,
         // the User Agent's root (MPAI_AIFU_SharedStorage_Init, M3203 3.4.1).
@@ -159,12 +177,20 @@ public sealed class UserAgent
             () => started?.StorageLocation ?? _sharedStorageRoot);
 
         moduleId = Interlocked.Increment(ref _nextModuleId);
+
+        // Every Module's Channels are planned, so that one whose reader does not
+        // accept its writer's transport refuses to load (M3215 3.1); a Continuous
+        // Module runs on them from now until Stop.
+        var channels = new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport);
+        if (graph.Root.IsContinuous) channels.Start();
+
         _running[moduleId] = started = new RunningModule
         {
-            Name     = name,
-            Graph    = graph,
-            Host     = host,
-            Executor = new MachineExecutor(host)
+            Name       = name,
+            Graph      = graph,
+            Host       = host,
+            Executor   = new MachineExecutor(host),
+            Continuous = graph.Root.IsContinuous ? channels : null
         };
         return AifError.OK;
     }
@@ -190,6 +216,7 @@ public sealed class UserAgent
     public AifError MPAI_AIFU_MODULE_Stop(int moduleId)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        module.Continuous?.StopAsync().GetAwaiter().GetResult();
         module.Host.Dispose();
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
@@ -228,6 +255,28 @@ public sealed class UserAgent
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         return module.Host.StopAim(name, "stopped by the User Agent") ? AifError.OK : AifError.NotFound;
     }
+
+    // A Continuous Module's boundary (M3215 3.3): a write under its Port's
+    // behaviour, a read of the oldest Message pending, each within its timeout.
+    public bool IsContinuous(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is not null;
+
+    public async Task<AifError> ContinuousWriteAsync(int moduleId, string dataType, int portNumber, string json, int timeoutMs)
+    {
+        if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return AifError.NotStarted;
+        return await module.Continuous.WriteBoundaryAsync(dataType, portNumber, json, timeoutMs);
+    }
+
+    public async Task<(AifError, string?)> ContinuousReadAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
+    {
+        if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null);
+        return await module.Continuous.ReadBoundaryAsync(dataType, portNumber, timeoutMs);
+    }
+
+    // What each Channel of a Continuous Module carried.
+    public IReadOnlyList<string> ChannelAccounts(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is not null
+            ? module.Continuous.Accounts() : Array.Empty<string>();
 
     // True when the Module's own policy stopped it (OnDegraded StopModule).
     public bool ModuleStopped(int moduleId) =>

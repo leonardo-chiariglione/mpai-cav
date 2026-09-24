@@ -1,0 +1,7 @@
+{
+  "(boundary).TST-TXT-V1.0#1": "Controller: 1TST-RDB-V1.0-I01.TST-TXT-V1.0#1 Block Depth 2; 1TST-RDO-V1.0-I01.TST-TXT-V1.0#1 DropOldest Depth 2; 1TST-RDN-V1.0-I01.TST-TXT-V1.0#1 DropNewest Depth 2; 1TST-RDA-V1.0-I01.TST-TXT-V1.0#1 Block Depth 16 MaxAge 100 ms",
+  "1TST-RDA-V1.0-I01.TST-TXT-V1.0#1": "Controller: (boundary).TST-TXT-V1.0#4 DropOldest Depth 16",
+  "1TST-RDB-V1.0-I01.TST-TXT-V1.0#1": "Controller: (boundary).TST-TXT-V1.0#1 DropOldest Depth 16",
+  "1TST-RDN-V1.0-I01.TST-TXT-V1.0#1": "Controller: (boundary).TST-TXT-V1.0#3 DropOldest Depth 16",
+  "1TST-RDO-V1.0-I01.TST-TXT-V1.0#1": "Controller: (boundary).TST-TXT-V1.0#2 DropOldest Depth 16"
+}
