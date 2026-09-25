@@ -1,0 +1,31 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/CAV2/V1.1/data/FullEnvironmentDescriptors.json",
+  "title":                              "Full Environment Descriptors V1.1",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "FullEnvironmentDescriptorsID", "FullEnvironmentDescriptorsSpaceTime" ],
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "CAV-FED-V1.1",
+                                          "description": "Full Environment Descriptors Header – Standard CAV-FED-Vx.y" },
+    "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Full Environment Descriptors instance." },
+    "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Full Environment Descriptors instance." },
+    "FullEnvironmentDescriptorsID":     { "type": "string", "description": "Unique identifier of this Full Environment Descriptors instance." },
+    "FullEnvironmentDescriptorsTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Full Environment Descriptors instance was produced." },
+
+    "FullEnvironmentDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Full Environment Descriptors instance applies." },
+
+    "AudioVisualSceneDescriptors":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json",
+                                          "description": "Audio-Visual Scene Descriptors representing the CAV's perception of the Environment." },
+    "SpatialAttitude":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
+                                          "description": "CAV Spatial Attitude derived from GNSS and Spatial Data." },
+    "WeatherData":                      { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/WeatherData.json",
+                                          "description": "Weather information integrated into the Scene Description." },
+    "RoadState":                        { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/RoadState.json",
+                                          "description": "Road State information integrated into the Scene." },
+    "CAVState":                         { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/CAVState.json",
+                                          "description": "CAV State information integrated into the Scene." },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                          "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Full Environment Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Full Environment Descriptors instance (plain text, max 2048 characters)." } } }

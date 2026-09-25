@@ -1,0 +1,99 @@
+{
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Basic Audio Scene Descriptors V1.5",
+  "type": "object",
+  "required": [
+    "Header",
+    "MInstanceID",
+    "BasicAudioSceneDescriptorsID",
+    "BASSpaceTime",
+    "AudioObjectCount",
+    "BasicAudioSceneDescriptorsData",
+    "ListenerPointOfView"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-BAS-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string"
+    },
+    "UEnvironmentID": {
+      "type": "string"
+    },
+    "BasicAudioSceneDescriptorsID": {
+      "type": "string"
+    },
+    "BasicAudioSceneDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "ParentBASID": {
+      "type": "string"
+    },
+    "BASSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "ListenerPointOfView": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+    },
+    "GravityValue": {
+      "type": "number"
+    },
+    "AudioObjectCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "AcousticProfile": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json"
+    },
+    "BasicAudioSceneDescriptorsData": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "AObjectIDOrAObject",
+          "PointOfView"
+        ],
+        "properties": {
+          "AudioObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          },
+          "AObjectIDOrAObject": {
+            "$ref": "#/$defs/ObjectIDOrObject"
+          },
+          "PointOfView": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+          }
+        }
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "$defs": {
+    "ObjectIDOrObject": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    }
+  }
+}

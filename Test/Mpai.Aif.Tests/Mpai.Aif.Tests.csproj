@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\UserAgent\Rca\Mpai.Rca.csproj" />
     <ProjectReference Include="..\..\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\CAV\Recordings\Mpai.Cav.Recordings.csproj" />
   </ItemGroup>
 
   <ItemGroup>

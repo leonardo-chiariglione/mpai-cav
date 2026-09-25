@@ -1,0 +1,47 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/OSD/V1.5/data/VisualSceneDescriptors.json",
+  "title":                        "Visual Scene Descriptors V1.5",
+  "description":                  "A Data Type including the Visual Objects of a scene, their Sub-Scenes, and their arrangement in the Scene.",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "VisualDescriptorsID", "VisualDescriptorsSpaceTime" ],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "OSD-VSD-V1.5", "description": "Visual Scene Descriptors Header â€“ Standard OSD-VSD-Vx.y." },
+    "MInstanceID":                { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":             { "type": "string", "description": "Identifier of the U-Environment." },
+    "VisualDescriptorsID":        { "type": "string", "description": "ID of this Visual Scene Descriptors instance." },
+    "VisualDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space and Time of this Visual Scene Descriptors instance." },
+
+    "ViewerPointOfView":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Point of View of the Viewer." },
+
+    "ObjectCount":                { "type": "integer", "description": "Number of Visual Objects in Visual Scene." },
+    "Objects":                    { "type": "array", "description": "Set of Data related to Visual Objects in the Visual Scene.",
+                                    "items": { "type": "object", "additionalProperties": false, "properties": {
+      "ObjectSpaceTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Visual Object in the Visual Scene." },
+      "ObjectIDOrObject":         { "$ref": "#/$defs/ObjectIDOrObject", "description": "Visual Object in the Scene." } } } },
+
+    "SubVisualCount":             { "type": "integer", "description": "Number of Visual Sub-Scenes in Visual Scene." },
+    "SubVisuals":                 { "type": "array", "description": "Set of Data related to Visual Sub-Scenes in the Scene.",
+                                    "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubVisualSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Visual Sub-Scene in the Scene." },
+      "SubVSceneIDOrSubVScene":   { "$ref": "#/$defs/SubVSceneIDOrSubVScene", "description": "A Visual Sub-Scene in the Scene." } } } },
+
+    "BVSceneOrVScene":            { "$ref": "#/$defs/BVSceneOrVScene" },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Visual Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Visual Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                        {
+
+    "ObjectIDOrObject":           { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json" },
+                                  { "type": "string" } ] } },
+
+    "SubVSceneIDOrSubVScene":     { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualSceneDescriptors.json" },
+                                  { "type": "string" } ] } },
+
+    "BVSceneOrVScene":            { "type": "array", "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json" },
+                                  { "$ref": "#/$defs/BVSceneOrVScene" } ] } } } }

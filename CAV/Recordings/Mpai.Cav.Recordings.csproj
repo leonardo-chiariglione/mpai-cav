@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The recorded data of the Connected Autonomous Vehicle (M3219 3.6): drives made
+       synthetically from a seed, where no sensor data exists, for the Environment
+       Sensing Subsystem to be run on. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
+  </ItemGroup>
+
+</Project>

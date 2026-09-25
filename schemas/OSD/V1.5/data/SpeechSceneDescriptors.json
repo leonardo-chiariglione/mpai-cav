@@ -1,0 +1,47 @@
+{ "$schema":                              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                  "https://schemas.mpai.community/OSD/V1.5/data/SpeechSceneDescriptors.json",
+  "title":                                "Speech Scene Descriptors V1.5",
+  "description":                          "A Data Type including the Speech Objects of a scene, their Sub-Scenes, and their arrangement in the Scene.",
+  "type":                                 "object",
+  "additionalProperties":                 false,
+  "required":                             [ "Header", "SpeechSceneDescriptorsID", "SpeechSceneDescriptorsSpaceTime" ],
+  "properties":                           {
+
+    "Header":                             { "type": "string", "const": "OSD-SSD-V1.5", "description": "Speech Scene Descriptors Header â€“ Standard OSD-SSD-Vx.y." },
+    "MInstanceID":                        { "type": "string", "description": "Identifier of the M-Instance." },
+    "EnvironmentID":                      { "type": "string", "description": "Identifier of the U-Environment." },
+    "SpeechSceneDescriptorsID":           { "type": "string", "description": "ID of this Speech Scene Descriptors instance." },
+    "SpeechSceneDescriptorsSpaceTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Speech Scene Descriptors instance." },
+
+    "ObjectCount":                        { "type": "integer", "description": "Number of Speech Objects in Speech Scene." },
+    "Objects":                            { "type": "array", "description": "Set of Data related to Speech Objects in the Speech Scene.",
+                                            "items": { "type": "object",
+                                            "additionalProperties": false, "properties": {
+      "ObjectSpaceTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Speech Object in the Speech Scene." },
+      "ObjectIDOrObject":                 { "$ref": "#/$defs/ObjectIDOrObject", "description": "Basic Speech Object in the Scene." } } } },
+
+    "SubSpeechSceneCount":                { "type": "integer", "description": "Number of Speech Sub-Scenes in Speech Scene." },
+    "SubSpeechScenes":                    { "type": "array", "description": "Set of Data related to Speech Sub-Scenes in the Scene.",
+                                            "items": { "type": "object",
+                                            "additionalProperties": false, "properties": {
+      "SubSpeechSceneSpaceTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Speech Object in the Scene." },
+      "SubSSceneIDOrSubSScene":           { "$ref": "#/$defs/SubSSceneIDOrSubSScene" } } } },
+
+    "BSSceneOrSScene":                    { "$ref": "#/$defs/BSSceneOrSScene" },
+
+    "DataXMData":                         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Speech Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":                      { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Speech Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                                {
+
+    "ObjectIDOrObject":                   { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
+                                          { "type": "string" } ] } },
+
+    "SubSSceneIDOrSubSScene":             { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechSceneDescriptors.json" },
+                                          { "type": "string" } ] } },
+
+    "BSSceneOrSScene":                    { "type": "array", "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechSceneDescriptors.json" },
+                                          { "$ref": "#/$defs/BSSceneOrSScene" } ] } } } }

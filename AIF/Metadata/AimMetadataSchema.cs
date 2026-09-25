@@ -17,10 +17,6 @@ namespace AIF.Metadata;
 // properties did not match" of each enclosing object.
 public sealed class AimMetadataSchema
 {
-    private static readonly object Registering = new();
-    private static string? loadedFrom;
-    private static Dictionary<string, JsonSchema>? loaded;
-
     private readonly JsonSchema schema;
 
     private AimMetadataSchema(JsonSchema schema) => this.schema = schema;
@@ -33,31 +29,9 @@ public sealed class AimMetadataSchema
     {
         var root = Path.GetFullPath(schemasRoot);
         var main = Path.Combine(root, "AIF", "V3.0", "data", "AIMMetadata.json");
-        lock (Registering)
-        {
-            if (loaded is null)
-            {
-                loaded = new Dictionary<string, JsonSchema>(StringComparer.OrdinalIgnoreCase);
-                loadedFrom = root;
-                foreach (var file in Directory.EnumerateFiles(root, "*.json", SearchOption.AllDirectories))
-                {
-                    try
-                    {
-                        var s = JsonSchema.FromFile(file);
-                        loaded[Path.GetFullPath(file)] = s;
-                        if (s.BaseUri is { } id) SchemaRegistry.Global.Register(id, s);
-                    }
-                    catch { /* a file that is not a schema, or not valid: its own check will say so */ }
-                }
-            }
-            else if (!string.Equals(loadedFrom, root, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException(
-                    $"The schemas of {loadedFrom} are loaded; one process checks against one schemas folder, not also {root}.");
-
-            return loaded.TryGetValue(main, out var schema)
-                ? new AimMetadataSchema(schema)
-                : throw new InvalidOperationException("The AIM Metadata schema could not be built: " + main);
-        }
+        return PublishedSchemas.At(root).TryGetValue(main, out var schema)
+            ? new AimMetadataSchema(schema)
+            : throw new InvalidOperationException("The AIM Metadata schema could not be built: " + main);
     }
 
     // What is wrong with this AIM Metadata; none when it validates.
@@ -68,7 +42,7 @@ public sealed class AimMetadataSchema
         // once corrupt it. A Store checking two submissions together, or two tests,
         // would fail at random.
         EvaluationResults evaluation;
-        lock (Registering)
+        lock (PublishedSchemas.Lock)
             evaluation = schema.Evaluate(aim, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
         if (evaluation.IsValid) return [];
         var found = new SortedSet<string>(StringComparer.Ordinal);

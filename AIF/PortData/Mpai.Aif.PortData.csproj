@@ -12,6 +12,7 @@
        Controller, no AIMs, no application. This library knows Data Types. -->
   <ItemGroup>
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\Metadata\AIF.Metadata.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JsonSchema.Net" Version="9.4.0" />

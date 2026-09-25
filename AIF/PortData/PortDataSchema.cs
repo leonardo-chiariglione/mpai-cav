@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -45,8 +46,37 @@ public static class PortDataSchema
         ["OSD-STM-V1.5"] = "OSD/V1.5/data/SimpleTime.json",
         ["OSD-SEL-V1.5"] = "OSD/V1.5/data/Selector.json",
         ["MMC-SUM-V2.5"] = "MMC/V2.5/data/Summary.json",
-        ["PAF-FDO-V1.6"] = "PAF/V1.6/data/FaceDescriptorsObject.json"
+        ["PAF-FDO-V1.6"] = "PAF/V1.6/data/FaceDescriptorsObject.json",
+
+        // The Data Types of the Environment Sensing Subsystem (M3219 3.6).
+        ["OSD-OSA-V1.5"] = "OSD/V1.5/data/SpatialAttitude.json",
+        ["CAV-GNO-V1.1"] = "CAV2/V1.1/data/GNSSObject.json",
+        ["CAV-WDT-V1.1"] = "CAV2/V1.1/data/WeatherData.json",
+        ["CAV-FED-V1.1"] = "CAV2/V1.1/data/FullEnvironmentDescriptors.json",
+        ["CAV-BED-V1.1"] = "CAV2/V1.1/data/BasicEnvironmentDescriptors.json",
+        ["CAV-ALT-V1.1"] = "CAV2/V1.1/data/Alert.json"
     };
+
+    // ONE EVALUATION AT A TIME, under the lock of the published schemas: the
+    // library resolves references into a registry the process shares.
+    private static object Evaluating => AIF.Metadata.PublishedSchemas.Lock;
+
+    // What is wrong with an instance of a Data Type against its schema; none
+    // when it validates. Null where no schema is known for the Data Type.
+    public static IReadOnlyList<string>? Violations(string dataType, string json)
+    {
+        lock (Evaluating)
+        {
+            var schema = SchemaFor(dataType);
+            if (schema is null) return null;
+            using var document = JsonDocument.Parse(json);
+            var result = schema.Evaluate(document.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
+            if (result.IsValid) return [];
+            var said = new StringBuilder();
+            Describe(result, said, 0);
+            return said.ToString().Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        }
+    }
 
     private static readonly ConcurrentDictionary<string, JsonSchema?> Loaded = new();
 
@@ -93,10 +123,12 @@ public static class PortDataSchema
         try
         {
             using var document = JsonDocument.Parse(wire);
-            var result   = schema.Evaluate(document.RootElement, new EvaluationOptions
-            {
-                OutputFormat = OutputFormat.List
-            });
+            EvaluationResults result;
+            lock (Evaluating)
+                result = schema.Evaluate(document.RootElement, new EvaluationOptions
+                {
+                    OutputFormat = OutputFormat.List
+                });
 
             if (result.IsValid) return;
 
@@ -117,6 +149,7 @@ public static class PortDataSchema
         if (r.Errors is not null)
             foreach (var e in r.Errors)
                 into.Append(' ').Append(r.InstanceLocation).Append(' ').Append(e.Value).Append(';');
+        if (r.Details is null) return;
         foreach (var child in r.Details)
             if (!child.IsValid) Describe(child, into, depth + 1);
     }
@@ -125,22 +158,7 @@ public static class PortDataSchema
         Loaded.GetOrAdd(dataType, dt =>
         {
             if (Root is null || !Files.TryGetValue(dt, out var relative)) return null;
-
-            var path = Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar));
-            if (!File.Exists(path)) return null;
-
-            // Register every published schema under its absolute $id, so that the
-            // $refs between them resolve without reaching the network.
-            foreach (var file in Directory.EnumerateFiles(Root!, "*.json", SearchOption.AllDirectories))
-            {
-                try
-                {
-                    var s = JsonSchema.FromFile(file);
-                    if (s.BaseUri is { } id) SchemaRegistry.Global.Register(id, s);
-                }
-                catch { /* a schema that will not parse is a separate fault */ }
-            }
-
-            try { return JsonSchema.FromFile(path); } catch { return null; }
+            var path = Path.GetFullPath(Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar)));
+            return AIF.Metadata.PublishedSchemas.At(Root).GetValueOrDefault(path);
         });
 }
