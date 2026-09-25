@@ -5,8 +5,7 @@
   "additionalProperties":   false,
   "properties":             {
 
-    "DataClass":              { "type": "string", "enum": [ "BehaviouralSignal", "ClinicalRecord", "MedicalImaging",
-                                "NeurophysiologicalSignal", "Omics", "PhysiologicalSignal" ] },
+    "DataClass":              { "type": "string", "description": "The Data Type of an AIH Data Object, by its identifier.", "enum": [ "AIH-BSO", "AIH-CRO", "AIH-ECO", "AIH-EEO", "AIH-EHO", "AIH-MDI", "AIH-NSO", "AIH-GOM", "AIH-PSO" ] },
 
     "DataUser":               { "type": "string", "enum": [ "End User", "Non-Profit Entity", "Profit Entity", "Clinical Entity",
                                 "Authorised Entity", "Caregiver" ] },
@@ -16,10 +15,7 @@
     "DataUsage":              { "type": "string", "enum": [ "Unrestricted", "Pseudonymised", "Anonymised", "Research", "Patient Use",
                                 "Health Care" ] },
 
-    "DataProcessTechnique":   { "type": "string", "enum": [ "DeID&AnonymAlgorithms", "Data Masking",
-                                "Data Aggregation", "Generalisation", "Perturbation", "Tokenisation", "Hashing",
-                                "Removal of Identifiers", "K-Anonymity", "L-Diversity", "Differential Privacy",
-                                "Synthetic Data Generation", "Homomorphic Encryption" ] },
+    "DataProcessTechnique":   { "type": "string", "enum": [ "Data Masking", "Data Aggregation", "Generalisation", "Perturbation", "Tokenisation", "Hashing", "Removal of Identifiers", "K-Anonymity", "L-Diversity", "Differential Privacy", "Synthetic Data Generation", "Homomorphic Encryption" ] },
 
     "DataAnomaly":            { "type": "string", "enum": [ "Point Anomaly", "Contextual Anomaly", "Collective Anomaly",
                                 "Medical Condition Anomaly" ] },

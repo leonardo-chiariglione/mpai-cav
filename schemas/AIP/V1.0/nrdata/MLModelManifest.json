@@ -9,7 +9,7 @@
     "Header":                 { "type": "string", "const": "AIP-MLM-V1.0" },
     "MInstanceID":            { "type": "string" },
     "MLModelManifestID":      { "type": "string" },
-    "MLModelManifestTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/nrdata/SimpleTime.json" },
+    "MLModelManifestTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
     "MLModelFunction":        { "type": "string" },
     "TrainingDataSetIDs":     { "type": "array", "items": { "type": "string" } },
