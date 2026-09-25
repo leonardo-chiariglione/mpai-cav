@@ -14,6 +14,7 @@ namespace Mpai.Aif.Tests;
 // the User Agent to read - at its request, or always, where the Metadata says so.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class RecordTests
 {
     private const string Text = StorageTests.Text;

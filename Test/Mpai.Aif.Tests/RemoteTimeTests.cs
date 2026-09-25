@@ -12,6 +12,7 @@ namespace Mpai.Aif.Tests;
 // compared with Controller and InProcess on the loop - reported, not judged.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class RemoteTimeTests
 {
     private const string Text = RemoteTests.Text;

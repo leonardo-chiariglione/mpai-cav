@@ -10,6 +10,7 @@ namespace Mpai.Aif.Tests;
 // changes the record as it changes the Controller.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class ContinuousTests
 {
     public const string Text = "TST-TXT-V1.0";

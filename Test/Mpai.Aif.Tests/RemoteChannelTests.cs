@@ -10,6 +10,7 @@ namespace Mpai.Aif.Tests;
 // wherever it is; the key; a link lost.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class RemoteChannelTests
 {
     private const string Text = "TST-TXT-V1.0";

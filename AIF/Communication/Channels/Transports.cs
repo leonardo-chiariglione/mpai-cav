@@ -16,26 +16,45 @@ internal sealed class ChannelCore
     private readonly RemoteDelivery? remote;
     private readonly Action<ChannelSpec, PortEnd, PortMessage>? delivered;
     private readonly IClock clock;
+    private readonly Func<Action<ChannelSpec, PortMessage>?> stamped;
     private long sequence;
 
     public long Written => Interlocked.Read(ref sequence);
 
     public ChannelCore(ChannelSpec spec, IClock clock, Action<ChannelSpec, PortMessage>? lost,
                        Func<PortEnd, bool>? isHere = null, RemoteDelivery? remote = null,
-                       Action<ChannelSpec, PortEnd, PortMessage>? delivered = null)
+                       Action<ChannelSpec, PortEnd, PortMessage>? delivered = null,
+                       Func<Action<ChannelSpec, PortMessage>?>? stamped = null)
     {
         Spec = spec;
         this.clock = clock;
         this.remote = remote;
         this.delivered = delivered;
+        this.stamped = stamped ?? (() => null);
         var here = isHere ?? (_ => true);
         Readers = spec.Readers.Where(r => here(r.Reader)).ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock,
             lost is null ? null : message => lost(spec, message)));
         elsewhere = spec.Readers.Where(r => !here(r.Reader)).Select(r => r.Reader).ToList();
     }
 
-    // The writer's end stamps the Message; the writer supplies no stamp.
+    // The writer's end stamps the Message; the writer supplies no stamp. Where
+    // something observes the stamping - the record of a boundary - the stamp and the
+    // observation are one step, under one lock for every Channel: whoever observes
+    // sees Messages in the order of their stamps. Taken apart, a Message stamped
+    // earlier on one thread could be observed after one stamped later on another,
+    // and a record's sequence went back in time.
     public void Stamp(PortMessage message)
+    {
+        if (stamped() is { } observe)
+            lock (StampOrder.Gate)
+            {
+                StampHere(message);
+                observe(Spec, message);
+            }
+        else StampHere(message);
+    }
+
+    private void StampHere(PortMessage message)
     {
         message.Stamp    = clock.Now;
         message.Written  = clock.Monotonic;
@@ -113,7 +132,7 @@ public abstract class ChannelTransport : IChannelTransport
     public abstract string Name { get; }
 
     internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote,
-                                                                                                   (s, r, m) => Delivered?.Invoke(s, r, m)));
+                                                                                                   (s, r, m) => Delivered?.Invoke(s, r, m), () => Stamped));
 
     internal ChannelCore? Core(string channelId) => channels.TryGetValue(channelId, out var core) ? core : null;
 
@@ -128,6 +147,10 @@ public abstract class ChannelTransport : IChannelTransport
     // Called with every Message put into a reader end on this machine: the place
     // to see what reaches a Module's boundary, whatever carried it (M3219 3.4).
     public Action<ChannelSpec, PortEnd, PortMessage>? Delivered { get; set; }
+
+    // Called with every Message stamped on this machine, as it is stamped and under
+    // the same lock (StampOrder): the place to record in the order of the stamps.
+    public Action<ChannelSpec, PortMessage>? Stamped { get; set; }
 
     public abstract IChannelWriter OpenWriter(ChannelSpec spec);
 
@@ -234,4 +257,11 @@ public sealed class ControllerTransport : ChannelTransport
             finally { one.Release(); }
         }
     }
+}
+
+// ONE ORDER FOR STAMPS AND WHAT OBSERVES THEM: the lock under which a Message is
+// stamped and observed, for every Channel of every transport of this process.
+public static class StampOrder
+{
+    public static readonly object Gate = new();
 }

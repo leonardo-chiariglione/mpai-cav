@@ -16,6 +16,7 @@ namespace Mpai.Aif.Tests;
 // boundary; the WDL has no stream.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class StorageTests
 {
     public const string Text = "TST-TXT-V1.0";

@@ -10,6 +10,7 @@ namespace Mpai.Aif.Tests;
 // killed during a run, under each OnDegraded.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class RemoteLifecycleTests
 {
     private const string Text = RemoteTests.Text;

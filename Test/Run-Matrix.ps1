@@ -46,6 +46,11 @@ $informative = [System.Collections.Generic.List[string]]::new()
 $failedBlocking = $false
 
 function Build([string]$project) {
+    # What a program writes to its error output is its output, not a failure of this
+    # script: under Stop, Windows PowerShell 5.1 turns each such line into a
+    # terminating error, and the run ended at the first failing test instead of
+    # reporting it.
+    $ErrorActionPreference = 'Continue'
     $out = & dotnet build (Join-Path $root $project) -nologo -v q 2>&1
     $errors = ($out | Select-String -Pattern '(\d+) Error\(s\)' | Select-Object -Last 1).Matches.Groups[1].Value
     return ($LASTEXITCODE -eq 0 -and $errors -eq '0')
@@ -61,6 +66,11 @@ foreach ($p in $informativeBuilds) {
 
 # Runs the tests a filter selects and returns one line per test, from the .trx report.
 function RunTests([string]$filter, [string]$name) {
+    # What a program writes to its error output is its output, not a failure of this
+    # script: under Stop, Windows PowerShell 5.1 turns each such line into a
+    # terminating error, and the run ended at the first failing test instead of
+    # reporting it.
+    $ErrorActionPreference = 'Continue'
     $trx = Join-Path $results "$name.trx"
     if (Test-Path $trx) { Remove-Item $trx -Confirm:$false }
     $project = Join-Path $root 'Test\Mpai.Aif.Tests\Mpai.Aif.Tests.csproj'

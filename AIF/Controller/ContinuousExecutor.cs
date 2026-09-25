@@ -63,14 +63,28 @@ public sealed partial class ContinuousExecutor
         Payloads = new PayloadStore(this.clock);
         Plan(defaultTransport);
 
-        // What reaches the boundary, whatever carried it, taken for the record.
+        // WHAT CROSSES THE BOUNDARY, TAKEN FOR THE RECORD AS IT IS STAMPED (M3219 3.4):
+        // a Message written at a boundary Input Port, and one written for a boundary
+        // Output Port, recorded in the one step that stamps it, so that the record's
+        // sequence is the order of the stamps. A Message stamped on another machine -
+        // written by an AIM on a host - is recorded as it reaches the boundary here.
         foreach (var transport in transports.Values.OfType<ChannelTransport>())
         {
+            var stampedBefore = transport.Stamped;
+            transport.Stamped = (spec, message) =>
+            {
+                stampedBefore?.Invoke(spec, message);
+                if (spec.Module != module || Record is not { } record) return;
+                if (spec.Writer.IsBoundary && message.RecordAsInput) record.Take("In", message);
+                foreach (var reader in spec.Readers.Where(r => r.Reader.IsBoundary))
+                    record.Take("Out", message, reader.Reader);
+            };
             var before = transport.Delivered;
             transport.Delivered = (spec, reader, message) =>
             {
                 before?.Invoke(spec, reader, message);
-                if (spec.Module == module && reader.IsBoundary) Record?.Take("Out", message, reader);
+                if (spec.Module == module && reader.IsBoundary && !this.runsHere(spec.Writer.Aim))
+                    Record?.Take("Out", message, reader);
             };
         }
     }
@@ -320,13 +334,14 @@ public sealed partial class ContinuousExecutor
     {
         if (!writers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return AifError.NoSuchPort;
         var all = true;
-        PortMessage? written = null;
+        var first = true;
         foreach (var end in ends)
         {
-            written = new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json) };
+            // Recorded once, as the first of its Channels stamps it.
+            var written = new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json), RecordAsInput = first };
+            first = false;
             all &= await end.WriteAsync(written, timeoutMs);
         }
-        if (all && written is not null) Record?.Take("In", written);
         return all ? AifError.OK : AifError.Timeout;
     }
 

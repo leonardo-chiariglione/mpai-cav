@@ -16,6 +16,7 @@ namespace Mpai.Aif.Tests;
 // same Module and recorded again, the two records hold the same data.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class PlaybackTests
 {
     private const string Text = StorageTests.Text;

@@ -44,6 +44,10 @@ public sealed class PortMessage
     public required string Json { get; init; }
     public IReadOnlyList<string> Payloads { get; init; } = Array.Empty<string>();
 
+    // The one Message of a boundary write that the record of the boundary takes, where
+    // the write goes to several Channels.
+    public bool RecordAsInput { get; init; }
+
     // Set by the writer's end.
     public DateTimeOffset Stamp { get; internal set; }
     public long Written { get; internal set; }          // monotonic, Stopwatch ticks

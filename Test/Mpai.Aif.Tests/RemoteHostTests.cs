@@ -9,6 +9,7 @@ namespace Mpai.Aif.Tests;
 // it, firing them, pausing, resuming and stopping them, asking their status.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class RemoteHostTests
 {
     private const string Text = "TST-TXT-V1.0";

@@ -6,6 +6,7 @@ namespace Mpai.Aif.Tests;
 // 3.2): each behaviour on each transport, recorded side by side.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class ChannelTests
 {
     private const string Text = "TST-TXT-V1.0";

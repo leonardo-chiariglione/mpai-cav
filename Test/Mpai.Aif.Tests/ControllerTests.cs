@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 using AIF.Controller;
 using AIF.Store;
@@ -14,6 +14,7 @@ namespace Mpai.Aif.Tests;
 // step changes the record as it changes the Controller.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class ControllerTests
 {
     public const string Text = "TST-TXT-V1.0";
