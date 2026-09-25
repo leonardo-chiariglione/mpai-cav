@@ -1,0 +1,7 @@
+{
+  "CAV-GNO-V1.1: received as the drive gave it": "yes, 41 of 41",
+  "OSD-BVO-V1.5: received as the drive gave it": "yes, 41 of 41",
+  "OSD-OSA-V1.5: received as the drive gave it": "yes, 201 of 201",
+  "Record_Stop": "CAV-GNO-V1.1 41; OSD-BVO-V1.5 41; OSD-OSA-V1.5 201",
+  "TST-SNK's last count": "OSD-BVO-V1.5:41 OSD-OSA-V1.5:201 CAV-GNO-V1.1:41 CAV-WDT-V1.1:0 CAV-FED-V1.1:0"
+}
