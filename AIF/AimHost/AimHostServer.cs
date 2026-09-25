@@ -21,12 +21,19 @@ public sealed class AimHostServer
     private readonly string storageRoot;
     private readonly ConcurrentDictionary<string, Hosted> modules = new();
 
-    // The AIMs of one Module instance held here, and their lifecycle.
+    // The AIMs of one Module instance held here, their lifecycle, the link to
+    // their Controller and - in a Continuous Module - what runs them.
     private sealed class Hosted
     {
         public required AimHost Host { get; init; }
+        public required RemoteLink Link { get; init; }
         public HashSet<string> Aims { get; } = new();
+        public ContinuousExecutor? Executor { get; set; }
     }
+
+    // The Channels of the Continuous Modules held here: an end of an AIM here is
+    // here; every other end - the boundary, AIMs elsewhere - is the Controller's.
+    private readonly RemoteTransport remote;
 
     public AimHostServer(AmdStore store, AimSettings settings, IAimProvider provider, string storageRoot)
     {
@@ -34,6 +41,8 @@ public sealed class AimHostServer
         this.settings = settings;
         this.provider = provider;
         this.storageRoot = storageRoot;
+        remote = new RemoteTransport((module, aim) =>
+            modules.TryGetValue(module, out var hosted) && !hosted.Aims.Contains(aim) ? hosted.Link : null);
     }
 
     // A Controller admitted: its requests served; its Module instances released
@@ -41,14 +50,14 @@ public sealed class AimHostServer
     public void Serve(RemoteLink link)
     {
         var mine = new ConcurrentBag<string>();
-        link.OnRequest = frame => HandleAsync(frame, mine);
+        link.OnRequest = frame => HandleAsync(frame, mine, link);
         link.Lost += _ =>
         {
             foreach (var module in mine) Release(module);
         };
     }
 
-    private async Task<JsonObject?> HandleAsync(JsonObject frame, ConcurrentBag<string> mine)
+    private async Task<JsonObject?> HandleAsync(JsonObject frame, ConcurrentBag<string> mine, RemoteLink link)
     {
         var module = frame["Module"]?.GetValue<string>() ?? "";
         switch (frame["Kind"]?.GetValue<string>())
@@ -59,7 +68,7 @@ public sealed class AimHostServer
                 var identifier = store.FindByAimName(aim);
                 if (identifier is null) return Refused($"this host holds no L3 of {aim}");
                 if (!provider.CanCreate(aim)) return Refused($"this host has no implementation of {aim}");
-                var hosted = modules.GetOrAdd(module, _ => { mine.Add(module); return new Hosted { Host = new AimHost() }; });
+                var hosted = modules.GetOrAdd(module, _ => { mine.Add(module); return new Hosted { Host = new AimHost(), Link = link }; });
                 if (!hosted.Aims.Add(aim)) return new JsonObject { ["Ok"] = true };   // placed already
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
                 var processor = provider.Create(aim, settings.For(aim),
@@ -101,9 +110,43 @@ public sealed class AimHostServer
                 }
             }
 
+            // A CONTINUOUS MODULE (M3217 3.2): its AIMs placed here run from now
+            // until Stop, on the Channels the Controller planned that touch them.
+            case "Start":
+            {
+                if (!modules.TryGetValue(module, out var hosted)) return Refused($"{module} holds nothing here");
+                if (hosted.Executor is not null) return new JsonObject { ["Ok"] = true };
+                var placed = new List<(DescriptorNode, string)>();
+                foreach (var entry in frame["Aims"]!.AsArray())
+                {
+                    var aim = entry!["Aim"]!.GetValue<string>();
+                    if (!hosted.Aims.Contains(aim)) return Refused($"{aim} is not placed here for {module}");
+                    var leaf = new global::AIF.Controller.Controller(store).RegisterAim(store.FindByAimName(aim)!).Root;
+                    placed.Add((leaf, entry["OnDegraded"]!.GetValue<string>()));
+                }
+                var executor = new ContinuousExecutor(placed, frame["Channels"]!.AsArray().Select(c => RemoteTransport.SpecOf(c!)), hosted.Host, remote, module)
+                {
+                    // An AIM DEGRADED here: its Controller applies the policy of the
+                    // composite that contains it.
+                    OnDegradedNotice = (aim, reason, policy) => _ = link.NoticeAsync(new JsonObject
+                    {
+                        ["Kind"] = "Degraded", ["Module"] = module, ["Aim"] = aim, ["Reason"] = reason, ["Policy"] = policy
+                    })
+                };
+                hosted.Executor = executor;
+                executor.Start();
+                Console.WriteLine($"[AIM host] {module}: {string.Join(", ", placed.Select(p => p.Item1.AIMName))} running");
+                return new JsonObject { ["Ok"] = true };
+            }
+
+            case "Message":
+                return await remote.ReceiveAsync(frame);
+
             case "Pause":  return Each(module, h => h.PauseModule());
             case "Resume": return Each(module, h => h.ResumeModule());
-            case "Stop":   return Each(module, h => h.StopModule());
+            case "Stop":
+                if (modules.TryGetValue(module, out var toStop)) _ = toStop.Executor?.StopAsync();
+                return Each(module, h => h.StopModule());
 
             case "StopAim":
                 return modules.TryGetValue(module, out var one) && one.Host.StopAim(frame["Aim"]!.GetValue<string>(), "stopped by its Controller")
@@ -145,6 +188,8 @@ public sealed class AimHostServer
     private void Release(string module)
     {
         if (!modules.TryRemove(module, out var hosted)) return;
+        _ = hosted.Executor?.StopAsync();
+        remote.Close(module);
         hosted.Host.Dispose();
         Console.WriteLine($"[AIM host] {module} released");
     }

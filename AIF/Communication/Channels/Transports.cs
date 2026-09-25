@@ -100,13 +100,13 @@ public abstract class ChannelTransport : IChannelTransport
 
     public abstract string Name { get; }
 
-    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), IsHere, Remote));
+    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote));
 
     internal ChannelCore? Core(string channelId) => channels.TryGetValue(channelId, out var core) ? core : null;
 
     // Where a reader end is: here, unless a transport that reaches other
     // machines says otherwise; and how a Message is delivered to one elsewhere.
-    protected virtual bool IsHere(PortEnd reader) => true;
+    protected virtual bool IsHere(ChannelSpec spec, PortEnd reader) => true;
     protected virtual RemoteDelivery? Remote => null;
 
     // Called with every Message a reader end loses, dropped or discarded.

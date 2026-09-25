@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System;
 using System.Collections.Concurrent;
 using AIF.Channels;
@@ -44,7 +45,16 @@ public sealed class UserAgent
                 ContinuousExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
         };
         InProcessTransport  = new InProcessTransport(Clock);
+        RemoteTransport     = new RemoteTransport(LinkFor, Clock);
     }
+
+    // The Remote transport's reach: the link to the host an AIM of a Module
+    // instance is placed on; null for an AIM here and for the boundary.
+    private readonly ConcurrentDictionary<string, Dictionary<string, AimHostClient>> placedAims = new();
+    private readonly ConcurrentDictionary<string, ContinuousExecutor> placedModules = new();
+
+    private RemoteLink? LinkFor(string module, string aim) =>
+        placedAims.TryGetValue(module, out var aims) && aims.TryGetValue(aim, out var client) ? client.Link : null;
 
     // THE CONTROLLER'S TIME BASE is whatever clock is plugged in (M3215 3.5). Every
     // Message is stamped on it, and an AIM reads it as IAimPorts.Now.
@@ -81,6 +91,7 @@ public sealed class UserAgent
     // its Output Ports declare, DefaultTransport where they declare none.
     public ControllerTransport ControllerTransport { get; }
     public InProcessTransport  InProcessTransport  { get; }
+    public RemoteTransport     RemoteTransport     { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
     // WHERE AIMs PLACED ON OTHER MACHINES RUN (M3217 3.4): the AIM host named for
@@ -98,6 +109,19 @@ public sealed class UserAgent
         {
             if (hostClients.TryGetValue(address, out var client) && !client.Link.IsClosed) return client;
             client = AimHostClient.ConnectAsync(address, AimHostKey).GetAwaiter().GetResult();
+
+            // What a host sends: Messages its AIMs write to readers here, and an
+            // AIM of its DEGRADED - the composite's policy applies here.
+            client.Link.OnRequest = async frame => frame["Kind"]?.GetValue<string>() == "Message"
+                ? await RemoteTransport.ReceiveAsync(frame)
+                : new JsonObject { ["Ok"] = false, ["Error"] = "not asked of a Controller" };
+            client.Link.OnNotice = frame =>
+            {
+                if (frame["Kind"]?.GetValue<string>() == "Degraded"
+                    && placedModules.TryGetValue(frame["Module"]!.GetValue<string>(), out var executor))
+                    executor.DegradedElsewhere(frame["Aim"]!.GetValue<string>(), frame["Reason"]!.GetValue<string>());
+                return Task.CompletedTask;
+            };
             hostClients[address] = client;
             return client;
         }
@@ -140,7 +164,8 @@ public sealed class UserAgent
     private IReadOnlyDictionary<string, IChannelTransport> Transports => new Dictionary<string, IChannelTransport>
     {
         [ControllerTransport.Name] = ControllerTransport,
-        [InProcessTransport.Name]  = InProcessTransport
+        [InProcessTransport.Name]  = InProcessTransport,
+        [RemoteTransport.Name]     = RemoteTransport
     };
 
     // MPAI_AIFU_SharedStorage_Init(MODULE_ID, location) (M3203 3.4.1): the scope
@@ -296,7 +321,14 @@ public sealed class UserAgent
         // Every Module's Channels are planned, so that one whose reader does not
         // accept its writer's transport refuses to load (M3215 3.1); a Continuous
         // Module runs on them from now until Stop.
-        var channels = new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport, Clock);
+        //
+        // A Continuous Module with AIMs on hosts runs there too: the Channels that
+        // touch them cross the Remote transport, and each host runs its AIMs on
+        // them (M3217 3.2, 3.4). Its instance has the name its hosts know it by.
+        var placedHere = graph.Root.IsContinuous && placement.Count > 0;
+        var channels = placedHere
+            ? new ContinuousExecutor(graph, host, Transports, hostModule, DefaultTransport, Clock, aim => !placement.ContainsKey(aim))
+            : new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport, Clock);
 
         // A PERIOD OR A DEADLINE the Controller cannot honour refuses the Module
         // (M3215 3.5): in an exchange, which runs when the User Agent asks; or a
@@ -309,6 +341,23 @@ public sealed class UserAgent
             if (aim.Period is { } period && TimeSpan.FromMilliseconds(period) < MinimumPeriod)
                 throw new InvalidOperationException(
                     $"{name}: {aim.AIMName} declares a Period of {period} ms; the shortest this Controller can keep is {MinimumPeriod.TotalMilliseconds:0.#} ms.");
+        }
+
+        if (placedHere)
+        {
+            placedAims[hostModule] = placement.ToDictionary(p => p.Key, p => HostAt(p.Value));
+            placedModules[hostModule] = channels;
+            foreach (var client in hosts)
+            {
+                var (specs, aims) = channels.PlacedPart(placement.Where(p => p.Value == client.Address).Select(p => p.Key).ToHashSet());
+                var reply = client.AskAsync("Start", hostModule, new JsonObject
+                {
+                    ["Channels"] = new JsonArray(specs.Select(s => (JsonNode)RemoteTransport.SpecJson(s)).ToArray()),
+                    ["Aims"]     = new JsonArray(aims.Select(a => (JsonNode)new JsonObject { ["Aim"] = a.Aim, ["OnDegraded"] = a.OnDegraded }).ToArray())
+                }).GetAwaiter().GetResult();
+                if (reply["Ok"]?.GetValue<bool>() != true)
+                    throw new InvalidOperationException($"{name}: the AIM host at {client.Address} did not start its AIMs: {reply["Error"]}.");
+            }
         }
 
         if (graph.Root.IsContinuous) channels.Start();
@@ -352,6 +401,8 @@ public sealed class UserAgent
         module.Continuous?.StopAsync().GetAwaiter().GetResult();
         OnHosts(module, "Stop");
         OnHosts(module, "Release");
+        placedAims.TryRemove(module.HostModule, out _);
+        placedModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
         _running.TryRemove(moduleId, out _);
         return AifError.OK;

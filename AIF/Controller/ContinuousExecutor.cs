@@ -42,22 +42,72 @@ public sealed partial class ContinuousExecutor
     // Module: its reader end keeps the newest Messages.
     public static PortBehaviour BoundaryOutput { get; } = new(PortBehaviour.DefaultDepth, Overflow.DropOldest, null);
 
+    // runsHere: whether a leaf AIM - or, for "", the boundary - runs on this
+    // machine; an AIM that does not is on an AIM host (M3217 3.4), and every
+    // Channel it writes or reads crosses the Remote transport. Null: all here.
     public ContinuousExecutor(
         DescriptorGraph graph,
         AimHost host,
         IReadOnlyDictionary<string, IChannelTransport> transports,
         string moduleInstance,
         string defaultTransport = "Controller",
-        IClock? clock = null)
+        IClock? clock = null,
+        Func<string, bool>? runsHere = null)
     {
         this.graph = graph;
         this.host = host;
         this.transports = transports;
         this.clock = clock ?? SystemClock.Instance;
+        this.runsHere = runsHere ?? (_ => true);
         module = moduleInstance;
         Payloads = new PayloadStore(this.clock);
         Plan(defaultTransport);
     }
+
+    // ON AN AIM HOST (M3217 3.1): the AIMs of a Module instance placed there, run
+    // on the Channels its Controller planned - those they write or read - with
+    // the policy of the composite that contains each. The Controller has the
+    // graph; the host has only these.
+    public ContinuousExecutor(
+        IEnumerable<(DescriptorNode Leaf, string OnDegraded)> placed,
+        IEnumerable<ChannelSpec> channelsPlanned,
+        AimHost host,
+        RemoteTransport remote,
+        string moduleInstance,
+        IClock? clock = null)
+    {
+        graph = new DescriptorGraph { Root = new DescriptorNode { AIMName = moduleInstance } };
+        this.host = host;
+        transports = new Dictionary<string, IChannelTransport> { [remote.Name] = remote };
+        this.clock = clock ?? SystemClock.Instance;
+        module = moduleInstance;
+        Payloads = new PayloadStore(this.clock);
+        foreach (var (leaf, onDegraded) in placed)
+        {
+            leaves[leaf.AIMName] = leaf;
+            parent[leaf] = new DescriptorNode { AIMName = moduleInstance, OnDegraded = onDegraded };
+        }
+        runsHere = leaves.ContainsKey;                                  // the boundary ("") is the Controller's
+        channels.AddRange(channelsPlanned);
+    }
+
+    private readonly Func<string, bool> runsHere;
+
+    // Told of every AIM of this executor that is DEGRADED: (AIM, reason, policy).
+    // A host tells the Controller, which applies the policy to the Module.
+    public Action<string, string, string>? OnDegradedNotice { get; set; }
+
+    // An AIM on a host is DEGRADED there: its composite's policy applies here.
+    public void DegradedElsewhere(string aim, string reason)
+    {
+        if (leaves.TryGetValue(aim, out var leaf)) Degraded(leaf, reason);
+    }
+
+    // What an AIM host is to run of this Module: the Channels that touch the AIMs
+    // given, and the policy of the composite containing each.
+    public (IReadOnlyList<ChannelSpec> Channels, IReadOnlyList<(string Aim, string OnDegraded)> Aims) PlacedPart(IReadOnlySet<string> aims) =>
+        (channels.Where(c => aims.Contains(c.Writer.Aim) || c.Readers.Any(r => aims.Contains(r.Reader.Aim))).ToList(),
+         aims.Where(leaves.ContainsKey).Select(a => (a, parent[leaves[a]].OnDegraded)).ToList());
 
     // The payload store of this Module instance (M3215 3.6).
     public PayloadStore Payloads { get; }
@@ -113,7 +163,12 @@ public sealed partial class ContinuousExecutor
 
         foreach (var (writer, sinks) in byWriter)
         {
-            var transport = writer.IsBoundary
+            // A Channel that touches an AIM on another machine crosses the Remote
+            // transport, whatever its Port would choose on one machine.
+            var crosses = (!writer.IsBoundary && !runsHere(writer.Aim)) || sinks.Any(s => s.Aim.Length > 0 && !runsHere(s.Aim));
+            var transport = crosses
+                ? "Remote"
+                : writer.IsBoundary
                 ? defaultTransport
                 : OwnPort(leaves[writer.Aim], "Output", writer.DataType, writer.PortNumber)?.Transport ?? defaultTransport;
             if (!transports.ContainsKey(transport))
@@ -209,15 +264,26 @@ public sealed partial class ContinuousExecutor
             };
         }
 
+        // A Message leaving for another machine carries its payloads inline.
+        foreach (var remote in transports.Values.OfType<RemoteTransport>())
+        {
+            var before = remote.Leaving;
+            remote.Leaving = (spec, json) => spec.Module == module ? Payloads.Inline(json) : before?.Invoke(spec, json) ?? json;
+        }
+
+        // The ends on this machine: the writers and readers of the AIMs that run
+        // here, and the boundary's, which is the Controller's.
+        bool Here(PortEnd end) => runsHere(end.Aim);
         foreach (var spec in channels)
         {
             var transport = transports[spec.Transport];
-            Add(writers, spec.Writer, transport.OpenWriter(spec));
-            foreach (var reader in spec.Readers)
+            (transport as RemoteTransport)?.Register(spec);
+            if (Here(spec.Writer)) Add(writers, spec.Writer, transport.OpenWriter(spec));
+            foreach (var reader in spec.Readers.Where(r => Here(r.Reader)))
                 Add(readers, reader.Reader, transport.OpenReader(spec, reader.Reader));
         }
 
-        foreach (var leaf in leaves.Values)
+        foreach (var leaf in leaves.Values.Where(l => runsHere(l.AIMName)))
             running.Add(Task.Run(() => RunAimAsync(leaf)));
     }
 
@@ -264,15 +330,19 @@ public sealed partial class ContinuousExecutor
     }
 
     // What every Channel carried: written, and at each reader taken, dropped,
-    // discarded, pending.
+    // discarded, pending. An end on another machine is accounted for there.
     public IReadOnlyList<string> Accounts() =>
         channels.Select(spec =>
         {
-            var written = writers[spec.Writer].Where(w => w.Spec.Id == spec.Id).Select(w => w.Written).DefaultIfEmpty().Max();
+            var written = writers.TryGetValue(spec.Writer, out var w)
+                ? w.Where(x => x.Spec.Id == spec.Id).Select(x => x.Written).DefaultIfEmpty().Max().ToString()
+                : "elsewhere";
             var ends = spec.Readers.Select(r =>
             {
-                var end = readers[r.Reader].First(x => x.Spec.Id == spec.Id);
-                return $"{r.Reader}: taken {end.Taken}, dropped {end.Dropped}, discarded {end.Discarded}, pending {end.Pending}";
+                var end = readers.GetValueOrDefault(r.Reader)?.FirstOrDefault(x => x.Spec.Id == spec.Id);
+                return end is null
+                    ? $"{r.Reader}: elsewhere"
+                    : $"{r.Reader}: taken {end.Taken}, dropped {end.Dropped}, discarded {end.Discarded}, pending {end.Pending}";
             });
             return $"{spec.Writer} ({spec.Transport}) wrote {written}; " + string.Join("; ", ends);
         }).ToList();
@@ -336,6 +406,7 @@ public sealed partial class ContinuousExecutor
         var aim = leaf.AIMName;
         host.Degrade(aim, reason);
         Console.WriteLine($"[AIF] {aim}: DEGRADED ({reason}); {parent[leaf].AIMName} OnDegraded {parent[leaf].OnDegraded}");
+        OnDegradedNotice?.Invoke(aim, reason, parent[leaf].OnDegraded);
         switch (parent[leaf].OnDegraded)
         {
             case "Continue":

@@ -60,6 +60,13 @@ public class RemoteTests
             api.InputWrite(name, Text, 1, "x", 2000);
             var read = api.OutputRead(name, Text, 1, 2000);
             outcome = "a write, then #1: " + (read.Ok ? $"'{MetadataTests.Short(read.Json!, 40)}'" : read.Error.ToString());
+            if (module == "TST-RPY")
+            {
+                var length = api.OutputRead(name, Text, 2, 2000);
+                outcome += ", #2: " + (length.Ok ? $"'{length.Json}'" : length.Error.ToString());
+            }
+            var remote = api.ChannelAccounts(name).Count(a => a.Contains("(Remote)"));
+            if (remote > 0) outcome += $"; Channels across the Remote transport: {remote}";
         }
         else
         {

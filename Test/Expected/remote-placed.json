@@ -1,8 +1,8 @@
 {
   "TST-RCP": "an exchange: OK; #1 'X'; #2 'x'; built by the Controller: ",
   "TST-RLL": "a write, then #1: '1:x'; built by the Controller: TST-ACC, TST-DSC",
-  "TST-RLP": "a write, then #1: '1:x'; built by the Controller: TST-DSC",
-  "TST-RPY": "a write, then #1: '{\"Entries\":[{\"Data\":\"cHBwcHBwcHBwcHBwcHB...'; built by the Controller: TST-PWR",
+  "TST-RLP": "a write, then #1: '1:x'; Channels across the Remote transport: 2; built by the Controller: TST-DSC",
+  "TST-RPY": "a write, then #1: '{\"Entries\":[{\"Data\":\"cHBwcHBwcHBwcHBwcHB...', #2: '100001'; Channels across the Remote transport: 2; built by the Controller: TST-PWR",
   "TST-RXC": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV",
   "TST-RXL": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV, TST-RPT, TST-SLP, TST-UPP"
 }

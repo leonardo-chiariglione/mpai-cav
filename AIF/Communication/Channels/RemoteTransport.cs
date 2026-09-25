@@ -12,15 +12,21 @@ namespace AIF.Channels;
 // Type and Port Number, never by the route of any Service.
 public sealed class RemoteTransport : ChannelTransport
 {
-    private readonly Func<string, RemoteLink?> linkFor;
+    private readonly Func<string, string, RemoteLink?> linkFor;
 
-    // linkFor: the link to the machine an AIM Instance is on; null for this one.
-    // The boundary (an empty AIM) is always the Controller's.
-    public RemoteTransport(Func<string, RemoteLink?> linkFor, IClock? clock = null) : base(clock) => this.linkFor = linkFor;
+    // linkFor: the link to the machine an AIM Instance of a Module instance is on;
+    // null for this one. The boundary (an empty AIM) is the Controller's.
+    public RemoteTransport(Func<string, string, RemoteLink?> linkFor, IClock? clock = null) : base(clock) => this.linkFor = linkFor;
+
+    public RemoteTransport(Func<string, RemoteLink?> linkFor, IClock? clock = null) : this((_, aim) => linkFor(aim), clock) { }
 
     public override string Name => "Remote";
 
-    protected override bool IsHere(PortEnd reader) => linkFor(reader.Aim) is null;
+    // What a Message's JSON becomes as it leaves this machine: the payloads it
+    // references inlined, by the store that holds them (M3215 3.6).
+    public Func<ChannelSpec, string, string>? Leaving { get; set; }
+
+    protected override bool IsHere(ChannelSpec spec, PortEnd reader) => linkFor(spec.Module, reader.Aim) is null;
 
     protected override RemoteDelivery Remote => DeliverAsync;
 
@@ -44,7 +50,7 @@ public sealed class RemoteTransport : ChannelTransport
 
     private async ValueTask<bool> DeliverAsync(ChannelSpec spec, PortEnd reader, PortMessage message, int timeoutMs, CancellationToken cancel)
     {
-        var link = linkFor(reader.Aim) ?? throw new InvalidOperationException($"No link to the machine of {reader}.");
+        var link = linkFor(spec.Module, reader.Aim) ?? throw new InvalidOperationException($"No link to the machine of {reader}.");
         var reply = await link.RequestAsync(new JsonObject
         {
             ["Kind"]       = "Message",
@@ -52,7 +58,7 @@ public sealed class RemoteTransport : ChannelTransport
             ["Reader"]     = End(reader),
             ["DataType"]   = message.DataType,
             ["PortNumber"] = message.PortNumber,
-            ["Json"]       = message.Json,
+            ["Json"]       = Leaving?.Invoke(spec, message.Json) ?? message.Json,
             ["Stamp"]      = message.Stamp.ToString("O"),
             ["Sequence"]   = message.Sequence,
             ["Timeout"]    = timeoutMs
@@ -73,9 +79,40 @@ public sealed class RemoteTransport : ChannelTransport
         };
         message.Stamp = DateTimeOffset.Parse(frame["Stamp"]!.GetValue<string>());
         message.Sequence = frame["Sequence"]!.GetValue<long>();
-        var ok = await core.ArrivedAsync(EndOf(frame["Reader"]!), message, frame["Timeout"]!.GetValue<int>(), CancellationToken.None);
+        var reader = EndOf(frame["Reader"]!);
+        var timeout = frame["Timeout"]!.GetValue<int>();
+
+        // For a reader on a third machine - an AIM on one host writing to an AIM
+        // on another - the Controller passes it on.
+        var ok = core.Readers.ContainsKey(reader) || linkFor(core.Spec.Module, reader.Aim) is null
+            ? await core.ArrivedAsync(reader, message, timeout, CancellationToken.None)
+            : await DeliverAsync(core.Spec, reader, message, timeout, CancellationToken.None);
         return new JsonObject { ["Ok"] = ok };
     }
+
+    // A Channel as it travels to the machine of an AIM it touches.
+    public static JsonObject SpecJson(ChannelSpec spec) => new()
+    {
+        ["Module"]    = spec.Module,
+        ["Writer"]    = End(spec.Writer),
+        ["Transport"] = spec.Transport,
+        ["Readers"]   = new JsonArray(spec.Readers.Select(r => (JsonNode)new JsonObject
+        {
+            ["Reader"]   = End(r.Reader),
+            ["Depth"]    = r.Behaviour.Depth,
+            ["Overflow"] = r.Behaviour.Overflow.ToString(),
+            ["MaxAge"]   = r.Behaviour.MaxAge?.TotalMilliseconds
+        }).ToArray())
+    };
+
+    public static ChannelSpec SpecOf(JsonNode node) => new(
+        node["Module"]!.GetValue<string>(),
+        EndOf(node["Writer"]!),
+        node["Readers"]!.AsArray().Select(r => new ChannelReaderSpec(EndOf(r!["Reader"]!), new PortBehaviour(
+            r["Depth"]!.GetValue<int>(),
+            Enum.Parse<Overflow>(r["Overflow"]!.GetValue<string>()),
+            r["MaxAge"] is { } age ? TimeSpan.FromMilliseconds(age.GetValue<double>()) : null))).ToList(),
+        node["Transport"]!.GetValue<string>());
 
     public static JsonObject End(PortEnd end) =>
         new() { ["Aim"] = end.Aim, ["DataType"] = end.DataType, ["PortNumber"] = end.PortNumber };
