@@ -1,0 +1,53 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json",
+  "title":                      "Cryptographic Instance Identity V1.0",
+  "description":                "ID for a unique cryptographic instance.",
+  "type":                       "object",
+  "required":                   ["CryptographicBinding", "Integrity"],
+  "additionalProperties":       false,
+  "properties":                 {
+
+    "Header":                   { "type": "string", "pattern": "^PTF-CII-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":              { "type": "string" },
+    "CryptographicInstanceID":  { "type": "string" },
+    "CryptographicInstanceTime":{ "type": "string" },
+
+    "CryptographicBinding":     { "type": "object", "required": ["PublicKey"], "additionalProperties": false, "properties": {
+
+      "PublicKey":              { "type": "object", "required": ["Algorithm", "KeyValue"], "additionalProperties": false, "properties": {
+        "Algorithm":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                                  "description": "Signature algorithm identifier from the Security Algorithm Taxonomy." },
+        "KeyEncoding":          { "type": "string", "enum": ["raw", "spki", "jwk"], "description": "Encoding of the public key material", "default": "raw" },
+        "KeyValue":             { "type": "string", "description": "Public key material encoded as base64 or base64url" } } },
+
+      "KeyDerivation":          { "type": "object", "additionalProperties": false, "properties": {
+        "Method":               { "type": "string", "enum": ["direct", "derived", "wrapped"] },
+        "Context":              { "type": "string", "description": "Optional derivation or domain separation context" } } } } },
+
+    "InstanceAttributes":       { "type": "object", "additionalProperties": false, "properties": {
+      "InstanceType":           { "type": "string", "enum": ["hardware", "software"] },
+      "Implementation":         { "type": "string", "description": "Vendor or implementation identifier" },
+      "InstanceClass":          { "type": "string", "description": "Optional logical or functional class" } } },
+
+    "Provenance":               { "type": "object", "additionalProperties": false, "properties": {
+      "Manufacturer":           { "type": "string", "description": "Entity declaring creation of the cryptographic instance" },
+      "CreationTime":           { "type": "string", "format": "date-time", "description": "Time of instance creation" },
+      "SerialOrSeedID":         { "type": "string", "description": "Optional non-secret serial or seed identifier" } } },
+
+    "Integrity":                { "type": "object", "required": ["Fingerprint"], "additionalProperties": false, "properties": {
+
+      "Fingerprint":            { "type": "object", "description": "Fingerprint of the cryptographic ID from the Security Algo.",
+                                  "required": ["Algorithm", "Value"], "additionalProperties": false, "properties": {
+        "Algorithm":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash",
+                                  "description": "Hash algorithm identifier from the Security Algorithm Taxonomy." },
+        "Value":                { "type": "string", "description": "Canonical fingerprint value encoded as hex or base64url." } } },
+
+      "Signature":              { "type": "object", "description": "Digital signature over cryptographic ID using a Signature algo.",
+                                  "required": ["Algorithm", "Value"], "additionalProperties": false, "properties": {
+        "Algorithm":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                                  "description": "Signature algorithm identifier from the Security Algorithm Taxonomy." },
+        "Value":                { "type": "string", "description": "Digital signature value encoded as base64url." } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }
+

@@ -1,0 +1,39 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/PTF/V1.0/data/AttestationEvidence.json",
+  "title":                      "Attestation Evidence V1.0", "description": "Typed evidence for runtime trust decisions, classified using SET.",
+  "type":                       "object",
+  "required":                   ["Version", "EvidenceItems"],
+  "additionalProperties":       false,
+  "properties":                 {
+
+    "Header":                   { "type": "string", "pattern": "^PTF-ATE-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":              { "type": "string" },
+    "AttestationEvidenceID":    { "type": "string" },
+    "AttestationEvidenceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time of evidence collection." },
+
+    "EvidenceItems":            { "type": "array", "description": "List of evidence items classified using the Security Evidence Taxonomy.",
+                                  "items": { "type": "object", "required": ["Type", "Value"], "additionalProperties": false, "properties": {
+
+      "Type":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityEvidenceTaxonomy.json#/definitions/EvidenceType",
+                                  "description": "Evidence type identifier from the Security Evidence Taxonomy." },
+
+      "Value":                  { "type": "string", "description": "Opaque evidence payload encoded as base64url." },
+
+      "Verifier":               { "type": "string", "description": "ID of the component that produced or verified the evidence." },
+
+      "HashAlgorithm":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash",
+                                  "description": "Optional hash algorithm identifier from the Security Algorithm Taxonomy." },
+
+      "HashValue":              { "type": "string", "description": "Optional hash of the evidence payload (hex or base64url)." } } } },
+
+    "Signature":                { "type": "object", "description": "Optional signature over the entire attestation evidence object.",
+                                  "required": ["Algorithm", "Value"], "additionalProperties": false, "properties": {
+
+      "Algorithm":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                                  "description": "Signature algorithm identifier from the Security Algorithm Taxonomy." },
+
+      "Value":                  { "type": "string", "description": "Digital signature value encoded as base64url." } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }
+

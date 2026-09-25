@@ -1,0 +1,11 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceRoleTaxonomy.json",
+  "title":                "Cryptographic Instance Role Taxonomy V1.0",
+  "description":          "Typed identifiers for cryptographic instance roles.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "properties":           {
+    "Role":               { "type": "string", "enum": [
+                            "AIF-CII-ROLE-KEY-HOLDER", "AIF-CII-ROLE-SIGNER", "AIF-CII-ROLE-VERIFIER", "AIF-CII-ROLE-ENCRYPTOR",
+                            "AIF-CII-ROLE-DECRYPTOR", "AIF-CII-ROLE-KEY-AGREEMENT-PARTY", "AIF-CII-ROLE-ATTESTATION-SOURCE",
+                            "AIF-CII-ROLE-ROOT-OF-TRUST" ] } } }

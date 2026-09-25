@@ -1,0 +1,88 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/PTF/V1.0/data/Profile.json",
+  "title":                          "Profile V1.0", "description": "Profiles defining subsets and usage of the PTF trust framework.",
+                                    "type": "object", "required": ["Header", "ProfileID", "ProfileType"],
+                                    "additionalProperties": false, "properties": {
+
+    "Header":                       { "type": "string", "pattern": "^PTF-PRF-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironmentID":               { "type": "string" },
+    "ProfileID":                    { "type": "string", "description": "Identifier of the Profile." },
+    "ProfileTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                      "description": "Time at which the Profile was defined or last updated." },
+
+    "ProfileType":                  { "type": "string", "enum": [ "DeploymentProfile", "CapabilityProfile", "VerificationProfile", "PolicyProfile" ],
+                                      "description": "Type of Profile defined in this object." },
+
+    "DeploymentProfile":            { "type": "object", "additionalProperties": false, "properties": {
+      "Name":                       { "type": "string", "description": "Human-readable name of the deployment profile (e.g., Basic, Security)." },
+      "Description":                { "type": "string", "description": "Description of the deployment environment and intended use." },
+      "RequiredIdentities":         { "type": "array", "description": "Required identity structures (e.g., CII, InstanceCredential).", "items": { "type": "string" } },
+      "RequiredCredentials":        { "type": "array", "description": "Required credential types for interoperable trust establishment.", "items": { "type": "string" } },
+      "RequiredEvidence":           { "type": "array", "description": "Required evidence types (e.g., attestation, freshness).", "items": { "type": "string" } },
+      "RequiredAlgorithms":         { "type": "object", "additionalProperties": false, "properties": {
+        "SignatureAlgorithms":      { "type": "array", "description": "Required or allowed signature algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature" } },
+        "HashAlgorithms":           { "type": "array", "description": "Required or allowed hash algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" } } } },
+      "RequiredPolicies":           { "type": "array", "description": "Required policy bindings or policy identifiers.", "items": { "type": "string" } },
+      "FreshnessRequirements":      { "type": "string", "description": "Requirements on evidence freshness (e.g., maximum age, renewal rules)." } } },
+
+    "CapabilityProfile":            { "type": "object", "additionalProperties": false, "properties": {
+      "Name":                       { "type": "string", "description": "Human-readable name of the capability profile." },
+      "Description":                { "type": "string", "description": "Description of supported PTF capabilities." },
+      "SupportedIdentities":        { "type": "array", "description": "Supported identity structures.", "items": { "type": "string" } },
+      "SupportedCredentials":       { "type": "array", "description": "Supported credential types.",
+                                      "items": { "type": "string" } },
+      "SupportedEvidence":          { "type": "array", "description": "Supported evidence types.",
+                                      "items": { "type": "string" } },
+      "SupportedAlgorithms":        { "type": "object", "additionalProperties": false, "properties": {
+        "SignatureAlgorithms":      { "type": "array", "description": "Supported signature algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature" } },
+        "HashAlgorithms":           { "type": "array", "description": "Supported hash algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" } } } },
+      "SupportedPolicies":          { "type": "array", "description": "Supported policy identifiers or classes.",
+                                      "items": { "type": "string" } },
+      "SupportedComponents":        { "type": "array", "description": "Supported PTF components or roles.",
+                                      "items": { "type": "string" } } } },
+
+    "VerificationProfile":          { "type": "object", "additionalProperties": false, "properties": {
+      "Name":                       { "type": "string", "description": "Human-readable name of the verification profile." },
+      "Description":                { "type": "string", "description": "Description of verification behaviour and guarantees." },
+      "RequiredChecks":             { "type": "array", "description": "Required verification checks (e.g., signature, hash, policy).", "items": { "type": "string" } },
+      "RequiredEvidenceValidation": { "type": "array", "description": "Required validation steps for evidence.", "items": { "type": "string" } },
+      "RequiredPolicyEvaluation":   { "type": "array", "description": "Required policy evaluation steps or rules.", "items": { "type": "string" } },
+      "FreshnessChecks":            { "type": "string", "description": "Requirements on checking evidence freshness." } } },
+
+    "PolicyProfile":                { "type": "object", "additionalProperties": false, "properties": {
+      "Name":                       { "type": "string", "description": "Human-readable name of the policy profile." },
+      "Description":                { "type": "string", "description": "Description of policy constraints and trust model." },
+      "RequiredTrustAnchors":       { "type": "array", "description": "Required or allowed trust anchors.", "items": { "type": "string" } },
+      "RequiredAlgorithms":         { "type": "object", "additionalProperties": false, "properties": {
+        "SignatureAlgorithms":      { "type": "array", "description": "Required or allowed signature algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature" } },
+        "HashAlgorithms":           { "type": "array", "description": "Required or allowed hash algorithms.",
+                                      "items": { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" } } } },
+      "RequiredEvidence":           { "type": "array", "description": "Required evidence types.", "items": { "type": "string" } },
+      "RequiredAttributes":         { "type": "object", "additionalProperties": false, "properties": {
+        "InstanceType":             { "type": "string", "description": "Required instance type, if any." },
+        "Implementation":           { "type": "string", "description": "Required implementation or vendor identifier, if any." },
+        "InstanceClass":            { "type": "string", "description": "Required logical or functional class, if any." } } },
+
+      "RequiredPolicies":           { "type": "array", "description": "Required policy identifiers or classes.", "items": { "type": "string" } } } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [                        { "properties": { "ProfileType": { "const": "DeploymentProfile" },
+                                      "DeploymentProfile": { "type": "object" } }, "required": [ "DeploymentProfile" ] },
+
+                                    { "properties": { "ProfileType": { "const": "CapabilityProfile" },
+                                      "CapabilityProfile": { "type": "object" } }, "required": [ "CapabilityProfile" ] },
+
+                                    { "properties": { "ProfileType": { "const": "VerificationProfile" },
+                                      "VerificationProfile": { "type": "object" } }, "required": [ "VerificationProfile" ] },
+
+                                    { "properties": { "ProfileType": { "const": "PolicyProfile" },
+                                      "PolicyProfile": { "type": "object" } }, "required": [ "PolicyProfile" ] } ] }
+

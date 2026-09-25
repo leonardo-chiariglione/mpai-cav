@@ -1,0 +1,44 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/TrustMessage.json",
+  "title":                "Trust Message V1.0",
+  "description":          "A unified structure for Trust Requests and Trust Responses.",
+  "type":                 "object",
+  "required":             ["Header", "MessageType", "MessageID", "MessageTime", "Signature"],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "pattern": "^PTF-MSG-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "MessageID":          { "type": "string", "description": "Unique identifier of the trust message." },
+    "MessageTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "MessageType":        { "type": "string", "enum": ["TrustRequest", "TrustResponse"],
+                            "description": "Indicates whether this message is a request or a response." },
+
+    "RequesterID":        { "type": "string", "description": "Identifier of the entity making the request." },
+    "ResponderID":        { "type": "string", "description": "Identifier of the entity responding to the request." },
+
+    "Request":            { "type": "object", "additionalProperties": false, "properties": {
+      "Operation":        { "type": "string", "description": "Requested trust operation." },
+      "TargetType":       { "type": "string", "description": "Type of object the request concerns." },
+      "TargetID":         { "type": "string", "description": "Identifier of the target object." } } },
+
+    "Response":           { "type": "object", "additionalProperties": false, "properties": {
+      "Status":           { "type": "string", "enum": ["Success", "Failure"] },
+      "Reason":           { "type": "string", "description": "Optional reason for failure." },
+      "Result":           { "type": "string", "description": "Optional result payload." } } },
+
+    "Signature":          { "type": "object", "required": ["Algorithm", "Value"],
+                            "additionalProperties": false, "properties": {
+      "Algorithm":        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature" },
+      "Value":            { "type": "string" } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [              { "properties": { "MessageType": { "const": "TrustRequest" },  "Request":  { "type": "object" } },
+                            "required": ["Request", "RequesterID"] },
+
+                          { "properties": { "MessageType": { "const": "TrustResponse" }, "Response": { "type": "object" } },
+                            "required": ["Response", "ResponderID"] } ] }
+

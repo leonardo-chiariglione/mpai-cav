@@ -1,0 +1,14 @@
+{
+  "a member added": "Invalid",
+  "a nested value changed": "Invalid",
+  "another algorithm named": "UnknownAlgorithm",
+  "members reordered, whitespace added": "Valid",
+  "no signature": "Missing",
+  "signed, verified": "Valid",
+  "the algorithm": "PTF-ALGO-SIG-ECDSA-P256-SHA256",
+  "the same with the Header PTF-MSG-V1,,.0,, that the pattern accepts": "valid",
+  "the signature value changed": "Invalid",
+  "the signed TrustMessage against its schema": "not valid",
+  "the value": "128 hexadecimal characters",
+  "verified with another key": "Invalid"
+}

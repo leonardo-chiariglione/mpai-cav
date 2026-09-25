@@ -1,0 +1,38 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/PolicyBinding.json",
+  "title":                "Policy Binding V1.0", "description": "Binding of a policy to an Instance Credential or Process.",
+  "type":                 "object",
+  "required":             ["Version", "PolicyID", "Target", "Signature"],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "pattern": "^PTF-POL-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "PolicyBindingID":    { "type": "string" },
+    "PolicyBindingTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "PolicyID":           { "type": "string", "description": "Identifier of the policy being bound." },
+
+    "Target":             { "type": "object", "required": ["Type", "ID"], "additionalProperties": false, "properties": {
+      "Type":             { "type": "string", "enum": ["AIMInstance", "ProcessInstance", "InstanceCredential"] },
+      "ID":               { "type": "string", "description": "Identifier of the target object." } } },
+
+    "Constraints":        { "type": "array", "description": "Optional constraints associated with the policy binding.",
+                            "items": { "type": "object", "required": ["Name", "Value"], "additionalProperties": false, "properties": {
+        "Name":           { "type": "string", "description": "Constraint name." },
+        "Value":          { "type": "string", "description": "Constraint value." },
+        "HashAlgorithm":  { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash",
+                            "description": "Optional hash algorithm identifier from the Security Algorithm Taxonomy." },
+        "HashValue":      { "type": "string", "description": "Optional hash of the constraint value (hex or base64url)." } } } },
+
+    "Signature":          { "type": "object", "required": ["Algorithm", "Value"],
+                            "description": "Digital signature over the policy binding using a Signature algo. from the Security Algorithm Taxonomy.",
+                            "additionalProperties": false, "properties": {
+      "Algorithm":        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                            "description": "Signature algorithm identifier from the Security Algorithm Taxonomy." },
+      "Value":            { "type": "string", "description": "Digital signature value encoded as base64url." } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

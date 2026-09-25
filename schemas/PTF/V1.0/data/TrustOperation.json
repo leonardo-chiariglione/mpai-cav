@@ -1,0 +1,40 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/TrustOperation.json",
+  "title":                "Trust Operation V1.0",
+  "description":          "Record of a trust-related operation within the PTF framework.",
+  "type":                 "object",
+  "required":             ["Header", "TrustOperationID", "OperationType", "TargetType", "TargetID", "ActorID", "Status", "Signature"],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "pattern": "^PTF-TOP-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "TrustOperationID":   { "type": "string" },
+    "TrustOperationTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "OperationType":      { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/TrustOperationTaxonomy.json#/properties/OperationType",
+                            "description": "Operation type identifier from the Trust Operation Taxonomy." },
+
+    "TargetType":         { "type": "string", "enum": [ "CII", "InstanceCredential", "ProcessLifecycleCredential", "AttestationEvidence", "PolicyBinding", "Profile" ],
+                            "description": "Type of object on which the operation was performed." },
+
+    "TargetID":           { "type": "string", "description": "Identifier of the target object." },
+
+    "ActorID":            { "type": "string", "description": "Identifier of the entity performing the operation." },
+
+    "Status":             { "type": "string", "enum": [ "Success", "Failure" ],
+                            "description": "Outcome of the trust operation." },
+
+    "FailureReason":      { "type": "string", "description": "Optional reason for failure." },
+
+    "Signature":          { "type": "object", "required": ["Algorithm", "Value"],
+                            "description": "Digital signature over the trust operation.",
+                            "additionalProperties": false, "properties": {
+      "Algorithm":        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                            "description": "Signature algorithm identifier from the Security Algorithm Taxonomy." },
+      "Value":            { "type": "string", "description": "Digital signature value encoded as base64url." } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

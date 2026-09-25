@@ -1,0 +1,30 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/ErrorCode.json",
+  "title":                "Error Code V1.0",
+  "description":          "Standardised error code structure for PTF components.",
+  "type":                 "object",
+  "required":             ["Header", "ErrorID", "ErrorType", "ErrorMessage"],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "pattern": "^PTF-ERR-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MINstance":          { "type": "string" },
+    "ErrorID":            { "type": "string", "description": "Unique identifier of the error instance." },
+
+    "ErrorTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                            "description": "Time at which the error occurred." },
+
+    "ErrorType":          { "type": "string",
+                            "enum": [ "schemaViolation", "missingField", "invalidValue", "signatureFailure", "hashMismatch",
+                                  "unsupportedAlgorithm", "unsupportedProfile", "policyViolation", "internalError", "other" ],
+                            "description": "Classification of the error." },
+
+    "ErrorMessage":       { "type": "string", "maxLength": 512, "description": "Human-readable description of the error." },
+
+    "ErrorDetails":       { "type": "object", "additionalProperties": false, "properties": {
+      "Field":            { "type": "string", "description": "Field associated with the error, if applicable." },
+      "Expected":         { "type": "string", "description": "Expected value or condition." },
+      "Found":            { "type": "string", "description": "Actual value or condition found." } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

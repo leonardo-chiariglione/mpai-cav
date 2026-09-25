@@ -1,0 +1,47 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/PTF/V1.0/data/TrustAnchor.json",
+  "title":                      "Trust Anchor V3.0",
+  "description":                "Entity whose credentials are accepted for issuing Instance Credentials.",
+  "type":                       "object",
+  "required":                   ["Version", "AnchorID", "PublicKey", "Validity"],
+  "additionalProperties":       false,
+  "properties":                 {
+
+    "Header":                   { "type": "string", "pattern": "^PTF-TRA-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":              { "type": "string" },
+    "AnchorID":                 { "type": "string", "description": "ID for the trust anchor (URI, DNS name, or opaque string)." },
+    "AnchorTime ":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "PublicKey":                { "type": "object", "description": "PK used by the trust anchor to sign Instance Credentials.",
+                                  "required": ["Algorithm", "KeyValue"], "additionalProperties": false, "properties": {
+      "Algorithm":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Signature",
+                                  "description": "Signature algorithm ID from the Security Algorithm Taxonomy." }
+,
+      "KeyEncoding":            { "type": "string", "enum": ["raw", "spki", "jwk"], "default": "raw" },
+      "KeyValue":               { "type": "string", "description": "Public key material encoded as base64 or base64url." } } },
+
+    "Validity":                 { "type": "object", "description": "Validity window for the trust anchor's signing authority.",
+                                  "required": ["NotBefore", "NotAfter"], "additionalProperties": false, "properties": {
+      "NotBefore":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "NotAfter":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } },
+
+    "Policies":                 { "type": "object", "description": "Constraints on what the trust anchor is allowed to issue.",
+                                  "additionalProperties": false, "properties": {
+
+      "AllowedAIMInstances":    { "type": "array", "items": { "type": "string",
+                                  "description": "AIM instance classes or identifiers allowed by this trust anchor." } },
+
+      "AllowedProcessInstances":{ "type": "array", "items": { "type": "string", "description": "Process instance classes or IDs allowed by this trust anchor." } },
+
+      "AllowedAlgorithms":      { "type": "array", "items": { "type": "string", "description": "Algorithm identifiers from the Security Algorithm Taxonomy." } },
+
+      "MaxCredentialLifetime":  { "type": "string", "description": "Optional maximum validity duration for issued credentials (ISO 8601 duration)." } } },
+
+    "Revocation":               { "type": "object", "description": "Optional revocation information for the trust anchor.",
+                                  "additionalProperties": false, "properties": {
+      "CRL":                    { "type": "string", "description": "URI of a certificate revocation list or equivalent." },
+      "OCSP":                   { "type": "string", "description": "URI of an online status service." },
+      "LastUpdated":            { "type": "string", "format": "date-time" } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

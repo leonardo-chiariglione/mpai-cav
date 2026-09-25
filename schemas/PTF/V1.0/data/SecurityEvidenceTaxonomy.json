@@ -1,0 +1,23 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PTF/V1.0/data/SecurityEvidenceTaxonomy.json",
+  "title":                "Security Evidence Taxonomy V1.0",
+  "description":          "Taxonomy of evidence types used for attestation and runtime trust decisions.",
+  "type":                 "object",
+  "additionalProperties": false,
+
+  "definitions":          {
+    "EvidenceType":       { "type": "string", "enum": [ "AIF-EVID-TEE-REPORT",
+                                                        "AIF-EVID-CODE-HASH",
+                                                        "AIF-EVID-CONFIG-HASH",
+                                                        "AIF-EVID-RUNTIME-MEASUREMENT",
+                                                        "AIF-EVID-ENVIRONMENT",
+                                                        "AIF-EVID-CUSTOM" ] } },
+
+  "properties":           {
+    "TEEReport":          { "const": "AIF-EVID-TEE-REPORT" },
+    "CodeHash":           { "const": "AIF-EVID-CODE-HASH" },
+    "ConfigHash":         { "const": "AIF-EVID-CONFIG-HASH" },
+    "RuntimeMeasurement": { "const": "AIF-EVID-RUNTIME-MEASUREMENT" },
+    "Environment":        { "const": "AIF-EVID-ENVIRONMENT" },
+    "Custom":             { "const": "AIF-EVID-CUSTOM" } } }
+

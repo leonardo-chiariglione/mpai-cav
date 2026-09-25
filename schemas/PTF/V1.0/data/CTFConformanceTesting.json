@@ -1,0 +1,693 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/PTF/V1.0/data/CTFConformanceTesting.json",
+  "title":                              "CTF Conformance Testing V1.0",
+  "ConformanceClasses":                 [ "Verifier", "ProcessInstance", "PolicyAuthority" ],
+
+  "Tests":                              {
+
+    "ID-01":                            {
+      "Purpose":                          "Valid identity",
+      "Preconditions":                  {
+        "CII":                            "valid",
+        "Roles":                        [ "AIF-CII-ROLE-DATA-CONSUMER" ]
+      },
+      "Inputs":                         {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                       {
+        "Verifier":                     {
+          "IdentityVerification":         "pass",
+          "FinalStatus":                  "Success"
+        },
+        "PI-A":                         {
+          "DataSent":                     true }  } },
+
+    "ID-02":                        {
+      "Purpose":                      "Invalid CII signature",
+      "Preconditions":                {
+        "CII":                          "invalidSignature"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "IdentityVerification":          "fail",
+          "Reason":                        "InvalidCIISignature",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "ID-03":                        {
+      "Purpose":                      "Missing required role",
+      "Preconditions":                {
+        "CII":                          "valid",
+        "Roles":                        [ "AIF-CII-ROLE-OTHER" ]
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "IdentityVerification":          "fail",
+          "Reason":                        "MissingRequiredRole",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "ID-04":                        {
+      "Purpose":                      "Unknown role taxonomy",
+      "Preconditions":                {
+        "CII":                          "validWithUnknownRole"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "IdentityVerification":          "fail",
+          "Reason":                        "UnknownRole",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "ID-05":                        {
+      "Purpose":                      "Malformed CII",
+      "Preconditions":                {
+        "CII":                          "malformed"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "IdentityVerification":          "fail",
+          "Reason":                        "MalformedCII",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+        "CR-01":                        {
+      "Purpose":                      "Valid credentials",
+      "Preconditions":                {
+        "InstanceCredential":           "valid",
+        "PLC":                          "valid",
+        "Issuer":                       "trusted"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "pass",
+          "FinalStatus":                    "Success"
+        }
+      }
+    },
+
+    "CR-02":                        {
+      "Purpose":                      "Missing InstanceCredential",
+      "Preconditions":                {
+        "InstanceCredential":           "missing"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "MissingInstanceCredential",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "CR-03":                        {
+      "Purpose":                      "Expired InstanceCredential",
+      "Preconditions":                {
+        "InstanceCredential":           "expired"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "ExpiredInstanceCredential",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "CR-04":                        {
+      "Purpose":                      "Invalid InstanceCredential signature",
+      "Preconditions":                {
+        "InstanceCredential":           "invalidSignature"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "InvalidInstanceCredentialSignature",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "CR-05":                        {
+      "Purpose":                      "Invalid PLC lifecycle state",
+      "Preconditions":                {
+        "PLCState":                    "Stopped"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "InvalidLifecycleState",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "CR-06":                        {
+      "Purpose":                      "Untrusted credential issuer",
+      "Preconditions":                {
+        "InstanceCredential":           "issuedByUntrustedIssuer"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "UntrustedCredentialIssuer",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "CR-07":                        {
+      "Purpose":                      "Credential chain validation (IA Ã¢â€ â€™ TrustAnchor)",
+      "Preconditions":                {
+        "InstanceCredential":           "issuedByIntermediateAuthority",
+        "IssuerChain":                  [ "IntermediateAuthority", "TrustAnchor" ]
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetZ"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "pass",
+          "FinalStatus":                    "Success"
+        }
+      }
+    },
+
+    "EV-01":                        {
+      "Purpose":                      "Valid evidence",
+      "Preconditions":                {
+        "Evidence":                     "valid",
+        "Freshness":                    "withinLimit"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "pass",
+          "FinalStatus":                    "Success"
+        }
+      }
+    },
+
+    "EV-02":                        {
+      "Purpose":                      "Missing evidence",
+      "Preconditions":                {
+        "Evidence":                     "missing"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "MissingEvidence",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "EV-03":                        {
+      "Purpose":                      "Unsupported evidence type",
+      "Preconditions":                {
+        "Evidence":                     "unsupportedType"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "UnsupportedEvidenceType",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "EV-04":                        {
+      "Purpose":                      "Invalid evidence signature",
+      "Preconditions":                {
+        "Evidence":                     "invalidSignature"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "InvalidEvidenceSignature",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "EV-05":                        {
+      "Purpose":                      "Invalid evidence hash",
+      "Preconditions":                {
+        "Evidence":                     "invalidHash"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "InvalidEvidenceHash",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "EV-06":                        {
+      "Purpose":                      "Stale evidence",
+      "Preconditions":                {
+        "Evidence":                     "stale"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "StaleEvidence",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+        "PL-01":                        {
+      "Purpose":                      "Valid policy and profile",
+      "Preconditions":                {
+        "PolicyBinding":                "valid",
+        "VerificationProfile":          "valid",
+        "RulesSatisfied":               true
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "PolicyEvaluation":              "pass",
+          "FinalStatus":                    "Success"
+        }
+      }
+    },
+
+    "PL-02":                        {
+      "Purpose":                      "Invalid PolicyBinding signature",
+      "Preconditions":                {
+        "PolicyBinding":                "invalidSignature"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "PolicyEvaluation":              "fail",
+          "Reason":                        "InvalidPolicyBinding",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "PL-03":                        {
+      "Purpose":                      "Missing VerificationProfile",
+      "Preconditions":                {
+        "VerificationProfile":          "missing"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "PolicyEvaluation":              "fail",
+          "Reason":                        "InvalidVerificationProfile",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+    "PL-04":                        {
+      "Purpose":                      "Policy rule violation",
+      "Preconditions":                {
+        "PolicyBinding":                "valid",
+        "VerificationProfile":          "valid",
+        "RulesSatisfied":               false
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetY"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "PolicyEvaluation":              "fail",
+          "Reason":                        "PolicyViolation:RequiredRole",
+          "FinalStatus":                    "Failure"
+        }
+      }
+    },
+
+        "DL-01":                        {
+      "Purpose":                      "All steps succeed (Example 1)",
+      "Preconditions":                {
+        "Identity":                     "valid",
+        "Credentials":                  "valid",
+        "Evidence":                     "valid",
+        "Policy":                       "satisfied"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "FinalStatus":                    "Success"
+        },
+        "PI-A":                        {
+          "DataSent":                      true
+        }
+      }
+    },
+
+    "DL-02":                        {
+      "Purpose":                      "Early termination on identity failure",
+      "Preconditions":                {
+        "Identity":                     "invalidCII"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "IdentityVerification":          "fail",
+          "Reason":                        "InvalidCIISignature",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "DL-03":                        {
+      "Purpose":                      "Early termination on credential failure",
+      "Preconditions":                {
+        "Credentials":                  "expired"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "CredentialVerification":        "fail",
+          "Reason":                        "ExpiredInstanceCredential",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "DL-04":                        {
+      "Purpose":                      "Early termination on evidence failure",
+      "Preconditions":                {
+        "Evidence":                     "stale"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetX"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "EvidenceVerification":          "fail",
+          "Reason":                        "StaleEvidence",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "DL-05":                        {
+      "Purpose":                      "Early termination on policy failure",
+      "Preconditions":                {
+        "Policy":                       "violation"
+      },
+      "Inputs":                       {
+        "TrustRequest":                 {
+          "RequesterID":                  "PI-A",
+          "TargetID":                     "PI-B",
+          "Operation":                    "ReceiveDatasetY"
+        }
+      },
+      "Expected":                     {
+        "Verifier":                     {
+          "PolicyEvaluation":              "fail",
+          "Reason":                        "PolicyViolation:RequiredRole",
+          "FinalStatus":                    "Failure"
+        },
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "DX-01":                        {
+      "Purpose":                      "Data sent only on success",
+      "Preconditions":                {
+        "TrustResponse":                "Success"
+      },
+      "Inputs":                       {
+        "Data":                         "payload",
+        "DEM":                          "valid"
+      },
+      "Expected":                     {
+        "PI-A":                        {
+          "DataSent":                      true
+        }
+      }
+    },
+
+    "DX-02":                        {
+      "Purpose":                      "No data sent on failure",
+      "Preconditions":                {
+        "TrustResponse":                "Failure"
+      },
+      "Inputs":                       {
+        "Data":                         "payload",
+        "DEM":                          "valid"
+      },
+      "Expected":                     {
+        "PI-A":                        {
+          "DataSent":                      false
+        }
+      }
+    },
+
+    "DX-03":                        {
+      "Purpose":                      "DEM retention enforcement",
+      "Preconditions":                {
+        "DEM":                          {
+          "RetentionLimit":                "P7D"
+        }
+      },
+      "Inputs":                       {
+        "Data":                         "payload"
+      },
+      "Expected":                     {
+        "PI-B":                        {
+          "RetentionEnforced":              true
+        }
+      }
+    },
+
+    "DX-04":                        {
+      "Purpose":                      "DEM no-onward-sharing enforcement",
+      "Preconditions":                {
+        "DEM":                          {
+          "NoOnwardSharing":               true
+        }
+      },
+      "Inputs":                       {
+        "Data":                         "payload"
+      },
+      "Expected":                     {
+        "PI-B":                        {
+          "OnwardSharingAllowed":           false
+        }
+      }
+    },
+
+    "DX-05":                        {
+      "Purpose":                      "DEM security enforcement",
+      "Preconditions":                {
+        "DEM":                          {
+          "Confidentiality":               "High",
+          "Integrity":                     "Required"
+        }
+      },
+      "Inputs":                       {
+        "Data":                         "payload"
+      },
+      "Expected":                     {
+        "PI-B":                        {
+          "ConfidentialityControlsApplied": true,
+          "IntegrityControlsApplied":       true
+        }
+      }
+    }
+  }
+}
