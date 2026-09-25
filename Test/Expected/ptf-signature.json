@@ -1,14 +1,14 @@
 {
   "a member added": "Invalid",
   "a nested value changed": "Invalid",
-  "another algorithm named": "UnknownAlgorithm",
   "members reordered, whitespace added": "Valid",
-  "no signature": "Missing",
+  "no Signature": "Missing",
   "signed, verified": "Valid",
-  "the algorithm": "PTF-ALGO-SIG-ECDSA-P256-SHA256",
-  "the same with the Header PTF-MSG-V1,,.0,, that the pattern accepts": "valid",
-  "the signature value changed": "Invalid",
-  "the signed TrustMessage against its schema": "not valid",
-  "the value": "128 hexadecimal characters",
-  "verified with another key": "Invalid"
+  "the KeyID": "key-A",
+  "the KeyID of a key not known": "UnknownKey",
+  "the KeyID of another known key": "Invalid",
+  "the Signature": "128 hexadecimal characters",
+  "the Signature changed": "Invalid",
+  "the same without its KeyID": "/ properties: Some properties did not match the required schema: [\"MessageType\"]; / required: Required properties [\"KeyID\"] are not present; / required: Required properties [\"Response\"] are not present; /MessageType const: Expected \"\\u0022TrustResponse\\u0022\"",
+  "the signed TrustMessage against its schema": "valid"
 }

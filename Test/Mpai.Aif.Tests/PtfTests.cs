@@ -48,11 +48,16 @@ public class PtfTests
             else result[$"{name}: Header"] = "a string, unconstrained";
 
             var undefined = new List<string>();
+            var top = schema["properties"] as JsonObject;
             Walk(schema, "", (node, path) =>
             {
-                if (node["required"] is not JsonArray required || node["properties"] is not JsonObject props) return;
+                if (node["required"] is not JsonArray required) return;
+                var props = node["properties"] as JsonObject ?? (path.Contains("/oneOf/") || path.Contains("/anyOf/") ? new JsonObject() : null);
+                if (props is null) return;
                 var closed = node["additionalProperties"] is JsonValue v && v.GetValueKind() == JsonValueKind.False;
-                foreach (var r in required.Select(x => (string?)x).Where(r => r is not null && !props.ContainsKey(r!)))
+                // In an alternative (oneOf, anyOf), a member the top level defines is defined.
+                var alternative = path.Contains("/oneOf/") || path.Contains("/anyOf/");
+                foreach (var r in required.Select(x => (string?)x).Where(r => r is not null && !props.ContainsKey(r!) && !(alternative && top?.ContainsKey(r!) == true)))
                     undefined.Add($"{(path.Length == 0 ? "/" : path)} {r}" + (closed ? " (no instance can validate)" : " (left unconstrained)"));
             });
             if (undefined.Count > 0) result[$"{name}: required and not defined"] = string.Join("; ", undefined);
@@ -102,9 +107,10 @@ public class PtfTests
         Expected.Match("ptf-canonical.json", result);
     }
 
-    // THE SIGNATURE of a PTF object: made over the canonical form without the
-    // Signature member, verified the same way. Any change detected; a change of
-    // order or whitespace not.
+    // THE SIGNATURE of a PTF object, as the Signature Conventions have it: the
+    // signature value in hexadecimal, and the KeyID of the key that verifies it,
+    // over the canonical form without the Signature. Any change detected; a change
+    // of order or whitespace not.
     [Fact]
     public void Signature()
     {
@@ -112,47 +118,48 @@ public class PtfTests
         using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         using var other = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         using var publicKey = ECDsa.Create(key.ExportParameters(false));
+        using var otherPublic = ECDsa.Create(other.ExportParameters(false));
+        ECDsa? KeyFor(string id) => id switch { "key-A" => publicKey, "key-B" => otherPublic, _ => null };
 
         var message = TrustRequest();
-        PtfSignature.Sign(message, key);
-        result["signed, verified"] = PtfSignature.Verify(message, publicKey).ToString();
-        result["the algorithm"] = (string)message["Signature"]!["Algorithm"]!;
-        result["the value"] = $"{((string)message["Signature"]!["Value"]!).Length} hexadecimal characters";
+        PtfSignature.Sign(message, key, "key-A");
+        result["signed, verified"] = PtfSignature.Verify(message, KeyFor).ToString();
+        result["the Signature"] = $"{((string)message["Signature"]!).Length} hexadecimal characters";
+        result["the KeyID"] = (string)message["KeyID"]!;
 
         var reordered = JsonNode.Parse(Reorder(message).ToJsonString(new JsonSerializerOptions { WriteIndented = true }))!.AsObject();
-        result["members reordered, whitespace added"] = PtfSignature.Verify(reordered, publicKey).ToString();
+        result["members reordered, whitespace added"] = PtfSignature.Verify(reordered, KeyFor).ToString();
 
         var changed = message.DeepClone().AsObject();
         changed["Request"]!["TargetID"] = "PI-C";
-        result["a nested value changed"] = PtfSignature.Verify(changed, publicKey).ToString();
+        result["a nested value changed"] = PtfSignature.Verify(changed, KeyFor).ToString();
 
         var added = message.DeepClone().AsObject();
-        added["ResponderID"] = "PI-C";
-        result["a member added"] = PtfSignature.Verify(added, publicKey).ToString();
+        added["DescrMetadata"] = "added";
+        result["a member added"] = PtfSignature.Verify(added, KeyFor).ToString();
 
         var value = message.DeepClone().AsObject();
-        var v = (string)value["Signature"]!["Value"]!;
-        value["Signature"]!["Value"] = (v[0] == 'A' ? "B" : "A") + v[1..];
-        result["the signature value changed"] = PtfSignature.Verify(value, publicKey).ToString();
+        var v = (string)value["Signature"]!;
+        value["Signature"] = (v[0] == 'A' ? "B" : "A") + v[1..];
+        result["the Signature changed"] = PtfSignature.Verify(value, KeyFor).ToString();
 
-        var algorithm = message.DeepClone().AsObject();
-        algorithm["Signature"]!["Algorithm"] = "PTF-ALGO-SIG-ED25519";
-        result["another algorithm named"] = PtfSignature.Verify(algorithm, publicKey).ToString();
+        var otherKey = message.DeepClone().AsObject();
+        otherKey["KeyID"] = "key-B";
+        result["the KeyID of another known key"] = PtfSignature.Verify(otherKey, KeyFor).ToString();
+
+        var unknown = message.DeepClone().AsObject();
+        unknown["KeyID"] = "key-Z";
+        result["the KeyID of a key not known"] = PtfSignature.Verify(unknown, KeyFor).ToString();
 
         var removed = message.DeepClone().AsObject();
         removed.Remove("Signature");
-        result["no signature"] = PtfSignature.Verify(removed, publicKey).ToString();
-
-        using var otherPublic = ECDsa.Create(other.ExportParameters(false));
-        result["verified with another key"] = PtfSignature.Verify(message, otherPublic).ToString();
+        result["no Signature"] = PtfSignature.Verify(removed, KeyFor).ToString();
 
         // The signed message against its schema, as PTF requires of every structure.
-        result["the signed TrustMessage against its schema"] = Violations("TrustMessage", message) == "valid" ? "valid" : "not valid";
-        // That the Header is the only fault: the same message with a Header that the
-        // pattern, as written, accepts.
-        var garbled = message.DeepClone().AsObject();
-        garbled["Header"] = "PTF-MSG-V1,,.0,,";
-        result["the same with the Header PTF-MSG-V1,,.0,, that the pattern accepts"] = Violations("TrustMessage", garbled);
+        result["the signed TrustMessage against its schema"] = Violations("TrustMessage", message);
+        var noKey = message.DeepClone().AsObject();
+        noKey.Remove("KeyID");
+        result["the same without its KeyID"] = Violations("TrustMessage", noKey);
         Expected.Match("ptf-signature.json", result);
     }
 
