@@ -11,54 +11,41 @@ using Mpai.Aif.Api;
 namespace Mpai.Aif.Tests;
 
 // PHASE 13, STEP 2 (M3223 3.1): the identities and credentials of AIM Instances.
-// A Trust Anchor the deployment configures issues the Controller its credential;
-// the Controller issues each AIM Instance it starts an Instance Credential for the
-// CII of a key of its own, and a Process Lifecycle Credential at each change of
-// state. An AIM on a host makes its key there, and is issued its credential only if
-// its CII shows it holds that key.
+// In the AIF only AIM Instances are PTF Process Instances, and a Controller is
+// itself a Trust Anchor (the author, 2026/09/25): it issues each AIM Instance it
+// starts an Instance Credential for the CII of a key of its own, and a Process
+// Lifecycle Credential at each change of state. An AIM on a host makes its key
+// there, and is issued its credential only if its CII shows it holds that key. An
+// AIM its credential entitles to issue - a package - credentials the AIMs inside it,
+// and a verifier follows the CredentialChain to the anchor.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class TrustIdentityTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 9, 25, 12, 0, 0, TimeSpan.Zero);
 
-    private static TrustAnchorKey Anchor(out ECDsa key)
-    {
-        key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        return new TrustAnchorKey("anchor.test.mpai", key, T0.AddDays(-1), T0.AddYears(1));
-    }
-
-    // THE OBJECTS, and the chain from the anchor to an AIM Instance.
+    // THE OBJECTS: the Controller's Trust Anchor, an AIM's CII, credential and
+    // lifecycle credential, and what each is checked against.
     [Fact]
     public void Identities()
     {
         var result = new Dictionary<string, string>();
-        var anchor = Anchor(out _);
         var now = T0;
-        var trust = new TrustDomain(anchor, "controller-1", () => now);
+        var trust = new TrustDomain("controller-1", () => now);
         var aim = trust.IssueLocal("TST#1/1TST-UPP-V1.0-I01", "1TST-UPP-V1.0-I01", "1TST-UPP-V1.0-I01");
 
-        result["the Trust Anchor against its schema"] = Violations("TrustAnchor", anchor.Object());
-        result["the Controller's CII against its schema"] = Violations("CryptographicInstanceIdentity", trust.ControllerCii);
-        result["the Controller's credential against its schema"] = Violations("InstanceCredential", trust.ControllerCredential);
+        result["the Controller's Trust Anchor against its schema"] = Violations("TrustAnchor", trust.Anchor.Object());
         result["the AIM's CII against its schema"] = Violations("CryptographicInstanceIdentity", aim.Cii);
         result["the AIM's credential against its schema"] = Violations("InstanceCredential", aim.Credential);
         result["the AIM's lifecycle credential against its schema"] = Violations("ProcessLifecycleCredential", aim.Lifecycle);
 
-        ECDsa? AnchorOnly(string id) => id == anchor.AnchorId ? anchor.PublicKey : null;
-        result["the Controller's CII, checked"] = PtfIdentity.Check(trust.ControllerCii, out _).ToString();
-        result["the Controller's credential, by the anchor"] = PtfCredential.CheckCredential(trust.ControllerCredential, trust.ControllerCii, AnchorOnly, now).ToString();
+        // A verifier given the Controller's Trust Anchor object, and nothing else.
+        var anchorObject = trust.Anchor.Object();
+        var anchorKey = TrustAnchorKey.KeyOf(anchorObject);
+        ECDsa? Given(string id) => id == (string?)anchorObject["AnchorID"] ? anchorKey : null;
         result["the AIM's CII, checked"] = PtfIdentity.Check(aim.Cii, out _).ToString();
-        result["the AIM's credential, by the Controller"] = PtfCredential.CheckCredential(aim.Credential, aim.Cii, trust.KeyFor, now).ToString();
-        result["the AIM's credential, by the anchor alone"] = PtfCredential.CheckCredential(aim.Credential, aim.Cii, AnchorOnly, now).ToString();
-        var chain = PtfCredential.Through(trust.ControllerCredential, trust.ControllerCii, anchor.AnchorId, anchor.PublicKey, now);
-        result["the AIM's credential, by the anchor through the Controller's credential"] = chain is null ? "the Controller's credential does not check"
-            : PtfCredential.CheckCredential(aim.Credential, aim.Cii, chain, now).ToString();
-        var forged = trust.ControllerCredential.DeepClone().AsObject();
-        forged["Subject"]!["Specification"] = "AIF-XXX";
-        result["the same, the Controller's credential altered"] = PtfCredential.Through(forged, trust.ControllerCii, anchor.AnchorId, anchor.PublicKey, now) is null
-            ? "the chain breaks" : "the chain holds";
-        result["the AIM's lifecycle: Created"] = PtfCredential.CheckLifecycle(aim.Lifecycle, aim.Id, "Created", trust.KeyFor, now).ToString();
+        result["the AIM's credential, by the Controller's anchor"] = PtfCredential.CheckCredential(aim.Credential, aim.Cii, Given, now).ToString();
+        result["the AIM's lifecycle: Created"] = PtfCredential.CheckLifecycle(aim.Lifecycle, aim.Id, "Created", Given, now).ToString();
         result["the AIM's credential says"] = $"{aim.Credential["Subject"]!["InstanceType"]} {aim.Credential["Subject"]!["InstanceID"]}, of {aim.Credential["Subject"]!["Specification"]}, issued by {aim.Credential["Issuer"]!["Name"]}";
 
         var key = trust.KeyOf(aim.Id)!;
@@ -70,6 +57,91 @@ public class TrustIdentityTests
         Expected.Match("trust-identities.json", result);
     }
 
+    // THE CREDENTIAL CHAIN: a package - an AIM the Controller credentials as an
+    // issuer - credentials the AIMs inside it; a verifier that trusts only the
+    // Controller's anchor follows the chain presented with a credential.
+    [Fact]
+    public void Chain()
+    {
+        var result = new Dictionary<string, string>();
+        var now = T0;
+        var trust = new TrustDomain("controller-1", () => now);
+        var package = trust.IssueLocal("TST#1/1TST-PKG-V1.0-I01", "1TST-PKG-V1.0-I01", null, issuer: true);
+        var byPackage = new PtfIssuer(package.Id, trust.KeyOf(package.Id)!, package.Id);
+
+        (JsonObject Cii, JsonObject Credential, ECDsa Key) Inner(PtfIssuer by, string id, string? scope = null)
+        {
+            var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+            var cii = PtfIdentity.Make(key, id, null, now);
+            return (cii, by.IssueCredential(cii, "AIMInstance", id, PtfIdentity.AimType(id.Split('/')[^1]), now, TrustDomain.CredentialLifetime, scope), key);
+        }
+        var inner = Inner(byPackage, "TST#1/1TST-PKG-V1.0-I01/1TST-UPP-V1.0-I01");
+        var link = new PtfCredential.Link(package.Cii, package.Credential);
+
+        result["an AIM inside the package, with the chain"] = PtfCredential.CheckChain(inner.Credential, inner.Cii, [link], trust.KeyFor, now).ToString();
+        result["the same, without the chain"] = PtfCredential.CheckChain(inner.Credential, inner.Cii, [], trust.KeyFor, now).ToString();
+        result["the package's own credential, no chain needed"] = PtfCredential.CheckChain(package.Credential, package.Cii, [], trust.KeyFor, now).ToString();
+
+        var plain = trust.IssueLocal("TST#1/1TST-PLN-V1.0-I01", "1TST-PLN-V1.0-I01", null);
+        var byPlain = Inner(new PtfIssuer(plain.Id, trust.KeyOf(plain.Id)!, plain.Id), "TST#1/1TST-PLN-V1.0-I01/1TST-UPP-V1.0-I01");
+        result["an AIM credentialed by an AIM not entitled to issue"] = PtfCredential.CheckChain(byPlain.Credential, byPlain.Cii,
+            [new PtfCredential.Link(plain.Cii, plain.Credential)], trust.KeyFor, now).ToString();
+
+        var altered = package.Credential.DeepClone().AsObject();
+        altered["Validity"]!["NotAfter"] = PtfIdentity.Time(now.AddYears(10));
+        result["the chain with the package's credential altered"] = PtfCredential.CheckChain(inner.Credential, inner.Cii,
+            [new PtfCredential.Link(package.Cii, altered)], trust.KeyFor, now).ToString();
+
+        using var stranger = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        result["the chain with a CII of the package's name and another key"] = PtfCredential.CheckChain(inner.Credential, inner.Cii,
+            [new PtfCredential.Link(PtfIdentity.Make(stranger, package.Id, null, now), package.Credential)], trust.KeyFor, now).ToString();
+
+        var other = new TrustDomain("controller-2", () => now);
+        result["the chain, verified by another Controller's anchor"] = PtfCredential.CheckChain(inner.Credential, inner.Cii, [link], other.KeyFor, now).ToString();
+
+        // Two levels: the package credentials a sub-package as an issuer, which
+        // credentials an AIM inside it.
+        var sub = Inner(byPackage, "TST#1/1TST-PKG-V1.0-I01/1TST-SUB-V1.0-I01", PtfCredential.IssuerScope);
+        var subId = (string)sub.Cii["CryptographicInstanceID"]!;
+        var deep = Inner(new PtfIssuer(subId, sub.Key, subId), subId + "/1TST-SLP-V1.0-I01");
+        result["two levels, the whole chain"] = PtfCredential.CheckChain(deep.Credential, deep.Cii,
+            [new PtfCredential.Link(sub.Cii, sub.Credential), link], trust.KeyFor, now).ToString();
+        result["two levels, the upper link missing"] = PtfCredential.CheckChain(deep.Credential, deep.Cii,
+            [new PtfCredential.Link(sub.Cii, sub.Credential)], trust.KeyFor, now).ToString();
+
+        // A loop: an issuer that presents itself as its own issuer.
+        const string selfId = "TST#9/1TST-SLF-V1.0-I01";
+        var selfKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var selfCii = PtfIdentity.Make(selfKey, selfId, null, now);
+        var selfIssued = new PtfIssuer(selfId, selfKey, selfId).IssueCredential(selfCii, "AIMInstance", selfId, null, now, TrustDomain.CredentialLifetime, PtfCredential.IssuerScope);
+        result["a chain that loops"] = PtfCredential.CheckChain(selfIssued, selfCii, [new PtfCredential.Link(selfCii, selfIssued)], trust.KeyFor, now).ToString();
+
+        // THE PRESENTATION: a TrustRequest carrying the inner AIM's identity,
+        // credential and chain, signed by the inner AIM.
+        var request = new JsonObject
+        {
+            ["Header"] = "PTF-MSG-V1.0", ["MessageID"] = "msg-1",
+            ["MessageTime"] = new JsonObject { ["Header"] = "OSD-TIM-V1.5", ["TimeID"] = "t-1", ["Data"] = PtfIdentity.Time(now) },
+            ["MessageType"] = "TrustRequest", ["RequesterID"] = (string)inner.Cii["CryptographicInstanceID"]!,
+            ["Request"] = new JsonObject { ["Operation"] = "Exchange", ["TargetType"] = "AIMInstance", ["TargetID"] = "TST#1/1TST-SLP-V1.0-I01" },
+            ["Presentation"] = new JsonObject
+            {
+                ["CII"] = inner.Cii.DeepClone(), ["InstanceCredential"] = inner.Credential.DeepClone(),
+                ["CredentialChain"] = new JsonArray(new JsonObject { ["CII"] = package.Cii.DeepClone(), ["InstanceCredential"] = package.Credential.DeepClone() })
+            }
+        };
+        PtfSignature.Sign(request, inner.Key, (string)inner.Cii["CryptographicInstanceID"]!);
+        result["a TrustRequest with its Presentation, against its schema"] = Violations("TrustMessage", request);
+        var presented = request["Presentation"]!.AsObject();
+        var presentedKey = PtfIdentity.PublicKey(presented["CII"]!.AsObject());
+        result["the TrustRequest: signed by the key its Presentation's CII names"] = PtfSignature.Verify(request, _ => presentedKey).ToString();
+        result["the TrustRequest: its credential, through the chain it presents"] = PtfCredential.CheckChain(
+            presented["InstanceCredential"]!.AsObject(), presented["CII"]!.AsObject(),
+            presented["CredentialChain"]!.AsArray().Select(l => new PtfCredential.Link(l!["CII"]!.AsObject(), l["InstanceCredential"]!.AsObject())).ToList(),
+            trust.KeyFor, now).ToString();
+        Expected.Match("trust-chain.json", result);
+    }
+
     // WHAT IS REFUSED: a CII that is not what it says, a credential changed, for
     // another CII, out of its time, or from an issuer not trusted; a lifecycle not in
     // the state claimed; an AIM on a host that does not hold the key it names.
@@ -77,9 +149,8 @@ public class TrustIdentityTests
     public void Refused()
     {
         var result = new Dictionary<string, string>();
-        var anchor = Anchor(out _);
         var now = T0;
-        var trust = new TrustDomain(anchor, "controller-1", () => now);
+        var trust = new TrustDomain("controller-1", () => now);
         var aim = trust.IssueLocal("TST#1/1TST-UPP-V1.0-I01", "1TST-UPP-V1.0-I01", null);
 
         using var stranger = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -101,8 +172,8 @@ public class TrustIdentityTests
         result["a credential after its time"] = PtfCredential.CheckCredential(aim.Credential, aim.Cii, trust.KeyFor, now + TrustDomain.CredentialLifetime + TimeSpan.FromMinutes(1)).ToString();
         result["a credential before its time"] = PtfCredential.CheckCredential(aim.Credential, aim.Cii, trust.KeyFor, now - TimeSpan.FromMinutes(1)).ToString();
 
-        var elsewhere = new TrustDomain(Anchor(out _), "controller-2", () => now);
-        result["a credential from a Controller of another deployment"] = PtfCredential.CheckCredential(
+        var elsewhere = new TrustDomain("controller-2", () => now);
+        result["a credential from another Controller"] = PtfCredential.CheckCredential(
             elsewhere.IssueLocal("TST#2/1TST-UPP-V1.0-I01", "1TST-UPP-V1.0-I01", null).Credential,
             elsewhere.Of("TST#2/1TST-UPP-V1.0-I01")!.Cii, trust.KeyFor, now).ToString();
         result["a lifecycle credential claimed Running while Created"] = PtfCredential.CheckLifecycle(aim.Lifecycle, aim.Id, "Running", trust.KeyFor, now).ToString();
@@ -123,8 +194,7 @@ public class TrustIdentityTests
         using var hostProcess = new HostProcess();
         foreach (var (module, placed) in new[] { ("TST-RXL", Array.Empty<string>()), ("TST-RXC", new[] { "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01" }) })
         {
-            var now = T0;
-            var trust = new TrustDomain(Anchor(out _), "controller-1");
+            var trust = new TrustDomain("controller-1");
             using var api = new ControllerApi(RemoteTests.Amds, Path.Combine(RemoteTests.Amds, "no-settings.json"), new RemoteAims());
             api.Controller.Trust = trust;
             api.Controller.AimHostKey = HostProcess.Key;

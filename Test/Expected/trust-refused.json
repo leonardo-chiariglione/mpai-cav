@@ -4,7 +4,7 @@
   "a credential after its time": "Expired",
   "a credential before its time": "NotYetValid",
   "a credential changed": "InvalidSignature",
-  "a credential from a Controller of another deployment": "UnknownIssuer",
+  "a credential from another Controller": "UnknownIssuer",
   "a credential presented with another CII": "CiiMismatch",
   "a host presenting a CII whose key it does not hold": "refused: TST#1/1TST-RPT-V1.0-I01: its CII is not valid (NotPossessed); no credential issued.",
   "a host presenting the CII of another instance": "refused: TST#1/1TST-RPT-V1.0-I01: its CII names TST#1/1TST-OTHER; no credential issued.",

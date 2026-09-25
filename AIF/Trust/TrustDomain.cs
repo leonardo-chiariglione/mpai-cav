@@ -4,10 +4,9 @@ using System.Text.Json.Nodes;
 
 namespace AIF.Trust;
 
-// THE TRUST ANCHOR OF A DEPLOYMENT (M3223 3.1, proposed): a key the deployment
-// configures, whose public part every party trusts, and which issues the
-// credentials of Controllers and hosts. Its PTF object (PTF-TRA) is what a verifier
-// is given to trust it.
+// A TRUST ANCHOR (MPAI-PTF V1.0, PTF-TRA): a key whose public part a verifier
+// trusts, and which issues credentials. Its PTF object is what a verifier is given
+// to trust it.
 public sealed class TrustAnchorKey
 {
     public const string Header = "PTF-TRA-V1.0";
@@ -44,6 +43,19 @@ public sealed class TrustAnchorKey
         }
     };
 
+    // The public key a PTF Trust Anchor object names.
+    public static ECDsa? KeyOf(JsonObject anchor)
+    {
+        if ((string?)anchor["Header"] != Header || (string?)anchor["PublicKey"]?["KeyEncoding"] != "spki") return null;
+        try
+        {
+            var key = ECDsa.Create();
+            key.ImportSubjectPublicKeyInfo(Convert.FromHexString((string?)anchor["PublicKey"]?["KeyValue"] ?? ""), out _);
+            return key;
+        }
+        catch (Exception e) when (e is FormatException or CryptographicException) { return null; }
+    }
+
     // A Simple Time (OSD-STM-V1.5) of one instant: a segment whose start and end are
     // the instant, absolute (FlagsByte bit 0), in milliseconds (bits 1-2 = 01).
     private static JsonObject TimeObject(string id, DateTimeOffset t)
@@ -62,12 +74,13 @@ public sealed class TrustAnchorKey
     }
 }
 
-// THE TRUST OF ONE CONTROLLER (Phase 13, M3223 3.1). Given the anchor of its
-// deployment, the Controller has an identity - its key, its CII, and the credential
-// the anchor issued it - and is the issuer of the credentials of the AIM Instances
-// it runs: every AIM Instance a PTF Process Instance, with a key of its own, its
-// CII, the Instance Credential that binds that CII to the instance, and a Process
-// Lifecycle Credential that follows the instance's state.
+// THE TRUST OF ONE CONTROLLER (Phase 13, M3223 3.1). In the AIF only AIM
+// Instances are PTF Process Instances, and a Controller is itself a Trust Anchor
+// (the author, 2026/09/25): its key is the anchor's, its Trust Anchor object is what
+// hosts and other Controllers are given to trust it, and it issues the credentials
+// of the AIM Instances it runs directly - every AIM Instance with a key of its own,
+// its CII, the Instance Credential that binds that CII to the instance, and a
+// Process Lifecycle Credential that follows the instance's state.
 //
 // The key of an AIM the Controller runs is made here, and never leaves this
 // process. The key of an AIM on a host is made on the host, which sends only the
@@ -77,6 +90,7 @@ public sealed class TrustDomain
 {
     public static readonly TimeSpan CredentialLifetime = TimeSpan.FromHours(24);
     public static readonly TimeSpan LifecycleLifetime = TimeSpan.FromHours(1);
+    public static readonly TimeSpan AnchorLifetime = TimeSpan.FromDays(365);
 
     public sealed class Instance
     {
@@ -90,37 +104,29 @@ public sealed class TrustDomain
 
     public string ControllerId { get; }
     public TrustAnchorKey Anchor { get; }
-    public JsonObject ControllerCii { get; }
-    public JsonObject ControllerCredential { get; }
 
     private readonly Func<DateTimeOffset> now;
-    private readonly PtfIssuer issuer;
-    private readonly ECDsa controllerPublic;
     private readonly ConcurrentDictionary<string, Instance> instances = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, ECDsa> keys = new(StringComparer.Ordinal);
 
-    public TrustDomain(TrustAnchorKey anchor, string controllerId, Func<DateTimeOffset>? now = null)
+    public TrustDomain(string controllerId, Func<DateTimeOffset>? now = null)
     {
-        Anchor = anchor;
         ControllerId = controllerId;
         this.now = now ?? (() => DateTimeOffset.UtcNow);
-        var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        controllerPublic = ECDsa.Create(key.ExportParameters(false));
-        ControllerCii = PtfIdentity.Make(key, controllerId, "AIF Controller", this.now());
-        ControllerCredential = anchor.Issuer.IssueCredential(ControllerCii, "ProcessInstance", controllerId, "AIF-CTR", this.now(), CredentialLifetime);
-        issuer = new PtfIssuer(controllerId, key, controllerId);
+        var t = this.now();
+        Anchor = new TrustAnchorKey(controllerId, ECDsa.Create(ECCurve.NamedCurves.nistP256), t, t + AnchorLifetime);
     }
 
-    // The public keys this Controller trusts, by KeyID: the anchor's and its own.
-    public ECDsa? KeyFor(string keyId) =>
-        keyId == Anchor.AnchorId ? Anchor.PublicKey : keyId == ControllerId ? controllerPublic : null;
+    // The public key a KeyID names, among those this Controller trusts: its own.
+    public ECDsa? KeyFor(string keyId) => keyId == Anchor.AnchorId ? Anchor.PublicKey : null;
 
-    // AN AIM THE CONTROLLER RUNS: its key made here.
-    public Instance IssueLocal(string instanceId, string aimInstance, string? implementation)
+    // AN AIM THE CONTROLLER RUNS: its key made here. An issuer - a package that
+    // credentials the AIMs inside it (M3223 3.3) - is entitled to issue by its scope.
+    public Instance IssueLocal(string instanceId, string aimInstance, string? implementation, bool issuer = false)
     {
         var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         keys[instanceId] = key;
-        return Issue(instanceId, aimInstance, PtfIdentity.Make(key, instanceId, implementation, now()), heldHere: true);
+        return Issue(instanceId, aimInstance, PtfIdentity.Make(key, instanceId, implementation, now()), heldHere: true, issuer);
     }
 
     // AN AIM ON A HOST: its key made there, its CII sent here. Refused unless the CII
@@ -131,16 +137,17 @@ public sealed class TrustDomain
             throw new InvalidOperationException($"{instanceId}: its CII is not valid ({checkedCii}); no credential issued.");
         if ((string?)cii["CryptographicInstanceID"] != instanceId)
             throw new InvalidOperationException($"{instanceId}: its CII names {cii["CryptographicInstanceID"]}; no credential issued.");
-        return Issue(instanceId, aimInstance, cii, heldHere: false);
+        return Issue(instanceId, aimInstance, cii, heldHere: false, issuer: false);
     }
 
-    private Instance Issue(string instanceId, string aimInstance, JsonObject cii, bool heldHere)
+    private Instance Issue(string instanceId, string aimInstance, JsonObject cii, bool heldHere, bool issuer)
     {
         var instance = new Instance
         {
             Id = instanceId,
             Cii = cii,
-            Credential = issuer.IssueCredential(cii, "AIMInstance", instanceId, PtfIdentity.AimType(aimInstance), now(), CredentialLifetime),
+            Credential = Anchor.Issuer.IssueCredential(cii, "AIMInstance", instanceId, PtfIdentity.AimType(aimInstance), now(),
+                                                        CredentialLifetime, issuer ? PtfCredential.IssuerScope : null),
             KeyHeldHere = heldHere
         };
         instances[instanceId] = instance;
@@ -165,7 +172,7 @@ public sealed class TrustDomain
     {
         lock (instance)
         {
-            instance.Lifecycle = issuer.IssueLifecycle(instance.Id, state, now(), LifecycleLifetime);
+            instance.Lifecycle = Anchor.Issuer.IssueLifecycle(instance.Id, state, now(), LifecycleLifetime);
             instance.States.Add(state);
         }
     }

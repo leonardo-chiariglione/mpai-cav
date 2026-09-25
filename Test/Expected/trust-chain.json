@@ -1,0 +1,15 @@
+{
+  "a TrustRequest with its Presentation, against its schema": "valid",
+  "a chain that loops": "ChainBroken",
+  "an AIM credentialed by an AIM not entitled to issue": "NotEntitled",
+  "an AIM inside the package, with the chain": "Valid",
+  "the TrustRequest: its credential, through the chain it presents": "Valid",
+  "the TrustRequest: signed by the key its Presentation's CII names": "Valid",
+  "the chain with a CII of the package's name and another key": "InvalidSignature",
+  "the chain with the package's credential altered": "InvalidSignature",
+  "the chain, verified by another Controller's anchor": "UnknownIssuer",
+  "the package's own credential, no chain needed": "Valid",
+  "the same, without the chain": "UnknownIssuer",
+  "two levels, the upper link missing": "UnknownIssuer",
+  "two levels, the whole chain": "Valid"
+}
