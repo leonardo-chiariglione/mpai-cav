@@ -1,0 +1,11 @@
+{
+  "Pause, then TST-SLP fired": "held; after Resume 'p'",
+  "Status after Release": "TST#1 holds nothing here",
+  "Status from the host": "1TST-RPT-V1.0-I01 Dead; 1TST-SLP-V1.0-I01 Dead; 1TST-UPP-V1.0-I01 Dead",
+  "Stop during a run on the host": "the AIM was stopped",
+  "TST-RPT fired on the host": "r; its report came back: 1TST-RPT-V1.0-I01: fell back to a simpler path",
+  "TST-UPP fired after its host went": "an error: the link to its host was lost",
+  "TST-UPP fired on the host": "X",
+  "a Controller with the wrong key": "not admitted",
+  "placing an AIM the host has no L3 of": "refused: The AIM host at <host> did not place 1TST-XXX-V1.0-I01: this host holds no L3 of 1TST-XXX-V1.0-I01."
+}
