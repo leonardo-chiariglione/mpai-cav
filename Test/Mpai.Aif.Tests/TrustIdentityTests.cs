@@ -195,7 +195,8 @@ public class TrustIdentityTests
         foreach (var (module, placed) in new[] { ("TST-RXL", Array.Empty<string>()), ("TST-RXC", new[] { "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01" }) })
         {
             var trust = new TrustDomain("controller-1");
-            using var api = new ControllerApi(RemoteTests.Amds, Path.Combine(RemoteTests.Amds, "no-settings.json"), new RemoteAims());
+            var amds = TrustEvidenceTests.ApprovedCopy();              // what runs under trust is approved (Step 3)
+            using var api = new ControllerApi(amds, Path.Combine(amds, "no-settings.json"), new RemoteAims());
             api.Controller.Trust = trust;
             api.Controller.AimHostKey = HostProcess.Key;
             foreach (var aim in placed) api.Controller.AimHosts[aim] = hostProcess.Address;

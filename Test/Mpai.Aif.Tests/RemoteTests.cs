@@ -99,6 +99,9 @@ public sealed class RemoteAims : IAimProvider
     private readonly ContinuousAims phase4 = new();
     public List<string> Built { get; } = new();
 
+    // The binary that implements every test AIM: this assembly (M3223 3.2).
+    public string? ImplementationOf(string aimName) => typeof(RemoteAims).Assembly.Location;
+
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
     {
         lock (Built) Built.Add(aimName[1..8]);

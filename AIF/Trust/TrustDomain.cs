@@ -100,12 +100,16 @@ public sealed class TrustDomain
         public JsonObject Lifecycle { get; set; } = new();
         public List<string> States { get; } = new();
         public bool KeyHeldHere { get; init; }
+
+        // The Attestation Evidence of what the instance runs (M3223 3.2).
+        public JsonObject? Evidence { get; set; }
     }
 
     public string ControllerId { get; }
     public TrustAnchorKey Anchor { get; }
 
     private readonly Func<DateTimeOffset> now;
+    private readonly ECDsa anchorKey;
     private readonly ConcurrentDictionary<string, Instance> instances = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, ECDsa> keys = new(StringComparer.Ordinal);
 
@@ -114,7 +118,8 @@ public sealed class TrustDomain
         ControllerId = controllerId;
         this.now = now ?? (() => DateTimeOffset.UtcNow);
         var t = this.now();
-        Anchor = new TrustAnchorKey(controllerId, ECDsa.Create(ECCurve.NamedCurves.nistP256), t, t + AnchorLifetime);
+        anchorKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        Anchor = new TrustAnchorKey(controllerId, anchorKey, t, t + AnchorLifetime);
     }
 
     // The public key a KeyID names, among those this Controller trusts: its own.
@@ -178,6 +183,11 @@ public sealed class TrustDomain
     }
 
     public Instance? Of(string instanceId) => instances.GetValueOrDefault(instanceId);
+
+    // The evidence of what an AIM the Controller runs will run, measured by the
+    // Controller and signed by it.
+    public JsonObject SignEvidence(string instanceId, IEnumerable<PtfEvidence.Item> items) =>
+        PtfEvidence.Make(instanceId, items, ControllerId, anchorKey, Anchor.AnchorId);
 
     public IReadOnlyList<Instance> OfModule(string moduleInstance) =>
         instances.Values.Where(i => i.Id.StartsWith(moduleInstance + "/", StringComparison.Ordinal)).OrderBy(i => i.Id, StringComparer.Ordinal).ToList();

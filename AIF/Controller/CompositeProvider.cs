@@ -31,6 +31,10 @@ public sealed class CompositeProvider : IAimProvider
     public bool CanCreate(string aimName) =>
         providers.Any(p => p.CanCreate(aimName));
 
+    // The binary that implements an AIM: as the provider that would build it says.
+    public string? ImplementationOf(string aimName) =>
+        providers.FirstOrDefault(p => p.CanCreate(aimName))?.ImplementationOf(aimName);
+
     public IAimProcessor Create(
         string aimName,
         IReadOnlyDictionary<string, string> settings,

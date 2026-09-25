@@ -91,7 +91,29 @@ public sealed class MpaiStore
 
     // ---- publishing -------------------------------------------------------
 
-    // Admits an AIM Metadata instance to the store, if it is valid.
+    // APPROVES an L3 the Store holds, with the binaries of its Implementations
+    // (M3223 3.2): records the fingerprint of each binary it names, as submitted. A
+    // binary the L3 does not name is not recorded; one it names and is not submitted
+    // is reported. Approval does not publish: publishing is Publish's, with its own
+    // check of the Metadata.
+    public StoreResult Approve(string aimName, IReadOnlyDictionary<string, string> binaries)
+    {
+        var identifier = FindByAimName(aimName);
+        if (identifier is null)
+            return StoreResult.Rejected(aimName, new[] { $"{aimName} is not in the store." });
+        using var document = JsonDocument.Parse(File.ReadAllText(PathOf(identifier)));
+        var named = document.RootElement.TryGetProperty("Implementations", out var list) && list.ValueKind == JsonValueKind.Array
+            ? list.EnumerateArray().Select(i => i.TryGetProperty("BinaryName", out var b) ? b.GetString() : null).OfType<string>().ToList()
+            : new List<string>();
+        var fingerprints = new ImplementationFingerprints(folder);
+        var reported = new List<string>();
+        foreach (var binary in named)
+            if (binaries.TryGetValue(binary, out var file)) fingerprints.Approve(aimName, binary, ImplementationFingerprints.Of(file), DateTimeOffset.UtcNow);
+            else reported.Add($"{binary}: named by the L3, not submitted - no fingerprint recorded");
+        if (named.Count == 0) reported.Add("the L3 names no binary");
+        return StoreResult.Valid(identifier.ToString(), reported);
+    }
+
     public StoreResult Publish(
         string amdJson,
         bool replace = false)

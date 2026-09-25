@@ -27,6 +27,11 @@ public interface IAimProvider
     // asked behaves as it always did.
     bool CanCreate(string aimName) => true;
 
+    // WHICH BINARY IMPLEMENTS AN AIM (M3223 3.2): the file the provider would build it
+    // from, so that it can be measured before it runs. Null where the provider cannot
+    // say - a Controller that verifies what it runs then refuses the AIM.
+    string? ImplementationOf(string aimName) => null;
+
     IAimProcessor Create(
         string aimName,
         IReadOnlyDictionary<string, string> settings,

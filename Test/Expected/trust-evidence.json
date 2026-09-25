@@ -1,0 +1,16 @@
+{
+  "a model declared and not there": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01: the model of ModelPath could not be measured.",
+  "a model with another SHA-256": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01: the model of ModelPath is not the one its settings declare.",
+  "a model with the SHA-256 its settings declare": "started; an exchange: OK",
+  "a provider that cannot say": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01: what implements it could not be measured; 1TST-REV-V1.0-I01: what implements it could not be measured; 1TST-SLP-V1.0-I01: what implements it could not be measured; 1TST-RPT-V1.0-I01: what implements it could not be measured.",
+  "a provider that names another binary": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01: implemented by AIF.Trust, its L3 names Mpai.Aif.Tests; 1TST-REV-V1.0-I01: implemented by AIF.Trust, its L3 names Mpai.Aif.Tests; 1TST-SLP-V1.0-I01: implemented by AIF.Trust, its L3 names Mpai.Aif.Tests; 1TST-RPT-V1.0-I01: implemented by AIF.Trust, its L3 names Mpai.Aif.Tests.",
+  "approved: 1TST-REV-V1.0-I01's evidence": "valid; signed by the Controller: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests (the binary's SHA-256)",
+  "approved: 1TST-RPT-V1.0-I01's evidence": "valid; signed by the Controller: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests (the binary's SHA-256)",
+  "approved: 1TST-SLP-V1.0-I01's evidence": "valid; signed by the Controller: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests (the binary's SHA-256)",
+  "approved: 1TST-UPP-V1.0-I01's evidence": "valid; signed by the Controller: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests (the binary's SHA-256)",
+  "approved: TST-RXL": "started; an exchange: OK",
+  "its evidence": "AIF-EVID-CODE-HASH Mpai.Aif.Tests, AIF-EVID-CONFIG-HASH ModelPath=<model>",
+  "not approved": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01: the Store approved no fingerprint of Mpai.Aif.Tests; 1TST-REV-V1.0-I01: the Store approved no fingerprint of Mpai.Aif.Tests; 1TST-SLP-V1.0-I01: the Store approved no fingerprint of Mpai.Aif.Tests; 1TST-RPT-V1.0-I01: the Store approved no fingerprint of Mpai.Aif.Tests.",
+  "one AIM approved with another fingerprint": "refused: 1TST-RXL-V1.0-I01 not started: 1TST-SLP-V1.0-I01: Mpai.Aif.Tests is not the binary the Store approved (SHA-256 <as measured>, approved 0000000000000000...).",
+  "without trust, not approved": "started; an exchange: OK"
+}

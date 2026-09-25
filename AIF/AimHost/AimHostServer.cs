@@ -123,8 +123,16 @@ public sealed class AimHostServer
                 var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
                 hosted.Keys[aim] = key;
                 hosted.Identities[aim] = AIF.Trust.PtfIdentity.Make(key, $"{module}/{aim}", aim, DateTimeOffset.UtcNow);
+
+                // What the AIM runs here, measured here, signed by its key (M3223 3.2);
+                // the model hashes its settings declare, for the Controller to check.
+                var aimSettings = settings.For(aim);
+                var evidence = AIF.Trust.PtfEvidence.Make($"{module}/{aim}",
+                    ImplementationEvidence.Of(provider.ImplementationOf(aim), aimSettings), "AIM host", key, $"{module}/{aim}");
+                var declared = new JsonObject();
+                foreach (var (k, v) in aimSettings.Where(s => s.Key.StartsWith("SHA256:", StringComparison.Ordinal))) declared[k] = v;
                 Console.WriteLine($"[AIM host] {aim} placed for {module}");
-                return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities[aim].DeepClone() };
+                return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities[aim].DeepClone(), ["Evidence"] = evidence, ["Declared"] = declared };
             }
 
             // The credentials the Controller issued an AIM placed here: kept, to be

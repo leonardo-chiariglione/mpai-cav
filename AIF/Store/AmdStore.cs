@@ -16,6 +16,16 @@ public sealed class AmdStore
 
     public int Count => amdDocuments.Count;
 
+    // What the Store approved of the Implementations its L3s name (M3223 3.2).
+    public ImplementationFingerprints Fingerprints => new(repositoryPath);
+
+    // The binary an L3 names for its Implementation: the first, where it names several.
+    public string? BinaryNameOf(Identifier identifier) =>
+        amdDocuments.TryGetValue(identifier, out var d) &&
+        d.RootElement.TryGetProperty("Implementations", out var list) && list.ValueKind == JsonValueKind.Array &&
+        list.EnumerateArray().Select(i => i.TryGetProperty("BinaryName", out var b) ? b.GetString() : null).FirstOrDefault(b => b is { Length: > 0 }) is { } name
+            ? name : null;
+
     public void Scan()
     {
         amdDocuments.Clear();

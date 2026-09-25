@@ -369,6 +369,7 @@ public sealed class UserAgent
         { this.inner = inner; this.kept = kept; }
 
         public bool CanCreate(string aimName) => inner.CanCreate(aimName);
+        public string? ImplementationOf(string aimName) => inner.ImplementationOf(aimName);
 
         public IAimProcessor Create(string aimName,
             IReadOnlyDictionary<string, string> settings,
@@ -450,11 +451,52 @@ public sealed class UserAgent
         var placement = Placement(graph.Root, name);
         var hosts = new List<AimHostClient>();
         var placedIdentities = new Dictionary<string, JsonObject?>(StringComparer.Ordinal);
+        var placedEvidence = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+
+        // WHAT EACH AIM THE CONTROLLER BUILDS WILL RUN, MEASURED BEFORE IT IS BUILT
+        // (M3223 3.2): the binary its provider names, the models its settings name,
+        // checked against the Store's approval and the settings. What does not check
+        // refuses the Module before anything runs.
+        var localEvidence = new Dictionary<string, List<AIF.Trust.PtfEvidence.Item>>(StringComparer.Ordinal);
+        if (Trust is not null)
+        {
+            var problems = new List<string>();
+            foreach (var leaf in LeafNodes(graph.Root).Where(l => !placement.ContainsKey(l.AIMName)))
+            {
+                var items = ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName));
+                var binary = _store.BinaryNameOf(IdentifierOf(leaf));
+                problems.AddRange(ImplementationEvidence.Check(leaf.AIMName, items, binary,
+                    binary is null ? null : _store.Fingerprints.Approved(leaf.AIMName, binary), settings.For(leaf.AIMName)));
+                localEvidence[leaf.AIMName] = items;
+            }
+            if (problems.Count > 0)
+                throw new InvalidOperationException($"{name} not started: {string.Join("; ", problems)}.");
+        }
         IAimProcessor? OnItsHost(DescriptorNode leaf)
         {
             if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
             var client = HostAt(address);
-            placedIdentities[leaf.AIMName] = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult()["CII"] as JsonObject;
+            var reply = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
+            placedIdentities[leaf.AIMName] = reply["CII"] as JsonObject;
+
+            // WHAT IT RUNS THERE (M3223 3.2): measured by the host, signed by the key
+            // the AIM holds there, checked here against what the Store approved.
+            if (Trust is not null)
+            {
+                var evidence = reply["Evidence"] as JsonObject;
+                var cii = reply["CII"] as JsonObject;
+                using var aimKey = cii is null ? null : AIF.Trust.PtfIdentity.PublicKey(cii);
+                if (evidence is null || aimKey is null ||
+                    AIF.Trust.PtfSignature.Verify(evidence, _ => aimKey) != AIF.Trust.PtfSignature.Outcome.Valid)
+                    throw new InvalidOperationException($"{name}: the AIM host at {address} gave no evidence of what runs {leaf.AIMName}, signed by it.");
+                var problems = ImplementationEvidence.Check(leaf.AIMName, AIF.Trust.PtfEvidence.Items(evidence),
+                    _store.BinaryNameOf(IdentifierOf(leaf)) is { } bin ? bin : null,
+                    _store.BinaryNameOf(IdentifierOf(leaf)) is { } b ? _store.Fingerprints.Approved(leaf.AIMName, b) : null,
+                    SettingsOnHost(reply));
+                if (problems.Count > 0)
+                    throw new InvalidOperationException($"{name} not started - on the AIM host at {address}: {string.Join("; ", problems)}.");
+                placedEvidence[leaf.AIMName] = evidence;
+            }
             if (!hosts.Contains(client)) hosts.Add(client);
             return new RemoteProcessor(leaf.AIMName, client, hostModule, host.Report);
         }
@@ -478,6 +520,7 @@ public sealed class UserAgent
                         var cii = placedIdentities.GetValueOrDefault(aim)
                             ?? throw new InvalidOperationException($"{name}: the AIM host at {address} gave {aim} no identity.");
                         var issued = trust.IssueHeld(instanceId, aim, cii);
+                        issued.Evidence = placedEvidence.GetValueOrDefault(aim);
                         var taken = HostAt(address).AskAsync("Credential", hostModule, new JsonObject
                         {
                             ["Aim"] = aim, ["Credential"] = issued.Credential.DeepClone(), ["Lifecycle"] = issued.Lifecycle.DeepClone()
@@ -485,7 +528,11 @@ public sealed class UserAgent
                         if (taken["Ok"]?.GetValue<bool>() != true)
                             throw new InvalidOperationException($"{name}: the AIM host at {address} did not take the credential of {aim}: {taken["Error"]}.");
                     }
-                    else trust.IssueLocal(instanceId, aim, aim);
+                    else
+                    {
+                        var issued = trust.IssueLocal(instanceId, aim, aim);
+                        issued.Evidence = trust.SignEvidence(instanceId, localEvidence.GetValueOrDefault(aim) ?? []);
+                    }
                 }
 
             moduleId = Interlocked.Increment(ref _nextModuleId);
@@ -672,6 +719,19 @@ public sealed class UserAgent
         AIF.SharedStorage.StorageOutcome.NotFound => AifError.NotFound,
         _                                         => AifError.NotAuthorised
     };
+
+    private static IEnumerable<DescriptorNode> LeafNodes(DescriptorNode node) =>
+        node.Children.SelectMany(c => c.IsComposite ? LeafNodes(c) : [c]);
+
+    private static Identifier IdentifierOf(DescriptorNode node) => new()
+    {
+        AIMName = node.AIMName, ImplementerID = node.ImplementerID, ImplementationID = node.ImplementationID
+    };
+
+    // The settings of an AIM on a host, as the host reports it measured them.
+    private static IReadOnlyDictionary<string, string> SettingsOnHost(JsonObject reply) =>
+        (reply["Declared"] as JsonObject)?.ToDictionary(p => p.Key, p => (string?)p.Value ?? "", StringComparer.Ordinal)
+        ?? new Dictionary<string, string>(StringComparer.Ordinal);
 
     private static IEnumerable<string> Leaves(DescriptorNode node) =>
         node.Children.SelectMany(c => c.IsComposite ? Leaves(c) : [c.AIMName]);

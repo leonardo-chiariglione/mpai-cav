@@ -1,0 +1,8 @@
+{
+  "an AIM not in the store": "1TST-XXX-V1.0-I01 is not in the store.",
+  "an L3 approved with its binary": "approved",
+  "an L3 approved without its binary": "Mpai.Aif.Tests: named by the L3, not submitted - no fingerprint recorded",
+  "its fingerprint": "none recorded",
+  "the Store publishing a current L3 (a finding)": "refused: '1TST-UPP-V1.0-I01' is not a well-formed AIM name (expected e.g. MMC-AMQ-V2.5).; Types is missing.; Ports is missing.",
+  "the fingerprint recorded": "the binary's SHA-256"
+}
