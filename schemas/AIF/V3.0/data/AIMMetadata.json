@@ -29,6 +29,8 @@
     "OnDegraded":         { "description": "What this Composite AIM does when one of its AIMs fails: StopModule - the run ends and the Module is stopped; StopAIM - that AIM is stopped and the others go on without it; Continue - the others run on what they have, and that AIM runs again at the next exchange. Omitted means StopModule.",
                             "anyOf": [ { "enum": [ "StopModule", "StopAIM", "Continue" ] }, { "$dynamicRef": "#placeholder" } ] },
 
+    "StorageControl": {"description": "The AIM Instance of a Sub-AIM of this Composite AIM that holds the central control of its Private Storage: it sets, for each category, who may write, who may read and the longest time, and reads every datum; a writer may restrict these for its datum, never extend them. Omitted means no central control: each writer sets the rules of the data it writes.", "anyOf": [{"$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMInstanceIdentifier"}, {"$dynamicRef": "#placeholder"}]},
+    "Record": {"description": "Always: the Controller records what crosses the boundary of this Composite AIM from its Start to its Stop, into its Private Storage, whatever the User Agent does. Omitted means the User Agent decides.", "anyOf": [{"enum": ["Always"]}, {"$dynamicRef": "#placeholder"}]},
     "RestartLimit":       { "description": "How many times the Controller restarts this AIM when it throws before leaving it DEAD. Omitted means 0.",
                             "anyOf": [ { "type": "integer", "minimum": 0 }, { "$dynamicRef": "#placeholder" } ] },
 

@@ -181,7 +181,9 @@ public sealed class Controller
 
         if (root.TryGetProperty("OnDegraded", out var onDegraded) && onDegraded.ValueKind == JsonValueKind.String)
             node.OnDegraded = onDegraded.GetString() ?? node.OnDegraded;
-        node.Execution    = TextOf(root, "Execution") ?? node.Execution;
+        node.Execution      = TextOf(root, "Execution") ?? node.Execution;
+        node.StorageControl = TextOf(root, "StorageControl");
+        node.Record         = TextOf(root, "Record");
         node.RestartLimit = IntOf(root, "RestartLimit") ?? 0;
         node.Period       = NumberOf(root, "Period");
         node.Deadline     = NumberOf(root, "Deadline");
@@ -463,7 +465,8 @@ public sealed class Controller
         AimSettings settings,
         AimHost host,
         Func<string?>? storageLocation = null,
-        Func<DescriptorNode, IAimProcessor?>? placed = null)
+        Func<DescriptorNode, IAimProcessor?>? placed = null,
+        Func<string, IRuledStorage?>? moduleStorage = null)
     {
         var instantiated = new List<string>();
 
@@ -480,12 +483,12 @@ public sealed class Controller
             CheckResources(graph.Root);
             host.RegisterRuntime(
                 provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation)));
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
             instantiated.Add(aimName);
             return instantiated;
         }
 
-        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation, placed);
+        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation, placed, moduleStorage);
         return instantiated;
     }
 
@@ -497,13 +500,14 @@ public sealed class Controller
         List<string> instantiated,
         string moduleName,
         Func<string?>? storageLocation,
-        Func<DescriptorNode, IAimProcessor?>? placed)
+        Func<DescriptorNode, IAimProcessor?>? placed,
+        Func<string, IRuledStorage?>? moduleStorage)
     {
         foreach (var child in node.Children)
         {
             if (child.IsComposite)
             {
-                InstantiateNode(child, provider, settings, host, instantiated, moduleName, storageLocation, placed);
+                InstantiateNode(child, provider, settings, host, instantiated, moduleName, storageLocation, placed, moduleStorage);
                 continue;
             }
 
@@ -524,7 +528,7 @@ public sealed class Controller
             CheckResources(child);
             host.RegisterRuntime(
                 provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation)));
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
             instantiated.Add(aimName);
         }
     }

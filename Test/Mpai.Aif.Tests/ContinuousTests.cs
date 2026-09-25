@@ -27,6 +27,7 @@ public class ContinuousTests
         var schema = AIF.Metadata.AimMetadataSchema.Load(Repository.Schemas);
         var invalid = Directory.EnumerateFiles(Amds, "*.json").Concat(Directory.EnumerateFiles(ControllerTests.Amds, "*.json"))
                                .Concat(Directory.EnumerateFiles(RemoteTests.Amds, "*.json"))
+                               .Concat(Directory.EnumerateFiles(StorageTests.Amds, "*.json"))
             .Select(f => (File: Path.GetFileName(f), Violations: schema.Violations(File.ReadAllText(f))))
             .Where(v => v.Violations.Count > 0)
             .Select(v => $"{v.File}: {string.Join("; ", v.Violations)}")

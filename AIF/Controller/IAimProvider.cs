@@ -41,4 +41,15 @@ public interface IAimProvider
         ISharedStorage? storage,
         ISharedStorage? privateStorage) =>
         Create(aimName, settings, storage);
+
+    // With the Private Storage of its Module as well (M3219 3.1), reached under
+    // the rules of its writers or its central control. A provider whose AIMs keep
+    // data of the Module overrides this; the default hands over the others.
+    IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage,
+        IRuledStorage? moduleStorage) =>
+        Create(aimName, settings, storage, privateStorage);
 }

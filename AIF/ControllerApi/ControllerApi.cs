@@ -287,6 +287,14 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // declares none (M3215 3.1).
     public UserAgent Controller => _ua;
 
+    // The Private Storage of a running Module, as the User Agent may reach it:
+    // under the rules of its writers or its central control (M3219 3.1).
+    public AIF.SharedStorage.IRuledStorage? ModuleStorage(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.ModuleStorage(started.Id) : null;
+    }
+
     public AifError SharedStorageInit(string moduleName, string location)
     {
         lock (_tables)

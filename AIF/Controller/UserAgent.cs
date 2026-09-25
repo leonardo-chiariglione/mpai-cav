@@ -241,13 +241,22 @@ public sealed class UserAgent
         public List<AimHostClient> Hosts { get; } = new();
         public Dictionary<string, AimHostClient> Placed { get; } = new(StringComparer.Ordinal);
         public string HostModule { get; init; } = "";
+
+        // Its Private Storage, under the rules of its writers or its central
+        // control (M3219 3.1).
+        public AIF.SharedStorage.RuledStore? Storage { get; init; }
     }
 
     // -- 3.1 General: initialise / destroy the Controller ---------------------
 
     // MPAI_AIFU_Controller_Initialize
+    // The session of this User Agent with this Controller: data kept until the
+    // session ends are this session's (M3219 3.1).
+    private string _session = Guid.NewGuid().ToString("N");
+
     public AifError MPAI_AIFU_Controller_Initialize()
     {
+        _session = Guid.NewGuid().ToString("N");
         _controller = new Controller(_store);
         _controller.SetSharedStorageRoot(_sharedStorageRoot);
         return AifError.OK;
@@ -285,10 +294,17 @@ public sealed class UserAgent
         public IAimProcessor Create(string aimName,
             IReadOnlyDictionary<string, string> settings,
             AIF.SharedStorage.ISharedStorage? storage,
-            AIF.SharedStorage.ISharedStorage? privateStorage)
+            AIF.SharedStorage.ISharedStorage? privateStorage) =>
+            Create(aimName, settings, storage, privateStorage, null);
+
+        public IAimProcessor Create(string aimName,
+            IReadOnlyDictionary<string, string> settings,
+            AIF.SharedStorage.ISharedStorage? storage,
+            AIF.SharedStorage.ISharedStorage? privateStorage,
+            AIF.SharedStorage.IRuledStorage? moduleStorage)
         {
             if (kept.TryGetValue(aimName, out var already)) return already;
-            var made = inner.Create(aimName, settings, storage, privateStorage);
+            var made = inner.Create(aimName, settings, storage, privateStorage, moduleStorage);
             kept[aimName] = made;
             return made;
         }
@@ -333,6 +349,17 @@ public sealed class UserAgent
         // AIMs PLACED ON OTHER MACHINES are placed on their hosts first: the Module
         // is refused, before anything is built, if one has no host named.
         var hostModule = $"{name}#{Guid.NewGuid():N}";
+
+        // THE PRIVATE STORAGE OF THE MODULE (M3219 3.1), below its scope beside its
+        // AIMs' own; its central control, where the Metadata names one, an AIM of
+        // the Module.
+        if (graph.Root.StorageControl is { } control && !Leaves(graph.Root).Contains(control))
+            throw new InvalidOperationException(
+                $"{name}: its StorageControl names {control}, which is not an AIM of the Module.");
+        var moduleStore = _stores[name] = new AIF.SharedStorage.RuledStore(
+            () => (started?.StorageLocation ?? _sharedStorageRoot) is { } scope
+                ? Path.Combine(scope, "private", Uri.EscapeDataString(name)) : null,
+            () => Clock.Now, hostModule, _session, graph.Root.StorageControl);
         var placement = Placement(graph.Root, name);
         var hosts = new List<AimHostClient>();
         IAimProcessor? OnItsHost(DescriptorNode leaf)
@@ -348,7 +375,8 @@ public sealed class UserAgent
         try
         {
             _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
-                () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost);
+                () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost,
+                aim => new CurrentStorage(this, name, aim));
 
             moduleId = Interlocked.Increment(ref _nextModuleId);
 
@@ -384,7 +412,8 @@ public sealed class UserAgent
                 Host       = host,
                 Continuous = graph.Root.IsContinuous ? channels : null,
                 Channels   = channels,
-                HostModule = hostModule
+                HostModule = hostModule,
+                Storage    = moduleStore
             };
             started.Hosts.AddRange(hosts);
             foreach (var (aim, address) in placement) started.Placed[aim] = HostAt(address);
@@ -459,9 +488,48 @@ public sealed class UserAgent
         OnHosts(module, "Release");
         hostModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
+        module.Storage?.EndOfModule();
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
     }
+
+    // THE PRIVATE STORAGE OF THE MODULE, THE USER AGENT'S FACE (M3219 3.1): the
+    // User Agent holds a handle as any AIM of the Module does, bound to it, and
+    // reaches what the rules let it reach. Never the central control.
+    // AN AIM IS RETAINED ACROSS MODULE INSTANCES, AND ITS HANDLE WITH IT: the
+    // handle reaches, at each call, the store of the instance of its Module that
+    // runs now, as the Shared Storage handle asks where its scope now is.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, AIF.SharedStorage.RuledStore> _stores = new(StringComparer.Ordinal);
+
+    private sealed class CurrentStorage(UserAgent ua, string module, string holder) : AIF.SharedStorage.IRuledStorage
+    {
+        private AIF.SharedStorage.IRuledStorage Now() =>
+            (ua._stores.TryGetValue(module, out var store) ? store : throw new InvalidOperationException($"{module} is not running."))
+            .For(holder);
+
+        public string Holder => holder;
+        public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, AIF.SharedStorage.StorageTime? time = null) =>
+            Now().MPAI_AIFM_RuledStorage_Put(key, data, category, readers, time);
+        public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Get(string key, out byte[] data) => Now().MPAI_AIFM_RuledStorage_Get(key, out data);
+        public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Delete(string key) => Now().MPAI_AIFM_RuledStorage_Delete(key);
+        public IReadOnlyList<string> MPAI_AIFM_RuledStorage_List(string? category = null, string prefix = "") => Now().MPAI_AIFM_RuledStorage_List(category, prefix);
+        public bool MPAI_AIFM_RuledStorage_Exists(string key) => Now().MPAI_AIFM_RuledStorage_Exists(key);
+        public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Trace(string key, out AIF.SharedStorage.StorageTrace? trace) => Now().MPAI_AIFM_RuledStorage_Trace(key, out trace);
+        public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_SetRule(string category, AIF.SharedStorage.StorageRule rule) => Now().MPAI_AIFM_RuledStorage_SetRule(category, rule);
+    }
+
+    public AIF.SharedStorage.IRuledStorage? ModuleStorage(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) ? module.Storage?.For(AIF.SharedStorage.RuledStore.UserAgent) : null;
+
+    public static AifError Outcome(AIF.SharedStorage.StorageOutcome outcome) => outcome switch
+    {
+        AIF.SharedStorage.StorageOutcome.OK       => AifError.OK,
+        AIF.SharedStorage.StorageOutcome.NotFound => AifError.NotFound,
+        _                                         => AifError.NotAuthorised
+    };
+
+    private static IEnumerable<string> Leaves(DescriptorNode node) =>
+        node.Children.SelectMany(c => c.IsComposite ? Leaves(c) : [c.AIMName]);
 
     // The boundary Ports of a running Module, as its Metadata declares them.
     public IReadOnlyList<RuntimePort>? BoundaryPorts(int moduleId) =>
@@ -634,5 +702,8 @@ public enum AifError
     TypeNotAccepted,
 
     // The Module is not started.
-    NotStarted
+    NotStarted,
+
+    // Not allowed by the rules of the storage (M3219 3.2).
+    NotAuthorised
 }

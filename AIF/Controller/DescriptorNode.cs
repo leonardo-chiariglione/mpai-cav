@@ -49,6 +49,14 @@ public sealed class DescriptorNode
     public string OnDegraded { get; set; } =
         "StopModule";
 
+    // The AIM Instance that holds the central control of this composite's Private
+    // Storage (M3219 3.2); null where each writer sets the rules of its data.
+    public string? StorageControl { get; set; }
+
+    // "Always" where the Controller records the boundary from Start to Stop
+    // (M3219 3.4); null where the User Agent decides.
+    public string? Record { get; set; }
+
     // How the Controller executes this composite: Exchange, the default, or
     // Continuous (M3205 Section 5).
     public string Execution { get; set; } =

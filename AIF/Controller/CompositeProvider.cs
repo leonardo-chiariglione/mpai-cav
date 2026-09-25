@@ -34,11 +34,28 @@ public sealed class CompositeProvider : IAimProvider
     public IAimProcessor Create(
         string aimName,
         IReadOnlyDictionary<string, string> settings,
-        ISharedStorage? storage)
+        ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null);
+
+    public IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage) =>
+        Create(aimName, settings, storage, privateStorage, null);
+
+    // Every handle passed on to the provider that makes the AIM: before this, the
+    // Private Storage of an AIM built through a CompositeProvider was lost.
+    public IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage,
+        IRuledStorage? moduleStorage)
     {
         foreach (var p in providers)
             if (p.CanCreate(aimName))
-                return p.Create(aimName, settings, storage);
+                return p.Create(aimName, settings, storage, privateStorage, moduleStorage);
 
         throw new NotSupportedException(
             $"No provider in this Service makes '{aimName}'. " +

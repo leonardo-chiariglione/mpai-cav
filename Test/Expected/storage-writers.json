@@ -1,0 +1,15 @@
+{
+  "a, no readers named: written": "OK; #1 'a: OK'",
+  "a, overwritten by the User Agent": "NotAuthorised",
+  "a: read by TST-SRD": "OK; #2 'NotAuthorised'",
+  "a: read by the User Agent": "NotAuthorised",
+  "after a new instance: e (Module), f (Scope)": "NotFound | 6",
+  "b, readers TST-SRD: written": "OK; #1 'b: OK'",
+  "b: its Trace, to the User Agent": "NotAuthorised",
+  "b: read by TST-SRD, by the User Agent": "OK; #2 '2' | NotAuthorised",
+  "c, readers the User Agent: read by it": "OK; #1 'c: OK' | 3",
+  "c: its Trace, to the User Agent": "OK: 1TST-SWR-V1.0-I01, Data, readers UserAgent, Scope, the writer's",
+  "d, time 150 ms: read at once, then after 400 ms": "OK; #2 '4' | OK; #2 'NotFound'",
+  "u, written by the User Agent for TST-SRD": "OK | OK; #2 'from the UA'",
+  "what the User Agent may list": "c,u"
+}

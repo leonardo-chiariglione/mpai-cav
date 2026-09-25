@@ -1,0 +1,16 @@
+{
+  "Notes written before any rule": "OK; #1 'n: NotAuthorised'",
+  "TST-MPX": "refused: 1TST-MPX-V1.0-I01: its StorageControl names 1TST-UPP-V1.0-I01, which is not an AIM of the Module.",
+  "a rule set by the User Agent": "NotAuthorised",
+  "m, readers narrowed to TST-SRD: TST-SRD, the User Agent": "OK; #1 'm: OK' | OK; #2 '2' | NotAuthorised",
+  "n written, read by TST-SRD and by the User Agent": "OK; #1 'n: OK' | OK; #2 '1' | 1",
+  "n, after the narrowing: TST-SRD, the User Agent": "OK; #2 'NotAuthorised' | 1",
+  "o, a category without a rule": "OK; #1 'o: NotAuthorised'",
+  "the central control lists": "OK; #3 'm,n,z'",
+  "the central control reads m, whose readers leave it out": "OK; #3 '2'",
+  "the rule narrowed: readers the User Agent only": "OK; #3 'Notes: OK'",
+  "the rule of Notes": "OK; #3 'Notes: OK'",
+  "x, a reader beyond the rule": "OK; #1 'x: NotAuthorised'",
+  "y, a time beyond the rule (Scope)": "OK; #1 'y: NotAuthorised'",
+  "z, a time within it (Module)": "OK; #1 'z: OK'"
+}

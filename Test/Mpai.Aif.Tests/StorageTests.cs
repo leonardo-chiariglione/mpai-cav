@@ -64,8 +64,8 @@ public class StorageTests
             using var b = Api();
             a.StartFlow("1TST-SHA-V1.0-I01"); a.SharedStorageInit("1TST-SHA-V1.0-I01", location);
             b.StartFlow("1TST-SHB-V1.0-I01"); b.SharedStorageInit("1TST-SHB-V1.0-I01", location);
-            result["TST-SHA writes"] = Outputs(a.Advance("1TST-SHA-V1.0-I01", [new(Text, 1, "s=shared; readers=1TST-SHA-V1.0-I01")]));
-            result["TST-SHB reads it"] = Outputs(b.Advance("1TST-SHB-V1.0-I01", [new(Text, 1, "s")]));
+            result["TST-SHA writes"] = Outputs(a.Advance("1TST-SHA-V1.0-I01", [new(Text, 1, "shared: s=shared; readers=1TST-SHA-V1.0-I01")]));
+            result["TST-SHB reads it"] = Outputs(b.Advance("1TST-SHB-V1.0-I01", [new(Text, 1, "shared: s")]));
             a.StopFlow("1TST-SHA-V1.0-I01"); b.StopFlow("1TST-SHB-V1.0-I01");
         }
 
@@ -115,6 +115,105 @@ public class StorageTests
 
         Expected.Match("storage-today.json", result);
     }
+    private const string Swr = "1TST-SWR-V1.0-I01", Srd = "1TST-SRD-V1.0-I01", Ua = AIF.SharedStorage.RuledStore.UserAgent;
+
+    private static string Ua_Get(ControllerApi api, string module, string key)
+    {
+        var storage = api.ModuleStorage(module)!;
+        var outcome = storage.MPAI_AIFM_RuledStorage_Get(key, out var data);
+        return outcome == AIF.SharedStorage.StorageOutcome.OK ? Encoding.UTF8.GetString(data) : outcome.ToString();
+    }
+
+    // THE PRIVATE STORAGE OF THE MODULE, NO CENTRAL CONTROL (M3219 3.1, 3.2): the
+    // writer sets the rules of each datum - its readers and its time.
+    [Fact]
+    public async Task WritersRules()
+    {
+        var result = new Dictionary<string, string>();
+        using var api = Api();
+        const string mps = "1TST-MPS-V1.0-I01";
+        var location = Location();
+        api.StartFlow(mps);
+        api.SharedStorageInit(mps, location);
+        string Write(string text) => Outputs(api.Advance(mps, [new(Text, 1, text)]));
+        string Read(string key) => Outputs(api.Advance(mps, [new(Text, 2, key)]));
+
+        result["a, no readers named: written"] = Write("a=1");
+        result["a: read by TST-SRD"] = Read("a");
+        result["a: read by the User Agent"] = Ua_Get(api, mps, "a");
+
+        result["b, readers TST-SRD: written"] = Write($"b=2; readers={Srd}");
+        result["b: read by TST-SRD, by the User Agent"] = Read("b") + " | " + Ua_Get(api, mps, "b");
+
+        result["c, readers the User Agent: read by it"] = Write($"c=3; readers={Ua}") + " | " + Ua_Get(api, mps, "c");
+
+        Write($"d=4; readers={Srd}; time=150ms");
+        var fresh = Read("d");
+        await Task.Delay(400);
+        result["d, time 150 ms: read at once, then after 400 ms"] = fresh + " | " + Read("d");
+
+        // The User Agent writes too, and names its readers.
+        var ua = api.ModuleStorage(mps)!;
+        result["u, written by the User Agent for TST-SRD"] = ua.MPAI_AIFM_RuledStorage_Put("u", Encoding.UTF8.GetBytes("from the UA"), "Data", [Srd]) + " | " + Read("u");
+        result["a, overwritten by the User Agent"] = ua.MPAI_AIFM_RuledStorage_Put("a", Encoding.UTF8.GetBytes("x"), "Data").ToString();
+
+        // The Trace, to one who may read.
+        result["c: its Trace, to the User Agent"] = ua.MPAI_AIFM_RuledStorage_Trace("c", out var trace) +
+            (trace is null ? "" : $": {trace.Writer}, {trace.Category}, readers {string.Join(",", trace.Readers ?? [])}, {trace.Time}, {trace.Rule}");
+        result["b: its Trace, to the User Agent"] = ua.MPAI_AIFM_RuledStorage_Trace("b", out _).ToString();
+        result["what the User Agent may list"] = string.Join(",", ua.MPAI_AIFM_RuledStorage_List());
+
+        // Kept until the Module stops, or as long as the scope: a new instance at
+        // the same location.
+        Write($"e=5; readers={Ua}; time=Module");
+        Write($"f=6; readers={Ua}");
+        api.StopFlow(mps);
+        api.StartFlow(mps);
+        api.SharedStorageInit(mps, location);
+        result["after a new instance: e (Module), f (Scope)"] = Ua_Get(api, mps, "e") + " | " + Ua_Get(api, mps, "f");
+        api.StopFlow(mps);
+
+        Expected.Match("storage-writers.json", result);
+    }
+
+    // A CENTRAL CONTROL (M3219 3.2): TST-SGV, named by StorageControl, sets the
+    // general rules of each category; a writer restricts them, never extends
+    // them; a narrowing applies at once; the central control reads everything.
+    [Fact]
+    public void CentralControl()
+    {
+        var result = new Dictionary<string, string>();
+        using var api = Api();
+        const string mpc = "1TST-MPC-V1.0-I01";
+        api.StartFlow(mpc);
+        api.SharedStorageInit(mpc, Location());
+        string Write(string text) => Outputs(api.Advance(mpc, [new(Text, 1, text)]));
+        string Read(string key) => Outputs(api.Advance(mpc, [new(Text, 2, key)]));
+        string Rule(string text) => Outputs(api.Advance(mpc, [new(Text, 3, text)]));
+
+        result["Notes written before any rule"] = Write("n=1; category=Notes");
+        result["the rule of Notes"] = Rule($"category Notes: writers {Swr}; readers {Srd},{Ua}; time Session");
+        result["n written, read by TST-SRD and by the User Agent"] = Write("n=1; category=Notes") + " | " + Read("n") + " | " + Ua_Get(api, mpc, "n");
+        result["m, readers narrowed to TST-SRD: TST-SRD, the User Agent"] = Write($"m=2; category=Notes; readers={Srd}") + " | " + Read("m") + " | " + Ua_Get(api, mpc, "m");
+        result["x, a reader beyond the rule"] = Write("x=3; category=Notes; readers=1TST-UPP-V1.0-I01");
+        result["y, a time beyond the rule (Scope)"] = Write("y=4; category=Notes; time=Scope");
+        result["z, a time within it (Module)"] = Write("z=5; category=Notes; time=Module");
+        result["o, a category without a rule"] = Write("o=6; category=Other");
+        result["a rule set by the User Agent"] = api.ModuleStorage(mpc)!.MPAI_AIFM_RuledStorage_SetRule("Notes",
+            new AIF.SharedStorage.StorageRule([Ua], [Ua], AIF.SharedStorage.StorageTime.Scope)).ToString();
+
+        result["the rule narrowed: readers the User Agent only"] = Rule($"category Notes: writers {Swr}; readers {Ua}; time Session");
+        result["n, after the narrowing: TST-SRD, the User Agent"] = Read("n") + " | " + Ua_Get(api, mpc, "n");
+        result["the central control reads m, whose readers leave it out"] = Rule("read m");
+        result["the central control lists"] = Rule("list");
+        api.StopFlow(mpc);
+
+        // A StorageControl that names an AIM not of the Module.
+        try { api.StartFlow("1TST-MPX-V1.0-I01"); result["TST-MPX"] = "started"; api.StopFlow("1TST-MPX-V1.0-I01"); }
+        catch (InvalidOperationException refused) { result["TST-MPX"] = "refused: " + refused.Message; }
+
+        Expected.Match("storage-central.json", result);
+    }
 }
 
 // The test AIMs of Phase 6. TST-SWR and TST-SRD write and read the storage they
@@ -126,11 +225,15 @@ public sealed class StorageAims : IAimProvider
     public bool CanCreate(string aimName) => aimName.StartsWith("1TST-", StringComparison.Ordinal);
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null);
+
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage,
+                                AIF.SharedStorage.ISharedStorage? privateStorage, AIF.SharedStorage.IRuledStorage? moduleStorage) =>
         aimName switch
         {
-            "1TST-SWR-V1.0-I01" => new Aim(aimName, m => ("Written", Write(storage, In(m)))),
-            "1TST-SRD-V1.0-I01" => new Aim(aimName, m => ("Read", Read(storage, In(m)))),
-            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("Ruled", "no rules can be set: " + In(m))),
+            "1TST-SWR-V1.0-I01" => new Aim(aimName, m => ("Written", Write(storage, moduleStorage, In(m)))),
+            "1TST-SRD-V1.0-I01" => new Aim(aimName, m => ("Read", Read(storage, moduleStorage, In(m)))),
+            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("Ruled", Rule(moduleStorage, In(m)))),
             "1TST-TRE-V1.0-I01" => new Echo(aimName),
             "1TST-SNK-V1.0-I01" => new Sink(aimName),
             _ => phase3.Create(aimName, settings, storage)
@@ -138,22 +241,55 @@ public sealed class StorageAims : IAimProvider
 
     private static string In(Message m) => m.Ports.Values.FirstOrDefault() ?? "";
 
-    // "key=value; readers=...; time=..." - today only key and value can be given.
-    private static string Write(AIF.SharedStorage.ISharedStorage? storage, string text)
+    // "key=value; category=C; readers=A,B; time=Module 200ms" into the Module's
+    // Private Storage; "shared: key=value" into the Shared Storage.
+    private static string Write(AIF.SharedStorage.ISharedStorage? shared, AIF.SharedStorage.IRuledStorage? mine, string text)
     {
-        if (storage is null) return "no storage";
-        var parts = text.Split(';', StringSplitOptions.TrimEntries);
+        var toShared = text.StartsWith("shared:");
+        var parts = text[(toShared ? 7 : 0)..].Split(';', StringSplitOptions.TrimEntries);
         var kv = parts[0].Split('=', 2);
-        storage.MPAI_AIFM_SharedStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]));
-        var ignored = parts.Skip(1).ToList();
-        return $"{kv[0]} written" + (ignored.Count > 0 ? $"; not given: {string.Join(", ", ignored)}" : "");
+        var options = parts.Skip(1).Select(o => o.Split('=', 2)).ToDictionary(o => o[0], o => o[1]);
+        if (toShared)
+        {
+            if (shared is null) return "no Shared Storage";
+            shared.MPAI_AIFM_SharedStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]));
+            return $"{kv[0]} written" + (options.Count > 0 ? $"; not given: {string.Join(", ", options.Keys)}" : "");
+        }
+        if (mine is null) return "no Private Storage of the Module";
+        var outcome = mine.MPAI_AIFM_RuledStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]),
+            options.GetValueOrDefault("category", "Data"),
+            options.TryGetValue("readers", out var r) ? r.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) : null,
+            options.TryGetValue("time", out var t) ? AIF.SharedStorage.StorageTime.Parse(t) : null);
+        return $"{kv[0]}: {outcome}";
     }
 
-    private static string Read(AIF.SharedStorage.ISharedStorage? storage, string key)
+    // "key" from the Module's Private Storage; "shared: key" from the Shared Storage.
+    private static string Read(AIF.SharedStorage.ISharedStorage? shared, AIF.SharedStorage.IRuledStorage? mine, string text)
     {
-        if (storage is null) return "no storage";
-        try { return Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(key)); }
-        catch (Exception refused) { return $"{refused.GetType().Name}: {refused.Message}"; }
+        if (text.StartsWith("shared:"))
+        {
+            if (shared is null) return "no Shared Storage";
+            try { return Encoding.UTF8.GetString(shared.MPAI_AIFM_SharedStorage_Get(text[7..].Trim())); }
+            catch (Exception refused) { return $"{refused.GetType().Name}: {refused.Message}"; }
+        }
+        if (mine is null) return "no Private Storage of the Module";
+        var outcome = mine.MPAI_AIFM_RuledStorage_Get(text, out var data);
+        return outcome == AIF.SharedStorage.StorageOutcome.OK ? Encoding.UTF8.GetString(data) : outcome.ToString();
+    }
+
+    // "category C: writers A,B; readers C,D; time Scope", "read key", "list".
+    private static string Rule(AIF.SharedStorage.IRuledStorage? mine, string text)
+    {
+        if (mine is null) return "no Private Storage of the Module";
+        if (text.StartsWith("read ")) return Read(null, mine, text[5..]);
+        if (text == "list") return string.Join(",", mine.MPAI_AIFM_RuledStorage_List());
+        var colon = text.IndexOf(':');
+        var category = text[9..colon].Trim();
+        var parts = text[(colon + 1)..].Split(';', StringSplitOptions.TrimEntries).ToDictionary(p => p.Split(' ', 2)[0], p => p.Split(' ', 2)[1]);
+        string[] Names(string key) => parts.TryGetValue(key, out var v) && v != "none" ? v.Split(',', StringSplitOptions.TrimEntries) : [];
+        var rule = new AIF.SharedStorage.StorageRule(Names("writers"), Names("readers"),
+                                                     parts.TryGetValue("time", out var t) ? AIF.SharedStorage.StorageTime.Parse(t) : AIF.SharedStorage.StorageTime.Scope);
+        return $"{category}: {mine.MPAI_AIFM_RuledStorage_SetRule(category, rule)}";
     }
 
     private sealed class Aim(string id, Func<Message, (string Port, string Value)> run) : IAimProcessor
