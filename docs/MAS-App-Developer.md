@@ -240,10 +240,12 @@ status; its Ports travel over the Remote transport (TLS on TCP, the host's
 key). A composite Sub-AIM that is not `Internal` has all its AIMs on its host.
 
 The L3 says *that* an AIM runs elsewhere; the Service's configuration says
-*where*. With the L3s of this repository every Sub-AIM is `Internal`: to run
-Entity Dialogue Processing of MAD elsewhere, the MAD L3 this Service loads
-must have `"Relation": "External"` on `1MMC-EDP-V2.5-I01`. A Module with such
-a Sub-AIM and no host named for it is refused, and says why.
+*where*. The Relation is written by the L3's developer, or changed at
+deployment time by whoever deploys the Module: the L3s of this repository
+have every Sub-AIM `Internal`, and to run Entity Dialogue Processing of MAD
+elsewhere, the deployer sets `"Relation": "External"` on `1MMC-EDP-V2.5-I01`
+in the MAD L3 this Service loads - its `AmdDirectory`, or its L3 cache. A
+Module with such a Sub-AIM and no host named for it is refused, and says why.
 
 **The machine that runs the Sub-AIM** runs the AIM host, given the L3s of
 the AIMs it may build, their settings, the provider that builds them and a
