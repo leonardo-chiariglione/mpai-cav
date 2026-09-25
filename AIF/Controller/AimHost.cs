@@ -193,7 +193,7 @@ public sealed class AimHost : IDisposable
 
     // ── Execution ─────────────────────────────────────────────────────────────
 
-    // Called by MachineExecutor for normal (non-interactive) AIMs.
+    // Called by the executor for normal (non-interactive) AIMs.
     // Waits while the Module is paused, refuses once it is stopped, then starts
     // the AIM, which runs to completion.
     public async Task<Message> ProcessAsync(string instanceId, Message message)

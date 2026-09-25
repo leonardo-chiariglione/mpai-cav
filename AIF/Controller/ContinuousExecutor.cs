@@ -31,6 +31,13 @@ public sealed partial class ContinuousExecutor
     // Deadlines missed, by AIM: in all, and in a row (M3215 3.5).
     private readonly Dictionary<string, (int All, int InARow)> misses = new();
 
+    // SOMEWHERE TO LOOK, WITHOUT KNOWING WHAT IS BEING LOOKED AT. The Framework
+    // routes Data Types and payloads; it does not know what an MPAI Object is, and
+    // must not. Whoever knows both worlds installs the inspector - the Controller
+    // API does - and the Controller transport shows it every Message it relays.
+    // (AIM name, Data Type, payload). No inspector, no cost beyond a null check.
+    public static Action<string, string, string>? ObjectInspector { get; set; }
+
     // A boundary Output Port the User Agent does not read must not stall the
     // Module: its reader end keeps the newest Messages.
     public static PortBehaviour BoundaryOutput { get; } = new(PortBehaviour.DefaultDepth, Overflow.DropOldest, null);
@@ -328,6 +335,7 @@ public sealed partial class ContinuousExecutor
     {
         var aim = leaf.AIMName;
         host.Degrade(aim, reason);
+        Console.WriteLine($"[AIF] {aim}: DEGRADED ({reason}); {parent[leaf].AIMName} OnDegraded {parent[leaf].OnDegraded}");
         switch (parent[leaf].OnDegraded)
         {
             case "Continue":

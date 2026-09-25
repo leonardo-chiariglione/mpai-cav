@@ -39,7 +39,7 @@ public sealed class AoaAimAdapter
         _duration   = duration ?? TimeSpan.FromSeconds(5);
     }
 
-    // IAimProcessor 鈥?used by MachineExecutor in headless mode.
+    // IAimProcessor 鈥?used by the executor in headless mode.
     public async Task<Message> ProcessAsync(Message message)
     {
         var audio = await _aoa.AcquireAsync(

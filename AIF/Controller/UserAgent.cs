@@ -41,7 +41,7 @@ public sealed class UserAgent
             // What an AIM produces is looked at on the way, as it was by the
             // exchange executor.
             Observer = (spec, message) =>
-                MachineExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
+                ContinuousExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
         };
         InProcessTransport  = new InProcessTransport(Clock);
     }
@@ -83,17 +83,10 @@ public sealed class UserAgent
     public InProcessTransport  InProcessTransport  { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
-    // WHICH EXECUTOR RUNS AN EXCHANGE (M3215 3.4, Step 7): "Machine", as before, or
-    // "Continuous", the exchange on the Module's Channels. Taken from
-    // MPAI_EXCHANGE_EXECUTOR, so that the whole matrix and the Service can be run
-    // on either until MachineExecutor goes.
-    public string ExchangeExecutor { get; set; } =
-        Environment.GetEnvironmentVariable("MPAI_EXCHANGE_EXECUTOR") ?? "Machine";
-
-    // True when this Module's exchanges run on its Channels.
+    // True when this Module runs in exchanges - on its Channels (M3215 3.4) - and
+    // not continuously.
     public bool ExchangesOnChannels(int moduleId) =>
-        ExchangeExecutor == "Continuous" &&
-        _running.TryGetValue(moduleId, out var module) && module.Continuous is null && module.Graph.Root.IsComposite;
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is null;
 
     // An exchange on the Module's Channels: each boundary Output Port settles as
     // soon as it can (OI-12).
@@ -125,14 +118,13 @@ public sealed class UserAgent
         public required string          Name        { get; init; }
         public required DescriptorGraph Graph       { get; init; }
         public required AimHost         Host        { get; init; }
-        public required MachineExecutor Executor    { get; init; }
 
         // The continuous executor, for a Module whose Metadata declares
         // Execution: Continuous (M3215 3.3); null for an exchange.
         public ContinuousExecutor? Continuous { get; init; }
 
         // The Module's Channels, planned for every Module: an exchange runs on
-        // them when ExchangeExecutor says so (M3215 3.4).
+        // them (M3215 3.4).
         public required ContinuousExecutor Channels { get; init; }
 
         // Where the User Agent initialised this Module's Shared Storage; null,
@@ -257,7 +249,6 @@ public sealed class UserAgent
             Name       = name,
             Graph      = graph,
             Host       = host,
-            Executor   = new MachineExecutor(host),
             Continuous = graph.Root.IsContinuous ? channels : null,
             Channels   = channels
         };
@@ -391,23 +382,8 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return (AifError.NotFound, null);
 
-        if (ExchangesOnChannels(moduleId))
-            return (AifError.OK, new RunOutcome { Completed = await module.Channels.Exchange(boundaryPorts, Guid.NewGuid().ToString()).Completed });
-
-        var result = await module.Executor.RunAsync(
-            module.Graph,
-            new Message
-            {
-                MessageId   = Guid.NewGuid().ToString(),
-                // MessageType carries no meaning the framework itself relies on (the
-                // only values Message.IsError/IsCancelled compare against are the
-                // reserved ErrorType/CancelledType constants). It is the RUNNING
-                // Module's own name - never a fixed application name.
-                MessageType = module.Name,
-                Ports       = new Dictionary<string, string>(boundaryPorts)
-            });
-
-        return (AifError.OK, new RunOutcome { Completed = result.Completed });
+        if (module.Continuous is not null) return (AifError.Failed, null);   // it runs by itself
+        return (AifError.OK, new RunOutcome { Completed = await module.Channels.Exchange(boundaryPorts, Guid.NewGuid().ToString()).Completed });
     }
 
     // TryGetRuntime USED to live here, handing an Module's AimHost and its Ports

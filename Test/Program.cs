@@ -40,14 +40,14 @@ void Register(DescriptorNode n)
     host.RegisterRuntime(new Echo(n));
 }
 Register(graph.Root);
-var executor = new MachineExecutor(host);
+var executor = new ContinuousExecutor(graph, host,
+    new Dictionary<string, AIF.Channels.IChannelTransport> { ["Controller"] = new AIF.Channels.ControllerTransport() }, "M3194Test");
 
 async Task Exchange(string title, Dictionary<string, string> boundary)
 {
     Console.WriteLine($"\n=== {title}: offered {string.Join(", ", boundary.Keys)} ===");
-    var result = await executor.RunAsync(graph,
-        new Message { MessageId = "t", MessageType = "test", Ports = boundary });
-    foreach (var kv in result.Completed.Ports) Console.WriteLine($"RESULT {kv.Key} = {kv.Value}");
+    var result = await executor.Exchange(boundary, "t").Completed;
+    foreach (var kv in result.Ports) Console.WriteLine($"RESULT {kv.Key} = {kv.Value}");
 }
 
 await Exchange("Welcome", new() { ["OSD-BTO-V1.5#1"] = "'Welcome'" });

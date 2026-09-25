@@ -10,7 +10,7 @@
   "StopAIM: the next run": "OK 'Y'; 1TST-THR-V1.0-I01 Dead (it threw: TST-THR throws; OnDegraded StopAIM)",
   "StopAim 1TST-UPP-V1.0-I01": "OK",
   "StopAim an AIM the Module does not have": "NotFound",
-  "StopModule: #1": "NotProduced",
+  "StopModule: #1": "OK 'X'",
   "StopModule: a write after": "NotStarted",
   "StopModule: started again": "OK, OK",
   "StopModule: status": "1TST-NOP-V1.0-I01 Dead (its Module was stopped); 1TST-RPT-V1.0-I01 Dead (its Module was stopped); 1TST-THR-V1.0-I01 Dead (its Module was stopped); 1TST-UPP-V1.0-I01 Dead (its Module was stopped)",

@@ -22,7 +22,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // application and both servers, since all of them construct a ControllerApi.
     static ControllerApi()
     {
-        AIF.Controller.MachineExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
+        AIF.Controller.ContinuousExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
     }
 
     // THE CODECS RESOLVE A REFERENCE THIS CONTROLLER ISSUED (M3215 3.6), through the
@@ -352,16 +352,11 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             var boundary = new Dictionary<string, string>(started.Written);
             started.Written.Clear();
-            if (_ua.ExchangesOnChannels(started.Id) && _ua.StartExchange(started.Id, boundary) is { } exchange)
-            {
-                started.Exchange = exchange;
-                started.Run = Completed(started, exchange);
-            }
-            else
-            {
-                started.Exchange = null;
-                started.Run = Task.Run(() => RunOnce(started, boundary));
-            }
+            var exchange = _ua.StartExchange(started.Id, boundary);
+            started.Exchange = exchange;
+            started.Run = exchange is null
+                ? Task.FromResult(new Result(AifError.NotStarted, Array.Empty<Datum>()))
+                : Completed(started, exchange);
         }
         return started.Run;
     }
@@ -372,12 +367,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         try { message = await exchange.Completed; }
         catch { return new Result(AifError.Failed, Array.Empty<Datum>()); }
         return ToResult(started, AifError.OK, message);
-    }
-
-    private async Task<Result> RunOnce(Started started, Dictionary<string, string> boundary)
-    {
-        var (err, outcome) = await _ua.RunAsync(started.Id, boundary);
-        return ToResult(started, err, outcome?.Completed);
     }
 
     private Result ToResult(Started started, AifError err, Message? completed)

@@ -58,7 +58,9 @@ public sealed partial class ContinuousExecutor
         await oneExchange.WaitAsync();
         try
         {
-            return await ExchangeAsync(run, boundary, messageId);
+            return graph.Root.IsComposite
+                ? await ExchangeAsync(run, boundary, messageId)
+                : await AimOnItsOwnAsync(graph.Root, boundary, messageId);
         }
         catch
         {
@@ -136,6 +138,60 @@ public sealed partial class ContinuousExecutor
         };
     }
 
+    // WHAT WAS STARTED MAY BE A BASIC AIM. A Remote Client may start any AIM
+    // (MPAI-MAS action 6), and a Service that offers one AIM runs that AIM. Nothing
+    // contains it: its own Ports are the boundary, so there is no Channel to run
+    // on. What the boundary carries, keyed by Data Type and Port Number, is given
+    // to it by its own Port names, and its outputs are put back on the boundary.
+    private async Task<Message> AimOnItsOwnAsync(DescriptorNode aim, IReadOnlyDictionary<string, string> boundary, string messageId)
+    {
+        host.BeginRun();
+        var inbox = new Dictionary<string, string>();
+        foreach (var (key, json) in boundary)
+        {
+            var hash = key.LastIndexOf('#');
+            var dataType = hash > 0 ? key[..hash] : key;
+            var number = hash > 0 && int.TryParse(key[(hash + 1)..], out var n) ? n : 1;
+            if (OwnPort(aim, "Input", dataType, number) is { } port) inbox[port.Name] = json;
+        }
+
+        Message result;
+        try
+        {
+            result = await host.ProcessAsync(aim.AIMName, new Message { MessageId = messageId, MessageType = module, Ports = inbox });
+        }
+        catch (OperationCanceledException cancelled)
+        {
+            return Message.Cancelled(messageId, aim.AIMName, cancelled.Message);
+        }
+        catch (Exception failure)
+        {
+            // Nothing contains it, so it has no policy: it is DEGRADED, and what to
+            // do is the User Agent's decision.
+            host.Degrade(aim.AIMName, $"it threw: {failure.Message}");
+            Console.WriteLine($"[AIF] {aim.AIMName}: threw, produced no output: {failure.Message}");
+            return new Message { MessageId = messageId, MessageType = module };
+        }
+
+        if (result.IsCancelled) return result;
+        if (result.IsError)
+        {
+            host.Degrade(aim.AIMName, $"it returned an error: {result.Payload}");
+            Console.WriteLine($"[AIF] {aim.AIMName}: error, produced no output: {result.Payload}");
+            return new Message { MessageId = messageId, MessageType = module };
+        }
+        host.Succeeded(aim.AIMName);
+
+        var produced = new Dictionary<string, string>();
+        foreach (var (name, json) in result.Ports)
+        {
+            if (aim.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == name) is not { } port) continue;
+            ObjectInspector?.Invoke(aim.AIMName, port.DataType, json);
+            produced[$"{port.DataType}#{NumberOf(aim, port)}"] = json;
+        }
+        return new Message { MessageId = messageId, MessageType = module, Ports = produced };
+    }
+
     private List<(RuntimePort Port, PortEnd End)> InputEnds(DescriptorNode leaf) =>
         leaf.Ports.Where(p => p.Direction == "Input")
                   .Select(p => (Port: p, End: new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
@@ -209,7 +265,10 @@ public sealed partial class ContinuousExecutor
         // The datum of a boundary Output Port in this exchange, or null when it
         // produced nothing; null too for a Port no Channel reaches.
         public Task<string?> Port(string dataType, int portNumber) =>
-            ports.TryGetValue(new PortEnd("", dataType, portNumber), out var port) ? port.Task : Task.FromResult<string?>(null);
+            ports.TryGetValue(new PortEnd("", dataType, portNumber), out var port)
+                ? port.Task
+                : Completed.ContinueWith(done => done.IsCompletedSuccessfully &&
+                                                 done.Result.Ports.TryGetValue($"{dataType}#{portNumber}", out var json) ? json : null);
 
         internal void Settle(ContinuousExecutor executor, Func<PortEnd, bool> done)
         {

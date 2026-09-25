@@ -220,6 +220,11 @@ public class ServiceTests
             var r = client.Advance(module, inputs);
             times.Add(clock.Elapsed.TotalSeconds);
             Assert.True(r.Ok, $"{module}: {r.Error}");
+
+            // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
+            // the language model unreachable, say - returns quickly with nothing to
+            // say, and would pass for a fast one.
+            Assert.True(r.ByType("OSD-BSO-V1.5") is not null, $"{module}: the turn produced no speech");
         }
         client.StopFlow(module);
         times.Sort();
