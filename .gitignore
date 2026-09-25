@@ -15,8 +15,9 @@ Test/Reports/
 *.bak
 .backups/
 
-# governed storage: biometrics / runtime data - NEVER commit
-SharedStorage/
+# governed storage: biometrics / runtime data - NEVER commit. Anchored to the
+# root: AIF/Communication/SharedStorage is source, not data.
+/SharedStorage/
 TestData/
 
 # large model binaries - not source (kept locally; use Git LFS in the
