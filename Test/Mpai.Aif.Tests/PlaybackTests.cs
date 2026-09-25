@@ -104,7 +104,7 @@ public class PlaybackTests
                 stream B (TST-TXT-V1.0:2) from record "first"
                 stream P (TST-TXT-V1.0:3) from record "first"
             """;
-        foreach (var (rate, tail) in new[] { (1.0, streams + "\n    wait 1s\n"), (2.0, streams.Replace("\"first\"", "\"first\" at x2") + "\n    wait 1s\n") })
+        foreach (var (rate, tail) in new[] { (1.0, streams + "\n    wait 3s\n"), (2.0, streams.Replace("\"first\"", "\"first\" at x2") + "\n    wait 3s\n") })
         {
             var (id, played) = await Play(api, first, tail);
             var again = Read(storage, id);

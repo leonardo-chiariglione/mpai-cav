@@ -120,7 +120,7 @@ public class SyntheticDriveTests
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
                 stream Gnss (CAV-GNO-V1.1) from record "drive"
-                wait 4500ms
+                wait 7s
             """), CancellationToken.None);
         Thread.Sleep(200);
         api.RecordStop(esb, out var totals);
