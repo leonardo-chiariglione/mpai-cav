@@ -1,0 +1,6 @@
+{
+  "TST-RLA, OnDegraded StopAIM": "before: #1 OK '1:a'; the host killed; a write: OK, #1 NotProduced; TST-ACC Dead (the link to its host <host> was lost; OnDegraded StopAIM)",
+  "TST-RLP, OnDegraded Continue": "before: #1 OK '1:a'; the host killed; a write: OK, #1 NotProduced; TST-ACC Degraded (the link to its host <host> was lost)",
+  "TST-RLS, OnDegraded StopModule": "before: #1 OK '1:a'; the host killed; a write: NotStarted, #1 NotProduced; TST-ACC Dead (its Module was stopped)",
+  "TST-RXC, OnDegraded Continue": "before: OK; #1 'A'; #2 'a'; #3 'a'; #4 'a'; the host killed: TST-UPP Degraded (the link to its host <host> was lost); a run: OK; #2 'b'; TST-UPP Degraded (it threw: the link to its host <host> was lost)"
+}

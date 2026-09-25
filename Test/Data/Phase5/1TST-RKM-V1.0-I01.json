@@ -1,0 +1,31 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-RKM-V1.0-I01", "AIMName": "1TST-RKM-V1.0-I01"},
+  "Header":           "TST-RKM-V1.0",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module, an AIM stopping another: TST-KIL on another machine stops TST-UPP, local.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Input",  "Direction": "Input",  "DataType": "TST-TXT-V1.0",                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Upper",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Killed", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-KIL-V1.0-I01", "AIMName": "1TST-KIL-V1.0-I01", "Relation": "External" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-UPP-V1.0-I01", "AIMName": "1TST-UPP-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Input"  }, "Input": { "AIMName": "1TST-KIL-V1.0-I01", "PortName": "Input"  } },
+                       { "Output": { "AIMName": "",                  "PortName": "Input"  }, "Input": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Input"  } },
+                       { "Output": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Upper"  }, "Input": { "AIMName": "",                  "PortName": "Upper"  } },
+                       { "Output": { "AIMName": "1TST-KIL-V1.0-I01", "PortName": "Killed" }, "Input": { "AIMName": "",                  "PortName": "Killed" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/RemoteTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

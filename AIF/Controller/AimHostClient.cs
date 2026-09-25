@@ -76,7 +76,7 @@ public sealed class RemoteProcessor : IAimProcessor
                 ["Ports"] = new JsonObject(message.Ports.Select(p => KeyValuePair.Create(p.Key, (JsonNode?)p.Value)))
             });
         }
-        catch (IOException lost)
+        catch (Exception lost) when (lost is IOException || host.Link.IsClosed)
         {
             throw new InvalidOperationException($"the link to its host {host.Address} was lost: {lost.Message}", lost);
         }

@@ -167,9 +167,16 @@ public sealed class AimHost : IDisposable
             if (!_lifecycles.TryGetValue(aim, out var lc)) return false;
             if (_status[aim] != AimStatus.Dead) { _status[aim] = AimStatus.Dead; _reason[aim] = reason; }
             lc.Stop();
-            return true;
         }
+        AimStopped?.Invoke(aim, reason);
+        return true;
     }
+
+    // AN AIM ON ANOTHER MACHINE (M3217 3.3). Told of every AIM stopped here: the
+    // Controller passes it on to the host the AIM runs on. And where an AIM here
+    // stops another, who does it: on a host, the Controller, which holds the Module.
+    public Action<string, string>? AimStopped { get; set; }
+    public Func<string, string, bool>? StopAimBy { get; set; }
 
     public bool IsDead(string aim)
     {
@@ -225,7 +232,8 @@ public sealed class AimHost : IDisposable
         var context = MPAI_AIFM_AIM_Start(instanceId);
         lock (_module)
             if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
-        return context.WithHost(text => Report(instanceId, text), aim => StopAim(aim, $"stopped by {instanceId}"));
+        return context.WithHost(text => Report(instanceId, text),
+            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"));
     }
 
     // Completes when the Module is not paused.

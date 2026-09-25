@@ -68,7 +68,29 @@ public sealed class AimHostServer
                 var identifier = store.FindByAimName(aim);
                 if (identifier is null) return Refused($"this host holds no L3 of {aim}");
                 if (!provider.CanCreate(aim)) return Refused($"this host has no implementation of {aim}");
-                var hosted = modules.GetOrAdd(module, _ => { mine.Add(module); return new Hosted { Host = new AimHost(), Link = link }; });
+                var hosted = modules.GetOrAdd(module, _ =>
+                {
+                    mine.Add(module);
+                    return new Hosted
+                    {
+                        // An AIM here stopping another (MPAI_AIFM_AIM_Stop): the
+                        // Controller holds the Module, and stops it wherever it runs.
+                        Host = new AimHost
+                        {
+                            StopAimBy = (other, by) =>
+                            {
+                                try
+                                {
+                                    var reply = link.RequestAsync(new JsonObject { ["Kind"] = "StopAim", ["Module"] = module, ["Aim"] = other, ["By"] = by })
+                                                    .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                                    return reply["Ok"]?.GetValue<bool>() == true;
+                                }
+                                catch { return false; }
+                            }
+                        },
+                        Link = link
+                    };
+                });
                 if (!hosted.Aims.Add(aim)) return new JsonObject { ["Ok"] = true };   // placed already
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
                 var processor = provider.Create(aim, settings.For(aim),

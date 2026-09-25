@@ -50,19 +50,30 @@ public sealed class RemoteTransport : ChannelTransport
 
     private async ValueTask<bool> DeliverAsync(ChannelSpec spec, PortEnd reader, PortMessage message, int timeoutMs, CancellationToken cancel)
     {
-        var link = linkFor(spec.Module, reader.Aim) ?? throw new InvalidOperationException($"No link to the machine of {reader}.");
-        var reply = await link.RequestAsync(new JsonObject
+        // A link gone delivers nothing: the AIM at its end is DEGRADED by whoever
+        // holds the link (M3217 3.2), not the writer.
+        var link = linkFor(spec.Module, reader.Aim);
+        if (link is null || link.IsClosed) return false;
+        JsonObject reply;
+        try
         {
-            ["Kind"]       = "Message",
-            ["Channel"]    = spec.Id,
-            ["Reader"]     = End(reader),
-            ["DataType"]   = message.DataType,
-            ["PortNumber"] = message.PortNumber,
-            ["Json"]       = Leaving?.Invoke(spec, message.Json) ?? message.Json,
-            ["Stamp"]      = message.Stamp.ToString("O"),
-            ["Sequence"]   = message.Sequence,
-            ["Timeout"]    = timeoutMs
-        }, cancel);
+            reply = await link.RequestAsync(new JsonObject
+            {
+                ["Kind"]       = "Message",
+                ["Channel"]    = spec.Id,
+                ["Reader"]     = End(reader),
+                ["DataType"]   = message.DataType,
+                ["PortNumber"] = message.PortNumber,
+                ["Json"]       = Leaving?.Invoke(spec, message.Json) ?? message.Json,
+                ["Stamp"]      = message.Stamp.ToString("O"),
+                ["Sequence"]   = message.Sequence,
+                ["Timeout"]    = timeoutMs
+            }, cancel);
+        }
+        catch (Exception) when (link.IsClosed && !cancel.IsCancellationRequested)
+        {
+            return false;
+        }
         return reply["Ok"]?.GetValue<bool>() == true;
     }
 

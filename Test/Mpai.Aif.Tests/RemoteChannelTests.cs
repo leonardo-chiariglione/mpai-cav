@@ -140,7 +140,9 @@ public class RemoteChannelTests
         pair.ControllerLink.Lost += reason => lost.TrySetResult(reason);
         await pair.HostLink.DisposeAsync();                          // the host gone
         var noticed = await Task.WhenAny(lost.Task, Task.Delay(5000)) == lost.Task;
-        try { await w.WriteAsync(M("after"), 2000); result["a write after the host went"] = "written"; }
+        // Not delivered, and no error to the writer: the AIM at the other end is
+        // DEGRADED by whoever holds the link (M3217 3.2).
+        try { result["a write after the host went"] = await w.WriteAsync(M("after"), 2000) ? "delivered" : "not delivered; the writer goes on"; }
         catch (IOException) { result["a write after the host went"] = "an error on the Channel"; }
         result["the Controller told the link was lost"] = noticed ? "yes" : "no";
 

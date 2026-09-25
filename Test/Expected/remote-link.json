@@ -1,5 +1,5 @@
 {
   "a Controller with the wrong key": "not admitted",
-  "a write after the host went": "an error on the Channel",
+  "a write after the host went": "not delivered; the writer goes on",
   "the Controller told the link was lost": "yes"
 }

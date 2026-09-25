@@ -1,0 +1,15 @@
+{
+  "TST-KIL on the host stopped TST-UPP here": "Dead (stopped by 1TST-KIL-V1.0-I01)",
+  "TST-RKM: the next run": "OK; #2 'y'",
+  "continuous: Pause, a write, #1; Resume, #1": "NotProduced; OK '2:b|1:a'",
+  "continuous: StopAim TST-ACC, on the host": "OK",
+  "continuous: TST-ACC's status after StopAim": "Dead (stopped by the User Agent)",
+  "continuous: TST-ACC's status, from its host": "Alive",
+  "continuous: a write, then #1": "OK '1:a'; after StopAim: NotProduced",
+  "exchange: Pause, a run, Resume": "held; then OK; #1 'P'; #2 'p'; #3 'p'; #4 'p'",
+  "exchange: StopAim TST-UPP, on the host": "OK",
+  "exchange: TST-RPT's report": "Degraded (it reported) reported 'fell back to a simpler path'",
+  "exchange: TST-UPP's status": "Dead (stopped by the User Agent)",
+  "exchange: a run": "OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'",
+  "exchange: the next run": "OK; #2 's'; #3 's'; #4 's'"
+}
