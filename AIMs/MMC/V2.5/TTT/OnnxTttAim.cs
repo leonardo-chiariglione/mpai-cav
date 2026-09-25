@@ -106,6 +106,7 @@ public sealed class OnnxTttAim : ITttAim, IDisposable
         {
             var translated = await Task.Run(
                 () => Translate(sourceText, source, targetId, token), token).ConfigureAwait(false);
+            Console.WriteLine($"[MMC-TTT-V2.5] {source} -> {target}: \"{sourceText}\" -> \"{translated}\"");
 
             return BasicTextObject.FromText(
                 translated,

@@ -177,6 +177,10 @@ internal static class Program
         PortDataSchema.Sink = (dataType, direction, complaint) =>
             Console.WriteLine($"[SCHEMA] {dataType} {direction} {complaint}");
 
+        // What is heard and said in other scripts - Japanese, Chinese - written as
+        // it is, not as question marks.
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         Console.WriteLine(PortDataSchema.Root is null
             ? "  Schemas:      NOT FOUND - port data will not be validated"
             : $"  Schemas:      {PortDataSchema.Root}");

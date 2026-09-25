@@ -110,12 +110,18 @@ public static class PortDataSchema
         return null;
     }
 
+    // ONCE FOR EACH DATA TYPE AND DIRECTION: what does not validate is said the
+    // first time; the Objects of that Data Type are not checked again in that
+    // direction. A face drawn many times a second would otherwise fill the log,
+    // and cost its checking on every one.
+    private static readonly ConcurrentDictionary<(string, string), byte> Reported = new();
+
     public static void Check(
         string dataType,
         string direction,
         byte[] wire)
     {
-        if (Sink is null) return;
+        if (Sink is null || Reported.ContainsKey((dataType, direction))) return;
 
         var schema = SchemaFor(dataType);
         if (schema is null) return;
@@ -135,7 +141,9 @@ public static class PortDataSchema
             var said = new StringBuilder();
             said.Append("does not validate against ").Append(Files[dataType]).Append(':');
             Describe(result, said, 0);
-            Sink.Invoke(dataType, direction, said.ToString());
+            var text = said.Length > 1200 ? said.ToString(0, 1200) + " ..." : said.ToString();
+            if (Reported.TryAdd((dataType, direction), 0))
+                Sink.Invoke(dataType, direction, text + " (said once: the Objects of this Data Type are not checked again this way)");
         }
         catch (Exception ex)
         {
