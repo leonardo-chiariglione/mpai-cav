@@ -6,7 +6,6 @@
   "type": "object",
   "required": [
     "Header",
-    "Version",
     "EvidenceItems"
   ],
   "additionalProperties": false,
@@ -14,11 +13,6 @@
     "Header": {
       "type": "string",
       "const": "PTF-ATE-V1.0"
-    },
-    "Version": {
-      "type": "string",
-      "const": "PTF-ATE-V1.0",
-      "description": "The Data Type and its version."
     },
     "MInstanceID": {
       "type": "string"

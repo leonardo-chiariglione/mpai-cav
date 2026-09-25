@@ -6,7 +6,6 @@
   "type": "object",
   "required": [
     "Header",
-    "Version",
     "PolicyID",
     "Target",
     "Signature",
@@ -17,11 +16,6 @@
     "Header": {
       "type": "string",
       "const": "PTF-POL-V1.0"
-    },
-    "Version": {
-      "type": "string",
-      "const": "PTF-POL-V1.0",
-      "description": "The Data Type and its version."
     },
     "MInstanceID": {
       "type": "string"

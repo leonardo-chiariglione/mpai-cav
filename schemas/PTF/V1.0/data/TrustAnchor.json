@@ -6,7 +6,6 @@
   "type": "object",
   "required": [
     "Header",
-    "Version",
     "AnchorID",
     "PublicKey",
     "Validity"
@@ -16,11 +15,6 @@
     "Header": {
       "type": "string",
       "const": "PTF-TRA-V1.0"
-    },
-    "Version": {
-      "type": "string",
-      "const": "PTF-TRA-V1.0",
-      "description": "The Data Type and its version."
     },
     "MInstanceID": {
       "type": "string"
