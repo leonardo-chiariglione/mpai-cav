@@ -8,8 +8,10 @@ namespace Mpai.Aif.Tests;
 // AIM host and reached through the Remote transport. The test Modules are in
 // Test/Data/Phase5, each with an Internal twin for comparison.
 //
-// Step 1 records what happens today: nothing places those AIMs elsewhere, so the
-// Controller builds them itself.
+// Today: a Module with an AIM placed elsewhere and no AIM host named for it is
+// refused; its Internal twin is built by the Controller. Placed: the AIMs placed
+// run on an AIM host in a process of its own, and the Module gives what its twin
+// gives.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class RemoteTests
@@ -18,30 +20,65 @@ public class RemoteTests
 
     public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase5");
 
+    private static readonly (string Module, bool Continuous)[] Modules =
+        [("TST-RXC", false), ("TST-RXL", false), ("TST-RLP", true), ("TST-RLL", true), ("TST-RCP", false), ("TST-RPY", true)];
+
+    // Where each Module's placed AIMs are said to run: the AIM Instances, or the
+    // composite that contains them.
+    private static readonly Dictionary<string, string[]> Hosted = new()
+    {
+        ["TST-RXC"] = ["1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01"],
+        ["TST-RLP"] = ["1TST-ACC-V1.0-I01"],
+        ["TST-RCP"] = ["1TST-RIN-V1.0-I01"],
+        ["TST-RPY"] = ["1TST-PRD-V1.0-I01"]
+    };
+
+    [Fact]
+    public void Placed()
+    {
+        var result = new Dictionary<string, string>();
+        using var hostProcess = new HostProcess();
+        foreach (var (module, continuous) in Modules)
+        {
+            var aims = new RemoteAims();
+            using var api = new ControllerApi(Amds, Path.Combine(Amds, "no-settings.json"), aims);
+            api.Controller.AimHostKey = HostProcess.Key;
+            foreach (var aim in Hosted.GetValueOrDefault(module) ?? []) api.Controller.AimHosts[aim] = hostProcess.Address;
+            result[module] = Run(api, module, continuous, aims);
+        }
+        Expected.Match("remote-placed.json", result);
+    }
+
+    private static string Run(ControllerApi api, string module, bool continuous, RemoteAims aims)
+    {
+        var name = $"1{module}-V1.0-I01";
+        try { api.StartFlow(name); }
+        catch (InvalidOperationException refused) { return "refused: " + refused.Message; }
+        string outcome;
+        if (continuous)
+        {
+            api.InputWrite(name, Text, 1, "x", 2000);
+            var read = api.OutputRead(name, Text, 1, 2000);
+            outcome = "a write, then #1: " + (read.Ok ? $"'{MetadataTests.Short(read.Json!, 40)}'" : read.Error.ToString());
+        }
+        else
+        {
+            var run = api.Advance(name, [new ControllerApi.Datum(Text, "x")]);
+            outcome = $"an exchange: {run.Error}; " + string.Join("; ", run.Outputs.OrderBy(o => o.PortNumber).Select(o => $"#{o.PortNumber} '{o.Json}'"));
+        }
+        api.StopFlow(name);
+        return $"{outcome}; built by the Controller: {string.Join(", ", aims.Built.OrderBy(b => b))}";
+    }
+
     [Fact]
     public void Today()
     {
         var result = new Dictionary<string, string>();
-        foreach (var (module, continuous) in new[] { ("TST-RXC", false), ("TST-RXL", false), ("TST-RLP", true), ("TST-RLL", true), ("TST-RCP", false), ("TST-RPY", true) })
+        foreach (var (module, continuous) in Modules)
         {
             var aims = new RemoteAims();
             using var api = new ControllerApi(Amds, Path.Combine(Amds, "no-settings.json"), aims);
-            var name = $"1{module}-V1.0-I01";
-            api.StartFlow(name);
-            string outcome;
-            if (continuous)
-            {
-                api.InputWrite(name, Text, 1, "x", 2000);
-                var read = api.OutputRead(name, Text, 1, 2000);
-                outcome = "a write, then #1: " + (read.Ok ? $"'{MetadataTests.Short(read.Json!, 40)}'" : read.Error.ToString());
-            }
-            else
-            {
-                var run = api.Advance(name, [new ControllerApi.Datum(Text, "x")]);
-                outcome = $"an exchange: {run.Error}; " + string.Join("; ", run.Outputs.OrderBy(o => o.PortNumber).Select(o => $"#{o.PortNumber} '{o.Json}'"));
-            }
-            api.StopFlow(name);
-            result[module] = $"{outcome}; built by the Controller: {string.Join(", ", aims.Built.OrderBy(b => b))}";
+            result[module] = Run(api, module, continuous, aims);
         }
         Expected.Match("remote-today.json", result);
     }

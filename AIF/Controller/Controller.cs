@@ -462,7 +462,8 @@ public sealed class Controller
         IAimProvider provider,
         AimSettings settings,
         AimHost host,
-        Func<string?>? storageLocation = null)
+        Func<string?>? storageLocation = null,
+        Func<DescriptorNode, IAimProcessor?>? placed = null)
     {
         var instantiated = new List<string>();
 
@@ -485,7 +486,7 @@ public sealed class Controller
             return instantiated;
         }
 
-        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation);
+        InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation, placed);
         return instantiated;
     }
 
@@ -502,19 +503,30 @@ public sealed class Controller
         AimHost host,
         List<string> instantiated,
         string moduleName,
-        Func<string?>? storageLocation)
+        Func<string?>? storageLocation,
+        Func<DescriptorNode, IAimProcessor?>? placed)
     {
         foreach (var child in node.Children)
         {
             if (child.IsComposite)
             {
-                InstantiateNode(child, provider, settings, host, instantiated, moduleName, storageLocation);
+                InstantiateNode(child, provider, settings, host, instantiated, moduleName, storageLocation, placed);
                 continue;
             }
 
             var aimName = child.AIMName;
             if (string.IsNullOrWhiteSpace(aimName) || instantiated.Contains(aimName))
                 continue;
+
+            // A SUB-AIM PLACED ON ANOTHER MACHINE (Relation other than Internal)
+            // is instantiated there by an AIM host (M3217 3.4); what comes back
+            // stands in for it here. Its resources are the host's.
+            if (placed?.Invoke(child) is { } onItsHost)
+            {
+                host.RegisterRuntime(onItsHost);
+                instantiated.Add(aimName);
+                continue;
+            }
 
             CheckResources(child);
 

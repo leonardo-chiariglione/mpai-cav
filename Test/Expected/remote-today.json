@@ -1,8 +1,8 @@
 {
-  "TST-RCP": "an exchange: OK; #1 'X'; #2 'x'; built by the Controller: TST-REV, TST-UPP",
+  "TST-RCP": "refused: 1TST-RCP-V1.0-I01: 1TST-UPP-V1.0-I01 runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.",
   "TST-RLL": "a write, then #1: '1:x'; built by the Controller: TST-ACC, TST-DSC",
-  "TST-RLP": "a write, then #1: '1:x'; built by the Controller: TST-ACC, TST-DSC",
-  "TST-RPY": "a write, then #1: '{\"Entries\":[{\"Data\":\"cHBwcHBwcHBwcHBwcHB...'; built by the Controller: TST-PRD, TST-PWR",
-  "TST-RXC": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV, TST-RPT, TST-SLP, TST-UPP",
+  "TST-RLP": "refused: 1TST-RLP-V1.0-I01: 1TST-ACC-V1.0-I01 runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.",
+  "TST-RPY": "refused: 1TST-RPY-V1.0-I01: 1TST-PRD-V1.0-I01 runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.",
+  "TST-RXC": "refused: 1TST-RXC-V1.0-I01: 1TST-UPP-V1.0-I01 runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.",
   "TST-RXL": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV, TST-RPT, TST-SLP, TST-UPP"
 }

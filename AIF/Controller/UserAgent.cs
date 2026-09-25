@@ -83,6 +83,48 @@ public sealed class UserAgent
     public InProcessTransport  InProcessTransport  { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
+    // WHERE AIMs PLACED ON OTHER MACHINES RUN (M3217 3.4): the AIM host named for
+    // an AIM Instance - or for a composite that contains it - as host:port, and the
+    // key the hosts were started with. The L3's Relation says an AIM runs
+    // elsewhere; this says where.
+    public Dictionary<string, string> AimHosts { get; } = new(StringComparer.Ordinal);
+    public string AimHostKey { get; set; } = "";
+
+    private readonly Dictionary<string, AimHostClient> hostClients = new(StringComparer.Ordinal);
+
+    private AimHostClient HostAt(string address)
+    {
+        lock (hostClients)
+        {
+            if (hostClients.TryGetValue(address, out var client) && !client.Link.IsClosed) return client;
+            client = AimHostClient.ConnectAsync(address, AimHostKey).GetAwaiter().GetResult();
+            hostClients[address] = client;
+            return client;
+        }
+    }
+
+    // Which AIMs of a Module are placed, and on which host: an AIM whose Relation,
+    // or that of a composite containing it, is not Internal, on the host named for
+    // it or for the nearest such composite.
+    private Dictionary<string, string> Placement(DescriptorNode root, string module)
+    {
+        var placed = new Dictionary<string, string>(StringComparer.Ordinal);
+        void Walk(DescriptorNode node, bool elsewhere, string? host)
+        {
+            foreach (var child in node.Children)
+            {
+                var away = elsewhere || (child.Relation.Length > 0 && child.Relation != "Internal");
+                var at = AimHosts.GetValueOrDefault(child.AIMName) ?? host;
+                if (child.IsComposite) { Walk(child, away, at); continue; }
+                if (!away) continue;
+                placed[child.AIMName] = at ?? throw new InvalidOperationException(
+                    $"{module}: {child.AIMName} runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.");
+            }
+        }
+        Walk(root, false, null);
+        return placed;
+    }
+
     // True when this Module runs in exchanges - on its Channels (M3215 3.4) - and
     // not continuously.
     public bool ExchangesOnChannels(int moduleId) =>
@@ -112,6 +154,15 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
+    // What the Module's AIMs on other machines are to do as well; a host gone
+    // does not stop the rest.
+    private static void OnHosts(RunningModule module, string kind)
+    {
+        foreach (var client in module.Hosts)
+            try { client.AskAsync(kind, module.HostModule).Wait(TimeSpan.FromSeconds(5)); }
+            catch { /* its AIMs are DEGRADED when next fired */ }
+    }
+
     // A running Module (composite AIM): its graph, host, and boundary Ports.
     private sealed class RunningModule
     {
@@ -130,6 +181,10 @@ public sealed class UserAgent
         // Where the User Agent initialised this Module's Shared Storage; null,
         // the User Agent's root (MPAI_AIFU_SharedStorage_Init, M3203 3.4.1).
         public string? StorageLocation { get; set; }
+
+        // The AIM hosts its placed AIMs run on, and the name it has there.
+        public List<AimHostClient> Hosts { get; } = new();
+        public string HostModule { get; init; } = "";
     }
 
     // -- 3.1 General: initialise / destroy the Controller ---------------------
@@ -219,8 +274,22 @@ public sealed class UserAgent
         // What is retained is the AIM implementation, so anything it holds is
         // retained with it. An AIM that keeps state between runs - a dialogue
         // memory, say - will carry that state into the next Module that uses it.
+        // AIMs PLACED ON OTHER MACHINES are placed on their hosts first: the Module
+        // is refused, before anything is built, if one has no host named.
+        var hostModule = $"{name}#{Guid.NewGuid():N}";
+        var placement = Placement(graph.Root, name);
+        var hosts = new List<AimHostClient>();
+        IAimProcessor? OnItsHost(DescriptorNode leaf)
+        {
+            if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
+            var client = HostAt(address);
+            client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
+            if (!hosts.Contains(client)) hosts.Add(client);
+            return new RemoteProcessor(leaf.AIMName, client, hostModule, host.Report);
+        }
+
         _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
-            () => started?.StorageLocation ?? _sharedStorageRoot);
+            () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost);
 
         moduleId = Interlocked.Increment(ref _nextModuleId);
 
@@ -250,8 +319,10 @@ public sealed class UserAgent
             Graph      = graph,
             Host       = host,
             Continuous = graph.Root.IsContinuous ? channels : null,
-            Channels   = channels
+            Channels   = channels,
+            HostModule = hostModule
         };
+        started.Hosts.AddRange(hosts);
         return AifError.OK;
     }
 
@@ -261,6 +332,7 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Host.PauseModule();
+        OnHosts(module, "Pause");
         return AifError.OK;
     }
 
@@ -269,6 +341,7 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Host.ResumeModule();
+        OnHosts(module, "Resume");
         return AifError.OK;
     }
 
@@ -277,6 +350,8 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Continuous?.StopAsync().GetAwaiter().GetResult();
+        OnHosts(module, "Stop");
+        OnHosts(module, "Release");
         module.Host.Dispose();
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
