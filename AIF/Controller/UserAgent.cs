@@ -106,6 +106,9 @@ public sealed class UserAgent
     // Lifecycle Credential that follows its state. Null: nothing verified, as before.
     public AIF.Trust.TrustDomain? Trust { get; set; }
 
+    // Why the last Module refused was refused, where it was not trusted.
+    public string? LastRefusal { get; private set; }
+
     // The instance of a Module that runs, as its AIM Instances are named by it
     // (<Module instance>/<AIM>), and the AIM hosts it uses.
     public string? InstanceName(string module) => _instances.GetValueOrDefault(module);
@@ -400,7 +403,16 @@ public sealed class UserAgent
         string name, IAimProvider provider, AimSettings settings, out int moduleId)
     {
         lock (_startOne)
-            return StartOne(name, provider, settings, out moduleId);
+        {
+            try { LastRefusal = null; return StartOne(name, provider, settings, out moduleId); }
+            catch (TrustRefusedException refused)
+            {
+                // An AIM not trusted (M3223 3.8): the outcome NOT_TRUSTED, and why.
+                LastRefusal = refused.Message;
+                moduleId = -1;
+                return AifError.NotTrusted;
+            }
+        }
     }
 
     private AifError StartOne(
@@ -452,26 +464,23 @@ public sealed class UserAgent
         var hosts = new List<AimHostClient>();
         var placedIdentities = new Dictionary<string, JsonObject?>(StringComparer.Ordinal);
         var placedEvidence = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+        var placedDeclared = new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
 
-        // WHAT EACH AIM THE CONTROLLER BUILDS WILL RUN, MEASURED BEFORE IT IS BUILT
-        // (M3223 3.2): the binary its provider names, the models its settings name,
-        // checked against the Store's approval and the settings. What does not check
-        // refuses the Module before anything runs.
-        var localEvidence = new Dictionary<string, List<AIF.Trust.PtfEvidence.Item>>(StringComparer.Ordinal);
-        if (Trust is not null)
-        {
-            var problems = new List<string>();
-            foreach (var leaf in LeafNodes(graph.Root).Where(l => !placement.ContainsKey(l.AIMName)))
+        // THE CONTROLLER IS THE VERIFIER (M3223 3.1-3.3). Before an AIM it builds is
+        // built: its identity and credentials issued; what it will run measured - the
+        // binary its provider names, the models its settings name - as evidence; the
+        // policy it is bound by derived from its approved Metadata; and the
+        // Verification Pipeline run on all of it. An AIM not trusted refuses the
+        // Module before anything runs.
+        if (Trust is { } verifier)
+            foreach (var leaf in AimsOf(graph.Root).Where(l => !placement.ContainsKey(l.AIMName)))
             {
-                var items = ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName));
-                var binary = _store.BinaryNameOf(IdentifierOf(leaf));
-                problems.AddRange(ImplementationEvidence.Check(leaf.AIMName, items, binary,
-                    binary is null ? null : _store.Fingerprints.Approved(leaf.AIMName, binary), settings.For(leaf.AIMName)));
-                localEvidence[leaf.AIMName] = items;
+                var instanceId = $"{hostModule}/{leaf.AIMName}";
+                var instance = verifier.IssueLocal(instanceId, leaf.AIMName, leaf.AIMName, issuer: leaf.Packaged.Count > 0);
+                instance.Evidence = verifier.SignEvidence(instanceId,
+                    ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName)));
+                Verify(verifier, instance, leaf, settings.For(leaf.AIMName), name);
             }
-            if (problems.Count > 0)
-                throw new InvalidOperationException($"{name} not started: {string.Join("; ", problems)}.");
-        }
         IAimProcessor? OnItsHost(DescriptorNode leaf)
         {
             if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
@@ -479,24 +488,10 @@ public sealed class UserAgent
             var reply = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
             placedIdentities[leaf.AIMName] = reply["CII"] as JsonObject;
 
-            // WHAT IT RUNS THERE (M3223 3.2): measured by the host, signed by the key
-            // the AIM holds there, checked here against what the Store approved.
-            if (Trust is not null)
-            {
-                var evidence = reply["Evidence"] as JsonObject;
-                var cii = reply["CII"] as JsonObject;
-                using var aimKey = cii is null ? null : AIF.Trust.PtfIdentity.PublicKey(cii);
-                if (evidence is null || aimKey is null ||
-                    AIF.Trust.PtfSignature.Verify(evidence, _ => aimKey) != AIF.Trust.PtfSignature.Outcome.Valid)
-                    throw new InvalidOperationException($"{name}: the AIM host at {address} gave no evidence of what runs {leaf.AIMName}, signed by it.");
-                var problems = ImplementationEvidence.Check(leaf.AIMName, AIF.Trust.PtfEvidence.Items(evidence),
-                    _store.BinaryNameOf(IdentifierOf(leaf)) is { } bin ? bin : null,
-                    _store.BinaryNameOf(IdentifierOf(leaf)) is { } b ? _store.Fingerprints.Approved(leaf.AIMName, b) : null,
-                    SettingsOnHost(reply));
-                if (problems.Count > 0)
-                    throw new InvalidOperationException($"{name} not started - on the AIM host at {address}: {string.Join("; ", problems)}.");
-                placedEvidence[leaf.AIMName] = evidence;
-            }
+            // What it runs there, measured by the host and signed by the key the AIM
+            // holds there (M3223 3.2); verified with the rest once it is placed.
+            if (reply["Evidence"] is JsonObject evidence) placedEvidence[leaf.AIMName] = evidence;
+            placedDeclared[leaf.AIMName] = SettingsOnHost(reply);
             if (!hosts.Contains(client)) hosts.Add(client);
             return new RemoteProcessor(leaf.AIMName, client, hostModule, host.Report);
         }
@@ -508,32 +503,36 @@ public sealed class UserAgent
                 () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost,
                 aim => new CurrentStorage(this, name, aim));
 
-            // THE IDENTITY OF EACH AIM INSTANCE (M3223 3.1): <Module instance>/<AIM>.
-            // An AIM here has its key made here; an AIM on a host has made its own,
-            // and is issued its credential only if its CII shows it holds that key.
+            // AN AIM ON A HOST (M3223 3.1-3.3): its key made there, its CII sent here;
+            // issued its credential only if the CII shows the host holds that key; then
+            // verified like the others, before its Module starts.
             if (Trust is { } trust)
-                foreach (var aim in made)
+            {
+                foreach (var leaf in AimsOf(graph.Root).Where(l => placement.ContainsKey(l.AIMName)))
                 {
+                    var aim = leaf.AIMName;
+                    var address = placement[aim];
                     var instanceId = $"{hostModule}/{aim}";
-                    if (placement.TryGetValue(aim, out var address))
+                    var cii = placedIdentities.GetValueOrDefault(aim)
+                        ?? throw new TrustRefusedException($"{name} not started: the AIM host at {address} gave {aim} no identity.");
+                    AIF.Trust.TrustDomain.Instance issued;
+                    try { issued = trust.IssueHeld(instanceId, aim, cii); }
+                    catch (InvalidOperationException e) { throw new TrustRefusedException($"{name} not started: on the AIM host at {address}, {e.Message}"); }
+                    issued.Evidence = placedEvidence.GetValueOrDefault(aim);
+                    Verify(trust, issued, leaf, placedDeclared.GetValueOrDefault(aim) ?? new Dictionary<string, string>(), name, address);
+                    var taken = HostAt(address).AskAsync("Credential", hostModule, new JsonObject
                     {
-                        var cii = placedIdentities.GetValueOrDefault(aim)
-                            ?? throw new InvalidOperationException($"{name}: the AIM host at {address} gave {aim} no identity.");
-                        var issued = trust.IssueHeld(instanceId, aim, cii);
-                        issued.Evidence = placedEvidence.GetValueOrDefault(aim);
-                        var taken = HostAt(address).AskAsync("Credential", hostModule, new JsonObject
-                        {
-                            ["Aim"] = aim, ["Credential"] = issued.Credential.DeepClone(), ["Lifecycle"] = issued.Lifecycle.DeepClone()
-                        }).GetAwaiter().GetResult();
-                        if (taken["Ok"]?.GetValue<bool>() != true)
-                            throw new InvalidOperationException($"{name}: the AIM host at {address} did not take the credential of {aim}: {taken["Error"]}.");
-                    }
-                    else
-                    {
-                        var issued = trust.IssueLocal(instanceId, aim, aim);
-                        issued.Evidence = trust.SignEvidence(instanceId, localEvidence.GetValueOrDefault(aim) ?? []);
-                    }
+                        ["Aim"] = aim, ["Credential"] = issued.Credential.DeepClone(), ["Lifecycle"] = issued.Lifecycle.DeepClone()
+                    }).GetAwaiter().GetResult();
+                    if (taken["Ok"]?.GetValue<bool>() != true)
+                        throw new InvalidOperationException($"{name}: the AIM host at {address} did not take the credential of {aim}: {taken["Error"]}.");
                 }
+
+                // A PACKAGE (M3223 3.3): each AIM its L3 says it contains, presented by
+                // it and verified through the chain to this Controller.
+                foreach (var leaf in AimsOf(graph.Root).Where(l => l.Packaged.Count > 0 && !placement.ContainsKey(l.AIMName)))
+                    VerifyPackage(trust, leaf, host, $"{hostModule}/{leaf.AIMName}", name);
+            }
 
             moduleId = Interlocked.Increment(ref _nextModuleId);
 
@@ -548,6 +547,10 @@ public sealed class UserAgent
             var channels = placedHere
                 ? new ContinuousExecutor(graph, host, Transports, hostModule, DefaultTransport, Clock, aim => !placement.ContainsKey(aim))
                 : new ContinuousExecutor(graph, host, Transports, $"{name}#{moduleId}", DefaultTransport, Clock);
+
+            // THE CHANNELS PLANNED, AGAINST THE POLICIES (M3223 3.3): every end an AIM is
+            // given is one its policy allows. The Controller binds nothing else.
+            if (Trust is { } bound) CheckChannels(bound, channels, hostModule, name);
 
             // A PERIOD OR A DEADLINE the Controller cannot honour refuses the Module
             // (M3215 3.5): in an exchange, which runs when the User Agent asks; or a
@@ -719,6 +722,82 @@ public sealed class UserAgent
         AIF.SharedStorage.StorageOutcome.NotFound => AifError.NotFound,
         _                                         => AifError.NotAuthorised
     };
+
+    // ---- the Verifier (M3223 3.3) ----------------------------------------------------
+
+    // The policy of an AIM, from its approved Metadata: the Ports it may read and
+    // write, and the storage it is given.
+    private static List<(string Name, string Value)> PolicyOf(DescriptorNode leaf) =>
+        leaf.Ports.Select(p => ("Port", $"{p.Direction} {string.Join("|", p.DataTypes.Count > 0 ? p.DataTypes : [p.DataType])}#{p.PortNumber ?? 1}"))
+            .Concat([("Storage", "Private"), ("Storage", "Module"), ("Storage", "Shared")])
+            .ToList();
+
+    private void Verify(AIF.Trust.TrustDomain trust, AIF.Trust.TrustDomain.Instance instance, DescriptorNode leaf,
+                        IReadOnlyDictionary<string, string> settings, string module, string? onHost = null)
+    {
+        var allowed = PolicyOf(leaf);
+        var policy = trust.BindPolicy(instance.Id, allowed);
+        var binary = _store.BinaryNameOf(IdentifierOf(leaf));
+        var approved = binary is null ? null : _store.Fingerprints.Approved(leaf.AIMName, binary);
+        var decision = trust.Verify(instance, new AIF.Trust.VerificationPipeline.Expectation(
+            instance.Id, LifecycleState: "Created", EvidenceRequired: true,
+            CheckEvidence: items => ImplementationEvidence.Check(leaf.AIMName, items, binary, approved, settings),
+            Policy: policy,
+            CheckPolicy: bound =>
+            {
+                var constraints = (bound["Constraints"] as JsonArray ?? []).Select(c => ((string?)c?["Name"] ?? "", (string?)c?["Value"] ?? "")).ToList();
+                return constraints.OrderBy(c => c).SequenceEqual(allowed.OrderBy(c => c)) ? [] : ["its policy is not what its approved Metadata allows"];
+            }));
+        if (!decision.Trusted)
+            throw new TrustRefusedException($"{module} not started: {leaf.AIMName}{(onHost is null ? "" : $" on the AIM host at {onHost}")} not trusted - {decision.Reason.Replace(leaf.AIMName + ": ", "")}.");
+    }
+
+    private void VerifyPackage(AIF.Trust.TrustDomain trust, DescriptorNode leaf, AimHost host, string packageId, string module)
+    {
+        if (host.ProcessorOf(leaf.AIMName) is not IAimPackage package)
+            throw new TrustRefusedException($"{module} not started: {leaf.AIMName} contains AIMs, and does not present them.");
+        var packageInstance = trust.Of(packageId)!;
+        var asIssuer = new AIF.Trust.PtfIssuer(packageId, trust.KeyOf(packageId)!, packageId);
+        var presented = package.Present(asIssuer, packageId, Clock.Now);
+        var names = presented.Select(p => p.AimName).OrderBy(n => n, StringComparer.Ordinal).ToList();
+        if (!names.SequenceEqual(leaf.Packaged.OrderBy(n => n, StringComparer.Ordinal)))
+            throw new TrustRefusedException($"{module} not started: {leaf.AIMName} presents {string.Join(", ", names)}; its L3 says it contains {string.Join(", ", leaf.Packaged)}.");
+        var chain = new[] { new AIF.Trust.PtfCredential.Link(packageInstance.Cii, packageInstance.Credential) };
+        var packageCode = AIF.Trust.PtfEvidence.Items(packageInstance.Evidence!).FirstOrDefault(i => i.Type == AIF.Trust.PtfEvidence.CodeHash);
+        foreach (var inner in presented)
+        {
+            var innerId = $"{packageId}/{inner.AimName}";
+            var instance = trust.RecordPackaged(innerId, packageId, inner.Cii, inner.Credential, inner.Evidence);
+            var decision = trust.Verify(instance, new AIF.Trust.VerificationPipeline.Expectation(
+                innerId,
+                // What runs inside a package is the package's binary.
+                CheckEvidence: items => items.Where(i => i.Type == AIF.Trust.PtfEvidence.CodeHash)
+                                             .Any(i => packageCode is null || i.Hash != packageCode.Hash)
+                    ? [$"{inner.AimName} is not run by the package's binary"] : []), chain);
+            if (!decision.Trusted)
+                throw new TrustRefusedException($"{module} not started: {inner.AimName} inside {leaf.AIMName} not trusted - {decision.Reason}.");
+        }
+    }
+
+    private static void CheckChannels(AIF.Trust.TrustDomain trust, ContinuousExecutor channels, string hostModule, string module)
+    {
+        bool Allows(AIF.Channels.PortEnd end, string direction) =>
+            trust.Of($"{hostModule}/{end.Aim}")?.Policy?["Constraints"] is JsonArray constraints &&
+            constraints.Any(c => (string?)c?["Name"] == "Port" && (string?)c?["Value"] is { } v &&
+                                 v.StartsWith(direction + " ", StringComparison.Ordinal) && v.EndsWith($"#{end.PortNumber}", StringComparison.Ordinal) &&
+                                 v[(direction.Length + 1)..v.LastIndexOf('#')].Split('|').Contains(end.DataType));
+        foreach (var spec in channels.Channels)
+        {
+            if (!spec.Writer.IsBoundary && !Allows(spec.Writer, "Output"))
+                throw new TrustRefusedException($"{module} not started: the Channel {spec.Writer} is not one its policy allows.");
+            foreach (var reader in spec.Readers.Where(r => !r.Reader.IsBoundary))
+                if (!Allows(reader.Reader, "Input"))
+                    throw new TrustRefusedException($"{module} not started: the Channel to {reader.Reader} is not one its policy allows.");
+        }
+    }
+
+    // The AIMs the Controller builds: the leaves, or the Module itself where it is one AIM.
+    private static IEnumerable<DescriptorNode> AimsOf(DescriptorNode root) => root.IsComposite ? LeafNodes(root) : [root];
 
     private static IEnumerable<DescriptorNode> LeafNodes(DescriptorNode node) =>
         node.Children.SelectMany(c => c.IsComposite ? LeafNodes(c) : [c]);
@@ -910,5 +989,9 @@ public enum AifError
     NotStarted,
 
     // Not allowed by the rules of the storage (M3219 3.2).
-    NotAuthorised
+    NotAuthorised,
+
+    // An AIM of the Module was not trusted: the Verification Pipeline refused it
+    // (M3223 3.8).
+    NotTrusted
 }

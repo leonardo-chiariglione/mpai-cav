@@ -1,0 +1,26 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-RXM-V1.0-I01", "AIMName": "1TST-RXM-V1.0-I01"},
+  "Header":           "TST-RXM-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test Module, exchange: the mixed TST-MIX.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Input", "Direction": "Input", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Reversed", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-MIX-V1.0-I01", "AIMName": "1TST-MIX-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "", "PortName": "Input" }, "Input": { "AIMName": "1TST-MIX-V1.0-I01", "PortName": "Input" } },
+                       { "Output": { "AIMName": "1TST-MIX-V1.0-I01", "PortName": "Reversed", "PortNumber": 2 }, "Input": { "AIMName": "", "PortName": "Reversed" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/TrustVerificationTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

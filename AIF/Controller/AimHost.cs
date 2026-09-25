@@ -45,6 +45,10 @@ public sealed class AimHost : IDisposable
     public bool Contains(string instanceId) =>
         _processors.ContainsKey(instanceId);
 
+    // The implementation that runs an AIM here.
+    public IAimProcessor? ProcessorOf(string instanceId) =>
+        _processors.GetValueOrDefault(instanceId);
+
     public AimState GetState(string instanceId) =>
         _lifecycles.TryGetValue(instanceId, out var lc)
             ? lc.State

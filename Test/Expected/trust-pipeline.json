@@ -1,0 +1,22 @@
+{
+  "a credential for another CII": "not trusted: its credential: CiiMismatch; VerifySignature Success, ValidateCredential Failure",
+  "a credential from another Controller": "not trusted: its credential: UnknownIssuer; VerifySignature Success, ValidateCredential Failure",
+  "a policy against PTF-POL": "valid",
+  "a policy bound for another instance": "not trusted: its policy is for another instance; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Success, EvaluatePolicy Failure",
+  "a policy bound with more than the Metadata allows": "not trusted: its policy is not what its approved Metadata allows; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Success, EvaluatePolicy Failure",
+  "a policy changed after it was bound": "not trusted: its policy is not the verifier's; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Success, EvaluatePolicy Failure",
+  "all as expected": "trusted; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Success, EvaluatePolicy Success",
+  "an AIM inside a package, with its chain": "trusted; VerifySignature Success, ValidateCredential Success",
+  "an AIM inside a package, without its chain": "not trusted: its credential: UnknownIssuer; VerifySignature Success, ValidateCredential Failure",
+  "an AIM inside an AIM not entitled to issue, with its chain": "not trusted: its credential: NotEntitled; VerifySignature Success, ValidateCredential Failure",
+  "an AIM inside an AIM not entitled to issue, without its chain": "not trusted: its credential: UnknownIssuer; VerifySignature Success, ValidateCredential Failure",
+  "evidence changed after it was signed": "not trusted: its evidence: Invalid; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Failure",
+  "evidence of another binary": "not trusted: not the binary approved; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Failure",
+  "expected Running, while Created": "not trusted: its lifecycle: WrongState; VerifySignature Success, ValidateCredential Success, ValidateCredential Failure",
+  "expected as another instance": "not trusted: its CII names TST#1/1TST-UPP-V1.0-I01, not TST#1/1TST-XXX-V1.0-I01; VerifySignature Failure",
+  "no evidence": "not trusted: no evidence of what it runs; VerifySignature Success, ValidateCredential Success, ValidateCredential Success, ValidateEvidence Failure",
+  "the Trust Operations": "59; BindPolicy Success x3, EvaluatePolicy Failure x3, EvaluatePolicy Success x1, IssueCredential Success x4, UpdateLifecycleState Success x4, ValidateCredential Failure x6, ValidateCredential Success x16, ValidateEvidence Failure x3, ValidateEvidence Success x4, VerifySignature Failure x1, VerifySignature Success x14",
+  "the Trust Operations against PTF-TOP": "valid",
+  "the Trust Operations signed by the Controller": "Valid",
+  "the verdict recorded": "trusted"
+}

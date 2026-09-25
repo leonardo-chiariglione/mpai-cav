@@ -241,13 +241,21 @@ public sealed class Controller
                 };
                 if (string.IsNullOrWhiteSpace(subId.AIMName)) continue;
 
-                var child = BuildNode(subId, expanding);
-                child.Relation =
+                var subRelation =
                     subAim.GetProperty("Identifier").TryGetProperty("Relation", out var relation)
                         ? relation.GetString() ?? string.Empty
                         : string.Empty;
+
+                // An AIM inside a package is not built: the package runs it.
+                if (subRelation == "Packaged") { node.Packaged.Add(subId.AIMName); continue; }
+
+                var child = BuildNode(subId, expanding);
+                child.Relation = subRelation;
                 node.Children.Add(child);
             }
+            if (node.Packaged.Count > 0 && node.Children.Count > 0)
+                throw new InvalidOperationException(
+                    $"{identifier.AIMName}: its SubAIMs are Packaged and built; a package contains all its AIMs, or none.");
         }
 
         // Topology
@@ -257,7 +265,7 @@ public sealed class Controller
         // human label. Here it is resolved ONCE, against this composite's own
         // ExternalPorts and InternalTypes, and the connections stored are purely
         // typed. Nothing downstream ever sees the name. See ResolveConnection.
-        if (root.TryGetProperty("Topology", out var topology))
+        if (node.Packaged.Count == 0 && root.TryGetProperty("Topology", out var topology))
         {
             foreach (var connection in topology.EnumerateArray())
                 node.Connections.AddRange(ResolveConnection(node, connection));

@@ -1,0 +1,16 @@
+{
+  "TST-RXP 1TST-PKG-V1.0-I01": "trusted; credential issued by controller-1, scope Issuer; policy Input TST-TXT-V1.0#1, Output TST-TXT-V1.0#1, Output TST-TXT-V1.0#2; lifecycle Created > Running > Terminated",
+  "TST-RXP 1TST-PKG-V1.0-I01/1TST-REV-V1.0-I01": "trusted; credential issued by <instance>/1TST-PKG-V1.0-I01; policy none; lifecycle Running > Terminated",
+  "TST-RXP 1TST-PKG-V1.0-I01/1TST-UPP-V1.0-I01": "trusted; credential issued by <instance>/1TST-PKG-V1.0-I01; policy none; lifecycle Running > Terminated",
+  "TST-RXP 1TST-SLP-V1.0-I01": "trusted; credential issued by controller-1; policy Input TST-TXT-V1.0#1, Output TST-TXT-V1.0#1; lifecycle Created > Running > Terminated",
+  "TST-RXP, with the package TST-PKG": "started; an exchange: OK; #1 'ABC'; #2 'cba'; #3 'abc'",
+  "a package issuing with a key of its own making": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-UPP-V1.0-I01 inside 1TST-PKG-V1.0-I01 not trusted - its credential: InvalidSignature.",
+  "a package not approved": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-PKG-V1.0-I01 not trusted - the Store approved no fingerprint of Mpai.Aif.Tests.",
+  "a package presenting a credential for another CII": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-UPP-V1.0-I01 inside 1TST-PKG-V1.0-I01 not trusted - its credential: CiiMismatch.",
+  "a package presenting an AIM it does not contain": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-PKG-V1.0-I01 presents 1TST-ECH-V1.0-I01, 1TST-UPP-V1.0-I01; its L3 says it contains 1TST-UPP-V1.0-I01, 1TST-REV-V1.0-I01.",
+  "a package presenting one AIM of two": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-PKG-V1.0-I01 presents 1TST-UPP-V1.0-I01; its L3 says it contains 1TST-UPP-V1.0-I01, 1TST-REV-V1.0-I01.",
+  "a package that is not all Packaged": "refused: 1TST-MIX-V1.0-I01: its SubAIMs are Packaged and built; a package contains all its AIMs, or none.",
+  "a package whose AIM runs another binary": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-UPP-V1.0-I01 inside 1TST-PKG-V1.0-I01 not trusted - 1TST-UPP-V1.0-I01 is not run by the package's binary.",
+  "an implementation that does not present its AIMs": "NOT_TRUSTED: 1TST-RXP-V1.0-I01 not started: 1TST-PKG-V1.0-I01 contains AIMs, and does not present them.",
+  "without trust, the package": "started; an exchange: OK; #1 'ABC'; #2 'cba'; #3 'abc'"
+}

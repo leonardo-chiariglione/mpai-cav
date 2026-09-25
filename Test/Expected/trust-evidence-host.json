@@ -3,5 +3,5 @@
   "1TST-SLP-V1.0-I01's evidence": "valid; signed by the AIM's key on the host: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests",
   "1TST-UPP-V1.0-I01's evidence": "valid; signed by the AIM's key on the host: Valid; AIF-EVID-CODE-HASH Mpai.Aif.Tests",
   "approved: TST-RXC with three AIMs on a host": "started; an exchange: OK",
-  "one AIM on the host approved with another fingerprint": "refused: 1TST-RXC-V1.0-I01 not started - on the AIM host at <host>: 1TST-SLP-V1.0-I01: Mpai.Aif.Tests is not the binary the Store approved (SHA-256 <as measured>, approved 0000000000000000...)."
+  "one AIM on the host approved with another fingerprint": "NOT_TRUSTED: 1TST-RXC-V1.0-I01 not started: 1TST-SLP-V1.0-I01 on the AIM host at <host> not trusted - Mpai.Aif.Tests is not the binary the Store approved (SHA-256 <as measured>, approved 0000000000000000...)."
 }

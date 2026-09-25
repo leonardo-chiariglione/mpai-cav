@@ -103,6 +103,14 @@ public sealed class TrustDomain
 
         // The Attestation Evidence of what the instance runs (M3223 3.2).
         public JsonObject? Evidence { get; set; }
+
+        // The Policy Binding the Controller bound it by, and the verdict of the
+        // Verification Pipeline (M3223 3.3).
+        public JsonObject? Policy { get; set; }
+        public string Verdict { get; set; } = "not verified";
+
+        // Where an AIM inside a package: the package, which issued its credential.
+        public string? PackagedIn { get; init; }
     }
 
     public string ControllerId { get; }
@@ -112,6 +120,7 @@ public sealed class TrustDomain
     private readonly ECDsa anchorKey;
     private readonly ConcurrentDictionary<string, Instance> instances = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, ECDsa> keys = new(StringComparer.Ordinal);
+    private readonly ConcurrentQueue<JsonObject> operations = new();
 
     public TrustDomain(string controllerId, Func<DateTimeOffset>? now = null)
     {
@@ -156,6 +165,7 @@ public sealed class TrustDomain
             KeyHeldHere = heldHere
         };
         instances[instanceId] = instance;
+        Operation("IssueCredential", "InstanceCredential", (string?)instance.Credential["InstanceCredentialID"] ?? instanceId, null);
         Transition(instance, "Created");
         return instance;
     }
@@ -179,10 +189,75 @@ public sealed class TrustDomain
         {
             instance.Lifecycle = Anchor.Issuer.IssueLifecycle(instance.Id, state, now(), LifecycleLifetime);
             instance.States.Add(state);
+            Operation("UpdateLifecycleState", "ProcessLifecycleCredential", (string?)instance.Lifecycle["ProcessLifecycleCredentialID"] ?? instance.Id, null);
         }
     }
 
     public Instance? Of(string instanceId) => instances.GetValueOrDefault(instanceId);
+
+    // ---- the Verifier (M3223 3.3) -------------------------------------------------
+
+    // Every trust decision and act of this Controller, as PTF Trust Operations
+    // (PTF-TOP), in the order made - for the Trace (M3223 3.6).
+    public IReadOnlyList<JsonObject> Operations => operations.ToArray();
+
+    public JsonObject Operation(string type, string targetType, string targetId, string? failure)
+    {
+        var operation = new JsonObject
+        {
+            ["Header"] = "PTF-TOP-V1.0",
+            ["TrustOperationID"] = $"{ControllerId}#TOP-{Guid.NewGuid():N}",
+            ["OperationType"] = type,
+            ["TargetType"] = targetType,
+            ["TargetID"] = targetId,
+            ["ActorID"] = ControllerId,
+            ["Status"] = failure is null ? "Success" : "Failure"
+        };
+        if (failure is not null) operation["FailureReason"] = failure;
+        PtfSignature.Sign(operation, anchorKey, Anchor.AnchorId);
+        operations.Enqueue(operation);
+        return operation;
+    }
+
+    // THE POLICY an AIM Instance is bound by (PTF-POL): what the approved Metadata
+    // allows it - the Ports it may read and write, the storage it is given - bound
+    // by this Controller, the Policy Authority of its AIMs.
+    public JsonObject BindPolicy(string instanceId, IEnumerable<(string Name, string Value)> constraints)
+    {
+        var policy = new JsonObject
+        {
+            ["Header"] = "PTF-POL-V1.0",
+            ["PolicyID"] = $"{instanceId}#POL-{Guid.NewGuid():N}",
+            ["Target"] = new JsonObject { ["Type"] = "AIMInstance", ["ID"] = instanceId },
+            ["Constraints"] = new JsonArray(constraints.Select(c => (JsonNode)new JsonObject { ["Name"] = c.Name, ["Value"] = c.Value }).ToArray())
+        };
+        PtfSignature.Sign(policy, anchorKey, Anchor.AnchorId);
+        if (instances.TryGetValue(instanceId, out var instance)) instance.Policy = policy;
+        Operation("BindPolicy", "PolicyBinding", (string)policy["PolicyID"]!, null);
+        return policy;
+    }
+
+    // AN AIM INSIDE A PACKAGE, as the package presented it: its CII and the
+    // credential the package issued it (M3223 3.3).
+    public Instance RecordPackaged(string instanceId, string packageId, JsonObject cii, JsonObject credential, JsonObject? evidence)
+    {
+        var instance = new Instance { Id = instanceId, Cii = cii, Credential = credential, KeyHeldHere = false, PackagedIn = packageId, Evidence = evidence };
+        instances[instanceId] = instance;
+        return instance;
+    }
+
+    // Runs the Verification Pipeline on an instance, as it presents itself, and
+    // records the verdict.
+    public VerificationPipeline.Decision Verify(Instance instance, VerificationPipeline.Expectation expectation,
+                                                IReadOnlyList<PtfCredential.Link>? chain = null)
+    {
+        var decision = VerificationPipeline.Run(
+            new VerificationPipeline.Presentation(instance.Cii, instance.Credential,
+                instance.Lifecycle.Count > 0 ? instance.Lifecycle : null, instance.Evidence, chain),
+            expectation, KeyFor, now(), Operation);
+        instance.Verdict = decision.Trusted ? "trusted" : "not trusted: " + decision.Reason;
+        return decision;
+    }
 
     // The evidence of what an AIM the Controller runs will run, measured by the
     // Controller and signed by it.

@@ -146,9 +146,13 @@ public class TrustEvidenceTests
             foreach (var aim in placed ?? []) api.Controller.AimHosts[aim] = host.Address;
         }
         var name = $"1{module}-V1.0-I01";
-        try { api.StartFlow(name); }
         // The measured SHA-256 of a binary changes with each build: not recorded.
-        catch (InvalidOperationException refused) { return "refused: " + Regex.Replace(refused.Message, @"SHA-256 [0-9A-F]{16}\.\.\.,", "SHA-256 <as measured>,"); }
+        static string Masked(string? why) => Regex.Replace(why ?? "", @"SHA-256 [0-9A-F]{16}\.\.\.,", "SHA-256 <as measured>,");
+        AifError outcome;
+        try { outcome = api.StartFlow(name); }
+        catch (InvalidOperationException refused) { return "refused: " + Masked(refused.Message); }
+        if (outcome == AifError.NotTrusted) return "NOT_TRUSTED: " + Masked(api.Controller.LastRefusal);
+        if (outcome != AifError.OK) return outcome.ToString();
         instance = api.Controller.InstanceName(name);
         var run = api.Advance(name, [new ControllerApi.Datum(RemoteTests.Text, "x")]);
         api.StopFlow(name);

@@ -44,6 +44,12 @@ public sealed class DescriptorNode
     public List<DescriptorNode> Children { get; } =
         new();
 
+    // A PACKAGE (M3223 3.3): the AIMs its L3 names with the Relation "Packaged" -
+    // inside its one binary. The Controller builds none of them; the package is
+    // one AIM to it, and presents them for verification.
+    public List<string> Packaged { get; } =
+        new();
+
     // What this composite does when one of its AIMs fails (M3213 3.5):
     // StopModule, the default; StopAIM; or Continue.
     public string OnDegraded { get; set; } =

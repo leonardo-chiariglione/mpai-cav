@@ -114,7 +114,9 @@
       { "const": "Private", "title": "Private",
         "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances deployed for the same provisioning account. In this case, the value of the Host Property must identify the private service instance." },
       { "const": "Public", "title": "Public",
-        "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances irrespective of their provisioning account. In this case, the value of the Host Property must identify the public service instance." }
+        "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances irrespective of their provisioning account. In this case, the value of the Host Property must identify the public service instance." },
+      { "const": "Packaged", "title": "Packaged",
+        "description": "The AIM is contained in the implementation of the AIM described by this AIM Metadata schema instance - one binary - and runs within it. The Controller does not instantiate it and does not connect it: the package does. Where a SubAIM is Packaged, all SubAIMs are, and the Topology, if any, describes the package and is not executed by the Controller. Under Zero Trust, the package presents each AIM it contains - its identity and a credential it issues it - for verification." }
                             ] },
 
 
