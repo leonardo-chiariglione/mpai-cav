@@ -241,6 +241,10 @@ public partial class RcaShell : ComponentBase
             var tcs = new TaskCompletionSource<(string Name, byte[] Data)?>(TaskCreationOptions.RunContinuationsAsynchronously);
             picture = tcs; choosingPicture = true;
             Refresh();
+
+            // Stop while the person is choosing ends the choosing: nothing chosen.
+            var stop = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+            using var stopped = stop.Register(() => tcs.TrySetResult(null));
             var chosen = await tcs.Task;
             choosingPicture = false; Refresh();
             return chosen is not { } c ? null : MpaiJson.ToJson(BasicVisualObject.FromFile(c.Name, c.Data, "Picture"));
