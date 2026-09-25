@@ -8,8 +8,8 @@
   "TST-RCA against the schema": "valid",
   "TST-RCA: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
   "TST-REC: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
-  "TST-SHA writes": "OK; #1 's written; not given: readers'",
-  "TST-SHB reads it": "OK; #1 'shared'",
+  "TST-SHA writes": "OK; #1 's: OK'",
+  "TST-SHB reads it": "OK; #1 'NotAuthorised'",
   "stream in a workflow": "read as: StartModule",
   "the Controller API's calls for a record": "none"
 }
