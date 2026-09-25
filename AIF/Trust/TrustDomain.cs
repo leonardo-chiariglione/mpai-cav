@@ -26,9 +26,8 @@ public sealed class TrustAnchorKey
         this.notAfter = notAfter;
     }
 
-    // The anchor as PTF has it. Its validity is a pair of Time objects (OSD-TIM), as
-    // the Trust Anchor schema requires, where every other PTF Data Type has a
-    // date-time: a finding for PTF.
+    // The anchor as PTF has it. Its validity is a pair of Simple Times (OSD-STM), as
+    // the author decided: each an absolute instant in milliseconds.
     public JsonObject Object() => new()
     {
         ["Header"] = Header,
@@ -45,8 +44,22 @@ public sealed class TrustAnchorKey
         }
     };
 
-    private static JsonObject TimeObject(string id, DateTimeOffset t) =>
-        new() { ["Header"] = "OSD-TIM-V1.5", ["TimeID"] = id, ["Data"] = PtfIdentity.Time(t) };
+    // A Simple Time (OSD-STM-V1.5) of one instant: a segment whose start and end are
+    // the instant, absolute (FlagsByte bit 0), in milliseconds (bits 1-2 = 01).
+    private static JsonObject TimeObject(string id, DateTimeOffset t)
+    {
+        var ms = t.ToUnixTimeMilliseconds();
+        return new()
+        {
+            ["Header"] = "OSD-STM-V1.5",
+            ["SimpleTimeID"] = id,
+            ["SimpleTimeData"] = new JsonArray(new JsonObject
+            {
+                ["FlagsByte"] = 3, ["StartTime"] = ms, ["EndTime"] = ms,
+                ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 0
+            })
+        };
+    }
 }
 
 // THE TRUST OF ONE CONTROLLER (Phase 13, M3223 3.1). Given the anchor of its
