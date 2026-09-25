@@ -2,22 +2,33 @@ using System.Collections.Concurrent;
 
 namespace AIF.Channels;
 
-// What both transports share: one Channel's reader ends, and the writer's stamp.
+// Delivers a Message to a reader end on another machine; false when it could not
+// be put there within the timeout.
+public delegate ValueTask<bool> RemoteDelivery(ChannelSpec spec, PortEnd reader, PortMessage message, int timeoutMs, CancellationToken cancel);
+
+// What every transport shares: one Channel's reader ends on this machine, the
+// deliveries to its reader ends on others, and the writer's stamp.
 internal sealed class ChannelCore
 {
     public ChannelSpec Spec { get; }
     public IReadOnlyDictionary<PortEnd, ReaderQueue> Readers { get; }
+    private readonly IReadOnlyList<PortEnd> elsewhere;
+    private readonly RemoteDelivery? remote;
     private readonly IClock clock;
     private long sequence;
 
     public long Written => Interlocked.Read(ref sequence);
 
-    public ChannelCore(ChannelSpec spec, IClock clock, Action<ChannelSpec, PortMessage>? lost)
+    public ChannelCore(ChannelSpec spec, IClock clock, Action<ChannelSpec, PortMessage>? lost,
+                       Func<PortEnd, bool>? isHere = null, RemoteDelivery? remote = null)
     {
         Spec = spec;
         this.clock = clock;
-        Readers = spec.Readers.ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock,
+        this.remote = remote;
+        var here = isHere ?? (_ => true);
+        Readers = spec.Readers.Where(r => here(r.Reader)).ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock,
             lost is null ? null : message => lost(spec, message)));
+        elsewhere = spec.Readers.Where(r => !here(r.Reader)).Select(r => r.Reader).ToList();
     }
 
     // The writer's end stamps the Message; the writer supplies no stamp.
@@ -33,7 +44,20 @@ internal sealed class ChannelCore
         var all = true;
         foreach (var reader in Readers.Values)
             all &= await reader.PutAsync(message, timeoutMs, cancel);
+        foreach (var reader in elsewhere)
+            all &= await remote!(Spec, reader, message, timeoutMs, cancel);
         return all;
+    }
+
+    // A Message that came from the writer's machine, for a reader here: stamped
+    // there; its age, for MaxAge, counted from its arrival here, since two
+    // machines' monotonic clocks are not comparable.
+    public ValueTask<bool> ArrivedAsync(PortEnd reader, PortMessage message, int timeoutMs, CancellationToken cancel)
+    {
+        message.Written = clock.Monotonic;
+        return Readers.TryGetValue(reader, out var queue)
+            ? queue.PutAsync(message, timeoutMs, cancel)
+            : ValueTask.FromResult(false);
     }
 
     public void Close()
@@ -76,7 +100,14 @@ public abstract class ChannelTransport : IChannelTransport
 
     public abstract string Name { get; }
 
-    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m)));
+    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), IsHere, Remote));
+
+    internal ChannelCore? Core(string channelId) => channels.TryGetValue(channelId, out var core) ? core : null;
+
+    // Where a reader end is: here, unless a transport that reaches other
+    // machines says otherwise; and how a Message is delivered to one elsewhere.
+    protected virtual bool IsHere(PortEnd reader) => true;
+    protected virtual RemoteDelivery? Remote => null;
 
     // Called with every Message a reader end loses, dropped or discarded.
     public Action<ChannelSpec, PortMessage>? Lost { get; set; }

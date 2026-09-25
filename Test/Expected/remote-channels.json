@@ -1,0 +1,7 @@
+{
+  "Block, Depth 2, the reader there": "third write with timeout 100: timed out; a write while full waits, then passes; there 2,4",
+  "DropOldest, Depth 2, the reader there, five written": "read 4,5; dropped 3",
+  "MaxAge 60 ms, the reader there": "read fresh; discarded 1",
+  "writer here, readers here and there": "here 1,2,3; there 1,2,3; stamped there now, sequence 1",
+  "writer there, reader here": "from the host"
+}
