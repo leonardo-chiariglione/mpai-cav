@@ -17,6 +17,17 @@ public sealed class KeyInfo
     public required string   RequestedBy { get; init; }
     public required DateTime StoredAt    { get; init; }
     public required long     Length      { get; init; }
+
+    // THE RULES OF THE DATUM (M3219 3.1), where it was written under them; absent
+    // in what was written before, which is read as category Data, every holder a
+    // reader, kept as long as the scope.
+    public string?          Category       { get; init; }
+    public List<string>?    Readers        { get; init; }
+    public StorageLifetime  Lifetime       { get; init; } = StorageLifetime.Scope;
+    public double?          WithinMs       { get; init; }
+    public string?          Rule           { get; init; }
+    public string?          ModuleInstance { get; init; }
+    public string?          Session        { get; init; }
 }
 
 // The six primitives of MPAI-AIF V3.0 Shared Storage API Section 4.10 -

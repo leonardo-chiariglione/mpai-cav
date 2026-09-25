@@ -200,10 +200,23 @@ public sealed class UserAgent
     // MPAI_AIFU_SharedStorage_Init(MODULE_ID, location) (M3203 3.4.1): the scope
     // of one Module is held at location. Its AIMs' handles follow at their next
     // call. The User Agent says where, and nothing about who writes.
-    public AifError MPAI_AIFU_SharedStorage_Init(int moduleId, string location)
+    public AifError MPAI_AIFU_SharedStorage_Init(int moduleId, string location) =>
+        MPAI_AIFU_SharedStorage_Init(moduleId, location, false);
+
+    // Several Modules given one location share its Shared Storage (M3219 3.3).
+    // governs: this Module's StorageControl holds the central control of that
+    // Shared Storage - refused where the Module names none, or another holds it.
+    public AifError MPAI_AIFU_SharedStorage_Init(int moduleId, string location, bool governs)
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         if (string.IsNullOrWhiteSpace(location)) return AifError.Failed;
+        if (governs)
+        {
+            if (module.Graph.Root.StorageControl is not { } control) return AifError.NotAuthorised;
+            if (!AIF.SharedStorage.RuledStore.SharedAt(location, () => Clock.Now)
+                    .Govern(new AIF.SharedStorage.StorageHolder(module.Name, control)))
+                return AifError.NotAuthorised;
+        }
         module.StorageLocation = location;
         return AifError.OK;
     }
@@ -256,9 +269,14 @@ public sealed class UserAgent
 
     public AifError MPAI_AIFU_Controller_Initialize()
     {
+        AIF.SharedStorage.RuledStore.Ended(_session);
         _session = Guid.NewGuid().ToString("N");
+        AIF.SharedStorage.RuledStore.Started(_session);
         _controller = new Controller(_store);
         _controller.SetSharedStorageRoot(_sharedStorageRoot);
+        _controller.InstanceOf = module => _instances.GetValueOrDefault(module, "");
+        _controller.SessionOf  = () => _session;
+        _controller.Now        = () => Clock.Now;
         return AifError.OK;
     }
 
@@ -359,7 +377,10 @@ public sealed class UserAgent
         var moduleStore = _stores[name] = new AIF.SharedStorage.RuledStore(
             () => (started?.StorageLocation ?? _sharedStorageRoot) is { } scope
                 ? Path.Combine(scope, "private", Uri.EscapeDataString(name)) : null,
-            () => Clock.Now, hostModule, _session, graph.Root.StorageControl);
+            () => Clock.Now, everyoneReads: false,
+            graph.Root.StorageControl is { } central ? new AIF.SharedStorage.StorageHolder(name, central) : null);
+        _instances[name] = hostModule;
+        AIF.SharedStorage.RuledStore.Started(hostModule);
         var placement = Placement(graph.Root, name);
         var hosts = new List<AimHostClient>();
         IAimProcessor? OnItsHost(DescriptorNode leaf)
@@ -488,7 +509,7 @@ public sealed class UserAgent
         OnHosts(module, "Release");
         hostModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
-        module.Storage?.EndOfModule();
+        AIF.SharedStorage.RuledStore.Ended(module.HostModule);
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
     }
@@ -501,13 +522,15 @@ public sealed class UserAgent
     // runs now, as the Shared Storage handle asks where its scope now is.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, AIF.SharedStorage.RuledStore> _stores = new(StringComparer.Ordinal);
 
-    private sealed class CurrentStorage(UserAgent ua, string module, string holder) : AIF.SharedStorage.IRuledStorage
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _instances = new(StringComparer.Ordinal);
+
+    private sealed class CurrentStorage(UserAgent ua, string module, string aim) : AIF.SharedStorage.IRuledStorage
     {
         private AIF.SharedStorage.IRuledStorage Now() =>
             (ua._stores.TryGetValue(module, out var store) ? store : throw new InvalidOperationException($"{module} is not running."))
-            .For(holder);
+            .For(new AIF.SharedStorage.StorageHolder(module, aim), ua._instances.GetValueOrDefault(module, ""), ua._session);
 
-        public string Holder => holder;
+        public string Holder => $"{module}/{aim}";
         public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, AIF.SharedStorage.StorageTime? time = null) =>
             Now().MPAI_AIFM_RuledStorage_Put(key, data, category, readers, time);
         public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Get(string key, out byte[] data) => Now().MPAI_AIFM_RuledStorage_Get(key, out data);
@@ -519,7 +542,16 @@ public sealed class UserAgent
     }
 
     public AIF.SharedStorage.IRuledStorage? ModuleStorage(int moduleId) =>
-        _running.TryGetValue(moduleId, out var module) ? module.Storage?.For(AIF.SharedStorage.RuledStore.UserAgent) : null;
+        _running.TryGetValue(moduleId, out var module)
+            ? module.Storage?.For(AIF.SharedStorage.StorageHolder.UserAgent, module.HostModule, _session) : null;
+
+    // The Shared Storage at a running Module's location, as the User Agent may
+    // reach it (M3219 3.3).
+    public AIF.SharedStorage.IRuledStorage? SharedStorage(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && (module.StorageLocation ?? _sharedStorageRoot) is { } at
+            ? (AIF.SharedStorage.IRuledStorage)AIF.SharedStorage.RuledStore.SharedAt(at, () => Clock.Now)
+                .PlainFor(AIF.SharedStorage.StorageHolder.UserAgent, module.HostModule, _session, "local")
+            : null;
 
     public static AifError Outcome(AIF.SharedStorage.StorageOutcome outcome) => outcome switch
     {

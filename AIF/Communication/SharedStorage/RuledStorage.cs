@@ -1,14 +1,21 @@
+using System.Collections.Concurrent;
+using System.Text;
 using System.Text.Json;
 
 namespace AIF.SharedStorage;
 
-// STORAGE UNDER RULES (M3219 3.1, 3.2). The Private Storage of a Module - and,
-// from Step 3, a Shared Storage of several Modules - holds each datum with the
-// rules under which it may be read: who may read it and how long it is kept.
-// The writer sets them, unless the store has a central control; with one, the
-// general rules of each category are the central control's, and a writer may
-// restrict them for its datum, never extend them. Nobody reaches the store but
-// through a handle the Controller bound to its holder's identity.
+// STORAGE UNDER RULES (M3219 3.1 to 3.3). The Private Storage of a Module, and a
+// Shared Storage of one Module or several, hold each datum with the rules under
+// which it may be read: who may read it and how long it is kept. The writer sets
+// them, unless the store has a central control; with one, the general rules of
+// each category are the central control's, and a writer may restrict them for
+// its datum, never extend them. Nobody reaches a store but through a handle the
+// Controller bound to its holder's identity.
+//
+// One layout on disk for both, the one Shared Storage has always had: per key a
+// .data file and a .info file (KeyInfo), the rules in the .info beside the
+// provenance. A .info without them is read as it always was: category Data,
+// readable by every holder, kept as long as the scope.
 
 // What a call to a store under rules comes to.
 public enum StorageOutcome
@@ -20,16 +27,16 @@ public enum StorageOutcome
     NotAuthorised
 }
 
-// How long a datum is kept: until the Module instance stops, until the session
-// of the User Agent ends, or as long as the scope is kept - and, where given, no
-// longer than a duration from its writing.
+// How long a datum is kept: until the Module instance that wrote it stops, until
+// the session of the User Agent ends, or as long as the scope is kept - and,
+// where given, no longer than a duration from its writing.
 public enum StorageLifetime { Module, Session, Scope }
 
 public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scope, TimeSpan? Within = null)
 {
     public static StorageTime Scope { get; } = new();
 
-    // Not longer than other: a shorter lifetime, and a duration within other's.
+    // Not longer than other: a lifetime no longer, and a duration within other's.
     public bool NotLongerThan(StorageTime other) =>
         Lifetime <= other.Lifetime &&
         (other.Within is null || (Within is { } mine && mine <= other.Within.Value));
@@ -53,7 +60,8 @@ public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scop
 }
 
 // The general rules of a category, set by a central control: who may write it,
-// who may read it, and the longest time.
+// who may read it, and the longest time. A name is a Module, an AIM Instance, or
+// the User Agent.
 public sealed record StorageRule(IReadOnlyCollection<string> Writers, IReadOnlyCollection<string> Readers, StorageTime Time);
 
 // What is known of a datum: who wrote it and when, its category, its readers as
@@ -62,7 +70,19 @@ public sealed record StorageRule(IReadOnlyCollection<string> Writers, IReadOnlyC
 public sealed record StorageTrace(string Writer, DateTimeOffset Stamp, string Category,
                                   IReadOnlyList<string>? Readers, StorageTime Time, string Rule);
 
-// A handle: the store, as its holder may reach it.
+// Who holds a handle: an AIM of a Module, the Controller for a Module, or the
+// User Agent. A name in the rules matches the holder's AIM, its Module, or - for
+// UserAgent - the User Agent.
+public sealed record StorageHolder(string? Module, string Name)
+{
+    public static StorageHolder UserAgent { get; } = new(null, RuledStore.UserAgent);
+
+    public bool Is(string name) => name == Name || (Module is not null && name == Module);
+
+    public override string ToString() => Module is null ? Name : $"{Module}/{Name}";
+}
+
+// A handle: a store, as its holder may reach it.
 public interface IRuledStorage
 {
     string Holder { get; }
@@ -78,50 +98,63 @@ public interface IRuledStorage
     StorageOutcome MPAI_AIFM_RuledStorage_SetRule(string category, StorageRule rule);
 }
 
-// One store: the files at a location, the rules, and the identities of the
-// Module instance and the session its data of those lifetimes belong to.
+// One store at one location.
 public sealed class RuledStore
 {
     public const string UserAgent = "UserAgent";
     public const string Controller = "Controller";
+    public const string Default = "Data";
+
+    // THE MODULE INSTANCES AND SESSIONS THAT ARE RUNNING, for data kept as long
+    // as they run: a datum of one that is not running any more is gone.
+    private static readonly ConcurrentDictionary<string, byte> running = new(StringComparer.Ordinal);
+    public static void Started(string instanceOrSession) => running[instanceOrSession] = 0;
+    public static void Ended(string instanceOrSession) => running.TryRemove(instanceOrSession, out _);
+
+    // THE SHARED STORAGES, one per location, whichever Modules reach them.
+    private static readonly ConcurrentDictionary<string, RuledStore> shared = new(StringComparer.OrdinalIgnoreCase);
+    public static RuledStore SharedAt(string location, Func<DateTimeOffset> now) =>
+        shared.GetOrAdd(Path.GetFullPath(location), l => new RuledStore(() => l, now, everyoneReads: true, centralControl: null));
 
     private readonly Func<string?> location;
     private readonly Func<DateTimeOffset> now;
-    private readonly string moduleInstance;
-    private readonly string session;
+    private readonly bool everyoneReads;
     private readonly Dictionary<string, StorageRule> rules = new(StringComparer.Ordinal);
     private readonly object one = new();
 
-    // centralControl: the AIM Instance that holds the central control; null for
-    // none. members: who may hold a handle - the AIMs of the Module and the User
-    // Agent - checked when a writer names readers.
-    public RuledStore(Func<string?> location, Func<DateTimeOffset> now, string moduleInstance, string session, string? centralControl)
+    // everyoneReads: a datum whose writer names no reader is read by every holder -
+    // Shared Storage - or by its writer alone - Private Storage.
+    public RuledStore(Func<string?> location, Func<DateTimeOffset> now, bool everyoneReads, StorageHolder? centralControl)
     {
         this.location = location;
         this.now = now;
-        this.moduleInstance = moduleInstance;
-        this.session = session;
+        this.everyoneReads = everyoneReads;
         CentralControl = centralControl;
     }
 
-    public string? CentralControl { get; }
+    public StorageHolder? CentralControl { get; private set; }
 
-    public IRuledStorage For(string holder) => new Handle(this, holder);
+    // A Shared Storage is given its central control when the User Agent names
+    // the Module whose StorageControl holds it; one store, one central control.
+    public bool Govern(StorageHolder control)
+    {
+        lock (one)
+        {
+            if (CentralControl is not null && CentralControl != control) return false;
+            CentralControl = control;
+            return true;
+        }
+    }
+
+    // moduleInstance and session: those the holder's data of those lifetimes belong to.
+    public IRuledStorage For(StorageHolder holder, string moduleInstance, string session) => new Handle(this, holder, moduleInstance, session);
+
+    // The plain Shared Storage calls of M3203 4.10, on this store, for a holder:
+    // what every AIM already does, now under the rules.
+    public ISharedStorage PlainFor(StorageHolder holder, string moduleInstance, string session, string requestedBy) =>
+        new Plain(new Handle(this, holder, moduleInstance, session), requestedBy);
 
     // ---- the files --------------------------------------------------------------
-
-    private sealed class Meta
-    {
-        public string Writer { get; set; } = "";
-        public DateTimeOffset Stamp { get; set; }
-        public string Category { get; set; } = "";
-        public List<string>? Readers { get; set; }
-        public StorageLifetime Lifetime { get; set; }
-        public double? WithinMs { get; set; }
-        public string Rule { get; set; } = "";
-        public string ModuleInstance { get; set; } = "";
-        public string Session { get; set; } = "";
-    }
 
     private string Root()
     {
@@ -131,41 +164,30 @@ public sealed class RuledStore
         return root;
     }
 
-    private (string Data, string Meta) PathsFor(string key)
+    private (string Data, string Info) PathsFor(string key)
     {
-        var name = Uri.EscapeDataString(key);
+        var safe = Convert.ToBase64String(Encoding.UTF8.GetBytes(key)).Replace('/', '_').Replace('+', '-');
         var root = Root();
-        return (Path.Combine(root, name + ".data"), Path.Combine(root, name + ".meta"));
+        return (Path.Combine(root, safe + ".data"), Path.Combine(root, safe + ".info"));
     }
+
+    private static string KeyOf(string infoPath) =>
+        Encoding.UTF8.GetString(Convert.FromBase64String(Path.GetFileNameWithoutExtension(infoPath).Replace('_', '/').Replace('-', '+')));
 
     // A datum, unless there is none, or its time has passed - then it is removed.
-    private Meta? Load(string key)
+    private KeyInfo? Load(string key)
     {
-        var (dataPath, metaPath) = PathsFor(key);
-        if (!File.Exists(metaPath) || !File.Exists(dataPath)) return null;
-        var meta = JsonSerializer.Deserialize<Meta>(File.ReadAllBytes(metaPath))!;
-        if (Expired(meta)) { File.Delete(dataPath); File.Delete(metaPath); return null; }
-        return meta;
+        var (dataPath, infoPath) = PathsFor(key);
+        if (!File.Exists(infoPath) || !File.Exists(dataPath)) return null;
+        var info = JsonSerializer.Deserialize<KeyInfo>(File.ReadAllBytes(infoPath))!;
+        if (Expired(info)) { File.Delete(dataPath); File.Delete(infoPath); return null; }
+        return info;
     }
 
-    private bool Expired(Meta meta) =>
-        (meta.WithinMs is { } ms && now() - meta.Stamp > TimeSpan.FromMilliseconds(ms)) ||
-        (meta.Lifetime == StorageLifetime.Module && meta.ModuleInstance != moduleInstance) ||
-        (meta.Lifetime == StorageLifetime.Session && meta.Session != session);
-
-    // The Module instance has stopped: its data of that lifetime go.
-    public void EndOfModule()
-    {
-        if (location() is not { } root || !Directory.Exists(root)) return;
-        lock (one)
-            foreach (var metaPath in Directory.EnumerateFiles(root, "*.meta"))
-            {
-                var meta = JsonSerializer.Deserialize<Meta>(File.ReadAllBytes(metaPath))!;
-                if (meta.Lifetime != StorageLifetime.Module || meta.ModuleInstance != moduleInstance) continue;
-                File.Delete(metaPath);
-                File.Delete(Path.ChangeExtension(metaPath, ".data"));
-            }
-    }
+    private bool Expired(KeyInfo info) =>
+        (info.WithinMs is { } ms && now() - new DateTimeOffset(info.StoredAt, TimeSpan.Zero) > TimeSpan.FromMilliseconds(ms)) ||
+        (info.Lifetime == StorageLifetime.Module && !running.ContainsKey(info.ModuleInstance ?? "")) ||
+        (info.Lifetime == StorageLifetime.Session && !running.ContainsKey(info.Session ?? ""));
 
     // ---- the rules ----------------------------------------------------------------
 
@@ -174,27 +196,31 @@ public sealed class RuledStore
         lock (one) return rules.GetValueOrDefault(category);
     }
 
-    private bool MayRead(string holder, Meta meta)
+    private bool IsCentral(StorageHolder holder) => CentralControl is { } c && c == holder;
+
+    private bool MayRead(StorageHolder holder, KeyInfo info)
     {
-        if (holder == meta.Writer || holder == CentralControl) return true;
-        if (CentralControl is null) return meta.Readers?.Contains(holder) == true;
+        if (holder.ToString() == info.StoredBy || IsCentral(holder)) return true;
+        if (CentralControl is null)
+            return info.Readers is { } named ? named.Any(holder.Is) : everyoneReads;
 
         // With a central control: a reader the general rules give now, and the
         // writer did not leave out.
-        var rule = RuleOf(meta.Category);
-        return rule is not null && rule.Readers.Contains(holder) && (meta.Readers is null || meta.Readers.Contains(holder));
+        var rule = RuleOf(info.Category ?? Default);
+        return rule is not null && rule.Readers.Any(holder.Is) && (info.Readers is null || info.Readers.Any(holder.Is));
     }
 
-    private StorageOutcome Put(string holder, string key, byte[] data, string category, IReadOnlyCollection<string>? readers, StorageTime? time)
+    private StorageOutcome Put(Handle by, string key, byte[] data, string category, IReadOnlyCollection<string>? readers, StorageTime? time, string requestedBy)
     {
+        var holder = by.Holder;
         string ruleText;
         var effective = time ?? StorageTime.Scope;
-        if (CentralControl is null || holder == CentralControl || holder == Controller)
-            ruleText = holder == CentralControl ? "the central control's own" : "the writer's";
+        if (CentralControl is null || IsCentral(holder) || holder.Name == Controller)
+            ruleText = IsCentral(holder) ? "the central control's own" : "the writer's";
         else
         {
             var rule = RuleOf(category);
-            if (rule is null || !rule.Writers.Contains(holder)) return StorageOutcome.NotAuthorised;
+            if (rule is null || !rule.Writers.Any(holder.Is)) return StorageOutcome.NotAuthorised;
             if (readers is not null && readers.Any(r => !rule.Readers.Contains(r))) return StorageOutcome.NotAuthorised;
             if (time is not null && !time.NotLongerThan(rule.Time)) return StorageOutcome.NotAuthorised;
             effective = time ?? rule.Time;
@@ -203,92 +229,164 @@ public sealed class RuledStore
 
         lock (one)
         {
-            // A key another wrote is not overwritten, but by the central control.
-            if (Load(key) is { } existing && existing.Writer != holder && holder != CentralControl)
+            // A datum another wrote is not overwritten, but by the central control
+            // - or, in a Shared Storage, where it was written for every holder, as
+            // Shared Storage has always been written.
+            if (Load(key) is { } existing && existing.StoredBy != holder.ToString() && !IsCentral(holder) &&
+                !(everyoneReads && existing.Readers is null && CentralControl is null))
                 return StorageOutcome.NotAuthorised;
 
-            var (dataPath, metaPath) = PathsFor(key);
-            var meta = new Meta
+            var (dataPath, infoPath) = PathsFor(key);
+            var info = new KeyInfo
             {
-                Writer = holder, Stamp = now(), Category = category, Readers = readers?.ToList(),
-                Lifetime = effective.Lifetime, WithinMs = effective.Within?.TotalMilliseconds, Rule = ruleText,
-                ModuleInstance = moduleInstance, Session = session
+                StoredBy = holder.ToString(), RequestedBy = requestedBy, StoredAt = now().UtcDateTime, Length = data.LongLength,
+                Category = category, Readers = readers?.ToList(), Lifetime = effective.Lifetime,
+                WithinMs = effective.Within?.TotalMilliseconds, Rule = ruleText,
+                ModuleInstance = by.ModuleInstance, Session = by.Session
             };
-            File.WriteAllBytes(metaPath + ".tmp", JsonSerializer.SerializeToUtf8Bytes(meta));
+            File.WriteAllBytes(infoPath + ".tmp", JsonSerializer.SerializeToUtf8Bytes(info));
             File.WriteAllBytes(dataPath + ".tmp", data);
-            File.Move(metaPath + ".tmp", metaPath, true);
+            File.Move(infoPath + ".tmp", infoPath, true);
             File.Move(dataPath + ".tmp", dataPath, true);
         }
         return StorageOutcome.OK;
     }
 
-    private StorageOutcome Get(string holder, string key, out byte[] data)
+    private StorageOutcome Get(StorageHolder holder, string key, out byte[] data)
     {
         data = [];
         lock (one)
         {
-            if (Load(key) is not { } meta) return StorageOutcome.NotFound;
-            if (!MayRead(holder, meta)) return StorageOutcome.NotAuthorised;
+            if (Load(key) is not { } info) return StorageOutcome.NotFound;
+            if (!MayRead(holder, info)) return StorageOutcome.NotAuthorised;
             data = File.ReadAllBytes(PathsFor(key).Data);
             return StorageOutcome.OK;
         }
     }
 
-    private StorageOutcome Delete(string holder, string key)
+    private StorageOutcome Delete(StorageHolder holder, string key)
     {
         lock (one)
         {
-            if (Load(key) is not { } meta) return StorageOutcome.NotFound;
-            if (holder != meta.Writer && holder != CentralControl) return StorageOutcome.NotAuthorised;
-            var (dataPath, metaPath) = PathsFor(key);
-            File.Delete(metaPath);
+            if (Load(key) is not { } info) return StorageOutcome.NotFound;
+            if (info.StoredBy != holder.ToString() && !IsCentral(holder) &&
+                !(everyoneReads && info.Readers is null && CentralControl is null))
+                return StorageOutcome.NotAuthorised;
+            var (dataPath, infoPath) = PathsFor(key);
+            File.Delete(infoPath);
             File.Delete(dataPath);
             return StorageOutcome.OK;
         }
     }
 
-    private IReadOnlyList<string> List(string holder, string? category, string prefix)
+    private IReadOnlyList<string> List(StorageHolder holder, string? category, string prefix)
     {
         if (location() is not { } root || !Directory.Exists(root)) return [];
         lock (one)
-            return Directory.EnumerateFiles(root, "*.meta")
-                .Select(p => Uri.UnescapeDataString(Path.GetFileNameWithoutExtension(p)))
+            return Directory.EnumerateFiles(root, "*.info")
+                .Select(KeyOf)
                 .Where(k => k.StartsWith(prefix, StringComparison.Ordinal))
-                .Where(k => Load(k) is { } m && (category is null || m.Category == category) && MayRead(holder, m))
+                .Where(k => Load(k) is { } i && (category is null || (i.Category ?? Default) == category) && MayRead(holder, i))
                 .OrderBy(k => k, StringComparer.Ordinal)
                 .ToList();
     }
 
-    private StorageOutcome Trace(string holder, string key, out StorageTrace? trace)
+    private StorageOutcome Trace(StorageHolder holder, string key, out StorageTrace? trace)
     {
         trace = null;
         lock (one)
         {
-            if (Load(key) is not { } m) return StorageOutcome.NotFound;
-            if (!MayRead(holder, m)) return StorageOutcome.NotAuthorised;
-            trace = new StorageTrace(m.Writer, m.Stamp, m.Category, m.Readers,
-                                     new StorageTime(m.Lifetime, m.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null), m.Rule);
+            if (Load(key) is not { } i) return StorageOutcome.NotFound;
+            if (!MayRead(holder, i)) return StorageOutcome.NotAuthorised;
+            trace = new StorageTrace(i.StoredBy, new DateTimeOffset(i.StoredAt, TimeSpan.Zero), i.Category ?? Default, i.Readers,
+                                     new StorageTime(i.Lifetime, i.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null), i.Rule ?? "the writer's");
             return StorageOutcome.OK;
         }
     }
 
-    private StorageOutcome SetRule(string holder, string category, StorageRule rule)
+    private StorageOutcome SetRule(StorageHolder holder, string category, StorageRule rule)
     {
-        if (holder != CentralControl) return StorageOutcome.NotAuthorised;
+        if (!IsCentral(holder)) return StorageOutcome.NotAuthorised;
         lock (one) rules[category] = rule;
         return StorageOutcome.OK;
     }
 
-    private sealed class Handle(RuledStore store, string holder) : IRuledStorage
+    private sealed class Handle(RuledStore store, StorageHolder holder, string moduleInstance, string session) : IRuledStorage
     {
-        public string Holder => holder;
+        public StorageHolder Holder { get; } = holder;
+        public string ModuleInstance { get; } = moduleInstance;
+        public string Session { get; } = session;
+        string IRuledStorage.Holder => Holder.ToString();
+
+        public StorageOutcome Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers, StorageTime? time, string requestedBy) =>
+            store.Put(this, key, data, category, readers, time, requestedBy);
+
         public StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, StorageTime? time = null) =>
-            store.Put(holder, key, data, category, readers, time);
-        public StorageOutcome MPAI_AIFM_RuledStorage_Get(string key, out byte[] data) => store.Get(holder, key, out data);
-        public StorageOutcome MPAI_AIFM_RuledStorage_Delete(string key) => store.Delete(holder, key);
-        public IReadOnlyList<string> MPAI_AIFM_RuledStorage_List(string? category = null, string prefix = "") => store.List(holder, category, prefix);
-        public bool MPAI_AIFM_RuledStorage_Exists(string key) => store.Get(holder, key, out _) == StorageOutcome.OK;
-        public StorageOutcome MPAI_AIFM_RuledStorage_Trace(string key, out StorageTrace? trace) => store.Trace(holder, key, out trace);
-        public StorageOutcome MPAI_AIFM_RuledStorage_SetRule(string category, StorageRule rule) => store.SetRule(holder, category, rule);
+            store.Put(this, key, data, category, readers, time, "local");
+        public StorageOutcome MPAI_AIFM_RuledStorage_Get(string key, out byte[] data) => store.Get(Holder, key, out data);
+        public StorageOutcome MPAI_AIFM_RuledStorage_Delete(string key) => store.Delete(Holder, key);
+        public IReadOnlyList<string> MPAI_AIFM_RuledStorage_List(string? category = null, string prefix = "") => store.List(Holder, category, prefix);
+        public bool MPAI_AIFM_RuledStorage_Exists(string key) => store.Get(Holder, key, out _) == StorageOutcome.OK;
+        public StorageOutcome MPAI_AIFM_RuledStorage_Trace(string key, out StorageTrace? trace) => store.Trace(Holder, key, out trace);
+        public StorageOutcome MPAI_AIFM_RuledStorage_SetRule(string category, StorageRule rule) => store.SetRule(Holder, category, rule);
+    }
+
+    // THE PLAIN CALLS, as every AIM makes them (M3203 4.10), and the rules beside
+    // them: a Put names no reader - every holder reads it - and a read the rules
+    // refuse is an UnauthorizedAccessException.
+    private sealed class Plain(Handle handle, string requestedBy) : ISharedStorage, IRuledStorage
+    {
+        private static void Check(StorageOutcome outcome, string key)
+        {
+            if (outcome == StorageOutcome.NotFound) throw new KeyNotFoundException($"No value is stored at '{key}'.");
+            if (outcome == StorageOutcome.NotAuthorised) throw new UnauthorizedAccessException($"'{key}' may not be reached by this AIM.");
+        }
+
+        public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data)
+        {
+            if (string.IsNullOrEmpty(key)) throw new ArgumentException("key must be non-empty", nameof(key));
+            Check(handle.Put(key, data ?? [], Default, null, null, requestedBy), key);
+        }
+
+        public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data, long offset)
+        {
+            var existing = handle.MPAI_AIFM_RuledStorage_Get(key, out var old) == StorageOutcome.OK ? old : [];
+            MPAI_AIFM_SharedStorage_Put(key, offset == 0 ? data : SharedStorageRanges.Write(existing, data, offset));
+        }
+
+        public byte[] MPAI_AIFM_SharedStorage_Get(string key)
+        {
+            Check(handle.MPAI_AIFM_RuledStorage_Get(key, out var data), key);
+            return data;
+        }
+
+        public byte[] MPAI_AIFM_SharedStorage_Get(string key, long offset, long length) =>
+            SharedStorageRanges.Read(MPAI_AIFM_SharedStorage_Get(key), key, offset, length);
+
+        public void MPAI_AIFM_SharedStorage_Delete(string key)
+        {
+            var outcome = handle.MPAI_AIFM_RuledStorage_Delete(key);
+            if (outcome == StorageOutcome.NotAuthorised) Check(outcome, key);
+        }
+
+        public IReadOnlyList<string> MPAI_AIFM_SharedStorage_List(string prefix) => handle.MPAI_AIFM_RuledStorage_List(null, prefix);
+        public bool MPAI_AIFM_SharedStorage_Exists(string key) => handle.MPAI_AIFM_RuledStorage_Exists(key);
+
+        public KeyInfo MPAI_AIFM_SharedStorage_GetKeyInfo(string key)
+        {
+            Check(handle.MPAI_AIFM_RuledStorage_Trace(key, out var trace), key);
+            handle.MPAI_AIFM_RuledStorage_Get(key, out var data);
+            return new KeyInfo { StoredBy = trace!.Writer, RequestedBy = requestedBy, StoredAt = trace.Stamp.UtcDateTime, Length = data.LongLength };
+        }
+
+        public string Holder => handle.Holder.ToString();
+        public StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, StorageTime? time = null) =>
+            handle.Put(key, data, category, readers, time, requestedBy);
+        public StorageOutcome MPAI_AIFM_RuledStorage_Get(string key, out byte[] data) => handle.MPAI_AIFM_RuledStorage_Get(key, out data);
+        public StorageOutcome MPAI_AIFM_RuledStorage_Delete(string key) => handle.MPAI_AIFM_RuledStorage_Delete(key);
+        public IReadOnlyList<string> MPAI_AIFM_RuledStorage_List(string? category = null, string prefix = "") => handle.MPAI_AIFM_RuledStorage_List(category, prefix);
+        public bool MPAI_AIFM_RuledStorage_Exists(string key) => handle.MPAI_AIFM_RuledStorage_Exists(key);
+        public StorageOutcome MPAI_AIFM_RuledStorage_Trace(string key, out StorageTrace? trace) => handle.MPAI_AIFM_RuledStorage_Trace(key, out trace);
+        public StorageOutcome MPAI_AIFM_RuledStorage_SetRule(string category, StorageRule rule) => handle.MPAI_AIFM_RuledStorage_SetRule(category, rule);
     }
 }

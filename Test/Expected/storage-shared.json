@@ -1,0 +1,14 @@
+{
+  "TST-MPC named as central control": "OK",
+  "TST-MPS, elsewhere, reads s1": "OK; #2 'NotFound'",
+  "TST-SHA named as central control (it has no StorageControl)": "NotAuthorised",
+  "s1, the plain call: TST-SHB, the User Agent": "OK; #1 's1: OK' | OK; #1 'v1' | v1",
+  "s2, readers TST-SHB: TST-SHB, the User Agent": "OK; #1 's2: OK' | OK; #1 'v2' | NotAuthorised",
+  "s3, readers its own Module: TST-SHB": "OK; #1 's3: OK' | OK; #1 'NotAuthorised'",
+  "s4 written, read by TST-SHB": "OK; #1 's4: OK' | OK; #1 'v4'",
+  "s4, the plain call before any rule": "OK; #1 's4: NotAuthorised'",
+  "s5, readers narrowed to TST-SHA: TST-SHB": "OK; #1 's5: OK' | OK; #1 'NotAuthorised'",
+  "s6, a reader beyond the rule (TST-MPS)": "OK; #1 's6: NotAuthorised'",
+  "the central control reads s5": "OK; #3 'v5'",
+  "the rule of Data": "OK; #3 'Data: OK'"
+}

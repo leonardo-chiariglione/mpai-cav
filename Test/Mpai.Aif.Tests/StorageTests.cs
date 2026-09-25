@@ -214,6 +214,54 @@ public class StorageTests
 
         Expected.Match("storage-central.json", result);
     }
+    // SHARED STORAGE OF SEVERAL MODULES (M3219 3.3): the Modules given one
+    // location share its Shared Storage, each datum under its rules; without
+    // readers named, every Module reads it, as Shared Storage always was read.
+    [Fact]
+    public void SharedAcrossModules()
+    {
+        var result = new Dictionary<string, string>();
+        using var api = Api();
+        const string sha = "1TST-SHA-V1.0-I01", shb = "1TST-SHB-V1.0-I01", mpc = "1TST-MPC-V1.0-I01", mps = "1TST-MPS-V1.0-I01";
+        var location = Location();
+        foreach (var m in new[] { sha, shb }) { api.StartFlow(m); api.SharedStorageInit(m, location); }
+        string A(string text) => Outputs(api.Advance(sha, [new(Text, 1, "shared: " + text)]));
+        string B(string key) => Outputs(api.Advance(shb, [new(Text, 1, "shared: " + key)]));
+        string Ua(string key)
+        {
+            var outcome = api.SharedStorage(sha)!.MPAI_AIFM_RuledStorage_Get(key, out var data);
+            return outcome == AIF.SharedStorage.StorageOutcome.OK ? Encoding.UTF8.GetString(data) : outcome.ToString();
+        }
+
+        result["s1, the plain call: TST-SHB, the User Agent"] = A("s1=v1") + " | " + B("s1") + " | " + Ua("s1");
+        result["s2, readers TST-SHB: TST-SHB, the User Agent"] = A($"s2=v2; readers={shb}") + " | " + B("s2") + " | " + Ua("s2");
+        result["s3, readers its own Module: TST-SHB"] = A($"s3=v3; readers={sha}") + " | " + B("s3");
+
+        // A Module given another location reaches none of it. Under a User Agent
+        // of its own: one User Agent retains an AIM across its Modules, and the
+        // AIM keeps the storage of the first (M3205 Section 8).
+        using (var other = Api())
+        {
+            other.StartFlow(mps); other.SharedStorageInit(mps, Location());
+            result["TST-MPS, elsewhere, reads s1"] = Outputs(other.Advance(mps, [new(Text, 2, "shared: s1")]));
+            other.StopFlow(mps);
+        }
+
+        // A central control: the StorageControl of TST-MPC, named by the User Agent.
+        api.StartFlow(mpc);
+        result["TST-SHA named as central control (it has no StorageControl)"] = api.SharedStorageInit(sha, location, governs: true).ToString();
+        result["TST-MPC named as central control"] = api.SharedStorageInit(mpc, location, governs: true).ToString();
+        string Rule(string text) => Outputs(api.Advance(mpc, [new(Text, 3, "shared: " + text)]));
+        result["s4, the plain call before any rule"] = A("s4=v4");
+        result["the rule of Data"] = Rule($"category Data: writers {sha}; readers {shb},{sha}");
+        result["s4 written, read by TST-SHB"] = A("s4=v4") + " | " + B("s4");
+        result["s5, readers narrowed to TST-SHA: TST-SHB"] = A($"s5=v5; readers={sha}") + " | " + B("s5");
+        result["s6, a reader beyond the rule (TST-MPS)"] = A($"s6=v6; readers={mps}");
+        result["the central control reads s5"] = Rule("read s5");
+        foreach (var m in new[] { sha, shb, mpc }) api.StopFlow(m);
+
+        Expected.Match("storage-shared.json", result);
+    }
 }
 
 // The test AIMs of Phase 6. TST-SWR and TST-SRD write and read the storage they
@@ -233,7 +281,9 @@ public sealed class StorageAims : IAimProvider
         {
             "1TST-SWR-V1.0-I01" => new Aim(aimName, m => ("Written", Write(storage, moduleStorage, In(m)))),
             "1TST-SRD-V1.0-I01" => new Aim(aimName, m => ("Read", Read(storage, moduleStorage, In(m)))),
-            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("Ruled", Rule(moduleStorage, In(m)))),
+            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("Ruled", In(m).StartsWith("shared:")
+                                                              ? Rule(storage as AIF.SharedStorage.IRuledStorage, In(m)[7..].Trim())
+                                                              : Rule(moduleStorage, In(m)))),
             "1TST-TRE-V1.0-I01" => new Echo(aimName),
             "1TST-SNK-V1.0-I01" => new Sink(aimName),
             _ => phase3.Create(aimName, settings, storage)
@@ -252,8 +302,18 @@ public sealed class StorageAims : IAimProvider
         if (toShared)
         {
             if (shared is null) return "no Shared Storage";
-            shared.MPAI_AIFM_SharedStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]));
-            return $"{kv[0]} written" + (options.Count > 0 ? $"; not given: {string.Join(", ", options.Keys)}" : "");
+            if (shared is not AIF.SharedStorage.IRuledStorage ruled)
+            {
+                shared.MPAI_AIFM_SharedStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]));
+                return $"{kv[0]} written" + (options.Count > 0 ? $"; not given: {string.Join(", ", options.Keys)}" : "");
+            }
+            if (options.Count == 0)
+            {
+                // The plain call, as every AIM makes it.
+                try { shared.MPAI_AIFM_SharedStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1])); return $"{kv[0]}: OK"; }
+                catch (UnauthorizedAccessException) { return $"{kv[0]}: NotAuthorised"; }
+            }
+            mine = ruled;
         }
         if (mine is null) return "no Private Storage of the Module";
         var outcome = mine.MPAI_AIFM_RuledStorage_Put(kv[0], Encoding.UTF8.GetBytes(kv[1]),
@@ -269,6 +329,7 @@ public sealed class StorageAims : IAimProvider
         if (text.StartsWith("shared:"))
         {
             if (shared is null) return "no Shared Storage";
+            if (shared is AIF.SharedStorage.IRuledStorage ruled) return Read(null, ruled, text[7..].Trim());
             try { return Encoding.UTF8.GetString(shared.MPAI_AIFM_SharedStorage_Get(text[7..].Trim())); }
             catch (Exception refused) { return $"{refused.GetType().Name}: {refused.Message}"; }
         }

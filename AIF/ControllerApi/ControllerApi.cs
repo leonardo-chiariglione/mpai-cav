@@ -295,12 +295,22 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             return _running.TryGetValue(moduleName, out var started) ? _ua.ModuleStorage(started.Id) : null;
     }
 
-    public AifError SharedStorageInit(string moduleName, string location)
+    public AifError SharedStorageInit(string moduleName, string location) => SharedStorageInit(moduleName, location, false);
+
+    public AifError SharedStorageInit(string moduleName, string location, bool governs)
     {
         lock (_tables)
             return _running.TryGetValue(moduleName, out var started)
-                ? _ua.MPAI_AIFU_SharedStorage_Init(started.Id, location)
+                ? _ua.MPAI_AIFU_SharedStorage_Init(started.Id, location, governs)
                 : AifError.NotStarted;
+    }
+
+    // The Shared Storage at a running Module's location, as the User Agent may
+    // reach it (M3219 3.3).
+    public AIF.SharedStorage.IRuledStorage? SharedStorage(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.SharedStorage(started.Id) : null;
     }
 
     // Write every input, read every output: one exchange, built on the data path.

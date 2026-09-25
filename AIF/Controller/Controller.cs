@@ -25,12 +25,25 @@ public sealed class Controller
     // WHERE, THE MODULE SAYS. A Module's scope is where the User Agent initialised
     // it (MPAI_AIFU_SharedStorage_Init with its MODULE_ID), else the Controller's
     // root; the handle asks at each call, so an Init after Start takes effect.
+    //
+    // UNDER RULES (M3219 3.3), where the User Agent says which instance of a
+    // Module and which session a handle serves: the Shared Storage at the
+    // location, shared by the Modules given it, each datum under its rules.
     private ISharedStorage? StorageFor(string moduleName, string aimName, Func<string?>? location) =>
-        location is not null
+        location is not null && InstanceOf is { } instance && SessionOf is { } session
+            ? new SharedStorageHandle(() => location() ?? storageRoot, new StorageHolder(moduleName, aimName),
+                                      () => instance(moduleName), session, "local", Now ?? (() => DateTimeOffset.UtcNow))
+            : location is not null
             ? new ModuleSharedStorage(() => location() ?? storageRoot, $"{moduleName}/{aimName}", "local")
             : storageRoot is null
                 ? null
                 : new FileSharedStorage(storageRoot, $"{moduleName}/{aimName}", "local");
+
+    // The instance of a Module that runs now, the session, and the time base: set
+    // by the User Agent, for the handles under rules.
+    public Func<string, string>? InstanceOf { get; set; }
+    public Func<string>? SessionOf { get; set; }
+    public Func<DateTimeOffset>? Now { get; set; }
 
     // PRIVATE STORAGE (M3215 3.7): reachable only by its AIM Instance, held below
     // its Module's scope at private/<AIM Instance>, stamped as Shared Storage is.
