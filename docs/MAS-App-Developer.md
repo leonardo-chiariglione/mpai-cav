@@ -227,70 +227,68 @@ These settings go in a Service's `mas-server-*.json` (see
 | `AimSource: "Packages"`, `PackageCache` | AIMs are built from the packages their L3s name, falling back to the compiled providers for any package missing or built for another machine. |
 | `ModelSource: "Fetch"`, `ModelCache` | A model a setting names and the machine lacks is fetched from `Source:<setting>` and checked against `SHA256:<setting>`. |
 | `Collections`, `DefaultCollection` | Which Apps this Service offers, and where (`/MPAI/AIFU/c/<name>`). |
-| `RemoteAims`, `RemoteToken` | A Sub-AIM this Service does not build itself; see 10.3. |
+| `AimHosts`, `AimHostKey` | Where a Sub-AIM whose L3 Relation is not `Internal` runs: an AIM host; see 10.3. |
 | `BearerToken` | Required once `ListenUrl` is not loopback (`127.0.0.1` or `localhost`); the Service refuses to start without one, so that a machine reachable from outside cannot be used by an uninvited caller. |
 
 ### 10.3 A Sub-AIM on another machine
 
-MPAI-MAS lets a Sub-AIM run on its own machine (`Identifier.Relation` other
-than `Internal`), reached over MPAI-MAS through a proxy
-(`Mpai.Mas.Client.RemoteAim`). What a Remote Client starts may itself be a
-basic AIM - action 6 starts "the AIM selected" - and the Controller and
-executor build and run that AIM directly, with no invented containing Module.
+A Sub-AIM whose `Identifier.Relation` in its composite's L3 is not `Internal`
+runs on another machine, on an **AIM host** (M3217). The Module stays one
+Module under one Controller - this Service's: the Controller places the AIM
+on the host, starts, pauses, resumes and stops it there, and asks its
+status; its Ports travel over the Remote transport (TLS on TCP, the host's
+key). A composite Sub-AIM that is not `Internal` has all its AIMs on its host.
 
-**The machine that runs the Sub-AIM** (call it the Sub-AIM's Service) offers
-only that AIM, with a token, listening on every interface so it can be
-reached:
+The L3 says *that* an AIM runs elsewhere; the Service's configuration says
+*where*. With the L3s of this repository every Sub-AIM is `Internal`: to run
+Entity Dialogue Processing of MAD elsewhere, the MAD L3 this Service loads
+must have `"Relation": "External"` on `1MMC-EDP-V2.5-I01`. A Module with such
+a Sub-AIM and no host named for it is refused, and says why.
 
-```json
-{
-  "ListenUrl": "http://0.0.0.0:5006/",
-  "L3Source": "Store", "StoreUrl": "http://<main machine>:5020/",
-  "L3Cache": "D:\\MPAI\\SCI\\L3",
-  "SettingsPath": "D:\\BI\\AIMs\\aim-settings.json",
-  "AppDirectory": "D:\\BI\\Apps", "Apps": [],
-  "BearerToken": "<a shared secret>"
-}
-```
-
-`Apps` is empty: this machine's job is the one AIM, not a composite Module,
-and today's startup loop always tries to build all five hardcoded Modules
-regardless of `Apps` (see 10.4) - so a model this machine lacks for an
-unrelated Module (BLIP for AMQ, say) does not need to be present, only not
-fatal, which 10.4 now ensures.
-
-**The machine whose Module uses the Sub-AIM** names where it is:
-
-```json
-{
-  "RemoteAims": { "1MMC-EDP-V2.5-I01": "http://<Sub-AIM's machine>:5006/" },
-  "RemoteToken": "<the same shared secret>"
-}
-```
-
-**Every Data Type the Sub-AIM's Ports carry must have a wire translator** in
-`AIF/PortData`, registered in `PortDataCodecs.Default()` - the same
-requirement as 7.3 for a new App. `MMC-SUM-V2.5` and `MMC-EPS-V2.5` (Entity
-Personal Status, needed for any AIM MPD uses remotely) exist today; a further
-AIM would need whatever its own Ports carry.
-
-**Firewall:** the Sub-AIM's port (`5006` above) must accept inbound
-connections from the other machine. On Windows, from an elevated PowerShell:
+**The machine that runs the Sub-AIM** runs the AIM host, given the L3s of
+the AIMs it may build, their settings, the provider that builds them and a
+key:
 
 ```powershell
-New-NetFirewallRule -DisplayName "MPAI EDP 5006" -Direction Inbound -Protocol TCP -LocalPort 5006 -Action Allow
+dotnet AIF\AimHost\bin\Debug\net10.0\AIF.AimHost.dll --port 5207 --key "<a shared secret>" `
+    --amds AIMs\AMDs --settings AIMs\aim-settings.json `
+    --provider AIMs\Providers\bin\Debug\net10.0\Mpai.Providers.dll:Mpai.Providers.MadProvider
 ```
 
-A firewall silently dropping the connection looks identical to the Sub-AIM's
-process being down: the caller's log shows a plain connection timeout
-(`AIF] <AIM>: threw, ... A connection attempt failed because the connected
-party did not properly respond ...`), not a refusal. Check the rule before
-suspecting the process.
+It prints `[AIM host] listening on 5207`. Anything the AIM needs on that
+machine - for EDP, the LLM its settings name - must be there.
 
-**Tested:** MAD and MPD, each with EDP as a remote AIM - locally (two
-Services on one machine) and, for MAD, across two physical machines over
-Tailscale - with the conversation's memory (`MMC-SUM-V2.5`) correctly
-accumulating turn over turn on the machine that does not hold it locally.
+**The machine whose Module uses the Sub-AIM** names the host in its
+`mas-server-*.json`:
+
+```json
+{
+  "AimHosts":   { "1MMC-EDP-V2.5-I01": "tcp+tls://<Sub-AIM's machine>:5207" },
+  "AimHostKey": "<the same shared secret>"
+}
+```
+
+The name may be an AIM Instance or a composite that contains it. No wire
+translators are needed: the Remote transport carries the Port data as it is.
+
+**Firewall:** the host's port (`5207` above) must accept inbound connections
+from the Controller's machine. On Windows, from an elevated PowerShell:
+
+```powershell
+New-NetFirewallRule -DisplayName "MPAI AIM host 5207" -Direction Inbound -Protocol TCP -LocalPort 5207 -Action Allow
+```
+
+A firewall silently dropping the connection looks identical to the host
+being down: the Module is refused with a connection timeout. Check the rule
+before suspecting the host.
+
+**If the host goes** during a run, its AIMs are DEGRADED and the composite's
+`OnDegraded` applies, as for an AIM that fails locally.
+
+The earlier arrangement - `RemoteAims` naming a MAS Service that ran the
+Sub-AIM as a Module of its own, reached through `Mpai.Mas.Client.RemoteAim` -
+is removed (M3217 3.5). MPAI-MAS remains how an App or a remote client uses
+a Service.
 
 ### 10.4 One Module's fault does not stop the Service
 

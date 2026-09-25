@@ -120,16 +120,17 @@ public sealed class MasServerConfig
     // <local application data>\MPAI\SCI\Models.
     public string? ModelCache { get; init; }
 
-    // SUB-AIMs THAT RUN ON ANOTHER MACHINE (MPAI-MAS: a Relation other than
-    // Internal). Each names the MAS Service that runs it:
+    // SUB-AIMs THAT RUN ON ANOTHER MACHINE (M3217 3.4): a Sub-AIM whose L3
+    // Relation is not Internal runs on an AIM host, and this names the host for
+    // its AIM Instance - or for a composite that contains it:
     //
-    //   "RemoteAims": { "1MMC-EDP-V2.5-I01": "https://other.machine:5005/" }
+    //   "AimHosts": { "1MMC-EDP-V2.5-I01": "tcp+tls://other.machine:5207" }
     //
-    // An AIM not named here is built on this machine, as they all are today.
-    public Dictionary<string, string>? RemoteAims { get; init; }
+    // A Module with such a Sub-AIM and no host named for it is refused.
+    public Dictionary<string, string>? AimHosts { get; init; }
 
-    // The bearer token this Service presents to those machines.
-    public string? RemoteToken { get; init; }
+    // The key the AIM hosts were started with (AIF.AimHost --key).
+    public string? AimHostKey { get; init; }
 
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.

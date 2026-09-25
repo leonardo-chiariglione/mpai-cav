@@ -478,8 +478,7 @@ public sealed class Controller
         {
             var aimName = graph.Root.AIMName;
             CheckResources(graph.Root);
-            var elsewhere = RemoteAims?.Invoke(aimName, graph.Root.Relation);
-            host.RegisterRuntime(elsewhere ??
+            host.RegisterRuntime(
                 provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
                                 PrivateStorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
@@ -489,12 +488,6 @@ public sealed class Controller
         InstantiateNode(graph.Root, provider, settings, host, instantiated, moduleName, storageLocation, placed);
         return instantiated;
     }
-
-    // WHERE A SUB-AIM THAT RUNS ELSEWHERE IS REACHED. A Service sets this; it is
-    // asked for every AIM, with what the L3 says about where that AIM runs, and
-    // answers null for the AIMs this machine builds itself. The Controller stays
-    // free of any knowledge of MPAI-MAS: what comes back is an IAimProcessor.
-    public static Func<string, string, IAimProcessor?>? RemoteAims { get; set; }
 
     private void InstantiateNode(
         DescriptorNode node,
@@ -529,14 +522,7 @@ public sealed class Controller
             }
 
             CheckResources(child);
-
-            // A SUB-AIM MAY RUN ON ANOTHER MACHINE (MPAI-MAS: Relation other than
-            // Internal). The Service says where, and supplies something that looks
-            // to this Controller like any AIM and carries its Ports there and back.
-            // Unanswered - no such arrangement, or none for this AIM - it is built
-            // here, as every AIM is today.
-            var elsewhere = RemoteAims?.Invoke(aimName, child.Relation);
-            host.RegisterRuntime(elsewhere ??
+            host.RegisterRuntime(
                 provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
                                 PrivateStorageFor(moduleName, aimName, storageLocation)));
             instantiated.Add(aimName);
