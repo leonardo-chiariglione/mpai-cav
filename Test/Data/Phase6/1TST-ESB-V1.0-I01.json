@@ -1,0 +1,36 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-ESB-V1.0-I01", "AIMName": "1TST-ESB-V1.0-I01"},
+  "Header":           "TST-ESB-V1.0",
+
+  "APIProfile":       "Basic",
+  "Execution":        "Continuous",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module with the boundary inputs of ESS Stage 1 (1CAV-ESS-V1.1-I01): what arrives is counted.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "BasicVisualObject",          "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpatialAttitude",            "Direction": "Input",  "DataType": "OSD-OSA-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "GNSSObject",                 "Direction": "Input",  "DataType": "CAV-GNO-V1.1",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "WeatherData",                "Direction": "Input",  "DataType": "CAV-WDT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "FullEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-FED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Counts",                     "Direction": "Output", "DataType": "TST-TXT-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-SNK-V1.0-I01", "AIMName": "1TST-SNK-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "BasicVisualObject"          }, "Input": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "BasicVisualObject"          } },
+                       { "Output": { "AIMName": "",                  "PortName": "SpatialAttitude"            }, "Input": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "SpatialAttitude"            } },
+                       { "Output": { "AIMName": "",                  "PortName": "GNSSObject"                 }, "Input": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "GNSSObject"                 } },
+                       { "Output": { "AIMName": "",                  "PortName": "WeatherData"                }, "Input": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "WeatherData"                } },
+                       { "Output": { "AIMName": "",                  "PortName": "FullEnvironmentDescriptors" }, "Input": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "FullEnvironmentDescriptors" } },
+                       { "Output": { "AIMName": "1TST-SNK-V1.0-I01", "PortName": "Counts"                     }, "Input": { "AIMName": "",                  "PortName": "Counts"                     } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

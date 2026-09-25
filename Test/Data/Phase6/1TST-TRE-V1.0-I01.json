@@ -1,0 +1,29 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-TRE-V1.0-I01", "AIMName": "1TST-TRE-V1.0-I01"},
+  "Header":           "TST-TRE-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: gives back on each of its three Output Ports what arrives on the Input Port of the same number, a payload as a payload.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "A",     "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "B",     "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "P",     "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EchoA", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EchoB", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EchoP", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

@@ -1,0 +1,15 @@
+{
+  "TST-ESB: a GNSS Object written": "OK 'OSD-BVO-V1.5:0 OSD-OSA-V1.5:0 CAV-GNO-V1.1:1 CAV-WDT-V1.1:0 CAV-FED-V1.1:0'",
+  "TST-MPC against the schema": "/: additionalProperties Some additional properties did not match the required schema: [\"StorageControl\"]; /StorageControl:  All values fail against the false schema",
+  "TST-MPC: rules given, then a write": "OK; #1 'k written; not given: readers=1TST-SWR-V1.0-I01'; #3 'no rules can be set: category Notes: writers 1TST-SWR-V1.0-I01, readers none'",
+  "TST-MPC: the other AIM reads it": "OK; #2 'v'",
+  "TST-MPS: rules given, then a write": "OK; #1 'k written; not given: readers=1TST-SWR-V1.0-I01'",
+  "TST-MPS: the other AIM reads it": "OK; #2 'v'",
+  "TST-RCA against the schema": "/: additionalProperties Some additional properties did not match the required schema: [\"Record\"]; /Record:  All values fail against the false schema",
+  "TST-RCA: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
+  "TST-REC: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
+  "TST-SHA writes": "OK; #1 's written; not given: readers=1TST-SHA-V1.0-I01'",
+  "TST-SHB reads it": "OK; #1 'shared'",
+  "stream in a workflow": "read as: StartModule",
+  "the Controller API's calls for a record": "none"
+}

@@ -63,7 +63,13 @@ public sealed class AimMetadataSchema
     // What is wrong with this AIM Metadata; none when it validates.
     public IReadOnlyList<string> Violations(JsonElement aim)
     {
-        var evaluation = schema.Evaluate(aim, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
+        // ONE EVALUATION AT A TIME. The library resolves the schemas' references on
+        // first use and records them in a dictionary it shares; two evaluations at
+        // once corrupt it. A Store checking two submissions together, or two tests,
+        // would fail at random.
+        EvaluationResults evaluation;
+        lock (Registering)
+            evaluation = schema.Evaluate(aim, new EvaluationOptions { OutputFormat = OutputFormat.Hierarchical });
         if (evaluation.IsValid) return [];
         var found = new SortedSet<string>(StringComparer.Ordinal);
         Walk(evaluation, found);

@@ -1,0 +1,27 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-REX-V1.0-I01", "AIMName": "1TST-REX-V1.0-I01"},
+  "Header":           "TST-REX-V1.0",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module, recorded: an exchange, its text in capitals.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",  "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Upper", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-UPP-V1.0-I01", "AIMName": "1TST-UPP-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Text"  }, "Input": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Text"  } },
+                       { "Output": { "AIMName": "1TST-UPP-V1.0-I01", "PortName": "Upper" }, "Input": { "AIMName": "",                  "PortName": "Upper" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

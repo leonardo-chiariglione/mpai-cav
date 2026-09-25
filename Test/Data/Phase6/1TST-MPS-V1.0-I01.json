@@ -1,0 +1,32 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-MPS-V1.0-I01", "AIMName": "1TST-MPS-V1.0-I01"},
+  "Header":           "TST-MPS-V1.0",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module: a writer and a reader of the Module's Private Storage, no central control.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Write",   "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Read",    "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Written", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Read",    "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-SWR-V1.0-I01", "AIMName": "1TST-SWR-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-SRD-V1.0-I01", "AIMName": "1TST-SRD-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Write"   }, "Input": { "AIMName": "1TST-SWR-V1.0-I01", "PortName": "Write"   } },
+                       { "Output": { "AIMName": "",                  "PortName": "Read"    }, "Input": { "AIMName": "1TST-SRD-V1.0-I01", "PortName": "Read"    } },
+                       { "Output": { "AIMName": "1TST-SWR-V1.0-I01", "PortName": "Written" }, "Input": { "AIMName": "",                  "PortName": "Written" } },
+                       { "Output": { "AIMName": "1TST-SRD-V1.0-I01", "PortName": "Read"    }, "Input": { "AIMName": "",                  "PortName": "Read"    } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

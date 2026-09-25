@@ -1,0 +1,36 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-REC-V1.0-I01", "AIMName": "1TST-REC-V1.0-I01"},
+  "Header":           "TST-REC-V1.0",
+
+  "APIProfile":       "Basic",
+  "Execution":        "Continuous",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module, recorded: three inputs - text, text, a payload - echoed, Continuous.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "A", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "B", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "P", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "A", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "B", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "P", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-TRE-V1.0-I01", "AIMName": "1TST-TRE-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "A"                  }, "Input": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "A", "PortNumber": 1 } },
+                       { "Output": { "AIMName": "",                  "PortName": "B"                  }, "Input": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "B", "PortNumber": 2 } },
+                       { "Output": { "AIMName": "",                  "PortName": "P"                  }, "Input": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "P", "PortNumber": 3 } },
+                       { "Output": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "A", "PortNumber": 1 }, "Input": { "AIMName": "",                  "PortName": "A"                  } },
+                       { "Output": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "B", "PortNumber": 2 }, "Input": { "AIMName": "",                  "PortName": "B"                  } },
+                       { "Output": { "AIMName": "1TST-TRE-V1.0-I01", "PortName": "P", "PortNumber": 3 }, "Input": { "AIMName": "",                  "PortName": "P"                  } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

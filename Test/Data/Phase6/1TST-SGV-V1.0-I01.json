@@ -1,0 +1,25 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-SGV-V1.0-I01", "AIMName": "1TST-SGV-V1.0-I01"},
+  "Header":           "TST-SGV-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test: the central control of a Module's storage; sets the general rules its text states.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",  "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Ruled", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

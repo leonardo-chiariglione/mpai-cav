@@ -1,0 +1,27 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-SHB-V1.0-I01", "AIMName": "1TST-SHB-V1.0-I01"},
+  "Header":           "TST-SHB-V1.0",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module: reads a Shared Storage that another Module writes.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Read", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Read", "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-SRD-V1.0-I01", "AIMName": "1TST-SRD-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Read" }, "Input": { "AIMName": "1TST-SRD-V1.0-I01", "PortName": "Read" } },
+                       { "Output": { "AIMName": "1TST-SRD-V1.0-I01", "PortName": "Read" }, "Input": { "AIMName": "",                  "PortName": "Read" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/StorageTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}
