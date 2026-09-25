@@ -15,7 +15,7 @@
     "EndDeviceID":        { "type": "string" },
     "ECGObjectTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
 
-    "EECData":            { "type": "array", "items": { "anyOf": [
+    "ECGData":            { "type": "array", "items": { "anyOf": [
                           { "type": "object", "properties": {
       "DataLength":       { "type": "integer" },
       "DataURI":          { "type": "string", "format": "uri" } } },

@@ -3,7 +3,7 @@
   "title":                      "Medical Imaging Object V1.1",
   "type":                       "object",
   "additionalProperties":       false,
-  "required":                   [ "Header", "MedicalImagingID", "MedicalImagingTime", "MedicalImagingData", "MedicalImagingQualifier" ],
+  "required":                   [ "Header", "MedicalImagingObjectID", "MedicalImagingObjectTime", "MedicalImagingObjectData", "MedicalImagingQualifier" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "AIH-MDI-V1.1" },

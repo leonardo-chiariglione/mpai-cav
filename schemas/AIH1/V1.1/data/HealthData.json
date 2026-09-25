@@ -15,7 +15,7 @@
     "HealthDataTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
                             "description": "Timestamp of the health data." },
 
-    "HeaalthlData":       { "type": "array", "items": { "anyOf": [
+    "HealthDataData":     { "type": "array", "items": { "anyOf": [
                           { "type": "object", "properties": { "Data": { "type": "string" } } },
                           { "type": "object", "properties": { "DataLength": { "type": "integer" },
                                                               "DataURI": { "type": "string", "format": "uri" } } },

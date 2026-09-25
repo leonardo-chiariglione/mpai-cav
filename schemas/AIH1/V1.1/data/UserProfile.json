@@ -29,7 +29,7 @@
 
                           { "type": "object", "description": "Organisation profile entry.", "required": [ "Organisation" ],
                             "additionalProperties": false, "properties": {
-    "Organisation":       { "type": "object", "description": "Organisation fields.", "required": [ "FirstName", "LastName" ],
+    "Organisation":       { "type": "object", "description": "Organisation fields.", "required": [ "CompanyName" ],
                             "additionalProperties": false, "properties": {
 
       "CompanyName":      { "type": "string", "description": "Company name." },

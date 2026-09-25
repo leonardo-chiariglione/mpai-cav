@@ -2,8 +2,8 @@
   "$id":                "https://schemas.mpai.community/AIH1/V1.1/data/OmicsObject.json",
   "title":              "Omics Object V1.1",
   "type":               "object",
-  "required":           [ "Header", "OmicsObjectID", "EndUserID", "OmicsObjectTime", "PhysiologicalSignalData",
-                          "PhysiologicalSignalQualifier" ],
+  "required":           [ "Header", "OmicsObjectID", "EndUserID", "OmicsObjectTime", "OmicsObjectData",
+                          "OmicsQualifier" ],
   "properties":         {
 
     "Header":           { "type": "string", "const": "AIH-GOM-V1.1" },

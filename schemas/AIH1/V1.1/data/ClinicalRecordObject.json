@@ -4,7 +4,7 @@
   "description":                "Symbolic clinical records.",
   "type":                       "object",
   "additionalProperties":       false,
-  "required":                   [ "Header", "ClinicalRecordID", "ClinicalRecordTime", "ClinicalRecordData",
+  "required":                   [ "Header", "ClinicalRecordObjectID", "ClinicalRecordObjectTime", "ClinicalRecordObjectData",
                                   "ClinicalRecordQualifier" ],
   "properties":                 {
 

@@ -25,7 +25,8 @@
       "Response":             { "type": "object", "required": [ "AIHDataID", "PostLearnNNModel" ], "additionalProperties": false,
                                 "properties": {
         "PostLearnNNModel":   { "$ref": "https://schemas.mpai.community/AIP/V1.0/data/MLModelObject.json",
-                                "description": "Post FedLearn model." } } } } } ] } },
+                                "description": "Post FedLearn model." },
+        "AIHDataID":          { "type": "string", "description": "ID of the AIH Data used for training." } } } } } ] } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

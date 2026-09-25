@@ -23,7 +23,8 @@
                               { "type": "object", "required": [ "Response" ], "properties":  {
       "Response":             { "type": "object", "required": [ "BlockchainLicenceID", "LicenceStatus", "AIHDataID" ], "properties":  {
         "BlockchainLicenceID":{ "type": "string", "description": "Licence ID returned in response." },
-        "LicenceStatus":      { "type": "boolean", "description": "Status of licence approval." } } } } } ] } },
+        "LicenceStatus":      { "type": "boolean", "description": "Status of licence approval." },
+        "AIHDataID":          { "type": "string", "description": "ID of the AIH Data the Licence applies to." } } } } } ] } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }
