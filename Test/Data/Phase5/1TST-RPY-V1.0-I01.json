@@ -1,0 +1,32 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-RPY-V1.0-I01", "AIMName": "1TST-RPY-V1.0-I01"},
+  "Header":           "TST-RPY-V1.0",
+
+  "APIProfile":       "Basic",
+  "Execution":        "Continuous",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module, payloads: TST-PWR local writes by reference, TST-PRD on another machine reads it.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Input",   "Direction": "Input",  "DataType": "TST-TXT-V1.0",                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Payload", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Length",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-PWR-V1.0-I01", "AIMName": "1TST-PWR-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-PRD-V1.0-I01", "AIMName": "1TST-PRD-V1.0-I01", "Relation": "External" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "Input"   }, "Input": { "AIMName": "1TST-PWR-V1.0-I01", "PortName": "Input"   } },
+                       { "Output": { "AIMName": "1TST-PWR-V1.0-I01", "PortName": "Payload" }, "Input": { "AIMName": "1TST-PRD-V1.0-I01", "PortName": "Payload" } },
+                       { "Output": { "AIMName": "1TST-PWR-V1.0-I01", "PortName": "Payload" }, "Input": { "AIMName": "",                  "PortName": "Payload" } },
+                       { "Output": { "AIMName": "1TST-PRD-V1.0-I01", "PortName": "Length"  }, "Input": { "AIMName": "",                  "PortName": "Length"  } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/RemoteTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

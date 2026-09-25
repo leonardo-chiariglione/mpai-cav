@@ -19,13 +19,14 @@ public class ContinuousTests
     private static ControllerApi Api() =>
         new(Amds, Path.Combine(Amds, "no-settings.json"), new ContinuousAims());
 
-    // The test L3s are L3s: every one, of Phase 3 and of Phase 4, validates against
+    // The test L3s are L3s: every one, of Phases 3, 4 and 5, validates against
     // the AIM Metadata schema.
     [Fact]
     public void L3sValidate()
     {
         var schema = AIF.Metadata.AimMetadataSchema.Load(Repository.Schemas);
         var invalid = Directory.EnumerateFiles(Amds, "*.json").Concat(Directory.EnumerateFiles(ControllerTests.Amds, "*.json"))
+                               .Concat(Directory.EnumerateFiles(RemoteTests.Amds, "*.json"))
             .Select(f => (File: Path.GetFileName(f), Violations: schema.Violations(File.ReadAllText(f))))
             .Where(v => v.Violations.Count > 0)
             .Select(v => $"{v.File}: {string.Join("; ", v.Violations)}")

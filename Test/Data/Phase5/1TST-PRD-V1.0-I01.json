@@ -1,0 +1,25 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-PRD-V1.0-I01", "AIMName": "1TST-PRD-V1.0-I01"},
+  "Header":           "TST-PRD-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test reader of a payload: gives its length and releases it.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Payload", "Direction": "Input",  "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Length",  "Direction": "Output", "DataType": "TST-TXT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/RemoteTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

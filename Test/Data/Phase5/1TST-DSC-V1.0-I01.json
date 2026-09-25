@@ -1,0 +1,26 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-DSC-V1.0-I01", "AIMName": "1TST-DSC-V1.0-I01"},
+  "Header":           "TST-DSC-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Test describer: its text, with the last accumulated value it received on its optional Port 2. A feedback input keeps only the latest value (Depth 1, DropOldest): one that Blocks would stall the loop when inputs come faster than it turns.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Text",      "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 1,                                                           "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Previous",  "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 2, "IsOptional": true, "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Described", "Direction": "Output", "DataType": "TST-TXT-V1.0",                                                                            "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/RemoteTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

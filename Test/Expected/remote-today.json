@@ -1,0 +1,8 @@
+{
+  "TST-RCP": "an exchange: OK; #1 'X'; #2 'x'; built by the Controller: TST-REV, TST-UPP",
+  "TST-RLL": "a write, then #1: '1:x'; built by the Controller: TST-ACC, TST-DSC",
+  "TST-RLP": "a write, then #1: '1:x'; built by the Controller: TST-ACC, TST-DSC",
+  "TST-RPY": "a write, then #1: '{\"Entries\":[{\"Data\":\"cHBwcHBwcHBwcHBwcHB...'; built by the Controller: TST-PRD, TST-PWR",
+  "TST-RXC": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV, TST-RPT, TST-SLP, TST-UPP",
+  "TST-RXL": "an exchange: OK; #1 'X'; #2 'x'; #3 'x'; #4 'x'; built by the Controller: TST-REV, TST-RPT, TST-SLP, TST-UPP"
+}
