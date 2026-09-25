@@ -90,6 +90,7 @@ public sealed class RemoteTransport : ChannelTransport
         };
         message.Stamp = DateTimeOffset.Parse(frame["Stamp"]!.GetValue<string>());
         message.Sequence = frame["Sequence"]!.GetValue<long>();
+        Arrived?.Invoke(core.Spec, message);
         var reader = EndOf(frame["Reader"]!);
         var timeout = frame["Timeout"]!.GetValue<int>();
 
@@ -99,6 +100,31 @@ public sealed class RemoteTransport : ChannelTransport
             ? await core.ArrivedAsync(reader, message, timeout, CancellationToken.None)
             : await DeliverAsync(core.Spec, reader, message, timeout, CancellationToken.None);
         return new JsonObject { ["Ok"] = ok };
+    }
+
+    // Called with every Message that arrives from another machine, stamped
+    // there - the place to look at stamps across machines.
+    public Action<ChannelSpec, PortMessage>? Arrived { get; set; }
+
+    // THE OFFSET OF THE CONTROLLER'S CLOCK FROM THIS MACHINE'S (M3217 3.2),
+    // measured over the link: the Controller is asked its time, and its answer
+    // taken as of the middle of the round trip. Of several measures, the one with
+    // the shortest round trip, whose middle is the least uncertain. Finer
+    // synchronisation is M3205 OI-7.
+    public static async Task<(TimeSpan Offset, TimeSpan RoundTrip)> ClockOffsetAsync(RemoteLink link, IClock local, int samples = 5)
+    {
+        (TimeSpan Offset, TimeSpan RoundTrip)? best = null;
+        for (var i = 0; i < samples; i++)
+        {
+            var sent = local.Now;
+            var started = System.Diagnostics.Stopwatch.GetTimestamp();
+            var reply = await link.RequestAsync(new JsonObject { ["Kind"] = "Time" });
+            var roundTrip = System.Diagnostics.Stopwatch.GetElapsedTime(started);
+            if (reply["Now"]?.GetValue<string>() is not { } now) continue;
+            var offset = DateTimeOffset.Parse(now) - (sent + roundTrip / 2);
+            if (best is null || roundTrip < best.Value.RoundTrip) best = (offset, roundTrip);
+        }
+        return best ?? throw new InvalidOperationException("The Controller did not tell its time.");
     }
 
     // A Channel as it travels to the machine of an AIM it touches.

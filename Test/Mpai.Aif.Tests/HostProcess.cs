@@ -13,6 +13,10 @@ public sealed class HostProcess : IDisposable
 
     private readonly Process process;
     public int Port { get; }
+
+    // The CPU the host has used: what an AIM on it costs, for the comparison of
+    // the transports.
+    public TimeSpan ProcessorTime { get { process.Refresh(); return process.TotalProcessorTime; } }
     public string Address => $"localhost:{Port}";
 
     public HostProcess(string? amds = null)

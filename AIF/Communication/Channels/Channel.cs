@@ -118,3 +118,14 @@ public sealed class SystemClock : IClock
     public DateTimeOffset Now => DateTimeOffset.UtcNow;
     public long Monotonic => System.Diagnostics.Stopwatch.GetTimestamp();
 }
+
+// ANOTHER MACHINE'S TIME BASE (M3217 3.2): this machine's clock moved by the
+// offset measured to the Controller's, so that what is stamped here is stamped
+// on the Controller's time base. Monotonic time stays this machine's own.
+public sealed class OffsetClock(IClock local) : IClock
+{
+    public IClock Local { get; } = local;
+    public TimeSpan Offset { get; set; }
+    public DateTimeOffset Now => Local.Now + Offset;
+    public long Monotonic => Local.Monotonic;
+}

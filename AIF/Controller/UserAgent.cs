@@ -120,6 +120,8 @@ public sealed class UserAgent
                 {
                     case "Message":
                         return await RemoteTransport.ReceiveAsync(frame);
+                    case "Time":                                   // the time base a host stamps on
+                        return new JsonObject { ["Ok"] = true, ["Now"] = Clock.Now.ToString("O") };
                     case "StopAim" when module is not null:
                         return new JsonObject
                         {

@@ -21,19 +21,28 @@ public sealed class AimHostServer
     private readonly string storageRoot;
     private readonly ConcurrentDictionary<string, Hosted> modules = new();
 
-    // The AIMs of one Module instance held here, their lifecycle, the link to
-    // their Controller and - in a Continuous Module - what runs them.
+    // The AIMs of one Module instance held here, their lifecycle, the Controller
+    // they are held for and - in a Continuous Module - what runs them.
     private sealed class Hosted
     {
         public required AimHost Host { get; init; }
-        public required RemoteLink Link { get; init; }
+        public required Served By { get; init; }
+        public RemoteLink Link => By.Link;
         public HashSet<string> Aims { get; } = new();
         public ContinuousExecutor? Executor { get; set; }
     }
 
-    // The Channels of the Continuous Modules held here: an end of an AIM here is
-    // here; every other end - the boundary, AIMs elsewhere - is the Controller's.
-    private readonly RemoteTransport remote;
+    // ONE CONTROLLER SERVED: its link; the Channels of its Continuous Modules - an
+    // end of an AIM here is here, every other end, the boundary included, is the
+    // Controller's; and the clock they are stamped on, this machine's moved to the
+    // Controller's time base (M3217 3.2).
+    private sealed class Served
+    {
+        public required RemoteLink Link { get; init; }
+        public required OffsetClock Clock { get; init; }
+        public required RemoteTransport Transport { get; init; }
+        public ConcurrentBag<string> Modules { get; } = new();
+    }
 
     public AimHostServer(AmdStore store, AimSettings settings, IAimProvider provider, string storageRoot)
     {
@@ -41,24 +50,30 @@ public sealed class AimHostServer
         this.settings = settings;
         this.provider = provider;
         this.storageRoot = storageRoot;
-        remote = new RemoteTransport((module, aim) =>
-            modules.TryGetValue(module, out var hosted) && !hosted.Aims.Contains(aim) ? hosted.Link : null);
     }
 
     // A Controller admitted: its requests served; its Module instances released
     // when its link goes.
     public void Serve(RemoteLink link)
     {
-        var mine = new ConcurrentBag<string>();
-        link.OnRequest = frame => HandleAsync(frame, mine, link);
+        var clock = new OffsetClock(SystemClock.Instance);
+        var served = new Served
+        {
+            Link = link,
+            Clock = clock,
+            Transport = new RemoteTransport((module, aim) =>
+                modules.TryGetValue(module, out var hosted) && !hosted.Aims.Contains(aim) ? link : null, clock)
+        };
+        link.OnRequest = frame => HandleAsync(frame, served);
         link.Lost += _ =>
         {
-            foreach (var module in mine) Release(module);
+            foreach (var module in served.Modules) Release(module);
         };
     }
 
-    private async Task<JsonObject?> HandleAsync(JsonObject frame, ConcurrentBag<string> mine, RemoteLink link)
+    private async Task<JsonObject?> HandleAsync(JsonObject frame, Served served)
     {
+        var link = served.Link;
         var module = frame["Module"]?.GetValue<string>() ?? "";
         switch (frame["Kind"]?.GetValue<string>())
         {
@@ -70,7 +85,7 @@ public sealed class AimHostServer
                 if (!provider.CanCreate(aim)) return Refused($"this host has no implementation of {aim}");
                 var hosted = modules.GetOrAdd(module, _ =>
                 {
-                    mine.Add(module);
+                    served.Modules.Add(module);
                     return new Hosted
                     {
                         // An AIM here stopping another (MPAI_AIFM_AIM_Stop): the
@@ -88,7 +103,7 @@ public sealed class AimHostServer
                                 catch { return false; }
                             }
                         },
-                        Link = link
+                        By = served
                     };
                 });
                 if (!hosted.Aims.Add(aim)) return new JsonObject { ["Ok"] = true };   // placed already
@@ -146,7 +161,14 @@ public sealed class AimHostServer
                     var leaf = new global::AIF.Controller.Controller(store).RegisterAim(store.FindByAimName(aim)!).Root;
                     placed.Add((leaf, entry["OnDegraded"]!.GetValue<string>()));
                 }
-                var executor = new ContinuousExecutor(placed, frame["Channels"]!.AsArray().Select(c => RemoteTransport.SpecOf(c!)), hosted.Host, remote, module)
+                // Stamped on the Controller's time base: the offset of its clock
+                // measured now, over the link.
+                var (offset, roundTrip) = await RemoteTransport.ClockOffsetAsync(link, served.Clock.Local);
+                served.Clock.Offset = offset;
+                Console.WriteLine($"[AIM host] the Controller's clock is {offset.TotalMilliseconds:0.###} ms from this one's (round trip {roundTrip.TotalMilliseconds:0.###} ms)");
+
+                var executor = new ContinuousExecutor(placed, frame["Channels"]!.AsArray().Select(c => RemoteTransport.SpecOf(c!)), hosted.Host,
+                                                      served.Transport, module, served.Clock)
                 {
                     // An AIM DEGRADED here: its Controller applies the policy of the
                     // composite that contains it.
@@ -162,7 +184,7 @@ public sealed class AimHostServer
             }
 
             case "Message":
-                return await remote.ReceiveAsync(frame);
+                return await served.Transport.ReceiveAsync(frame);
 
             case "Pause":  return Each(module, h => h.PauseModule());
             case "Resume": return Each(module, h => h.ResumeModule());
@@ -211,7 +233,7 @@ public sealed class AimHostServer
     {
         if (!modules.TryRemove(module, out var hosted)) return;
         _ = hosted.Executor?.StopAsync();
-        remote.Close(module);
+        hosted.By.Transport.Close(module);
         hosted.Host.Dispose();
         Console.WriteLine($"[AIM host] {module} released");
     }

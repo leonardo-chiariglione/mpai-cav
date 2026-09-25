@@ -1,0 +1,5 @@
+{
+  "each stamp against the Controller's clock at arrival": "within 100 ms",
+  "from TST-ACC on the host": "every Message that arrived",
+  "their stamps": "on the Controller's time base: 2030"
+}
