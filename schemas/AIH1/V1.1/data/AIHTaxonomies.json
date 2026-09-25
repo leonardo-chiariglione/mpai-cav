@@ -1,0 +1,30 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json",
+  "title":                  "AIH Taxonomies V1.1",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "properties":             {
+
+    "DataClass":              { "type": "string", "enum": [ "BehaviouralSignal", "ClinicalRecord", "MedicalImaging",
+                                "NeurophysiologicalSignal", "Omics", "PhysiologicalSignal" ] },
+
+    "DataUser":               { "type": "string", "enum": [ "End User", "Non-Profit Entity", "Profit Entity", "Clinical Entity",
+                                "Authorised Entity", "Caregiver" ] },
+
+    "DataStatus":             { "type": "string", "enum": [ "Anonymised", "Pseudonymised", "Identified" ] },
+
+    "DataUsage":              { "type": "string", "enum": [ "Unrestricted", "Pseudonymised", "Anonymised", "Research", "Patient Use",
+                                "Health Care" ] },
+
+    "DataProcessTechnique":   { "type": "string", "enum": [ "DeID&AnonymAlgorithms", "Data Masking",
+                                "Data Aggregation", "Generalisation", "Perturbation", "Tokenisation", "Hashing",
+                                "Removal of Identifiers", "K Anonymity", "L Diversity", "Differential Privacy",
+                                "Synthetic Data Generation", "Homomorphic Encryption" ] },
+
+    "DataAnomaly":            { "type": "string", "enum": [ "Point Anomaly", "Contextual Anomaly", "Collective Anomaly",
+                                "Medical Condition Anomaly" ] },
+
+    "Risk":                   { "type": "string", "enum": [ "Red", "Orange", "Yellow", "Green", "Blue" ] },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

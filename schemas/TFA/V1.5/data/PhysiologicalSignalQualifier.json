@@ -1,0 +1,105 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/PhysiologicalSignalQualifier.json",
+  "title":                  "Physiological Signal Qualifier V1.5",
+  "description":            "Specifies Sub-Types, Formats, ans Attributes of of physiological signals.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               ["Header", "PhysiologicalSignalQualifierID", "SubTypes", "Formats", "GroupMap"],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "TFA-PSQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "PhysiologicalSignalQualifierID":   { "type": "string" },
+    "PhysiologicalSignalQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":             { "type": "object", "required": ["ECG", "PPG", "EMG", "EOG", "Ventilation", "GSR / EDA",
+                              "Blood Pressure Waveform"], "additionalProperties": false, "properties": {
+      "ECG":                { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Resting 12-lead ECG", "Exercise / Stress ECG", "Signal-Averaged ECG (SAE)",
+                              "Heart Rate Variability (HRV)", "Ambulatory ECG (Holter)", "Wearable ECG" ] },
+      "PPG":                { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Reflective PPG", "Transmissive PPG", "Multi-wavelength PPG", "Wearable PPG" ] },
+      "EMG":                { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Surface EMG (sEMG)", "Intramuscular EMG", "High-density EMG" ] },
+      "EOG":                { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Horizontal/vertical EOG", "Blink detection EOG", "Saccade tracking EOG" ] },
+      "Ventilation":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Airflow", "Respiratory effort (thoracic/abdominal belts)",
+                              "Capnography (CO2 waveform)" ] },
+      "GSR / EDA":          { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Skin conductance", "Skin resistance", "Tonic/phasic EDA" ] },
+      "Blood Pressure Waveform": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                              "default": [ "Arterial pressure waveform", "Pulse transit time waveform",
+                              "Continuous non-invasive BP waveform" ] } } },
+
+    "Formats":              { "type": "object", "required": [ "ECG Formats", "PPG Formats", "EMG Formats", "EOG Formats",
+                              "Ventilation Formats", "GSR / EDA Formats", "Blood Pressure Waveform Formats" ],
+                              "additionalProperties": false, "properties": {
+      "ECG Formats":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "HL7 aECG (Annotated ECG)", "SCP-ECG (Standard Communications Protocol for Computer-Assisted Electrocardiography)",
+                              "DICOM-ECG (DICOM Waveform for ECG)", "ecgML (XML-based ECG format)", "mECGML (Mobile ECG Markup Language)",
+                              "ML-ECG (Machine Learning ECG format)", "MFER (Medical Waveform Format Encoding Rules)", "Philips XML (Philips ECG XML format)",
+                              "ecgAware (ECG markup for ambulatory monitoring)", "EDF / EDF+ (General biosignal format)", "BDF (BioSemi Data Format)",
+                              "WFDB (PhysioNet waveform format)" ] },
+      "PPG Formats":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "OpenSignals (Biosignal format used by BITalino and wearables)", "EDF / EDF+", "BDF", "WFDB",
+                              "HDF5 (Large biosignal datasets)", "PPG-BDF (BioSemi PPG variant)", "PPG-CSV/TSV (Common export formats)" ] },
+      "EMG Formats":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "SENIAM-compatible CSV/TSV (Standard EMG electrode placement & data conventions)", "EDF / EDF+", "BDF",
+                              "WFDB", "OpenSignals", "HDF5", "EMG-MAT (MATLAB-based EMG format)" ] },
+      "EOG Formats":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "EDF / EDF+", "BDF", "WFDB", "OpenSignals", "HDF5", "EOG-MAT" ] },
+      "Ventilation Formats":{ "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "EDF / EDF+", "WFDB", "DICOM-Waveform (for capnography)", "HDF5", "Resp-CSV/TSV" ] },
+      "GSR / EDA Formats":  { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "OpenSignals", "EDF / EDF+", "WFDB", "HDF5", "EDA-CSV/TSV" ] },
+      "Blood Pressure Waveform Formats": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [
+                              "DICOM-Waveform", "WFDB", "EDF / EDF+", "HDF5", "BP-CSV/TSV" ] } } },
+    "GroupMap":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+                              "SubTypeGroup": { "type": "string" }, "FormatGroup": { "type": "string" } },
+                              "required": ["SubTypeGroup", "FormatGroup"] }, "minItems": 1, "default": [
+                            { "SubTypeGroup": "Resting 12-lead ECG",                 "FormatGroup": "ECG Formats" },
+                            { "SubTypeGroup": "Exercise / Stress ECG",               "FormatGroup": "ECG Formats" },
+                            { "SubTypeGroup": "Signal-Averaged ECG (SAE)",            "FormatGroup": "ECG Formats" },
+                            { "SubTypeGroup": "Heart Rate Variability (HRV)",         "FormatGroup": "ECG Formats" },
+                            { "SubTypeGroup": "Ambulatory ECG (Holter)",              "FormatGroup": "ECG Formats" },
+                            { "SubTypeGroup": "Wearable ECG",                         "FormatGroup": "ECG Formats" },
+
+                            { "SubTypeGroup": "Reflective PPG",                       "FormatGroup": "PPG Formats" },
+                            { "SubTypeGroup": "Transmissive PPG",                     "FormatGroup": "PPG Formats" },
+                            { "SubTypeGroup": "Multi-wavelength PPG",                 "FormatGroup": "PPG Formats" },
+                            { "SubTypeGroup": "Wearable PPG",                         "FormatGroup": "PPG Formats" },
+
+                            { "SubTypeGroup": "Surface EMG (sEMG)",                   "FormatGroup": "EMG Formats" },
+                            { "SubTypeGroup": "Intramuscular EMG",                    "FormatGroup": "EMG Formats" },
+                            { "SubTypeGroup": "High-density EMG",                     "FormatGroup": "EMG Formats" },
+
+                            { "SubTypeGroup": "Horizontal/vertical EOG",              "FormatGroup": "EOG Formats" },
+                            { "SubTypeGroup": "Blink detection EOG",                  "FormatGroup": "EOG Formats" },
+                            { "SubTypeGroup": "Saccade tracking EOG",                 "FormatGroup": "EOG Formats" },
+
+                            { "SubTypeGroup": "Airflow",                               "FormatGroup": "Ventilation Formats" },
+                            { "SubTypeGroup": "Respiratory effort (thoracic/abdominal belts)", "FormatGroup": "Ventilation Formats" },
+                            { "SubTypeGroup": "Capnography (CO2 waveform)",            "FormatGroup": "Ventilation Formats" },
+
+                            { "SubTypeGroup": "Skin conductance",                      "FormatGroup": "GSR / EDA Formats" },
+                            { "SubTypeGroup": "Skin resistance",                       "FormatGroup": "GSR / EDA Formats" },
+                            { "SubTypeGroup": "Tonic/phasic EDA",                      "FormatGroup": "GSR / EDA Formats" },
+
+                            { "SubTypeGroup": "Arterial pressure waveform",            "FormatGroup": "Blood Pressure Waveform Formats" },
+                            { "SubTypeGroup": "Pulse transit time waveform",           "FormatGroup": "Blood Pressure Waveform Formats" },
+                            { "SubTypeGroup": "Continuous non-invasive BP waveform",   "FormatGroup": "Blood Pressure Waveform Formats" } ] },
+
+    "Attributes":           { "type": "object", "additionalProperties": false, "properties": {
+      "ChannelNames":       { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+      "Units":              { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+      "SamplingRateHz":     { "type": "number", "minimum": 0 },
+      "SensorPlacement":    { "type": "string" },
+      "LeadConfiguration":  { "type": "string", "description": "For ECG (e.g., Mason-Likar, Einthoven, Frank)." },
+      "ElectrodePlacement": { "type": "string", "description": "For EMG/EOG placement conventions (e.g., SENIAM)." },
+      "Device":             { "type": "string" },
+      "RecordingContext":   { "type": "string" } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

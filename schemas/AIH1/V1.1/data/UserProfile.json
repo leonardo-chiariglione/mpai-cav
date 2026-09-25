@@ -1,0 +1,45 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIH1/V1.1/data/UserProfile.json",
+  "title":                "User Profile V1.1",
+  "description":          "User profile for a Human or an Organisation.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "UserID", "UserProfileID", "UserProfileData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "AIH-UPR-V1.1" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironment":       { "type": "string" },    "UserID":             { "type": "string", "description": "User identifier." },
+    "UserProfileID":      { "type": "string", "description": "Unique identifier of the user profile record." },
+    "UserProfileTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "UserProfileData":    { "type": "array", "minItems": 1, "description": "Human or Organisation profile entries.", "items": { "oneOf": [
+
+                          { "type": "object", "description": "Human profile entry.", "required": [ "Human" ],
+                            "additionalProperties": false, "properties": {
+    "Human":              { "type": "object", "description": "Human fields.", "required": [ "FirstName", "LastName" ],
+                            "additionalProperties": false, "properties": {
+
+      "FirstName":        { "type": "string", "description": "Given name." },
+      "LastName":         { "type": "string", "description": "Family name." },
+      "Age":              { "type": "integer", "minimum": 0, "description": "Age (years)." },
+      "Nationality":      { "type": "string", "description": "Nationality (ISO 2-chr country code)." },
+      "Address":          { "type": "string"},
+      "Email":            { "type": "string", "format": "email", "description": "Email address." } } } } },
+
+                          { "type": "object", "description": "Organisation profile entry.", "required": [ "Organisation" ],
+                            "additionalProperties": false, "properties": {
+    "Organisation":       { "type": "object", "description": "Organisation fields.", "required": [ "FirstName", "LastName" ],
+                            "additionalProperties": false, "properties": {
+
+      "CompanyName":      { "type": "string", "description": "Company name." },
+      "RegistrationCode": { "type": "string", "description": "RegistrationCode issued by country of company." },
+      "Address":          { "type": "string", "description": "Address of company." },
+      "Country":          { "type": "string", "description": "Country of Company registration." },
+      "Email":            { "type": "string", "format": "email", "description": "Email address." },
+      "Type":             { "type": "array", "minItems": 1, "items":
+                          { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUser" } } } } } } ] } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

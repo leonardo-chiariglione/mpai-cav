@@ -1,0 +1,104 @@
+{
+  "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/TFA/V1.5/data/MedicalImagingQualifier.json",
+  "title":                          "Medical Imaging Qualifier V1.5",
+  "description":                    "Specifies Sub-Types, Formats, and Attributes of medical imaging data.",
+  "type":                           "object",
+  "additionalProperties":           false,
+  "required":                       ["SubTypes","Formats","GroupMap"],
+
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "TFA-MIQ-V1.5" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironmentID":               { "type": "string" },
+    "MedicalImagingQualID":         { "type": "string" },
+    "MedicalImagingQualTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                     { "type": "object", "additionalProperties": false,
+      "required":                   [ "X-Ray","Computed Tomography","Magnetic Resonance Imaging","Ultrasound","Nuclear Medicine","Optical Imaging"],
+                                      "properties": {
+
+        "X-Ray":                    { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "Projection Radiography","Mammography","Digital Breast Tomosynthesis","Fluoroscopy - Diagnostic",
+                                      "Fluoroscopy - Interventional","Dental X-Ray"] },
+
+        "ComputedTomography":       { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "Conventional CT","Low-Dose CT","CT Angiography","Dual Energy CT","Photon-Counting CT","Cone Beam CT"] },
+
+        "MagneticResonanceImaging": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "Structural MRI","Functional MRI (fMRI)","Diffusion MRI (DWI/DTI)","Magnetic Resonance Angiography (MRA)",
+                                      "Magnetic Resonance Spectroscopy (MRS)"] },
+
+        "Ultrasound":               { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    ["B-Mode Ultrasound","Doppler Ultrasound","Color Doppler","Elastography","3D/4D Ultrasound"] },
+
+        "NuclearMedicine":          { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "Scintigraphy","Single-Photon Emission Computed Tomography (SPECT)","Positron Emission Tomography (PET)",
+                                      "PET/CT","PET/MR"] },
+
+        "OpticalImaging":           { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "Endoscopy","Fundus Photography","Optical Coherence Tomography (OCT)","Microscopy"] } } },
+
+    "Formats":                      { "type": "object", "additionalProperties": false, "required": [ "DICOM Formats","Research Imaging Formats",
+                                      "Image Exchange Formats"], "properties": {
+
+        "DICOMFormats":             { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default":
+                                    [ "DICOM Image","DICOM Enhanced Multi-Frame","DICOM Structured Report (SR)","DICOM Segmentation",
+                                      "DICOM Radiotherapy Objects"] },
+
+        "ResearchImagingFormats":   { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [ "NIfTI",
+                                      "Analyze 7.5","MINC","NRRD","HDF5 Imaging Containers"] },
+
+        "ImageExchangeFormats":     { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "default": [ "TIFF",
+                                      "JPEG","JPEG2000","PNG"] } } },
+
+    "GroupMap":                     { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
+                                      "required": ["SubTypeGroup","FormatGroup"], "properties": {
+      "SubTypeGroup":               { "type": "string" },
+      "FormatGroup":                { "type": "string" } } },
+
+      "default":                    [
+                                    { "SubTypeGroup": "Projection Radiography", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Mammography", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Digital Breast Tomosynthesis", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Fluoroscopy - Diagnostic", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Fluoroscopy - Interventional", "FormatGroup": "DICOM Formats" },
+
+                                    { "SubTypeGroup": "Conventional CT", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "CT Angiography", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Dual Energy CT", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Photon-Counting CT", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Cone Beam CT", "FormatGroup": "DICOM Formats" },
+
+                                    { "SubTypeGroup": "Structural MRI", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Functional MRI (fMRI)", "FormatGroup": "Research Imaging Formats" },
+                                    { "SubTypeGroup": "Diffusion MRI (DWI/DTI)", "FormatGroup": "Research Imaging Formats" },
+
+                                    { "SubTypeGroup": "B-Mode Ultrasound", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Doppler Ultrasound", "FormatGroup": "DICOM Formats" },
+
+                                    { "SubTypeGroup": "Scintigraphy", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Single-Photon Emission Computed Tomography (SPECT)", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "Positron Emission Tomography (PET)", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "PET/CT", "FormatGroup": "DICOM Formats" },
+                                    { "SubTypeGroup": "PET/MR", "FormatGroup": "DICOM Formats" },
+
+                                    { "SubTypeGroup": "Optical Coherence Tomography (OCT)", "FormatGroup": "Image Exchange Formats" } ] },
+
+    "Attributes":                   { "type": "object", "additionalProperties": false, "properties": {
+        "AnatomicalRegion":         { "type": "string" },
+        "Modality":                 { "type": "string" },
+        "Laterality":               { "type": "string" },
+        "ContrastAgent":            { "type": "string" },
+        "ClinicalPurpose":          { "type": "string", "description": "Screening, Diagnostic, Interventional, Follow-up" },
+        "AcquisitionContext":       { "type": "string", "description": "Portable, Intraoperative, Emergency" },
+        "AcquisitionProtocol":      { "type": "string" },
+        "SliceThickness":           { "type": "number", "minimum": 0 },
+        "VoxelSpacing":             { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 3 },
+        "Orientation":              { "type": "string" },
+        "FrameOfReference":         { "type": "string" },
+        "ReconstructionMethod":     { "type": "string" } } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,58 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/AIH1/V1.1/data/ModelLicence.json",
+  "title":                        "Model Licence V1.1",
+  "type":                         "object",
+  "required":                     [ "Header", "ModelLicenceID", "ModelLicenceTime", "EndUserID", "AIHDataID", "AIHDataType",
+                                    "ModelLicenceData" ],
+  "additionalProperties":         false,
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "AIH-MDL-V1.1" },
+    "MInstance":                  { "type": "string" },
+    "UEnvironment":               { "type": "string" },
+    "ModelLicenceID":             { "type": "string" },
+    "ModelLicenceTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "EndUserID":                  { "type": "string" },
+    "AIHDataID":                  { "type": "string" },
+    "AIHDataType":                { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataClass" },
+
+    "ModelLicenceData":           { "type": "object", "required": [ "Common", "Specific" ], "additionalProperties": false, "properties": {
+
+      "Common":                   { "type": "object", "required": [ "LicenceTime", "AIHDataID", "AIHDataUsage", "AIHDataProcessingType", "EndUserID" ],
+                                    "additionalProperties": false, "properties": {
+        "LicenceTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "EndUserID":              { "type": "string" },
+        "AIHDataID":              { "type": "string" },
+        "AIHDataUsage":           { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUsage" },
+        "AIHDataProcessingType":  { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHDataProcessingType.json" } } },
+      "Specific":                 { "type": "array", "minItems": 1, "items": { "oneOf": [
+                                  { "type": "object", "required": [ "BackEndLicence" ], "additionalProperties": false, "properties": {
+          "BackEndLicence":       { "type": "object", "required": [ "EndUserID", "BackEndID", "AIHDataID",
+                                    "AIHDataStatus", "AIHDataProcess", "AIHDataUsage" ], "additionalProperties": false, "properties": {
+            "EndUserID":          { "type": "string" },
+            "BackEndID":          { "type": "string" },
+            "AIHDataID":          { "type": "string" },
+            "AIHDataStatus":      { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataStatus" },
+            "AIHDataProcess":     { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHDataProcessingType.json" },
+            "AIHDataUsage":       { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUsage" } } } } },
+                                  { "type": "object", "required": [ "ThirdPartyUserLicence" ], "additionalProperties": false, "properties": {
+          "ThirdPartyUserLicence":{ "type": "object", "required": [ "BackEndID", "ThirdPartyUserID", "LicensableEndUsers", "AIHDataID",
+                                    "Time", "UserTypes", "ProcessTypes", "AnomalyTypes", "UsageTypes" ], "additionalProperties": false,
+                                    "properties": {
+            "BackEndID":          { "type": "string" },
+            "ThirdPartyUserID":   { "type": "string" },
+            "LicensableEndUsers": {"type": "array", "minItems": 1, "items": { "type": "object",
+                                    "required": [ "UserID", "AIHDataClasses" ], "additionalProperties": false, "properties": {
+              "UserID":           { "type": "string" },
+              "AIHDataClasses":   { "type": "array", "minItems": 1,
+                                    "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataClass" } } } } },
+            "AIHDataID":          { "type": "string" },
+            "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+            "UserTypes":          { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "ProcessTypes":       { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHDataProcessingType.json" },
+            "AnomalyTypes":       { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "UsageTypes":         { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUsage" } } } } }  ] } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }
+

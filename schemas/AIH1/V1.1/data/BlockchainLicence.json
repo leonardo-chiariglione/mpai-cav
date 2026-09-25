@@ -1,0 +1,29 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/AIH1/V1.1/data/BlockchainLicence.json",
+  "title":                    "Blockchain Licence V1.1",
+  "description":              "Schema for BLC-based licence.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "BlockchainLicenceID", "AIHDataID", "BlockchainLicenceTime", "BlockchainLicenceData" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "AIH-BCL-V1.1" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironment":           { "type": "string" },
+    "UserID":                 { "type": "string", "description": "ID of End User to whose AIH Data the licence applies." },
+    "BlockchainLicenceID":    { "type": "string", "description": "Unique ID for the blockchain licence." },
+    "BlockchainLicenceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "AIHDataID":              { "type": "string", "description": "ID of AIH Data." },
+
+    "BlockchainLicenceData":  { "type": "array", "description": "Licence-related requests or responses.", "items": { "oneOf": [
+                              { "type": "object", "required": [ "Request" ], "properties":  {
+      "Request":              { "type": "object", "required": [ "ModelLicence" ], "properties":  {
+        "ModelLicence":       { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ModelLicence.json",
+                                "description": "Model licence schema." } } } } },
+                              { "type": "object", "required": [ "Response" ], "properties":  {
+      "Response":             { "type": "object", "required": [ "BlockchainLicenceID", "LicenceStatus", "AIHDataID" ], "properties":  {
+        "BlockchainLicenceID":{ "type": "string", "description": "Licence ID returned in response." },
+        "LicenceStatus":      { "type": "boolean", "description": "Status of licence approval." } } } } } ] } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

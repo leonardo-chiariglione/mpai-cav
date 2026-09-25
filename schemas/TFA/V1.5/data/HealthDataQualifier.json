@@ -1,0 +1,28 @@
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/TFA/V1.5/data/HealthDataQualifier.json",
+  "title":                 "Health Data Qualifier V1.5",
+  "description":           "Unified entry point for Health Data Qualifiers, each specified by its own schema.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "HealthDataQualifierID", "SpecialisedQualifier" ],
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "TFA-HDQ-V1.5" },
+    "MInstanceID":         { "type": "string" },
+    "UEnvironmentID":      { "type": "string" },
+    "HealthDataQualifierID":   { "type": "string" },
+    "HealthDataQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SpecialisedQualifier":{ "description": "The Health Data Qualifier that applies to this instance.", "oneOf": [
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/BehaviouralSignalQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ClinicalRecordQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ECGQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/EEGQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/EHRQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/MedicalImagingQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/NeurophysiologicalSignalQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/OmicsQualifier.json" },
+      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/PhysiologicalSignalQualifier.json" } ] },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

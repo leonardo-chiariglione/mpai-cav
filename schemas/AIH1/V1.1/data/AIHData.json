@@ -1,0 +1,28 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/AIH1/V1.1/data/AIHData.json",
+  "title":                    "AIH Data V1.1",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "UserID", "AIHDataID", "AIHData" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "AIH-AHD-V1.1" },
+    "MInstance":              { "type": "string", "description": "Unique identifier for the metaverse instance" },
+    "UEnvironment":           { "type": "string", "description": "Unique identifier for the universe environment" },
+    "UserID":                 { "type": "string", "description": "Unique identifier of End User" },
+    "AIHDataID":              { "type": "string", "description": "Unique identifier of AIHData" },
+    "AIHDataTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "AIHData":                { "type": "object", "additionalProperties": false,
+                                "required": [ "HealthData", "ModelLicence", "SmartContractID", "DeIDAndAnonym" ], "properties": {
+        "HealthData":         { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/HealthData.json" },
+        "ModelLicence":       { "oneOf": [
+                              { "type": "string" },
+                              { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ModelLicence.json" } ] },
+        "SmartContractID":    { "type": "string" },
+        "ARAData":            { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ARAData.json" },
+        "DeIDAndAnonym":      { "type": "string", "enum": [ "De-Identified", "Anonymised", "De-Identified and Anonymised" ] },
+        "ParentAIHDataID":    { "type": "string" } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

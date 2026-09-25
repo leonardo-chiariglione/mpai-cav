@@ -1,0 +1,24 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/AIH1/V1.1/data/NeurophysiologicalSignalObject.json",
+  "title":                      "Neurophysiological Signal Object V1.1",
+  "type":                       "object",
+  "required":                   [ "Header", "NPSObjectID", "EndUserID", "NPSObjectTime", "NPSData", "NPSQualifier" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "AIH-NSO-V1.1" },
+    "MInstance":                { "type": "string" },
+    "NPSObjectID":              { "type": "string", "description": "Identifier of the Neurophysiological Signal Object." },
+    "EndUserID":                { "type": "string", "description": "ID of the End User the NPS Data refers to." },
+    "NPSObjectTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "NPSData":                  { "type": "array", "items": { "anyOf": [
+                                { "type": "object", "properties": { "Data": { "type": "string" } } },
+                                { "type": "object", "properties": { "DataLength": { "type": "integer" },
+                                                                    "DataURI": { "type": "string", "format": "uri" } } },
+                                { "type": "object", "properties": { "ID": { "type": "string" } } } ] } },
+
+    "NPSQualifier":             { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/NeurophysiologicalSignalQualifier.json",
+                                  "description": "Neurophysiological Signal Qualifier." },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

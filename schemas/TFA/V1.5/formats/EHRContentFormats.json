@@ -1,0 +1,19 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/TFA/V1.5/formats/EHRContentFormats.json",
+  "title": "EHR Content Formats V1.5",
+  "description": "Enumerates supported EHR content formats. Uses oneOf with const+description so each value is self-documented.",
+  "type": "string",
+  "oneOf": [
+    { "const": "FHIR-JSON",   "description": "HL7 FHIR resources serialized in JSON." },
+    { "const": "FHIR-XML",    "description": "HL7 FHIR resources serialized in XML." },
+    { "const": "HL7v2",       "description": "HL7 Version 2 messages (pipe-delimited segments)." },
+    { "const": "CDA-XML",     "description": "HL7 Clinical Document Architecture (CDA) in XML." },
+    { "const": "CCD-XML",     "description": "Continuity of Care Document (CCD) in XML (a CDA-based profile)." },
+    { "const": "openEHR-JSON","description": "openEHR composition/operational templates serialized in JSON." },
+    { "const": "openEHR-XML", "description": "openEHR composition/operational templates serialized in XML." },
+    { "const": "DICOM-SR",    "description": "DICOM Structured Reporting objects (imaging-derived clinical content)." },
+    { "const": "PDF",         "description": "Portable Document Format; typically encapsulated narrative or scanned records." },
+    { "const": "CSV",         "description": "Comma-Separated Values used for tabular EHR extracts." },
+    { "const": "TSV",         "description": "Tab-Separated Values used for tabular EHR extracts." },
+    { "const": "EHRxF",       "description": "Proprietary EHR exchange format defined by the implementation." } ] }
+

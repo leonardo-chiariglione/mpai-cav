@@ -1,0 +1,70 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/TFA/V1.5/data/OmicsQualifier.json",
+  "title":                    "Omics Qualifier V1.5",
+  "description":              "Omics Sub-Type groups, Format groups, and allowed pairings.",
+  "type":                     "object",
+  "required":                 [ "SubTypes", "Formats", "GroupMap" ],
+  "additionalProperties":     false,
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "TFA-OCQ-V1.5" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "OmicsQualifierID":       { "type": "string" },
+    "OmicsQualifierTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":               { "type": "object", "additionalProperties": false,
+                                "required": [ "DNA-Based Data", "RNA-Based Data", "Epigenomic Data", "Proteomics Data", "Metabolomics Data" ],
+                                "properties": {
+
+      "DNA-Based Data":       { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "Whole-genome variants", "Whole-exome variants", "Targeted panel variants",
+                                "Structural variants", "Copy-number profiles" ] },
+
+      "RNA-Based Data":       { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "Gene-expression matrix (bulk RNA-seq)", "Transcript-level quantification",
+                                "Splicing / junction counts" ] },
+
+      "Epigenomic Data":      { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "Methylation array profiles", "Bisulfite sequencing profiles" ] },
+
+      "Proteomics Data":      { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "Protein abundance profiles", "Peptide quantification tables" ] },
+
+      "Metabolomics Data":    { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "Metabolite abundance profiles" ] } } },
+
+    "Formats":                { "type": "object", "additionalProperties": false,
+                                "required": [ "DNA-Based Formats", "RNA-Based Formats", "Epigenomic Formats", "Proteomics Formats", "Metabolomics Formats" ],
+                                "properties": {
+
+      "DNA-Based Formats":    { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "VCF", "BCF", "FASTQ (raw reads)", "BAM / CRAM (aligned reads)",
+                                "TSV/CSV (variant tables)" ] },
+
+      "RNA-Based Formats":    { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "FASTQ (raw reads)", "BAM / CRAM", "TSV/CSV (gene-expression matrices)",
+                                "HDF5 (assay containers)" ] },
+
+      "Epigenomic Formats":   { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "IDAT (array raw files)", "TSV/CSV (processed methylation profiles)", "HDF5" ] },
+
+      "Proteomics Formats":   { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "TSV/CSV (protein/peptide quantification)", "HDF5" ] },
+
+      "Metabolomics Formats": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                "default": [ "TSV/CSV (metabolite abundance)", "HDF5" ] } } },
+
+    "GroupMap":               { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
+                                "required": [ "SubTypeGroup", "FormatGroup" ], "properties": {
+      "SubTypeGroup":         { "type": "string" },
+      "FormatGroup":          { "type": "string" } } },
+                                "default": [
+                              { "SubTypeGroup": "DNA-Based Data",        "FormatGroup": "DNA-Based Formats" },
+                              { "SubTypeGroup": "RNA-Based Data",        "FormatGroup": "RNA-Based Formats" },
+                              { "SubTypeGroup": "Epigenomic Data",       "FormatGroup": "Epigenomic Formats" },
+                              { "SubTypeGroup": "Proteomics Data",       "FormatGroup": "Proteomics Formats" },
+                              { "SubTypeGroup": "Metabolomics Data",     "FormatGroup": "Metabolomics Formats" } ] },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

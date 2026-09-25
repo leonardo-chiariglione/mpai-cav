@@ -1,0 +1,31 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIH1/V1.1/data/LicenceConfirm.json",
+  "title":                "Licence Confirm V1.1",
+  "description":          "Schema for licence confirm.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "LicenceConfirmID", "LicenceConfirmTime", "LicenceConfirmData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "AIH-LCF-V1.1" },
+    "MInstance":          { "type": "string" },
+    "UEnvironment":       { "type": "string" },
+    "EndUserID":          { "type": "string" },
+    "LicenceConfirmID":   { "type": "string", "description": "Unique licence confirmation identifier." },
+    "LicenceConfirmTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                            "description": "Timestamp of  licence confirm." },
+
+    "LicenceConfirmData": { "type": "array", "items": { "oneOf": [
+
+                          { "type": "object", "required": [ "Request" ], "additionalProperties": false, "properties": {
+        "Request":        { "type": "object", "required": [ "AIHDataID", "ProcessType", "Time" ], "additionalProperties": false, "properties": {
+          "AIHDataID":    { "type": "string", "description": "Identifier of the AIH data to process." },
+          "ProcessType":  { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ProcessTypes.json#" },
+          "Time":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Request Time." } } } } },
+
+                          { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties": {
+          "Response":     { "type": "object", "required": [ "Status" ], "additionalProperties": false, "properties": {
+            "Status":     { "type": "boolean", "description": "Processing status (true=approved, false=rejected)." } } } } } ] } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

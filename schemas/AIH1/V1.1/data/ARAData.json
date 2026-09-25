@@ -1,0 +1,23 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIH1/V1.1/data/ARAData.json",
+  "title":                "ARA Data V1.1",
+  "type":                 "object",
+  "additionalProperties": false,
+                          "required": [ "Header", "ARADataID", "ARAData" ],
+  "properties":           {
+
+    "Header":        { "type": "string", "const": "AIH-ARD-V1.1" },
+    "MInstance":     { "type": "string", "description": "Unique identifier for the metaverse instance" },
+    "UEnvironment":  { "type": "string", "description": "Unique identifier for the universe environment" },
+    "UserID":        { "type": "string", "description": "Unique identifier of the user" },
+    "ARADataID":     { "type": "string", "description": "Unique identifier for this ARAData record" },
+    "ARADataTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "ARAData":       { "type": "object", "additionalProperties": false, "required": [ "AIHDataID" ], "properties": {
+      "AIHDataID":   { "type": "string", "description": "Identifier of AIH Data instance" },
+      "Risk":        { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/Risk" },
+      "Anomalies":   { "type": "object", "properties": {
+        "Anomaly":   { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataAnomaly" } } } } },
+
+    "DataXMData":    { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata": { "type": "string", "maxLength": 2048 } } }

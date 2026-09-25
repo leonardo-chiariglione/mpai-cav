@@ -1,0 +1,30 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/AIH1/V1.1/data/MedicalImagingObject.json",
+  "title":                      "Medical Imaging Object V1.1",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "MedicalImagingID", "MedicalImagingTime", "MedicalImagingData", "MedicalImagingQualifier" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "AIH-MDI-V1.1" },
+    "MedicalImagingObjectID":   { "type": "string" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironment":             { "type": "string" },
+    "EndUserID":                { "type": "string" },
+    "EndDeviceID":              { "type": "string" },
+    "MedicalImagingObjectTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                  "description": "Time of image acquisition." },
+
+    "MedicalImagingObjectData": { "type": "array", "items": { "anyOf": [
+                                { "type": "object", "properties": {
+      "DataLength":             { "type": "integer" },
+      "DataURI":                { "type": "string", "format": "uri" } } },
+                                { "type": "object", "properties": {
+      "Data":                   { "type": "string" } } },
+                                { "type": "object", "properties": {
+      "DataID":                 { "type": "string" } } } ] } },
+
+    "MedicalImagingQualifier":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/VisualQualifier.json" },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

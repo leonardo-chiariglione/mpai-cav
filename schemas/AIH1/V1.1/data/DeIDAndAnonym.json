@@ -1,0 +1,26 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/AIH1/V1.1/data/DeIDAndAnonym.json",
+  "title":                      "De-Identification and Anonymisation V1.1",
+  "type":                       "object",
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "AIH-DIA-V1.1" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "DeIDAndAnonymID":          { "type": "string" },
+    "DeIDAndAnonymTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "EndUserID":                { "type": "string" },
+
+    "DeIDAndAnonymData":        { "type": "array", "items": { "oneOf": [
+                                { "type": "object", "properties": {
+      "Request":                { "type": "object", "properties": {
+        "AIHDataID":            { "type": "string" },
+        "DeIDAndAnonymType":    { "type": "string", "Enum": [ "De-Identify", "Anonymise", "De-Identify and Anonymise" ] },
+        "DeIDAndAnonymAlgoID":  { "type": "string" } } } } },
+                                { "type": "object", "properties": {
+      "Response":               { "type": "object", "properties": {
+        "AIHDataID":            { "type": "string" },
+        "ProcessingState":      { "type": "boolean" } } } } } ] } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

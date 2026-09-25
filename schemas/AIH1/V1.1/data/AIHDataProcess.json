@@ -1,0 +1,33 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/AIH1/V1.1/data/AIHDataProcess.json",
+  "title":                        "AIH Data Process V1.1",
+  "type":                         "object",
+  "description":                  "AHD processing envelope.", "required": [ "Header", "UserID", "AIHDataProcessID", "AIHDataProcess" ],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "AIH-AHP-V1.1" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":                { "type": "string" },
+    "UserID":                     { "type": "string" },
+    "AIHDataProcessID":           { "type": "string" },
+    "AIHDataProcessTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "AIHDataProcess":             { "type": "array", "description": "Request/response for AIH Data processing.", "items": { "oneOf": [
+                                  { "type": "object", "required": [ "Request" ], "properties": {
+      "Request":                  { "type": "object", "description": "Inputs to an AHD process operation.",
+                                    "required": [ "AIHData", "ProcessType", "Tokens" ], "properties": {
+        "AIHDataOrAIHDataID":     { "type": "array", "description": "List of AHDs to process.", "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHData.json" },
+                                  { "type": "string" } ] } },
+        "ProcessingType":         { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ProcessTypes.json" },
+        "Tokens":                 { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Tokens.json" } } } } },
+                                  { "type": "object", "description": "Process response block.", "required": [ "Response" ], "properties": {
+      "Response":                 { "type": "object", "description": "Outputs of an AIH data process operation.",
+                                    "required": [ "AIHData", "ProcessStatus" ], "properties": {
+        "AIHDataOrAIHDataID":     { "type": "array", "description": "List of AID (ID or object) results.", "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHData.json" },
+                                  { "type": "string" } ] } },
+        "ProcessingStatus":       { "type": "boolean" } } } } } ] } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,68 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/TFA/V1.5/data/BehaviouralSignalQualifier.json",
+  "title":                        "Behavioural Signal Qualifier V1.5",
+  "type":                         "object",
+  "required":                     [ "Header", "BehaviouralSignalQualifierID", "SubTypes", "Formats", "GroupMap" ],
+  "additionalProperties":         false,
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "TFA-BSQ-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "BehaviouralSignalQualifierID":   { "type": "string" },
+    "BehaviouralSignalQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                   { "type": "object", "additionalProperties": false,
+                                    "required": [ "Motor Behaviour", "Gesture Behaviour", "Facial Behaviour",
+                                    "Interaction Behaviour", "Speech-Related Behaviour" ], "properties": {
+
+      "Motor Behaviour":          { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "Gait", "Upper-limb movement", "Whole-body movement", "Fine motor actions" ] },
+
+      "Gesture Behaviour":        { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "Hand gestures", "Arm gestures", "Body gestures" ] },
+
+      "Facial Behaviour":         { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "Facial action units", "Facial expressions", "Eye region movements (non-EOG)" ] },
+
+      "Interaction Behaviour":    { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "Touchscreen interactions", "Keyboard interactions", "Mouse interactions", "Controller interactions" ] },
+
+      "Speech-Related Behaviour": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "Speech activity (voice activity detection)", "Prosodic behaviour (pitch, intensity, rhythm)", "Articulatory movement traces (non-audio)" ] } } },
+
+    "Formats":                    { "type": "object", "additionalProperties": false, "required": [ "Motor Behaviour Formats",
+                                    "Gesture Behaviour Formats", "Facial Behaviour Formats", "Interaction Behaviour Formats",
+                                    "Speech-Related Behaviour Formats" ], "properties": {
+
+      "Motor Behaviour Formats":  { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "CSV / TSV (motion time-series)", "JSON (motion event stream)",
+                                    "BVH (Biovision Hierarchy)", "C3D (3D motion capture format)",
+                                    "HDF5 (structured motion datasets)" ] },
+
+      "Gesture Behaviour Formats":{ "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "CSV / TSV", "JSON", "BVH", "C3D", "HDF5" ] },
+
+      "Facial Behaviour Formats": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "CSV / TSV (facial landmark time-series)", "JSON (facial action event stream)",
+                                    "HDF5", "C3D (3D facial motion capture)", "BVH (hierarchical facial motion)" ] },
+
+      "InteractionBehaviourFmts": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "CSV / TSV (interaction logs)", "JSON (event-based interaction logs)", "XML (interaction trace format)", "HDF5" ] },
+
+      "SpeechRelatBehaviourFmts": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true,
+                                    "default": [ "CSV / TSV (prosodic features)", "JSON (speech activity events)", "HDF5", "RTTM (Rich Transcription Time Marked - activity only)", "TextGrid (timing annotations)" ] } } },
+
+    "GroupMap":                   { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
+                                    "required": [ "SubTypeGroup", "FormatGroup" ], "properties": {
+      "SubTypeGroup":             { "type": "string" },
+      "FormatGroup":              { "type": "string" } } },
+                                    "default": [
+                                  { "SubTypeGroup": "Motor Behaviour",           "FormatGroup": "Motor Behaviour Formats" },
+                                  { "SubTypeGroup": "Gesture Behaviour",         "FormatGroup": "Gesture Behaviour Formats" },
+                                  { "SubTypeGroup": "Facial Behaviour",          "FormatGroup": "Facial Behaviour Formats" },
+                                  { "SubTypeGroup": "Interaction Behaviour",     "FormatGroup": "Interaction Behaviour Formats" },
+                                  { "SubTypeGroup": "Speech-Related Behaviour",  "FormatGroup": "Speech-Related Behaviour Formats" } ] },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

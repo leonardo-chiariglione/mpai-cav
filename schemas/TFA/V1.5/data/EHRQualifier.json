@@ -1,0 +1,29 @@
+{ "$id":                  "https://schemas.mpai.community/TFA/V1.5/data/EHRQualifier.json",
+  "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "title":                "EHR Qualifier V1.5",
+  "description":          "Qualifier for EHR content indicating subtypes, format, and implementation-defined attributes.",
+  "type":                 "object",
+  "required":             [ "Header", "EHRQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "TFA-EHQ-V1.5" },
+    "MInstanceID":    { "type": "string" },
+    "UEnvironmentID": { "type": "string" },
+
+    "EHRQualifierID":     { "type": "string",
+                          "description": "Identifier of this EHRQualifier instance (implementation-defined format)." },
+    "EHRQualifierTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":            { "type": "object", "additionalProperties": false, "properties": {
+      "Categories":       { "type": "array", "description": "EHR content subtype(s).", "items": { "type": "string" },
+                            "minItems": 1, "uniqueItems": true } } },
+
+    "Formats":             { "type": "object", "additionalProperties": false, "properties": {
+      "ContentFormat":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/EHRContentFormats.json" } } },
+
+    "Attributes":         { "type": "object", "additionalProperties": true,
+                            "description": "Attributes that further qualify the EHR content." },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "description": "Free-text descriptive metadata.", "maxLength": 2048 } } }

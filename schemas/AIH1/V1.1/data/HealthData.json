@@ -1,0 +1,28 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIH1/V1.1/data/HealthData.json",
+  "title":                "Health Data V1.1",
+  "description":          "Schema for raw health data.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "HealthDataID", "HealthDataTime", "HealthDataData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "AIH-HLD-V1.1" },
+    "MInstance":          { "type": "string" },
+    "UEnvironment":       { "type": "string" },
+    "EndUserID":          { "type": "string" },
+    "HealthDataID":       { "type": "string", "description": "Unique identifier of the HealthData record." },
+    "HealthDataTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                            "description": "Timestamp of the health data." },
+
+    "HeaalthlData":       { "type": "array", "items": { "anyOf": [
+                          { "type": "object", "properties": { "Data": { "type": "string" } } },
+                          { "type": "object", "properties": { "DataLength": { "type": "integer" },
+                                                              "DataURI": { "type": "string", "format": "uri" } } },
+                          { "type": "object", "properties": { "ID": { "type": "string" } } } ] } },
+
+      "DataQualifier":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/HealthDataQualifier.json",
+                            "description": "Health Data Qualifier." },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

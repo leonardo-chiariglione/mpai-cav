@@ -1,0 +1,22 @@
+{ "$schema":            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                "https://schemas.mpai.community/AIH1/V1.1/data/EHRObject.json",
+  "title":              "EHR Object V1.1",
+  "type":               "object",
+  "properties":         {
+
+    "Header":           { "type": "string", "const": "AIH-EHO-V1.1" },
+    "EHRObjectID":      { "type": "string" },
+    "MInstanceID":      { "type": "string" },
+    "UEnvironment":     { "type": "string" },
+    "EndUserID":        { "type": "string" },
+    "EHRObjectTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "EHRData":          {  "type": "array", "items": { "anyOf": [
+                        { "type": "object", "properties": { "DataLength": { "type": "integer" },
+                                                            "DataURI": { "type": "string", "format": "uri" } } },
+                        { "type": "object", "properties": { "Data": { "type": "string" } } },
+                        { "type": "object", "properties": { "ID": { "type": "string" } } } ] } },
+    "EHRDataQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/EHRQualifier.json" },
+
+    "DataXMData":       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":    { "type": "string", "description": "Optional descriptive metadata." } } }

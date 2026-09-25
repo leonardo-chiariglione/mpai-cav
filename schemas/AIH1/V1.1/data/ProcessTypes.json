@@ -1,0 +1,6 @@
+{ "$schema":  "https://json-schema.org/draft/2020-12/schema",
+  "$id":      "https://schemas.mpai.community/AIH1/V1.1/data/ProcessTypes.json",
+  "title":    "Process Types V1.1",
+  "type":     "string",
+  "enum":     [ "Store", "Auditing", "DeIDAndAnonym", "AIHDataProcessing", "LicenceChange" ] }
+

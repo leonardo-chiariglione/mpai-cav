@@ -1,0 +1,31 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/AIH1/V1.1/data/FederatedLearn.json",
+  "title":                    "Federated Learn V1.1",
+  "description":              "Schema for federated learning.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "FederatedLearnID", "FederatedLearnTime", "FederatedLearnData" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "AIH-FDL-V1.1" },
+    "MInstance":              { "type": "string" },
+    "UEnvironment":           { "type": "string" },
+    "EndUserID":              { "type": "string" },
+    "FederatedLearnID":       { "type": "string", "description": "Unique ID of the federated learn instance." },
+    "FederatedLearnTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                "description": "Timestamp of the federated learn instance." },
+
+    "FederatedLearnData":     { "type": "array", "minItems": 1, "description": "A federated learning request or response.", "items": { "oneOf": [
+                              { "type": "object", "required": [ "Request" ], "additionalProperties": false, "properties":  {
+      "Request":              { "type": "object", "required": [ "HFEID", "PreLearnNNModelID" ],
+                                "additionalProperties": false, "properties": {
+        "HFEID":              { "type": "string", "description": "Id of the human-feature extraction or relevant component." },
+        "PreLearnNNModelID":  { "type": "string", "description": "Identifier of the pre-learning neural network model." } } } } },
+                              { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties":  {
+      "Response":             { "type": "object", "required": [ "AIHDataID", "PostLearnNNModel" ], "additionalProperties": false,
+                                "properties": {
+        "PostLearnNNModel":   { "$ref": "https://schemas.mpai.community/AIP/V1.0/data/MLModelObject.json",
+                                "description": "Post FedLearn model." } } } } } ] } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

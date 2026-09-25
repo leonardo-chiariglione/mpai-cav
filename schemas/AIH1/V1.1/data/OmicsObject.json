@@ -1,0 +1,24 @@
+{ "$schema":            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                "https://schemas.mpai.community/AIH1/V1.1/data/OmicsObject.json",
+  "title":              "Omics Object V1.1",
+  "type":               "object",
+  "required":           [ "Header", "OmicsObjectID", "EndUserID", "OmicsObjectTime", "PhysiologicalSignalData",
+                          "PhysiologicalSignalQualifier" ],
+  "properties":         {
+
+    "Header":           { "type": "string", "const": "AIH-GOM-V1.1" },
+    "MInstance":        { "type": "string" },
+    "OmicsObjectID":    { "type": "string", "description": "Identifier of the Physiological Signal Object." },
+    "EndUserID":        { "type": "string", "description": "ID of End User the PS Data refers to." },
+    "OmicsObjectTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "OmicsObjectData":  { "type": "array", "items": { "anyOf": [
+                        { "type": "object", "properties": { "Data": { "type": "string" } } },
+                        { "type": "object", "properties": { "DataLength": { "type": "integer" },
+                                                            "DataURI": { "type": "string", "format": "uri" } } },
+                        { "type": "object", "properties": { "ID": { "type": "string" } } } ] } },
+
+    "OmicsQualifier":   { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/OmicsQualifier.json" },
+
+    "DataXMData":       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":    { "type": "string", "maxLength": 2048 } } }

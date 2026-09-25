@@ -1,0 +1,32 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/ClinicalRecordQualifier.json",
+  "title":                  "Clinical Record Qualifier V1.5",
+  "description":            "Type-coding-context of symbolic clinical record data.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":             [ "Header", "ClinicalRecordQualifierID", "ClinicalRecordType", "CodingSystem" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "TFA-CRQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ClinicalRecordQualifierID":   { "type": "string" },
+    "ClinicalRecordQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ClinicalRecordType":   { "type": "string", "description": "Type of clinical record described by the Clinical Record Data.",
+                              "enum": [ "Diagnosis", "Observation", "Procedure", "Medication", "LaboratoryResult", "VitalSign",
+                              "AllergyOrIntolerance", "ProblemListEntry", "CarePlan", "ClinicalNote" ] },
+
+    "CodingSystem":         { "type": "string", "description": "Coding or vocabulary system used to encode the clinical record.",
+                              "enum": [ "ICD9", "ICD10", "ICD11", "SNOMEDCT", "LOINC", "ATC", "RxNorm", "LocalEHR" ] },
+
+    "RecordRepresentation": { "type": "string", "description": "Representation form of the clinical record.",
+                              "enum": [ "CodedValue", "CodedValueWithText", "AttributeValueSet", "StructuredText" ] },
+
+    "ClinicalContext":      { "type": "string", "description": "Clinical scope under which the record is valid.",
+                              "enum": [ "EncounterBased", "Longitudinal", "ProblemOriented", "EpisodeOfCare" ] },
+
+    "EHRSource":            { "type": "string", "description": "ID of the originating EHR system, if applicable." },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }
