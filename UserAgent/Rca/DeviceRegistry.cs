@@ -53,6 +53,19 @@ public sealed class DeviceRegistry
 
     private readonly List<(string Name, Present Render)> presenters = new();
 
+    // RECORDS, BY THE NAME A WORKFLOW GIVES THEM (M3219 3.5): a source of the
+    // Physical Layer as a microphone is. Which record a name means is the User
+    // Agent's own business, as which device serves a Data Type is.
+    private readonly Dictionary<string, IRecordSource> records = new(StringComparer.Ordinal);
+
+    public DeviceRegistry RegisterRecord(string name, IRecordSource source)
+    {
+        records[name] = source;
+        return this;
+    }
+
+    public IRecordSource? Record(string name) => records.GetValueOrDefault(name);
+
     // ONE SOURCE PER DATA TYPE. Which device serves a Data Type is the User
     // Agent's own business; the request that reaches it says what is wanted.
     public DeviceRegistry RegisterAcquire(string dataType, Acquire how)

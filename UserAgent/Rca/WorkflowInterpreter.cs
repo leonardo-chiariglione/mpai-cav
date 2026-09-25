@@ -49,6 +49,19 @@ public sealed class WorkflowInterpreter
 
     private readonly HashSet<string> running = new(StringComparer.OrdinalIgnoreCase);
 
+    // RECORDS PLAYED (M3219 3.5): the stream lines not yet started, the records
+    // playing, and how each playing went.
+    private readonly List<Step> bound = new();
+    private readonly List<Task> playing = new();
+    private readonly CancellationTokenSource endOfWorkflow = new();
+    public List<PlaybackReport> Playbacks { get; } = new();
+
+    // How a record was played: its Messages, the rate, how long it took, and how
+    // far each write fell from the time it was due - the recorded time divided by
+    // the rate - in milliseconds.
+    public sealed record PlaybackReport(string Record, int Messages, double Rate, TimeSpan Recorded, TimeSpan Took,
+                                        double MedianErrorMs, double P95ErrorMs, double MaxErrorMs);
+
     public WorkflowInterpreter(
         IAsyncControllerApi north,
         DeviceRegistry devices,
@@ -69,6 +82,10 @@ public sealed class WorkflowInterpreter
         }
         finally
         {
+            // The records still playing end with the workflow.
+            endOfWorkflow.Cancel();
+            try { await Task.WhenAll(playing); } catch { }
+
             // What On Stop says, and then whatever is still running: a workflow
             // that failed mid-way must not leave a Module started.
             try { await WalkAsync(workflow.OnStop, CancellationToken.None); }
@@ -84,6 +101,114 @@ public sealed class WorkflowInterpreter
         {
             if (stop.IsCancellationRequested && step.Kind != StepKind.StopModule) return;
             await StepAsync(step, stop);
+        }
+        if (bound.Count > 0) await PlayAsync(stop);
+    }
+
+    // ---- records played (M3219 3.5) ------------------------------------------
+
+    // THE STREAMS BOUND, STARTED TOGETHER: every stream from one record shares one
+    // clock. A record unknown, a track it lacks, or a record the User Agent may
+    // not read stops the workflow before anything is played.
+    private async Task PlayAsync(CancellationToken stop)
+    {
+        var streams = bound.ToList();
+        bound.Clear();
+        foreach (var group in streams.GroupBy(s => s.Text!))
+        {
+            var first = group.First();
+            var source = devices.Record(group.Key)
+                ?? throw new InvalidOperationException($"line {first.Line}: no record \"{group.Key}\" is known to this User Agent.");
+            var rates = group.Select(s => s.Rate).Distinct().ToList();
+            if (rates.Count > 1)
+                throw new InvalidOperationException($"line {first.Line}: the streams of \"{group.Key}\" share one clock, and name {rates.Count} rates.");
+            var inputs = await source.InputsAsync();
+            foreach (var s in group)
+                if (!inputs.Any(m => m.DataType == s.Port!.DataType && m.PortNumber == s.Port.PortNumber))
+                    throw new InvalidOperationException($"line {s.Line}: the record \"{group.Key}\" has no track {s.Port!.DataType}:{s.Port.PortNumber}.");
+
+            var tracks = group.Select(s => (s.Port!.DataType, s.Port.PortNumber)).ToHashSet();
+            var played = inputs.Where(m => tracks.Contains((m.DataType, m.PortNumber))).ToList();
+            var labels = group.Select(s => s.Port!.Label).ToList();
+            foreach (var label in labels) absent.Remove(label);
+            say($"stream {string.Join(", ", group.Select(s => s.Port))} from record \"{group.Key}\"" + (rates[0] != 1 ? $" at x{rates[0]}" : ""));
+
+            playing.Add(Task.Run(() => PlayOneAsync(group.Key, played, rates[0], labels, CancellationTokenSource.CreateLinkedTokenSource(stop, endOfWorkflow.Token).Token)));
+        }
+    }
+
+    private async Task PlayOneAsync(string record, List<RecordedMessage> messages, double rate, List<string> labels, CancellationToken stop)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var errors = new List<double>();
+        try
+        {
+            foreach (var m in messages)
+            {
+                var due = TimeSpan.FromTicks((long)(m.At.Ticks / rate));
+                await UntilAsync(clock, due, stop);
+                var json = await WithPayloadsAsync(m);
+                errors.Add((clock.Elapsed - due).TotalMilliseconds);
+                await north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1);
+            }
+        }
+        catch (OperationCanceledException) { }
+
+        // A TRACK ENDS WHEN ITS RECORDS DO: the workflow learns it as it learns
+        // that an acquisition returned nothing.
+        lock (absent) foreach (var label in labels) absent.Add(label);
+        errors.Sort();
+        var report = new PlaybackReport(record, errors.Count, rate,
+            messages.Count > 0 ? messages[^1].At : TimeSpan.Zero, clock.Elapsed,
+            errors.Count > 0 ? errors[errors.Count / 2] : 0, errors.Count > 0 ? errors[(int)(errors.Count * 0.95)] : 0,
+            errors.Count > 0 ? errors[^1] : 0);
+        lock (Playbacks) Playbacks.Add(report);
+        say($"record \"{record}\" played: {report.Messages} Messages in {report.Took.TotalSeconds:0.00} s; error median {report.MedianErrorMs:0.00} ms, max {report.MaxErrorMs:0.00} ms");
+    }
+
+    // The time a Message is due: a sleep while it is far, a spin when it is near -
+    // a timer on this machine resolves some milliseconds, no finer.
+    private static async Task UntilAsync(System.Diagnostics.Stopwatch clock, TimeSpan due, CancellationToken stop)
+    {
+        while (true)
+        {
+            stop.ThrowIfCancellationRequested();
+            var remaining = due - clock.Elapsed;
+            if (remaining <= TimeSpan.Zero) return;
+            if (remaining > TimeSpan.FromMilliseconds(20)) await Task.Delay(remaining - TimeSpan.FromMilliseconds(16), stop);
+            else Thread.SpinWait(200);
+        }
+    }
+
+    // The payloads of a recorded Object, given to the Module by reference where
+    // the Controller API places payloads, inline where it does not (over MPAI-MAS).
+    private async Task<string> WithPayloadsAsync(RecordedMessage m)
+    {
+        if (m.Payloads.Count == 0) return m.Json;
+        var root = System.Text.Json.Nodes.JsonNode.Parse(m.Json)!;
+        foreach (var (recorded, bytes) in m.Payloads)
+        {
+            var (error, reference) = await north.PayloadPutAsync(Module, m.DataType, m.PortNumber, bytes);
+            Replace(root, recorded, error == AifError.OK ? reference : null, bytes);
+        }
+        return root.ToJsonString();
+
+        static void Replace(System.Text.Json.Nodes.JsonNode node, string recorded, string? reference, byte[] bytes)
+        {
+            switch (node)
+            {
+                case System.Text.Json.Nodes.JsonObject o:
+                    if (o["DataURI"] is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var uri) && uri == recorded)
+                    {
+                        if (reference is not null) o["DataURI"] = reference;
+                        else { o.Remove("DataURI"); o.Remove("DataLength"); o["Data"] = Convert.ToBase64String(bytes); }
+                    }
+                    foreach (var (_, child) in o.ToList()) if (child is not null) Replace(child, recorded, reference, bytes);
+                    break;
+                case System.Text.Json.Nodes.JsonArray a:
+                    foreach (var child in a) if (child is not null) Replace(child, recorded, reference, bytes);
+                    break;
+            }
         }
     }
 
@@ -164,6 +289,10 @@ public sealed class WorkflowInterpreter
 
     private async Task StepAsync(Step step, CancellationToken stop)
     {
+        // STREAMS ARE BOUND, THEN PLAYED TOGETHER at the first step that is not one.
+        if (step.Kind == StepKind.Stream) { bound.Add(step); return; }
+        if (bound.Count > 0) await PlayAsync(stop);
+
         switch (step.Kind)
         {
             case StepKind.StartModule:  await StartModuleAsync(Module); break;

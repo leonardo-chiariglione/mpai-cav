@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -21,6 +22,11 @@ public interface IAsyncControllerApi
     Task<ControllerApi.ModuleStatus> StatusAsync(string moduleName);
     Task<AifError>             StopAimAsync(string moduleName, string aimName);
     Task<AifError>             SharedStorageInitAsync(string moduleName, string location);
+
+    // A payload placed for a boundary Input Port, its reference returned (M3215
+    // 3.6). Not over MPAI-MAS (Phase 15): there a payload goes inline.
+    Task<(AifError Error, string? Reference)> PayloadPutAsync(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data) =>
+        Task.FromResult((AifError.Failed, (string?)null));
 }
 
 public static class ControllerApiAsync
@@ -36,6 +42,11 @@ public static class ControllerApiAsync
 
         public Task<AifError> StartFlowAsync(string moduleName) =>
             Task.Run(() => api.StartFlow(moduleName));
+
+        public Task<(AifError Error, string? Reference)> PayloadPutAsync(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data) =>
+            api is ControllerApi local
+                ? Task.Run(() => local.PayloadPut(moduleName, dataType, portNumber, data))
+                : Task.FromResult((AifError.Failed, (string?)null));
 
         public Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs) =>
             Task.Run(() => api.Advance(moduleName, inputs));

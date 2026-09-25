@@ -1,0 +1,5 @@
+{
+  "played at its original rate: the same Objects, in the same order, on each Port": "yes",
+  "played at twice its rate: the same Objects, in the same order, on each Port": "yes",
+  "the record played": "In#1: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19 | In#2: b0,b1,b2,b3,b4 | In#3: payload of 100000 bytes, as written,payload of 100000 bytes, as written | Out#1: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19 | Out#2: b0,b1,b2,b3,b4 | Out#3: payload of 100000 bytes, as written,payload of 100000 bytes, as written"
+}

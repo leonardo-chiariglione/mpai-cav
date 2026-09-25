@@ -1,0 +1,8 @@
+{
+  "a record the User Agent does not know": "InvalidOperationException: line 3: no record \"nope\" is known to this User Agent.",
+  "a record the User Agent is not a reader of": "UnauthorizedAccessException: The User Agent is not a reader of the record R9.",
+  "a track the record does not have": "InvalidOperationException: line 3: the record \"first\" has no track TST-TXT-V1.0:4.",
+  "stream without 'record'": "refused: line 3: 'stream' expects '<label> (<DataType>[:<PortNumber>]) from record \"<name>\" [at x<rate>]'.",
+  "stream, read": "Stream A (TST-TXT-V1.0) from R at x2.5",
+  "two rates for one record": "InvalidOperationException: line 3: the streams of \"first\" share one clock, and name 2 rates."
+}

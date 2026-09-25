@@ -10,6 +10,6 @@
   "TST-REC: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
   "TST-SHA writes": "OK; #1 's: OK'",
   "TST-SHB reads it": "OK; #1 'NotAuthorised'",
-  "stream in a workflow": "read as: StartModule",
+  "stream in a workflow": "read as: StartModule; Stream",
   "the Controller API's calls for a record": "present"
 }

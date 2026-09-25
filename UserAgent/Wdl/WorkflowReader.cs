@@ -213,6 +213,22 @@ public sealed class WorkflowReader
             case "type":
                 return new Step { Kind = StepKind.Type, Port = ReadDatum(n, rest).Port, Line = n };
 
+            // A RECORD PLAYED TO A BOUNDARY PORT (M3219 3.5), for the life of the
+            // workflow: the track of the record with that Data Type and Port
+            // Number, at the pace it was recorded at, or a multiple of it.
+            //
+            //     stream Camera (OSD-BVO-V1.5) from record "drive-1" [at x2]
+            case "stream":
+            {
+                var m = StreamLine.Match(rest.Trim());
+                if (!m.Success)
+                    throw new WorkflowSyntaxError(n, "'stream' expects '<label> (<DataType>[:<PortNumber>]) from record \"<name>\" [at x<rate>]'.");
+                var rate = m.Groups["rate"].Success ? double.Parse(m.Groups["rate"].Value, CultureInfo.InvariantCulture) : 1;
+                if (rate <= 0) throw new WorkflowSyntaxError(n, "'stream' plays at a rate above 0.");
+                return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
+                                  Text = m.Groups["record"].Value, Rate = rate, Line = n };
+            }
+
 
             // A STEP THAT WAITS FOR THE PERSON. The word is the App's, and the
             // client shows it on a button: an App decides what a person is invited
@@ -349,6 +365,10 @@ public sealed class WorkflowReader
         }
     }
 
+    private static readonly Regex StreamLine = new(
+        @"^(?<datum>.+?\))\s+from\s+record\s+""(?<record>[^""]+)""(\s+at\s+x(?<rate>[0-9]+(\.[0-9]+)?))?$",
+        RegexOptions.IgnoreCase);
+
     private (PortRef Port, string? Literal) ReadDatum(int n, string s)
     {
         var m = Datum.Match(s.Trim());
@@ -455,7 +475,8 @@ public sealed class WorkflowReader
     private static readonly string[] Starters =
     {
         "workflow ", "on Start:", "on Stop:", "on Degraded:", "ask ", "acquire ", "type ", "prompt ",
-        "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run "
+        "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run ",
+        "stream "
     };
 
     // A brace stands on its own: it closes a block and is not a continuation

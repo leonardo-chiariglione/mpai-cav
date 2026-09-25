@@ -46,6 +46,7 @@ public enum StepKind
     EndLoop,          // end  - leave the enclosing loop
     Say,              // say (T:n) "..." give (T), (T) - words in, speech and face out
     Run,              // run L  - obtain the App named by that datum and run it
+    Stream,           // stream L (T:n) from record "R" [at x2] - a record played to a boundary Port
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }
@@ -62,6 +63,7 @@ public sealed class Step
     public string?  Variable      { get; init; }   // Set, Branch; StopAim: the AIM
     public string?  Value         { get; init; }   // Set
     public TimeSpan Duration      { get; init; }   // Wait
+    public double   Rate          { get; init; } = 1;   // Stream: x2 plays twice as fast
     public bool     ViaVad        { get; init; }   // Acquire
 
     // WHAT IS WANTED, NOT WHERE IT COMES FROM. A workflow names a Qualifier -
