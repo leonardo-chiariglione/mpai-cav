@@ -1,0 +1,5 @@
+{
+  "TST-RXC, three AIMs on a host: the same": "yes",
+  "TST-RXL, all local": "In#1:x In#1:y Out#1:X Out#1:Y Out#2:x Out#2:y Out#3:x Out#3:y Out#4:x Out#4:y",
+  "on a test clock of 2030: the stamps": "2030"
+}

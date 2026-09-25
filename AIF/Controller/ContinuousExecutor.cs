@@ -62,7 +62,21 @@ public sealed partial class ContinuousExecutor
         module = moduleInstance;
         Payloads = new PayloadStore(this.clock);
         Plan(defaultTransport);
+
+        // What reaches the boundary, whatever carried it, taken for the record.
+        foreach (var transport in transports.Values.OfType<ChannelTransport>())
+        {
+            var before = transport.Delivered;
+            transport.Delivered = (spec, reader, message) =>
+            {
+                before?.Invoke(spec, reader, message);
+                if (spec.Module == module && reader.IsBoundary) Record?.Take("Out", message, reader);
+            };
+        }
     }
+
+    // The record of the boundary, while there is one (M3219 3.4).
+    public BoundaryRecord? Record { get; set; }
 
     // ON AN AIM HOST (M3217 3.1): the AIMs of a Module instance placed there, run
     // on the Channels its Controller planned - those they write or read - with
@@ -306,11 +320,13 @@ public sealed partial class ContinuousExecutor
     {
         if (!writers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return AifError.NoSuchPort;
         var all = true;
+        PortMessage? written = null;
         foreach (var end in ends)
-            all &= await end.WriteAsync(new PortMessage
-            {
-                DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json)
-            }, timeoutMs);
+        {
+            written = new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json) };
+            all &= await end.WriteAsync(written, timeoutMs);
+        }
+        if (all && written is not null) Record?.Take("In", written);
         return all ? AifError.OK : AifError.Timeout;
     }
 

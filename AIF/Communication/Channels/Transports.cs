@@ -14,17 +14,20 @@ internal sealed class ChannelCore
     public IReadOnlyDictionary<PortEnd, ReaderQueue> Readers { get; }
     private readonly IReadOnlyList<PortEnd> elsewhere;
     private readonly RemoteDelivery? remote;
+    private readonly Action<ChannelSpec, PortEnd, PortMessage>? delivered;
     private readonly IClock clock;
     private long sequence;
 
     public long Written => Interlocked.Read(ref sequence);
 
     public ChannelCore(ChannelSpec spec, IClock clock, Action<ChannelSpec, PortMessage>? lost,
-                       Func<PortEnd, bool>? isHere = null, RemoteDelivery? remote = null)
+                       Func<PortEnd, bool>? isHere = null, RemoteDelivery? remote = null,
+                       Action<ChannelSpec, PortEnd, PortMessage>? delivered = null)
     {
         Spec = spec;
         this.clock = clock;
         this.remote = remote;
+        this.delivered = delivered;
         var here = isHere ?? (_ => true);
         Readers = spec.Readers.Where(r => here(r.Reader)).ToDictionary(r => r.Reader, r => new ReaderQueue(r.Behaviour, clock,
             lost is null ? null : message => lost(spec, message)));
@@ -42,8 +45,12 @@ internal sealed class ChannelCore
     public async ValueTask<bool> DeliverAsync(PortMessage message, int timeoutMs, CancellationToken cancel)
     {
         var all = true;
-        foreach (var reader in Readers.Values)
-            all &= await reader.PutAsync(message, timeoutMs, cancel);
+        foreach (var (end, reader) in Readers)
+        {
+            var put = await reader.PutAsync(message, timeoutMs, cancel);
+            if (put) delivered?.Invoke(Spec, end, message);
+            all &= put;
+        }
         foreach (var reader in elsewhere)
             all &= await remote!(Spec, reader, message, timeoutMs, cancel);
         return all;
@@ -55,9 +62,14 @@ internal sealed class ChannelCore
     public ValueTask<bool> ArrivedAsync(PortEnd reader, PortMessage message, int timeoutMs, CancellationToken cancel)
     {
         message.Written = clock.Monotonic;
-        return Readers.TryGetValue(reader, out var queue)
-            ? queue.PutAsync(message, timeoutMs, cancel)
-            : ValueTask.FromResult(false);
+        return Readers.TryGetValue(reader, out var queue) ? Put(queue) : ValueTask.FromResult(false);
+
+        async ValueTask<bool> Put(ReaderQueue queue)
+        {
+            var put = await queue.PutAsync(message, timeoutMs, cancel);
+            if (put) delivered?.Invoke(Spec, reader, message);
+            return put;
+        }
     }
 
     public void Close()
@@ -100,7 +112,8 @@ public abstract class ChannelTransport : IChannelTransport
 
     public abstract string Name { get; }
 
-    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote));
+    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote,
+                                                                                                   (s, r, m) => Delivered?.Invoke(s, r, m)));
 
     internal ChannelCore? Core(string channelId) => channels.TryGetValue(channelId, out var core) ? core : null;
 
@@ -111,6 +124,10 @@ public abstract class ChannelTransport : IChannelTransport
 
     // Called with every Message a reader end loses, dropped or discarded.
     public Action<ChannelSpec, PortMessage>? Lost { get; set; }
+
+    // Called with every Message put into a reader end on this machine: the place
+    // to see what reaches a Module's boundary, whatever carried it (M3219 3.4).
+    public Action<ChannelSpec, PortEnd, PortMessage>? Delivered { get; set; }
 
     public abstract IChannelWriter OpenWriter(ChannelSpec spec);
 

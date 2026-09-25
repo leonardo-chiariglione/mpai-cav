@@ -1,0 +1,10 @@
+{
+  "TST-MPS: its AIM reads the record's header": "OK; #2 'NotAuthorised'",
+  "TST-MPS: the User Agent reads it": "yes",
+  "TST-RCA recorded without being asked": "yes",
+  "TST-RCA, after its Stop: what is recorded": "In:x0 Out:x0 In:x1 Out:x1 In:x2 Out:x2",
+  "TST-RCA, its header": "always true",
+  "TST-RCA: Record_Stop": "NotAuthorised",
+  "TST-REX: Record_Stop": "In #1 2; Out #1 2",
+  "TST-REX: exchange by exchange": "In:hello Out:HELLO In:world Out:WORLD"
+}

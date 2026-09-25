@@ -110,6 +110,10 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     public readonly record struct ModuleStatus(AifError Error, IReadOnlyList<AimReport> Aims)
     {
         public bool Ok => Error == AifError.OK;
+
+        // While the Module is recorded: per Port, what is recorded and what is not
+        // (M3219 3.4).
+        public IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? Record { get; init; }
     }
 
     // What one OutputRead returned: an outcome, and the datum when it is OK.
@@ -249,7 +253,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             if (!_running.TryGetValue(moduleName, out var started)) return new ModuleStatus(AifError.NotStarted, Array.Empty<AimReport>());
             var err = _ua.MPAI_AIFU_MODULE_GetStatus(started.Id, out var aims);
-            return new ModuleStatus(err, aims);
+            return new ModuleStatus(err, aims) { Record = _ua.RecordStatus(started.Id)?.Totals };
         }
     }
 
@@ -286,6 +290,30 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // The Controller's transports and the one a Channel uses when its Output Port
     // declares none (M3215 3.1).
     public UserAgent Controller => _ua;
+
+    // THE RECORD OF THE BOUNDARY (M3219 3.4).
+    public AifError RecordStart(string moduleName, out string? recordId)
+    {
+        recordId = null;
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.MPAI_AIFU_Record_Start(started.Id, out recordId) : AifError.NotStarted;
+    }
+
+    public AifError RecordStop(string moduleName, out IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? totals)
+    {
+        totals = null;
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.MPAI_AIFU_Record_Stop(started.Id, out totals) : AifError.NotStarted;
+    }
+
+    public AIF.SharedStorage.IRuledStorage ModuleStorageAt(string moduleName, string location) =>
+        _ua.ModuleStorageAt(moduleName, location);
+
+    public string? RecordId(string moduleName)
+    {
+        lock (_tables)
+            return _running.TryGetValue(moduleName, out var started) ? _ua.RecordStatus(started.Id)?.Id : null;
+    }
 
     // The Private Storage of a running Module, as the User Agent may reach it:
     // under the rules of its writers or its central control (M3219 3.1).

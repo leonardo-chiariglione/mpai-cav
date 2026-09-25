@@ -258,7 +258,61 @@ public sealed class UserAgent
         // Its Private Storage, under the rules of its writers or its central
         // control (M3219 3.1).
         public AIF.SharedStorage.RuledStore? Storage { get; init; }
+
+        // Its record, while there is one (M3219 3.4).
+        public BoundaryRecord? Record { get; set; }
     }
+
+    // THE RECORD OF THE BOUNDARY (M3219 3.4). Its queue, and - to see a record that
+    // cannot keep up - a delay before each write.
+    public int RecordQueueDepth { get; set; } = 4096;
+    public TimeSpan RecordWriteDelay { get; set; } = TimeSpan.Zero;
+
+    private BoundaryRecord NewRecord(RunningModule module, bool always)
+    {
+        var header = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Module"] = module.Name, ["ModuleInstance"] = module.HostModule,
+            ["L3"] = module.Graph.Root.AIMName, ["TimeBase"] = Clock.GetType().Name, ["Always"] = always
+        };
+        var record = new BoundaryRecord(
+            module.Storage!.For(new AIF.SharedStorage.StorageHolder(module.Name, AIF.SharedStorage.RuledStore.Controller), module.HostModule, _session),
+            module.Channels.Payloads, Clock, header, always, RecordQueueDepth, RecordWriteDelay);
+        module.Record = record;
+        module.Channels.Record = record;
+        return record;
+    }
+
+    // Record_Start (M3219 3.4): the Controller records the Module's boundary into
+    // its Private Storage, until Record_Stop or the Module stops.
+    public AifError MPAI_AIFU_Record_Start(int moduleId, out string? recordId)
+    {
+        recordId = null;
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        if (module.StorageLocation is null) return AifError.NotInitialized;    // the Module's scope, first
+        if (module.Record is not null) return AifError.Failed;
+        recordId = NewRecord(module, false).Id;
+        return AifError.OK;
+    }
+
+    // Record_Stop: the record ends, and says what it recorded and what it could
+    // not, per Port. A record the Metadata declares always on is not stopped.
+    public AifError MPAI_AIFU_Record_Stop(int moduleId, out IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? totals)
+    {
+        totals = null;
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        if (module.Record is not { } record) return AifError.Failed;
+        if (record.Always) return AifError.NotAuthorised;
+        module.Channels.Record = null;
+        module.Record = null;
+        totals = record.StopAsync().GetAwaiter().GetResult();
+        return AifError.OK;
+    }
+
+    // The record of a running Module, as it stands: its identity, and per Port
+    // what is recorded and what is not.
+    public (string Id, IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)> Totals)? RecordStatus(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) && module.Record is { } record ? (record.Id, record.Totals) : null;
 
     // -- 3.1 General: initialise / destroy the Controller ---------------------
 
@@ -467,6 +521,10 @@ public sealed class UserAgent
                 }
             }
 
+            // A Module whose Metadata declares its record always on is recorded from
+            // its Start, whatever the User Agent does (M3219 3.4).
+            if (graph.Root.Record == "Always") NewRecord(started, true);
+
             if (graph.Root.IsContinuous) channels.Start();
 
             _running[moduleId] = started;
@@ -505,6 +563,12 @@ public sealed class UserAgent
     {
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Continuous?.StopAsync().GetAwaiter().GetResult();
+        if (module.Record is { } record)
+        {
+            module.Channels.Record = null;
+            module.Record = null;
+            record.StopAsync().GetAwaiter().GetResult();
+        }
         OnHosts(module, "Stop");
         OnHosts(module, "Release");
         hostModules.TryRemove(module.HostModule, out _);
@@ -544,6 +608,15 @@ public sealed class UserAgent
     public AIF.SharedStorage.IRuledStorage? ModuleStorage(int moduleId) =>
         _running.TryGetValue(moduleId, out var module)
             ? module.Storage?.For(AIF.SharedStorage.StorageHolder.UserAgent, module.HostModule, _session) : null;
+
+    // THE PRIVATE STORAGE OF A MODULE AT A LOCATION, running or not - a record
+    // is read after its Module stops, or from another instance (M3219 3.5): the
+    // User Agent reaches what it is a reader of. Rules of a central control no
+    // longer running do not reach it; its data read as their writers named.
+    public AIF.SharedStorage.IRuledStorage ModuleStorageAt(string moduleName, string location) =>
+        new AIF.SharedStorage.RuledStore(() => Path.Combine(location, "private", Uri.EscapeDataString(moduleName)),
+                                         () => Clock.Now, everyoneReads: false, centralControl: null)
+            .For(AIF.SharedStorage.StorageHolder.UserAgent, "", _session);
 
     // The Shared Storage at a running Module's location, as the User Agent may
     // reach it (M3219 3.3).

@@ -6,10 +6,10 @@
   "TST-MPS: rules given, then a write": "OK; #1 'k: OK'",
   "TST-MPS: the other AIM reads it": "OK; #2 'NotAuthorised'",
   "TST-RCA against the schema": "valid",
-  "TST-RCA: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
+  "TST-RCA: an input, then its echo": "OK 'a1'; files at the Module's location: 6",
   "TST-REC: an input, then its echo": "OK 'a1'; files at the Module's location: 0",
   "TST-SHA writes": "OK; #1 's: OK'",
   "TST-SHB reads it": "OK; #1 'NotAuthorised'",
   "stream in a workflow": "read as: StartModule",
-  "the Controller API's calls for a record": "none"
+  "the Controller API's calls for a record": "present"
 }
