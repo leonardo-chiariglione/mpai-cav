@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\Trust\AIF.Trust.csproj" />
     <ProjectReference Include="..\Communication\Channels\AIF.Channels.csproj" />
     <ProjectReference Include="..\Communication\SharedStorage\AIF.SharedStorage.csproj" />
   </ItemGroup>

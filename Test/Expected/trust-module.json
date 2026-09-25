@@ -1,0 +1,10 @@
+{
+  "TST-RXC 1TST-REV-V1.0-I01": "key made by the Controller; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid",
+  "TST-RXC 1TST-RPT-V1.0-I01": "key made on the host; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid; on the host: key and CII held here, credential issued by controller-1",
+  "TST-RXC 1TST-SLP-V1.0-I01": "key made on the host; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid; on the host: key and CII held here, credential issued by controller-1",
+  "TST-RXC 1TST-UPP-V1.0-I01": "key made on the host; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid; on the host: key and CII held here, credential issued by controller-1",
+  "TST-RXL 1TST-REV-V1.0-I01": "key made by the Controller; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid",
+  "TST-RXL 1TST-RPT-V1.0-I01": "key made by the Controller; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid",
+  "TST-RXL 1TST-SLP-V1.0-I01": "key made by the Controller; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid",
+  "TST-RXL 1TST-UPP-V1.0-I01": "key made by the Controller; CII Valid; credential Valid; lifecycle Created > Running > Suspended > Running > Terminated, the last Valid"
+}

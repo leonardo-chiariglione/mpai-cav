@@ -1,0 +1,19 @@
+{
+  "another AIM's key": "its own",
+  "the AIM's CII against its schema": "valid",
+  "the AIM's CII, checked": "Valid",
+  "the AIM's credential against its schema": "valid",
+  "the AIM's credential says": "AIMInstance TST#1/1TST-UPP-V1.0-I01, of TST-UPP-V1.0, issued by controller-1",
+  "the AIM's credential, by the Controller": "Valid",
+  "the AIM's credential, by the anchor alone": "UnknownIssuer",
+  "the AIM's credential, by the anchor through the Controller's credential": "Valid",
+  "the AIM's key, the one its CII names": "yes",
+  "the AIM's lifecycle credential against its schema": "valid",
+  "the AIM's lifecycle: Created": "Valid",
+  "the Controller's CII against its schema": "valid",
+  "the Controller's CII, checked": "Valid",
+  "the Controller's credential against its schema": "valid",
+  "the Controller's credential, by the anchor": "Valid",
+  "the Trust Anchor against its schema": "valid",
+  "the same, the Controller's credential altered": "the chain breaks"
+}

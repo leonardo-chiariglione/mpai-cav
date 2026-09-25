@@ -29,11 +29,14 @@ public sealed class AimHostClient : IAsyncDisposable
         return new AimHostClient(link, address);
     }
 
-    public async Task PlaceAsync(string module, string aim)
+    // The host's answer: with the CII of the AIM Instance it placed, whose key it
+    // made and holds (M3223 3.1).
+    public async Task<JsonObject> PlaceAsync(string module, string aim)
     {
         var reply = await Link.RequestAsync(new JsonObject { ["Kind"] = "Place", ["Module"] = module, ["Aim"] = aim });
         if (reply["Ok"]?.GetValue<bool>() != true)
             throw new InvalidOperationException($"The AIM host at {Address} did not place {aim}: {reply["Error"]}.");
+        return reply;
     }
 
     public Task<JsonObject> AskAsync(string kind, string module, JsonObject? more = null)

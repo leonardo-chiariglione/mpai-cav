@@ -99,6 +99,18 @@ public sealed class UserAgent
     // key the hosts were started with. The L3's Relation says an AIM runs
     // elsewhere; this says where.
     public Dictionary<string, string> AimHosts { get; } = new(StringComparer.Ordinal);
+
+    // TRUST (Phase 13, M3223 3.1): where the deployment has configured its Trust
+    // Anchor, every AIM Instance started is a PTF Process Instance - its key, its
+    // CII, the Instance Credential this Controller issues it, and a Process
+    // Lifecycle Credential that follows its state. Null: nothing verified, as before.
+    public AIF.Trust.TrustDomain? Trust { get; set; }
+
+    // The instance of a Module that runs, as its AIM Instances are named by it
+    // (<Module instance>/<AIM>), and the AIM hosts it uses.
+    public string? InstanceName(string module) => _instances.GetValueOrDefault(module);
+    public IReadOnlyList<AimHostClient> HostsOf(string module) =>
+        _running.Values.FirstOrDefault(m => m.Name == module)?.Hosts ?? (IReadOnlyList<AimHostClient>)[];
     public string AimHostKey { get; set; } = "";
 
     private readonly Dictionary<string, AimHostClient> hostClients = new(StringComparer.Ordinal);
@@ -437,11 +449,12 @@ public sealed class UserAgent
         AIF.SharedStorage.RuledStore.Started(hostModule);
         var placement = Placement(graph.Root, name);
         var hosts = new List<AimHostClient>();
+        var placedIdentities = new Dictionary<string, JsonObject?>(StringComparer.Ordinal);
         IAimProcessor? OnItsHost(DescriptorNode leaf)
         {
             if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
             var client = HostAt(address);
-            client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
+            placedIdentities[leaf.AIMName] = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult()["CII"] as JsonObject;
             if (!hosts.Contains(client)) hosts.Add(client);
             return new RemoteProcessor(leaf.AIMName, client, hostModule, host.Report);
         }
@@ -449,9 +462,31 @@ public sealed class UserAgent
         // A Module refused once some of its AIMs are placed releases them.
         try
         {
-            _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
+            var made = _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
                 () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost,
                 aim => new CurrentStorage(this, name, aim));
+
+            // THE IDENTITY OF EACH AIM INSTANCE (M3223 3.1): <Module instance>/<AIM>.
+            // An AIM here has its key made here; an AIM on a host has made its own,
+            // and is issued its credential only if its CII shows it holds that key.
+            if (Trust is { } trust)
+                foreach (var aim in made)
+                {
+                    var instanceId = $"{hostModule}/{aim}";
+                    if (placement.TryGetValue(aim, out var address))
+                    {
+                        var cii = placedIdentities.GetValueOrDefault(aim)
+                            ?? throw new InvalidOperationException($"{name}: the AIM host at {address} gave {aim} no identity.");
+                        var issued = trust.IssueHeld(instanceId, aim, cii);
+                        var taken = HostAt(address).AskAsync("Credential", hostModule, new JsonObject
+                        {
+                            ["Aim"] = aim, ["Credential"] = issued.Credential.DeepClone(), ["Lifecycle"] = issued.Lifecycle.DeepClone()
+                        }).GetAwaiter().GetResult();
+                        if (taken["Ok"]?.GetValue<bool>() != true)
+                            throw new InvalidOperationException($"{name}: the AIM host at {address} did not take the credential of {aim}: {taken["Error"]}.");
+                    }
+                    else trust.IssueLocal(instanceId, aim, aim);
+                }
 
             moduleId = Interlocked.Increment(ref _nextModuleId);
 
@@ -528,10 +563,12 @@ public sealed class UserAgent
             if (graph.Root.IsContinuous) channels.Start();
 
             _running[moduleId] = started;
+            Trust?.TransitionModule(hostModule, "Running");
             return AifError.OK;
         }
         catch
         {
+            Trust?.TransitionModule(hostModule, "Terminated");
             hostModules.TryRemove(hostModule, out _);
             foreach (var client in hosts)
                 try { client.AskAsync("Release", hostModule).Wait(TimeSpan.FromSeconds(5)); } catch { }
@@ -546,6 +583,7 @@ public sealed class UserAgent
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Host.PauseModule();
         OnHosts(module, "Pause");
+        Trust?.TransitionModule(module.HostModule, "Suspended");
         return AifError.OK;
     }
 
@@ -555,6 +593,7 @@ public sealed class UserAgent
         if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
         module.Host.ResumeModule();
         OnHosts(module, "Resume");
+        Trust?.TransitionModule(module.HostModule, "Running");
         return AifError.OK;
     }
 
@@ -574,6 +613,7 @@ public sealed class UserAgent
         hostModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
         AIF.SharedStorage.RuledStore.Ended(module.HostModule);
+        Trust?.TransitionModule(module.HostModule, "Terminated");
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
     }

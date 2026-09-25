@@ -30,6 +30,13 @@ public sealed class AimHostServer
         public RemoteLink Link => By.Link;
         public HashSet<string> Aims { get; } = new();
         public ContinuousExecutor? Executor { get; set; }
+
+        // THE IDENTITY OF EACH AIM PLACED HERE (M3223 3.1): its key, made here and
+        // never sent; its CII, sent to the Controller; the credentials the
+        // Controller issued it.
+        public Dictionary<string, System.Security.Cryptography.ECDsa> Keys { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, JsonObject> Identities { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, JsonObject> Credentials { get; } = new(StringComparer.Ordinal);
     }
 
     // ONE CONTROLLER SERVED: its link; the Channels of its Continuous Modules - an
@@ -106,13 +113,32 @@ public sealed class AimHostServer
                         By = served
                     };
                 });
-                if (!hosted.Aims.Add(aim)) return new JsonObject { ["Ok"] = true };   // placed already
+                if (!hosted.Aims.Add(aim))                                              // placed already
+                    return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities.GetValueOrDefault(aim)?.DeepClone() };
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
                 var processor = provider.Create(aim, settings.For(aim),
                     new FileSharedStorage(scope, $"{module}/{aim}", "remote"),
                     new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"));
                 hosted.Host.RegisterRuntime(processor);
+                var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+                hosted.Keys[aim] = key;
+                hosted.Identities[aim] = AIF.Trust.PtfIdentity.Make(key, $"{module}/{aim}", aim, DateTimeOffset.UtcNow);
                 Console.WriteLine($"[AIM host] {aim} placed for {module}");
+                return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities[aim].DeepClone() };
+            }
+
+            // The credentials the Controller issued an AIM placed here: kept, to be
+            // presented (M3223 3.4). One that is not for the CII of that AIM is refused.
+            case "Credential":
+            {
+                var aim = frame["Aim"]?.GetValue<string>() ?? "";
+                if (!modules.TryGetValue(module, out var hosted) || !hosted.Identities.TryGetValue(aim, out var cii))
+                    return Refused($"{aim} is not placed here for {module}");
+                if (frame["Credential"] is not JsonObject credential ||
+                    !string.Equals((string?)credential["CII"]?["Hash"], AIF.Trust.PtfIdentity.Hash(cii), StringComparison.OrdinalIgnoreCase))
+                    return Refused($"the credential is not for the CII of {aim}");
+                hosted.Credentials[aim] = (JsonObject)credential.DeepClone();
+                if (frame["Lifecycle"] is JsonObject lifecycle) hosted.Credentials[aim + "#Lifecycle"] = (JsonObject)lifecycle.DeepClone();
                 return new JsonObject { ["Ok"] = true };
             }
 
@@ -205,7 +231,10 @@ public sealed class AimHostServer
                     ["Aims"] = new JsonArray(hosted.Host.Status().Select(a => (JsonNode)new JsonObject
                     {
                         ["Aim"] = a.Aim, ["Status"] = a.Status.ToString(), ["Reason"] = a.Reason,
-                        ["Reports"] = new JsonArray(a.Reports.Select(r => (JsonNode)JsonValue.Create(r)!).ToArray())
+                        ["Reports"] = new JsonArray(a.Reports.Select(r => (JsonNode)JsonValue.Create(r)!).ToArray()),
+                        // What this host holds of the AIM's identity (M3223 3.1): the key never leaves.
+                        ["Identity"] = hosted.Identities.ContainsKey(a.Aim) ? "key and CII held here" : "none",
+                        ["Credential"] = hosted.Credentials.TryGetValue(a.Aim, out var c) ? $"issued by {c["Issuer"]?["Name"]}" : "none"
                     }).ToArray())
                 };
             }
