@@ -148,9 +148,14 @@ public sealed class WorkflowInterpreter
             var json = result.ByType(want.DataType, want.PortNumber);
             if (string.IsNullOrWhiteSpace(json))
             {
+                // NOTHING GIVEN THIS TIME holds nothing: what an earlier turn gave
+                // is not given again.
+                data.Remove(want.Label);
+                absent.Add(want.Label);
                 say($"[C] give {want}: nothing");
                 continue;
             }
+            absent.Remove(want.Label);
             data[want.Label] = (want.DataType, json);
             say($"[C] give {want}");
         }
@@ -288,6 +293,11 @@ public sealed class WorkflowInterpreter
                 var together = new Dictionary<string, string>();
                 foreach (var label in step.Labels)
                     if (data.TryGetValue(label, out var d)) together[d.DataType] = d.Json;
+                if (together.Count == 0)
+                {
+                    say("present " + string.Join(", ", step.Labels) + ": nothing to present");
+                    break;
+                }
                 await devices.PresentAsync(together);
                 say("present " + string.Join(", ", step.Labels));
                 break;

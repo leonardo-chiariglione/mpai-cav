@@ -70,9 +70,22 @@ public sealed class EdpAimProcessor : IAimProcessor
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
         string? userText = ReadText(message, _textPort);
-        if (string.IsNullOrWhiteSpace(userText))
+        if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Text Object on input port"));
+
+        // NO WORDS - a sound, a silence - IS NOTHING SAID: no reply, and the
+        // conversation's memory goes on as it came in.
+        if (string.IsNullOrWhiteSpace(userText))
+            return System.Threading.Tasks.Task.FromResult(new Message
+            {
+                MessageId = message.MessageId,
+                MessageType = message.MessageType,
+                Ports = new Dictionary<string, string>
+                {
+                    [_outSummaryPort] = MpaiJson.ToJson(Summary.Of(Read<Summary>(message, _summaryPort)?.Text() ?? ""))
+                }
+            });
 
         var psIn        = Read<EntityPersonalStatus>(message, _psPort);   // MMC-EPS in (may be absent)
         bool affect     = psIn is not null;                               // EPS in -> affect path; else plain

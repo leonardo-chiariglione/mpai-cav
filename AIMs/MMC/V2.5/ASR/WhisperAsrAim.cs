@@ -80,9 +80,11 @@ public sealed class WhisperAsrAim : IAsrAim
             await process.WaitForExitAsync();
             var output = stdoutTask.Result;
 
-            var recognisedText = ExtractTranscription(output);
+            var recognisedText = ExtractTranscription(output, out var sounds);
 
-            System.Console.WriteLine($"[MMC-ASR-V2.5] heard: {recognisedText}");
+            System.Console.WriteLine(recognisedText.Length == 0 && sounds.Length > 0
+                ? $"[MMC-ASR-V2.5] heard only a sound: {sounds} - ignored"
+                : $"[MMC-ASR-V2.5] heard: {recognisedText}");
 
             return BasicTextObject.FromText(recognisedText, BuildTextQualifier(speech));
         }
@@ -189,21 +191,31 @@ public sealed class WhisperAsrAim : IAsrAim
         };
     }
 
-    private static string ExtractTranscription(string output)
+    // WHAT WAS SAID, NOT WHAT WAS HEARD. Whisper learned from subtitles, and
+    // writes a sound as a caption - "(spoon clanks)", "[BLANK_AUDIO]", "[Music]".
+    // A caption is not speech: it is taken out, and a turn that was only a sound
+    // has no words. sounds: the captions taken out, for the log.
+    private static readonly Regex Caption = new(@"\([^()]*\)|\[[^\[\]]*\]", RegexOptions.Compiled);
+
+    private static string ExtractTranscription(string output, out string sounds)
     {
         var sb = new StringBuilder();
+        var heard = new System.Collections.Generic.List<string>();
 
         foreach (var line in output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
         {
             if (!line.StartsWith('[')) continue;
 
-            var cleaned = Regex.Replace(line, @"^\[[^\]]+\]\s*", "").Trim();
+            var cleaned = Regex.Replace(line, @"^\[[^\]]+\]\s*", "").Trim();      // the timestamps
+            foreach (Match caption in Caption.Matches(cleaned)) heard.Add(caption.Value);
+            cleaned = Regex.Replace(Caption.Replace(cleaned, " "), @"\s+", " ").Trim();
 
-            if (cleaned is "" or "[silence]" or "[BLANK_AUDIO]") continue;
+            if (cleaned.Length == 0) continue;
 
             sb.AppendLine(cleaned);
         }
 
+        sounds = string.Join(" ", heard);
         return sb.ToString().Trim();
     }
 }
