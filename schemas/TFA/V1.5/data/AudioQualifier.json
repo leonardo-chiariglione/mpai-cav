@@ -97,7 +97,7 @@
         "Manufacturer":           { "type": "string" },
         "Model":                  { "type": "string" },
 
-        "MicrophoneArrayGeometry":{ "$ref": "https://schemas.mpai.community/CAE1/V2.4/data/MicrophoneArrayGeometry.json" },
+        "MicrophoneArrayGeometry":{ "$ref": "https://schemas.mpai.community/CAE1/V2.5/data/MicrophoneArrayGeometry.json" },
         "DeviceGeometry":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/DeviceSceneGeometry.json" },
         "MicrophDirectivFormat":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/MicrophoneDirectivityFormats.json" },
 
