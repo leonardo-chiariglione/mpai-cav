@@ -20,12 +20,12 @@ public class RemoteTests
 
     public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase5");
 
-    private static readonly (string Module, bool Continuous)[] Modules =
+    public static readonly (string Module, bool Continuous)[] Modules =
         [("TST-RXC", false), ("TST-RXL", false), ("TST-RLP", true), ("TST-RLL", true), ("TST-RCP", false), ("TST-RPY", true)];
 
     // Where each Module's placed AIMs are said to run: the AIM Instances, or the
     // composite that contains them.
-    private static readonly Dictionary<string, string[]> Hosted = new()
+    public static readonly Dictionary<string, string[]> Hosted = new()
     {
         ["TST-RXC"] = ["1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01"],
         ["TST-RLP"] = ["1TST-ACC-V1.0-I01"],
@@ -49,7 +49,7 @@ public class RemoteTests
         Expected.Match("remote-placed.json", result);
     }
 
-    private static string Run(ControllerApi api, string module, bool continuous, RemoteAims aims)
+    public static string Run(ControllerApi api, string module, bool continuous, RemoteAims aims)
     {
         var name = $"1{module}-V1.0-I01";
         try { api.StartFlow(name); }

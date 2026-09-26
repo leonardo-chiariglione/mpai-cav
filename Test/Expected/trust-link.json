@@ -1,0 +1,22 @@
+{
+  "a Controller claiming the anchor of another": "refused: The host at <host>: it did not admit this Controller: forged: its signature is Invalid under the key of controller-1. The host: refused controller-1: forged: its signature is Invalid under the key of controller-1",
+  "a Controller of the Trust Protocol, to a host with the key": "refused: The host at <host>: it did not answer with a TrustResponse. The host: -",
+  "a Controller the host does not trust": "refused: The host at <host>: it did not admit this Controller: foreign: controller-2 is not an anchor this end trusts. The host: refused controller-2: foreign: controller-2 is not an anchor this end trusts",
+  "a Controller whose anchor has expired": "refused: The host at <host>: it did not admit this Controller: expired: the anchor controller-1 is not valid now. The host: refused controller-1: expired: the anchor controller-1 is not valid now",
+  "a Controller with the key, to a host of the Trust Protocol": "refused: The host at <host>: it did not admit this Controller. The host: refused a Controller: it did not open with a TrustRequest",
+  "a host claiming the anchor of another": "refused: The host at <host>: forged: its signature is Invalid under the key of aimhost-1. The host: admitted controller-1",
+  "a host the Controller does not trust": "refused: The host at <host>: foreign: aimhost-2 is not an anchor this end trusts. The host: admitted controller-1",
+  "a host whose anchor has expired": "refused: The host at <host>: expired: the anchor aimhost-1 is not valid now. The host: admitted controller-1",
+  "a refusal against PTF-MSG": "valid",
+  "a refusal, checked": "it did not admit this Controller: forged: its signature is Invalid under the key of controller-1",
+  "a request altered after it was signed": "refused: forged: its signature is Invalid under the key of controller-1",
+  "a request relayed to another host": "refused: not for this link: it names another certificate",
+  "a request sent six minutes ago": "refused: stale: sent 6 minutes from its receipt",
+  "a request, answered on its link": "admitted controller-1",
+  "a response relayed to another Controller": "not for this link: it names another certificate",
+  "a response, checked on its link": "trusted",
+  "an anchor against PTF-TRA": "valid",
+  "mutual trust": "admitted; the host: admitted controller-1; a request answered: over the link",
+  "the request against PTF-MSG": "valid",
+  "the response against PTF-MSG": "valid"
+}

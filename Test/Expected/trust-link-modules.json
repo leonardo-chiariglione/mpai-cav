@@ -1,0 +1,12 @@
+{
+  "TST-RCP under trust": "as before",
+  "TST-RLL under trust": "as before",
+  "TST-RLP under trust": "as before",
+  "TST-RPY under trust": "as before",
+  "TST-RXC under trust": "as before",
+  "TST-RXL under trust": "as before",
+  "a host claiming an anchor this Controller trusts, without its key": "NOT_TRUSTED: the AIM host at <host> not trusted - forged: its signature is Invalid under the key of aimhost-1.",
+  "a host that does not trust this Controller": "NOT_TRUSTED: the AIM host at <host> not trusted - it did not admit this Controller: foreign: controller-1 is not an anchor this end trusts.",
+  "a host this Controller does not trust": "NOT_TRUSTED: the AIM host at <host> not trusted - foreign: aimhost-1 is not an anchor this end trusts.",
+  "a host with the key, to a Controller under trust": "NOT_TRUSTED: the AIM host at <host> not trusted - it did not answer with a TrustResponse."
+}

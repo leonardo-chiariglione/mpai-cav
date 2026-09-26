@@ -20,12 +20,15 @@ public sealed class AimHostClient : IAsyncDisposable
 
     // address: host:port, or tcp+tls://host:port, as the Controller's
     // configuration names it (M3217 3.4).
-    public static async Task<AimHostClient> ConnectAsync(string address, string key, CancellationToken cancel = default)
+    public static Task<AimHostClient> ConnectAsync(string address, string key, CancellationToken cancel = default) =>
+        ConnectAsync(address, new KeyAdmission(key), cancel);
+
+    public static async Task<AimHostClient> ConnectAsync(string address, ILinkAdmission admission, CancellationToken cancel = default)
     {
         var at = address.StartsWith("tcp+tls://", StringComparison.OrdinalIgnoreCase) ? address["tcp+tls://".Length..] : address;
         at = at.TrimEnd('/');
         var colon = at.LastIndexOf(':');
-        var link = await RemoteLink.ConnectAsync(at[..colon], int.Parse(at[(colon + 1)..]), key, cancel);
+        var link = await RemoteLink.ConnectAsync(at[..colon], int.Parse(at[(colon + 1)..]), admission, cancel);
         return new AimHostClient(link, address);
     }
 

@@ -191,18 +191,19 @@ public class TrustIdentityTests
     public void Module()
     {
         var result = new Dictionary<string, string>();
-        using var hostProcess = new HostProcess();
+        using var hostProcess = TrustedParties.Host();
         foreach (var (module, placed) in new[] { ("TST-RXL", Array.Empty<string>()), ("TST-RXC", new[] { "1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01" }) })
         {
-            var trust = new TrustDomain("controller-1");
+            var trust = TrustedParties.Controller();
             var amds = TrustEvidenceTests.ApprovedCopy();              // what runs under trust is approved (Step 3)
             using var api = new ControllerApi(amds, Path.Combine(amds, "no-settings.json"), new RemoteAims());
             api.Controller.Trust = trust;
-            api.Controller.AimHostKey = HostProcess.Key;
+            api.Controller.HostAnchors.Add(hostProcess.Anchor!);
             foreach (var aim in placed) api.Controller.AimHosts[aim] = hostProcess.Address;
 
             var name = $"1{module}-V1.0-I01";
-            api.StartFlow(name);
+            var started = api.StartFlow(name);
+            Assert.True(started == AIF.Controller.AifError.OK, $"{module}: {started} {api.Controller.LastRefusal}{Environment.NewLine}The host:{Environment.NewLine}{hostProcess.Output}");
             var instance = api.Controller.InstanceName(name)!;
             api.Pause(name);
             api.Resume(name);

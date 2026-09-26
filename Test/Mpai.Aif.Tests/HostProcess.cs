@@ -19,7 +19,12 @@ public sealed class HostProcess : IDisposable
     public TimeSpan ProcessorTime { get { process.Refresh(); return process.TotalProcessorTime; } }
     public string Address => $"localhost:{Port}";
 
-    public HostProcess(string? amds = null)
+    // The host's Trust Anchor object, where it admits by the Trust Protocol.
+    public System.Text.Json.Nodes.JsonObject? Anchor { get; init; }
+
+    // anchor, trust: the host's anchor and the anchors of the Controllers it serves
+    // (M3223 3.4); without them, it admits by the key.
+    public HostProcess(string? amds = null, string? anchor = null, string? trust = null)
     {
         var bin = AppContext.BaseDirectory;
         var info = new ProcessStartInfo("dotnet")
@@ -31,11 +36,12 @@ public sealed class HostProcess : IDisposable
         };
         foreach (var arg in new[]
         {
-            Path.Combine(bin, "AIF.AimHost.dll"), "--port", "0", "--key", Key,
+            Path.Combine(bin, "AIF.AimHost.dll"), "--port", "0",
             "--amds", amds ?? RemoteTests.Amds,
             "--storage", Path.Combine(Path.GetTempPath(), "mpai-phase5-host-" + Guid.NewGuid().ToString("N")),
             "--provider", Path.Combine(bin, "Mpai.Aif.Tests.dll") + ":Mpai.Aif.Tests.RemoteAims"
         }) info.ArgumentList.Add(arg);
+        foreach (var arg in anchor is null ? ["--key", Key] : new[] { "--anchor", anchor, "--trust", trust! }) info.ArgumentList.Add(arg);
 
         process = Process.Start(info)!;
         var clock = Stopwatch.StartNew();
@@ -47,12 +53,20 @@ public sealed class HostProcess : IDisposable
             if (m.Success)
             {
                 Port = int.Parse(m.Groups[1].Value);
-                _ = Task.Run(() => { while (process.StandardOutput.ReadLine() is not null) { } });
+                _ = Task.Run(() =>
+                {
+                    while (process.StandardOutput.ReadLine() is { } more)
+                        lock (output) { output.Add(more); if (output.Count > 200) output.RemoveAt(0); }
+                });
                 return;
             }
         }
         throw new InvalidOperationException("The AIM host did not start: " + process.StandardError.ReadToEnd());
     }
+
+    // What the host has written, its last lines: for a test that fails to say why.
+    private readonly List<string> output = new();
+    public string Output { get { lock (output) return string.Join(Environment.NewLine, output); } }
 
     public void Kill()
     {

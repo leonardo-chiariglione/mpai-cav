@@ -116,14 +116,32 @@ public sealed class UserAgent
         _running.Values.FirstOrDefault(m => m.Name == module)?.Hosts ?? (IReadOnlyList<AimHostClient>)[];
     public string AimHostKey { get; set; } = "";
 
+    // THE ANCHORS OF THE AIM HOSTS this Controller uses (M3223 3.4): where Trust is
+    // configured, a link to a host opens with the Trust Protocol, and a host that is
+    // not one of these, or does not prove it, is not used. The key is not.
+    public List<JsonObject> HostAnchors { get; } = new();
+
     private readonly Dictionary<string, AimHostClient> hostClients = new(StringComparer.Ordinal);
+    private TrustedLink? _trustedLink;
+
+    // How long the last link took to open, the Trust Protocol included.
+    public TimeSpan LastLinkOpened { get; private set; }
 
     private AimHostClient HostAt(string address)
     {
         lock (hostClients)
         {
             if (hostClients.TryGetValue(address, out var client) && !client.Link.IsClosed) return client;
-            client = AimHostClient.ConnectAsync(address, AimHostKey).GetAwaiter().GetResult();
+            AIF.Channels.ILinkAdmission admission = Trust is { } trust
+                ? _trustedLink ??= new TrustedLink(trust.LinkWith(HostAnchors))
+                : new AIF.Channels.KeyAdmission(AimHostKey);
+            var opening = System.Diagnostics.Stopwatch.StartNew();
+            try { client = AimHostClient.ConnectAsync(address, admission).GetAwaiter().GetResult(); }
+            catch (UnauthorizedAccessException refused) when (Trust is not null)
+            {
+                throw new TrustRefusedException($"the AIM host at {address} not trusted - {refused.Message[(refused.Message.IndexOf(": ", StringComparison.Ordinal) + 2)..].TrimEnd('.')}.");
+            }
+            LastLinkOpened = opening.Elapsed;
 
             // What a host sends (M3217 3.3): Messages its AIMs write to readers
             // here; an AIM of its stopping another - the Module is held here; an AIM

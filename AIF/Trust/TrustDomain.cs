@@ -56,6 +56,34 @@ public sealed class TrustAnchorKey
         catch (Exception e) when (e is FormatException or CryptographicException) { return null; }
     }
 
+    // The validity of a PTF Trust Anchor object: the instants its Simple Times state.
+    public static (DateTimeOffset NotBefore, DateTimeOffset NotAfter)? ValidityOf(JsonObject anchor)
+    {
+        static DateTimeOffset? At(JsonNode? time) =>
+            time?["SimpleTimeData"]?[0]?["StartTime"] is JsonValue ms && ms.TryGetValue<long>(out var v) ? DateTimeOffset.FromUnixTimeMilliseconds(v) : null;
+        return At(anchor["Validity"]?["NotBefore"]) is { } from && At(anchor["Validity"]?["NotAfter"]) is { } to ? (from, to) : null;
+    }
+
+    // AN ANCHOR'S IDENTITY KEPT BETWEEN RUNS - a Controller's, a host's: its Trust
+    // Anchor object, which the other parties are given, and its private key. Until a
+    // root of trust holds the key (M3223 3.5, Step 6), a file holds it.
+    public static void Save(string path, string anchorId, ECDsa key, DateTimeOffset notBefore, DateTimeOffset notAfter) =>
+        File.WriteAllText(path, new JsonObject
+        {
+            ["Anchor"] = new TrustAnchorKey(anchorId, key, notBefore, notAfter).Object(),
+            ["PrivateKey"] = Convert.ToHexString(key.ExportPkcs8PrivateKey())
+        }.ToJsonString());
+
+    public static (TrustAnchorKey Anchor, ECDsa Key) Load(string path)
+    {
+        var saved = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        var anchor = saved["Anchor"]!.AsObject();
+        var key = ECDsa.Create();
+        key.ImportPkcs8PrivateKey(Convert.FromHexString((string)saved["PrivateKey"]!), out _);
+        var (from, to) = ValidityOf(anchor) ?? throw new InvalidDataException($"{path}: the anchor states no validity.");
+        return (new TrustAnchorKey((string)anchor["AnchorID"]!, key, from, to), key);
+    }
+
     // A Simple Time (OSD-STM-V1.5) of one instant: a segment whose start and end are
     // the instant, absolute (FlagsByte bit 0), in milliseconds (bits 1-2 = 01).
     private static JsonObject TimeObject(string id, DateTimeOffset t)
@@ -130,6 +158,20 @@ public sealed class TrustDomain
         anchorKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         Anchor = new TrustAnchorKey(controllerId, anchorKey, t, t + AnchorLifetime);
     }
+
+    // A Controller whose anchor is kept between runs: the hosts it uses are given
+    // its Trust Anchor object.
+    public TrustDomain(TrustAnchorKey anchor, ECDsa key, Func<DateTimeOffset>? now = null)
+    {
+        ControllerId = anchor.AnchorId;
+        this.now = now ?? (() => DateTimeOffset.UtcNow);
+        anchorKey = key;
+        Anchor = anchor;
+    }
+
+    // THE TRUST PROTOCOL of this Controller with the hosts whose anchors it trusts
+    // (M3223 3.4).
+    public TrustProtocol LinkWith(IEnumerable<JsonObject> hostAnchors) => new(Anchor, anchorKey, hostAnchors, now);
 
     // The public key a KeyID names, among those this Controller trusts: its own.
     public ECDsa? KeyFor(string keyId) => keyId == Anchor.AnchorId ? Anchor.PublicKey : null;

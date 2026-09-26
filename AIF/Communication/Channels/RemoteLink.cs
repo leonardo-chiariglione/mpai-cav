@@ -9,14 +9,46 @@ using System.Text.Json.Nodes;
 
 namespace AIF.Channels;
 
+// HOW A LINK IS ADMITTED: what the Controller's end sends first, and how it
+// judges the answer; what the host's end answers, and whether it admits. Each end
+// sees the TLS certificate of the other.
+public interface ILinkAdmission
+{
+    // This end's TLS certificate; null: the host makes one for the run, the
+    // Controller presents none.
+    X509Certificate2? Certificate { get; }
+
+    // The Controller's end: its first frame, and null where the host's answer admits
+    // it and is trusted - otherwise why not.
+    JsonObject Opening(X509Certificate? host);
+    string? Admitted(JsonObject answer, X509Certificate? host);
+
+    // The host's end: its answer to the first frame, and whether it admits.
+    (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate? controller);
+}
+
+// ADMITTED BY A KEY SHARED IN CONFIGURATION (M3217 3.3): where no Trust Anchor is
+// configured. The host presents a certificate made for the run, which gives the
+// link its confidentiality; the Controller is admitted by the key the host was
+// started with, sent first. Identity is the Trust Protocol's (M3223 3.4).
+public sealed class KeyAdmission(string key) : ILinkAdmission
+{
+    public X509Certificate2? Certificate => null;
+    public JsonObject Opening(X509Certificate? host) => new() { ["Kind"] = "Hello", ["Key"] = key };
+    public string? Admitted(JsonObject answer, X509Certificate? host) =>
+        answer["Ok"]?.GetValue<bool>() == true ? null : "it did not admit this Controller";
+    public (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate? controller)
+    {
+        var ok = opening["Kind"]?.GetValue<string>() == "Hello" && opening["Key"]?.GetValue<string>() == key;
+        return (new JsonObject { ["Ok"] = ok }, ok);
+    }
+}
+
 // ONE LINK BETWEEN A CONTROLLER AND AN AIM HOST (M3217 3.2, 3.3): TLS over TCP,
 // frames of length-prefixed UTF-8 JSON. A frame is a request - it carries an id
 // and waits for the frame that replies to it - or a notice, which waits for
-// nothing. The Channels between the two and the control path share the link.
-//
-// Until Zero Trust (Phase 13) gives identities: the host presents a certificate
-// made for the run, which gives the link its confidentiality; the Controller is
-// admitted by the key the host was started with, sent first.
+// nothing. The Channels between the two and the control path share the link. It
+// opens with the first frame of its admission, and is used only once admitted.
 public sealed class RemoteLink : IAsyncDisposable
 {
     private readonly Stream stream;
@@ -37,36 +69,53 @@ public sealed class RemoteLink : IAsyncDisposable
 
     // ---- opening -------------------------------------------------------------
 
-    public static async Task<RemoteLink> ConnectAsync(string host, int port, string key, CancellationToken cancel = default)
+    public static Task<RemoteLink> ConnectAsync(string host, int port, string key, CancellationToken cancel = default) =>
+        ConnectAsync(host, port, new KeyAdmission(key), cancel);
+
+    public static async Task<RemoteLink> ConnectAsync(string host, int port, ILinkAdmission admission, CancellationToken cancel = default)
     {
         var tcp = new TcpClient { NoDelay = true };
         await tcp.ConnectAsync(host, port, cancel);
-        var tls = new SslStream(tcp.GetStream(), false, (_, _, _, _) => true);   // confidentiality; identity is Phase 13
-        await tls.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = host }, cancel);
+        // The host's certificate is judged by the admission, not by a chain.
+        var tls = new SslStream(tcp.GetStream(), false, (_, _, _, _) => true);
+        await tls.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+        {
+            TargetHost = host,
+            ClientCertificates = admission.Certificate is { } own ? new X509CertificateCollection { own } : null
+        }, cancel);
         var link = new RemoteLink(tls);
         link.Start();
-        JsonObject hello;
-        try { hello = await link.RequestAsync(new JsonObject { ["Kind"] = "Hello", ["Key"] = key }, cancel); }
-        catch (IOException) { hello = new JsonObject { ["Ok"] = false }; }         // closed on us: not admitted
-        if (hello["Ok"]?.GetValue<bool>() != true)
+        JsonObject answer;
+        try { answer = await link.RequestAsync(admission.Opening(tls.RemoteCertificate), cancel); }
+        catch (IOException) { answer = new JsonObject { ["Ok"] = false }; }       // closed on us: not admitted
+        if (admission.Admitted(answer, tls.RemoteCertificate) is { } refused)
         {
             await link.DisposeAsync();
-            throw new UnauthorizedAccessException($"The host at {host}:{port} did not admit this Controller.");
+            throw new UnauthorizedAccessException($"The host at {host}:{port}: {refused}.");
         }
         return link;
     }
 
-    // A host listens; each Controller that connects with the right key is a link.
+    // A host listens; each Controller its admission admits is a link.
     public sealed class Listener : IAsyncDisposable
     {
         private readonly TcpListener tcp;
-        private readonly X509Certificate2 certificate = MadeForTheRun();
+        private readonly X509Certificate2 certificate;
         private readonly CancellationTokenSource stop = new();
         public int Port => ((IPEndPoint)tcp.LocalEndpoint).Port;
 
-        public Listener(int port, string key, Action<RemoteLink> admitted)
+        // A connection that failed before it was a link - its TLS, most often - and why.
+        public event Action<string>? Failed;
+
+        public Listener(int port, string key, Action<RemoteLink> admitted) : this(port, new KeyAdmission(key), admitted) { }
+
+        public Listener(int port, ILinkAdmission admission, Action<RemoteLink> admitted)
         {
-            tcp = new TcpListener(IPAddress.Any, port);
+            certificate = admission.Certificate ?? MadeForTheRun();
+            // Both IPv6 and IPv4: a Controller that reaches "localhost" by ::1 first
+            // is not kept waiting for its fallback to 127.0.0.1.
+            tcp = new TcpListener(IPAddress.IPv6Any, port);
+            tcp.Server.DualMode = true;
             tcp.Start();
             _ = Task.Run(async () =>
             {
@@ -81,14 +130,21 @@ public sealed class RemoteLink : IAsyncDisposable
                         {
                             client.NoDelay = true;
                             var tls = new SslStream(client.GetStream(), false);
-                            await tls.AuthenticateAsServerAsync(certificate);
+                            await tls.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
+                            {
+                                ServerCertificate = certificate,
+                                // Where the admission has a certificate, the Controller
+                                // presents one too; the admission judges it.
+                                ClientCertificateRequired = admission.Certificate is not null,
+                                RemoteCertificateValidationCallback = (_, _, _, _) => true
+                            });
                             var link = new RemoteLink(tls);
                             var admittedOnce = new TaskCompletionSource<bool>();
                             link.OnRequest = frame =>
                             {
-                                var ok = frame["Kind"]?.GetValue<string>() == "Hello" && frame["Key"]?.GetValue<string>() == key;
-                                admittedOnce.TrySetResult(ok);
-                                return Task.FromResult<JsonObject?>(new JsonObject { ["Ok"] = ok });
+                                var (answer, admits) = admission.Answer(frame, tls.RemoteCertificate);
+                                admittedOnce.TrySetResult(admits);
+                                return Task.FromResult<JsonObject?>(answer);
                             };
                             link.Start();
                             if (await admittedOnce.Task) admitted(link);
@@ -98,7 +154,11 @@ public sealed class RemoteLink : IAsyncDisposable
                                 await link.DisposeAsync();
                             }
                         }
-                        catch { client.Dispose(); }
+                        catch (Exception failure)
+                        {
+                            Failed?.Invoke(failure.Message + (failure.InnerException is { } inner ? " - " + inner.Message : ""));
+                            client.Dispose();
+                        }
                     });
                 }
             });
@@ -118,6 +178,16 @@ public sealed class RemoteLink : IAsyncDisposable
             using var made = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(1));
             return X509CertificateLoader.LoadPkcs12(made.Export(X509ContentType.Pfx), null);
         }
+    }
+
+    // A certificate of this end for the run, to be named by a signed message: its
+    // key made for it, held only in this process.
+    public static X509Certificate2 CertificateForTheRun(string name)
+    {
+        using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var request = new CertificateRequest($"CN={name}", ecdsa, HashAlgorithmName.SHA256);
+        using var made = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(1));
+        return X509CertificateLoader.LoadPkcs12(made.Export(X509ContentType.Pfx), null);
     }
 
     // ---- frames ----------------------------------------------------------------

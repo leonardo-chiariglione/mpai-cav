@@ -115,7 +115,7 @@ public class TrustEvidenceTests
     public void OnAHost()
     {
         var result = new Dictionary<string, string>();
-        using var hostProcess = new HostProcess();
+        using var hostProcess = TrustedParties.Host();
         string[] placed = ["1TST-UPP-V1.0-I01", "1TST-SLP-V1.0-I01", "1TST-RPT-V1.0-I01"];
 
         result["approved: TST-RXC with three AIMs on a host"] = Start(ApprovedCopy(), "TST-RXC", out var trust, out var instance, host: hostProcess, placed: placed);
@@ -136,13 +136,14 @@ public class TrustEvidenceTests
                                 IAimProvider? provider = null, string? settings = null, bool trusted = true,
                                 HostProcess? host = null, string[]? placed = null)
     {
-        trust = trusted ? new TrustDomain("controller-1") : null;
+        // A Controller that uses a host is one the host trusts (M3223 3.4).
+        trust = !trusted ? null : host is null ? new TrustDomain("controller-1") : TrustedParties.Controller();
         instance = null;
         using var api = new ControllerApi(amds, settings ?? Path.Combine(amds, "no-settings.json"), provider ?? new RemoteAims());
         api.Controller.Trust = trust;
         if (host is not null)
         {
-            api.Controller.AimHostKey = HostProcess.Key;
+            api.Controller.HostAnchors.Add(host.Anchor!);
             foreach (var aim in placed ?? []) api.Controller.AimHosts[aim] = host.Address;
         }
         var name = $"1{module}-V1.0-I01";
