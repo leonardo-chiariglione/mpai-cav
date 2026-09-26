@@ -4,7 +4,7 @@
   "CAV-ESS-V2.0": "wired",
   "CAV-LIS-V2.0": "wired",
   "CAV-RAS-V2.0": "wired",
-  "CAV-TPD-V1.1": "CAV-TOA-V1.1 has no Input of CAV-INT-V1.1 (TrajectoryResponseMT); CAV-TOA-V1.1's required FullEnvironmentDescriptorsIn is not fed; CAV-TOA-V1.1's required Trajectory is not fed",
+  "CAV-TPD-V1.1": "wired",
   "CAV-ULS-V2.0": "wired",
   "CAV-VIS-V2.0": "wired"
 }
