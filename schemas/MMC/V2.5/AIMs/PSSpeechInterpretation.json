@@ -11,7 +11,7 @@
   "Description":  "This AIM extracts the Speec Personal Status from the Speech Descriptors.",
 
   "ExternalPorts":  [
-    { "Name": "SpeechDescriptors",    "Direction": "Input",  "DataType": "MMC-SPD-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "SpeechDescriptors",    "Direction": "Input",  "DataType": "MMC-SDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 

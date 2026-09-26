@@ -12,7 +12,7 @@
 
   "ExternalPorts":  [
     { "Name": "SpeechObject",         "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "SpeechDescriptors",    "Direction": "Input",  "DataType": "MMC-SPD-V2.5",                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "SpeechDescriptors",    "Direction": "Input",  "DataType": "MMC-SDO-V2.5",                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5",                                       "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 

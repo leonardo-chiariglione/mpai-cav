@@ -17,6 +17,7 @@
     { "Name": "RoadState"                    , "Direction": "Input",   "DataType": "CAV-RDS-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "CAVState"                     , "Direction": "Input",   "DataType": "CAV-CST-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSData"                      , "Direction": "Input",   "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "EgoRemoteAMSMessage"          , "Direction": "Input",   "DataType": "CAV-ERA-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "FullEnvironmentDescriptorsOut", "Direction": "Output",  "DataType": ["CAV-FED-V1.1", "CAV-FED-V2.0"],  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
