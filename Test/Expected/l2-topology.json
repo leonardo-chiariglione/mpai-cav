@@ -13,7 +13,7 @@
   "MAS-APP-V1.0": "loads",
   "MMC-ACR-V2.5": "loads",
   "MMC-AMQ-V2.5": "loads",
-  "MMC-HCI-V2.5": "fails: MMC-HCI-V2.5: Topology end 'PAF-RSR-V1.6.OSD-OPV-V1.5' - PAF-RSR-V1.6 declares no Input Port of OSD-OPV-V1.5.",
+  "MMC-HCI-V2.5": "loads",
   "MMC-MAC-V2.5": "loads",
   "MMC-MAD-V2.5": "loads",
   "MMC-MAT-V2.5": "loads",
