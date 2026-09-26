@@ -13,7 +13,7 @@ namespace Mpai.Cae.Aii;
 //
 // Receives a (generic, non-speech) Basic Audio Object and produces its Audio
 // Instance Identifier (OSD-IID): what the sound IS, against the AudioSet taxonomy.
-// It is the audio analogue of OSD-VII - where VII identifies a located visual
+// It is the audio analogue of CVE-VII - where VII identifies a located visual
 // object, AII identifies a located sound object. The audio arrives already in the
 // format the model needs (mono, 16 kHz, 16-bit PCM), produced by Audio Qualifier
 // Conversion (CAE-QCV); AII reads the samples directly - no decode here.

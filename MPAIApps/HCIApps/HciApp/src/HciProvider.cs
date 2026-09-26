@@ -92,7 +92,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             "CAE-ASI-V2.5" => new CaeAsiAimProcessor(aimName, SoundAsi(settings), AimPortReader.Load(_store, aimName)),
             "CAE-AII-V2.5" => new CaeAiiAimProcessor(aimName, SoundAii(settings), AimPortReader.Load(_store, aimName)),
             "CVE-VSI-V1.0" => new CveVsiAimProcessor(aimName, Scrfd(settings), AimPortReader.Load(_store, aimName)),
-            "OSD-VII-V1.5" => new ViiAimProcessor(aimName, Yolox(settings), AimPortReader.Load(_store, aimName)),
+            "CVE-VII-V1.0" => new ViiAimProcessor(aimName, Yolox(settings), AimPortReader.Load(_store, aimName)),
 
             // ---- recognisers + reconciliation ------------------------------
             "PAF-FIR-V1.6" => new FirAimProcessor(aimName, Scrfd(settings), ArcFace(settings), _gallery, AimPortReader.Load(_store, aimName)),

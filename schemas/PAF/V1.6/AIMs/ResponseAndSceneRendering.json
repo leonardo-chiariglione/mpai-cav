@@ -17,7 +17,9 @@
                      {"Name": "PersonalStatus",         "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "MachineSpeech",          "Direction": "Output", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "MachineBodyDescriptors", "Direction": "Output", "DataType": "PAF-BDO-V1.6",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "MachineBodyDescriptors", "Direction": "Output", "DataType": "PAF-BDO-V1.6",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "FullEnvironmentDescriptors",  "Direction": "Input",  "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "PointOfView",                 "Direction": "Input",  "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PSD-V1.6", "Relation": "" } },
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": "" } },

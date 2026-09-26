@@ -9,7 +9,7 @@ using Mpai.Osd.VisualScene;   // YoloxObjectDetector, ObjectDetection
 
 namespace Mpai.Osd.Vii;
 
-// OSD-VII-V1.5 - Visual Instance Identification, as an AIF IAimProcessor.
+// CVE-VII-V1.0 - Visual Instance Identification, as an AIF IAimProcessor.
 //
 // Receives a Basic Visual Object (the Target Visual Object to be identified) and
 // produces its Visual Instance Identifier (OSD-IID): the identity of the object

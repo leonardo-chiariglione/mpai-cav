@@ -1,5 +1,5 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-VII-V1.5"},
-  "Header":            "OSD-VII-V1.5",
+{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CVE-VII-V1.0"},
+  "Header":            "CVE-VII-V1.0",
 
   "APIProfile":       "Basic",
   "Description":      "This AIM receives a Target Visual Object and produces its Visual Instance Identifier: the identity of the Visual Object against a taxonomy.",

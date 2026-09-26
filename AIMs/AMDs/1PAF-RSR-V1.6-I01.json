@@ -13,7 +13,9 @@
                        {"Name": "FaceText",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true, "PortNumber": 2, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus",         "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "IsOptional": true,                              "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "MachineSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                  "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "FullEnvironmentDescriptors",  "Direction": "Input",  "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PointOfView",                 "Direction": "Input",  "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PSD-V1.6-I01", "AIMName": "1PAF-PSD-V1.6-I01", "Relation": "Internal" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I01", "AIMName": "1MMC-TTS-V2.5-I01", "Relation": "Internal" } },
