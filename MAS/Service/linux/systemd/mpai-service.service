@@ -1,0 +1,15 @@
+# The MAS Service: MAS-App and its Apps, their AIMs and models. On loopback only: the
+# browser client's host, on this machine, is what the network reaches.
+[Unit]
+Description=MPAI-MAS - the MAS Service
+After=network.target mpai-ollama.service
+Wants=mpai-ollama.service
+
+[Service]
+User=mpai
+WorkingDirectory=/opt/mpai
+ExecStart=/opt/mpai/service/MasService /opt/mpai/mas-server.json
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
