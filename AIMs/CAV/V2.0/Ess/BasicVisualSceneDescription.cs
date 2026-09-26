@@ -21,8 +21,8 @@ namespace Mpai.Cav.Ess;
 //  - an Alert when an object in the ego's lane is nearer than AlertDistance, or will
 //    be reached within AlertTime at the closing speed the prior Basic Environment
 //    Descriptors give for the object there.
-// The latest frame is described: the Port holds one, and a frame arriving while
-// another is described replaces the one waiting (Depth 1, DropOldest, in its L3).
+// Every frame is described: a frame arriving while another is described waits
+// (Block, in its L3) - the CAV is to perform, not to keep up (M3233).
 public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDisposable
 {
     public const string Frame = "OSD-BVO-V1.5", Attitude = "OSD-OSA-V1.5", Prior = "CAV-BED-V2.0",

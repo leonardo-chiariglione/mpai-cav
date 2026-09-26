@@ -4,7 +4,7 @@
   "Description":      "Spatial Attitude Generation: the ego Spatial Attitude on a frame anchored to the first GNSS fix - east, north and up in metres - from the Spatial Attitude of the Motion Actuation Subsystem, given at its rate, corrected by GNSS through a complementary filter whose weight is a setting.",
   "InternalTypes":    [],
   "ExternalPorts":    [{"Name": "GNSSObject", "Direction": "Input", "DataType": "CAV-GNO-V1.1", "IsOptional": true, "Depth": 4, "MaxAge": 2000, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "Depth": 16, "MaxAge": 200, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "Depth": 16, "MaxAge": 2000, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "EgoSpatialAttitude", "Direction": "Output", "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],

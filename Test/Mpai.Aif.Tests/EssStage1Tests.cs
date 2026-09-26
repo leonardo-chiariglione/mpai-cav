@@ -304,6 +304,10 @@ public class EssStage1Tests
         Expected.Match("ess-stage1-bed.json", result);
     }
 
+    // (M3233: the CAV is to perform, not to run in real time. The camera Blocks, so
+    // the playback waits for the describer, and the workflow waits long enough for
+    // every frame to be given and described; the time is reported, not judged.)
+    //
     // Step 6: ESS Stage 1 end to end - the Module 1CAV-ESS-V2.0-I01 under the
     // Controller, continuously, a drive of 20 s played from a record into its
     // boundary by a workflow, its boundary recorded. From the Controller's stamps:
@@ -411,7 +415,7 @@ public class EssStage1Tests
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
                 stream Gnss (CAV-GNO-V1.1) from record "drive"
-                wait {{(int)drive.Duration.TotalSeconds + 2}}s
+                wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
             """), CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(15));
         var status = api.Status(ess);

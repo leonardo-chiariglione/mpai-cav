@@ -1,0 +1,8 @@
+{
+  "steps, each frame described": "200, all described",
+  "the ESS's AIMs at the end": "1CAV-BED-V2.0-I01 Alive; 1CAV-SAG-V2.0-I01 Alive; 1OSD-BVS-V1.5-I02 Alive",
+  "the Route of the scenario": "SW00W10 SW10W20 SW20W21, 43.7 s at the limits",
+  "the same seed, the same world": "yes",
+  "the vehicle ahead, 12 to 50 m, in the descriptors": "90% of frames or more",
+  "the vehicle in the left lane, 12 to 50 m, in the descriptors": "90% of frames or more"
+}
