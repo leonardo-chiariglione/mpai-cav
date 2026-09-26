@@ -1,0 +1,45 @@
+{ "$id":                            "https://schemas.mpai.community/OSD/V1.5/data/Object.json",
+  "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "title":                          "Object V1.5",
+  "description":                    "Hierarchical object.",
+  "type":                           "object",
+  "required":                       [ "Header", "ObjectID", "ObjectSpaceTime" ],
+  "additionalProperties":           false,
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "OSD-OBJ-V1.5" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironmentID":               { "type": "string" },
+    "ObjectID":                     { "type": "string" },
+    "ObjectTime":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "BasicObjectCount":             { "type": "integer" },
+    "BasicObjects":                 { "type": "array", "items": { "type": "object", "required": [ "BasicObjectIDOrBasicObject" ],
+                                      "additionalProperties": false, "properties": {
+      "BasicObjectSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "BasicObjectIDOrBasicObject": { "$ref": "#/$defs/BasicObjectIDOrBasicObject" } } } },
+
+    "SubObjectCount":               { "type": "integer" },
+    "SubObjects":                   { "type": "array", "items": { "type": "object", "required": [ "SubObjectIDOrSubObject" ],
+                                      "additionalProperties": false, "properties": {
+      "SubObjectSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "SubObjectIDOrSubObject":     { "$ref": "#/$defs/SubObjectIDOrSubObject" } } } },
+
+    "BasicObjectOrObject":          { "type": "array", "items": { "$ref": "#/$defs/BasicObjectOrObject" } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                          {
+
+    "BasicObjectIDOrBasicObject":   { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicObject.json" },
+                                      { "type": "string" } ] } },
+
+    "SubObjectIDOrSubObject":       { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Object.json" },
+                                      { "type": "string" } ] } },
+
+    "BasicObjectOrObject":          { "type": "array", "items": { "oneOf": [
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicObject.json" },
+                                      { "$ref": "#/$defs/BasicObjectOrObject" } ] } } } }

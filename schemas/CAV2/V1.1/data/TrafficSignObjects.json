@@ -1,0 +1,34 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/CAV2/V1.1/data/TrafficSignObjects.json",
+  "title":                      "Traffic Sign Object V1.1",
+  "description":                "Perceived traffic sign objects.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "TrafficSignObjectID", "TrafficSignObject" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "CAV-TSO-V1.1", "description": "Traffic Sign Object Header – Standard CAV-TSO-Vx.y." },
+    "MInstanceID":              { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Traffic Sign Object instance." },
+    "UEnvironmentID":           { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Traffic Sign Object instance." },
+    "TrafficSignObjectID":      { "type": "string", "description": "Identifier of Traffic Sign Objects." },
+    "TrafficSignObjectTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time this Traffic Sign Object instance was produced." },
+
+    "TrafficSignObject":        { "type": "array", "description": "Traffic Sign Object dataset.",
+                                  "items": { "type": "object", "additionalProperties": false, "required": [ "Location", "TrafficObjects" ], "properties": {
+      "Location":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json", "description": "Location containing Traffic Sign Objects." },
+      "TrafficObjects":         { "type": "array", "description": "Set of Traffic Objects.",
+                                  "items": { "type": "object", "additionalProperties": false, "required": [ "TrafficObject" ], "properties": {
+        "TrafficObject":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json", "description": "Individual Traffic Object (Perceptible Entities)." },
+        "RecognisedRoadSign":   { "type": "object", "additionalProperties": false, "required": [ "Sign", "Confidence" ],
+                                  "description": "Recognised road sign linked to the Road Signs and Signals schema.", "properties": {
+          "Sign":               { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/RoadSignsAndSignals.json#" },
+          "Confidence":         { "type": "number", "minimum": 0, "maximum": 1 } } },
+        "TextObjects":          { "type": "array", "description": "Text Objects related to the Traffic Object.",
+                                  "items": { "type": "object", "additionalProperties": false, "required": [ "TextObject", "SpatialAttitude" ], "properties": {
+          "TextObject":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextObject.json", "description": "A specific Text Object." },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Text Object's Spatial Attitude." } } } },
+        "PriorityInformation":  { "type": "string", "enum": [ "Police", "Ambulance", "Hazard" ], "description": "One of Police, Ambulance, Hazard." } } } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                  "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Traffic Sign Object instance in a trusted data exchange context." },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Traffic Sign Object instance (plain text, max 2048 characters)." } } }

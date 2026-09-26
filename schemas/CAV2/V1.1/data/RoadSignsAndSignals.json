@@ -1,0 +1,53 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/CAV2/V1.1/data/RoadSignsAndSignals.json",
+  "title":                        "Road Signs and Signals V1.1",
+  "description":                  "Road signs, signals, and markings per the Vienna Convention on Road Signs and Signals.",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "RSSID", "DangerWarningSigns", "PrioritySigns", "ProhibitorySigns", "MandatorySigns", 
+                                    "SpecialRegulationSigns", "InformatorySigns", "TrafficLightSignals", "RoadMarkings" ],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "CAV-RSS-V1.1", "description": "Road Signs and Signals Header – Standard CAV-RSS-Vx.y" },
+    "MInstanceID":                { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Road Signs and Signals instance." },
+    "UEnvironmentID":             { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Road Signs and Signals instance." },
+    "RSSID":                      { "type": "string", "description": "Unique identifier of this Road Signs and Signals instance." },
+    "RSSTime":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Road Signs and Signals instance was produced." },
+
+    "RSSSpaceTime":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Road Signs and Signals instance applies." },
+
+    "DangerWarningSigns":         { "type": "object", "additionalProperties": false, "required": [ "IndicateDanger" ],
+                                    "description": "Signs warning road users of existing or potential dangers ahead.", "properties": {
+      "IndicateDanger":           { "type": "boolean", "const": true, "description": "Indicates the presence of a Danger Warning Sign." } } },
+
+    "PrioritySigns":              { "type": "object", "additionalProperties": false, "required": [ "IndicatePriority" ],
+                                    "description": "Signs indicating priority rules at intersections or road sections.", "properties": {
+      "IndicatePriority":         { "type": "boolean", "const": true, "description": "Indicates the presence of a Priority Sign." } } },
+
+    "ProhibitorySigns":           { "type": "object", "additionalProperties": false, "required": [ "IndicateProhibition" ],
+                                    "description": "Signs indicating prohibitions or restrictions applicable to road users.", "properties": {
+      "IndicateProhibition":      { "type": "boolean", "const": true, "description": "Indicates the presence of a Prohibitory Sign." } } },
+
+    "MandatorySigns":             { "type": "object", "additionalProperties": false, "required": [ "IndicateObligation" ],
+                                    "description": "Signs indicating mandatory obligations for road users.", "properties": {
+      "IndicateObligation":       { "type": "boolean", "const": true, "description": "Indicates the presence of a Mandatory Sign." } } },
+
+    "SpecialRegulationSigns":     { "type": "object", "additionalProperties": false, "required": [ "IndicateSpecialRegulation" ],
+                                    "description": "Signs indicating special traffic regulations applicable in specific areas or lanes.", "properties": {
+      "IndicateSpecialRegulation":{ "type": "boolean", "const": true, "description": "Indicates the presence of a Special Regulation Sign." } } },
+
+    "InformatorySigns":           { "type": "object", "additionalProperties": false, "required": [ "ProvideInformation" ],
+                                    "description": "Signs providing information, services, or guidance to road users.", "properties": {
+      "ProvideInformation":       { "type": "boolean", "const": true, "description": "Indicates the presence of an Informatory Sign." } } },
+
+    "TrafficLightSignals":        { "type": "object", "additionalProperties": false, "required": [ "SignalTrafficMovement" ],
+                                    "description": "Light signals regulating traffic movement by colour, position, or flashing mode.", "properties": {
+      "SignalTrafficMovement":    { "type": "boolean", "const": true, "description": "Indicates the presence of a Traffic Light Signal." } } },
+
+    "RoadMarkings":               { "type": "object", "additionalProperties": false, "required": [ "ConveyRoadInformation" ],
+                                    "description": "Markings applied on the road surface to convey regulations, warnings, or guidance.", "properties": {
+      "ConveyRoadInformation":    { "type": "boolean", "const": true, "description": "Indicates the presence of Road Markings." } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                    "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Road Signs and Signals instance in a trusted data exchange context." },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Road Signs and Signals instance (plain text, max 2048 characters)." } } }

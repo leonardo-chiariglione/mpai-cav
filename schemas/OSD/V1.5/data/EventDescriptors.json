@@ -1,0 +1,25 @@
+{ "$id":                          "https://schemas.mpai.community/OSD/V1.5/data/EventDescriptors.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "title":                        "Event Descriptors V1.5",
+  "description":                  "Event descriptor set.",
+  "type":                         "object",
+  "required":                     [ "Header", "EventDescriptorsID", "EventDescriptorsSpaceTime" ],
+  "additionalProperties":         false,
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "OSD-EVT-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "EventDescriptorsID":         { "type": "string" },
+    "EventDescriptorsTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "EventDescriptorsSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "EventDescriptors":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SceneOrSceneID":           { "description": "Either an embedded SceneDescriptors object or a SceneDescriptors ID.",
+                                    "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SceneDescriptors.json" },
+                                  { "type": "string" } ] } } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

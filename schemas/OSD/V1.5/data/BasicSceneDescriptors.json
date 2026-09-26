@@ -1,0 +1,32 @@
+{ "$id":                              "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneDescriptors.json",
+  "$schema":                          "https://json-schema.org/draft/2020-12/schema",
+  "title":                            "Basic Scene Descriptors V1.5",
+  "type":                             "object",
+  "required":                         [ "Header", "BasicSceneDescriptorsID", "BasicSceneDescriptorsSpaceTime" ],
+  "additionalProperties":             false,
+  "properties":                       {
+
+    "Header":                         { "type": "string", "const": "OSD-BSD-V1.5" },
+    "MInstanceID":                    { "type": "string" },
+    "UEnvironmentID":                 { "type": "string" },
+    "BasicSceneDescriptorsID":        { "type": "string" },
+    "BasicSceneDescriptorsTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "BasicSceneDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "GravityValue":                   { "type": "number" },
+
+    "ObjectCount":                    { "type": "integer" },
+    "BasicSceneDescriptors":          { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "ObjectSpaceTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "ObjectMediaType":              { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json" },
+      "ObjectIDOrObject":             { "$ref": "#/$defs/ObjectIDOrObject" } } } },
+
+    "DataXMData":                     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                  { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                            {
+    "ObjectIDOrObject":               { "description": "Either an embedded Object or an ObjectID (by reference).",
+                                      "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Object.json" },
+                                      { "type": "string" } ] } } } }

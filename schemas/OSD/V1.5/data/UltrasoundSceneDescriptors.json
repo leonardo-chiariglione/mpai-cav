@@ -1,0 +1,45 @@
+{ "$schema":                   "https://json-schema.org/draft/2020-12/schema",
+  "$id":                       "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundSceneDescriptors.json",
+  "title":                     "Ultrasound Scene Descriptors V1.5",
+  "description":               "A Data Type including the Ultrasound Objects of a scene, their Sub-Scenes, and their arrangement in the Scene.",
+  "type":                      "object",
+  "additionalProperties":      false,
+  "required":                  [ "Header", "USDescriptorsID", "USDescriptorsSpaceTime" ],
+  "properties":                {
+
+    "Header":                  { "type": "string", "const": "OSD-USD-V1.5", "description": "Ultrasound Scene Descriptors Header â€“ Standard OSD-USD-Vx.y." },
+    "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment." },
+    "USDescriptorsID":         { "type": "string", "description": "ID of this Ultrasound Scene Descriptors instance." },
+    "USDescriptorsSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Ultrasound Scene Descriptors instance." },
+
+    "ObjectCount":             { "type": "integer", "description": "Number of Ultrasound Objects in Ultrasound Scene." },
+    "Objects":                 { "type": "array", "description": "Set of Data related to Ultrasound Objects in the Ultrasound Scene.",
+                                 "items": { "type": "object", "additionalProperties": false, "properties": {
+      "ObjectSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Ultrasound Object in the Ultrasound Scene." },
+      "ObjectIDOrObject":      { "$ref": "#/$defs/ObjectIDOrObject", "description": "Ultrasound Object in the Scene." } } } },
+
+    "SubUSCount":              { "type": "integer", "description": "Number of Ultrasound Sub-Scenes in Ultrasound Scene." },
+    "SubUSs":                  { "type": "array", "description": "Set of Data related to Ultrasound Sub-Scenes in the Scene.",
+                                 "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubUSSpaceTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space and Time of Ultrasound Sub-Scene in the Scene." },
+      "SubUSceneIDOrSubUScene":{ "$ref": "#/$defs/SubUSceneIDOrSubUScene", "description": "An Ultrasound Sub-Scene in the Scene." } } } },
+
+    "BUSceneOrUScene":         { "$ref": "#/$defs/BUSceneOrUScene" },
+
+    "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Ultrasound Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":           { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Ultrasound Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                     {
+
+    "ObjectIDOrObject":        { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundObject.json" },
+                                 { "type": "string" } ] } },
+
+    "SubUSceneIDOrSubUScene":  { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundSceneDescriptors.json" },
+                                 { "type": "string" } ] } },
+
+    "BUSceneOrUScene":         { "type": "array", "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundSceneDescriptors.json" },
+                                 { "$ref": "#/$defs/BUSceneOrUScene" } ] } } } }

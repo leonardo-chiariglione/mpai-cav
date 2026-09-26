@@ -1,0 +1,28 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/CAV2/V1.1/data/CAVIdentifier.json",
+  "title":                "CAV Identifier V1.1",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "CAVIdentifier", "CAVIdentifierData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "CAV-CID-V1.1", "description": "CAV Identifier Header – Standard CAV-CID-Vx.y" },
+    "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this CAV Identifier." },
+    "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this CAV Identifier." },
+    "ValueID":            { "type": "string", "description": "Identifier of the value set associated with this CAV Identifier instance." },
+    "CAVIdentifierTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this CAV Identifier was produced." },
+
+    "CAVIdentifierSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this CAV Identifier applies." },
+
+    "CAVIdentifier":      { "type": "string", "description": "Unique identifier of this CAV instance." },
+
+    "CAVIdentifierData":  { "type": "object", "additionalProperties": false, "description": "Set of data composing the CAV Identifier.", "properties": {
+      "CountryID":        { "type": "string", "description": "Two-character country of registration identifier." },
+      "RegistrationID":   { "type": "string", "description": "Vehicle registration identifier assigned by the country." },
+      "ManufacturerID":   { "type": "string", "description": "Identifier of the CAV manufacturer." },
+      "ModelID":          { "type": "string", "description": "Identifier of the CAV model." },
+      "MInstanceID":      { "type": "string", "description": "Identifier of the CAV's M-Instance." } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                            "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this CAV Identifier in a trusted data exchange context." },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the CAV Identifier (plain text, max 2048 characters)." } } }

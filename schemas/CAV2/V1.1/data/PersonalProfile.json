@@ -1,0 +1,42 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/CAV2/V1.1/data/PersonalProfile.json",
+  "title":                      "Personal Profile V1.1",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "PersonalProfileID", "PersonalProfileData" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "CAV-PPF-V1.1", "description": "Personal Profile Header – Standard CAV-PPF-Vx.y" },
+    "humanID":                  { "type": "string", "description": "Identifier of the human to whom this Personal Profile refers." },
+    "UEnvironmentID":           { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Personal Profile." },
+    "PersonalProfileID":        { "type": "string", "description": "Unique identifier of this Personal Profile instance." },
+    "PersonalProfileTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Personal Profile was produced." },
+
+    "PersonalProfileSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Personal Profile applies." },
+
+    "PersonalProfileData":      { "type": "object", "additionalProperties": false, "description": "Data identifying and describing the human passenger.", "properties": {
+
+      "FirstName":              { "type": "string", "description": "The human's given name." },
+      "LastName":               { "type": "string", "description": "The human's family name." },
+      "Age":                    { "type": "string", "description": "The human's age." },
+      "Gender":                 { "type": "string", "description": "The human's gender." },
+      "Nationality":            { "type": "string", "description": "The human's country of nationality." },
+      "Email":                  { "type": "string", "description": "The human's email address." },
+      "PreferredPronoun":       { "type": "string", "description": "The human's preferred pronouns." },
+
+      "SpecialNeeds":           { "type": "object", "additionalProperties": false, "description": "Special needs of the human passenger.", "properties": {
+
+        "Visual":               { "type": "string", "enum": [ "Blind", "LimitedVision", "ColourBlindness" ], "description": "Visual impairment: one of Blind, LimitedVision, ColourBlindness." },
+        "Oral":                 { "type": "string", "enum": [ "UnableToSpeak", "BadPronunciation" ], "description": "Oral impairment: one of UnableToSpeak, BadPronunciation." },
+        "Hearing":              { "type": "string", "enum": [ "TotallyDeaf", "PartiallyDeaf" ], "description": "Hearing impairment: one of TotallyDeaf, PartiallyDeaf." },
+        "Mobility":             { "type": "object", "additionalProperties": false, "description": "Mobility impairments.", "properties": {
+          "Arms":               { "type": "boolean", "description": "Indicates inability to use arms." },
+          "Legs":               { "type": "string", "enum": [ "UnableToWalk", "UnableToBendLegs" ], "description": "Leg mobility limitation: one of UnableToWalk, UnableToBendLegs." } } },
+        "Cognitive":            { "type": "object", "additionalProperties": false, "description": "Cognitive impairments.", "properties": {
+          "AutisticSpectrum":   { "type": "boolean", "description": "Indicates autism spectrum condition." },
+          "Dislexia":           { "type": "boolean", "description": "Indicates dyslexia." },
+          "LowUnderstanding":   { "type": "boolean", "description": "Indicates reduced comprehension." } } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                  "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Personal Profile in a trusted data exchange context." },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Personal Profile (plain text, max 2048 characters)." } } } }

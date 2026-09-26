@@ -1,0 +1,52 @@
+{ "$schema":                   "https://json-schema.org/draft/2020-12/schema",
+  "$id":                       "https://schemas.mpai.community/OSD/V1.5/data/OfflineMapSceneDescriptors.json",
+  "title":                     "Offline Map Scene Descriptors V1.5",
+  "type":                      "object",
+  "additionalProperties":      false,
+  "required":                  [ "Header", "OMSDescriptorsID", "OMSDescriptorsSpaceTime" ],
+  "properties":                {
+
+    "Header":                  { "type": "string", "const": "OSD-OSD-V1.5", "description": "Offline Map Scene Descriptors Header â€“ Standard OSD-OSD-Vx.y" },
+    "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Offline Map Scene is or is intended to be located." },
+    "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Offline Map Scene is or is intended to be located." },
+    "OMSDescriptorsID":        { "type": "string", "description": "Unique identifier of this Offline Map Scene Descriptors instance." },
+    "OMSDescriptorsTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Offline Map Scene Descriptors instance was produced." },
+
+    "OMSDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Offline Map Scene Descriptors instance is located." },
+
+    "OfflineMapObjectCount":   { "type": "integer", "minimum": 0, "description": "Number of Offline Map Objects in the Offline Map Scene." },
+
+    "OfflineMapObjects":       { "type": "array", "minItems": 0, "description": "Set of Offline Map Objects in the Offline Map Scene.",
+                                 "items": { "type": "object", "additionalProperties": false, "properties": {
+      "OfflineMapObjectSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                 "description": "Space/Time where/when this Offline Map Object is located within the Offline Map Scene." },
+      "ObjectIDOrObject":      { "$ref": "#/$defs/ObjectIDOrObject", "description": "Either the ID of an Offline Map Object or the Offline Map Object itself." } } } },
+
+    "SubOMSCount":             { "type": "integer", "minimum": 0, "description": "Number of Offline Map Sub-Scenes in the Offline Map Scene." },
+
+    "SubOMScenes":             { "type": "array", "minItems": 0, "description": "Set of Offline Map Sub-Scenes in the Offline Map Scene.",
+                                 "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubOMSSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                 "description": "Space/Time where/when this Offline Map Sub-Scene is located within the Offline Map Scene." },
+      "SubOSceneIDOrSubOScene":{ "$ref": "#/$defs/SubOSceneIDOrSubOScene", "description": "Either the ID of an Offline Map Sub-Scene or the Offline Map Sub-Scene itself." } } } },
+
+    "BOSceneOrOScene":         { "type": "array", "minItems": 0, "description": "A mixed array of Basic Offline Map Scene Descriptors and Offline Map Scene Descriptors.",
+                                 "items": { "$ref": "#/$defs/BOSceneOrOScene" } },
+
+    "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                 "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Offline Map Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":           { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Offline Map Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                     {
+
+    "ObjectIDOrObject":        { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/OfflineMapObject.json" },
+                                 { "type": "string" } ] } },
+
+    "SubOSceneIDOrSubOScene":  { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/OfflineMapSceneDescriptors.json" },
+                                 { "type": "string" } ] } },
+
+    "BOSceneOrOScene":         { "type": "array", "items": { "oneOf": [
+                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapSceneDescriptors.json" },
+                                 { "$ref": "#/$defs/BOSceneOrOScene" } ] } } } }

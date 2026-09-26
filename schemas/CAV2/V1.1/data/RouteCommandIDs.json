@@ -1,0 +1,5 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/CAV2/V1.1/data/RouteCommandIDs.json",
+  "title":   "Route Command ID",
+  "type":    "string",
+  "enum":     [ "Execute", "Suspend", "Resume", "Change", "Stop" ] }

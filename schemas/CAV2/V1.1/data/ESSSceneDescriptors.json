@@ -1,0 +1,26 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/CAV2/V1.1/data/ESSSceneDescriptors.json",
+  "title":                        "ESS Scene Descriptors V1.1",
+  "type":                         "object",
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "CAV-ESD-V1.1" },
+
+    "ESSSceneDescriptorsID":      { "type": "string" },
+
+    "ESSSceneDescriptors":        { "type": "array", "items": { "anyOf": [
+                                  { "type": "object", "properties": {
+      "AudioSceneDescriptors":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioSceneDescriptors.json" } } },
+                                  { "type": "object", "properties": {
+      "LiDARSceneDescriptors":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LiDARSceneDescriptors.json" } } },
+                                  { "type": "object", "properties": {
+      "RADARSceneDescriptors":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RADARSceneDescriptors.json" } } },
+                                  { "type": "object", "properties": {
+      "OfflineMapSceneDescriptors":{"$ref": "https://schemas.mpai.community/OSD/V1.5/data/OfflineMapSceneDescriptors.json" } } },
+                                  { "type": "object", "properties": {
+      "UltrasoundSceneDescriptors":{"$ref": "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundSceneDescriptors.json" } } },
+                                  { "type": "object", "properties": {
+      "VisualSceneDescriptors":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualSceneDescriptors.json" } } } ] } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

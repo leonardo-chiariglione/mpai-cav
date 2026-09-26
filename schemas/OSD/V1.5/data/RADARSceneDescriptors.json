@@ -1,0 +1,47 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/OSD/V1.5/data/RADARSceneDescriptors.json",
+  "title":                              "RADAR Scene Descriptors V1.5",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "RADARSceneDescriptorsID", "RADARSceneDescriptorsSpaceTime" ],
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "OSD-RSD-V1.5", "description": "RADAR Scene Descriptors Header â€“ Standard OSD-RSD-Vx.y" },
+    "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this RADAR Scene is or is intended to be located." },
+    "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this RADAR Scene is or is intended to be located." },
+    "RADARSceneDescriptorsID":          { "type": "string", "description": "Unique identifier of this RADAR Scene Descriptors instance." },
+    "RADARSceneDescriptorsTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this RADAR Scene Descriptors instance was produced." },
+
+    "RADARSceneDescriptorsSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this RADAR Scene Descriptors instance is located." },
+
+    "RADARObjectCount":                 { "type": "integer", "minimum": 0, "description": "Number of RADAR Objects in the RADAR Scene." },
+
+    "RADARObjects":                     { "type": "array", "minItems": 0, "description": "Set of RADAR Objects in the RADAR Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "RADARObjectSpaceTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this RADAR Object is located within the RADAR Scene." },
+      "ObjectIDOrObject":               { "$ref": "#/$defs/ObjectIDOrObject", "description": "Either the ID of a RADAR Object or the RADAR Object itself." } } } },
+
+    "SubRADARSceneCount":               { "type": "integer", "minimum": 0, "description": "Number of RADAR Sub-Scenes in the RADAR Scene." },
+
+    "SubRADARScenes":                   { "type": "array", "minItems": 0, "description": "Set of RADAR Sub-Scenes in the RADAR Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubRADARSceneSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this RADAR Sub-Scene is located within the RADAR Scene." },
+      "SubRSceneIDOrSubRScene":         { "$ref": "#/$defs/SubRSceneIDOrSubRScene", "description": "Either the ID of a RADAR Sub-Scene or the RADAR Sub-Scene itself." } } } },
+
+    "BRSceneOrRScene":                  { "$ref": "#/$defs/BRSceneOrRScene", "description": "A mixed array of Basic RADAR Scene Descriptors and RADAR Scene Descriptors." },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                          "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this RADAR Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the RADAR Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                              {
+
+    "ObjectIDOrObject":                 { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RADARObject.json" },
+                                          { "type": "string" } ] } },
+
+    "SubRSceneIDOrSubRScene":           { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RADARSceneDescriptors.json" },
+                                          { "type": "string" } ] } },
+
+    "BRSceneOrRScene":                  { "type": "array", "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARSceneDescriptors.json" },
+                                          { "$ref": "#/$defs/BRSceneOrRScene" } ] } } } }

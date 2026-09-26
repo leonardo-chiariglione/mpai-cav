@@ -1,0 +1,29 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/CAV2/V1.1/data/PersonalPreferences.json",
+  "title":                          "Personal Preferences V1.1",
+  "type":                           "object",
+  "additionalProperties":           false,
+  "required":                       [ "Header", "PersonalPreferencesID", "PersonalPreferenceData" ],
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "CAV-PPR-V1.1", "description": "Personal Preferences Header – Standard CAV-PPR-Vx.y" },
+    "humanID":                      { "type": "string", "description": "Identifier of the human to whom these Personal Preferences refer." },
+    "UEnvironmentID":               { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with these Personal Preferences." },
+    "PersonalPreferencesID":        { "type": "string", "description": "Unique identifier of this Personal Preferences instance." },
+    "PersonalPreferencesTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Personal Preferences instance was produced." },
+
+    "PersonalPreferencesSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when these Personal Preferences apply." },
+
+    "PersonalPreferenceData":       { "type": "object", "additionalProperties": false, "description": "Set of Personal Preference values.", "properties": {
+      "Language":                   { "type": "string", "description": "Preferred language." },
+      "SeatPosition":               { "type": "string", "description": "Preferred seat position." },
+      "MirrorPosition":             { "type": "string", "description": "Preferred mirror position." },
+      "DisplayCharacteristics":     { "type": "string", "description": "Preferred display characteristics." },
+      "PreferredDrivingStyle":      { "type": "string", "description": "Preferred driving style." },
+      "PreferentialRoutes":         { "type": "string", "description": "Preferred routes." },
+      "PreferentialInfoSources":    { "type": "string", "description": "Preferred information sources." },
+      "PreferentialEntertainmentSources": { "type": "string", "description": "Preferred entertainment sources." } } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                      "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with these Personal Preferences in a trusted data exchange context." },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Personal Preferences instance (plain text, max 2048 characters)." } } }

@@ -1,0 +1,142 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/CAV2/V1.1/data/TrafficRules.json",
+  "title":                        "Traffic Rules V1.1",
+  "description":                  "Traffic rules mapped to Chapter II of the Vienna Convention on Road Traffic.",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "Article7", "Article8", "Article9", "Article10", "Article11", "Article12", "Article13",
+                                    "Article14", "Article15", "Article16", "Article17", "Article18", "Article19", "Article20",
+                                    "Article21", "Article22", "Article23", "Article24", "Article25", "Article26", "Article27",
+                                    "Article28", "Article29", "Article30", "Article31", "Article32", "Article33", "Article34" ],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "CAV-TRR-V1.1", "description": "Traffic Rules Header – Standard CAV-TRR-Vx.y." },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "TrafficRulesID":             { "type": "string" },
+    "TrafficRulesTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "Article7":                   { "description": "General duties of all road users to avoid endangerment and unnecessary obstruction.",
+                                    "type": "object", "additionalProperties": false, "required": [ "DutyOfCare", "NoEndangerment", "NoUnnecessaryObstruction" ], "properties": {
+      "DutyOfCare":               { "type": "boolean", "const": true },
+      "NoEndangerment":           { "type": "boolean", "const": true },
+      "NoUnnecessaryObstruction": { "type": "boolean", "const": true } } },
+
+    "Article8":                   { "description": "Obligations of drivers to be fit, in control of the vehicle, and properly supervised if learning.",
+                                    "type": "object", "additionalProperties": false, "required": [ "DriverInControl", "FitnessToDriveRequired" ], "properties": {
+      "DriverInControl":          { "type": "boolean", "const": true },
+      "FitnessToDriveRequired":   { "type": "boolean", "const": true } } },
+
+    "Article9":                   { "description": "Requirement to drive on the prescribed side of the road and keep as near as practicable to its edge.",
+                                    "type": "object", "additionalProperties": false, "required": [ "KeepToPrescribedSide", "KeepNearEdge" ], "properties": {
+      "KeepToPrescribedSide":     { "type": "boolean", "const": true },
+      "KeepNearEdge":             { "type": "boolean", "const": true } } },
+
+    "Article10":                  { "description": "Rules governing use of the carriageway, lanes, and parts reserved for specific road users.",
+                                    "type": "object", "additionalProperties": false, "required": [ "LaneDiscipline", "RespectReservedLanes" ], "properties": {
+      "LaneDiscipline":           { "type": "boolean", "const": true },
+      "RespectReservedLanes":     { "type": "boolean", "const": true } } },
+
+    "Article11":                  { "description": "Behavioural rules applicable to pedestrians when using roads and crossing carriageways.",
+                                    "type": "object", "additionalProperties": false, "required": [ "UseFootpaths", "CrossCarefully" ], "properties": {
+      "UseFootpaths":             { "type": "boolean", "const": true },
+      "CrossCarefully":           { "type": "boolean", "const": true } } },
+
+    "Article12":                  { "description": "Special behavioural rules applicable to cyclists, moped riders, and similar road users.",
+                                    "type": "object", "additionalProperties": false, "required": [ "UseDesignatedTracks" ], "properties": {
+      "UseDesignatedTracks":      { "type": "boolean", "const": true } } },
+
+    "Article13":                  { "description": "Obligation to control speed and adapt it to traffic, road, weather, and visibility conditions.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ControlSpeed", "AdaptToConditions" ], "properties": {
+      "ControlSpeed":             { "type": "boolean", "const": true },
+      "AdaptToConditions":        { "type": "boolean", "const": true } } },
+
+    "Article14":                  { "description": "Requirements for safely executing manoeuvres and signalling intentions in advance.",
+                                    "type": "object", "additionalProperties": false, "required": [ "SignalIntention", "EnsureSafety" ], "properties": {
+      "SignalIntention":          { "type": "boolean", "const": true },
+      "EnsureSafety":             { "type": "boolean", "const": true } } },
+
+    "Article15":                  { "description": "Conditions under which overtaking is permitted, including safety and visibility constraints.",
+                                    "type": "object", "additionalProperties": false, "required": [ "OvertakeSafely", "SufficientVisibility" ], "properties": {
+      "OvertakeSafely":           { "type": "boolean", "const": true },
+      "SufficientVisibility":     { "type": "boolean", "const": true } } },
+
+    "Article16":                  { "description": "Obligation to maintain sufficient distance when driving in rows of vehicles.",
+                                    "type": "object", "additionalProperties": false, "required": [ "MaintainDistance" ], "properties": {
+      "MaintainDistance":         { "type": "boolean", "const": true } } },
+
+    "Article17":                  { "description": "Duties of slow-moving vehicles to facilitate the flow of faster traffic.",
+                                    "type": "object", "additionalProperties": false, "required": [ "FacilitateOvertaking" ], "properties": {
+      "FacilitateOvertaking":     { "type": "boolean", "const": true } } },
+
+    "Article18":                  { "description": "Rules governing behaviour at intersections and compliance with priority indications.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ObservePriority" ], "properties": {
+      "ObservePriority":          { "type": "boolean", "const": true } } },
+
+    "Article19":                  { "description": "Behaviour required of road users when approaching and using level crossings.",
+                                    "type": "object", "additionalProperties": false, "required": [ "StopWhenRequired" ], "properties": {
+      "StopWhenRequired":         { "type": "boolean", "const": true } } },
+
+    "Article20":                  { "description": "Obligations to respect the movement and priority of public transport vehicles.",
+                                    "type": "object", "additionalProperties": false, "required": [ "RespectPublicTransport" ], "properties": {
+      "RespectPublicTransport":   { "type": "boolean", "const": true } } },
+
+    "Article21":                  { "description": "Rules governing driver behaviour at pedestrian crossings.",
+                                    "type": "object", "additionalProperties": false, "required": [ "GiveWayToPedestrians" ], "properties": {
+      "GiveWayToPedestrians":     { "type": "boolean", "const": true } } },
+
+    "Article22":                  { "description": "Obligations to yield and give way to emergency and priority vehicles.",
+                                    "type": "object", "additionalProperties": false, "required": [ "YieldToEmergencyVehicles" ], "properties": {
+      "YieldToEmergencyVehicles": { "type": "boolean", "const": true } } },
+
+    "Article23":                  { "description": "Conditions governing standing and parking so as not to endanger or obstruct traffic.",
+                                    "type": "object", "additionalProperties": false, "required": [ "NoDangerOrObstruction" ], "properties": {
+      "NoDangerOrObstruction":    { "type": "boolean", "const": true } } },
+
+    "Article24":                  { "description": "Obligation to open vehicle doors only when it does not endanger other road users.",
+                                    "type": "object", "additionalProperties": false, "required": [ "OpenDoorsSafely" ], "properties": {
+      "OpenDoorsSafely":          { "type": "boolean", "const": true } } },
+
+    "Article25":                  { "description": "Requirements governing the use of vehicle lights in darkness and poor visibility.",
+                                    "type": "object", "additionalProperties": false, "required": [ "UseLightsWhenRequired" ], "properties": {
+      "UseLightsWhenRequired":    { "type": "boolean", "const": true } } },
+
+    "Article26":                  { "description": "Restrictions on the use of audible warning devices to necessary situations only.",
+                                    "type": "object", "additionalProperties": false, "required": [ "UseAudibleWarningsSparingly" ], "properties": {
+      "UseAudibleWarningsSparingly":{ "type": "boolean", "const": true } } },
+
+    "Article27":                  { "description": "Rules governing transport and securing of loads to avoid danger or obstruction.",
+                                    "type": "object", "additionalProperties": false, "required": [ "SecureLoadsSafely" ], "properties": {
+      "SecureLoadsSafely":        { "type": "boolean", "const": true } } },
+
+    "Article28":                  { "description": "Behavioural obligations related to towing vehicles in traffic.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ComplyWithTowingRules" ], "properties": {
+      "ComplyWithTowingRules":    { "type": "boolean", "const": true } } },
+
+    "Article29":                  { "description": "Requirements for giving clear and unambiguous signals by drivers.",
+                                    "type": "object", "additionalProperties": false, "required": [ "GiveClearSignals" ], "properties": {
+      "GiveClearSignals":         { "type": "boolean", "const": true } } },
+
+    "Article30":                  { "description": "Obligations of drivers in the event of vehicle breakdown or immobilisation.",
+                                    "type": "object", "additionalProperties": false, "required": [ "WarnOtherRoadUsers" ], "properties": {
+      "WarnOtherRoadUsers":       { "type": "boolean", "const": true } } },
+
+    "Article31":                  { "description": "Duties of road users to avoid damage to roads and related infrastructure.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ProtectInfrastructure" ], "properties": {
+      "ProtectInfrastructure":    { "type": "boolean", "const": true } } },
+
+    "Article32":                  { "description": "Requirements governing the use of front and rear lights and signalling devices.",
+                                    "type": "object", "additionalProperties": false, "required": [ "UsePrescribedLights" ], "properties": {
+      "UsePrescribedLights":      { "type": "boolean", "const": true } } },
+
+    "Article33":                  { "description": "Special behavioural rules applicable to traffic on motorways.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ComplyWithMotorwayRules" ], "properties": {
+      "ComplyWithMotorwayRules":  { "type": "boolean", "const": true } } },
+
+    "Article34":                  { "description": "Applicability of additional domestic rules consistent with the Convention.",
+                                    "type": "object", "additionalProperties": false, "required": [ "ComplyWithDomesticLaw" ], "properties": {
+      "ComplyWithDomesticLaw":    { "type": "boolean", "const": true } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                    "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Traffic Rules instance in a trusted data exchange context." },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Traffic Rules instance (plain text, max 2048 characters)." } } }

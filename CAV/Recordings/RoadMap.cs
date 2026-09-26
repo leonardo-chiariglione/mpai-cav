@@ -99,21 +99,78 @@ public sealed class RoadMap
         return (OriginLat + north / earth * 180 / Math.PI, OriginLon + east / (earth * Math.Cos(OriginLat * Math.PI / 180)) * 180 / Math.PI);
     }
 
-    // The map as the data of a Basic Offline Map Object.
-    public JsonObject ToJson() => new()
+    // THE MAP AS GEOJSON, a format the Offline Map Qualifier admits (TFA): each way
+    // point a Point, each segment a LineString from its first way point to its
+    // second, with its speed limit and lanes; the map's identifier and origin as
+    // members of the collection.
+    public JsonObject ToGeoJson()
     {
-        ["MapID"] = Id, ["Origin"] = new JsonObject { ["Lat"] = OriginLat, ["Lon"] = OriginLon }, ["LaneWidth"] = LaneWidth,
-        ["WayPoints"] = new JsonArray(WayPoints.Select(w => (JsonNode)new JsonObject { ["WayPointID"] = w.Id, ["East"] = w.East, ["North"] = w.North }).ToArray()),
-        ["Segments"] = new JsonArray(Segments.Select(s => (JsonNode)new JsonObject
+        JsonArray Position(WayPoint w) { var (lat, lon) = Geodetic(w.East, w.North); return new JsonArray(Math.Round(lon, 8), Math.Round(lat, 8)); }
+        var features = new JsonArray();
+        foreach (var w in WayPoints)
+            features.Add(new JsonObject
+            {
+                ["type"] = "Feature", ["geometry"] = new JsonObject { ["type"] = "Point", ["coordinates"] = Position(w) },
+                ["properties"] = new JsonObject { ["WayPointID"] = w.Id }
+            });
+        foreach (var s in Segments)
+            features.Add(new JsonObject
+            {
+                ["type"] = "Feature",
+                ["geometry"] = new JsonObject { ["type"] = "LineString", ["coordinates"] = new JsonArray(Position(points[s.From]), Position(points[s.To])) },
+                ["properties"] = new JsonObject { ["SegmentID"] = s.Id, ["From"] = s.From, ["To"] = s.To, ["SpeedLimit"] = s.SpeedLimit, ["Lanes"] = s.Lanes, ["LaneWidth"] = LaneWidth }
+            });
+        return new JsonObject
         {
-            ["SegmentID"] = s.Id, ["From"] = s.From, ["To"] = s.To, ["SpeedLimit"] = s.SpeedLimit, ["Lanes"] = s.Lanes
-        }).ToArray())
-    };
+            ["type"] = "FeatureCollection", ["MapID"] = Id, ["Origin"] = new JsonObject { ["Lat"] = OriginLat, ["Lon"] = OriginLon },
+            ["features"] = features
+        };
+    }
 
-    public static RoadMap FromJson(JsonNode map) => new(
-        (string)map["MapID"]!, (double)map["Origin"]!["Lat"]!, (double)map["Origin"]!["Lon"]!,
-        map["WayPoints"]!.AsArray().Select(w => new WayPoint((string)w!["WayPointID"]!, (double)w["East"]!, (double)w["North"]!)).ToList(),
-        map["Segments"]!.AsArray().Select(s => new RoadSegment((string)s!["SegmentID"]!, (string)s["From"]!, (string)s["To"]!, (double)s["SpeedLimit"]!, (int)s["Lanes"]!)).ToList());
+    public static RoadMap FromGeoJson(JsonNode map)
+    {
+        var (lat0, lon0) = ((double)map["Origin"]!["Lat"]!, (double)map["Origin"]!["Lon"]!);
+        const double earth = 6_371_000;
+        var features = map["features"]!.AsArray();
+        var wayPoints = features.Where(f => (string)f!["geometry"]!["type"]! == "Point").Select(f =>
+        {
+            var c = f!["geometry"]!["coordinates"]!.AsArray();
+            var (lon, lat) = ((double)c[0]!, (double)c[1]!);
+            return new WayPoint((string)f["properties"]!["WayPointID"]!,
+                Math.Round((lon - lon0) * Math.PI / 180 * earth * Math.Cos(lat0 * Math.PI / 180), 3), Math.Round((lat - lat0) * Math.PI / 180 * earth, 3));
+        }).ToList();
+        var segments = features.Where(f => (string)f!["geometry"]!["type"]! == "LineString").Select(f =>
+        {
+            var p = f!["properties"]!;
+            return new RoadSegment((string)p["SegmentID"]!, (string)p["From"]!, (string)p["To"]!, (double)p["SpeedLimit"]!, (int)p["Lanes"]!);
+        }).ToList();
+        return new RoadMap((string)map["MapID"]!, lat0, lon0, wayPoints, segments);
+    }
+
+    // The map as a Basic Offline Map Object: its GeoJSON as the data, the Qualifier
+    // saying so.
+    public string ToOfflineMapObject(long ms) => new JsonObject
+    {
+        ["Header"] = "OSD-BOO-V1.5", ["BasicOfflineMapObjectID"] = Id,
+        ["BasicOfflineMapObjectSpaceTime"] = new JsonObject
+        {
+            ["Header"] = "OSD-SPT-V1.5", ["SpaceTimeID"] = Id + "-ST",
+            ["Time"] = new JsonObject
+            {
+                ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = Id + "-T",
+                ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = ms, ["EndTime"] = ms, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
+            }
+        },
+        ["BasicOfflineMapData"] = new JsonArray(new JsonObject { ["Data"] = ToGeoJson().ToJsonString() }),
+        ["BasicOfflineMapDataQualifier"] = new JsonObject
+        {
+            ["Header"] = "TFA-OMQ-V1.5", ["OLMapQualifierID"] = Id + "-Q", ["SubTypes"] = new JsonObject(),
+            ["Formats"] = new JsonObject { ["ContentFormat"] = "GeoJSON" }
+        }
+    }.ToJsonString();
+
+    public static RoadMap FromOfflineMapObject(JsonNode map) =>
+        FromGeoJson(JsonNode.Parse((string)map["BasicOfflineMapData"]![0]!["Data"]!)!);
 }
 
 // A ROUTE AS A LINE TO FOLLOW: its way points joined, a position and a heading at

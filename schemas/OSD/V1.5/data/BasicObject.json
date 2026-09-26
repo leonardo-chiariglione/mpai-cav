@@ -1,0 +1,49 @@
+{ "$id":                          "https://schemas.mpai.community/OSD/V1.5/data/BasicObject.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "title":                        "Basic Object V1.5",
+  "description":                  "Atomic object carrying data, media qualifiers, spatiotemporal context, and annotations.",
+  "type":                         "object", "required": [ "Header", "BasicObjectID", "BasicObjectSpaceTime", "Trace" ],
+  "additionalProperties":         false,
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "OSD-BOB-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "BasicObjectID":              { "type": "string" },
+    "BasicObjectTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ParentObjects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "ParentObjectID":         { "type": "string" },
+        "ParentObjectSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "ChildObjects":               { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "ChildObjectID":          { "type": "string" },
+        "ChildObjectSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "BasicObjectData":            { "type": "array", "items": { "anyOf": [
+                                  { "type": "object", "additionalProperties": false, "properties": {
+          "Data":                 { "type": "string" } } },
+                                  { "type": "object", "additionalProperties": false, "properties": {
+          "Length":               { "type": "integer" },
+          "URI":                  { "type": "string", "format": "uri" } } },
+                                  { "type": "object", "additionalProperties": false, "properties": {
+          "ID":                   { "type": "string" } } } ] } },
+
+    "MediaType":                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json" },
+
+    "BasicObject":                { "type": "array", "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/3DModelQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioVisualQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/LiDARQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/OfflineMapQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/RADARQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/TextQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/UltrasoundQualifier.json" },
+                                  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/VisualQualifier.json" } ] } },
+
+    "BasicObjectSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,52 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/OSD/V1.5/data/LiDARSceneDescriptors.json",
+  "title":                              "LiDAR Scene Descriptors V1.5",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "LiDARSceneDescriptorsID", "LiDARSceneDescriptorsSpaceTime" ],
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "OSD-LSD-V1.5",
+                                          "description": "LiDAR Scene Descriptors Header â€“ Standard OSD-LSD-Vx.y" },
+    "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this LiDAR Scene is or is intended to be located." },
+    "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this LiDAR Scene is or is intended to be located." },
+    "LiDARSceneDescriptorsID":          { "type": "string", "description": "Unique identifier of this LiDAR Scene Descriptors instance." },
+    "LiDARSceneDescriptorsTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this LiDAR Scene Descriptors instance was produced." },
+
+    "LiDARSceneDescriptorsSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this LiDAR Scene Descriptors instance is located." },
+
+    "LiDARObjectCount":                 { "type": "integer", "minimum": 0, "description": "Number of LiDAR Objects in the LiDAR Scene." },
+
+    "LiDARObjects":                     { "type": "array", "minItems": 0, "description": "Set of LiDAR Objects in the LiDAR Scene.",
+                                          "items": { "type": "object", "additionalProperties": false, "properties": {
+      "LiDARObjectSpaceTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                          "description": "Space/Time where/when this LiDAR Object is located within the LiDAR Scene." },
+      "ObjectIDOrObject":               { "$ref": "#/$defs/ObjectIDOrObject", "description": "Either the ID of a LiDAR Object or the LiDAR Object itself." } } } },
+
+    "SubLiDARSceneCount":               { "type": "integer", "minimum": 0, "description": "Number of LiDAR Sub-Scenes in the LiDAR Scene." },
+
+    "SubLiDARScenes":                   { "type": "array", "minItems": 0, "description": "Set of LiDAR Sub-Scenes in the LiDAR Scene.",
+                                          "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubLiDARSceneSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this LiDAR Sub-Scene is located within the LiDAR Scene." },
+      "SubLSceneIDOrSubLScene":         { "$ref": "#/$defs/SubLSceneIDOrSubLScene", "description": "Either the ID of a LiDAR Sub-Scene or the LiDAR Sub-Scene itself." } } } },
+
+    "BLSceneOrLScene":                  { "$ref": "#/$defs/BLSceneOrLScene",
+                                          "description": "A mixed array of Basic LiDAR Scene Descriptors and LiDAR Scene Descriptors." },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                          "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this LiDAR Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the LiDAR Scene Descriptors instance (plain text, max 2048 characters)." } },
+
+  "$defs":                              {
+
+    "ObjectIDOrObject":                 { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LiDARObject.json" },
+                                          { "type": "string" } ] } },
+
+    "SubLSceneIDOrSubLScene":           { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LiDARSceneDescriptors.json" },
+                                          { "type": "string" } ] } },
+
+    "BLSceneOrLScene":                  { "type": "array", "items": { "oneOf": [
+                                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicLiDARSceneDescriptors.json" },
+                                          { "$ref": "#/$defs/BLSceneOrLScene" } ] } } } }

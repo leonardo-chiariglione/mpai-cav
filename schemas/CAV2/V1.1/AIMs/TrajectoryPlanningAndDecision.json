@@ -1,0 +1,87 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id": "https://schemas.mpai.community/CAV2/V1.1/AIMs/TrajectoryPlanningAndDecision.json",
+  "title": "Trajectory Planning and Decision V1.1",
+
+  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TPD-V1.1" },
+
+  "Header":       "CAV-TPD-V1.1",
+
+  "APIProfile":   "Basic",
+  "Description":  "This AIM issues an AMSMASMessage from the context.",
+
+  "InternalTypes":  [
+    { "Name": "PathResponse"      , "DataType": "CAV-INT-V1.1" },
+    { "Name": "PathRequest"       , "DataType": "CAV-INT-V1.1" },
+    { "Name": "TrajectoryResponse", "DataType": "CAV-INT-V1.1" },
+    { "Name": "TrajectoryRequest" , "DataType": "CAV-INT-V1.1" }
+  ],
+
+  "ExternalPorts":  [
+    { "Name": "BasicOfflineMapObject", "Direction": "Input",   "DataType": "OSD-BOO-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSDataIn"                    , "Direction": "Input",   "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AlertIn"                      , "Direction": "Input",   "DataType": "CAV-ALT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSMASMessageIn"              , "Direction": "Input",   "DataType": "CAV-AMM-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "FullEnvironmentDescriptorsIn" , "Direction": "Input",   "DataType": ["CAV-FED-V1.1", "CAV-FED-V2.0"],  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RouteResponseIn"              , "Direction": "Input",   "DataType": "CAV-INT-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RouteRequestOut"              , "Direction": "Output",  "DataType": "CAV-INT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "FullEnvironmentDescriptorsOut", "Direction": "Output",  "DataType": ["CAV-FED-V1.1", "CAV-FED-V2.0"], "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSMASMessageOut"             , "Direction": "Output",  "DataType": "CAV-AMM-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "CAVStateOut"                  , "Direction": "Output",  "DataType": "CAV-CST-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateOut"                 , "Direction": "Output",  "DataType": "CAV-RDS-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSDataOut"                   , "Direction": "Output",  "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false }
+  ],
+
+  "SubAIMs":  [
+    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-PSP-V1.1" } },
+    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-MSP-V1.1" } },
+    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TOA-V1.1" } }
+  ],
+
+  "Topology":  [
+    { "Output": { "AIMName": "", "PortName": "BasicOfflineMapObject" }, "Input": { "AIMName": "CAV-PSP-V1.1", "PortName": "BasicOfflineMapObject" } },
+    { "Output": { "AIMName": ""            , "PortName": "AMSDataIn"                      }, "Input": { "AIMName": "CAV-PSP-V1.1", "PortName": "AMSDataInP" } },
+    { "Output": { "AIMName": ""            , "PortName": "AMSDataIn"                      }, "Input": { "AIMName": "CAV-MSP-V1.1", "PortName": "AMSDataInM" } },
+    { "Output": { "AIMName": ""            , "PortName": "AMSDataIn"                      }, "Input": { "AIMName": "CAV-TOA-V1.1", "PortName": "AMSDataInT" } },
+    { "Output": { "AIMName": ""            , "PortName": "FullEnvironmentDescriptorsIn"   }, "Input": { "AIMName": "CAV-PSP-V1.1", "PortName": "FullEnvironmentDescriptorsInP" } },
+    { "Output": { "AIMName": ""            , "PortName": "FullEnvironmentDescriptorsIn"   }, "Input": { "AIMName": "CAV-MSP-V1.1", "PortName": "FullEnvironmentDescriptorsInM" } },
+    { "Output": { "AIMName": ""            , "PortName": "AlertIn"                        }, "Input": { "AIMName": "CAV-TOA-V1.1", "PortName": "AlertInT" } },
+    { "Output": { "AIMName": ""            , "PortName": "AMSMASMessageIn"                }, "Input": { "AIMName": "CAV-TOA-V1.1", "PortName": "AMSMASMessageInT" } },
+    { "Output": { "AIMName": ""            , "PortName": "RouteResponseIn"                }, "Input": { "AIMName": "CAV-PSP-V1.1", "PortName": "RouteResponseInP", "PortNumber": 1 } },
+    { "Output": { "AIMName": "CAV-PSP-V1.1", "PortName": "RouteRequestPOut"               }, "Input": { "AIMName": ""            , "PortName": "RouteRequestOut" } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "AMSMASMessageTOut"              }, "Input": { "AIMName": ""            , "PortName": "AMSMASMessageOut" } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "CAVStateTOut"                   }, "Input": { "AIMName": ""            , "PortName": "CAVStateOut" } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "RoadStateTOut"                  }, "Input": { "AIMName": ""            , "PortName": "RoadStateOut" } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "AMSDataTOut"                    }, "Input": { "AIMName": ""            , "PortName": "AMSDataOut" } },
+    { "Output": { "AIMName": "CAV-PSP-V1.1", "PortName": "PathResponsePM"                 }, "Input": { "AIMName": "CAV-MSP-V1.1", "PortName": "PathResponsePM", "PortNumber": 1 } },
+    { "Output": { "AIMName": "CAV-MSP-V1.1", "PortName": "PathRequestMP"                  }, "Input": { "AIMName": "CAV-PSP-V1.1", "PortName": "PathRequestMP", "PortNumber": 2 } },
+    { "Output": { "AIMName": "CAV-MSP-V1.1", "PortName": "TrajectoryResponseMT"           }, "Input": { "AIMName": "CAV-TOA-V1.1", "PortName": "TrajectoryResponseMT" } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "TrajectoryRequestTM"            }, "Input": { "AIMName": "CAV-MSP-V1.1", "PortName": "TrajectoryRequestTM", "PortNumber": 2 } },
+    { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "FullEnvironmentDescriptorsTOut" }, "Input": { "AIMName": ""            , "PortName": "FullEnvironmentDescriptorsOut" } }
+  ],
+
+  "Implementations":  [
+   {
+    "ImplementationURI": "/* URI storing Implementation */",
+    "BinaryName": "/* BinaryName */",
+    "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+    "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+    "Version": "/* Version */",
+    "Source": "/* AIMStorage | MPAIStore | AIMURL */",
+    "Destination": "/* Destination URI */"
+   }
+  ],
+
+  "ResourcePolicies":  [
+    { "Name": "Memory"              , "Minimum": "/* GB */",                                                                                                                 "Maximum": "/* GB */",                                                                                                                 "Request": "/* GB */" },
+    { "Name": "CPU:Number"          , "Minimum": "/* integer, 0=all */",                                                                                                     "Maximum": "/* integer, 0=all */",                                                                                                     "Request": "/* integer, 0=all */" },
+    { "Name": "CPU:Class"           , "Minimum": "/* Low | Medium | High */",                                                                                                "Maximum": "/* Low | Medium | High */",                                                                                                "Request": "/* Low | Medium | High */" },
+    { "Name": "GPU:Number"          , "Minimum": "/* integer, 0=all */",                                                                                                     "Maximum": "/* integer, 0=all */",                                                                                                     "Request": "/* integer, 0=all */" },
+    { "Name": "GPU:CUDA:Class"      , "Minimum": "/* SM10|SM11|SM12|SM13|SM20|SM21|SM30|SM32|SM35|SM37|SM50|SM52|SM53|SM60|SM61|SM62|SM70|SM72|SM75|SM80|SM86|SM87|SM90 */", "Maximum": "/* SM10|SM11|SM12|SM13|SM20|SM21|SM30|SM32|SM35|SM37|SM50|SM52|SM53|SM60|SM61|SM62|SM70|SM72|SM75|SM80|SM86|SM87|SM90 */", "Request": "/* SM10|SM11|SM12|SM13|SM20|SM21|SM30|SM32|SM35|SM37|SM50|SM52|SM53|SM60|SM61|SM62|SM70|SM72|SM75|SM80|SM86|SM87|SM90 */" },
+    { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* float_GB_GDDR|GDDR2|GDDR3|GDDR4|GDDR5|GDDR5X|GDDR6|GDDR6X */",                                                          "Maximum": "/* float_GB_GDDR|GDDR2|GDDR3|GDDR4|GDDR5|GDDR5X|GDDR6|GDDR6X */",                                                          "Request": "/* float_GB_GDDR|GDDR2|GDDR3|GDDR4|GDDR5|GDDR5X|GDDR6|GDDR6X */" },
+    { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* float_GHz */",                                                                                                          "Maximum": "/* float_GHz */",                                                                                                          "Request": "/* float_GHz */" }
+  ],
+
+  "DataXMData":  { },
+
+  "Documentation":  [{ "Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-cav/" }] }
