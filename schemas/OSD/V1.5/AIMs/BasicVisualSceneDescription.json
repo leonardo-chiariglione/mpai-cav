@@ -8,7 +8,7 @@
 
   "ExternalPorts":   [{"Name": "BasicVisualObject",           "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": ["CAV-BED-V1.1", "CAV-BED-V2.0"], "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "BasicVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "Alert",                       "Direction": "Output", "DataType": "CAV-ALT-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 

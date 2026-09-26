@@ -1,0 +1,21 @@
+{
+  "CAE3/V1.0/AIMs/AudioObjectAcquisition.json": "valid",
+  "CAV2/V2.0/AIMs/AudioSensors.json": "valid",
+  "CAV2/V2.0/AIMs/BasicEnvironmentDescription.json": "valid",
+  "CAV2/V2.0/AIMs/EnvironmentSensingSubsystem.json": "valid",
+  "CAV2/V2.0/AIMs/LiDARSensors.json": "valid",
+  "CAV2/V2.0/AIMs/RADARSensors.json": "valid",
+  "CAV2/V2.0/AIMs/SpatialAttitudeGeneration.json": "valid",
+  "CAV2/V2.0/AIMs/UltrasoundSensors.json": "valid",
+  "CAV2/V2.0/AIMs/VisualSensors.json": "valid",
+  "CVE/V1.0/AIMs/VisualObjectAcquisition.json": "valid",
+  "OSD/V1.5/AIMs/BasicAudioSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicLiDARSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicOfflineMapSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicRADARSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicUltrasoundSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicVisualSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/LiDARObjectAcquisition.json": "valid",
+  "OSD/V1.5/AIMs/RADARObjectAcquisition.json": "valid",
+  "OSD/V1.5/AIMs/UltrasoundObjectAcquisition.json": "valid"
+}
