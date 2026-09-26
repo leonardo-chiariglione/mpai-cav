@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\CAV\Recordings\Mpai.Cav.Recordings.csproj" />
     <ProjectReference Include="..\..\AIMs\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ess\Mpai.Cav.Ess.csproj" />
   </ItemGroup>
 
   <ItemGroup>

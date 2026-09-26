@@ -1,6 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
+
+using Mpai.Cav.Ess;
 using Mpai.Cav.Recordings;
 using Mpai.Osd.VisualScene;
 
@@ -80,5 +83,53 @@ public class EssStage1Tests
         var report = Path.Combine(Repository.Root, "Test", "Reports", "ess-stage1-detector.json");
         File.WriteAllText(report, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("ess-stage1-detector.json", result);
+    }
+
+    // Step 3: Spatial Attitude Generation on a drive of 20 s whose odometry reads 1.5%
+    // long. The ego position it gives at each camera frame, against the truth on its
+    // frame - east and north of the first GNSS fix - and against what the odometry
+    // alone would say; and whether the accuracy it states covers its error.
+    [Fact]
+    public async Task Step3SpatialAttitude()
+    {
+        var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
+        var ports = DrivePorts.Of(messages, SyntheticDrive.Attitude, SyntheticDrive.Gnss);
+        await new SpatialAttitudeGeneration(EssProvider.Sag, new Dictionary<string, string> { ["GnssWeight"] = "0.1" }).RunAsync(ports, AimContext.None);
+
+        const double earth = 6_371_000;
+        var frames = truth["Frames"]!.AsArray();
+        double lat0 = (double)truth["Origin"]!["Lat"]!, lon0 = (double)truth["Origin"]!["Lon"]!;
+        double anchorLat = (double)frames[0]!["GnssLat"]!, anchorLon = (double)frames[0]!["GnssLon"]!;
+        var scale = (double)truth["OdometryScale"]!;
+        double East(double lon) => (lon - anchorLon) * Math.PI / 180 * earth * Math.Cos(anchorLat * Math.PI / 180);
+        var north = (lat0 - anchorLat) * Math.PI / 180 * earth;
+
+        var byTime = ports.Written.GroupBy(w => w.At).ToDictionary(g => g.Key, g => g.Last().Json);
+        var sag = new List<double>(); var odometry = new List<double>(); var covered = 0;
+        foreach (var f in frames)
+        {
+            var at = TimeSpan.FromSeconds((double)f!["At"]!);
+            if (!byTime.TryGetValue(at, out var json)) continue;
+            var position = System.Text.Json.Nodes.JsonNode.Parse(json)!["Position"]!;
+            var p = position["CartPosition"]!.AsArray();
+            var accuracy = (double)position["CartPositionAccuracy"]![0]!;
+            var x = (double)f["EgoEast"]!;
+            var trueEast = East(lon0 + x / (earth * Math.Cos(lat0 * Math.PI / 180)) * 180 / Math.PI);
+            var error = Math.Sqrt(Math.Pow((double)p[0]! - trueEast, 2) + Math.Pow((double)p[1]! - north, 2));
+            sag.Add(error);
+            odometry.Add(Math.Abs(x * scale - x));
+            if (error <= 2 * accuracy) covered++;
+        }
+        string Stats(List<double> e) { var s = e.Order().ToList(); return $"median {s[s.Count / 2]:0.00} m, 95th percentile {s[(int)(s.Count * 0.95)]:0.00} m, max {s[^1]:0.00} m"; }
+        var result = new Dictionary<string, string>
+        {
+            ["ego attitudes given"] = $"{ports.Written.Count} for {messages.Count(m => m.DataType == SyntheticDrive.Attitude)} of the MAS",
+            ["position error, SAG"] = Stats(sag),
+            ["position error, odometry alone"] = Stats(odometry),
+            ["error within twice the stated accuracy"] = $"{covered} of {sag.Count} frames"
+        };
+        var report = Path.Combine(Repository.Root, "Test", "Reports", "ess-stage1-sag.json");
+        File.WriteAllText(report, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("ess-stage1-sag.json", result);
     }
 }

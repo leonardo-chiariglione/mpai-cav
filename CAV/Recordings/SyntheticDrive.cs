@@ -30,7 +30,7 @@ public sealed class SyntheticDrive
     private const double Focal = 500, CameraHeight = 1.5, Horizon = 140, Lane = 3.5, RoadHalf = 1.5 * Lane, NearThreshold = 15;
 
     // Where the drive begins: Turin, heading east.
-    private const double Lat0 = 45.0703, Lon0 = 7.6869, Earth = 6_371_000;
+    private const double Lat0 = 45.0703, Lon0 = 7.6869, Earth = 6_371_000, OdometryScale = 1.015;
 
     public int Seed { get; }
     public TimeSpan Duration { get; }
@@ -76,7 +76,9 @@ public sealed class SyntheticDrive
             var v = Speed(t);
             if (i > 0) x += v / stepsPerSecond;
 
-            messages.Add(new DriveMessage(at, Attitude, 1, SpatialAttitude(i, t, x, v)));
+            // The Motion Actuation Subsystem's odometry: its wheels read 1.5% long, so
+            // its position drifts from the truth, as odometry does (M3221 3.2).
+            messages.Add(new DriveMessage(at, Attitude, 1, SpatialAttitude(i, t, x * OdometryScale, v * OdometryScale)));
             if (i % 5 != 0) continue;
 
             var eastNoisy = x + Noise(1.5);
@@ -115,6 +117,7 @@ public sealed class SyntheticDrive
         {
             ["Seed"] = Seed, ["Duration"] = Duration.TotalSeconds, ["Start"] = Start.ToString("O"),
             ["Origin"] = new JsonObject { ["Lat"] = Lat0, ["Lon"] = Lon0, ["Heading"] = "east" },
+            ["OdometryScale"] = OdometryScale,
             ["Camera"] = new JsonObject { ["Width"] = Width, ["Height"] = Height, ["Focal"] = Focal, ["Height m"] = CameraHeight, ["Horizon"] = Horizon },
             ["Lanes"] = new JsonObject { ["Width"] = Lane, ["Ego"] = 0, ["Count"] = 3 },
             ["NearThreshold"] = NearThreshold,
@@ -180,6 +183,8 @@ public sealed class SyntheticDrive
     private string VisualObject(int i, double t, byte[] png) => new JsonObject
     {
         ["Header"] = Camera, ["BasicVisualObjectID"] = $"BVO{i:D6}",
+        // The time of what the frame shows: the time of its capture (M3221 3.3).
+        ["BasicVisualObjectTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["SpaceTimeID"] = $"BVO{i:D6}-ST", ["Time"] = SimpleTime($"BVO{i:D6}-T", t) },
         ["BasicVisualObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(png) }),
         ["VisualQualifier"] = new JsonObject
         {
