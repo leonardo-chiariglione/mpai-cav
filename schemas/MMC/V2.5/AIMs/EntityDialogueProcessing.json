@@ -21,7 +21,11 @@
                      {"Name": "MachineTextObject",     "Direction": "Output", "DataType": "OSD-BTO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "MachinePersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "HCIMemoryData",         "Direction": "Output", "DataType": "MMC-HMD-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "HCIMemoryData",         "Direction": "Output", "DataType": "MMC-HMD-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AMSHCIMessageIn",         "Direction": "Input",  "DataType": "CAV-AHM-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "EgoRemoteHCIMessageIn",   "Direction": "Input",  "DataType": "CAV-ERH-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AMSHCIMessageOut",        "Direction": "Output", "DataType": "CAV-AHM-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "EgoRemoteHCIMessageOut",  "Direction": "Output", "DataType": "CAV-ERH-V1.1", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 
