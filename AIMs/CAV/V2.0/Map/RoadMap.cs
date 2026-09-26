@@ -1,8 +1,9 @@
 using System.Text.Json.Nodes;
 
-namespace Mpai.Cav.Recordings;
+namespace Mpai.Cav.Map;
 
-// THE OFFLINE MAP OF THE SYNTHETIC CAV (M3233 3.1): way points at junctions, and
+// THE OFFLINE MAP OF THE CAV (M3233 3.1), as the AMS reads it and the simulation
+// makes it: way points at junctions, and
 // road segments between them, each with its direction of travel, its lanes and its
 // speed limit; on a local frame of east and north metres from an origin, whose
 // geodetic coordinates the map states. Made from a seed, as the drives are.
@@ -11,7 +12,7 @@ public sealed record RoadSegment(string Id, string From, string To, double Speed
 
 public sealed class RoadMap
 {
-    public const double LaneWidth = CameraRenderer.Lane;
+    public const double LaneWidth = 3.5;
 
     public string Id { get; }
     public double OriginLat { get; }

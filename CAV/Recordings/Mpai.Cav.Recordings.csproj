@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Map\Mpai.Cav.Map.csproj" />
   </ItemGroup>
 
 </Project>

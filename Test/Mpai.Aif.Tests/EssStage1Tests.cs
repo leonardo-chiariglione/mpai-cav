@@ -359,7 +359,7 @@ public class EssStage1Tests
         var outside = alertOut.Count(a => a.Ms < nearFrom - 100 || a.Ms > nearTo + 100);
 
         result["frames given"] = frameIn.Count.ToString();
-        result["the Module's AIMs at 15 s"] = string.Join("; ", status.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
+        result["the Module's AIMs at 19 s"] = string.Join("; ", status.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
         result["the vehicle ahead, 12 m and more, in the descriptors of its frame"] = $"{(ahead >= aheadFrames * 0.9 ? "90% of frames or more" : "fewer than 90% of frames")}";
         result["the first Alert against the truth nearer than 15 m"] = firstAlert is { } fa ? (Math.Abs(fa - nearFrom) <= 200 ? "within two frames" : $"{fa - nearFrom} ms off") : "none";
         result["Alerts where the truth has none"] = outside <= 5 ? "5 or fewer" : "more than 5";
@@ -381,7 +381,7 @@ public class EssStage1Tests
         var after = records2.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-BED-V2.0")
             .Select(r => JsonNode.Parse((string)r["Json"]!)!)
             .Where(j => Ms(j["BasicEnvironmentDescriptorsTime"]) > start + 11_000).ToList();
-        result["camera stopped at 10 s: the Module's AIMs at 15 s"] = string.Join("; ", status2.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
+        result["camera stopped at 10 s: the Module's AIMs at 19 s"] = string.Join("; ", status2.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
         result["camera stopped at 10 s: descriptors given after 11 s"] = after.Count >= 50 ? "yes, several a second" : after.Count > 0 ? "a few" : "none";
         result["camera stopped at 10 s: objects in the last descriptors"] = after.Count == 0 ? "none given" : after[^1]["BasicEnvironmentObjectCount"]!.ToString();
         report["camera stopped at 10 s: descriptors given after 11 s"] = after.Count.ToString();
@@ -393,7 +393,9 @@ public class EssStage1Tests
     }
 
     // The Module run on a drive, played from a record by a workflow; its boundary recorded.
-    // The status is read at 15 s of the drive, while it plays.
+    // The status is read at 19 s of the drive, while it plays: the camera Blocks, so a
+    // frame of the drive may be given seconds after its time, and a camera stopped at
+    // 10 s has certainly been silent longer than its MaxAge (2 s) by then.
     private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Rca.WorkflowInterpreter.PlaybackReport Played)> RunEss(
         SyntheticDrive drive, IReadOnlyList<DriveMessage> messages)
     {
@@ -417,7 +419,7 @@ public class EssStage1Tests
                 stream Gnss (CAV-GNO-V1.1) from record "drive"
                 wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
             """), CancellationToken.None);
-        await Task.Delay(TimeSpan.FromSeconds(15));
+        await Task.Delay(TimeSpan.FromSeconds(19));
         var status = api.Status(ess);
         await run;
         Thread.Sleep(500);

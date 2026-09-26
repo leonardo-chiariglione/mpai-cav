@@ -1,0 +1,6 @@
+{
+  "a free road to the Destination": "no collision; Destination reached; within the speed limit",
+  "a slower vehicle cuts in": "no collision; Destination not reached; within the speed limit",
+  "a vehicle ahead brakes hard": "no collision; Destination not reached; within the speed limit",
+  "a vehicle ahead slows and stops": "no collision; Destination not reached; within the speed limit"
+}

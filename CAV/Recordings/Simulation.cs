@@ -2,12 +2,20 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
 
+using Mpai.Cav.Map;
+
 namespace Mpai.Cav.Recordings;
 
 // A VEHICLE OF A SCENARIO: its lane relative to the ego's (+1 left, -1 right), where
 // it starts along the ego's Route, and its speed: the target speed of each time
 // from which it holds, reached within its acceleration and deceleration.
-public sealed record ScenarioVehicle(string Id, int Lane, double Start, IReadOnlyList<(double From, double Speed)> Speeds, (byte R, byte G, byte B) Paint);
+// A lane change, where there is one: from At seconds, the vehicle is in Lane. Its
+// speeds changed at most at Braking m/s2 down, 3 m/s2 up.
+public sealed record ScenarioVehicle(string Id, int Lane, double Start, IReadOnlyList<(double From, double Speed)> Speeds, (byte R, byte G, byte B) Paint,
+                                     (double At, int Lane)? LaneChange = null, double Braking = 3)
+{
+    public int LaneAt(double t) => LaneChange is { } c && t >= c.At ? c.Lane : Lane;
+}
 
 // THE STEPPED SIMULATION OF THE CAV'S WORLD (M3233 3.1). A map, the ego on a Route
 // on it, other vehicles on the same Route in their lanes. At each step - 0.1 s of
@@ -55,7 +63,9 @@ public sealed class Simulation
 
     public sealed record Sensed(IReadOnlyList<(string DataType, string Json)> Messages, JsonObject Truth, long FrameMs);
 
-    public Sensed Sense()
+    // camera: false where nothing looks at the frame (perfect perception): the
+    // Messages then have none, and the truth's boxes are empty.
+    public Sensed Sense(bool camera = true)
     {
         var messages = new List<(string, string)>();
         var ms0 = (Start + TimeSpan.FromSeconds(Time)).ToUnixTimeMilliseconds();
@@ -76,14 +86,18 @@ public sealed class Simulation
         // it sees another's rear at the distance between centres less a length -
         // for a vehicle in the ego's lane, the gap between them.
         var inView = others.Select(o => (o.Spec, Ahead: o.S - EgoS - VehicleLength)).Where(o => o.Ahead > 2 && o.Ahead < 90).ToList();
-        var (boxes, png) = CameraRenderer.Render(EgoS, inView.Select(o => (o.Ahead, -o.Spec.Lane * RoadMap.LaneWidth, o.Spec.Paint)).ToArray(), grain);
-        messages.Add(("OSD-BVO-V1.5", Frame(ms0, png)));
+        var boxes = new (int X, int Y, int W, int H)[inView.Count];
+        if (camera)
+        {
+            (boxes, var png) = CameraRenderer.Render(EgoS, inView.Select(o => (o.Ahead, -o.Spec.LaneAt(Time) * RoadMap.LaneWidth, o.Spec.Paint)).ToArray(), grain);
+            messages.Add(("OSD-BVO-V1.5", Frame(ms0, png)));
+        }
 
         var vehicles = new JsonArray();
         for (var i = 0; i < inView.Count; i++)
             vehicles.Add(new JsonObject
             {
-                ["Id"] = inView[i].Spec.Id, ["Lane"] = inView[i].Spec.Lane, ["Distance"] = Math.Round(inView[i].Ahead, 3),
+                ["Id"] = inView[i].Spec.Id, ["Lane"] = inView[i].Spec.LaneAt(Time), ["Distance"] = Math.Round(inView[i].Ahead, 3),
                 ["Speed"] = Math.Round(others.First(o => o.Spec == inView[i].Spec).Speed, 3),
                 ["Box"] = new JsonArray(boxes[i].X, boxes[i].Y, boxes[i].W, boxes[i].H)
             });
@@ -105,7 +119,7 @@ public sealed class Simulation
     // The gap to the nearest vehicle ahead in the ego's lane, bumper to bumper.
     public double? GapAhead()
     {
-        var ahead = others.Where(o => o.Spec.Lane == 0 && o.S > EgoS).Select(o => o.S - EgoS - VehicleLength).ToList();
+        var ahead = others.Where(o => o.Spec.LaneAt(Time) == 0 && o.S > EgoS).Select(o => o.S - EgoS - VehicleLength).ToList();
         return ahead.Count == 0 ? null : ahead.Min();
     }
 
@@ -124,7 +138,7 @@ public sealed class Simulation
         {
             var (spec, s, v) = others[i];
             var target = SpeedOf(spec, Time);
-            var next = target > v ? Math.Min(target, v + MaxAcceleration * Step) : Math.Max(target, v - MaxDeceleration * Step);
+            var next = target > v ? Math.Min(target, v + MaxAcceleration * Step) : Math.Max(target, v - Math.Min(spec.Braking, MaxDeceleration) * Step);
             others[i] = (spec, s + (v + next) / 2 * Step, next);
         }
         if (GapAhead() is { } gap && gap < 0) Collided = true;
