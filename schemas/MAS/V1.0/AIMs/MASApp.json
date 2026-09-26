@@ -13,7 +13,8 @@
 
   "SubAIMs":         [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": ""}}],
 
-  "Topology":        [{"Output": {"AIMName": "",             "PortName": "UAText"},                "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAText"}},
+  "Topology":        [{"Output": {"AIMName": "",             "PortName": "UAText"},                "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAText", "PortNumber": 1}},
+                      {"Output": {"AIMName": "",             "PortName": "UAText"},                "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAText", "PortNumber": 2}},
                       {"Output": {"AIMName": "",             "PortName": "UAPersonalStatus"},      "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAPersonalStatus"}},
                       {"Output": {"AIMName": "PAF-RSR-V1.6", "PortName": "OutputSpeech"},          "Input": {"AIMName": "",             "PortName": "OutputSpeech"}},
                       {"Output": {"AIMName": "PAF-RSR-V1.6", "PortName": "OutputFaceDescriptors"}, "Input": {"AIMName": "",             "PortName": "OutputFaceDescriptors"}}],

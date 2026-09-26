@@ -402,10 +402,10 @@ public sealed class Controller
             // The composite's own boundary: one of its ExternalPorts, of the
             // direction this end implies, found by its label or by the Data Type
             // the end states. A label may repeat - PortNumber decides.
+            // An end that states its Data Type is found by it; its name is not read.
             var named = node.Ports
                 .Where(p => p.Direction == boundaryDirection &&
-                            (side.Name.Length > 0 ? p.Name == side.Name
-                                                  : side.DataType is not null && p.Accepts(side.DataType)))
+                            (side.DataType is not null ? p.Accepts(side.DataType) : p.Name == side.Name))
                 .ToList();
 
             if (named.Count > 1 && side.Cited is null)
@@ -429,7 +429,7 @@ public sealed class Controller
         // its InternalTypes or its ExternalPorts. The name the Sub-AIM gives its own
         // Port is never read - nothing guarantees a sender and a receiver share it.
         Declared? declared = null;
-        if (side.Name.Length > 0)
+        if (side.DataType is null && side.Name.Length > 0)
         {
             if (node.InternalTypes.TryGetValue(side.Name, out var internalType))
                 declared = new Declared(

@@ -15,8 +15,8 @@
     { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "PathRequest"               , "Direction": "Input",   "DataType": "CAV-INT-V1.1",  "Technology": "Software", "Protocol": "", "PortNumber": 1, "IsRemote": false },
     { "Name": "TrajectoryRequest"         , "Direction": "Input",   "DataType": "CAV-INT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "PortNumber": 2, "IsRemote": false },
-    { "Name": "PathResponse"              , "Direction": "Output",  "DataType": "CAV-INT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "TrajectoryResponse"        , "Direction": "Output",  "DataType": "CAV-INT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "PathResponse"              , "Direction": "Output",  "DataType": "CAV-INT-V1.1", "PortNumber": 1, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "TrajectoryResponse"        , "Direction": "Output",  "DataType": "CAV-INT-V1.1", "PortNumber": 2, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Trajectory"                , "Direction": "Output",  "DataType": "OSD-TRJ-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 

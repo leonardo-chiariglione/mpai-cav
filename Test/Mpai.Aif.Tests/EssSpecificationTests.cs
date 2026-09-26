@@ -99,12 +99,17 @@ public class EssSpecificationTests
                 {
                     var aim = (string)end["AIMName"]!;
                     var label = (string)end["PortName"]!;
-                    if (!labels.TryGetValue(label, out var types)) { problems.Add($"label {label} not declared"); continue; }
+                    // An end that states its Data Type is read by it, not by its name.
+                    var stated = (string?)end["DataType"];
+                    List<string>? types = stated is not null ? [stated] : null;
+                    if (types is null && !labels.TryGetValue(label, out types)) { problems.Add($"label {label} not declared"); continue; }
                     if (aim == "")
                     {
                         // The boundary: an Output end is one of the composite's Inputs, and the reverse.
-                        var boundary = composite["ExternalPorts"]!.AsArray().FirstOrDefault(p => (string)p!["Name"]! == label);
                         var want = direction == "Output" ? "Input" : "Output";
+                        var boundary = composite["ExternalPorts"]!.AsArray().FirstOrDefault(p => stated is not null
+                            ? (string)p!["Direction"]! == want && Types(p["DataType"]).Contains(stated)
+                            : (string)p!["Name"]! == label);
                         if (boundary is null || (string)boundary["Direction"]! != want) problems.Add($"{label} is not a boundary {want}");
                         continue;
                     }

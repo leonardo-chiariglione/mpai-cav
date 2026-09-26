@@ -246,6 +246,48 @@ public class MetadataTests
         Assert.Equal(baseline, MadConnections(renamed));
     }
 
+    // The L2s follow the L3s: every composite L2 loaded through the Controller, as
+    // an L3 is, its Sub-AIMs' L2s beside it. A label the composite does not declare,
+    // or a Port the line does not number where a Sub-AIM has several of its Data
+    // Type, stops it loading. Where an L2 does not load, the reason is recorded.
+    [Fact]
+    public void L2Topology()
+    {
+        var copy = Path.Combine(Path.GetTempPath(), "mpai-l2s-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(copy);
+            var composites = new List<string>();
+            foreach (var file in Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
+                                          .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
+            {
+                var l2 = TryParse(file);
+                if (l2?["Identifier"]?["AIMName"]?.GetValue<string>() is not { } aim) continue;
+                // What an L2 leaves to the Implementer ("IsRemote": "") is not topology.
+                foreach (var port in l2["ExternalPorts"]?.AsArray() ?? [])
+                    if (port?["IsRemote"] is JsonValue v && v.GetValueKind() == JsonValueKind.String) port["IsRemote"] = false;
+                File.WriteAllText(Path.Combine(copy, aim + ".json"), l2.ToJsonString());
+                if (l2["Topology"] is JsonArray { Count: > 0 }) composites.Add(aim);
+            }
+
+            var store = new AmdStore(copy);
+            store.Scan();
+            var controller = new Controller(store);
+            var result = new Dictionary<string, string>();
+            foreach (var aim in composites.Distinct().Order(StringComparer.Ordinal))
+            {
+                try
+                {
+                    controller.RegisterAim(store.FindByAimName(aim)!);
+                    result[aim] = "loads";
+                }
+                catch (Exception failure) { result[aim] = "fails: " + Short(failure.Message, 200); }
+            }
+            Expected.Match("l2-topology.json", result);
+        }
+        finally { Directory.Delete(copy, recursive: true); }
+    }
+
     // The fields the schema gained in Phase 2 (M3211 3.1): each, with a legal value,
     // adds no violation to an L3; with an illegal value, or where it may not appear,
     // adds one. An L3 carrying all of them loads exactly as it did without them.

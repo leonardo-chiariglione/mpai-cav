@@ -6,12 +6,12 @@
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "TextObject",       "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":   [{"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 1,                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "TextObject",       "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "Meaning",          "Direction": "Input",  "DataType": "MMC-MEA-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TranslatedText",   "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "RecognisedText",   "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "MediaSelector",    "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "RecognisedText",   "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "MediaSelector",    "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 2,                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 
