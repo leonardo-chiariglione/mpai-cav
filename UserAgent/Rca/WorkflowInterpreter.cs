@@ -133,11 +133,23 @@ public sealed class WorkflowInterpreter
             foreach (var label in labels) absent.Remove(label);
             say($"stream {string.Join(", ", group.Select(s => s.Port))} from record \"{group.Key}\"" + (rates[0] != 1 ? $" at x{rates[0]}" : ""));
 
-            playing.Add(Task.Run(() => PlayOneAsync(group.Key, played, rates[0], labels, CancellationTokenSource.CreateLinkedTokenSource(stop, endOfWorkflow.Token).Token)));
+            // ON A THREAD OF ITS OWN (M3221 3.6): the shared pool is taken by the AIMs of
+            // the Module a record is played into - a detector, a tracker - and a record
+            // played from it falls behind them. Its own thread, above normal priority,
+            // keeps the pace, and the pace can be judged.
+            var token = CancellationTokenSource.CreateLinkedTokenSource(stop, endOfWorkflow.Token).Token;
+            var (key, rate) = (group.Key, rates[0]);
+            var done = new TaskCompletionSource();
+            new Thread(() =>
+            {
+                try { PlayOne(key, played, rate, labels, token); done.SetResult(); }
+                catch (Exception e) { done.SetException(e); }
+            }) { IsBackground = true, Priority = ThreadPriority.AboveNormal, Name = $"playback of {key}" }.Start();
+            playing.Add(done.Task);
         }
     }
 
-    private async Task PlayOneAsync(string record, List<RecordedMessage> messages, double rate, List<string> labels, CancellationToken stop)
+    private void PlayOne(string record, List<RecordedMessage> messages, double rate, List<string> labels, CancellationToken stop)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var errors = new List<double>();
@@ -146,10 +158,10 @@ public sealed class WorkflowInterpreter
             foreach (var m in messages)
             {
                 var due = TimeSpan.FromTicks((long)(m.At.Ticks / rate));
-                await UntilAsync(clock, due, stop);
-                var json = await WithPayloadsAsync(m);
+                Until(clock, due, stop);
+                var json = WithPayloadsAsync(m).GetAwaiter().GetResult();
                 errors.Add((clock.Elapsed - due).TotalMilliseconds);
-                await north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1);
+                north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult();
             }
         }
         catch (OperationCanceledException) { }
@@ -168,14 +180,14 @@ public sealed class WorkflowInterpreter
 
     // The time a Message is due: a sleep while it is far, a spin when it is near -
     // a timer on this machine resolves some milliseconds, no finer.
-    private static async Task UntilAsync(System.Diagnostics.Stopwatch clock, TimeSpan due, CancellationToken stop)
+    private static void Until(System.Diagnostics.Stopwatch clock, TimeSpan due, CancellationToken stop)
     {
         while (true)
         {
             stop.ThrowIfCancellationRequested();
             var remaining = due - clock.Elapsed;
             if (remaining <= TimeSpan.Zero) return;
-            if (remaining > TimeSpan.FromMilliseconds(20)) await Task.Delay(remaining - TimeSpan.FromMilliseconds(16), stop);
+            if (remaining > TimeSpan.FromMilliseconds(20)) stop.WaitHandle.WaitOne(remaining - TimeSpan.FromMilliseconds(16));
             else Thread.SpinWait(200);
         }
     }

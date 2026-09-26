@@ -1,0 +1,11 @@
+{
+  "Alerts where the truth has none": "5 or fewer",
+  "camera stopped at 10 s: descriptors given after 11 s": "yes, several a second",
+  "camera stopped at 10 s: objects in the last descriptors": "0",
+  "camera stopped at 10 s: the Module's AIMs at 15 s": "1CAV-BED-V2.0-I01 Alive; 1CAV-SAG-V2.0-I01 Alive; 1OSD-BVS-V1.5-I02 Degraded",
+  "frame to descriptors, 95th percentile, against the frame period": "beyond 100 ms",
+  "frames given": "201",
+  "the Module's AIMs at 15 s": "1CAV-BED-V2.0-I01 Alive; 1CAV-SAG-V2.0-I01 Alive; 1OSD-BVS-V1.5-I02 Alive",
+  "the first Alert against the truth nearer than 15 m": "within two frames",
+  "the vehicle ahead, 12 m and more, in the descriptors of its frame": "90% of frames or more"
+}

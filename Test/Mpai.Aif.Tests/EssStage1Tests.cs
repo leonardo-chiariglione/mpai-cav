@@ -303,4 +303,123 @@ public class EssStage1Tests
         File.WriteAllText(report, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("ess-stage1-bed.json", result);
     }
+
+    // Step 6: ESS Stage 1 end to end - the Module 1CAV-ESS-V2.0-I01 under the
+    // Controller, continuously, a drive of 20 s played from a record into its
+    // boundary by a workflow, its boundary recorded. From the Controller's stamps:
+    // the time from a frame to the Basic Environment Descriptors of its time, and to
+    // the Alert it caused, judged against the frame period (100 ms); the frames
+    // described and those the describer did not reach. Against the ground truth:
+    // the vehicle ahead in the descriptors, the Alert. The pace of the playback. Then
+    // the same drive with the camera stopped at 10 s: the describer DEGRADED, the
+    // Subsystem going on.
+    [SkippableFact]
+    public async Task Step6EndToEnd()
+    {
+        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        var drive = new SyntheticDrive(11, TimeSpan.FromSeconds(20));
+        var (messages, truth) = drive.Make();
+        var result = new Dictionary<string, string>();
+        var report = new Dictionary<string, string>();
+
+        // ---- the whole drive ----
+        var (records, status, played) = await RunEss(drive, messages);
+        long Ms(JsonNode? simpleTime) => (long)(double)simpleTime!["SimpleTimeData"]![0]!["StartTime"]!;
+        var frameIn = records.Where(r => (string)r["Direction"]! == "In" && (string)r["DataType"]! == SyntheticDrive.Camera)
+            .ToDictionary(r => Ms(JsonNode.Parse((string)r["Json"]!)!["BasicVisualObjectTime"]!["Time"]), r => DateTimeOffset.Parse((string)r["Stamp"]!));
+        var bedOut = records.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-BED-V2.0")
+            .Select(r => (Json: JsonNode.Parse((string)r["Json"]!)!, Stamp: DateTimeOffset.Parse((string)r["Stamp"]!)))
+            .Select(b => (b.Json, b.Stamp, Ms: Ms(b.Json["BasicEnvironmentDescriptorsTime"]))).ToList();
+        var alertOut = records.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-ALT-V1.1")
+            .Select(r => (Ms: Ms(JsonNode.Parse((string)r["Json"]!)!["AlertTime"]), Stamp: DateTimeOffset.Parse((string)r["Stamp"]!))).ToList();
+
+        var toBed = bedOut.Where(b => frameIn.ContainsKey(b.Ms)).Select(b => (b.Stamp - frameIn[b.Ms]).TotalMilliseconds).Order().ToList();
+        var toAlert = alertOut.Where(a => frameIn.ContainsKey(a.Ms)).Select(a => (a.Stamp - frameIn[a.Ms]).TotalMilliseconds).Order().ToList();
+        string Latency(List<double> l) => l.Count == 0 ? "none" : $"median {l[l.Count / 2]:0} ms, 95th percentile {l[(int)(l.Count * 0.95)]:0} ms, max {l[^1]:0} ms";
+
+        var start = drive.Start.ToUnixTimeMilliseconds();
+        var frames = truth["Frames"]!.AsArray().ToDictionary(f => start + (long)Math.Round((double)f!["At"]! * 1000), f => f!);
+        int ahead = 0, aheadFrames = 0;
+        foreach (var (json, _, ms) in bedOut.Where(b => frames.ContainsKey(b.Ms)))
+        {
+            var d = (double)frames[ms]["AheadDistance"]!;
+            if (d < 12) continue;
+            aheadFrames++;
+            if (json["BasicEnvironmentObjects"]!.AsArray().Any(o =>
+                    Math.Abs((double)o!["SpatialAttitude"]!["Position"]!["CartPosition"]![1]!) < 1.75 &&
+                    Math.Abs((double)o["SpatialAttitude"]!["Position"]!["CartPosition"]![0]! - d) < 0.25 * d + 2)) ahead++;
+        }
+        var nearFrom = start + (long)((double)truth["Near"]!["From"]! * 1000);
+        var nearTo = start + (long)((double)truth["Near"]!["To"]! * 1000);
+        var firstAlert = alertOut.Where(a => a.Ms >= nearFrom - 100 && a.Ms <= nearTo + 100).Select(a => (long?)a.Ms).Min();
+        var outside = alertOut.Count(a => a.Ms < nearFrom - 100 || a.Ms > nearTo + 100);
+
+        result["frames given"] = frameIn.Count.ToString();
+        result["the Module's AIMs at 15 s"] = string.Join("; ", status.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
+        result["the vehicle ahead, 12 m and more, in the descriptors of its frame"] = $"{(ahead >= aheadFrames * 0.9 ? "90% of frames or more" : "fewer than 90% of frames")}";
+        result["the first Alert against the truth nearer than 15 m"] = firstAlert is { } fa ? (Math.Abs(fa - nearFrom) <= 200 ? "within two frames" : $"{fa - nearFrom} ms off") : "none";
+        result["Alerts where the truth has none"] = outside <= 5 ? "5 or fewer" : "more than 5";
+        result["frame to descriptors, 95th percentile, against the frame period"] = toBed.Count == 0 ? "none" : toBed[(int)(toBed.Count * 0.95)] <= 100 ? "within 100 ms" : "beyond 100 ms";
+
+        report["frames given"] = frameIn.Count.ToString();
+        report["frames described (descriptors of their time)"] = bedOut.Count(b => frameIn.ContainsKey(b.Ms)).ToString();
+        report["frames the describer did not reach"] = (frameIn.Count - bedOut.Count(b => frameIn.ContainsKey(b.Ms))).ToString();
+        report["frame to Basic Environment Descriptors"] = Latency(toBed);
+        report["frame to Alert"] = Latency(toAlert);
+        report["the vehicle ahead, 12 m and more, in the descriptors of its frame"] = $"{ahead} of {aheadFrames}";
+        report["the first Alert against the truth nearer than 15 m"] = firstAlert is { } f2 ? $"{f2 - nearFrom} ms" : "none";
+        report["Alerts where the truth has none"] = outside.ToString();
+        report["playback: write error against the record's time"] = $"median {played.MedianErrorMs:0.0} ms, 95th percentile {played.P95ErrorMs:0.0} ms, max {played.MaxErrorMs:0.0} ms";
+
+        // ---- the camera stopped at 10 s ----
+        var stopped = messages.Where(m => m.DataType != SyntheticDrive.Camera || m.At <= TimeSpan.FromSeconds(10)).ToList();
+        var (records2, status2, _) = await RunEss(drive, stopped);
+        var after = records2.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-BED-V2.0")
+            .Select(r => JsonNode.Parse((string)r["Json"]!)!)
+            .Where(j => Ms(j["BasicEnvironmentDescriptorsTime"]) > start + 11_000).ToList();
+        result["camera stopped at 10 s: the Module's AIMs at 15 s"] = string.Join("; ", status2.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
+        result["camera stopped at 10 s: descriptors given after 11 s"] = after.Count >= 50 ? "yes, several a second" : after.Count > 0 ? "a few" : "none";
+        result["camera stopped at 10 s: objects in the last descriptors"] = after.Count == 0 ? "none given" : after[^1]["BasicEnvironmentObjectCount"]!.ToString();
+        report["camera stopped at 10 s: descriptors given after 11 s"] = after.Count.ToString();
+
+        foreach (var (k, v) in result) report.TryAdd(k, v);
+        File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "ess-stage1-end-to-end.json"),
+            JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("ess-stage1-end-to-end.json", result);
+    }
+
+    // The Module run on a drive, played from a record by a workflow; its boundary recorded.
+    // The status is read at 15 s of the drive, while it plays.
+    private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Rca.WorkflowInterpreter.PlaybackReport Played)> RunEss(
+        SyntheticDrive drive, IReadOnlyList<DriveMessage> messages)
+    {
+        const string ess = "1CAV-ESS-V2.0-I01";
+        var location = Path.Combine(Path.GetTempPath(), "mpai-phase7-" + Guid.NewGuid().ToString("N"));
+        var store = new AIF.SharedStorage.RuledStore(() => Path.Combine(location, "private", ess), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
+        var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, "SyntheticDrive"), "", ""), messages);
+
+        using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
+        Assert.Equal(AifError.OK, api.StartFlow(ess));
+        api.SharedStorageInit(ess, location);
+        Assert.Equal(AifError.OK, api.RecordStart(ess, out var recordId));
+
+        var devices = new Mpai.Rca.DeviceRegistry().RegisterRecord("drive", new Mpai.Rca.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
+        var interpreter = new Mpai.Rca.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
+        var run = interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
+            workflow DRIVE over {{ess}}
+            on Start:
+                stream Camera (OSD-BVO-V1.5) from record "drive"
+                stream Attitude (OSD-OSA-V1.5) from record "drive"
+                stream Gnss (CAV-GNO-V1.1) from record "drive"
+                wait {{(int)drive.Duration.TotalSeconds + 2}}s
+            """), CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(15));
+        var status = api.Status(ess);
+        await run;
+        Thread.Sleep(500);
+        api.RecordStop(ess, out _);
+        var records = RecordTests.Records(api.ModuleStorage(ess)!, recordId!);
+        api.StopFlow(ess);
+        return (records, status, interpreter.Playbacks.Single());
+    }
 }

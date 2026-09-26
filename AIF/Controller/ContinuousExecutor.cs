@@ -391,7 +391,14 @@ public sealed partial class ContinuousExecutor
                 if (host.Processor(aim) is IAimRunner runner)
                 {
                     var context = await host.ContextAsync(aim);
-                    await runner.RunAsync(ports, context);
+                    using var watching = CancellationTokenSource.CreateLinkedTokenSource(host.Stopping);
+                    var watch = WatchMaxAgeAsync(leaf, ports, watching.Token);
+                    try { await runner.RunAsync(ports, context); }
+                    finally
+                    {
+                        watching.Cancel();
+                        try { await watch; } catch (OperationCanceledException) { }
+                    }
                     return;                                             // it ran until Stop
                 }
                 if (!await FireOnceAsync(leaf, ports)) return;
@@ -448,6 +455,42 @@ public sealed partial class ContinuousExecutor
             default:
                 _ = StopAsync();
                 return false;
+        }
+    }
+
+    // AN AIM THAT RUNS ON ITS OWN PORTS reads them itself, so the Controller watches
+    // beside it that each required Port with a MaxAge goes on delivering (M3215 3.2,
+    // M3221 3.7): once a Port has delivered, a silence longer than its MaxAge makes
+    // the AIM DEGRADED and its Module's OnDegraded applies; a new arrival makes it
+    // ALIVE again. A Port that has not yet delivered is a sensor not yet started,
+    // not one that stopped.
+    private async Task WatchMaxAgeAsync(DescriptorNode leaf, Ports ports, CancellationToken stop)
+    {
+        var watched = leaf.Ports.Where(p => p.Direction == "Input" && !p.IsOptional && p.MaxAge is not null)
+                                .Select(p => (Port: p, Ends: ports.ReadersOf(p)))
+                                .Where(x => x.Ends.Count > 0)
+                                .ToList();
+        if (watched.Count == 0) return;
+        static long Arrived(IReadOnlyList<IChannelReader> ends) => ends.Sum(e => e.Taken + e.Pending + e.Dropped + e.Discarded);
+        var last = watched.ToDictionary(x => x.Port, x => (Count: Arrived(x.Ends), At: System.Diagnostics.Stopwatch.GetTimestamp()));
+        var every = TimeSpan.FromMilliseconds(Math.Max(10, watched.Min(x => x.Port.MaxAge!.Value) / 4));
+        var silent = false;
+        while (true)
+        {
+            await Task.Delay(every, stop);
+            foreach (var (port, ends) in watched)
+            {
+                var now = Arrived(ends);
+                if (now != last[port].Count)
+                {
+                    last[port] = (now, System.Diagnostics.Stopwatch.GetTimestamp());
+                    if (silent) { silent = false; host.Succeeded(leaf.AIMName); }
+                    continue;
+                }
+                if (now == 0 || silent || System.Diagnostics.Stopwatch.GetElapsedTime(last[port].At).TotalMilliseconds <= port.MaxAge!.Value) continue;
+                silent = true;
+                if (!Degraded(leaf, $"its Port {port.DataType}#{NumberOf(leaf, port)} delivered nothing within its MaxAge of {port.MaxAge} ms")) return;
+            }
         }
     }
 

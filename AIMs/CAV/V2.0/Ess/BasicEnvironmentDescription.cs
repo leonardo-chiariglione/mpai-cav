@@ -14,7 +14,12 @@ namespace Mpai.Cav.Ess;
 //  - its existence confidence raised by each association and lowered by each miss;
 //    a track missed DropAfterMisses times in a row dropped;
 //  - the Basic Environment Descriptors V2.0 on the ego frame, given out and returned
-//    to the describer as its prior.
+//    to the describer as its prior;
+//  - where no descriptors come for Quiet milliseconds of the ego's time (1 s: longer
+//    than a frame takes to be described, and than its MaxAge) - a camera
+//    stopped - the tracks predicted and a miss counted for each, and the
+//    descriptors given all the same: the Subsystem goes on, and what it no longer
+//    senses fades from what it describes (M3221 3.7).
 // Nothing is given out before the ego Spatial Attitude is known: it is the frame.
 public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDictionary<string, string> settings) : IAimProcessor, IAimRunner
 {
@@ -36,9 +41,10 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
 
     private readonly double gate = EssJson.Setting(settings, "Gate", 3);
     private readonly int dropAfter = (int)EssJson.Setting(settings, "DropAfterMisses", 5);
+    private readonly long quiet = (long)EssJson.Setting(settings, "Quiet", 1000);
     private readonly List<Track> tracks = [];
     private JsonNode? ego, weather;
-    private long? lastMs;
+    private long? lastMs, lastGiven, lastDescribed;
     private long tracksMade, instances;
 
     public string InstanceId { get; } = instanceId;
@@ -52,26 +58,43 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
             var json = JsonNode.Parse(m.Json);
             switch (port.DataType)
             {
-                case Attitude: ego = json; continue;
+                case Attitude:
+                    ego = json;
+                    // Descriptors silent for Quiet: given every 100 ms of the ego's time.
+                    if (EssJson.Milliseconds(json!["SpatialAttitudeTime"]) is { } now && lastDescribed is { } described && now - described >= quiet
+                        && (lastGiven is not { } given || now - given >= 100))
+                    {
+                        Fuse(null, now);
+                        await Give(ports, now);
+                    }
+                    continue;
                 case Weather: weather = json; continue;
                 case Full: continue;                                 // other CAVs' objects: a later stage
             }
             var ms = EssJson.Milliseconds(json!["BVSDescriptorsSpaceTime"]?["Time"]) ?? ports.Now.ToUnixTimeMilliseconds();
+            lastDescribed = ms;
             Fuse(json!, ms);
-            if (ego is null) continue;
-            await ports.WriteAsync(Descriptors, 1, Descriptors_(ms).ToJsonString());
+            await Give(ports, ms);
         }
     }
 
-    private void Fuse(JsonNode descriptors, long ms)
+    private async Task Give(IAimPorts ports, long ms)
+    {
+        if (ego is null) return;
+        lastGiven = ms;
+        await ports.WriteAsync(Descriptors, 1, Descriptors_(ms).ToJsonString());
+    }
+
+    // What the descriptors say at ms; with none, only the prediction and the misses.
+    private void Fuse(JsonNode? descriptors, long ms)
     {
         var dt = lastMs is { } l ? Math.Max(0.001, (ms - l) / 1000.0) : 0;
         lastMs = ms;
         foreach (var t in tracks) { t.X += t.Vx * dt; t.Y += t.Vy * dt; }
 
         var free = new HashSet<Track>(tracks);
-        var id = descriptors["BasicVisualSceneDescriptorsID"]?.GetValue<string>();
-        foreach (var entry in descriptors["BasicVisualSceneDescriptors"]?.AsArray() ?? [])
+        var id = descriptors?["BasicVisualSceneDescriptorsID"]?.GetValue<string>();
+        foreach (var entry in descriptors?["BasicVisualSceneDescriptors"]?.AsArray() ?? [])
         {
             var obj = entry?["VObjectIDOrVObject"]?[0];
             var position = EssJson.Vector(entry?["VisualObjectSpaceTime"]?["SpatialAttitude1"]?["Position"]?["CartPosition"]);
