@@ -19,6 +19,7 @@
     { "Name": "RouteResponse"             , "Direction": "Input",   "DataType": "CAV-INT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSHCIMessageOut"          , "Direction": "Output",  "DataType": "CAV-AHM-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "RouteRequest"              , "Direction": "Output",  "DataType": "CAV-INT-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSData"                   , "Direction": "Output",  "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Route"                     , "Direction": "Output",  "DataType": "CAV-RTE-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 

@@ -1,5 +1,5 @@
 {
-  "CAV-AMS-V1.1": "CAV-FED-V1.1 has no Output of CAV-ERA-V1.1 (EgoRemoteAMSMessageFOut); CAV-RSP-V1.1 has no Output of CAV-AMD-V1.1 (AMSDataROut); CAV-AMM-V1.1 has no Input of CAV-AMD-V1.1 (AMSDataRM); CAV-AMM-V1.1 has no Input of CAV-AMD-V1.1 (AMSDataTM)",
+  "CAV-AMS-V1.1": "wired",
   "CAV-AUS-V2.0": "wired",
   "CAV-ESS-V2.0": "wired",
   "CAV-LIS-V2.0": "wired",

@@ -19,6 +19,8 @@
     { "Name": "RoadState"                 , "Direction": "Input",   "DataType": "CAV-RDS-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "CAVState"                  , "Direction": "Input",   "DataType": "CAV-CST-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSMASMessage"             , "Direction": "Input",   "DataType": "CAV-AMM-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V1.1", "PortNumber": 1, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V1.1", "PortNumber": 2, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSData"                   , "Direction": "Output",  "DataType": "CAV-AMD-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
