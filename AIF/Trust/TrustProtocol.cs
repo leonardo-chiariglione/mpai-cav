@@ -37,10 +37,16 @@ public sealed class TrustProtocol
     private readonly Func<DateTimeOffset> now;
     private readonly IRootOfTrust? attestor;
     private readonly Attestation.Policy? requires;
+    private readonly Action<string, string, string, string?>? record;
 
+    // record: each check of the other end, as a Trust Operation - its type, the type
+    // and identifier of what was checked, and why it failed where it did - for the
+    // Trace of this end (M3223 3.6).
     public TrustProtocol(TrustAnchorKey self, ECDsa key, IEnumerable<JsonObject> trusted, Func<DateTimeOffset>? now = null,
-                         IRootOfTrust? attestor = null, Attestation.Policy? requires = null)
+                         IRootOfTrust? attestor = null, Attestation.Policy? requires = null,
+                         Action<string, string, string, string?>? record = null)
     {
+        this.record = record;
         this.self = self;
         this.key = key;
         this.trusted = trusted;
@@ -106,17 +112,42 @@ public sealed class TrustProtocol
     {
         var refused = Check(response, "TrustResponse", "ResponderID", (string?)response["Response"]?["Result"], ownCertificate);
         if (refused is not null) return refused;
-        return (string?)response["Response"]?["Status"] == "Success" ? null : $"it did not admit this Controller: {response["Response"]?["Reason"]}";
+        if ((string?)response["Response"]?["Status"] == "Success") return null;
+
+        // Refused by the other end, as its policy judged this end: recorded too.
+        var reason = $"it did not admit this Controller: {response["Response"]?["Reason"]}";
+        record?.Invoke("EvaluatePolicy", "TrustMessage", (string?)response["MessageID"] ?? "", reason);
+        return reason;
     }
 
     // One message: well formed; signed by an anchor this end trusts, current, whose
     // key verifies it; its sender that anchor; fresh; and naming this end's
     // certificate.
+    // Each check recorded: the message - its sender, signature, time and link - and,
+    // where required, the evidence of what the sender runs.
     private string? Check(JsonObject message, string type, string senderField, string? namedCertificate, string ownCertificate)
     {
+        var refused = CheckMessage(message, type, senderField, namedCertificate, ownCertificate, out var anchor);
+        record?.Invoke("VerifySignature", "TrustMessage", (string?)message["MessageID"] ?? "", refused);
+        if (refused is not null || requires is null) return refused;
+
+        // What it runs: quoted over this end's certificate - the nonce this end chose
+        // for the link.
+        var evidence = message["Presentation"]?["AttestationEvidence"] as JsonObject;
+        using var anchorKey = TrustAnchorKey.KeyOf(anchor!);
+        var unproven = evidence is null ? "no evidence of what it runs"
+            : Attestation.Check(evidence, anchorKey!, (string)anchor!["AnchorID"]!, Convert.FromHexString(ownCertificate), requires, now());
+        record?.Invoke("ValidateEvidence", "AttestationEvidence", (string?)evidence?["AttestationEvidenceID"] ?? "", unproven);
+        return unproven is null ? null : $"not attested: {unproven}";
+    }
+
+    private string? CheckMessage(JsonObject message, string type, string senderField, string? namedCertificate, string ownCertificate,
+                                 out JsonObject? anchor)
+    {
+        anchor = null;
         if ((string?)message["Header"] != Header || (string?)message["MessageType"] != type) return $"not a {type}";
         var keyId = (string?)message["KeyID"] ?? "";
-        var anchor = trusted.FirstOrDefault(a => (string?)a["AnchorID"] == keyId);
+        anchor = trusted.FirstOrDefault(a => (string?)a["AnchorID"] == keyId);
         if (anchor is null) return $"foreign: {keyId} is not an anchor this end trusts";
         var t = now();
         if (TrustAnchorKey.ValidityOf(anchor) is not var (notBefore, notAfter) || t < notBefore || t > notAfter)
@@ -129,15 +160,6 @@ public sealed class TrustProtocol
             return $"stale: sent {(t - sent).Duration().TotalMinutes:0} minutes from its receipt";
         if (!string.Equals(namedCertificate, ownCertificate, StringComparison.OrdinalIgnoreCase))
             return "not for this link: it names another certificate";
-
-        // What it runs, where this end requires it: quoted over this end's
-        // certificate - the nonce this end chose for the link.
-        if (requires is not null)
-        {
-            if (message["Presentation"]?["AttestationEvidence"] is not JsonObject evidence) return "not attested: no evidence of what it runs";
-            if (Attestation.Check(evidence, anchorKey!, keyId, Convert.FromHexString(ownCertificate), requires, t) is { } unproven)
-                return $"not attested: {unproven}";
-        }
         return null;
     }
 

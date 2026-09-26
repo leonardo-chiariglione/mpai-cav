@@ -1,0 +1,18 @@
+{
+  "a failure changed to a success": "record 9: altered, or not the Controller's (its signature does not verify)",
+  "a failure's reason removed": "record 9: altered, or not the Controller's (its signature does not verify)",
+  "a record inserted, signed by another key": "record 4: altered, or not the Controller's (its signature does not verify)",
+  "a record removed": "record 4: its sequence is 5 - records are missing, or out of their order",
+  "as kept, against the head": "intact, 10 records",
+  "its records": "1 IssueCredential Success, 2 UpdateLifecycleState Success, 3 BindPolicy Success, 4 VerifySignature Success, 5 ValidateCredential Success, 6 ValidateCredential Success, 7 VerifySignature Success, 8 ValidateCredential Success, 9 ValidateCredential Failure, 10 UpdateLifecycleState Success",
+  "its records against AIF-TRC": "valid",
+  "kept in memory, and in its file": "the same",
+  "started again, and a decision made": "intact, 12 records",
+  "started on a broken Trace": "refused: The Trace at <file> is not intact: record 4: its sequence is 5 - records are missing, or out of their order. The Controller does not continue it.",
+  "the Trace, as kept": "intact, 10 records",
+  "the first begins at the anchor": "yes",
+  "the last record cut, against the head": "it ends at record 9, its head is record 10: records were cut from its end",
+  "the last record cut, without the head": "intact, 9 records",
+  "their Trust Operations against PTF-TOP": "valid",
+  "two records swapped": "record 3: its sequence is 4 - records are missing, or out of their order"
+}

@@ -45,7 +45,8 @@
         "ProcessLifecycleCredential",
         "AttestationEvidence",
         "PolicyBinding",
-        "Profile"
+        "Profile",
+        "TrustMessage"
       ],
       "description": "Type of object on which the operation was performed."
     },

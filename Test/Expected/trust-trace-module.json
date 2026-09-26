@@ -1,0 +1,7 @@
+{
+  "TST-RXC started": "OK",
+  "TST-RXC, on a host that does not trust this Controller": "NotTrusted",
+  "its decisions": "BindPolicy PolicyBinding Success x5, EvaluatePolicy PolicyBinding Success x5, EvaluatePolicy TrustMessage Failure x1, IssueCredential InstanceCredential Success x5, UpdateLifecycleState ProcessLifecycleCredential Success x14, ValidateCredential InstanceCredential Success x5, ValidateCredential ProcessLifecycleCredential Success x5, ValidateEvidence AttestationEvidence Success x5, VerifySignature CII Success x5, VerifySignature TrustMessage Success x2",
+  "the Trace": "intact",
+  "the refusal, as traced": "EvaluatePolicy TrustMessage: it did not admit this Controller: foreign: controller-1 is not an anchor this end trusts"
+}

@@ -148,7 +148,6 @@ public sealed class TrustDomain
     private readonly ECDsa anchorKey;
     private readonly ConcurrentDictionary<string, Instance> instances = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, ECDsa> keys = new(StringComparer.Ordinal);
-    private readonly ConcurrentQueue<JsonObject> operations = new();
 
     public TrustDomain(string controllerId, Func<DateTimeOffset>? now = null)
     {
@@ -157,22 +156,28 @@ public sealed class TrustDomain
         var t = this.now();
         anchorKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         Anchor = new TrustAnchorKey(controllerId, anchorKey, t, t + AnchorLifetime);
+        Trace = new TrustTrace(Anchor, anchorKey, this.now);
     }
 
     // A Controller whose anchor is kept between runs: the hosts it uses are given
-    // its Trust Anchor object.
-    public TrustDomain(TrustAnchorKey anchor, ECDsa key, Func<DateTimeOffset>? now = null)
+    // its Trust Anchor object. traceFile: where its Trace is kept (M3223 3.6), and
+    // continued from, if it is there.
+    public TrustDomain(TrustAnchorKey anchor, ECDsa key, Func<DateTimeOffset>? now = null, string? traceFile = null)
     {
         ControllerId = anchor.AnchorId;
         this.now = now ?? (() => DateTimeOffset.UtcNow);
         anchorKey = key;
         Anchor = anchor;
+        Trace = new TrustTrace(Anchor, anchorKey, this.now, traceFile);
     }
+
+    // THE TRACE of this Controller's trust decisions, a chain (M3223 3.6).
+    public TrustTrace Trace { get; }
 
     // THE TRUST PROTOCOL of this Controller with the hosts whose anchors it trusts
     // (M3223 3.4).
     public TrustProtocol LinkWith(IEnumerable<JsonObject> hostAnchors, IRootOfTrust? attestor = null, Attestation.Policy? requires = null) =>
-        new(Anchor, anchorKey, hostAnchors, now, attestor, requires);
+        new(Anchor, anchorKey, hostAnchors, now, attestor, requires, (type, targetType, targetId, failure) => Operation(type, targetType, targetId, failure));
 
     // The public key a KeyID names, among those this Controller trusts: its own.
     public ECDsa? KeyFor(string keyId) => keyId == Anchor.AnchorId ? Anchor.PublicKey : null;
@@ -242,7 +247,7 @@ public sealed class TrustDomain
 
     // Every trust decision and act of this Controller, as PTF Trust Operations
     // (PTF-TOP), in the order made - for the Trace (M3223 3.6).
-    public IReadOnlyList<JsonObject> Operations => operations.ToArray();
+    public IReadOnlyList<JsonObject> Operations => Trace.Records.Select(r => r["TrustOperation"]!.AsObject()).ToList();
 
     public JsonObject Operation(string type, string targetType, string targetId, string? failure)
     {
@@ -250,6 +255,10 @@ public sealed class TrustDomain
         {
             ["Header"] = "PTF-TOP-V1.0",
             ["TrustOperationID"] = $"{ControllerId}#TOP-{Guid.NewGuid():N}",
+            ["TrustOperationTime"] = new JsonObject
+            {
+                ["Header"] = "OSD-TIM-V1.5", ["TimeID"] = $"{ControllerId}#TIM-{Guid.NewGuid():N}", ["Data"] = PtfIdentity.Time(now())
+            },
             ["OperationType"] = type,
             ["TargetType"] = targetType,
             ["TargetID"] = targetId,
@@ -258,7 +267,7 @@ public sealed class TrustDomain
         };
         if (failure is not null) operation["FailureReason"] = failure;
         PtfSignature.Sign(operation, anchorKey, Anchor.AnchorId);
-        operations.Enqueue(operation);
+        Trace.Append(operation);
         return operation;
     }
 
