@@ -52,10 +52,18 @@ public class StandInTests
         public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         {
             var l3 = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, aimName + ".json")))!;
-            var ports = l3["ExternalPorts"]!.AsArray().Select(p => (
-                Name: p!["Name"]!.GetValue<string>(),
-                Direction: p["Direction"]!.GetValue<string>(),
-                Number: p["PortNumber"]?.GetValue<int>() ?? 1)).ToList();
+            // Keyed as every AIM's Ports are, by Data Type and Port Number; the
+            // name only labels the answer, for the person reading it.
+            var seen = new Dictionary<(string, string), int>();
+            var ports = l3["ExternalPorts"]!.AsArray().Select(p =>
+            {
+                var direction = p!["Direction"]!.GetValue<string>();
+                var type = p["DataType"] is JsonArray a ? a[0]!.GetValue<string>() : p["DataType"]!.GetValue<string>();
+                var position = seen[(direction, type)] = seen.GetValueOrDefault((direction, type)) + 1;
+                var number = p["PortNumber"]?.GetValue<int>() ?? 1;
+                return (Name: p["Name"]!.GetValue<string>(), Direction: direction, Number: number,
+                        Key: AIF.Controller.PortKey.Of(type, p["PortNumber"]?.GetValue<int>() ?? position));
+            }).ToList();
             var outputs = ports.Where(p => p.Direction == "Output").ToList();
             var inputs = ports.Where(p => p.Direction == "Input").ToList();
             var short_ = aimName[1..8];
@@ -63,9 +71,9 @@ public class StandInTests
             {
                 var got = string.Join("+", m.Ports.OrderBy(p => p.Key).Select(p => p.Value));
                 var answer = aimName.Contains("MMC-ASR")
-                    ? outputs.Where(o => inputs.Any(i => m.Ports.ContainsKey(i.Name) && i.Number == o.Number)).ToList()
+                    ? outputs.Where(o => inputs.Any(i => m.Ports.ContainsKey(i.Key) && i.Number == o.Number)).ToList()
                     : outputs;
-                return new Message { Ports = answer.ToDictionary(o => o.Name, o => $"{short_}.{o.Name}({got})") };
+                return new Message { Ports = answer.ToDictionary(o => o.Key, o => $"{short_}.{o.Name}({got})") };
             });
         }
     }

@@ -20,7 +20,7 @@ namespace Mpai.Aims.Audio;
 public sealed class AoaAimAdapter
     : IAimProcessor, IStartStopAcquisition
 {
-    public const string OutputPort = "OutputAudio";
+    public static readonly string OutputPort = PortKey.Of("OSD-AUO-V1.5", 1);
 
     private readonly IAudioAcquisitionAim  _aoa;
     private readonly IStartStopAcquisition? _startStop;

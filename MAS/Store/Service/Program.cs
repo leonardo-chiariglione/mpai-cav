@@ -14,7 +14,7 @@ using Mpai.StoreService;
 //
 // --Root is where the Store keeps its L3s (default: <local application data>\MPAI\Store).
 // --Schemas is the published schemas folder (default: the "schemas" folder above this program):
-//   the AIM Metadata schema every L3 must validate against, and the L2s.
+//   the L2s every L3 is checked against.
 // --Packages is the folder holding all packages; file: URIs are inspected only inside it.
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +28,6 @@ var repository = new L3Repository(root);
 // An L3 is found for the conformance check of a composite among the L3s the Store holds.
 var l2 = new L2Conformance(schemas, id =>
     repository.Text(id, null) is { } text ? JsonDocument.Parse(text).RootElement.Clone() : null);
-var metadata = AimMetadataSchema.Load(schemas);
 var packages = new PackageCheck(builder.Configuration["Packages"]);
 var app = builder.Build();
 
@@ -47,18 +46,15 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
         if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || id.Contains(".."))
             return Results.BadRequest(new { refused = $"'{id}' cannot name an L3 in the Store." });
 
-        // AN L3 THAT DOES NOT VALIDATE IS REFUSED: the AIM Metadata schema of AIF V3.0
-        // is what a Controller relies on when it reads the L3.
-        var violations = metadata.Violations(l3);
-        if (violations.Count > 0)
+        // AN L3 IS VALIDATED AGAINST ITS L2, not against the AIM Metadata schema (L1):
+        // the L2 is valid against L1, and the L3 conforms to its L2 (below). First,
+        // what import will do to it: its names resolved to Data Types - an L3 whose
+        // Topology cannot be resolved is refused.
+        try { AIF.Store.TopologyNormaliser.Normalise(l3).Dispose(); }
+        catch (InvalidOperationException refusal)
         {
-            Console.WriteLine($"[Store] refused {id}: {violations.Count} violation(s) of the AIM Metadata schema");
-            return Results.Json(new
-            {
-                id, published = false,
-                refused = "The L3 does not validate against the AIM Metadata schema of AIF V3.0.",
-                violations
-            }, statusCode: 422);
+            Console.WriteLine($"[Store] refused {id}: {refusal.Message}");
+            return Results.Json(new { id, published = false, refused = refusal.Message }, statusCode: 422);
         }
 
         // WHAT IS SIGNALLED: the package the L3 names.

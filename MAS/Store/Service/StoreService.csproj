@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\AIF\Metadata\AIF.Metadata.csproj" />
+    <ProjectReference Include="..\..\..\AIF\Store\AIF.Store.csproj" />
   </ItemGroup>
 
 </Project>

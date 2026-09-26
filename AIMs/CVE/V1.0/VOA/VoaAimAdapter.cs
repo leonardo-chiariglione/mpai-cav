@@ -15,7 +15,7 @@ namespace Mpai.Aims.Visual;
 public sealed class VoaAimAdapter
     : IAimProcessor
 {
-    public const string OutputPort = "OutputVisual";
+    public static readonly string OutputPort = PortKey.Of("OSD-VIO-V1.5", 1);
 
     private readonly IVisualAcquisitionAim voa;
     private readonly string sourceHint;

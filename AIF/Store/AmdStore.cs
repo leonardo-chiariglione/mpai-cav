@@ -6,8 +6,18 @@ public sealed class AmdStore
 {
     private readonly string repositoryPath;
 
+    // The L3s as imported: the original, as written and as distributed, and the
+    // normalised document (TopologyNormaliser) - no names in it - which is all
+    // that processing receives. An L3 the normaliser refused has no normalised
+    // document; asking for it gives the reason.
     private readonly Dictionary<Identifier, JsonDocument>
         amdDocuments = new();
+
+    private readonly Dictionary<Identifier, JsonDocument>
+        normalised = new();
+
+    private readonly Dictionary<Identifier, string>
+        refused = new();
 
     public AmdStore(string repositoryPath)
     {
@@ -29,6 +39,8 @@ public sealed class AmdStore
     public void Scan()
     {
         amdDocuments.Clear();
+        normalised.Clear();
+        refused.Clear();
 
         var scanner = new AmdRepositoryScanner(repositoryPath);
 
@@ -53,6 +65,8 @@ public sealed class AmdStore
             };
 
             amdDocuments[identifier] = document;
+            try { normalised[identifier] = TopologyNormaliser.Normalise(document.RootElement); }
+            catch (InvalidOperationException reason) { refused[identifier] = reason.Message; }
         }
     }
 
@@ -108,7 +122,18 @@ public sealed class AmdStore
         return catalog.OrderBy(c => c.AIMName).ToList();
     }
 
+    // The L3 for processing: normalised, no names in it.
     public JsonDocument GetAMD(Identifier identifier)
+    {
+        if (refused.TryGetValue(identifier, out var reason))
+            throw new InvalidOperationException(reason);
+        if (!normalised.TryGetValue(identifier, out var document))
+            throw new InvalidOperationException($"AMD not found: {identifier}");
+        return document;
+    }
+
+    // The L3 as written, for distributing it and for people to read.
+    public JsonDocument GetOriginal(Identifier identifier)
     {
         if (!amdDocuments.TryGetValue(identifier, out var document))
             throw new InvalidOperationException($"AMD not found: {identifier}");

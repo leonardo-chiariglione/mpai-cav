@@ -34,7 +34,7 @@ public sealed class AoaAimProcessor : IAimProcessor
         _aoa        = aoa;
         _startStop  = aoa as IStartStopAcquisition;
         _duration   = duration ?? System.TimeSpan.FromSeconds(5);
-        _inputPort  = ports.InputOrDefault("OSD-AUO-V1.5", "InputAudio");
+        _inputPort  = ports.InputOrDefault("OSD-AUO-V1.5", PortKey.Of("OSD-AUO-V1.5", 1));
         _outputPort = ports.Output("OSD-AUO-V1.5");
     }
 

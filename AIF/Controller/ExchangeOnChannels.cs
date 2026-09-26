@@ -152,7 +152,7 @@ public sealed partial class ContinuousExecutor
             var hash = key.LastIndexOf('#');
             var dataType = hash > 0 ? key[..hash] : key;
             var number = hash > 0 && int.TryParse(key[(hash + 1)..], out var n) ? n : 1;
-            if (OwnPort(aim, "Input", dataType, number) is { } port) inbox[port.Name] = json;
+            if (OwnPort(aim, "Input", dataType, number) is { } port) inbox[KeyOf(aim, port)] = json;
         }
 
         Message result;
@@ -185,7 +185,7 @@ public sealed partial class ContinuousExecutor
         var produced = new Dictionary<string, string>();
         foreach (var (name, json) in result.Ports)
         {
-            if (aim.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == name) is not { } port) continue;
+            if (aim.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(aim, p) == name) is not { } port) continue;
             ObjectInspector?.Invoke(aim.AIMName, port.DataType, json);
             produced[$"{port.DataType}#{NumberOf(aim, port)}"] = json;
         }
@@ -206,7 +206,7 @@ public sealed partial class ContinuousExecutor
         var inbox = new Dictionary<string, string>();
         foreach (var (port, end) in inputs)
             foreach (var reader in readers[end])
-                if (reader.TryRead(out var message) && message is not null) { inbox[port.Name] = Payloads.Inline(message.Json); break; }
+                if (reader.TryRead(out var message) && message is not null) { inbox[KeyOf(leaf, port)] = Payloads.Inline(message.Json); break; }
 
         Message result;
         try
@@ -236,7 +236,7 @@ public sealed partial class ContinuousExecutor
         var ports = new Ports(this, leaf);
         foreach (var (name, json) in result.Ports)
         {
-            var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == name);
+            var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
             if (port is null) { Console.WriteLine($"[AIF] {leaf.AIMName}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
             await ports.WriteAsync(port.DataType, NumberOf(leaf, port), json, -1);
         }

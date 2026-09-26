@@ -6,7 +6,7 @@
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "BasicRADARObject", "Direction": "Input",  "DataType": "OSD-BRO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BasicRADARObject", "Direction": "Input",  "DataType": "OSD-BRO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicRADARObject", "Direction": "Output", "DataType": "OSD-BRO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

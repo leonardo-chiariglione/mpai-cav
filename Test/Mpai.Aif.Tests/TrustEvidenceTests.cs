@@ -66,9 +66,14 @@ public class TrustEvidenceTests
         result["its fingerprint"] = new ImplementationFingerprints(folder).Approved("1TST-SLP-V1.0-I01", "Mpai.Aif.Tests") ?? "none recorded";
         result["an AIM not in the store"] = string.Join("; ", store.Approve("1TST-XXX-V1.0-I01", new Dictionary<string, string>()).Errors);
 
-        // The Store's own check of Metadata, as it is: Publish refuses a current L3.
-        var published = new MpaiStore(Path.Combine(folder, "publish")).Publish(File.ReadAllText(Path.Combine(RemoteTests.Amds, "1TST-UPP-V1.0-I01.json")));
-        result["the Store publishing a current L3 (a finding)"] = published.WasPublished ? "published" : "refused: " + string.Join("; ", published.Errors);
+        // The Store's check of Metadata: an L3 against the L2 of its type. ASR's L3
+        // is published; a test AIM, which has no L2, is refused.
+        var conformance = new AIF.Metadata.L2Conformance(Repository.Schemas, _ => null);
+        var publisher = new MpaiStore(Path.Combine(folder, "publish"), l3 => conformance.Check(l3));
+        var asr = publisher.Publish(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-ASR-V2.5-I01.json")));
+        result["the Store publishing an L3 of an AIM with an L2"] = asr.WasPublished ? "published" : "refused: " + string.Join("; ", asr.Errors);
+        var upp = publisher.Publish(File.ReadAllText(Path.Combine(RemoteTests.Amds, "1TST-UPP-V1.0-I01.json")));
+        result["the Store publishing an L3 of an AIM without one"] = upp.WasPublished ? "published" : "refused: " + string.Join("; ", upp.Errors);
         Expected.Match("trust-store.json", result);
     }
 

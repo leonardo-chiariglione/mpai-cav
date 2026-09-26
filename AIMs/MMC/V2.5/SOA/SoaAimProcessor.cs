@@ -45,7 +45,7 @@ public sealed class SoaAimProcessor : IAimProcessor
         _duration    = duration ?? System.TimeSpan.FromSeconds(5);
         _pressToStop = pressToStop;
         _vadAutoStop = vadAutoStop;
-        _inputPort  = ports.InputOrDefault("OSD-BSO-V1.5", "InputSpeech");
+        _inputPort  = ports.InputOrDefault("OSD-BSO-V1.5", PortKey.Of("OSD-BSO-V1.5", 1));
         _outputPort = ports.Output("OSD-BSO-V1.5");
     }
 

@@ -7,7 +7,7 @@
   "APIProfile":       "Basic",
   "Description":      "Visual Object Acquisition: receives a User Command, a Visual Object, and provides a Visual Object.",
   "ExternalPorts":    [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "IsOptional": true},
-                       {"Name": "VisualObject", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "VisualObject", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false},
                        {"Name": "VisualObject", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],

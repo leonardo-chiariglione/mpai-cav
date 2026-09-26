@@ -266,6 +266,10 @@ public sealed partial class ContinuousExecutor
         return candidates.FirstOrDefault(p => NumberOf(aim, p) == number) ?? (candidates.Count == 1 ? candidates[0] : null);
     }
 
+    // What an AIM's Message carries a Port's datum under: the Port's Data Type and
+    // Number (PortKey), never its name.
+    private static string KeyOf(DescriptorNode aim, RuntimePort port) => PortKey.Of(port.DataType, NumberOf(aim, port));
+
     private static int NumberOf(DescriptorNode aim, RuntimePort port) =>
         port.PortNumber ??
         aim.Ports.Where(p => p.Direction == port.Direction && p.DataType == port.DataType).ToList().IndexOf(port) + 1;
@@ -512,7 +516,7 @@ public sealed partial class ContinuousExecutor
             host.Stopping.ThrowIfCancellationRequested();
             foreach (var (port, ends) in inputs)
                 foreach (var end in ends)
-                    while (end.TryRead(out var message) && message is not null) inbox[port.Name] = Payloads.Inline(message.Json);
+                    while (end.TryRead(out var message) && message is not null) inbox[KeyOf(leaf, port)] = Payloads.Inline(message.Json);
         }
         else
         {
@@ -545,7 +549,7 @@ public sealed partial class ContinuousExecutor
 
             foreach (var (port, ends) in inputs)
                 foreach (var end in ends)
-                    if (end.TryRead(out var message) && message is not null) { inbox[port.Name] = Payloads.Inline(message.Json); break; }
+                    if (end.TryRead(out var message) && message is not null) { inbox[KeyOf(leaf, port)] = Payloads.Inline(message.Json); break; }
         }
 
         var clockAtStart = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -561,7 +565,7 @@ public sealed partial class ContinuousExecutor
 
         foreach (var (name, json) in result.Ports)
         {
-            var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && p.Name == name);
+            var port = leaf.Ports.FirstOrDefault(p => p.Direction == "Output" && KeyOf(leaf, p) == name);
             if (port is null) { Console.WriteLine($"[AIF] {leaf.AIMName}: produced '{name}', which is not one of its Output Ports; dropped"); continue; }
             await ports.WriteAsync(port.DataType, NumberOf(leaf, port), json, -1);
         }

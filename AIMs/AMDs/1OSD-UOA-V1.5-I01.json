@@ -6,7 +6,7 @@
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "BasicUltrasoundObject", "Direction": "Input",  "DataType": "OSD-BUO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BasicUltrasoundObject", "Direction": "Input",  "DataType": "OSD-BUO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicUltrasoundObject", "Direction": "Output", "DataType": "OSD-BUO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

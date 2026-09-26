@@ -280,9 +280,9 @@ public sealed class StorageAims : IAimProvider
                                 AIF.SharedStorage.ISharedStorage? privateStorage, AIF.SharedStorage.IRuledStorage? moduleStorage) =>
         aimName switch
         {
-            "1TST-SWR-V1.0-I01" => new Aim(aimName, m => ("Written", Write(storage, moduleStorage, In(m)))),
-            "1TST-SRD-V1.0-I01" => new Aim(aimName, m => ("Read", Read(storage, moduleStorage, In(m)))),
-            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("Ruled", In(m).StartsWith("shared:")
+            "1TST-SWR-V1.0-I01" => new Aim(aimName, m => ("TST-TXT-V1.0#1", Write(storage, moduleStorage, In(m)))),
+            "1TST-SRD-V1.0-I01" => new Aim(aimName, m => ("TST-TXT-V1.0#1", Read(storage, moduleStorage, In(m)))),
+            "1TST-SGV-V1.0-I01" => new Aim(aimName, m => ("TST-TXT-V1.0#1", In(m).StartsWith("shared:")
                                                               ? Rule(storage as AIF.SharedStorage.IRuledStorage, In(m)[7..].Trim())
                                                               : Rule(moduleStorage, In(m)))),
             "1TST-TRE-V1.0-I01" => new Echo(aimName),

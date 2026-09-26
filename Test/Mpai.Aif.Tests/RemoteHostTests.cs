@@ -15,7 +15,7 @@ public class RemoteHostTests
     private const string Text = "TST-TXT-V1.0";
     private const string Module = "TST#1";
 
-    private static Message In(string text) => new() { MessageId = "m", Ports = new() { ["Text"] = text } };
+    private static Message In(string text) => new() { MessageId = "m", Ports = new() { ["TST-TXT-V1.0#1"] = text } };
 
     [Fact]
     public async Task ControlPath()
@@ -37,15 +37,15 @@ public class RemoteHostTests
         var slp = new RemoteProcessor("1TST-SLP-V1.0-I01", host, Module);
         var rpt = new RemoteProcessor("1TST-RPT-V1.0-I01", host, Module, (aim, text) => reports.Add($"{aim}: {text}"));
 
-        result["TST-UPP fired on the host"] = (await upp.ProcessAsync(In("x"))).Ports["Upper"];
-        result["TST-RPT fired on the host"] = (await rpt.ProcessAsync(In("r"))).Ports["Reported"] + $"; its report came back: {string.Join("; ", reports)}";
+        result["TST-UPP fired on the host"] = (await upp.ProcessAsync(In("x"))).Ports["TST-TXT-V1.0#1"];
+        result["TST-RPT fired on the host"] = (await rpt.ProcessAsync(In("r"))).Ports["TST-TXT-V1.0#1"] + $"; its report came back: {string.Join("; ", reports)}";
 
         // Paused: a run on the host waits; resumed: it completes.
         await host.AskAsync("Pause", Module);
         var held = slp.ProcessAsync(In("p"));
         var waited = await Task.WhenAny(held, Task.Delay(800)) != held;
         await host.AskAsync("Resume", Module);
-        result["Pause, then TST-SLP fired"] = (waited ? "held" : "not held") + $"; after Resume '{(await held.WaitAsync(TimeSpan.FromSeconds(5))).Ports["Slept"]}'";
+        result["Pause, then TST-SLP fired"] = (waited ? "held" : "not held") + $"; after Resume '{(await held.WaitAsync(TimeSpan.FromSeconds(5))).Ports["TST-TXT-V1.0#1"]}'";
 
         // Stopped during a run: the AIM on the host is signalled.
         var stopped = slp.ProcessAsync(In("s"));

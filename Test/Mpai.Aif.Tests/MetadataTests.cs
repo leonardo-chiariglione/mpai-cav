@@ -39,17 +39,20 @@ public class MetadataTests
         Expected.Match("l3-load.json", result);
     }
 
-    // Every L3 against the AIM Metadata schema of AIF V3.0, references resolved
-    // from the local schemas folder, never from the network.
+    // Every L2 against the AIM Metadata schema of AIF V3.0 (L1), references resolved
+    // from the local schemas folder, never from the network. An L3 is not checked
+    // against L1: it is checked against its L2 (Conformance), which is.
     [Fact]
     public void Schema()
     {
         var schema = AimMetadataSchema.Load(Repository.Schemas);
 
         var result = new Dictionary<string, string>();
-        foreach (var file in L3Files())
+        foreach (var file in Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
+                                      .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs")
+                                      .Order(StringComparer.Ordinal))
         {
-            var name = Path.GetFileNameWithoutExtension(file);
+            var name = Path.GetRelativePath(Repository.Schemas, file).Replace(Path.DirectorySeparatorChar, '/');
             try
             {
                 var violations = schema.Violations(File.ReadAllText(file));
@@ -244,6 +247,42 @@ public class MetadataTests
             renamed[name] = l3;
         }
         Assert.Equal(baseline, MadConnections(renamed));
+
+        // MAD's own names - its ExternalPorts, InternalTypes and every Topology
+        // label - renamed consistently: the same connections.
+        var own = mad.DeepClone();
+        var labels = new Dictionary<string, string>();
+        string Fresh(string old) => labels.TryGetValue(old, out var f) ? f : labels[old] = $"Label{labels.Count + 1}";
+        foreach (var p in own["ExternalPorts"]!.AsArray().Concat(own["InternalTypes"]?.AsArray() ?? []))
+            p!["Name"] = Fresh(p["Name"]!.GetValue<string>());
+        foreach (var line in own["Topology"]!.AsArray())
+            foreach (var side in new[] { "Output", "Input" })
+                if (line![side]!["PortName"]?.GetValue<string>() is { } label) line[side]!["PortName"] = Fresh(label);
+        Assert.Equal(baseline, MadConnections(own));
+    }
+
+    // NO NAME REACHES PROCESSING. Every L3, as the Store gives it to the Controller,
+    // the executors and the AIMs, is normalised at import: no ExternalPort Name, no
+    // InternalTypes, no PortName - each Topology end a Data Type (and Port Number).
+    [Fact]
+    public void NoNameReachesProcessing()
+    {
+        var store = new AmdStore(Repository.Amds);
+        store.Scan();
+        var named = new List<string>();
+        foreach (var aim in store.GetAimNames())
+        {
+            var root = JsonNode.Parse(store.GetAMD(store.FindByAimName(aim)!).RootElement.GetRawText())!;
+            if (root["InternalTypes"] is not null) named.Add($"{aim}: InternalTypes");
+            if (root["ExternalPorts"]!.AsArray().Any(p => p!["Name"] is not null)) named.Add($"{aim}: an ExternalPort Name");
+            foreach (var line in root["Topology"]?.AsArray() ?? [])
+                foreach (var side in new[] { "Output", "Input" })
+                {
+                    if (line![side]!["PortName"] is not null) named.Add($"{aim}: a PortName");
+                    if (line[side]!["DataType"] is null) named.Add($"{aim}: an end with no DataType");
+                }
+        }
+        Assert.True(named.Count == 0, string.Join("\n", named.Distinct()));
     }
 
     // The L2s follow the L3s: every composite L2 loaded through the Controller, as

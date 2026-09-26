@@ -382,12 +382,12 @@ public sealed class TestAims : IAimProvider
     private static IAimProcessor Make(string aimName) =>
         aimName switch
         {
-            "1TST-SPL-V1.0-I01" => new TestAim(aimName, m => Out(("First", "A:" + In(m)), ("Second", "B:" + In(m)))),
-            "1TST-UPP-V1.0-I01" => new TestAim(aimName, m => Out(("Upper", In(m).ToUpperInvariant()))),
-            "1TST-REV-V1.0-I01" => new TestAim(aimName, m => Out(("Reversed", new string(In(m).Reverse().ToArray())))),
-            "1TST-ECH-V1.0-I01" => new TestAim(aimName, m => Out(("Echo", In(m)))),
-            "1TST-RPT-V1.0-I01" => new TestAim(aimName, m => { m.Context.Report("fell back to a simpler path"); return Out(("Reported", In(m))); }),
-            "1TST-KIL-V1.0-I01" => new TestAim(aimName, m => { m.Context.StopAim("1TST-UPP-V1.0-I01"); return Out(("Killed", In(m))); }),
+            "1TST-SPL-V1.0-I01" => new TestAim(aimName, m => Out((T1, "A:" + In(m)), (T2, "B:" + In(m)))),
+            "1TST-UPP-V1.0-I01" => new TestAim(aimName, m => Out((T1, In(m).ToUpperInvariant()))),
+            "1TST-REV-V1.0-I01" => new TestAim(aimName, m => Out((T1, new string(In(m).Reverse().ToArray())))),
+            "1TST-ECH-V1.0-I01" => new TestAim(aimName, m => Out((T1, In(m)))),
+            "1TST-RPT-V1.0-I01" => new TestAim(aimName, m => { m.Context.Report("fell back to a simpler path"); return Out((T1, In(m))); }),
+            "1TST-KIL-V1.0-I01" => new TestAim(aimName, m => { m.Context.StopAim("1TST-UPP-V1.0-I01"); return Out((T1, In(m))); }),
             "1TST-NOP-V1.0-I01" => new TestAim(aimName, m => Out()),
             "1TST-THR-V1.0-I01" => new TestAim(aimName, (Func<Message, Message>)(m => throw new InvalidOperationException("TST-THR throws"))),
             "1TST-SLP-V1.0-I01" => new TestAim(aimName, async m =>
@@ -398,12 +398,15 @@ public sealed class TestAims : IAimProvider
                     await Task.Delay(10);
                 }
                 await m.Context.CheckAsync();
-                return Out(("Slept", In(m)));
+                return Out((T1, In(m)));
             }),
             _ => throw new InvalidOperationException($"No test AIM {aimName}.")
         };
 
-    private static string In(Message m) => m.Ports.TryGetValue("Text", out var text) ? text : "";
+    // A test AIM's Ports, keyed as every AIM's are: by Data Type and Port Number.
+    private const string T1 = "TST-TXT-V1.0#1", T2 = "TST-TXT-V1.0#2";
+
+    private static string In(Message m) => m.Ports.TryGetValue(T1, out var text) ? text : "";
 
     private static Message Out(params (string Port, string Value)[] ports) =>
         new() { Ports = ports.ToDictionary(p => p.Port, p => p.Value) };

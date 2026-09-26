@@ -3,6 +3,8 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PSFaceInterpretation.json",
   "title":                "PS-Face Interpretation V1.6",
 
+  "Header":               "PAF-PFI-V1.6",
+
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6"},
 
   "APIProfile":           "Basic",
@@ -15,7 +17,7 @@
 
   "Topology":             [ ],
 
-  "Implementations":      [ ],
+  "Implementations":      [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 
   "ResourcePolicies":     [ ],
 

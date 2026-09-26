@@ -190,10 +190,10 @@ public class TrustVerificationTests
         public string InstanceId => instanceId;
         public Task<Message> ProcessAsync(Message m)
         {
-            var text = m.Ports.TryGetValue("Text", out var t) ? t : "";
+            var text = m.Ports.TryGetValue("TST-TXT-V1.0#1", out var t) ? t : "";
             return Task.FromResult(new Message { Ports = new Dictionary<string, string>
             {
-                ["Upper"] = text.ToUpperInvariant(), ["Reversed"] = new string(text.Reverse().ToArray())
+                ["TST-TXT-V1.0#1"] = text.ToUpperInvariant(), ["TST-TXT-V1.0#2"] = new string(text.Reverse().ToArray())
             } });
         }
     }

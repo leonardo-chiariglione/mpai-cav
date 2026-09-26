@@ -62,7 +62,9 @@ sealed class Echo(DescriptorNode node) : IAimProcessor
         var got = string.Join(" ", m.Ports.Select(kv => $"{kv.Key}={kv.Value}"));
         var short_ = node.AIMName.Substring(1, 7);
         var outs = node.Ports.Where(p => p.Direction == "Output")
-                             .ToDictionary(p => p.Name, p => $"{short_}({got})");
+                             .GroupBy(p => p.DataType)
+                             .SelectMany(g => g.Select((p, i) => PortKey.Of(p.DataType, p.PortNumber ?? i + 1)))
+                             .ToDictionary(key => key, _ => $"{short_}({got})");
         Console.WriteLine($"   ran {node.AIMName}: {got}");
         return Task.FromResult(new Message { MessageId = m.MessageId, MessageType = m.MessageType, Ports = outs });
     }

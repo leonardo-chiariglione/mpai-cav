@@ -6,9 +6,6 @@ namespace AIF.Controller;
 // Runtime representation of an AIM ExternalPort.
 public sealed class RuntimePort
 {
-    public string Name { get; init; } =
-        string.Empty;
-
     public string Direction { get; init; } =
         string.Empty;
 

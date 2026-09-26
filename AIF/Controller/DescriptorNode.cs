@@ -6,10 +6,8 @@
 // AIM; a node with children is a Composite AIM, and its Connections are that
 // composite's own Topology. The structure nests to any depth.
 //
-// InternalTypes maps an InternalType name (as used in Topology PortName fields)
-// to its DataType identifier (e.g. "OSD-AUO-V1.5"). This lets the executor
-// route data between AIMs by DataType rather than by port name, so each AIM
-// can use its own port names without the Controller needing to know them.
+// Built from the L3 as normalised at import (AIF.Store.TopologyNormaliser):
+// there is no name in it, so nothing here can route by one.
 public sealed class DescriptorNode
 {
     public string AIMName { get; init; } =
@@ -30,16 +28,6 @@ public sealed class DescriptorNode
     // "Private", "Public": on its own machine, reached over MPAI-MAS. Empty when
     // the L3 does not say.
     public string Relation { get; set; } = string.Empty;
-
-    // InternalType name -> DataType identifier.
-    // Populated from the "InternalTypes" array in the composite's AMD.
-    public Dictionary<string, string> InternalTypes { get; } =
-        new();
-
-    // InternalType name -> the Output number (M3194 Number 3) declared on that
-    // flow, for the flows that are sent on to a child composite's Input group.
-    public Dictionary<string, int> InternalTypeOutputs { get; } =
-        new();
 
     public List<DescriptorNode> Children { get; } =
         new();
@@ -82,13 +70,4 @@ public sealed class DescriptorNode
 
     public bool IsComposite =>
         Children.Count > 0;
-
-    // Resolve an InternalType name to a DataType.
-    // Returns null if the name is not found in InternalTypes.
-    public string? ResolveInternalType(string internalTypeName)
-    {
-        return InternalTypes.TryGetValue(internalTypeName, out var dataType)
-            ? dataType
-            : null;
-    }
 }

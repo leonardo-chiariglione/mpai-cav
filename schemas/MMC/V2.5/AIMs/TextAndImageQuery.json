@@ -3,6 +3,8 @@
   "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/TextAndImageQuery.json",
   "title":                "Text and Image Query V2.5",
 
+  "Header":               "MMC-TIQ-V2.5",
+
   "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TIQ-V2.5"},
 
   "APIProfile":           "Basic",

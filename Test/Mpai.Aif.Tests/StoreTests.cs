@@ -6,9 +6,9 @@ using System.Text.Json.Nodes;
 
 namespace Mpai.Aif.Tests;
 
-// The MPAI Store of this repository (M3211 3.5): an L3 that does not validate
-// against the AIM Metadata schema, or is not an instance of its L2, is refused;
-// one that is both is published, its L2 being the one its Header names. The Store runs
+// The MPAI Store of this repository (M3211 3.5): an L3 is validated against its
+// L2 - the one its Header names, itself valid against the AIM Metadata schema
+// (L1) - not against L1. One that is not an instance of its L2 is refused. The Store runs
 // from its own build output, on a free port, with a Store folder of its own that
 // is deleted afterwards.
 [Trait("Group", "Fast")]
@@ -46,16 +46,15 @@ public class StoreTests
             Assert.DoesNotContain("has no Header", ok.Body);
             Assert.DoesNotContain("No L2 of", ok.Body);
 
-            // Without its Header it does not validate: refused, and the violation said.
+            // Without its Header it is not an instance of its L2: refused, and said.
             var headless = asr.DeepClone();
             headless.AsObject().Remove("Header");
             var refused = await Submit(http, headless);
             Assert.True(refused.Status == HttpStatusCode.UnprocessableEntity, $"an invalid L3 was not refused: {refused.Status} {refused.Body}");
-            Assert.Contains("violations", refused.Body);
+            Assert.Contains("nonconformities", refused.Body);
             Assert.Contains("Header", refused.Body);
 
-            // It validates against the schema but is not an instance of its L2 - an
-            // input the L2 of ASR does not have: refused, and the nonconformity said.
+            // An input the L2 of ASR does not have: refused, and the nonconformity said.
             var extra = asr.DeepClone();
             extra["ExternalPorts"]!.AsArray().Add(new JsonObject
             {

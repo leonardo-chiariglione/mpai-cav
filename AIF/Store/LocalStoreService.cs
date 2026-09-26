@@ -40,7 +40,7 @@ public sealed class LocalStoreService : IStoreService
         Identifier identifier)
     {
         return amdStore
-            .GetAMD(identifier)
+            .GetOriginal(identifier)
             .RootElement
             .GetRawText();
     }

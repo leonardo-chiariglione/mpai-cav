@@ -31,7 +31,7 @@ public sealed class VoaAimProcessor : IAimProcessor
         InstanceId   = instanceId;
         _voa         = voa;
         _sourceHint  = sourceHint;
-        _inputPort   = ports.InputOrDefault("OSD-VIO-V1.5", "InputVisual");
+        _inputPort   = ports.InputOrDefault("OSD-VIO-V1.5", PortKey.Of("OSD-VIO-V1.5", 1));
         _outputPort  = ports.Output("OSD-VIO-V1.5");
     }
 

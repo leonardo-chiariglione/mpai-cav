@@ -372,7 +372,7 @@ public sealed class ContinuousAims : IAimProvider
                                 AIF.SharedStorage.ISharedStorage? storage, AIF.SharedStorage.ISharedStorage? privateStorage) =>
         aimName switch
         {
-            "1TST-PVA-V1.0-I01" or "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out(("Private", KeepPrivately(aimName, storage, privateStorage)))),
+            "1TST-PVA-V1.0-I01" or "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out((T1, KeepPrivately(aimName, storage, privateStorage)))),
             _ => Create(aimName, settings, storage)
         };
 
@@ -391,23 +391,26 @@ public sealed class ContinuousAims : IAimProvider
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage) =>
         aimName switch
         {
-            "1TST-DSC-V1.0-I01" => Aim(aimName, m => Out(("Described", In(m, "Text") + (m.Ports.TryGetValue("Previous", out var p) ? "|" + p : "")))),
-            "1TST-ACC-V1.0-I01" => Aim(aimName, m => Out(("Accumulated", $"{Interlocked.Increment(ref accumulated)}:{In(m, "Text")}"))),
+            "1TST-DSC-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1) + (m.Ports.TryGetValue(T2, out var p) ? "|" + p : "")))),
+            "1TST-ACC-V1.0-I01" => Aim(aimName, m => Out((T1, $"{Interlocked.Increment(ref accumulated)}:{In(m, T1)}"))),
             "1TST-RDB-V1.0-I01" or "1TST-RDO-V1.0-I01" or "1TST-RDN-V1.0-I01" or "1TST-RDA-V1.0-I01" =>
-                Aim(aimName, async m => { await Task.Delay(50); return Out(("Read", In(m, "Text"))); }),
-            "1TST-TXO-V1.0-I01" => Aim(aimName, m => Out(("Written", In(m, "Text")))),
-            "1TST-TXC-V1.0-I01" => Aim(aimName, m => Out(("Read", In(m, "Text")))),
-            "1TST-TIK-V1.0-I01" => Aim(aimName, m => Out(("Ticks", Interlocked.Increment(ref ticks).ToString()))),
-            "1TST-DLN-V1.0-I01" => Aim(aimName, async m => { await Task.Delay(60); return Out(("Late", In(m, "Text"))); }),
+                Aim(aimName, async m => { await Task.Delay(50); return Out((T1, In(m, T1))); }),
+            "1TST-TXO-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1)))),
+            "1TST-TXC-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1)))),
+            "1TST-TIK-V1.0-I01" => Aim(aimName, m => Out((T1, Interlocked.Increment(ref ticks).ToString()))),
+            "1TST-DLN-V1.0-I01" => Aim(aimName, async m => { await Task.Delay(60); return Out((T1, In(m, T1))); }),
             "1TST-THS-V1.0-I01" => Aim(aimName, m => Interlocked.Increment(ref thrown) <= 2
                                                       ? throw new InvalidOperationException("TST-THS throws")
-                                                      : Out(("Survived", In(m, "Text")))),
+                                                      : Out((T1, In(m, T1)))),
             "1TST-PWR-V1.0-I01" => new PayloadWriter(aimName),
             "1TST-PRD-V1.0-I01" => new PayloadReader(aimName),
-            "1TST-PVA-V1.0-I01" => Aim(aimName, m => Out(("Private", "A"))),
-            "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out(("Private", "B"))),
+            "1TST-PVA-V1.0-I01" => Aim(aimName, m => Out((T1, "A"))),
+            "1TST-PVB-V1.0-I01" => Aim(aimName, m => Out((T1, "B"))),
             _ => throw new InvalidOperationException($"No test AIM {aimName}.")
         };
+
+    // A test AIM's Ports, keyed as every AIM's are: by Data Type and Port Number.
+    private const string T1 = "TST-TXT-V1.0#1", T2 = "TST-TXT-V1.0#2";
 
     private static string In(Message m, string port) => m.Ports.TryGetValue(port, out var text) ? text : "";
 

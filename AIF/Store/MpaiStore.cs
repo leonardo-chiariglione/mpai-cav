@@ -13,15 +13,17 @@ namespace AIF.Store;
 // AmdStore remains the read path used by the Controller; this is the write path.
 public sealed class MpaiStore
 {
-    private static readonly Regex AimNamePattern =
-        new(@"^[A-Z]{3}-[A-Z]{3}-V[0-9]+\.[0-9]+$");
-
     private readonly string folder;
 
+    // What the L3 does not conform to in its L2 (none when it conforms).
+    private readonly Func<JsonElement, IReadOnlyList<string>>? conformance;
+
     public MpaiStore(
-        string folder)
+        string folder,
+        Func<JsonElement, IReadOnlyList<string>>? conformance = null)
     {
         this.folder = folder;
+        this.conformance = conformance;
 
         Directory.CreateDirectory(folder);
     }
@@ -175,218 +177,46 @@ public sealed class MpaiStore
 
     // ---- validation -------------------------------------------------------
 
-    // What an AIM Metadata instance must satisfy to be self-consistent.
-    // The JSON Schema states the shape; these are the checks that need the
-    // instance as a whole, and the store as context.
+    // AN L3 IS VALIDATED AGAINST ITS L2, not against the AIM Metadata schema (L1):
+    // the L2 of its type is what the Standard allows, and the L2 itself is valid
+    // against L1. The check is the host's (AIF.Metadata.L2Conformance, given to the
+    // constructor), so that AIF.Store carries no validator; without it nothing is
+    // published. Before it, what import will do to the L3: its names resolved to
+    // Data Types (TopologyNormaliser) - an L3 it refuses is refused here.
     public StoreResult Validate(
         string amdJson)
     {
-        var errors =
-            new List<string>();
-
-        var warnings =
-            new List<string>();
+        var errors = new List<string>();
+        var warnings = new List<string>();
 
         JsonDocument document;
-
-        try
-        {
-            document =
-                JsonDocument.Parse(amdJson);
-        }
-        catch (JsonException failure)
-        {
-            return StoreResult.Rejected(
-                "",
-                new[]
-                {
-                    "Not valid JSON: " + failure.Message
-                });
-        }
+        try { document = JsonDocument.Parse(amdJson); }
+        catch (JsonException failure) { return StoreResult.Rejected("", new[] { "Not valid JSON: " + failure.Message }); }
 
         using (document)
         {
-            var root =
-                document.RootElement;
+            var root = document.RootElement;
+            var aimName = root.TryGetProperty("Identifier", out var identifier) ? Text(identifier, "AIMName") : "";
+            if (aimName.Length == 0)
+                return StoreResult.Rejected("", new[] { "Identifier.AIMName is missing: without it the Store cannot say what the L3 is." });
 
-            var aimName = "";
+            try { TopologyNormaliser.Normalise(root).Dispose(); }
+            catch (InvalidOperationException refusal) { errors.Add(refusal.Message); }
 
-            if (!root.TryGetProperty(
-                    "Identifier",
-                    out var identifier))
-            {
-                errors.Add("Identifier is missing.");
-            }
-            else if (!identifier.TryGetProperty(
-                         "AIMName",
-                         out var aimNameElement))
-            {
-                errors.Add("Identifier.AIMName is missing.");
-            }
+            if (conformance is null)
+                errors.Add("This Store has no L2 to check an L3 against: nothing is published without that check.");
             else
-            {
-                aimName =
-                    aimNameElement.GetString()
-                    ?? "";
+                errors.AddRange(conformance(root));
 
-                if (!AimNamePattern.IsMatch(aimName))
-                {
-                    errors.Add(
-                        $"'{aimName}' is not a well-formed AIM name " +
-                        "(expected e.g. MMC-AMQ-V2.5).");
-                }
-            }
-
-            foreach (var required in new[]
-                     {
-                         "APIProfile",
-                         "Description",
-                         "Types",
-                         "Ports",
-                         "SubAIMs",
-                         "Topology",
-                         "Implementations"
-                     })
-            {
-                if (!root.TryGetProperty(required, out _))
-                {
-                    errors.Add($"{required} is missing.");
-                }
-            }
-
-            var types =
-                new HashSet<string>();
-
-            if (root.TryGetProperty("Types", out var typeArray) &&
-                typeArray.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var type in typeArray.EnumerateArray())
-                {
-                    var name =
-                        Text(type, "Name");
-
-                    if (name.Length == 0)
-                    {
-                        errors.Add("A Type has no Name.");
-                    }
-                    else if (!types.Add(name))
-                    {
-                        errors.Add($"Type {name} is declared twice.");
-                    }
-                }
-            }
-
-            var ports =
-                new HashSet<string>();
-
-            if (root.TryGetProperty("Ports", out var portArray) &&
-                portArray.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var port in portArray.EnumerateArray())
-                {
-                    var name =
-                        Text(port, "Name");
-
-                    var direction =
-                        Text(port, "Direction");
-
-                    var recordType =
-                        Text(port, "RecordType");
-
-                    if (name.Length == 0)
-                    {
-                        errors.Add("A Port has no Name.");
-                        continue;
-                    }
-
-                    if (!ports.Add(name))
-                    {
-                        errors.Add($"Port {name} is declared twice.");
-                    }
-
-                    if (direction != "Input" &&
-                        direction != "Output")
-                    {
-                        errors.Add(
-                            $"Port {name} has Direction '{direction}'; " +
-                            "expected Input or Output.");
-                    }
-
-                    if (recordType.Length > 0 &&
-                        !types.Contains(recordType))
-                    {
-                        errors.Add(
-                            $"Port {name} uses RecordType {recordType}, " +
-                            "which is not declared in Types.");
-                    }
-                }
-            }
-
-            var subAims =
-                new HashSet<string>();
-
-            if (root.TryGetProperty("SubAIMs", out var subArray) &&
-                subArray.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var subAim in subArray.EnumerateArray())
-                {
-                    if (!subAim.TryGetProperty(
-                            "Identifier",
-                            out var subIdentifier))
-                    {
-                        errors.Add("A SubAIM has no Identifier.");
-                        continue;
-                    }
-
-                    var subName =
-                        Text(subIdentifier, "AIMName");
-
-                    if (subName.Length == 0)
-                    {
-                        errors.Add(
-                            "A SubAIM has no Identifier.AIMName.");
-                        continue;
-                    }
-
-                    subAims.Add(subName);
-
-                    if (!Exists(subName) &&
-                        subName != aimName)
-                    {
-                        warnings.Add(
-                            $"SubAIM {subName} is not in the store yet; " +
-                            "publish it before running this AIM.");
-                    }
-                }
-            }
-
-            if (root.TryGetProperty("Topology", out var topology) &&
-                topology.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var connection in topology.EnumerateArray())
-                {
-                    CheckEndpoint(
-                        connection,
-                        "Output",
-                        subAims,
-                        errors);
-
-                    CheckEndpoint(
-                        connection,
-                        "Input",
-                        subAims,
-                        errors);
-                }
-            }
+            if (root.TryGetProperty("SubAIMs", out var subAims) && subAims.ValueKind == JsonValueKind.Array)
+                foreach (var subAim in subAims.EnumerateArray())
+                    if (subAim.TryGetProperty("Identifier", out var subIdentifier) &&
+                        Text(subIdentifier, "AIMName") is { Length: > 0 } subName && subName != aimName && !Exists(subName))
+                        warnings.Add($"SubAIM {subName} is not in the store yet; publish it before running this AIM.");
 
             return errors.Count == 0
-                ? StoreResult.Valid(
-                    aimName,
-                    warnings)
-                : StoreResult.Rejected(
-                    aimName,
-                    errors,
-                    warnings);
+                ? StoreResult.Valid(aimName, warnings)
+                : StoreResult.Rejected(aimName, errors, warnings);
         }
     }
 
@@ -466,40 +296,6 @@ public sealed class MpaiStore
                     identifier,
                     "AIMName")
         };
-    }
-
-    private static void CheckEndpoint(
-        JsonElement connection,
-        string side,
-        ICollection<string> subAims,
-        ICollection<string> errors)
-    {
-        if (!connection.TryGetProperty(side, out var endpoint))
-        {
-            errors.Add(
-                $"A Topology connection has no {side}.");
-            return;
-        }
-
-        var aimName =
-            Text(endpoint, "AIMName");
-
-        var portName =
-            Text(endpoint, "PortName");
-
-        if (portName.Length == 0)
-        {
-            errors.Add(
-                $"A Topology {side} has no PortName.");
-        }
-
-        if (aimName.Length > 0 &&
-            !subAims.Contains(aimName))
-        {
-            errors.Add(
-                $"Topology {side} names {aimName}, " +
-                "which is not one of the SubAIMs.");
-        }
     }
 
     private static string Text(

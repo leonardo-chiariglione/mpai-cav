@@ -7,11 +7,10 @@ using AIF.Store;
 
 namespace AIF.Controller;
 
-// Reads ExternalPort names from an AMD by DataType.
-//
-// Each AIM reads its own port names from its own instance JSON at startup, so
-// nothing is hardcoded. The AIM knows its own DataTypes; the AMD declares which
-// port name carries each DataType. This class bridges the two.
+// The key under which an AIM finds each of its Ports in a Message (PortKey:
+// "DataType#PortNumber"), from its own L3 as normalised at import - there is no
+// name in it. The AIM knows the Data Types it reads and writes; this class gives
+// it the key of the Port that carries each, the same key the executor uses.
 //
 // An AIM may declare SEVERAL ports of the same Direction and DataType - MMC-TTT
 // has two OSD-TXO-V1.5 inputs, Input Text and Recognised Text. DataType alone
@@ -23,7 +22,7 @@ public sealed class AimPortReader
     private readonly Dictionary<string, List<Entry>> _inputPorts  = new();
     private readonly Dictionary<string, List<Entry>> _outputPorts = new();
 
-    private sealed record Entry(string Name, int Ordinal, int Declared);
+    private sealed record Entry(string Key, int Ordinal, int Declared);
 
     private AimPortReader() { }
 
@@ -40,12 +39,12 @@ public sealed class AimPortReader
             return reader;
 
         var declared = 0;
+        var sameType = new Dictionary<(string Direction, string DataType), int>();
         foreach (var port in ports.EnumerateArray())
         {
-            var name      = port.GetProperty("Name").GetString()      ?? string.Empty;
             var direction = port.GetProperty("Direction").GetString() ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(name))
+            var types     = DataTypesOf(port);
+            if (types.Count == 0)
                 continue;
 
             var ordinal =
@@ -53,6 +52,13 @@ public sealed class AimPortReader
                 portNumber.TryGetInt32(out var parsed) && parsed >= 1
                     ? parsed
                     : 0;   // 0 = not declared; declaration order decides
+
+            // The key, as the executor computes it: the first Data Type, and the
+            // declared PortNumber or else the position among the Ports of the same
+            // Direction and first Data Type.
+            var position1 = sameType.GetValueOrDefault((direction, types[0])) + 1;
+            sameType[(direction, types[0])] = position1;
+            var key = PortKey.Of(types[0], ordinal > 0 ? ordinal : position1);
 
             var target = direction == "Input"  ? reader._inputPorts
                        : direction == "Output" ? reader._outputPorts
@@ -68,7 +74,7 @@ public sealed class AimPortReader
             // that a multi-typed Port does not consume several ordinals.
             var position = declared++;
 
-            foreach (var dataType in DataTypesOf(port))
+            foreach (var dataType in types)
             {
                 if (!target.TryGetValue(dataType, out var list))
                 {
@@ -76,7 +82,7 @@ public sealed class AimPortReader
                     target[dataType] = list;
                 }
 
-                list.Add(new Entry(name, ordinal, position));
+                list.Add(new Entry(key, ordinal, position));
             }
         }
 
@@ -107,27 +113,27 @@ public sealed class AimPortReader
         return Array.Empty<string>();
     }
 
-    // Return the Input port name for the given DataType and ordinal.
+    // The key of the Input Port for the given DataType and ordinal.
     // Throws if not found â€” a misconfigured AMD is a hard error.
     public string Input(string dataType, int ordinal = 1) =>
         Resolve(_inputPorts, dataType, ordinal)
         ?? throw new InvalidOperationException(
                $"No Input port {ordinal} found for DataType '{dataType}'.");
 
-    // Return the Output port name for the given DataType and ordinal.
+    // The key of the Output Port for the given DataType and ordinal.
     public string Output(string dataType, int ordinal = 1) =>
         Resolve(_outputPorts, dataType, ordinal)
         ?? throw new InvalidOperationException(
                $"No Output port {ordinal} found for DataType '{dataType}'.");
 
-    // Return the Input port name, or a fallback if not found.
+    // The key of the Input Port, or a fallback if not found.
     public string InputOrDefault(string dataType, string fallback) =>
         Resolve(_inputPorts, dataType, 1) ?? fallback;
 
     public string InputOrDefault(string dataType, int ordinal, string fallback) =>
         Resolve(_inputPorts, dataType, ordinal) ?? fallback;
 
-    // Return the Output port name, or a fallback if not found.
+    // The key of the Output Port, or a fallback if not found.
     public string OutputOrDefault(string dataType, string fallback) =>
         Resolve(_outputPorts, dataType, 1) ?? fallback;
 
@@ -144,15 +150,15 @@ public sealed class AimPortReader
             return null;
 
         if (list.Count == 1)
-            return list[0].Name;
+            return list[0].Key;
 
         var declared = list.FirstOrDefault(e => e.Ordinal == ordinal);
         if (declared is not null)
-            return declared.Name;
+            return declared.Key;
 
         var ordered = list.OrderBy(e => e.Declared).ToList();
         return ordinal >= 1 && ordinal <= ordered.Count
-            ? ordered[ordinal - 1].Name
+            ? ordered[ordinal - 1].Key
             : null;
     }
 }

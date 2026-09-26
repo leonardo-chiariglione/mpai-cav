@@ -3,6 +3,8 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/FacePersonalStatusExtraction.json",
   "title":                "Face Personal Status Extraction V1.6",
 
+  "Header":               "PAF-FPE-V1.6",
+
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-FPE-V1.6"},
 
   "APIProfile":           "Basic",
@@ -22,7 +24,7 @@
                            { "Output": { "AIMName": "",             "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" }, "Input": { "AIMName": "PAF-PFI-V1.6", "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" } },
                            { "Output": { "AIMName": "PAF-PFI-V1.6", "PortName": "FacePersonalStatus" },     "Input": { "AIMName": "",             "PortName": "FacePersonalStatus" } }],
 
-  "Implementations":      [ ],
+  "Implementations":      [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 
   "ResourcePolicies":     [ ],
 
