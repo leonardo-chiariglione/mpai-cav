@@ -3,8 +3,10 @@
 MPAI as a Service - MAS-App and the four Apps it offers (MAD, AMQ, MAT, MPD), with
 their AIMs and models - runs on Linux. Installed as described here, the server holds
 all of it: the **MAS Service** (the Apps' Modules, their AIMs, the models, Ollama)
-and the **browser client's host** (the page people open). A person needs only a
-browser: `https://<server>/`.
+and the **browser client's host** (the page people open). People need only a
+browser, on any machine anywhere, many at once: `https://<server>/`. (The client's
+*host* is the server program that sends browsers the page and relays their
+requests; the people using it are wherever their browsers are.)
 
 Tested on 2026/09/26 by following these steps in WSL (Ubuntu 26.04, .NET 10.0.12,
 x86-64) into a folder of its own: the four Apps answered as on Windows - MAD "The
@@ -36,7 +38,8 @@ libraries); everything else runs on the CPU.
 
 The Service listens on the server's loopback only (`127.0.0.1:5005`): the network
 reaches the client's host, over HTTPS, and the host passes the client's requests on.
-No bearer token is then needed.
+No bearer token is then needed. The Service can also be on a machine of its own,
+reached by the client's host or by desktop clients: see "Other layouts" below.
 
 ## 1. On the build machine: the package
 
@@ -140,24 +143,55 @@ of `1MMC-ASR-V2.5-I01` written by `setup.sh`.
 Run `package.sh` again on the build machine, copy `service/` and `client/` (and
 whatever else changed) to the server, and `systemctl restart mpai-service mpai-client`.
 
-## Other ways
+## Other layouts
 
-- **The Service here, the client elsewhere** - a desktop client, or a client's host on
-  another machine: the Service must listen beyond loopback, so it needs a
-  `BearerToken`, and the client must send it. The desktop client's API
-  (`RemoteControllerApi`) can; the browser client's host today passes on only what the
-  browser sends, and the browser sends none - it cannot yet be used this way.
-- **Ollama elsewhere**: set `OllamaUrl`, and leave out `mpai-ollama`.
-- **In WSL** (as tested): the same, in a folder of the WSL user; WSL forwards the ports
-  its programs listen on to Windows' `localhost`. A Windows Ollama is not reachable
-  from WSL's default networking (and mirrored networking, which would share it, needs
-  Windows 11): Ollama runs in WSL, on another port than a Windows one (e.g. 11435, in
-  `OllamaUrl`).
+**The front end and the models on separate machines.** The MAS Service (with the
+models and Ollama) on one machine, the client's host on another - the one people
+reach. On the Service's machine, in `mas-server.json`:
 
-## Not tested
+```
+"ListenUrl": "http://0.0.0.0:5005/",
+"BearerToken": "<a long random string, e.g. openssl rand -hex 24>"
+```
 
-- The systemd units running as services: they were checked with `systemd-analyze
+A Service that listens beyond loopback does not start without a token, and refuses
+every request without it (401). Let only the front end reach port 5005 (firewall),
+or give the Service a certificate (`CertificatePath`, `PrivateKeyPath`) and an
+`https` address: the token travels in each request, and the client's host does not
+check the Service's certificate. On the front end, install `client/` and
+`UserAgent/` only, and give the host the Service's address and token: in
+`mpai-client.service`, `--Service http://<service machine>:5005/`, and in
+`/opt/mpai/service-token.env` (readable by `mpai` only):
+
+```
+MPAI_MAS_TOKEN=<the same string>
+```
+
+**Desktop clients.** The Windows desktop client reaches a Service directly: on each
+PC, set `MPAI_MAS_SERVER=https://<service machine>:5005/` and
+`MPAI_MAS_TOKEN=<the token>`, with the Service listening beyond loopback as above.
+
+**Ollama elsewhere**: set `OllamaUrl`, and leave out `mpai-ollama`.
+
+**In WSL** (as tested): the same, in a folder of the WSL user; WSL forwards the ports
+its programs listen on to Windows' `localhost`. A Windows Ollama is not reachable from
+WSL's default networking (and mirrored networking, which would share it, needs
+Windows 11): Ollama runs in WSL, on another port than a Windows one (e.g. 11435, in
+`OllamaUrl`).
+
+## Tested, and not tested
+
+Tested in WSL, beyond the steps above: the two-machine layout, with the Service
+reached at WSL's network address (not loopback) and its token. The Service refused a
+request without the token (401), a client's host without it got 401, and through the
+host with it the four Apps answered.
+
+Not tested:
+
+- two real machines, and the Service over https;
+- desktop clients reaching a Service on another machine;
+- the systemd units running as services: they were checked with `systemd-analyze
   verify`, and the three programs run with exactly their command lines - but not
-  under systemd, nor on port 443 (5443 was used), nor as a `mpai` user.
-- A server of its own, a certificate browsers trust, and a firewall.
-- Other distributions than Ubuntu, and ARM.
+  under systemd, nor on port 443 (5443 was used), nor as a `mpai` user;
+- a server of its own, a certificate browsers trust, and a firewall;
+- other distributions than Ubuntu, and ARM.

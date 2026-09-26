@@ -8,6 +8,10 @@
 //   /MPAI/AIFU/...      passed on to the MPAI-MAS Service
 //
 //   dotnet run --project UserAgent\Clients\Browser\Host -- --Service https://localhost:5005/ --Urls https://localhost:5010
+//
+// A Service on another machine listens beyond its loopback, and so requires a bearer
+// token: this host adds it to what it passes on - the ServiceToken setting, or the
+// MPAI_MAS_TOKEN environment variable the desktop client reads too.
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -20,6 +24,9 @@ builder.WebHost.UseStaticWebAssets();
 builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "https://localhost:5010");
 
 var service = new Uri(builder.Configuration["Service"] ?? "https://localhost:5005/");
+var serviceToken = builder.Configuration["ServiceToken"] is { Length: > 0 } configured ? configured
+                 : Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN") is { Length: > 0 } fromEnvironment ? fromEnvironment
+                 : null;
 var root    = RepositoryRoot(AppContext.BaseDirectory);
 var assets  = Path.Combine(root, "UserAgent", "Assets");
 var masOrch = Path.Combine(root, "UserAgent", "Orchestration", "MPAI-MAS.orch");
@@ -103,7 +110,10 @@ app.Map("/MPAI/AIFU/{**rest}", async (HttpContext http) =>
     }
     if (http.Request.Headers.TryGetValue("MPAI-Client", out var clientId))
         request.Headers.TryAddWithoutValidation("MPAI-Client", clientId.ToString());
-    if (http.Request.Headers.Authorization.Count > 0)
+    // The Service's token, where this host has one; otherwise what the browser sent.
+    if (serviceToken is not null)
+        request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + serviceToken);
+    else if (http.Request.Headers.Authorization.Count > 0)
         request.Headers.TryAddWithoutValidation("Authorization", http.Request.Headers.Authorization.ToString());
 
     using var response = await forward.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, http.RequestAborted);
@@ -117,7 +127,7 @@ app.MapFallbackToFile("index.html");
 
 Console.WriteLine($"=== MPAI-MAS browser client ===");
 Console.WriteLine($"  Open:     {builder.Configuration["Urls"] ?? "https://localhost:5010"}");
-Console.WriteLine($"  Service:  {service}");
+Console.WriteLine($"  Service:  {service}{(serviceToken is null ? "" : " (with its bearer token)")}");
 Console.WriteLine($"  Assets:   {assets}");
 app.Run();
 
