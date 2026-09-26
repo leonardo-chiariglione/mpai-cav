@@ -50,6 +50,18 @@ public static class EssJson
         }
     };
 
+    // What an object is: its class against the taxonomy of the detector's classes
+    // (COCO), with its confidence.
+    public static JsonObject Identifier(string label, double confidence) => new()
+    {
+        ["Header"] = "OSD-IID-V1.5", ["MInstanceID"] = "", ["InstanceIdentifier"] = label,
+        ["InstanceIdentifierData"] = new JsonArray(new JsonObject
+        {
+            ["InstanceLabel"] = label, ["LabelConfidenceLevel"] = Math.Round(confidence, 3),
+            ["Taxonomy"] = new JsonObject { ["TaxonomyLevelIDs"] = new JsonArray("COCO", label), ["TaxonomyDataURI"] = "https://cocodataset.org/#explore" }
+        })
+    };
+
     public static JsonArray Triple((double X, double Y, double Z) v) => new(Math.Round(v.X, 4), Math.Round(v.Y, 4), Math.Round(v.Z, 4));
 
     public static (double X, double Y, double Z)? Vector(JsonNode? array) =>

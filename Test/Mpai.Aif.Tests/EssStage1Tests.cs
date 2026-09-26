@@ -132,4 +132,101 @@ public class EssStage1Tests
         File.WriteAllText(report, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("ess-stage1-sag.json", result);
     }
+
+    // Step 4: Basic Visual Scene Description on the frames of a drive of 20 s, alone:
+    // the vehicle ahead and the one in the left lane, each against the truth - found,
+    // at what distance, in which lane; the Alert against the truth's first instant
+    // nearer than 15 m, and where the truth has none; every output valid against its
+    // schema; the time each frame takes.
+    [SkippableFact]
+    public async Task Step4VisualSceneDescription()
+    {
+        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+
+        var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
+        var ports = DrivePorts.Of(messages, SyntheticDrive.Camera);
+        var settings = new Dictionary<string, string>
+        {
+            ["Model"] = model, ["FocalPixels"] = "500", ["CameraHeight"] = "1.5", ["HorizonRow"] = "140", ["ImageWidth"] = "640",
+            ["LaneHalfWidth"] = "1.75", ["AlertDistance"] = "15", ["AlertTime"] = "2"
+        };
+        using var bvs = new BasicVisualSceneDescription(EssProvider.Bvs, settings, Repository.Root);
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        await bvs.RunAsync(ports, AimContext.None);
+        var perFrame = clock.Elapsed.TotalMilliseconds / messages.Count(m => m.DataType == SyntheticDrive.Camera);
+
+        var schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
+        Json.Schema.JsonSchema Schema(string rel) => schemas[Path.GetFullPath(Path.Combine(Repository.Schemas, rel))];
+        var descriptorsSchema = Schema("OSD/V1.5/data/BasicVisualSceneDescriptors.json");
+        var alertSchema = Schema("CAV2/V1.1/data/Alert.json");
+        bool Valid(Json.Schema.JsonSchema s, string json)
+        {
+            using var doc = JsonDocument.Parse(json);
+            lock (AIF.Metadata.PublishedSchemas.Lock) return s.Evaluate(doc.RootElement).IsValid;
+        }
+
+        var frames = truth["Frames"]!.AsArray();
+        var byTime = frames.ToDictionary(f => TimeSpan.FromSeconds((double)f!["At"]!), f => f!);
+        var nearFrom = TimeSpan.FromSeconds((double)truth["Near"]!["From"]!);
+        var nearTo = TimeSpan.FromSeconds((double)truth["Near"]!["To"]!);
+        int aheadFound = 0, aheadFrames = 0, leftFound = 0, leftFrames = 0, leftInItsLane = 0, validDescriptors = 0, validAlerts = 0;
+        var distanceErrors = new List<double>();
+        TimeSpan? firstAlert = null; int alertsOutside = 0, alertsForLeft = 0;
+
+        foreach (var (at, dataType, _, json) in ports.Written)
+        {
+            var node = JsonNode.Parse(json)!;
+            var f = byTime[at];
+            if (dataType == BasicVisualSceneDescription.Alert)
+            {
+                if (Valid(alertSchema, json)) validAlerts++;
+                if (at < nearFrom - TimeSpan.FromMilliseconds(100) || at > nearTo + TimeSpan.FromMilliseconds(100)) alertsOutside++;
+                else firstAlert ??= at;
+                foreach (var o in node["AlertData"]!.AsArray())
+                    if ((double)o!["BasicVisualObjectProperties"]!["BasicVisualObjectSpaceTime"]!["SpatialAttitude1"]!["Position"]!["CartPosition"]![1]! > 1.75) alertsForLeft++;
+                continue;
+            }
+            if (Valid(descriptorsSchema, json)) validDescriptors++;
+            var seen = node["BasicVisualSceneDescriptors"]!.AsArray()
+                .Select(e => e!["VisualObjectSpaceTime"]!["SpatialAttitude1"]!["Position"]!["CartPosition"]!.AsArray())
+                .Select(p => (Ahead: (double)p[0]!, Left: (double)p[1]!)).ToList();
+            foreach (var v in f["Vehicles"]!.AsArray())
+            {
+                var d = (double)v!["Distance"]!;
+                if (d < 12) continue;                                        // nearer, not drawn as a car (Step 1)
+                var lane = (int)v["Lane"]!;
+                var match = seen.Where(s => Math.Abs(s.Ahead - d) < 0.25 * d + 2).OrderBy(s => Math.Abs(s.Ahead - d)).Cast<(double Ahead, double Left)?>().FirstOrDefault();
+                if (lane == 0)
+                {
+                    aheadFrames++;
+                    var inLane = seen.Where(s => Math.Abs(s.Left) < 1.75).OrderBy(s => Math.Abs(s.Ahead - d)).Cast<(double Ahead, double Left)?>().FirstOrDefault();
+                    if (inLane is { } a && Math.Abs(a.Ahead - d) < 0.25 * d + 2) { aheadFound++; distanceErrors.Add(Math.Abs(a.Ahead - d)); }
+                }
+                else
+                {
+                    leftFrames++;
+                    var inLeft = seen.Where(s => s.Left > 1.75 && s.Left < 5.25).OrderBy(s => Math.Abs(s.Ahead - d)).Cast<(double Ahead, double Left)?>().FirstOrDefault();
+                    if (match is not null) leftFound++;
+                    if (inLeft is { } l && Math.Abs(l.Ahead - d) < 0.25 * d + 2) leftInItsLane++;
+                }
+            }
+        }
+        var sorted = distanceErrors.Order().ToList();
+        var descriptorsCount = ports.Written.Count(w => w.DataType == BasicVisualSceneDescription.Descriptors);
+        var result = new Dictionary<string, string>
+        {
+            ["descriptors given"] = $"{descriptorsCount}, {validDescriptors} valid against their schema",
+            ["vehicle ahead, 12 m and more, found in the ego's lane"] = $"{aheadFound} of {aheadFrames} frames",
+            ["vehicle ahead, distance error"] = sorted.Count == 0 ? "none found" : $"median {sorted[sorted.Count / 2]:0.00} m, 95th percentile {sorted[(int)(sorted.Count * 0.95)]:0.00} m",
+            ["vehicle in the left lane, 12 m and more, found"] = $"{leftFound} of {leftFrames} frames, in the left lane in {leftInItsLane}",
+            ["the first Alert, against the truth nearer than 15 m"] = firstAlert is { } fa ? ((fa - nearFrom).TotalMilliseconds is var lag && lag < 0 ? $"{-lag:0} ms before it" : $"{lag:0} ms after it") : "none",
+            ["Alerts where the truth has none"] = alertsOutside.ToString(),
+            ["Alerts naming the vehicle in the left lane"] = alertsForLeft.ToString(),
+            ["Alerts valid against their schema"] = $"{validAlerts} of {ports.Written.Count(w => w.DataType == BasicVisualSceneDescription.Alert)}"
+        };
+        var report = Path.Combine(Repository.Root, "Test", "Reports", "ess-stage1-bvs.json");
+        File.WriteAllText(report, JsonSerializer.Serialize(result.Append(new("time per frame", $"{perFrame:0} ms")).ToDictionary(), new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("ess-stage1-bvs.json", result);
+    }
 }

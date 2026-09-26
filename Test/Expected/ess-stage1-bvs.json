@@ -1,0 +1,10 @@
+{
+  "Alerts naming the vehicle in the left lane": "0",
+  "Alerts valid against their schema": "43 of 43",
+  "Alerts where the truth has none": "4",
+  "descriptors given": "201, 201 valid against their schema",
+  "the first Alert, against the truth nearer than 15 m": "100 ms before it",
+  "vehicle ahead, 12 m and more, found in the ego's lane": "201 of 201 frames",
+  "vehicle ahead, distance error": "median 1.47 m, 95th percentile 4.47 m",
+  "vehicle in the left lane, 12 m and more, found": "173 of 173 frames, in the left lane in 173"
+}
