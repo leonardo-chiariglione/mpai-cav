@@ -1,0 +1,7 @@
+{
+  "Basic Environment Descriptors given": "201, 201 valid against their schema",
+  "existence confidence of the vehicles followed": "median 1.00, lowest 0.50",
+  "speed of the vehicle ahead relative to the ego, error": "median 1.11 m/s, 95th percentile 4.24 m/s",
+  "vehicle ahead, 12 m and more": "followed in 201 of 201 frames, by 1 track(s)",
+  "vehicle in the left lane, 12 m and more": "followed in 173 of 173 frames, by 1 track(s)"
+}

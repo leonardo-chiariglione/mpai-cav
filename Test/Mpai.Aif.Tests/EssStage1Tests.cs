@@ -229,4 +229,78 @@ public class EssStage1Tests
         File.WriteAllText(report, JsonSerializer.Serialize(result.Append(new("time per frame", $"{perFrame:0} ms")).ToDictionary(), new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("ess-stage1-bvs.json", result);
     }
+
+    // Step 5: Basic Environment Description on what SAG and BVS give for a drive of
+    // 20 s, in the order of the drive's times: the Basic Environment Descriptors
+    // valid; each vehicle followed by one track - identity switches counted - and
+    // its speed relative to the ego against the truth; the confidence of its
+    // existence.
+    [SkippableFact]
+    public async Task Step5EnvironmentDescription()
+    {
+        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+
+        var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
+        var sagPorts = DrivePorts.Of(messages, SyntheticDrive.Attitude, SyntheticDrive.Gnss);
+        await new SpatialAttitudeGeneration(EssProvider.Sag, new Dictionary<string, string>()).RunAsync(sagPorts, AimContext.None);
+        var bvsPorts = DrivePorts.Of(messages, SyntheticDrive.Camera);
+        using (var bvs = new BasicVisualSceneDescription(EssProvider.Bvs, new Dictionary<string, string> { ["Model"] = model }, Repository.Root))
+            await bvs.RunAsync(bvsPorts, AimContext.None);
+
+        // The ego attitude before the frame of the same time: the order the Controller gives.
+        var inputs = sagPorts.Written.Select(w => (w.At, w.DataType, w.PortNumber, w.Json))
+            .Concat(bvsPorts.Written.Where(w => w.DataType == BasicVisualSceneDescription.Descriptors).Select(w => (At: w.At + TimeSpan.FromTicks(1), w.DataType, w.PortNumber, w.Json)));
+        var bedPorts = new DrivePorts(inputs);
+        await new BasicEnvironmentDescription(EssProvider.Bed, new Dictionary<string, string> { ["Gate"] = "3", ["DropAfterMisses"] = "5" }).RunAsync(bedPorts, AimContext.None);
+
+        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V2.0", "data", "BasicEnvironmentDescriptors.json"))];
+        var frames = truth["Frames"]!.AsArray().ToDictionary(f => TimeSpan.FromSeconds((double)f!["At"]!), f => f!);
+        int valid = 0, given = 0;
+        var tracks = new Dictionary<string, List<string>> { ["ahead"] = [], ["left"] = [] };
+        var speedErrors = new List<double>(); var existence = new List<double>();
+        foreach (var (at, _, _, json) in bedPorts.Written)
+        {
+            given++;
+            using (var doc = JsonDocument.Parse(json))
+                lock (AIF.Metadata.PublishedSchemas.Lock) if (schema.Evaluate(doc.RootElement).IsValid) valid++;
+            var f = frames[at - TimeSpan.FromTicks(1)];
+            var objects = JsonNode.Parse(json)!["BasicEnvironmentObjects"]!.AsArray()
+                .Select(o => (Id: (string)o!["BasicEnvironmentObjectID"]!, P: o["SpatialAttitude"]!["Position"]!["CartPosition"]!.AsArray(),
+                              V: o["SpatialAttitude"]!["Position"]!["CartVelocity"]!.AsArray(), E: (double)o["ExistenceConfidence"]!))
+                .Select(o => (o.Id, X: (double)o.P[0]!, Y: (double)o.P[1]!, Vx: (double)o.V[0]!, o.E)).ToList();
+            foreach (var v in f["Vehicles"]!.AsArray())
+            {
+                var d = (double)v!["Distance"]!;
+                if (d < 12) continue;
+                var name = (string)v["Id"]!;
+                var lane = (int)v["Lane"]!;
+                var match = objects.Where(o => lane == 0 ? Math.Abs(o.Y) < 1.75 : o.Y > 1.75)
+                                   .Where(o => Math.Abs(o.X - d) < 0.25 * d + 2).OrderBy(o => Math.Abs(o.X - d)).Cast<(string Id, double X, double Y, double Vx, double E)?>().FirstOrDefault();
+                if (match is not { } m) { tracks[name].Add("-"); continue; }
+                tracks[name].Add(m.Id);
+                existence.Add(m.E);
+                if (name == "ahead" && frames.TryGetValue(at - TimeSpan.FromTicks(1) + TimeSpan.FromMilliseconds(100), out var next))
+                {
+                    var trueSpeed = ((double)next["Vehicles"]![0]!["Distance"]! - d) / 0.1;       // the distance's rate: the speed relative to the ego
+                    speedErrors.Add(Math.Abs(m.Vx - trueSpeed));
+                }
+            }
+        }
+        string Switches(List<string> ids) =>
+            $"followed in {ids.Count(i => i != "-")} of {ids.Count} frames, by {ids.Where(i => i != "-").Distinct().Count()} track(s)";
+        var s = speedErrors.Order().ToList();
+        var e = existence.Order().ToList();
+        var result = new Dictionary<string, string>
+        {
+            ["Basic Environment Descriptors given"] = $"{given}, {valid} valid against their schema",
+            ["vehicle ahead, 12 m and more"] = Switches(tracks["ahead"]),
+            ["vehicle in the left lane, 12 m and more"] = Switches(tracks["left"]),
+            ["speed of the vehicle ahead relative to the ego, error"] = s.Count == 0 ? "none" : $"median {s[s.Count / 2]:0.00} m/s, 95th percentile {s[(int)(s.Count * 0.95)]:0.00} m/s",
+            ["existence confidence of the vehicles followed"] = e.Count == 0 ? "none" : $"median {e[e.Count / 2]:0.00}, lowest {e[0]:0.00}"
+        };
+        var report = Path.Combine(Repository.Root, "Test", "Reports", "ess-stage1-bed.json");
+        File.WriteAllText(report, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("ess-stage1-bed.json", result);
+    }
 }

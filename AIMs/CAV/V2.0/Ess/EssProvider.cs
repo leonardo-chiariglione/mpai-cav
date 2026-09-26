@@ -12,7 +12,7 @@ public sealed class EssProvider(string root) : IAimProvider
 
     public string Root { get; } = root;
 
-    public bool CanCreate(string aimName) => aimName is Sag or Bvs;
+    public bool CanCreate(string aimName) => aimName is Sag or Bvs or Bed;
 
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(EssProvider).Assembly.Location : null;
 
@@ -20,6 +20,7 @@ public sealed class EssProvider(string root) : IAimProvider
     {
         Sag => new SpatialAttitudeGeneration(aimName, settings),
         Bvs => new BasicVisualSceneDescription(aimName, settings, Root),
+        Bed => new BasicEnvironmentDescription(aimName, settings),
         _ => throw new ArgumentException($"{aimName} is not an AIM of ESS Stage 1.")
     };
 }
