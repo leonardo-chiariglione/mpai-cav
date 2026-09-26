@@ -79,7 +79,10 @@
       "minItems": 1,
       "maxItems": 1,
       "items": {
-        "oneOf": [
+        "anyOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json"
+          },
           {
             "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json"
           },

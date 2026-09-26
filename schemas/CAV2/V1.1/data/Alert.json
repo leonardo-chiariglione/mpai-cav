@@ -16,7 +16,12 @@
                                       "description": "Time this Alert was produced." },
 
     "AlertData":                    { "type": "array", "minItems": 1, "description": "Set of Objects deemed to require urgent consideration by the Traffic Obstacle Avoidance AIM.",
-                                      "items": { "oneOf": [
+                                      "items": { "anyOf": [
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARObject.json" },
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicLiDARObject.json" },
+                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundObject.json" },
                                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json" },
                                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LiDARObject.json" },
                                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RADARObject.json" },

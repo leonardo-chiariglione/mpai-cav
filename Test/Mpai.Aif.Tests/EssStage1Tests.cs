@@ -11,8 +11,11 @@ namespace Mpai.Aif.Tests;
 // against the ground truth the frames were made from. The detector is the YOLOX
 // of the Middleware (Models/yolox_s.onnx); a vehicle is found when a car, a truck
 // or a bus is detected over its box with an IoU of 0.5 or more.
+// Run alone: a detector keeps the processor busy, and a test that judges time run
+// beside it measures the load (Timing).
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class EssStage1Tests
 {
     private static readonly HashSet<string> Vehicles = ["car", "truck", "bus"];
