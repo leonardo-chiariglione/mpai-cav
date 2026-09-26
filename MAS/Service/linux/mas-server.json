@@ -1,0 +1,15 @@
+{
+  "ListenUrl": "https://localhost:5205/",
+  "CertificatePath": "/home/mpai/mpai-linux/tls/cert.pem",
+  "PrivateKeyPath": "/home/mpai/mpai-linux/tls/key.pem",
+  "AppDirectory": "/mnt/d/DI/Apps",
+  "Apps": [
+    "MAD",
+    "AMQ",
+    "MAT",
+    "MPD"
+  ],
+  "AmdDirectory": "/mnt/d/DI/AIMs/AMDs",
+  "SettingsPath": "/home/mpai/mpai-linux/aim-settings.json",
+  "SchemaDirectory": "/mnt/d/DI/schemas"
+}

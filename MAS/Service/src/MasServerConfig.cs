@@ -145,6 +145,11 @@ public sealed class MasServerConfig
     // Where delivered output is written. Absent means the default.
     public string? OutputFolder { get; init; }
 
+    // Where the schemas of the Data Types are, against which port data is
+    // validated. Absent means found by walking up from the Service's own folder -
+    // which finds them in the repository, not in an installation elsewhere.
+    public string? SchemaDirectory { get; init; }
+
     // True when ListenUrl names a loopback address. This is the only case in
     // which a missing certificate and a missing token are tolerated, because it
     // is the only case in which nothing outside the machine can connect.

@@ -181,6 +181,16 @@ internal static class Program
         // it is, not as question marks.
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+        if (!string.IsNullOrWhiteSpace(config.SchemaDirectory))
+        {
+            if (!Directory.Exists(config.SchemaDirectory))
+            {
+                Console.WriteLine($"FATAL: SchemaDirectory {config.SchemaDirectory} does not exist.");
+                return 1;
+            }
+            PortDataSchema.Root = config.SchemaDirectory;
+        }
+
         Console.WriteLine(PortDataSchema.Root is null
             ? "  Schemas:      NOT FOUND - port data will not be validated"
             : $"  Schemas:      {PortDataSchema.Root}");

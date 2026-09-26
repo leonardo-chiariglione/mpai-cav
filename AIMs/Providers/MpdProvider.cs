@@ -59,7 +59,10 @@ public sealed class MpdProvider : IAimProvider, IDisposable
     {
         if (_llm is not null) return _llm;
         string model = s.TryGetValue("OllamaModel", out var m) && !string.IsNullOrWhiteSpace(m) ? m : "llama3.2:3b";
-        return _llm = new OllamaClient(model);
+        // Where Ollama is: OllamaUrl, or this machine's.
+        return _llm = s.TryGetValue("OllamaUrl", out var url) && !string.IsNullOrWhiteSpace(url)
+            ? new OllamaClient(model, url)
+            : new OllamaClient(model);
     }
 
     private Wav2Vec2EmotionEstimator W2v2(IReadOnlyDictionary<string, string> s)

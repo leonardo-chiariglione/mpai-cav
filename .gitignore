@@ -35,6 +35,8 @@ MPAIApps/HCIApps/MatApp/src/*.langbak
 
 # transient
 mas-server*.json
+# ...except the Linux template, which holds no token.
+!MAS/Service/linux/mas-server.json
 tree.txt
 _stale/
 *.bak
