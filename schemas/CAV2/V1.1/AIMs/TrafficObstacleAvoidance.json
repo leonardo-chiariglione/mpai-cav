@@ -18,6 +18,7 @@
     { "Name": "AMSMASMessageIn"              , "Direction": "Input",   "DataType": "CAV-AMM-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "FullEnvironmentDescriptorsOut", "Direction": "Output",  "DataType": ["CAV-FED-V1.1", "CAV-FED-V2.0"], "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSMASMessageOut"             , "Direction": "Output",  "DataType": "CAV-AMM-V1.1",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSData"                      , "Direction": "Output",  "DataType": "CAV-AMD-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "RoadState"                    , "Direction": "Output",  "DataType": "CAV-RDS-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "CAVState"                     , "Direction": "Output",  "DataType": "CAV-CST-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AlertOut"                     , "Direction": "Output",  "DataType": "CAV-ALT-V1.1", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
