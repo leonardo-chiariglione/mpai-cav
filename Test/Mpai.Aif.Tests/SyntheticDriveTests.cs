@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIF.SharedStorage;
 using Mpai.Aif.PortData;
@@ -126,11 +127,14 @@ public class SyntheticDriveTests
         api.RecordStop(esb, out var totals);
 
         var records = RecordTests.Records(api.ModuleStorage(esb)!, received!);
+        // What was received, each payload the record keeps apart (a frame over 64 KB)
+        // put back where the Object refers to it.
         var inputs = records.Where(r => (string)r["Direction"]! == "In").ToList();
+        var played0 = new StoredRecord(api.ModuleStorage(esb)!, received!).InputsAsync().Result;
         foreach (var type in new[] { SyntheticDrive.Camera, SyntheticDrive.Attitude, SyntheticDrive.Gnss })
         {
             var sent = messages.Where(m => m.DataType == type).Select(m => m.Json).ToList();
-            var got = inputs.Where(r => (string)r["DataType"]! == type).Select(r => (string)r["Json"]!).ToList();
+            var got = played0.Where(r => r.DataType == type).Select(r => Inline(r.Json, r.Payloads)).ToList();
             result[$"{type}: received as the drive gave it"] = got.SequenceEqual(sent) ? $"yes, {got.Count} of {sent.Count}" : $"no: {got.Count} of {sent.Count}";
         }
         var counts = records.Where(r => (string)r["Direction"]! == "Out").Select(r => (string)r["Json"]!).LastOrDefault();
@@ -152,5 +156,27 @@ public class SyntheticDriveTests
         api.StopFlow(esb);
 
         Expected.Match("ess-playback.json", result);
+    }
+
+    // An Object with its record payloads inline again: { DataLength, DataURI } back to { Data }.
+    private static string Inline(string json, IReadOnlyDictionary<string, byte[]> payloads)
+    {
+        if (payloads.Count == 0) return json;
+        var root = JsonNode.Parse(json)!;
+        void Walk(JsonNode? node)
+        {
+            if (node is JsonObject o)
+            {
+                if (o["DataURI"] is JsonValue u && u.TryGetValue<string>(out var reference) && payloads.TryGetValue(reference, out var bytes))
+                {
+                    o.Remove("DataURI"); o.Remove("DataLength");
+                    o["Data"] = Convert.ToBase64String(bytes);
+                }
+                foreach (var (_, child) in o.ToList()) Walk(child);
+            }
+            else if (node is JsonArray a) foreach (var child in a.ToList()) Walk(child);
+        }
+        Walk(root);
+        return root.ToJsonString();
     }
 }

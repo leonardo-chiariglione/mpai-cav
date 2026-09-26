@@ -2,7 +2,7 @@
   "CAV-GNO-V1.1 against its schema": "every one valid",
   "OSD-BVO-V1.5 against its schema": "every one valid",
   "OSD-OSA-V1.5 against its schema": "every one valid",
-  "a frame": "PNG, 320 x 180",
+  "a frame": "PNG, 640 x 360",
   "another seed, another drive": "yes",
   "as a record, read by the User Agent": "283 inputs, as made, at their times: yes",
   "in the order of their times": "yes",
@@ -11,5 +11,5 @@
   "the ground truth": "41 frames; near from 1.7 s to 2.3 s",
   "the record's writer": "1CAV-ESS-V1.1-I01/SyntheticDrive",
   "the same seed, the same drive": "yes",
-  "the vehicle ahead on the image": "48.0 m: 9 px wide; 12.0 m: 38 px wide"
+  "the vehicle ahead on the image": "48.0 m: 19 px wide; 12.0 m: 75 px wide"
 }

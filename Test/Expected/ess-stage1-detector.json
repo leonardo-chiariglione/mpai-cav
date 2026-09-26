@@ -1,0 +1,14 @@
+{
+  "ahead, 12-20 m": "found in 63 of 63 frames",
+  "ahead, 20-30 m": "found in 36 of 36 frames",
+  "ahead, 30-40 m": "found in 38 of 38 frames",
+  "ahead, 40 m and more": "found in 64 of 64 frames",
+  "detections of other classes": "4",
+  "left, 12-20 m": "found in 32 of 32 frames",
+  "left, 20-30 m": "found in 40 of 40 frames",
+  "left, 30-40 m": "found in 40 of 40 frames",
+  "left, 40 m and more": "found in 61 of 61 frames",
+  "left, under 12 m": "found in 6 of 28 frames",
+  "score of the vehicles found, median": "0.84",
+  "vehicles detected where there is none": "34"
+}
