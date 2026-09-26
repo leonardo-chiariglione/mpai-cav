@@ -40,6 +40,10 @@ internal static class Program
 
     private static async Task<int> Main(string[] args)
     {
+        // "approve <config>": the Store's approval of what this Service deploys (below).
+        var approving = args.Length > 0 && args[0] == "approve";
+        if (approving) args = args[1..];
+
         var configPath = args.Length > 0
             ? args[0]
             : Path.Combine(AppContext.BaseDirectory, "mas-server.json");
@@ -221,6 +225,27 @@ internal static class Program
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "Packages");
         if (fromPackages) Console.WriteLine($"  AIMs:          from their packages, kept in {packageCache}");
 
+        // THE STORE'S APPROVAL OF WHAT THIS SERVICE DEPLOYS (M3223 3.2): for every L3 of
+        // an AIM these providers implement, the fingerprint of the binary that
+        // implements it, recorded where the Controller will check it. The Store's
+        // act, done here by whoever deploys the Service - until the Store takes
+        // binaries itself.
+        if (approving)
+        {
+            var approvals = new AIF.Store.MpaiStore(amdDir);
+            var providers = new IAimProvider[] { new AmqProvider(store), new MadProvider(store), new MatProvider(store), new MpdProvider(store) };
+            foreach (var aim in store.GetCatalog().Select(c => c.AIMName).Distinct().OrderBy(a => a, StringComparer.Ordinal))
+            {
+                var file = providers.Select(p => p.ImplementationOf(aim)).FirstOrDefault(f => f is not null);
+                if (file is null) continue;
+                var result = approvals.Approve(aim, new Dictionary<string, string> { [Path.GetFileNameWithoutExtension(file)] = file });
+                Console.WriteLine(result.IsValid
+                    ? $"  approved {aim}: {Path.GetFileName(file)}{(result.Warnings.Count > 0 ? " - " + string.Join("; ", result.Warnings) : "")}"
+                    : $"  NOT approved {aim}: {string.Join("; ", result.Errors)}");
+            }
+            return 0;
+        }
+
         using var north = new ControllerApi(amdDir, settingsPath, s =>
         {
             var providers = new List<IAimProvider>();
@@ -240,6 +265,33 @@ internal static class Program
             Console.WriteLine($"  AIM host:      {aim} at {where}");
         }
         north.Controller.AimHostKey = config.AimHostKey ?? "";
+
+        // ZERO TRUST, where configured (M3223).
+        if (config.Trust is { Anchor: { Length: > 0 } anchorFile } trust)
+        {
+            AIF.RootOfTrust.SimulatedTpm? tpm = null;
+            AIF.Trust.TrustAnchorKey anchor;
+            System.Security.Cryptography.ECDsa key;
+            if (AIF.RootOfTrust.TpmParty.Is(anchorFile)) { (anchor, tpm) = AIF.RootOfTrust.TpmParty.Load(anchorFile); key = tpm.IdentityKey; }
+            else (anchor, key) = AIF.Trust.TrustAnchorKey.Load(anchorFile);
+            north.Controller.Trust = new AIF.Trust.TrustDomain(anchor, key, null, trust.Trace);
+            if (tpm is not null) north.Controller.Attest(tpm);
+            // A host's Trust Anchor object: the file holds it, or holds a party that has it.
+            foreach (var hostAnchor in trust.HostAnchors ?? [])
+            {
+                var read = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(hostAnchor))!.AsObject();
+                north.Controller.HostAnchors.Add(read["Anchor"] as System.Text.Json.Nodes.JsonObject ?? read);
+            }
+            if (trust.Manufacturer is { Length: > 0 } manufacturer)
+                north.Controller.Manufacturer = AIF.RootOfTrust.TpmParty.Manufacturer(manufacturer);
+            if (trust.HostCode is { Length: > 0 } hostCode)
+                foreach (var (file, sha256) in System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(hostCode))!.AsObject())
+                    north.Controller.HostCode[file] = (string)sha256!;
+            Console.WriteLine($"  Trust:         the Controller is the Trust Anchor {anchor.AnchorId}{(tpm is null ? "" : ", its key in a TPM, its code measured")}; " +
+                              $"{north.Controller.HostAnchors.Count} host anchor(s){(north.Controller.Manufacturer is null ? "" : ", hosts attested")}" +
+                              (trust.Trace is null ? "" : $"; traced in {trust.Trace}"));
+        }
+        else Console.WriteLine("  Trust:         none configured - nothing is verified");
 
         var runner = new ControllerApiRunner(north, store);
 

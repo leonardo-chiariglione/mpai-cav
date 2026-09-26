@@ -35,6 +35,9 @@ public sealed class MpdProvider : IAimProvider, IDisposable
 
     public MpdProvider(AmdStore store) => _store = store;
 
+    // The binary that implements it: measured under Zero Trust (M3223 3.2).
+    public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
+
     public bool CanCreate(string aimName) =>
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SPE-V2.5-I01" or "1PAF-FPE-V1.6-I01"
                 or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"

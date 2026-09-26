@@ -132,6 +132,28 @@ public sealed class MasServerConfig
     // The key the AIM hosts were started with (AIF.AimHost --key).
     public string? AimHostKey { get; init; }
 
+    // ZERO TRUST (M3223): absent, nothing is verified, as before. Present, this
+    // Service's Controller is a Trust Anchor - its anchor file, with its key or in a
+    // TPM (TpmParty) - and verifies every AIM before it runs against the Store's
+    // approvals; it reaches its AIM hosts by the Trust Protocol, trusting the anchors
+    // HostAnchors names (files of PTF Trust Anchor objects), and, where Manufacturer
+    // (a certificate) and HostCode (a JSON object, file to SHA-256) are named,
+    // requires them attested; its decisions are traced in Trace.
+    //
+    //   "Trust": { "Anchor": "controller.json", "HostAnchors": [ "aimhost-1.json" ],
+    //              "Manufacturer": "manufacturer.cer", "HostCode": "host-code.json",
+    //              "Trace": "trust-trace.jsonl" }
+    public TrustSettings? Trust { get; init; }
+
+    public sealed class TrustSettings
+    {
+        public string? Anchor { get; init; }
+        public string[]? HostAnchors { get; init; }
+        public string? Manufacturer { get; init; }
+        public string? HostCode { get; init; }
+        public string? Trace { get; init; }
+    }
+
     // Required of every request as "Authorization: Bearer <token>". A server
     // reachable from anywhere but loopback will not start without one.
     public string? BearerToken { get; init; }

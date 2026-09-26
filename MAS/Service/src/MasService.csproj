@@ -29,6 +29,9 @@
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <!-- Controller API -->
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- Zero Trust (M3223): the anchor, the Trace, a TPM-held key -->
+    <ProjectReference Include="..\..\..\AIF\Trust\AIF.Trust.csproj" />
+    <ProjectReference Include="..\..\..\AIF\RootOfTrust\AIF.RootOfTrust.csproj" />
     <!-- MAS -->
     <ProjectReference Include="..\..\Server\Mpai.Mas.Server.csproj" />
 

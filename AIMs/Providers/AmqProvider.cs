@@ -29,6 +29,9 @@ public sealed class AmqProvider : IAimProvider
 
     // WHAT THIS PROVIDER CAN MAKE. A Service composed of several providers asks
     // before it builds, and says at startup which Apps it cannot run.
+    // The binary that implements it: measured under Zero Trust (M3223 3.2).
+    public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
+
     public bool CanCreate(string aimName) =>
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-TIQ-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1PAF-GFD-V1.6-I01";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)

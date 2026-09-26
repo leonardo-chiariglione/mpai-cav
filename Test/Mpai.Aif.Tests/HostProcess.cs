@@ -24,8 +24,10 @@ public sealed class HostProcess : IDisposable
 
     // anchor, trust: the host's anchor and the anchors of the Controllers it serves
     // (M3223 3.4); without them, it admits by the key.
-    // bin: where the host runs from; extra: more of its arguments.
-    public HostProcess(string? amds = null, string? anchor = null, string? trust = null, string? bin = null, string[]? extra = null)
+    // bin: where the host runs from; extra: more of its arguments; provider: what builds
+    // its AIMs (assembly:Type), the test AIMs where not given.
+    public HostProcess(string? amds = null, string? anchor = null, string? trust = null, string? bin = null, string[]? extra = null,
+                       string? provider = null)
     {
         bin ??= AppContext.BaseDirectory;
         var info = new ProcessStartInfo("dotnet")
@@ -40,7 +42,7 @@ public sealed class HostProcess : IDisposable
             Path.Combine(bin, "AIF.AimHost.dll"), "--port", "0",
             "--amds", amds ?? RemoteTests.Amds,
             "--storage", Path.Combine(Path.GetTempPath(), "mpai-phase5-host-" + Guid.NewGuid().ToString("N")),
-            "--provider", Path.Combine(bin, "Mpai.Aif.Tests.dll") + ":Mpai.Aif.Tests.RemoteAims"
+            "--provider", provider ?? Path.Combine(bin, "Mpai.Aif.Tests.dll") + ":Mpai.Aif.Tests.RemoteAims"
         }) info.ArgumentList.Add(arg);
         foreach (var arg in anchor is null ? ["--key", Key] : new[] { "--anchor", anchor, "--trust", trust! }) info.ArgumentList.Add(arg);
         foreach (var arg in extra ?? []) info.ArgumentList.Add(arg);
