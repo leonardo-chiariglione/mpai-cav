@@ -16,6 +16,12 @@ namespace AIF.Trust;
 // the host's; the response, the Controller's - so a message is good only on the TLS
 // link it was sent on, and the channel and the identity are the same: a party that
 // relays it to a third end presents a certificate the message does not name.
+//
+// ATTESTED (M3223 3.5): an end with a root of trust presents, beside its message,
+// its Trust Anchor object and its Attestation Evidence - the quote of its
+// registers over the hash of the other end's certificate, which is the nonce the
+// other chose, new for each link. An end that requires attestation refuses a
+// message without it, or whose evidence does not prove what it says.
 public sealed class TrustProtocol
 {
     public const string Header = "PTF-MSG-V1.0";
@@ -29,13 +35,18 @@ public sealed class TrustProtocol
     private readonly ECDsa key;
     private readonly IEnumerable<JsonObject> trusted;          // read at each check: the list may change
     private readonly Func<DateTimeOffset> now;
+    private readonly IRootOfTrust? attestor;
+    private readonly Attestation.Policy? requires;
 
-    public TrustProtocol(TrustAnchorKey self, ECDsa key, IEnumerable<JsonObject> trusted, Func<DateTimeOffset>? now = null)
+    public TrustProtocol(TrustAnchorKey self, ECDsa key, IEnumerable<JsonObject> trusted, Func<DateTimeOffset>? now = null,
+                         IRootOfTrust? attestor = null, Attestation.Policy? requires = null)
     {
         this.self = self;
         this.key = key;
         this.trusted = trusted;
         this.now = now ?? (() => DateTimeOffset.UtcNow);
+        this.attestor = attestor;
+        this.requires = requires;
     }
 
     public string Id => self.AnchorId;
@@ -44,7 +55,7 @@ public sealed class TrustProtocol
     public static string CertificateHash(byte[] der) => Convert.ToHexString(SHA256.HashData(der));
 
     // THE REQUEST: the Controller's, naming the certificate the host presented.
-    public JsonObject Request(string hostCertificate) => Signed(new JsonObject
+    public JsonObject Request(string hostCertificate) => Signed(Presented(new JsonObject
     {
         ["Header"] = Header,
         ["MessageType"] = "TrustRequest",
@@ -52,7 +63,20 @@ public sealed class TrustProtocol
         ["MessageTime"] = Time(),
         ["RequesterID"] = Id,
         ["Request"] = new JsonObject { ["Operation"] = Operation, ["TargetType"] = CertificateTarget, ["TargetID"] = hostCertificate }
-    });
+    }, hostCertificate));
+
+    // This end's anchor and the evidence of what it runs, quoted over the other end's
+    // certificate: where it has a root of trust.
+    private JsonObject Presented(JsonObject message, string otherCertificate)
+    {
+        if (attestor is not null)
+            message["Presentation"] = new JsonObject
+            {
+                ["TrustAnchor"] = self.Object(),
+                ["AttestationEvidence"] = attestor.Evidence(Id, Convert.FromHexString(otherCertificate))
+            };
+        return message;
+    }
 
     // THE ANSWER: the host's, to a request received on a link whose certificates are
     // these. Signed whether it admits the requester or not; the requester it admits,
@@ -72,6 +96,7 @@ public sealed class TrustProtocol
                 ? new JsonObject { ["Status"] = "Success", ["Result"] = requesterCertificate }
                 : new JsonObject { ["Status"] = "Failure", ["Reason"] = refused, ["Result"] = requesterCertificate }
         };
+        if (refused is null) Presented(response, requesterCertificate);
         return (Signed(response), refused is null ? (string)request["RequesterID"]! : null, refused);
     }
 
@@ -104,6 +129,15 @@ public sealed class TrustProtocol
             return $"stale: sent {(t - sent).Duration().TotalMinutes:0} minutes from its receipt";
         if (!string.Equals(namedCertificate, ownCertificate, StringComparison.OrdinalIgnoreCase))
             return "not for this link: it names another certificate";
+
+        // What it runs, where this end requires it: quoted over this end's
+        // certificate - the nonce this end chose for the link.
+        if (requires is not null)
+        {
+            if (message["Presentation"]?["AttestationEvidence"] is not JsonObject evidence) return "not attested: no evidence of what it runs";
+            if (Attestation.Check(evidence, anchorKey!, keyId, Convert.FromHexString(ownCertificate), requires, t) is { } unproven)
+                return $"not attested: {unproven}";
+        }
         return null;
     }
 

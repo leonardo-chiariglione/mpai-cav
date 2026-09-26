@@ -1,0 +1,8 @@
+{
+  "a Controller that is not attested, to a host that requires it": "refused - not attested: no evidence of what it runs. The host: refused: not attested: no evidence of what it runs",
+  "a host attested by a TPM of another manufacturer": "refused - not attested: its attestation key is not certified by a manufacturer this verifier trusts. The host: admitted",
+  "a host replaying the evidence of an earlier link": "first link: admitted; the host admitted Second link: refused - not attested: replayed: its quote is not over the nonce this verifier chose. The host: admitted",
+  "a host that is not attested, to a Controller that requires it": "refused - not attested: no evidence of what it runs. The host: admitted",
+  "a host whose code is not the code approved": "refused - not attested: AIF.AimHost.dll is not the code approved (altered). The host: admitted",
+  "both attested, each requiring it": "admitted; the host admitted"
+}

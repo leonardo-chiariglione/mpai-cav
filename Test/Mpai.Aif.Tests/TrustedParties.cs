@@ -24,7 +24,8 @@ public static class TrustedParties
         return path;
     }
 
-    public static JsonObject AnchorOf(string saved) => TrustAnchorKey.Load(saved).Anchor.Object();
+    // The Trust Anchor object of a party saved - with its key, or in a TPM.
+    public static JsonObject AnchorOf(string saved) => JsonNode.Parse(File.ReadAllText(saved))!["Anchor"]!.AsObject();
 
     public static string TrustFile(params JsonObject[] anchors)
     {

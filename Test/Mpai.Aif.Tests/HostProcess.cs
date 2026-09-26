@@ -24,9 +24,10 @@ public sealed class HostProcess : IDisposable
 
     // anchor, trust: the host's anchor and the anchors of the Controllers it serves
     // (M3223 3.4); without them, it admits by the key.
-    public HostProcess(string? amds = null, string? anchor = null, string? trust = null)
+    // bin: where the host runs from; extra: more of its arguments.
+    public HostProcess(string? amds = null, string? anchor = null, string? trust = null, string? bin = null, string[]? extra = null)
     {
-        var bin = AppContext.BaseDirectory;
+        bin ??= AppContext.BaseDirectory;
         var info = new ProcessStartInfo("dotnet")
         {
             RedirectStandardOutput = true,
@@ -42,6 +43,7 @@ public sealed class HostProcess : IDisposable
             "--provider", Path.Combine(bin, "Mpai.Aif.Tests.dll") + ":Mpai.Aif.Tests.RemoteAims"
         }) info.ArgumentList.Add(arg);
         foreach (var arg in anchor is null ? ["--key", Key] : new[] { "--anchor", anchor, "--trust", trust! }) info.ArgumentList.Add(arg);
+        foreach (var arg in extra ?? []) info.ArgumentList.Add(arg);
 
         process = Process.Start(info)!;
         var clock = Stopwatch.StartNew();

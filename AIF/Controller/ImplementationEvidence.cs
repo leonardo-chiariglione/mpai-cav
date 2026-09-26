@@ -41,6 +41,28 @@ public static class ImplementationEvidence
         return items;
     }
 
+    // THE ROOT OF TRUST MEASURES IT TOO (M3223 3.5): the binary that implements an
+    // AIM is extended into the register of Implementations before the AIM is built,
+    // so that the party's quote covers what it runs.
+    public const string MeasurementPrefix = "implementation ";
+
+    public static void Record(IRootOfTrust? root, string aim, IEnumerable<PtfEvidence.Item> items)
+    {
+        if (root is null) return;
+        foreach (var code in items.Where(i => i.Type == PtfEvidence.CodeHash))
+            root.Measure(Attestation.ImplementationRegister, $"{MeasurementPrefix}{aim} {code.What}", code.Hash);
+    }
+
+    // A measurement of an Implementation, judged against a Store's approvals: null
+    // where the Store approved that binary for that AIM with that fingerprint.
+    public static string? Approve(ImplementationFingerprints approvals, Attestation.Measurement m)
+    {
+        var parts = m.What.StartsWith(MeasurementPrefix, StringComparison.Ordinal) ? m.What[MeasurementPrefix.Length..].Split(' ') : [];
+        if (parts.Length != 2) return $"{m.What} is not an Implementation";
+        return approvals.Approved(parts[0], parts[1]) is { } approved && string.Equals(approved, m.Sha256, StringComparison.OrdinalIgnoreCase)
+            ? null : $"{parts[1]} of {parts[0]} is not an Implementation the Store approved";
+    }
+
     // What does not check, against the Store's approval and the settings; empty
     // when everything does.
     public static List<string> Check(string aim, IReadOnlyList<PtfEvidence.Item> items, string? binaryName, string? approved,

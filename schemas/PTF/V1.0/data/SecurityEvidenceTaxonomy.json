@@ -7,6 +7,7 @@
 
   "definitions":          {
     "EvidenceType":       { "type": "string", "enum": [ "AIF-EVID-TEE-REPORT",
+                                                        "AIF-EVID-TPM-QUOTE",
                                                         "AIF-EVID-CODE-HASH",
                                                         "AIF-EVID-CONFIG-HASH",
                                                         "AIF-EVID-RUNTIME-MEASUREMENT",
@@ -15,6 +16,8 @@
 
   "properties":           {
     "TEEReport":          { "const": "AIF-EVID-TEE-REPORT" },
+    "TPMQuote":           { "const": "AIF-EVID-TPM-QUOTE",
+                            "description": "A quote of a TPM 2.0: the TPMS_ATTEST of TPM2_Quote over a nonce the verifier chose, its signature by the attestation key, and the certificate of that key by the TPM's manufacturer. The measurements it covers are given as AIF-EVID-RUNTIME-MEASUREMENT items, in the order they were extended." },
     "CodeHash":           { "const": "AIF-EVID-CODE-HASH" },
     "ConfigHash":         { "const": "AIF-EVID-CONFIG-HASH" },
     "RuntimeMeasurement": { "const": "AIF-EVID-RUNTIME-MEASUREMENT" },

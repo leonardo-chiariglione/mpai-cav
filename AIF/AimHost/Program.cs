@@ -17,6 +17,13 @@ using AIF.Store;
 // serves a Controller whose Trust Anchor is among those --trust names (a file of
 // one PTF Trust Anchor object, or of an array of them) and which proves it with
 // the Trust Protocol. Without them, a Controller that opens with the key.
+//
+// With a root of trust (M3223 3.5): --anchor names a party provisioned in a TPM
+// (TpmParty) - the host's code is measured into it at start, each Implementation
+// before it is built, and the Controller is given its quote. --manufacturer (the
+// certificate of the manufacturer of roots of trust it accepts) and --reference (the
+// Controller code it approves: a JSON object, file to SHA-256) require the same of
+// the Controller; the Implementations it measured are judged by this host's Store.
 
 string? Arg(string name) => args.SkipWhile(a => a != name).Skip(1).FirstOrDefault();
 IEnumerable<string> Args(string name) => args.Select((a, i) => (a, i)).Where(x => x.a == name && x.i + 1 < args.Length).Select(x => args[x.i + 1]);
@@ -48,18 +55,37 @@ var providers = Args("--provider").Select(spec =>
         : Activator.CreateInstance(type)!);
 }).ToList();
 
-var server = new AimHostServer(store, settings, new CompositeProvider(providers.ToArray()), storage);
+AIF.RootOfTrust.SimulatedTpm? tpm = null;
+AIF.Trust.TrustAnchorKey? tpmAnchor = null;
+if (anchorFile is not null && AIF.RootOfTrust.TpmParty.Is(anchorFile))
+{
+    (tpmAnchor, tpm) = AIF.RootOfTrust.TpmParty.Load(anchorFile);
+    AIF.Trust.PartyCode.MeasureInto(tpm, AppContext.BaseDirectory);
+    Console.WriteLine($"[AIM host] its root of trust: the TPM of {tpm.Name}; its code measured ({tpm.Log.Count} files)");
+}
+var server = new AimHostServer(store, settings, new CompositeProvider(providers.ToArray()), storage) { RootOfTrust = tpm };
 ILinkAdmission admission = new KeyAdmission(key ?? "");
 if (anchorFile is not null)
 {
-    var (anchor, anchorKey) = AIF.Trust.TrustAnchorKey.Load(anchorFile);
+    var (anchor, anchorKey) = tpmAnchor is not null ? (tpmAnchor, tpm!.IdentityKey) : AIF.Trust.TrustAnchorKey.Load(anchorFile);
+    AIF.Trust.Attestation.Policy? requires = null;
+    if (Arg("--manufacturer") is { } manufacturer)
+    {
+        var reference = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Arg("--reference")
+                            ?? throw new ArgumentException("--manufacturer requires --reference: the Controller code this host approves.")))!
+                        .AsObject().ToDictionary(p => p.Key, p => (string)p.Value!, StringComparer.Ordinal);
+        var approvals = new ImplementationFingerprints(amds);
+        requires = new AIF.Trust.Attestation.Policy(AIF.RootOfTrust.TpmParty.Manufacturer(manufacturer), m => m.Register == AIF.Trust.Attestation.CodeRegister
+            ? AIF.Trust.PartyCode.Approve(reference, m)
+            : ImplementationEvidence.Approve(approvals, m));
+    }
     var trusted = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(trustFile!)) switch
     {
         System.Text.Json.Nodes.JsonArray many => many.Select(a => a!.AsObject()).ToList(),
         System.Text.Json.Nodes.JsonObject one => [one],
         _ => throw new ArgumentException($"{trustFile}: not a Trust Anchor object, nor an array of them.")
     };
-    admission = new TrustedLink(new AIF.Trust.TrustProtocol(anchor, anchorKey, trusted))
+    admission = new TrustedLink(new AIF.Trust.TrustProtocol(anchor, anchorKey, trusted, null, tpm, requires))
     {
         Answered = (controller, refused) => Console.WriteLine(refused is null
             ? $"[AIM host] {controller} admitted by the Trust Protocol"

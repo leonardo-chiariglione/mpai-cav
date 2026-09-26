@@ -1,0 +1,19 @@
+{
+  "a PTF object signed by the identity key": "Valid",
+  "a party whose file names a TPM that does not hold its key": "refused: <file>: the TPM at 127.0.0.1:2421 does not hold the key of the anchor party-1.",
+  "a secret sealed, unsealed after another measurement": "refused",
+  "a secret sealed, unsealed while the registers hold": "a secret of this party",
+  "booted again: its identity key": "the same",
+  "booted again: its log": "0 measurements",
+  "its code measured": "9 files into register 10",
+  "its private key, as PKCS#8": "refused: The private key is held by the TPM, which does not release it.",
+  "its private key, duplicated out of the TPM": "refused by the TPM: AuthType (the key is FixedTPM, and has no policy that would let it be duplicated)",
+  "its private key, exported": "refused: The private key is held by the TPM, which does not release it.",
+  "the evidence against PTF-ATE": "valid",
+  "the evidence, a measurement left out of its log": "its log is not what its registers hold",
+  "the evidence, changed after it was signed": "its evidence is not signed by its identity key",
+  "the evidence, checked": "proven",
+  "the evidence, from a TPM of another manufacturer": "its attestation key is not certified by a manufacturer this verifier trusts",
+  "the evidence, over an old nonce": "replayed: its quote is not over the nonce this verifier chose",
+  "the evidence, the code altered": "AIF.Controller.dll is not the code approved (altered)"
+}

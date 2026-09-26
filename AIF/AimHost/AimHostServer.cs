@@ -51,6 +51,10 @@ public sealed class AimHostServer
         public ConcurrentBag<string> Modules { get; } = new();
     }
 
+    // Where the host has a root of trust (M3223 3.5): each Implementation it builds is
+    // measured into it first.
+    public AIF.Trust.IRootOfTrust? RootOfTrust { get; init; }
+
     public AimHostServer(AmdStore store, AimSettings settings, IAimProvider provider, string storageRoot)
     {
         this.store = store;
@@ -116,6 +120,7 @@ public sealed class AimHostServer
                 if (!hosted.Aims.Add(aim))                                              // placed already
                     return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities.GetValueOrDefault(aim)?.DeepClone() };
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
+                ImplementationEvidence.Record(RootOfTrust, aim, ImplementationEvidence.Of(provider.ImplementationOf(aim), settings.For(aim)));
                 var processor = provider.Create(aim, settings.For(aim),
                     new FileSharedStorage(scope, $"{module}/{aim}", "remote"),
                     new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"));

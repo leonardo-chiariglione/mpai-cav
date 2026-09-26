@@ -89,11 +89,7 @@
     "Presentation": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "CII",
-        "InstanceCredential"
-      ],
-      "description": "What the sender presents to be trusted: its identity, its credential, its lifecycle and evidence, and the CredentialChain from the issuer of its credential to a Trust Anchor.",
+      "description": "What the sender presents to be trusted. A Process Instance: its identity, its credential, its lifecycle and evidence, and the CredentialChain from the issuer of its credential to a Trust Anchor. A party that is itself a Trust Anchor - in the AIF a Controller or an AIM host - its Trust Anchor object and the evidence of what it runs; it is trusted as an anchor the receiver is configured with.",
       "properties": {
         "CII": {
           "$ref": "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json"
@@ -126,8 +122,43 @@
               }
             }
           }
+        },
+        "TrustAnchor": {
+          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/TrustAnchor.json"
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "CII",
+            "InstanceCredential"
+          ]
+        },
+        {
+          "required": [
+            "TrustAnchor"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "CII"
+                ]
+              },
+              {
+                "required": [
+                  "InstanceCredential"
+                ]
+              },
+              {
+                "required": [
+                  "CredentialChain"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     },
     "Signature": {
       "type": "string",

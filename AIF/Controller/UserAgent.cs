@@ -4,6 +4,8 @@ using System.Collections.Concurrent;
 using AIF.Channels;
 using AIF.Store;
 
+using AIF.Trust;
+
 namespace AIF.Controller;
 
 // The User Agent, as defined by MPAI-AIF V3.0 Basic API section 3.
@@ -106,6 +108,29 @@ public sealed class UserAgent
     // Lifecycle Credential that follows its state. Null: nothing verified, as before.
     public AIF.Trust.TrustDomain? Trust { get; set; }
 
+    // THE ROOT OF TRUST OF THIS CONTROLLER (M3223 3.5): where it has one, its code is
+    // measured into it now, each Implementation before it is built, and a host it
+    // links to is given the quote. Its identity key is the key of Trust's anchor.
+    public IRootOfTrust? RootOfTrust { get; private set; }
+
+    public void Attest(IRootOfTrust root)
+    {
+        PartyCode.MeasureInto(root, Path.GetDirectoryName(typeof(UserAgent).Assembly.Location)!);
+        RootOfTrust = root;
+    }
+
+    // WHAT THIS CONTROLLER REQUIRES OF A HOST'S ROOT OF TRUST: the manufacturer it
+    // trusts, and the code a host may run - its reference values, file by file. Null
+    // manufacturer: a host is not required to be attested.
+    public System.Security.Cryptography.X509Certificates.X509Certificate2? Manufacturer { get; set; }
+    public Dictionary<string, string> HostCode { get; } = new(StringComparer.Ordinal);
+
+    private Attestation.Policy? HostAttestation => Manufacturer is { } manufacturer
+        ? new Attestation.Policy(manufacturer, m => m.Register == Attestation.CodeRegister
+            ? PartyCode.Approve(HostCode, m)
+            : ImplementationEvidence.Approve(_store.Fingerprints, m))
+        : null;
+
     // Why the last Module refused was refused, where it was not trusted.
     public string? LastRefusal { get; private set; }
 
@@ -133,7 +158,7 @@ public sealed class UserAgent
         {
             if (hostClients.TryGetValue(address, out var client) && !client.Link.IsClosed) return client;
             AIF.Channels.ILinkAdmission admission = Trust is { } trust
-                ? _trustedLink ??= new TrustedLink(trust.LinkWith(HostAnchors))
+                ? _trustedLink ??= new TrustedLink(trust.LinkWith(HostAnchors, RootOfTrust, HostAttestation))
                 : new AIF.Channels.KeyAdmission(AimHostKey);
             var opening = System.Diagnostics.Stopwatch.StartNew();
             try { client = AimHostClient.ConnectAsync(address, admission).GetAwaiter().GetResult(); }
@@ -495,8 +520,9 @@ public sealed class UserAgent
             {
                 var instanceId = $"{hostModule}/{leaf.AIMName}";
                 var instance = verifier.IssueLocal(instanceId, leaf.AIMName, leaf.AIMName, issuer: leaf.Packaged.Count > 0);
-                instance.Evidence = verifier.SignEvidence(instanceId,
-                    ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName)));
+                var measured = ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName));
+                ImplementationEvidence.Record(RootOfTrust, leaf.AIMName, measured);
+                instance.Evidence = verifier.SignEvidence(instanceId, measured);
                 Verify(verifier, instance, leaf, settings.For(leaf.AIMName), name);
             }
         IAimProcessor? OnItsHost(DescriptorNode leaf)

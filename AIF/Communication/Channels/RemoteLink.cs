@@ -11,20 +11,20 @@ namespace AIF.Channels;
 
 // HOW A LINK IS ADMITTED: what the Controller's end sends first, and how it
 // judges the answer; what the host's end answers, and whether it admits. Each end
-// sees the TLS certificate of the other.
+// knows its own TLS certificate of the link and sees the other's.
 public interface ILinkAdmission
 {
-    // This end's TLS certificate; null: the host makes one for the run, the
-    // Controller presents none.
-    X509Certificate2? Certificate { get; }
+    // This end's TLS certificate for a new link, made for it; null: the host uses
+    // one made for the run, the Controller presents none.
+    X509Certificate2? NewCertificate();
 
     // The Controller's end: its first frame, and null where the host's answer admits
     // it and is trusted - otherwise why not.
-    JsonObject Opening(X509Certificate? host);
-    string? Admitted(JsonObject answer, X509Certificate? host);
+    JsonObject Opening(X509Certificate2? own, X509Certificate? host);
+    string? Admitted(JsonObject answer, X509Certificate2? own, X509Certificate? host);
 
     // The host's end: its answer to the first frame, and whether it admits.
-    (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate? controller);
+    (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate2? own, X509Certificate? controller);
 }
 
 // ADMITTED BY A KEY SHARED IN CONFIGURATION (M3217 3.3): where no Trust Anchor is
@@ -33,11 +33,11 @@ public interface ILinkAdmission
 // started with, sent first. Identity is the Trust Protocol's (M3223 3.4).
 public sealed class KeyAdmission(string key) : ILinkAdmission
 {
-    public X509Certificate2? Certificate => null;
-    public JsonObject Opening(X509Certificate? host) => new() { ["Kind"] = "Hello", ["Key"] = key };
-    public string? Admitted(JsonObject answer, X509Certificate? host) =>
+    public X509Certificate2? NewCertificate() => null;
+    public JsonObject Opening(X509Certificate2? own, X509Certificate? host) => new() { ["Kind"] = "Hello", ["Key"] = key };
+    public string? Admitted(JsonObject answer, X509Certificate2? own, X509Certificate? host) =>
         answer["Ok"]?.GetValue<bool>() == true ? null : "it did not admit this Controller";
-    public (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate? controller)
+    public (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate2? own, X509Certificate? controller)
     {
         var ok = opening["Kind"]?.GetValue<string>() == "Hello" && opening["Key"]?.GetValue<string>() == key;
         return (new JsonObject { ["Ok"] = ok }, ok);
@@ -65,6 +65,9 @@ public sealed class RemoteLink : IAsyncDisposable
     public event Action<string>? Lost;
     public bool IsClosed => closed.IsCancellationRequested;
 
+    // Why the link went, once it has.
+    public string? LostReason { get; private set; }
+
     private RemoteLink(Stream stream) => this.stream = stream;
 
     // ---- opening -------------------------------------------------------------
@@ -72,23 +75,63 @@ public sealed class RemoteLink : IAsyncDisposable
     public static Task<RemoteLink> ConnectAsync(string host, int port, string key, CancellationToken cancel = default) =>
         ConnectAsync(host, port, new KeyAdmission(key), cancel);
 
+    // A LINK LOST WHILE IT OPENS - its TLS reset, or closed before any answer - is
+    // opened again, up to three times in all: a failure of the transport, not a
+    // decision of the other end. Seen, rarely, with a certificate at both ends, reset
+    // at both at once; its cause is not found. A refusal is never retried.
+    public const int Openings = 3;
+    private static long reopened;
+    public static long Reopened => Interlocked.Read(ref reopened);
+
     public static async Task<RemoteLink> ConnectAsync(string host, int port, ILinkAdmission admission, CancellationToken cancel = default)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try { return await OpenAsync(host, port, admission, cancel); }
+            catch (LostWhileOpening) when (attempt < Openings)
+            {
+                Interlocked.Increment(ref reopened);
+                await Task.Delay(100 * attempt, cancel);
+            }
+            catch (LostWhileOpening lost)
+            {
+                throw new UnauthorizedAccessException($"The host at {host}:{port}: the link was lost as it opened, {Openings} times: {lost.Message}.");
+            }
+        }
+    }
+
+    private sealed class LostWhileOpening(string why) : Exception(why);
+
+    private static async Task<RemoteLink> OpenAsync(string host, int port, ILinkAdmission admission, CancellationToken cancel)
     {
         var tcp = new TcpClient { NoDelay = true };
         await tcp.ConnectAsync(host, port, cancel);
         // The host's certificate is judged by the admission, not by a chain.
         var tls = new SslStream(tcp.GetStream(), false, (_, _, _, _) => true);
-        await tls.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+        var own = admission.NewCertificate();
+        try
         {
-            TargetHost = host,
-            ClientCertificates = admission.Certificate is { } own ? new X509CertificateCollection { own } : null
-        }, cancel);
+            await tls.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
+            {
+                TargetHost = host,
+                ClientCertificates = own is not null ? new X509CertificateCollection { own } : null
+            }, cancel);
+        }
+        catch (Exception failure) when (failure is IOException or System.Security.Authentication.AuthenticationException)
+        {
+            tcp.Dispose();
+            throw new LostWhileOpening($"its TLS failed: {failure.Message}");
+        }
         var link = new RemoteLink(tls);
         link.Start();
         JsonObject answer;
-        try { answer = await link.RequestAsync(admission.Opening(tls.RemoteCertificate), cancel); }
-        catch (IOException) { answer = new JsonObject { ["Ok"] = false }; }       // closed on us: not admitted
-        if (admission.Admitted(answer, tls.RemoteCertificate) is { } refused)
+        try { answer = await link.RequestAsync(admission.Opening(own, tls.RemoteCertificate), cancel); }
+        catch (IOException)
+        {
+            await link.DisposeAsync();
+            throw new LostWhileOpening($"lost before an answer: {link.LostReason}");
+        }
+        if (admission.Admitted(answer, own, tls.RemoteCertificate) is { } refused)
         {
             await link.DisposeAsync();
             throw new UnauthorizedAccessException($"The host at {host}:{port}: {refused}.");
@@ -100,7 +143,7 @@ public sealed class RemoteLink : IAsyncDisposable
     public sealed class Listener : IAsyncDisposable
     {
         private readonly TcpListener tcp;
-        private readonly X509Certificate2 certificate;
+        private readonly X509Certificate2 forTheRun = MadeForTheRun();
         private readonly CancellationTokenSource stop = new();
         public int Port => ((IPEndPoint)tcp.LocalEndpoint).Port;
 
@@ -111,7 +154,6 @@ public sealed class RemoteLink : IAsyncDisposable
 
         public Listener(int port, ILinkAdmission admission, Action<RemoteLink> admitted)
         {
-            certificate = admission.Certificate ?? MadeForTheRun();
             // Both IPv6 and IPv4: a Controller that reaches "localhost" by ::1 first
             // is not kept waiting for its fallback to 127.0.0.1.
             tcp = new TcpListener(IPAddress.IPv6Any, port);
@@ -130,19 +172,20 @@ public sealed class RemoteLink : IAsyncDisposable
                         {
                             client.NoDelay = true;
                             var tls = new SslStream(client.GetStream(), false);
+                            var own = admission.NewCertificate();
                             await tls.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
                             {
-                                ServerCertificate = certificate,
-                                // Where the admission has a certificate, the Controller
+                                ServerCertificate = own ?? forTheRun,
+                                // Where the admission makes a certificate, the Controller
                                 // presents one too; the admission judges it.
-                                ClientCertificateRequired = admission.Certificate is not null,
+                                ClientCertificateRequired = own is not null,
                                 RemoteCertificateValidationCallback = (_, _, _, _) => true
                             });
                             var link = new RemoteLink(tls);
                             var admittedOnce = new TaskCompletionSource<bool>();
                             link.OnRequest = frame =>
                             {
-                                var (answer, admits) = admission.Answer(frame, tls.RemoteCertificate);
+                                var (answer, admits) = admission.Answer(frame, own, tls.RemoteCertificate);
                                 admittedOnce.TrySetResult(admits);
                                 return Task.FromResult<JsonObject?>(answer);
                             };
@@ -180,9 +223,9 @@ public sealed class RemoteLink : IAsyncDisposable
         }
     }
 
-    // A certificate of this end for the run, to be named by a signed message: its
+    // A certificate of this end for one link, to be named by a signed message: its
     // key made for it, held only in this process.
-    public static X509Certificate2 CertificateForTheRun(string name)
+    public static X509Certificate2 CertificateForALink(string name)
     {
         using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var request = new CertificateRequest($"CN={name}", ecdsa, HashAlgorithmName.SHA256);
@@ -268,13 +311,15 @@ public sealed class RemoteLink : IAsyncDisposable
         }
         catch (Exception failure)
         {
-            Close(failure is EndOfStreamException ? "the other end closed the link" : failure.Message);
+            Close(failure is EndOfStreamException ? "the other end closed the link"
+                  : failure.Message + (failure.InnerException is { } inner ? $" ({inner.GetType().Name}: {inner.Message})" : ""));
         }
     }
 
     private void Close(string reason)
     {
         if (closed.IsCancellationRequested) return;
+        LostReason = reason;
         closed.Cancel();
         foreach (var (_, reply) in waiting) reply.TrySetCanceled();
         Lost?.Invoke(reason);

@@ -171,7 +171,8 @@ public sealed class TrustDomain
 
     // THE TRUST PROTOCOL of this Controller with the hosts whose anchors it trusts
     // (M3223 3.4).
-    public TrustProtocol LinkWith(IEnumerable<JsonObject> hostAnchors) => new(Anchor, anchorKey, hostAnchors, now);
+    public TrustProtocol LinkWith(IEnumerable<JsonObject> hostAnchors, IRootOfTrust? attestor = null, Attestation.Policy? requires = null) =>
+        new(Anchor, anchorKey, hostAnchors, now, attestor, requires);
 
     // The public key a KeyID names, among those this Controller trusts: its own.
     public ECDsa? KeyFor(string keyId) => keyId == Anchor.AnchorId ? Anchor.PublicKey : null;

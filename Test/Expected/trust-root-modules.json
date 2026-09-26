@@ -1,0 +1,5 @@
+{
+  "TST-RLP, both attested": "as before",
+  "TST-RXC, both attested": "as before",
+  "a host whose code was altered": "NOT_TRUSTED: the AIM host at <host> not trusted - not attested: AIF.AimHost.dll is not the code approved (altered)."
+}

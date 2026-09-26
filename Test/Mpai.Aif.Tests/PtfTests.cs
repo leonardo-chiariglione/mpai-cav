@@ -55,9 +55,12 @@ public class PtfTests
                 var props = node["properties"] as JsonObject ?? (path.Contains("/oneOf/") || path.Contains("/anyOf/") ? new JsonObject() : null);
                 if (props is null) return;
                 var closed = node["additionalProperties"] is JsonValue v && v.GetValueKind() == JsonValueKind.False;
-                // In an alternative (oneOf, anyOf), a member the top level defines is defined.
+                // In an alternative (oneOf, anyOf), a member is defined where the object
+                // the alternatives constrain defines it - or the top level.
                 var alternative = path.Contains("/oneOf/") || path.Contains("/anyOf/");
-                foreach (var r in required.Select(x => (string?)x).Where(r => r is not null && !props.ContainsKey(r!) && !(alternative && top?.ContainsKey(r!) == true)))
+                var enclosing = alternative ? At(schema, path[..new[] { path.IndexOf("/oneOf/"), path.IndexOf("/anyOf/") }.Where(i => i >= 0).Min()])?["properties"] as JsonObject : null;
+                foreach (var r in required.Select(x => (string?)x).Where(r => r is not null && !props.ContainsKey(r!) &&
+                                                                        !(alternative && (top?.ContainsKey(r!) == true || enclosing?.ContainsKey(r!) == true))))
                     undefined.Add($"{(path.Length == 0 ? "/" : path)} {r}" + (closed ? " (no instance can validate)" : " (left unconstrained)"));
             });
             if (undefined.Count > 0) result[$"{name}: required and not defined"] = string.Join("; ", undefined);
@@ -69,6 +72,9 @@ public class PtfTests
                     names[char.IsUpper(key[0]) ? "UpperCamelCase" : "lowerCamelCase"]++;
             });
         }
+        // The node at a path of the walk ("/properties/Presentation").
+        static JsonNode? At(JsonNode? node, string path) =>
+            path.Split('/', StringSplitOptions.RemoveEmptyEntries).Aggregate(node, (n, step) => n is JsonArray a && int.TryParse(step, out var i) ? a[i] : n?[step]);
         result["member names"] = $"{names["UpperCamelCase"]} UpperCamelCase, {names["lowerCamelCase"]} lowerCamelCase (Data Conventions: lowerCamelCase)";
         Expected.Match("ptf-schemas.json", result);
     }
