@@ -1,0 +1,11 @@
+{
+  "AMS-MAS Messages given out": "some",
+  "decisions kept": "Route yes, Path yes, AMS-MAS Message yes",
+  "each AMS Data carries the Route, the Path, the Trajectory, the FED": "yes",
+  "each decision kept with the FED it was taken on": "yes",
+  "every AMS-MAS Message has its AMS Data": "yes",
+  "its header": "always true",
+  "its record, read back": "In CAV-AHM-V1.1, In CAV-BED-V2.0, In OSD-BOO-V1.5, Out CAV-AMD-V1.1, Out CAV-AMM-V1.1",
+  "the AMS Data valid against its schema": "all",
+  "the AMS recorded without being asked": "yes"
+}

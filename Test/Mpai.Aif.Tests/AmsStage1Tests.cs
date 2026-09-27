@@ -56,6 +56,59 @@ public sealed class EssInTheLoop : IDisposable
     }
 }
 
+// THE CAV IN THE LOOP: the ESS and the AMS, two Modules under the Controller,
+// driven by one User Agent (M3233 3.10): each step the sensor data to the ESS, its
+// Basic Environment Descriptors and Alerts carried to the AMS, and the AMS-MAS
+// Message of that frame read back - the simulation waits for it.
+public sealed class CavInTheLoop : IDisposable
+{
+    public const string Ams = "1CAV-AMS-V1.1-I01";
+    private readonly EssInTheLoop ess = new();
+    private readonly Mpai.Aif.Api.ControllerApi api;
+    private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p8s8-" + Guid.NewGuid().ToString("N"));
+
+    public CavInTheLoop(Simulation sim, string destination)
+    {
+        api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
+        var started = api.StartFlow(Ams);
+        if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
+        api.SharedStorageInit(Ams, location);
+        api.InputWrite(Ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
+        api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
+    }
+
+    public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs) Step(Simulation.Sensed sensed, int timeoutMs = 5000)
+    {
+        var (alerts, command, latency, _) = StepWithBed(sensed, timeoutMs);
+        return (alerts, command, latency);
+    }
+
+    public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs, JsonNode? Bed) StepWithBed(Simulation.Sensed sensed, int timeoutMs = 5000)
+    {
+        var (bed, alerts) = ess.Step(sensed);
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        foreach (var alert in alerts) api.InputWrite(Ams, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
+        api.InputWrite(Ams, AmsTypes.Bed, 1, bed!.ToJsonString(), timeoutMs);
+        JsonNode? command = null;
+        while (command is null && api.OutputRead(Ams, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
+        {
+            var message = JsonNode.Parse(json)!;
+            if (AmsTypes.Ms(message["AMSMASMessageTime"]) == sensed.FrameMs) command = message;   // an older one is passed over
+        }
+        var latency = clock.Elapsed.TotalMilliseconds;
+        while (api.OutputRead(Ams, AmsTypes.Data, 1, 0) is { Error: AifError.OK }) { }           // the AMS Data, not used here
+        return (alerts, command, latency, bed);
+    }
+
+    public void Dispose()
+    {
+        api.StopFlow(Ams);
+        api.Dispose();
+        ess.Dispose();
+        try { Directory.Delete(location, recursive: true); } catch { }
+    }
+}
+
 public sealed record ControllerApiStatus(Mpai.Aif.Api.ControllerApi.ModuleStatus Module)
 {
     public override string ToString() => string.Join("; ", Module.Aims.OrderBy(a => a.Aim).Select(a => $"{a.Aim} {a.Status}"));
@@ -411,5 +464,161 @@ public class AmsStage1Tests
         File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "ams-stage1-toa.json"),
             JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("ams-stage1-toa.json", result);
+    }
+
+    // Step 7: AMS Memory and Record Always (M3233 3.8). The AMS run as a Module on the
+    // open scenario: every decision kept in the Private Storage with the Full
+    // Environment Descriptors it was taken on; for each AMS-MAS Message, the AMS Data
+    // of its instant; and, the AMS declaring Record Always, what it received and what
+    // it decided recorded without being asked, and read back.
+    [Fact]
+    public void Step7MemoryAndRecord()
+    {
+        const string ams = "1CAV-AMS-V1.1-I01";
+        using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
+        var location = Path.Combine(Path.GetTempPath(), "mpai-p8s7-" + Guid.NewGuid().ToString("N"));
+        var result = new Dictionary<string, string>();
+        try
+        {
+            api.StartFlow(ams);
+            api.SharedStorageInit(ams, location);
+            var recordId = api.RecordId(ams);
+            result["the AMS recorded without being asked"] = recordId is null ? "no" : "yes";
+
+            var sim = OpenScenario();
+            api.InputWrite(ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 2000);
+            api.InputWrite(ams, AmsTypes.Hci, 1, Destination("W21"), 2000);
+            var messages = new List<JsonNode>();
+            var data = new List<JsonNode>();
+            for (var i = 0; i < 40; i++)
+            {
+                var sensed = sim.Sense(camera: false);
+                api.InputWrite(ams, AmsTypes.Bed, 1, TruthBed.Of(sim, sensed), 2000);
+                if (api.OutputRead(ams, AmsTypes.Message, 1, 500) is { Ok: true, Json: { } m }) messages.Add(JsonNode.Parse(m)!);
+                while (api.OutputRead(ams, AmsTypes.Data, 1, messages.Count > data.Count ? 500 : 0) is { Ok: true, Json: { } d }) data.Add(JsonNode.Parse(d)!);
+                sim.Advance(KeepTheLimit(sim));
+            }
+            api.RecordStop(ams, out _);
+            api.StopFlow(ams);
+
+            // The AMS Data: one for each AMS-MAS Message, valid, carrying what 3.8 says.
+            var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V1.1", "data", "AMSData.json"))];
+            var valid = data.Count(d => { using var doc = JsonDocument.Parse(d.ToJsonString()); lock (AIF.Metadata.PublishedSchemas.Lock) return schema.Evaluate(doc.RootElement).IsValid; });
+            var ids = data.Select(d => (string?)d["AMSMASMessage"]?["AMSMASMessageID"]).ToHashSet();
+            result["AMS-MAS Messages given out"] = messages.Count > 0 ? "some" : "none";
+            result["every AMS-MAS Message has its AMS Data"] = messages.All(m => ids.Contains((string?)m["AMSMASMessageID"])) ? "yes" : "no";
+            result["the AMS Data valid against its schema"] = valid == data.Count && data.Count > 0 ? "all" : $"{valid} of {data.Count}";
+            result["each AMS Data carries the Route, the Path, the Trajectory, the FED"] =
+                data.Count > 0 && data.All(d => d["RouteID"] is not null && d["Path"] is not null && d["Trajectory"] is not null && d["FED"] is not null) ? "yes" : "no";
+
+            // The decisions, in the Private Storage, each with the FED it was taken on.
+            var storage = api.ModuleStorageAt(ams, location);
+            var keys = storage.MPAI_AIFM_RuledStorage_List("AMSData", "decisions/");
+            var kinds = keys.Select(k => k[(k.IndexOf('-') + 1)..]).ToHashSet();
+            result["decisions kept"] = string.Join(", ", new[] { (AmsTypes.Route, "Route"), (AmsTypes.Path, "Path"), (AmsTypes.Message, "AMS-MAS Message") }
+                .Select(k => $"{k.Item2} {(kinds.Contains(k.Item1) ? "yes" : "no")}"));
+            var withFed = 0;
+            foreach (var key in keys)
+                if (storage.MPAI_AIFM_RuledStorage_Get(key, out var bytes) == AIF.SharedStorage.StorageOutcome.OK &&
+                    JsonNode.Parse(bytes) is { } record && record["FED"] is { } fed && record["Decision"] is { } decision &&
+                    AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]) <= Math.Max(AmsTypes.Ms(decision["RouteTime"]), Math.Max(AmsTypes.Ms(decision["PathTime"]), AmsTypes.Ms(decision["AMSMASMessageTime"]))) + 1)
+                    withFed++;
+            result["each decision kept with the FED it was taken on"] = keys.Count > 0 && withFed == keys.Count ? "yes" : $"{withFed} of {keys.Count}";
+
+            // Record Always: what the AMS received and decided, read back.
+            var records = RecordTests.Records(storage, recordId!);
+            var recorded = records.Select(r => $"{r["Direction"]} {r["DataType"]}").Distinct().Order(StringComparer.Ordinal);
+            result["its record, read back"] = string.Join(", ", recorded);
+            result["its header"] = RecordTests.Header(storage, recordId!) is { } h ? $"always {h["Always"]}" : "none";
+        }
+        finally
+        {
+            try { api.StopFlow(ams); } catch { }
+            try { Directory.Delete(location, recursive: true); } catch { }
+        }
+        Expected.Match("ams-stage1-amm.json", result);
+    }
+
+    // Step 8: the CAV end to end (M3233 3.9). The ESS and the AMS driven together on
+    // each scenario of 3.1, the loop closed: what the AMS commands moves the CAV, which
+    // changes what the ESS senses next. Judged: no collision; the speed within the
+    // limit; the Destination reached; an Alert answered by braking before the time to
+    // collision falls below 1 s. Reported: the minimum gap, the hardest braking, the
+    // harshest jerk, the steps without a command, the latency from a Basic Environment
+    // Descriptors instance to its AMS-MAS Message.
+    //
+    // A KNOWN LIMITATION, recorded (the author, 2026/09/27): the cut-in ends in a
+    // collision. The camera is the ESS's only sensor in Stage 1, and its detector,
+    // trained on photographs, stops recognising a vehicle a few metres ahead (a car
+    // at 10.9 m 0.42, at 8.2 m a "truck" 0.10, nearer a "bench"). The BED keeps what
+    // it can no longer see in the ego's lane, so a vehicle ahead that slows and stops
+    // is not driven into; but the cutting-in vehicle changes lane 5 m ahead, unseen,
+    // and nothing tells the ESS it is now in the ego's lane. Near-range sensing
+    // (ultrasound, RADAR) is for the phase that adds sensors.
+    [SkippableFact]
+    public void Step8EndToEnd()
+    {
+        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        var result = new Dictionary<string, string>();
+        var report = new Dictionary<string, string>();
+        foreach (var (name, make) in Scenarios())
+        {
+            var sim = make();
+            using var cav = new CavInTheLoop(sim, "W21");
+            double minGap = double.PositiveInfinity, overLimit = 0, hardest = 0, jerk = 0, lastA = 0, held = 0;
+            var latencies = new List<double>();
+            int steps = 0, uncommanded = 0, alerts = 0;
+            bool awaitingBrake = false, braked = false;
+            double? lowestTtcAtBraking = null;
+            for (; steps < 600 && !sim.Arrived && !sim.Collided; steps++)
+            {
+                var sensed = sim.Sense();
+                var (alertList, command, latency) = cav.Step(sensed);
+                if (sim.GapAhead() is { } g) minGap = Math.Min(minGap, g);
+                overLimit = Math.Max(overLimit, sim.EgoSpeed - (double)sensed.Truth["Ego"]!["SpeedLimit"]!);
+                if (command is not null)
+                {
+                    latencies.Add(latency);
+                    var points = command["AMSMessage"]!["Trajectory"]!["Trajectory"]!;
+                    held = (TrafficObstacleAvoidance.Speed(points[1]!) - TrafficObstacleAvoidance.Speed(points[0]!)) / MotionSelectionPlanning.Step;
+                }
+                else uncommanded++;                                       // the last command holds
+                if (alertList.Count > 0) { alerts += alertList.Count; awaitingBrake = true; }
+                if (awaitingBrake && held < -0.5)
+                {
+                    awaitingBrake = false; braked = true;
+                    lowestTtcAtBraking = Math.Min(lowestTtcAtBraking ?? double.PositiveInfinity, TimeToCollision(sensed.Truth));
+                }
+                sim.Advance(held);
+                hardest = Math.Max(hardest, -sim.EgoAcceleration);
+                if (steps > 0) jerk = Math.Max(jerk, Math.Abs(sim.EgoAcceleration - lastA) / Simulation.Step);
+                lastA = sim.EgoAcceleration;
+            }
+            var alertJudged = alerts == 0 ? "no Alert"
+                : !braked ? "an Alert, no braking asked after it"
+                : lowestTtcAtBraking >= 1 ? "each Alert answered by braking before the time to collision fell below 1 s"
+                : "braking asked when the time to collision was below 1 s";
+            result[name] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Arrived ? "Destination reached" : "Destination not reached")}; " +
+                           $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; {alertJudged}";
+            latencies.Sort();
+            report[name] = result[name] + $"; minimum gap {(double.IsPositiveInfinity(minGap) ? "-" : minGap.ToString("0.0"))} m, hardest braking {hardest:0.0} m/s2, " +
+                           $"harshest jerk {jerk:0.0} m/s3, {steps} steps, {uncommanded} without a command, {alerts} Alert(s)" +
+                           (lowestTtcAtBraking is { } ttc && !double.IsPositiveInfinity(ttc) ? $", time to collision at braking {ttc:0.0} s" : "") +
+                           (latencies.Count > 0 ? $"; latency BED -> AMS-MAS Message median {latencies[latencies.Count / 2]:0} ms, 95% {latencies[(int)(latencies.Count * 0.95)]:0} ms" : "");
+        }
+        File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "ams-stage1-end-to-end.json"),
+            JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("ams-stage1-end-to-end.json", result);
+    }
+
+    // The time to collision with the vehicle ahead in the ego's lane, from the truth;
+    // infinite when the ego is not closing on it.
+    private static double TimeToCollision(JsonObject truth)
+    {
+        var ego = (double)truth["Ego"]!["Speed"]!;
+        var gap = truth["Gap"] is JsonValue v ? (double)v : double.PositiveInfinity;
+        var lead = truth["Vehicles"]!.AsArray().Where(x => (int)x!["Lane"]! == 0).OrderBy(x => (double)x!["Distance"]!).FirstOrDefault();
+        var closing = ego - (lead is null ? ego : (double)lead["Speed"]!);
+        return closing > 0 && !double.IsPositiveInfinity(gap) ? gap / closing : double.PositiveInfinity;
     }
 }

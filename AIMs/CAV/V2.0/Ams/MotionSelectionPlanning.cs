@@ -136,7 +136,7 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
         }
         return new JsonObject
         {
-            ["Header"] = AmsTypes.Trajectory, ["TrajectoryID"] = id, ["TrajectoryTime"] = EssJson.SimpleTime(id + "-T", ms), ["Trajectory"] = points
+            ["Header"] = AmsTypes.Trajectory, ["TrajectoryID"] = id, ["TrajectoryTime"] = EssJson.Time(id + "-T", ms), ["Trajectory"] = points
         };
     }
 }

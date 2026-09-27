@@ -12,7 +12,14 @@ namespace Mpai.Cav.Ess;
 //  - the track's position and velocity estimated by an alpha-beta filter, from one
 //    instant to the next, relative to the ego;
 //  - its existence confidence raised by each association and lowered by each miss;
-//    a track missed DropAfterMisses times in a row dropped;
+//    a track missed DropAfterMisses times in a row dropped - but for one in the ego's
+//    lane close ahead (within KeepNear m), which is kept while unseen (for KeepFor ms
+//    at most, where KeepFor is set; by default until the ego reaches it): the camera loses what is near and large before it is gone (a detector
+//    trained on photographs stops recognising a vehicle a few metres ahead), and what
+//    was in front of the ego does not vanish because it is no longer recognised. An
+//    unseen track moves by its own speed - the ego's added to its relative velocity
+//    when last seen - less the ego's speed now: a stopped vehicle stays where it is
+//    while the ego brakes, and is dropped when the ego reaches it;
 //  - the Basic Environment Descriptors V2.0 on the ego frame, given out and returned
 //    to the describer as its prior;
 //  - where no descriptors come for Quiet milliseconds of the ego's time (1 s: longer
@@ -33,6 +40,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
         public required string Class;
         public double Score;
         public double X, Y, Vx, Vy, AccuracyX, AccuracyY;
+        public double Speed;                                  // its own, along the ego's heading, when last seen
         public double Existence = 0.5;
         public int Misses;
         public long First, Last;
@@ -42,6 +50,9 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
     private readonly double gate = EssJson.Setting(settings, "Gate", 3);
     private readonly int dropAfter = (int)EssJson.Setting(settings, "DropAfterMisses", 5);
     private readonly long quiet = (long)EssJson.Setting(settings, "Quiet", 1000);
+    private readonly double keepNear = EssJson.Setting(settings, "KeepNear", 15);
+    private readonly long keepFor = (long)EssJson.Setting(settings, "KeepFor", 0);   // 0: no limit
+    private readonly double laneHalf = EssJson.Setting(settings, "LaneHalfWidth", 1.75);
     private readonly List<Track> tracks = [];
     private JsonNode? ego, weather;
     private long? lastMs, lastGiven, lastDescribed;
@@ -90,7 +101,12 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
     {
         var dt = lastMs is { } l ? Math.Max(0.001, (ms - l) / 1000.0) : 0;
         lastMs = ms;
-        foreach (var t in tracks) { t.X += t.Vx * dt; t.Y += t.Vy * dt; }
+        var egoSpeed = EgoSpeed();
+        foreach (var t in tracks)
+        {
+            if (t.Misses == 0) { t.X += t.Vx * dt; t.Y += t.Vy * dt; }
+            else t.X += (t.Speed - egoSpeed) * dt;                   // unseen: its own speed, the ego's now
+        }
 
         var free = new HashSet<Track>(tracks);
         var id = descriptors?["BasicVisualSceneDescriptorsID"]?.GetValue<string>();
@@ -118,12 +134,21 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
                 track.Existence += (1 - track.Existence) * 0.3;
             }
             track.Class = cls; track.Score = score; track.Misses = 0; track.Last = ms;
+            // Its own speed: not backwards - the filter lags while the ego brakes, and a
+            // vehicle ahead in the lane does not come back at it.
+            track.Speed = Math.Max(0, track.Vx + egoSpeed);
             track.AccuracyX = accuracy.X; track.AccuracyY = accuracy.Y;
             track.From = id; track.Object = obj?["BasicVisualObjectID"]?.GetValue<string>();
         }
-        foreach (var t in free) { t.Misses++; t.Existence *= 0.7; }
-        tracks.RemoveAll(t => t.Misses >= dropAfter);
+        foreach (var t in free) { t.Misses++; if (!Kept(t, ms)) t.Existence *= 0.7; }
+        tracks.RemoveAll(t => t.Misses >= dropAfter && !Kept(t, ms));
     }
+
+    // In the ego's lane, ahead and near, and not unseen for too long.
+    private bool Kept(Track t, long ms) => t.X > 0 && t.X < keepNear && Math.Abs(t.Y) < laneHalf && (keepFor <= 0 || ms - t.Last <= keepFor);
+
+    // The ego's speed, from its Spatial Attitude.
+    private double EgoSpeed() => EssJson.Vector(ego?["Position"]?["CartVelocity"]) is { } v ? Math.Sqrt(v.X * v.X + v.Y * v.Y) : 0;
 
     private static double Distance(Track t, (double X, double Y, double Z) p) => Math.Sqrt(Math.Pow(t.X - p.X, 2) + Math.Pow(t.Y - p.Y, 2));
 

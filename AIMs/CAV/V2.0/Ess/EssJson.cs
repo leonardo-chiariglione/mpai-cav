@@ -19,9 +19,19 @@ public static class EssJson
         })
     };
 
-    // The milliseconds of a Simple Time; null where there is none.
-    public static long? Milliseconds(JsonNode? simpleTime) =>
-        simpleTime?["SimpleTimeData"]?[0]?["StartTime"] is JsonValue v && v.TryGetValue<double>(out var ms) ? (long)ms : null;
+    // The same instant as an OSD Time (OSD-TIM-V1.5), where a Data Type asks for one -
+    // a Trajectory's time: its Data the ISO 8601 instant of the milliseconds.
+    public static JsonObject Time(string id, long ms) => new()
+    {
+        ["Header"] = "OSD-TIM-V1.5", ["TimeID"] = id,
+        ["Data"] = DateTimeOffset.FromUnixTimeMilliseconds(ms).ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture)
+    };
+
+    // The milliseconds of a Simple Time, or of an OSD Time; null where there is none.
+    public static long? Milliseconds(JsonNode? time) =>
+        time?["SimpleTimeData"]?[0]?["StartTime"] is JsonValue v && v.TryGetValue<double>(out var ms) ? (long)ms
+        : (string?)time?["Data"] is { } data && DateTimeOffset.TryParse(data, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var at)
+            ? at.ToUnixTimeMilliseconds() : null;
 
     public static JsonObject SpaceTime(string id, long ms, JsonObject? attitude = null)
     {

@@ -3,7 +3,7 @@
   "title":                "AMS Data V1.1",
   "type":                 "object",
   "additionalProperties": false,
-  "required":             [ "Header", "AMSDataID", "AMSData" ],
+  "required":             [ "Header", "AMSDataID" ],
 
   "properties":           {
 
@@ -26,8 +26,7 @@
                             "description": "Road State produced by Traffic Obstacle Avoidance." },
     "CAVState":           { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/CAVState.json",
                             "description": "CAV State produced by Traffic Obstacle Avoidance." },
-    "FED":                { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/FullEnvironmentDescriptors.json",
-                            "description": "Full Environment Descriptors produced by Full Environment Description." },
+    "FED": { "anyOf": [ { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/FullEnvironmentDescriptors.json" }, { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/FullEnvironmentDescriptors.json" } ], "description": "Full Environment Descriptors produced by Full Environment Description, V1.1 or V2.0." },
     "AMSMASMessage":      { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/AMSMASMessage.json",
                             "description": "AMS-MAS Messages exchanged between AMS and Motion Actuation Subsystem." },
 
