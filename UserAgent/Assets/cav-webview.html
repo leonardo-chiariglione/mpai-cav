@@ -127,6 +127,68 @@ const key  = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(1.5, 2.
 const fill = new THREE.DirectionalLight(0xbcd0ff, 0.9); fill.position.set(-2.0, 0.5, 1.5); scene.add(fill);
 const rim  = new THREE.DirectionalLight(0xffffff, 1.4); rim.position.set(-1.0, 1.5, -2.5); scene.add(rim);
 
+// ---- the environment and the user's Point of View ----
+// A basic Visual Delivery: the environment the CAV sees - Basic Mixed Scene
+// Descriptors (OSD-BMS-V1.5), each entry an object placed by its BXSSpaceTime -
+// drawn around the avatar as simple shapes (a vehicle a box at its position), and
+// the camera where the user declares to see the scene from (OSD-OPV-V1.5).
+// Positions are in metres in the CAV's frame, as the CAV code uses it: X ahead,
+// Y left, Z up, the avatar (the CAV) at the origin; Orientation is (alpha, beta,
+// gamma) in degrees - roll, pitch, yaw. three.js is y-up, -z ahead: (-Y, Z, -X).
+camera.far = 500; camera.updateProjectionMatrix();
+const environment = new THREE.Group();
+scene.add(environment);
+const toThree = ([x, y, z]) => new THREE.Vector3(-y, z, -x);
+let groundY = 0;                                   // the road: at the avatar's feet, once it is loaded
+const SIZES = {                                    // length (along X), width (Y), height (Z), in metres
+  vehicle: [4.5, 1.8, 1.5], car: [4.5, 1.8, 1.5], truck: [8.0, 2.5, 3.2], bus: [11.0, 2.5, 3.2],
+  bicycle: [1.8, 0.6, 1.6], motorcycle: [2.2, 0.8, 1.4], person: [0.5, 0.5, 1.7], pedestrian: [0.5, 0.5, 1.7]
+};
+const COLOURS = { vehicle: 0x3b82f6, car: 0x3b82f6, truck: 0x8b5cf6, bus: 0x8b5cf6, bicycle: 0x10b981,
+                  motorcycle: 0x10b981, person: 0xf59e0b, pedestrian: 0xf59e0b };
+function classOf(entry) {
+  const id = entry.BXSOrBXSID;
+  const text = typeof id === 'string' ? id : JSON.stringify(id || {});
+  const lower = text.toLowerCase();
+  return Object.keys(SIZES).find(k => lower.includes(k)) || 'object';
+}
+function setEnvironment(bms) {
+  if (typeof bms === 'string') bms = JSON.parse(bms);
+  environment.clear();
+  const grid = new THREE.GridHelper(200, 40, 0x3a4658, 0x252e3b);
+  grid.position.y = groundY;
+  environment.add(grid);
+  let drawn = 0;
+  for (const entry of (bms && bms.BasicAVSceneDescriptorsData) || []) {
+    const attitude = entry.BXSSpaceTime && entry.BXSSpaceTime.SpatialAttitude1;
+    const position = attitude && attitude.Position && attitude.Position.CartPosition;
+    if (!position) continue;
+    const kind = classOf(entry);
+    const [l, w, h] = SIZES[kind] || [1, 1, 1];
+    const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, l),
+                               new THREE.MeshStandardMaterial({ color: COLOURS[kind] || 0x9ca3af, roughness: 0.6 }));
+    const p = toThree(position);
+    box.position.set(p.x, grid.position.y + h / 2, p.z);   // standing on the road
+    const yaw = attitude.Orientation && attitude.Orientation.Orientation ? attitude.Orientation.Orientation[2] : 0;
+    box.rotation.y = THREE.MathUtils.degToRad(yaw || 0);
+    environment.add(box);
+    drawn++;
+  }
+  (document.getElementById('status') || {}).textContent = `environment: ${drawn} object(s)`;
+}
+function setPointOfView(pov) {
+  if (typeof pov === 'string') pov = JSON.parse(pov);
+  if (!pov || !pov.CartPosition) return;
+  const [roll, pitch, yaw] = (pov.Orientation || [0, 0, 0]).map(THREE.MathUtils.degToRad);
+  camera.position.copy(toThree(pov.CartPosition));
+  camera.rotation.set(-pitch, yaw, -roll, 'YXZ');         // pitch about the left axis is nose-down positive
+  const ahead = new THREE.Vector3(0, 0, -5).applyEuler(camera.rotation);
+  controls.target.copy(camera.position).add(ahead);
+  controls.minDistance = 0.1; controls.maxDistance = 400;
+  controls.update();
+}
+window.cavScene = { setEnvironment, setPointOfView };
+
 let morphMeshes = [];   // meshes with morph targets
 let currentAUs = {};    // AU -> weight
 let speaking = false;
@@ -179,6 +241,7 @@ loader.load(AVATAR_URL, (gltf) => {
 
   // Frame the camera on the head.
   const box = new THREE.Box3().setFromObject(avatar);
+  groundY = box.min.y;
   const size = box.getSize(new THREE.Vector3());
   const headY = box.max.y - size.y*0.085;         // eye/upper-head height
   camera.position.set(0.0, headY, 0.72);          // closer, portrait framing
@@ -311,6 +374,8 @@ if (window.chrome && window.chrome.webview) {
   window.chrome.webview.addEventListener('message', ev => {
     const m = ev.data;
     if (m && m.Kind === 'render') receiveResponse(m.FaceDescriptors, m.SpeechWavBase64);
+    if (m && m.Kind === 'environment') setEnvironment(m.Descriptors);
+    if (m && m.Kind === 'pointOfView') setPointOfView(m.PointOfView);
   });
 }
 
