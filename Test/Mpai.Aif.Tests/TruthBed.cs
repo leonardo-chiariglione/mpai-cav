@@ -15,7 +15,7 @@ public static class TruthBed
     {
         var truth = sensed.Truth;
         var ego = truth["Ego"]!;
-        var heading = sim.Path.At(sim.EgoS).Heading;
+        var heading = (double)ego["Heading"]! * Math.PI / 180;
         var speed = (double)ego["Speed"]!;
         var ms = sensed.FrameMs;
         var attitude = EssJson.Attitude($"EGO{sim.StepNumber}", ms, ((double)ego["East"]!, (double)ego["North"]!, 0), (0.1, 0.1, 0.1),

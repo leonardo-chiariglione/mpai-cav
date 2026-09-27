@@ -392,16 +392,10 @@ public class AmsStage1Tests
         public string Measured => $"minimum gap {(double.IsPositiveInfinity(MinGap) ? "-" : MinGap.ToString("0.0"))} m, hardest braking {HardestBraking:0.0} m/s2, harshest jerk {HarshestJerk:0.0} m/s3, {Steps} steps";
     }
 
-    // The CAV's AMS on perfect perception, step by step: truth -> FED -> MSP (-> TOA) ->
-    // the acceleration of the next point of the Trajectory -> the simulation.
-    public static DriveOutcome Drive(Simulation sim, bool withToa, int maxSteps = 600)
+    // The Path of the simulation's Route, as Path Selection Planning gives it.
+    public static JsonObject PathOf(Simulation sim)
     {
-        var map = sim.Map;
-        var fed = new FullEnvironmentDescription(AmsProvider.Fed);
-        fed.Know(JsonNode.Parse(map.ToOfflineMapObject(0))!);
-        var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
-        var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
-        var line = new RoutePath(map, sim.Path.Segments);
+        var line = new RoutePath(sim.Map, sim.Path.Segments);
         var path = new JsonArray();
         for (var s = 0.0; ; s += PathSelectionPlanning.Spacing)
         {
@@ -409,7 +403,20 @@ public class AmsStage1Tests
             path.Add(new JsonObject { ["PointOfView"] = new JsonObject { ["CartPosition"] = new JsonArray(e, n, 0.0), ["Orientation"] = new JsonArray(0.0, 0.0, h * 180 / Math.PI) } });
             if (s >= line.Length) break;
         }
-        msp.Follow(new JsonObject { ["Path"] = path });
+        return new JsonObject { ["Path"] = path };
+    }
+
+    // The CAV's AMS on perfect perception, step by step: truth -> FED -> MSP (-> TOA) ->
+    // the acceleration of the next point of the Trajectory -> the simulation.
+    // At most 90 s: long enough to slow for the corner of the Route (M3237, Step 4).
+    public static DriveOutcome Drive(Simulation sim, bool withToa, int maxSteps = 900)
+    {
+        var map = sim.Map;
+        var fed = new FullEnvironmentDescription(AmsProvider.Fed);
+        fed.Know(JsonNode.Parse(map.ToOfflineMapObject(0))!);
+        var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
+        var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
+        msp.Follow(PathOf(sim));
 
         double minGap = double.PositiveInfinity, overLimit = 0, hardest = 0, jerk = 0, lastA = 0;
         var steps = 0;
@@ -570,7 +577,7 @@ public class AmsStage1Tests
             int steps = 0, uncommanded = 0, alerts = 0;
             bool awaitingBrake = false, braked = false;
             double? lowestTtcAtBraking = null;
-            for (; steps < 600 && !sim.Arrived && !sim.Collided; steps++)
+            for (; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
             {
                 var sensed = sim.Sense();
                 var (alertList, command, latency) = cav.Step(sensed);

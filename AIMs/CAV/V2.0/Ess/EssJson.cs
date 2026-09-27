@@ -20,8 +20,14 @@ public static class EssJson
     };
 
     // The milliseconds of a Simple Time - the CAV's only time; null where there is none.
+    // A Simple Time read from text holds a number; one built in this process, the long
+    // it was built with.
     public static long? Milliseconds(JsonNode? simpleTime) =>
-        simpleTime?["SimpleTimeData"]?[0]?["StartTime"] is JsonValue v && v.TryGetValue<double>(out var ms) ? (long)ms : null;
+        simpleTime?["SimpleTimeData"]?[0]?["StartTime"] is not JsonValue v ? null
+        : v.TryGetValue<long>(out var l) ? l
+        : v.TryGetValue<double>(out var d) ? (long)d
+        : v.TryGetValue<int>(out var i) ? i
+        : null;
 
     public static JsonObject SpaceTime(string id, long ms, JsonObject? attitude = null)
     {

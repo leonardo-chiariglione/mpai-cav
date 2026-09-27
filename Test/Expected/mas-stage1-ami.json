@@ -1,0 +1,17 @@
+{
+  "1 m to the left of it": "motor acceleration 0; wheels right",
+  "1 m to the right of it": "motor acceleration 0; wheels left",
+  "2 m/s slower than it": "motor acceleration 1.5; wheels straight",
+  "CAV-BRC-V2.0 against its schema": "every one valid",
+  "CAV-MRC-V2.0 against its schema": "every one valid",
+  "CAV-WHC-V2.0 against its schema": "every one valid",
+  "Execute with no Trajectory": "AMM-Y: Execute, and no Trajectory to follow.",
+  "Resume": "brake 0 m/s2; motor acceleration 0; wheels straight",
+  "Suspend": "emergency brake; wheels straight",
+  "an AMS-MAS Message with no AMS Message": "AMM-X: no AMS Message to interpret.",
+  "before any AMS-MAS Message": "nothing",
+  "it brakes at 3 m/s2": "motor torque 0; brake 3 m/s2; wheels straight",
+  "it brakes at 7 m/s2": "emergency brake; wheels straight",
+  "on the Trajectory, at its speed": "motor acceleration 0; wheels straight",
+  "stopped, to stay stopped": "motor torque 0; brake 2 m/s2; wheels straight"
+}

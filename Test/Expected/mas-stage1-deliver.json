@@ -1,0 +1,7 @@
+{
+  "Stop: the interlock": "stopped; 1 safe stop(s) within 1.5 s of the start; device \"Echo\" brought to its safe state: Stop",
+  "a device the User Agent does not know": "line 3: no device \"Echo\" is known to this User Agent.",
+  "deliver not in its form": "line 3: 'deliver' expects '<label> (<DataType>[:<PortNumber>]) to device \"<name>\"'.",
+  "the workflow ends: the interlock": "1 safe stop(s); device \"Echo\": stream In (TST-TXT-V1.0), deliver Out (TST-TXT-V1.0) | device \"Echo\" brought to its safe state: the workflow ends",
+  "the workflow ends: what the device produced, delivered back to it": "ended; d1,d2,d3,d4,d5"
+}

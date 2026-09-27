@@ -218,15 +218,38 @@ public sealed class WorkflowReader
             // Number, at the pace it was recorded at, or a multiple of it.
             //
             //     stream Camera (OSD-BVO-V1.5) from record "drive-1" [at x2]
+            //
+            // OR WHAT A DEVICE PRODUCES (M3237 3.2): each datum of that Data Type the
+            // device gives, written to the boundary Port as it comes.
+            //
+            //     stream Motion (CAV-SPD-V2.0) from device "Vehicle"
             case "stream":
             {
+                var d = StreamDeviceLine.Match(rest.Trim());
+                if (d.Success)
+                    return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, d.Groups["datum"].Value).Port,
+                                      Text = d.Groups["device"].Value, FromDevice = true, Line = n };
                 var m = StreamLine.Match(rest.Trim());
                 if (!m.Success)
-                    throw new WorkflowSyntaxError(n, "'stream' expects '<label> (<DataType>[:<PortNumber>]) from record \"<name>\" [at x<rate>]'.");
+                    throw new WorkflowSyntaxError(n, "'stream' expects '<label> (<DataType>[:<PortNumber>]) from record \"<name>\" [at x<rate>]' or '... from device \"<name>\"'.");
                 var rate = m.Groups["rate"].Success ? double.Parse(m.Groups["rate"].Value, CultureInfo.InvariantCulture) : 1;
                 if (rate <= 0) throw new WorkflowSyntaxError(n, "'stream' plays at a rate above 0.");
                 return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
                                   Text = m.Groups["record"].Value, Rate = rate, Line = n };
+            }
+
+            // WHAT A BOUNDARY PORT GIVES, TO A DEVICE (M3205 3.1.1, M3237 3.2), for the
+            // life of the workflow: each datum the Port gives is delivered to it. The
+            // User Agent owns the act, and can interlock it.
+            //
+            //     deliver Brake (CAV-BRC-V2.0) to device "Vehicle"
+            case "deliver":
+            {
+                var m = DeliverLine.Match(rest.Trim());
+                if (!m.Success)
+                    throw new WorkflowSyntaxError(n, "'deliver' expects '<label> (<DataType>[:<PortNumber>]) to device \"<name>\"'.");
+                return new Step { Kind = StepKind.Deliver, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
+                                  Text = m.Groups["device"].Value, Line = n };
             }
 
 
@@ -365,6 +388,12 @@ public sealed class WorkflowReader
         }
     }
 
+    private static readonly Regex StreamDeviceLine = new(
+        @"^(?<datum>.+?\))\s+from\s+device\s+""(?<device>[^""]+)""$", RegexOptions.IgnoreCase);
+
+    private static readonly Regex DeliverLine = new(
+        @"^(?<datum>.+?\))\s+to\s+device\s+""(?<device>[^""]+)""$", RegexOptions.IgnoreCase);
+
     private static readonly Regex StreamLine = new(
         @"^(?<datum>.+?\))\s+from\s+record\s+""(?<record>[^""]+)""(\s+at\s+x(?<rate>[0-9]+(\.[0-9]+)?))?$",
         RegexOptions.IgnoreCase);
@@ -476,7 +505,7 @@ public sealed class WorkflowReader
     {
         "workflow ", "on Start:", "on Stop:", "on Degraded:", "ask ", "acquire ", "type ", "prompt ",
         "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run ",
-        "stream "
+        "stream ", "deliver "
     };
 
     // A brace stands on its own: it closes a block and is not a continuation

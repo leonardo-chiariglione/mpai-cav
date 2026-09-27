@@ -66,6 +66,19 @@ public sealed class DeviceRegistry
 
     public IRecordSource? Record(string name) => records.GetValueOrDefault(name);
 
+    // DEVICES OF THE PHYSICAL LAYER THAT ACT AND ANSWER (M3237 3.2): a workflow
+    // delivers to them what a Module gives and streams back what they produce, by
+    // the name it gives them. Which device a name means is the User Agent's own.
+    private readonly Dictionary<string, IDevice> devices = new(StringComparer.Ordinal);
+
+    public DeviceRegistry RegisterDevice(string name, IDevice device)
+    {
+        devices[name] = device;
+        return this;
+    }
+
+    public IDevice? Device(string name) => devices.GetValueOrDefault(name);
+
     // ONE SOURCE PER DATA TYPE. Which device serves a Data Type is the User
     // Agent's own business; the request that reaches it says what is wanted.
     public DeviceRegistry RegisterAcquire(string dataType, Acquire how)

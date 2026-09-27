@@ -47,6 +47,8 @@ public enum StepKind
     Say,              // say (T:n) "..." give (T), (T) - words in, speech and face out
     Run,              // run L  - obtain the App named by that datum and run it
     Stream,           // stream L (T:n) from record "R" [at x2] - a record played to a boundary Port
+                      //   or from device "D" - what a device produces, to a boundary Port
+    Deliver,          // deliver L (T:n) to device "D" - what a boundary Port gives, to a device
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }
@@ -64,6 +66,7 @@ public sealed class Step
     public string?  Value         { get; init; }   // Set
     public TimeSpan Duration      { get; init; }   // Wait
     public double   Rate          { get; init; } = 1;   // Stream: x2 plays twice as fast
+    public bool     FromDevice    { get; init; }   // Stream: Text names a device, not a record
     public bool     ViaVad        { get; init; }   // Acquire
 
     // WHAT IS WANTED, NOT WHERE IT COMES FROM. A workflow names a Qualifier -

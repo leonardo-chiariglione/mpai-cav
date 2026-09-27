@@ -13,12 +13,21 @@ namespace Mpai.Cav.Ams;
 // never nearer than a minimum gap, stopping at the end of the Path as behind a
 // vehicle stopped there. The object ahead predicted at its speed. Settings: DesiredSpeed
 // (m/s; the limit where absent), TimeGap, MinimumGap, Acceleration, Deceleration.
+//
+// AT A CORNER OF THE PATH (M3237, found in Step 4: a CAV that moves as a vehicle does
+// cannot turn at the speed limit): where the Path turns by more than 20 degrees the
+// desired speed is at most what a turn of CornerRadius metres allows at
+// LateralAcceleration m/s2, reached at CornerDeceleration m/s2 before it and held
+// through the turn.
 public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictionary<string, string> settings) : IAimProcessor, IAimRunner
 {
     public const double Step = 0.1, Horizon = 6;
     private readonly double timeGap = EssJson.Setting(settings, "TimeGap", 1.5), minimumGap = EssJson.Setting(settings, "MinimumGap", 4),
                             acceleration = EssJson.Setting(settings, "Acceleration", 1.5), deceleration = EssJson.Setting(settings, "Deceleration", 2);
+    private readonly double cornerRadius = EssJson.Setting(settings, "CornerRadius", 10), lateralAcceleration = EssJson.Setting(settings, "LateralAcceleration", 2),
+                            cornerDeceleration = EssJson.Setting(settings, "CornerDeceleration", 1);
     private List<(double S, double East, double North, double Heading)>? path;
+    private List<double> corners = [];
     private long count;
 
     public string InstanceId { get; } = instanceId;
@@ -41,7 +50,27 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
     }
 
     // The Path to follow, from a Path Response.
-    public void Follow(JsonNode path) => this.path = Line(path);
+    public void Follow(JsonNode path)
+    {
+        this.path = Line(path);
+        corners = [];
+        for (var i = 0; i + 1 < this.path.Count; i++)
+            if (Math.Abs(Math.IEEERemainder(this.path[i + 1].Heading - this.path[i].Heading, 2 * Math.PI)) > 20 * Math.PI / 180)
+                corners.Add(this.path[i + 1].S);
+    }
+
+    // The desired speed at s: no more than the corners ahead, and the one being
+    // turned, allow.
+    private double CornerLimit(double s, double desired)
+    {
+        var turning = Math.Sqrt(lateralAcceleration * cornerRadius);
+        foreach (var c in corners)
+        {
+            if (s > c + cornerRadius) continue;
+            desired = Math.Min(desired, s >= c ? turning : Math.Sqrt(turning * turning + 2 * cornerDeceleration * (c - s)));
+        }
+        return desired;
+    }
 
     // The Path as a line: each point with its distance along the Path.
     private static List<(double S, double East, double North, double Heading)> Line(JsonNode path)
@@ -124,7 +153,7 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             // Behind the nearer of the object ahead and the end of the Path.
             var (gap, closing) = (end + minimumGap - pos, v0);
             if (lead - pos < gap) (gap, closing) = (lead - pos, v0 - (leadSpeed ?? 0));
-            var a = Math.Clamp(Idm(v0, desired, gap, closing), -9, acceleration);
+            var a = Math.Clamp(Idm(v0, CornerLimit(pos, desired), gap, closing), -9, acceleration);
             var (e, n, h) = At(pos);
             var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (e, n, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(h), v0 * Math.Sin(h), 0));
             point["Position"]!["CartAccel"] = EssJson.Triple((a * Math.Cos(h), a * Math.Sin(h), 0));

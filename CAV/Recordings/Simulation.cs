@@ -68,7 +68,9 @@ public sealed class Simulation
         noise = new Random(seed); grain = new Random(seed + 1);
     }
 
-    public bool Arrived => EgoS >= Path.Length - 0.5;
+    // Arrived at the end of the Route; moved by its mechanical subsystems, the CAV
+    // stops where its brakes leave it, within 2 m.
+    public bool Arrived => EgoS >= Path.Length - (Mechanics is null ? 0.5 : 2);
 
     // From now on the ego is moved by its mechanical subsystems.
     public Vehicle Mechanical(int seed)
@@ -104,7 +106,8 @@ public sealed class Simulation
             messages.Add(("OSD-OSA-V1.5", Attitude(ms, heading)));
         }
 
-        var (east, north, _, segment) = Path.At(EgoS);
+        var (east, north, egoHeading, segment) = Path.At(EgoS);
+        if (Mechanics is not null) (east, north, egoHeading) = (Mechanics.East, Mechanics.North, Mechanics.Heading);
         var (lat, lon) = Map.Geodetic(east + Gaussian(GnssSigma), north + Gaussian(GnssSigma));
         messages.Add(("CAV-GNO-V2.0", Gnss(ms0, lat, lon)));
 
@@ -135,7 +138,7 @@ public sealed class Simulation
             ["Ego"] = new JsonObject
             {
                 ["S"] = Math.Round(EgoS, 3), ["Speed"] = Math.Round(EgoSpeed, 3), ["Acceleration"] = Math.Round(EgoAcceleration, 3),
-                ["East"] = Math.Round(east, 3), ["North"] = Math.Round(north, 3), ["Segment"] = segment.Id, ["SpeedLimit"] = segment.SpeedLimit,
+                ["East"] = Math.Round(east, 3), ["North"] = Math.Round(north, 3), ["Heading"] = Math.Round(egoHeading * 180 / Math.PI, 3), ["Segment"] = segment.Id, ["SpeedLimit"] = segment.SpeedLimit,
                 ["Offset"] = Math.Round(EgoOffset, 3), ["LeftLane"] = LeftLane,
                 ["Friction"] = FrictionAt(EgoS), ["Steer"] = Mechanics is null ? null : Math.Round(Mechanics.Steer * 180 / Math.PI, 3),
                 ["Skidding"] = Mechanics?.Skidding, ["AbsActive"] = Mechanics?.AbsActive

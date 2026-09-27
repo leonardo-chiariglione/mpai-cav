@@ -54,6 +54,11 @@ public sealed class WorkflowInterpreter
     private readonly List<Step> bound = new();
     private readonly List<Task> playing = new();
     private readonly CancellationTokenSource endOfWorkflow = new();
+
+    // The devices a workflow delivers to or streams from: asked for their safe
+    // state before the Modules stop, and when the Module degrades (M3237 3.2).
+    private readonly List<(string Name, IDevice Device)> boundDevices = new();
+    private int safeStopped;
     public List<PlaybackReport> Playbacks { get; } = new();
 
     // How a record was played: its Messages, the rate, how long it took, and how
@@ -86,6 +91,10 @@ public sealed class WorkflowInterpreter
             endOfWorkflow.Cancel();
             try { await Task.WhenAll(playing); } catch { }
 
+            // THE INTERLOCK: every device the workflow acted through, to its safe
+            // state, before anything is stopped.
+            await SafeStopAsync(stop.IsCancellationRequested ? "Stop" : "the workflow ends");
+
             // What On Stop says, and then whatever is still running: a workflow
             // that failed mid-way must not leave a Module started.
             try { await WalkAsync(workflow.OnStop, CancellationToken.None); }
@@ -114,6 +123,9 @@ public sealed class WorkflowInterpreter
     {
         var streams = bound.ToList();
         bound.Clear();
+        var withDevices = streams.Where(s => s.FromDevice || s.Kind == StepKind.Deliver).ToList();
+        if (withDevices.Count > 0) BindDevices(withDevices, stop);
+        streams = streams.Except(withDevices).ToList();
         foreach (var group in streams.GroupBy(s => s.Text!))
         {
             var first = group.First();
@@ -176,6 +188,82 @@ public sealed class WorkflowInterpreter
             errors.Count > 0 ? errors[^1] : 0);
         lock (Playbacks) Playbacks.Add(report);
         say($"record \"{record}\" played: {report.Messages} Messages in {report.Took.TotalSeconds:0.00} s; error median {report.MedianErrorMs:0.00} ms, max {report.MaxErrorMs:0.00} ms");
+    }
+
+    // ---- devices that act and answer (M3237 3.2) -----------------------------------
+
+    // BOUND FOR THE LIFE OF THE WORKFLOW: what a device produces written to the
+    // boundary Ports streamed from it, as it comes; what a boundary Port gives
+    // delivered to the device it is delivered to, as it comes. A device unknown to
+    // this User Agent stops the workflow before anything is bound.
+    private void BindDevices(IReadOnlyList<Step> steps, CancellationToken stop)
+    {
+        var token = CancellationTokenSource.CreateLinkedTokenSource(stop, endOfWorkflow.Token).Token;
+        foreach (var group in steps.GroupBy(s => s.Text!))
+        {
+            var device = devices.Device(group.Key)
+                ?? throw new InvalidOperationException($"line {group.First().Line}: no device \"{group.Key}\" is known to this User Agent.");
+            boundDevices.Add((group.Key, device));
+
+            var into = group.Where(s => s.FromDevice).ToDictionary(s => s.Port!.DataType, s => s.Port!, StringComparer.Ordinal);
+            if (into.Count > 0)
+                playing.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        await foreach (var (dataType, json) in device.ReadAsync(token))
+                            if (into.TryGetValue(dataType, out var port))
+                                await north.InputWriteAsync(Module, dataType, port.PortNumber, json, -1);
+                    }
+                    catch (OperationCanceledException) { }
+                }));
+
+            foreach (var d in group.Where(s => s.Kind == StepKind.Deliver))
+            {
+                var port = d.Port!;
+                playing.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (!token.IsCancellationRequested)
+                        {
+                            var read = await north.OutputReadAsync(Module, port.DataType, port.PortNumber, 200);
+                            if (read.Ok && read.Json is not null) await device.DeliverAsync(port.DataType, read.Json, token);
+                        }
+                    }
+                    catch (OperationCanceledException) { }
+                }));
+            }
+            say($"device \"{group.Key}\": " + string.Join(", ", group.Select(s => (s.Kind == StepKind.Deliver ? "deliver " : "stream ") + s.Port)));
+        }
+
+        // A MODULE THAT DEGRADES stops acting on the world: its devices are brought
+        // to their safe state (the interlock), and the workflow goes on as it says.
+        playing.Add(Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested && safeStopped == 0)
+                {
+                    await Task.Delay(500, token);
+                    var status = await north.StatusAsync(Module);
+                    if (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive))
+                        await SafeStopAsync("an AIM of " + Module + " is " + status.Aims.First(a => a.Status != AimStatus.Alive).Status);
+                }
+            }
+            catch (OperationCanceledException) { }
+        }));
+    }
+
+    // Once: every bound device to its safe state, and why.
+    private async Task SafeStopAsync(string why)
+    {
+        if (boundDevices.Count == 0 || Interlocked.Exchange(ref safeStopped, 1) == 1) return;
+        foreach (var (name, device) in boundDevices)
+        {
+            try { await device.SafeStopAsync(); say($"device \"{name}\" brought to its safe state: {why}"); }
+            catch (Exception e) { say($"device \"{name}\" not brought to its safe state: {e.Message}"); }
+        }
     }
 
     // The time a Message is due: a sleep while it is far, a spin when it is near -
@@ -303,7 +391,7 @@ public sealed class WorkflowInterpreter
     private async Task StepAsync(Step step, CancellationToken stop)
     {
         // STREAMS ARE BOUND, THEN PLAYED TOGETHER at the first step that is not one.
-        if (step.Kind == StepKind.Stream) { bound.Add(step); return; }
+        if (step.Kind is StepKind.Stream or StepKind.Deliver) { bound.Add(step); return; }
         if (bound.Count > 0) await PlayAsync(stop);
 
         switch (step.Kind)

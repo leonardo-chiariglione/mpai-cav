@@ -1,47 +1,25 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Mpai.Aif.Api;
+using Mpai.Cav.Ams;
+using Mpai.Cav.Ess;
 using Mpai.Cav.Map;
+using Mpai.Cav.Mas;
 using Mpai.Cav.Recordings;
+using Mpai.Rca;
+using Mpai.Wdl;
 
 namespace Mpai.Aif.Tests;
 
-// PHASE 9 (M3237): the Motion Actuation Subsystem, Stage 1.
+// PHASE 9 (M3237): the Motion Actuation Subsystem, Stage 1. Step 4 runs a workflow
+// against the clock (deliver): with the tests that time.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
+[Collection(Timing.Name)]
 public class MasStage1Tests
 {
     private static readonly RoadMap Map = RoadMap.Grid(3);
-
-    // THE COMMANDS OF THE MECHANICAL SUBSYSTEMS, as their schemas give them.
-    public static string Brake(string id, double deceleration, long ms, bool abs = true, bool emergency = false, double releaseAt = 0) => new JsonObject
-    {
-        ["Header"] = "CAV-BRC-V2.0", ["BrakeCommandID"] = id, ["BrakeID"] = "B1",
-        ["BrakeCommand"] = new JsonArray(new JsonObject
-        {
-            ["TargetVelocity"] = releaseAt, ["BrakeCommandTime"] = Time(id + "-T", ms),
-            ["DecelerationTarget"] = deceleration, ["ABSAllow"] = abs, ["EmergencyBrakeFlag"] = emergency
-        })
-    }.ToJsonString();
-
-    public static string Motor(string id, string mode, double target, long ms)
-    {
-        var command = new JsonObject { ["ControlMode"] = mode, ["MotorCommandTime"] = Time(id + "-T", ms) };
-        command[mode switch { "torque" => "TargetTorque", "acceleration" => "TargetAcceleration", _ => "TargetVelocity" }] = target;
-        return new JsonObject { ["Header"] = "CAV-MRC-V2.0", ["MotorCommandID"] = id, ["MotorID"] = "M1", ["MotorCommand"] = command }.ToJsonString();
-    }
-
-    public static string Wheel(string id, double degrees, long ms) => new JsonObject
-    {
-        ["Header"] = "CAV-WHC-V2.0", ["WheelCommandID"] = id, ["WheelID"] = "W1", ["WheelCommandTime"] = Time(id + "-T", ms),
-        ["WheelCommand"] = new JsonObject { ["Angle"] = degrees, ["SteeringMode"] = "SteerByWire" }
-    }.ToJsonString();
-
-    private static JsonObject Time(string id, long ms) => new()
-    {
-        ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = id,
-        ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = ms, ["EndTime"] = ms, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
-    };
 
     // A run: the vehicle on a Route, the same commands at every step, until stopped
     // or for a time. Every command, Response and Spatial Data kept, to be validated.
@@ -88,7 +66,7 @@ public class MasStage1Tests
             var run = Drive("W20", 20, 60, (sim, ms, k) =>
             {
                 sawAbs |= sim.Mechanics!.AbsActive; sawLock |= sim.Mechanics.WheelLocked;
-                return [("CAV-BRC-V2.0", Brake($"BRC{k}", 9, ms, abs))];
+                return [("CAV-BRC-V2.0", MasTypes.Brake($"BRC{k}", ms, 9, abs: abs))];
             }, friction, untilStopped: true);
             var deceleration = Math.Min(Vehicle.MaxBrakeDeceleration, (abs ? Vehicle.AbsGrip : Vehicle.LockedGrip) * friction * g);
             var a0 = deceleration + Vehicle.RollingResistance * g;
@@ -110,7 +88,7 @@ public class MasStage1Tests
                 var v = sim.Mechanics!.Speed; var a = sim.Mechanics.Acceleration;
                 if (k > 0) worst = Math.Max(worst, a - Math.Min(Simulation.DryFriction * g, Vehicle.MaxPower / (Vehicle.Mass * Math.Max(v0, 1))));
                 v0 = v;
-                return [("CAV-MRC-V2.0", Motor($"MRC{k}", "torque", Vehicle.MaxMotorTorque, ms))];
+                return [("CAV-MRC-V2.0", MasTypes.Motor($"MRC{k}", ms, "torque", Vehicle.MaxMotorTorque))];
             });
             everything.AddRange(run.Objects);
             result["full torque from standstill, 10 s"] =
@@ -124,7 +102,7 @@ public class MasStage1Tests
             var run = Drive("W20", 10, 6, (sim, ms, k) =>
             {
                 if (k == 10) h0 = sim.Mechanics!.Heading;
-                return [("CAV-MRC-V2.0", Motor($"MRC{k}", "velocity", 10, ms)), ("CAV-WHC-V2.0", Wheel($"WHC{k}", 5, ms))];
+                return [("CAV-MRC-V2.0", MasTypes.Motor($"MRC{k}", ms, "velocity", 10)), ("CAV-WHC-V2.0", MasTypes.Wheel($"WHC{k}", ms, 5))];
             });
             var rate = (run.Sim.Mechanics!.Heading - h0) / ((run.Steps - 10) * Simulation.Step);
             var expected = 10 * Math.Tan(5 * Math.PI / 180) / Vehicle.Wheelbase;
@@ -139,7 +117,7 @@ public class MasStage1Tests
             var run = Drive("W20", 15, 3, (sim, ms, k) =>
             {
                 skid |= sim.Mechanics!.Skidding;
-                return [("CAV-MRC-V2.0", Motor($"MRC{k}", "velocity", 15, ms)), ("CAV-WHC-V2.0", Wheel($"WHC{k}", 20, ms))];
+                return [("CAV-MRC-V2.0", MasTypes.Motor($"MRC{k}", ms, "velocity", 15)), ("CAV-WHC-V2.0", MasTypes.Wheel($"WHC{k}", ms, 20))];
             }, friction: 0.15);
             everything.AddRange(run.Objects);
             result["too sharp a turn on ice, 15 m/s, 20 degrees"] = skid ? "the vehicle slides" : "no slide";
@@ -153,7 +131,7 @@ public class MasStage1Tests
             var run = Drive("W20", 15, 10, (sim, ms, k) =>
             {
                 atReading = sim.Mechanics!.Distance;
-                return [("CAV-MRC-V2.0", Motor($"MRC{k}", "velocity", 15, ms))];
+                return [("CAV-MRC-V2.0", MasTypes.Motor($"MRC{k}", ms, "velocity", 15))];
             });
             var last = JsonNode.Parse(run.Objects.Last(o => o.DataType == "CAV-SPD-V2.0").Json)!["SpatialData"]!;
             var odometer = (double)last["OdometerData"]!;
@@ -161,19 +139,264 @@ public class MasStage1Tests
             result["the odometer against the distance travelled"] = $"{Bucket((odometer / atReading - 1) * 100, 0.5)} % long";
         }
 
+        foreach (var (key, value) in Validity(everything)) result[key] = value;
+        Expected.Match("mas-stage1-mechanics.json", result);
+    }
+
+    // ---- Step 4 (M3237 3.4, 3.2): AMS-MAS Message Interpretation, and deliver --------
+
+    // An AMS-MAS Message whose Trajectory starts at (east, north) heading east at v0
+    // m/s, accelerating at a m/s2 (never below a standstill): 6 s of points 0.1 s
+    // apart, as Motion Selection Planning gives them.
+    public static JsonNode Straight(long ms, double east, double north, double v0, double a, string command = "Execute")
+    {
+        var points = new JsonArray();
+        double v = v0, x = east;
+        for (var k = 0; k <= 60; k++)
+        {
+            var t = ms + k * 100;
+            var point = EssJson.Attitude($"T-{k}", t, (x, north, 0), (0.5, 0.5, 0.1), (v, 0, 0));
+            point["Position"]!["CartAccel"] = EssJson.Triple((v > 0 || a > 0 ? a : 0, 0, 0));
+            points.Add(new JsonObject { ["ExpectedSpaceTime"] = EssJson.SpaceTime($"T-{k}-ST", t, point) });
+            var next = Math.Max(0, v + a * 0.1);
+            x += (v + next) / 2 * 0.1;
+            v = next;
+        }
+        return new JsonObject
+        {
+            ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = $"AMM{ms}", ["AMSMASMessageTime"] = EssJson.SimpleTime($"AMM{ms}-T", ms),
+            ["AMSMessage"] = new JsonObject
+            {
+                ["Trajectory"] = new JsonObject { ["Header"] = "OSD-TRJ-V1.5", ["TrajectoryID"] = $"TRJ{ms}", ["TrajectoryTime"] = EssJson.SimpleTime($"TRJ{ms}-T", ms), ["Trajectory"] = points },
+                ["Command"] = command
+            }
+        };
+    }
+
+    // The MAS's Spatial Attitude of a CAV at (east, north), its heading (degrees), its speed.
+    public static JsonNode Pose(long ms, double east, double north, double heading, double speed) =>
+        EssJson.Attitude($"P{ms}", ms, (east, north, 0), (0.1, 0.1, 0.1), (speed * Math.Cos(heading * Math.PI / 180), speed * Math.Sin(heading * Math.PI / 180), 0),
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"P{ms}-O", ["Orientation"] = new JsonArray(0.0, 0.0, heading) });
+
+    // What one set of commands says: each device, what it is told.
+    private static string Told(IReadOnlyList<(string DataType, string Json)> commands) => commands.Count == 0 ? "nothing" : string.Join("; ", commands.Select(c =>
+    {
+        var j = JsonNode.Parse(c.Json)!;
+        return c.DataType switch
+        {
+            MasTypes.MotorCommand => $"motor {(string)j["MotorCommand"]!["ControlMode"]!} {Bucket((double?)j["MotorCommand"]!["TargetAcceleration"] ?? (double?)j["MotorCommand"]!["TargetTorque"] ?? 0, 0.5)}",
+            MasTypes.BrakeCommand => (bool)j["BrakeCommand"]![0]!["EmergencyBrakeFlag"]! ? "emergency brake"
+                                     : $"brake {Bucket((double)j["BrakeCommand"]![0]!["DecelerationTarget"]!, 0.5)} m/s2",
+            _ => (double)j["WheelCommand"]!["Angle"]! is var d && Math.Abs(d) < 0.5 ? "wheels straight" : d > 0 ? "wheels left" : "wheels right"
+        };
+    }));
+
+    // AMI on its own: what each situation makes it command.
+    [Fact]
+    public void Step4Interpretation()
+    {
+        var result = new Dictionary<string, string>();
+        var all = new List<(string, string)>();
+        const long t0 = 1_767_254_400_000;
+        var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
+        string At(JsonNode pose) { var c = ami.Commands(pose); all.AddRange(c); return Told(c); }
+
+        result["before any AMS-MAS Message"] = At(Pose(t0, 0, 0, 0, 10));
+        ami.Accept(Straight(t0, 0, 0, 10, 0));
+        result["on the Trajectory, at its speed"] = At(Pose(t0, 0, 0, 0, 10));
+        result["1 m to the right of it"] = At(Pose(t0 + 100, 1, -1, 0, 10));
+        result["1 m to the left of it"] = At(Pose(t0 + 200, 2, 1, 0, 10));
+        result["2 m/s slower than it"] = At(Pose(t0 + 300, 3, 0, 0, 8));
+        ami.Accept(Straight(t0 + 400, 4, 0, 10, -3));
+        result["it brakes at 3 m/s2"] = At(Pose(t0 + 400, 4, 0, 0, 10));
+        ami.Accept(Straight(t0 + 500, 5, 0, 10, -7));
+        result["it brakes at 7 m/s2"] = At(Pose(t0 + 500, 5, 0, 0, 10));
+        ami.Accept(Straight(t0 + 600, 6, 0, 10, 0));
+        ami.Accept(Straight(t0 + 600, 6, 0, 10, 0, "Suspend"));
+        result["Suspend"] = At(Pose(t0 + 600, 6, 0, 0, 10));
+        ami.Accept(Straight(t0 + 700, 7, 0, 10, 0, "Resume"));
+        result["Resume"] = At(Pose(t0 + 700, 7, 0, 0, 10));
+        ami.Accept(Straight(t0 + 800, 8, 0, 0, 0));
+        result["stopped, to stay stopped"] = At(Pose(t0 + 800, 8, 0, 0, 0));
+        result["an AMS-MAS Message with no AMS Message"] = ami.Accept(new JsonObject { ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = "AMM-X" }) ?? "accepted";
+        result["Execute with no Trajectory"] = ami.Accept(new JsonObject
+        {
+            ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = "AMM-Y", ["AMSMessage"] = new JsonObject { ["Command"] = "Execute" }
+        }) ?? "accepted";
+        foreach (var (key, value) in Validity(all)) result[key] = value;
+        Expected.Match("mas-stage1-ami.json", result);
+    }
+
+    // THE LOOP CLOSED THROUGH THE MECHANICAL SUBSYSTEMS (M3237 3.8): the scenarios of
+    // Phase 8, and the first of them on an icy stretch the AMS does not know of (ICA:
+    // Step 6), on perfect perception - the AMS of Phase 8 in-process, its AMS-MAS
+    // Message interpreted by AMI, whose commands move the vehicle. The Spatial
+    // Attitude AMI follows the Trajectory from is the truth, on the map's frame, until
+    // MSA gives it (Step 5). Judged: no collision; the Destination reached; within the
+    // speed limit; in its lane on the straights - not within 25 m of a corner of the
+    // Route; not sliding. Reported: how far from the lane's centre, on the straights
+    // and at the corners; the speed against the Trajectory's; the hardest braking; the
+    // Emergency Brake Commands; the steps.
+    public static IReadOnlyDictionary<string, Func<Simulation>> Scenarios()
+    {
+        var scenarios = new Dictionary<string, Func<Simulation>>(AmsStage1Tests.Scenarios());
+        var map = RoadMap.Grid(3);
+        var route = map.FastestRoute("W00", "W21")!;
+        scenarios["a vehicle ahead slows and stops, on ice"] = () => new Simulation(map, route,
+            [new ScenarioVehicle("ahead", 0, 45, [(0, 13.0), (8, 6.0), (14, 0.0)], CameraRenderer.Silver)], seed: 7, egoSpeed: 12) { Surface = [(100, 300, 0.15)] };
+        return scenarios;
+    }
+
+    [Fact]
+    public void Step4ClosedLoop()
+    {
+        var result = new Dictionary<string, string>();
+        var report = new Dictionary<string, string>();
+        var everything = new List<(string DataType, string Json)>();
+        foreach (var (name, make) in Scenarios())
+        {
+            var sim = make();
+            sim.Mechanical(seed: 9);
+            var fed = new FullEnvironmentDescription(AmsProvider.Fed);
+            fed.Know(JsonNode.Parse(sim.Map.ToOfflineMapObject(0))!);
+            var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
+            msp.Follow(AmsStage1Tests.PathOf(sim));
+            var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
+            var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
+            var corners = Enumerable.Range(1, sim.Path.Segments.Count - 1).Select(i => sim.Path.Segments.Take(i).Sum(sim.Map.Length)).ToList();
+
+            double straight = 0, corner = 0, overLimit = 0, hardest = 0, sumSquares = 0, worstSpeed = 0;
+            int steps = 0, emergencies = 0;
+            var skidded = false;
+            for (; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
+            {
+                var sensed = sim.Sense(camera: false);
+                overLimit = Math.Max(overLimit, sim.EgoSpeed - (double)sensed.Truth["Ego"]!["SpeedLimit"]!);
+                var bed = JsonNode.Parse(TruthBed.Of(sim, sensed))!;
+                var described = fed.Describe(bed);
+                toa.Observe(described);
+                var message = toa.Refine(msp.Plan(described));
+                ami.Accept(message);
+                var commands = ami.Commands(bed["EgoSpatialAttitude"]!);
+                emergencies += commands.Count(c => c.DataType == MasTypes.BrakeCommand && c.Json.Contains("\"EmergencyBrakeFlag\":true"));
+                var planned = TrafficObstacleAvoidance.Speed(message["AMSMessage"]!["Trajectory"]!["Trajectory"]![1]!);
+                sim.Actuate(commands);
+                everything.AddRange(commands);
+                everything.AddRange(sim.Advance());
+                var error = sim.EgoSpeed - planned;
+                sumSquares += error * error;
+                worstSpeed = Math.Max(worstSpeed, Math.Abs(error));
+                hardest = Math.Max(hardest, -sim.EgoAcceleration);
+                skidded |= sim.Mechanics!.Skidding;
+                if (corners.Any(c => Math.Abs(sim.EgoS - c) < 25)) corner = Math.Max(corner, Math.Abs(sim.EgoOffset));
+                else straight = Math.Max(straight, Math.Abs(sim.EgoOffset));
+            }
+            var inLane = straight <= (RoadMap.LaneWidth - 1.8) / 2;
+            result[name] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Arrived ? "Destination reached" : "Destination not reached")}; " +
+                           $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; " +
+                           $"{(inLane ? "in its lane on the straights" : "out of its lane on a straight")}; {(skidded ? "slid" : "did not slide")}";
+            report[name] = result[name] + $"; off the lane's centre at most {straight:0.00} m on the straights, {corner:0.00} m at the corners; " +
+                           $"speed against the Trajectory's RMS {Math.Sqrt(sumSquares / Math.Max(1, steps)):0.00} m/s, at most {worstSpeed:0.00} m/s; " +
+                           $"hardest braking {hardest:0.0} m/s2; {emergencies} Emergency Brake Command(s); {steps} steps";
+        }
+        foreach (var (key, value) in Validity(everything)) result[key] = value;
+        File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mas-stage1-closed-loop.json"),
+            JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("mas-stage1-closed-loop.json", result);
+    }
+
+    // DELIVER (M3237 3.2), on the Module of Phase 6 that echoes its inputs: a device
+    // produces five data, streamed to the Module; what the Module gives is delivered
+    // back to it. The interlock: the device brought to its safe state once, when the
+    // workflow ends, and at once on Stop. A device the User Agent does not know stops
+    // the workflow before anything is bound; a deliver not in its form is refused.
+    private sealed class EchoDevice : IDevice
+    {
+        public readonly List<string> Delivered = [];
+        public readonly List<long> SafeStops = [];
+        public readonly System.Diagnostics.Stopwatch Clock = System.Diagnostics.Stopwatch.StartNew();
+
+        public Task DeliverAsync(string dataType, string json, CancellationToken cancel)
+        {
+            lock (Delivered) Delivered.Add(json);
+            return Task.CompletedTask;
+        }
+
+        public async IAsyncEnumerable<(string DataType, string Json)> ReadAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancel)
+        {
+            for (var i = 1; i <= 5; i++)
+            {
+                await Task.Delay(50, cancel);
+                yield return (StorageTests.Text, $"d{i}");
+            }
+            await Task.Delay(-1, cancel);
+        }
+
+        public Task SafeStopAsync()
+        {
+            lock (SafeStops) SafeStops.Add(Clock.ElapsedMilliseconds);
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public async Task Step4Deliver()
+    {
+        const string rec = "1TST-REC-V1.0-I01";
+        const string body = "    stream In (TST-TXT-V1.0:1) from device \"Echo\"\n    deliver Out (TST-TXT-V1.0:1) to device \"Echo\"\n";
+        var result = new Dictionary<string, string>();
+        using var api = new ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
+
+        async Task<(EchoDevice Device, List<string> Said, string Outcome)> Run(string tail, int stopAfterMs = -1, string device = "Echo")
+        {
+            api.StartFlow(rec);
+            var echo = new EchoDevice();
+            var said = new List<string>();
+            var interpreter = new WorkflowInterpreter(api.Async(), new DeviceRegistry().RegisterDevice(device, echo), line => { lock (said) said.Add(line); });
+            using var stop = new CancellationTokenSource();
+            if (stopAfterMs >= 0) stop.CancelAfter(stopAfterMs);
+            string outcome;
+            try { await interpreter.RunAsync(new WorkflowReader().Read($"workflow DELIVER over {rec}\non Start:\n{body}{tail}\n"), stop.Token); outcome = "ended"; }
+            catch (OperationCanceledException) { outcome = "stopped"; }
+            catch (InvalidOperationException e) { outcome = e.Message; }
+            api.StopFlow(rec);
+            return (echo, said, outcome);
+        }
+
+        var (ends, endsSaid, endsOutcome) = await Run("    wait 1s");
+        result["the workflow ends: what the device produced, delivered back to it"] = $"{endsOutcome}; {string.Join(",", ends.Delivered)}";
+        result["the workflow ends: the interlock"] = $"{ends.SafeStops.Count} safe stop(s); " + string.Join(" | ", endsSaid.Where(l => l.StartsWith("device")));
+
+        var (stopped, stoppedSaid, stoppedOutcome) = await Run("    wait 10s", stopAfterMs: 300);
+        result["Stop: the interlock"] = $"{stoppedOutcome}; {stopped.SafeStops.Count} safe stop(s) " +
+                                       $"{(stopped.SafeStops.Count > 0 && stopped.SafeStops[0] < 1500 ? "within 1.5 s of the start" : "late or none")}; " +
+                                       string.Join(" | ", stoppedSaid.Where(l => l.Contains("safe state")));
+
+        var (_, _, unknown) = await Run("    wait 1s", device: "Pedal");
+        result["a device the User Agent does not know"] = unknown;
+        try { new WorkflowReader().Read($"workflow W over {rec}\non Start:\n    deliver Out (TST-TXT-V1.0:1) to \"Echo\"\n"); result["deliver not in its form"] = "accepted"; }
+        catch (WorkflowReader.WorkflowSyntaxError e) { result["deliver not in its form"] = e.Message; }
+        Expected.Match("mas-stage1-deliver.json", result);
+    }
+
+    // Each Data Type of the commands, Responses and Spatial Data against its schema.
+    private static Dictionary<string, string> Validity(IEnumerable<(string DataType, string Json)> objects)
+    {
         var schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
         var byType = new Dictionary<string, string>
         {
-            ["CAV-BRC-V2.0"] = "BrakeCommand", ["CAV-BRR-V2.0"] = "BrakeResponse", ["CAV-MRC-V2.0"] = "MotorCommand", ["CAV-MRP-V2.0"] = "MotorResponse",
-            ["CAV-WHC-V2.0"] = "WheelCommand", ["CAV-WHR-V2.0"] = "WheelResponse", ["CAV-SPD-V2.0"] = "SpatialData"
+            [MasTypes.BrakeCommand] = "BrakeCommand", [MasTypes.BrakeResponse] = "BrakeResponse", [MasTypes.MotorCommand] = "MotorCommand",
+            [MasTypes.MotorResponse] = "MotorResponse", [MasTypes.WheelCommand] = "WheelCommand", [MasTypes.WheelResponse] = "WheelResponse",
+            [MasTypes.SpatialData] = "SpatialData"
         };
-        foreach (var group in everything.GroupBy(o => o.DataType).OrderBy(g => g.Key))
+        var result = new Dictionary<string, string>();
+        foreach (var group in objects.GroupBy(o => o.DataType).OrderBy(g => g.Key))
         {
             var schema = schemas[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V2.0", "data", byType[group.Key] + ".json"))];
             var valid = group.Count(o => { using var doc = JsonDocument.Parse(o.Json); lock (AIF.Metadata.PublishedSchemas.Lock) return schema.Evaluate(doc.RootElement).IsValid; });
             result[$"{group.Key} against its schema"] = valid == group.Count() ? "every one valid" : $"{valid} of {group.Count()}";
         }
-        Expected.Match("mas-stage1-mechanics.json", result);
+        return result;
     }
 
     private static string Near(double value, double expected, double tolerance) =>
