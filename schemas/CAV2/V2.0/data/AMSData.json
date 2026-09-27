@@ -1,14 +1,14 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$id":                  "https://schemas.mpai.community/CAV2/V2.0/data/AMSData.json",
-  "title":                "AMS Data V1.1",
+  "title":                "AMS Data V2.0",
   "type":                 "object",
   "additionalProperties": false,
-  "required":             [ "Header", "AMSDataID" ],
+  "required":             [ "Header", "AMSDataID", "AMSDataTime", "AMSMASMessage" ],
 
   "properties":           {
 
     "Header":             { "type": "string", "const": "CAV-AMD-V2.0",
-                            "description": "AMS Data Header – Standard CAV-AMD-Vx.y" },
+                            "description": "AMS Data Header – Standard CAV-AMD-V2.0" },
     "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this AMS Data instance." },
     "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this AMS Data instance." },
     "AMSDataID":          { "type": "string", "description": "Unique identifier of this AMS Data instance." },
@@ -28,7 +28,7 @@
                             "description": "CAV State produced by Traffic Obstacle Avoidance." },
     "FED": { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/FullEnvironmentDescriptors.json", "description": "Full Environment Descriptors produced by Full Environment Description." },
     "AMSMASMessage":      { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/AMSMASMessage.json",
-                            "description": "AMS-MAS Messages exchanged between AMS and Motion Actuation Subsystem." },
+                            "description": "The decision this AMS Data records: the AMS-MAS Message sent to the Motion Actuation Subsystem." },
 
     "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                             "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this AMS Data instance in a trusted data exchange context." },
