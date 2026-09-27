@@ -98,7 +98,9 @@ public sealed class Simulation
         var messages = new List<(string, string)>();
         var ms0 = (Start + TimeSpan.FromSeconds(Time)).ToUnixTimeMilliseconds();
         var heading = Path.At(EgoS).Heading;
-        for (var k = 0; k < AttitudesPerStep; k++)
+        // Moved by its mechanical subsystems, the CAV's Spatial Attitude is the MAS's
+        // (MSA, from the Spatial Data below), not the simulation's.
+        for (var k = 0; k < (Mechanics is null ? AttitudesPerStep : 0); k++)
         {
             var dt = Step / AttitudesPerStep;
             if (StepNumber > 0 || k > 0) { odoX += EgoSpeed * OdometryScale * Math.Cos(heading) * dt; odoY += EgoSpeed * OdometryScale * Math.Sin(heading) * dt; }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Cav.Ams;
 using Mpai.Cav.Ess;
@@ -247,6 +248,37 @@ public class MasStage1Tests
         return scenarios;
     }
 
+    // ONE STEP OF THE LOOP: what was sensed, the AMS-MAS Message, the commands, the
+    // Responses to them.
+    private sealed record Stepped(Simulation.Sensed Sensed, JsonNode Message, IReadOnlyList<(string DataType, string Json)> Commands,
+                                  IReadOnlyList<(string DataType, string Json)> Responses);
+
+    // The loop of Step 4 on a scenario, moved by its mechanics, until the CAV arrives,
+    // collides or 90 s have gone; each step given to see.
+    private static Simulation Loop(Simulation sim, Action<Stepped> each)
+    {
+        sim.Mechanical(seed: 9);
+        var fed = new FullEnvironmentDescription(AmsProvider.Fed);
+        fed.Know(JsonNode.Parse(sim.Map.ToOfflineMapObject(0))!);
+        var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
+        msp.Follow(AmsStage1Tests.PathOf(sim));
+        var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
+        var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
+        for (var steps = 0; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
+        {
+            var sensed = sim.Sense(camera: false);
+            var bed = JsonNode.Parse(TruthBed.Of(sim, sensed))!;
+            var described = fed.Describe(bed);
+            toa.Observe(described);
+            var message = toa.Refine(msp.Plan(described));
+            ami.Accept(message);
+            var commands = ami.Commands(bed["EgoSpatialAttitude"]!);
+            sim.Actuate(commands);
+            each(new Stepped(sensed, message, commands, sim.Advance()));
+        }
+        return sim;
+    }
+
     [Fact]
     public void Step4ClosedLoop()
     {
@@ -256,41 +288,26 @@ public class MasStage1Tests
         foreach (var (name, make) in Scenarios())
         {
             var sim = make();
-            sim.Mechanical(seed: 9);
-            var fed = new FullEnvironmentDescription(AmsProvider.Fed);
-            fed.Know(JsonNode.Parse(sim.Map.ToOfflineMapObject(0))!);
-            var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
-            msp.Follow(AmsStage1Tests.PathOf(sim));
-            var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
-            var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
-            var corners = Enumerable.Range(1, sim.Path.Segments.Count - 1).Select(i => sim.Path.Segments.Take(i).Sum(sim.Map.Length)).ToList();
-
+            var corners = Corners(sim);
             double straight = 0, corner = 0, overLimit = 0, hardest = 0, sumSquares = 0, worstSpeed = 0;
             int steps = 0, emergencies = 0;
             var skidded = false;
-            for (; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
+            Loop(sim, s =>
             {
-                var sensed = sim.Sense(camera: false);
-                overLimit = Math.Max(overLimit, sim.EgoSpeed - (double)sensed.Truth["Ego"]!["SpeedLimit"]!);
-                var bed = JsonNode.Parse(TruthBed.Of(sim, sensed))!;
-                var described = fed.Describe(bed);
-                toa.Observe(described);
-                var message = toa.Refine(msp.Plan(described));
-                ami.Accept(message);
-                var commands = ami.Commands(bed["EgoSpatialAttitude"]!);
-                emergencies += commands.Count(c => c.DataType == MasTypes.BrakeCommand && c.Json.Contains("\"EmergencyBrakeFlag\":true"));
-                var planned = TrafficObstacleAvoidance.Speed(message["AMSMessage"]!["Trajectory"]!["Trajectory"]![1]!);
-                sim.Actuate(commands);
-                everything.AddRange(commands);
-                everything.AddRange(sim.Advance());
-                var error = sim.EgoSpeed - planned;
+                steps++;
+                var ego = s.Sensed.Truth["Ego"]!;
+                overLimit = Math.Max(overLimit, (double)ego["Speed"]! - (double)ego["SpeedLimit"]!);
+                emergencies += s.Commands.Count(c => c.DataType == MasTypes.BrakeCommand && c.Json.Contains("\"EmergencyBrakeFlag\":true"));
+                everything.AddRange(s.Commands);
+                everything.AddRange(s.Responses);
+                var error = sim.EgoSpeed - TrafficObstacleAvoidance.Speed(s.Message["AMSMessage"]!["Trajectory"]!["Trajectory"]![1]!);
                 sumSquares += error * error;
                 worstSpeed = Math.Max(worstSpeed, Math.Abs(error));
                 hardest = Math.Max(hardest, -sim.EgoAcceleration);
                 skidded |= sim.Mechanics!.Skidding;
                 if (corners.Any(c => Math.Abs(sim.EgoS - c) < 25)) corner = Math.Max(corner, Math.Abs(sim.EgoOffset));
                 else straight = Math.Max(straight, Math.Abs(sim.EgoOffset));
-            }
+            });
             var inLane = straight <= (RoadMap.LaneWidth - 1.8) / 2;
             result[name] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Arrived ? "Destination reached" : "Destination not reached")}; " +
                            $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; " +
@@ -303,6 +320,92 @@ public class MasStage1Tests
         File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mas-stage1-closed-loop.json"),
             JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("mas-stage1-closed-loop.json", result);
+    }
+
+    // Where the Route turns: the distance along it of each way point between segments.
+    private static List<double> Corners(Simulation sim) =>
+        Enumerable.Range(1, sim.Path.Segments.Count - 1).Select(i => sim.Path.Segments.Take(i).Sum(sim.Map.Length)).ToList();
+
+    // STEP 5 (M3237 3.5): MSA - the Spatial Attitude of the MAS - on the drives of Step
+    // 4, from the Spatial Data and the Wheel Responses of each, its heading at Start
+    // the Route's; and the ESS's Spatial Attitude Generation fed by it and by GNSS, as
+    // the ESS now is. Each against the truth. Judged: MSA's error within the accuracy
+    // it states, at every Spatial Data; SAG's within twice its. Reported: the errors,
+    // MSA's heading error, the distance run.
+    [Fact]
+    public async Task Step5SpatialAttitude()
+    {
+        const double earth = 6_371_000;
+        var result = new Dictionary<string, string>();
+        var report = new Dictionary<string, string>();
+        var outputs = new List<(string DataType, string Json)>();
+        foreach (var name in new[] { "a free road to the Destination", "a slower vehicle cuts in", "a vehicle ahead slows and stops, on ice" })
+        {
+            var sim = Scenarios()[name]();
+            var drive = new List<(TimeSpan At, string DataType, int PortNumber, string Json)>();
+            var gnss = new List<(TimeSpan At, string DataType, int PortNumber, string Json)>();
+            var truth = new Dictionary<TimeSpan, (double East, double North, double Heading)>();
+            TimeSpan At(long ms) => TimeSpan.FromMilliseconds(ms - sim.Start.ToUnixTimeMilliseconds());
+            Loop(sim, s =>
+            {
+                var at = At(s.Sensed.FrameMs);
+                var ego = s.Sensed.Truth["Ego"]!;
+                truth[at] = ((double)ego["East"]!, (double)ego["North"]!, (double)ego["Heading"]!);
+                foreach (var (dataType, json) in s.Sensed.Messages)
+                    if (dataType == MasTypes.SpatialData) drive.Add((at, dataType, 1, json));
+                    else if (dataType == SpatialAttitudeGeneration.Gnss) gnss.Add((at + TimeSpan.FromTicks(1), dataType, 1, json));
+                // The Responses of this step answer at the next: before its Spatial Data.
+                foreach (var (dataType, json) in s.Responses.Where(r => r.DataType == MasTypes.WheelResponse))
+                    drive.Add((At(MasTypes.Ms(JsonNode.Parse(json)!["WheelResponseTime"])), dataType, 1, json));
+            });
+
+            // MSA on the drive.
+            var start = sim.Path.At(0).Heading * 180 / Math.PI;
+            var msaPorts = new DrivePorts(drive);
+            await new MasSpatialAttitudeGeneration(MasProvider.Msa, new Dictionary<string, string> { ["InitialHeading"] = start.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+                .RunAsync(msaPorts, AimContext.None);
+            outputs.AddRange(msaPorts.Written.Select(w => (w.DataType, w.Json)));
+            var msa = new List<double>(); var headings = new List<double>(); var covered = 0; var run = 0.0;
+            foreach (var (at, _, _, json) in msaPorts.Written)
+            {
+                var a = JsonNode.Parse(json)!;
+                var pose = MasTypes.Pose(a);
+                var t = truth[at];
+                var error = Math.Sqrt(Math.Pow(pose.East - t.East, 2) + Math.Pow(pose.North - t.North, 2));
+                msa.Add(error);
+                headings.Add(Math.Abs(Math.IEEERemainder(pose.Heading * 180 / Math.PI - t.Heading, 360)));
+                if (error <= (double)a["Position"]!["CartPositionAccuracy"]![0]!) covered++;
+            }
+            run = sim.Mechanics!.Distance;
+
+            // SAG on MSA's Spatial Attitudes and the GNSS fixes: its frame anchored at
+            // the first fix, so the truth is moved there.
+            var sagPorts = new DrivePorts(msaPorts.Written.Concat(gnss));
+            await new SpatialAttitudeGeneration(EssProvider.Sag, new Dictionary<string, string> { ["GnssWeight"] = "0.1" }).RunAsync(sagPorts, AimContext.None);
+            var (lat0, lon0) = SpatialAttitudeGeneration.Position(JsonNode.Parse(gnss[0].Json)!)!.Value;
+            var anchor = ((lon0 - sim.Map.OriginLon) * Math.PI / 180 * earth * Math.Cos(lat0 * Math.PI / 180), (lat0 - sim.Map.OriginLat) * Math.PI / 180 * earth);
+            var sag = new List<double>(); var sagCovered = 0;
+            foreach (var (at, _, _, json) in sagPorts.Written)
+            {
+                if (!truth.TryGetValue(at, out var t)) continue;
+                var p = JsonNode.Parse(json)!["Position"]!;
+                var c = p["CartPosition"]!.AsArray();
+                var error = Math.Sqrt(Math.Pow((double)c[0]! - (t.East - anchor.Item1), 2) + Math.Pow((double)c[1]! - (t.North - anchor.Item2), 2));
+                sag.Add(error);
+                if (error <= 2 * (double)p["CartPositionAccuracy"]![0]!) sagCovered++;
+            }
+            string Stats(List<double> e, string unit) { var s = e.Order().ToList(); return $"median {s[s.Count / 2]:0.00} {unit}, 95th percentile {s[(int)(s.Count * 0.95)]:0.00} {unit}, max {s[^1]:0.00} {unit}"; }
+            result[name] = $"MSA within its stated accuracy at {(covered == msa.Count ? "every" : $"{covered} of {msa.Count}")} Spatial Data; " +
+                           $"SAG within twice its stated accuracy at {(sagCovered == sag.Count ? "every" : $"{sagCovered} of {sag.Count}")} Spatial Attitude";
+            report[name] = result[name] + $"; {run:0} m run; MSA position error {Stats(msa, "m")}, at the end {msa[^1]:0.00} m; " +
+                           $"MSA heading error {Stats(headings, "degrees")}; SAG position error {Stats(sag, "m")}";
+        }
+        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD", "V1.5", "data", "SpatialAttitude.json"))];
+        var valid = outputs.Count(o => { using var doc = JsonDocument.Parse(o.Json); lock (AIF.Metadata.PublishedSchemas.Lock) return schema.Evaluate(doc.RootElement).IsValid; });
+        result["OSD-OSA-V1.5 of MSA against its schema"] = valid == outputs.Count ? "every one valid" : $"{valid} of {outputs.Count}";
+        File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mas-stage1-msa.json"),
+            JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("mas-stage1-msa.json", result);
     }
 
     // DELIVER (M3237 3.2), on the Module of Phase 6 that echoes its inputs: a device

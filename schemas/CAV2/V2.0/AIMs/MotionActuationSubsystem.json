@@ -52,6 +52,7 @@
     { "Output": { "AIMName": ""              , "PortName": "WheelResponse" }, "Input": { "AIMName": "CAV-AMI-V2.0"  , "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0" } },
     { "Output": { "AIMName": ""              , "PortName": "WheelResponse" }, "Input": { "AIMName": "CAV-ICA-V2.0"  , "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0" } },
     { "Output": { "AIMName": ""              , "PortName": "WheelResponse" }, "Input": { "AIMName": "CAV-MRA-V2.0"  , "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0" } },
+    { "Output": { "AIMName": ""              , "PortName": "WheelResponse" }, "Input": { "AIMName": "CAV-MSA-V2.0"  , "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0" } },
     { "Output": { "AIMName": "CAV-MSA-V2.0"  , "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5" }, "Input": { "AIMName": ""              , "PortName": "SpatialAttitude" } },
     { "Output": { "AIMName": "CAV-MSA-V2.0"  , "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5" }, "Input": { "AIMName": "CAV-AMI-V2.0"  , "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5" } },
     { "Output": { "AIMName": "CAV-MSA-V2.0"  , "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5" }, "Input": { "AIMName": "CAV-ICA-V2.0"  , "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5" } },
