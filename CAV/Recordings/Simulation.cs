@@ -51,6 +51,9 @@ public sealed class Simulation
     // The road's friction along the Route: dry but for the stretches given.
     public IReadOnlyList<(double From, double To, double Friction)> Surface { get; init; } = [];
     public const double DryFriction = 0.9;
+    // The weather, if any: the air temperature (degrees C) and snowfall (mm/h), which
+    // the CAV's weather sensors report each second as Weather Data.
+    public (double Celsius, double Snow)? Weather { get; init; }
     public double FrictionAt(double s) => Surface.Where(x => s >= x.From && s < x.To).Select(x => x.Friction).DefaultIfEmpty(DryFriction).First();
     private long spatialData;
 
@@ -125,6 +128,16 @@ public sealed class Simulation
         }
 
         if (Mechanics is not null) messages.Add(("CAV-SPD-V2.0", Mechanics.SpatialData($"SPD{++spatialData:D6}", ms0)));
+        if (Weather is { } w && StepNumber % 10 == 0)
+            messages.Add(("CAV-WDT-V2.0", new JsonObject
+            {
+                ["Header"] = "CAV-WDT-V2.0", ["WeatherDataID"] = $"WDT{StepNumber:D6}", ["WeatherDataTime"] = SimpleTime($"WDT{StepNumber:D6}-T", ms0),
+                ["WeatherData"] = new JsonObject
+                {
+                    ["Temperature"] = new JsonObject { ["Value"] = Math.Round(w.Celsius + 273.15, 2), ["Unit"] = "K" },
+                    ["Snow"] = new JsonObject { ["Value"] = w.Snow }
+                }
+            }.ToJsonString()));
 
         var vehicles = new JsonArray();
         for (var i = 0; i < inView.Count; i++)

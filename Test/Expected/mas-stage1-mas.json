@@ -1,0 +1,17 @@
+{
+  "CAV-AMM-V2.0 against its schema": "every one valid",
+  "CAV-BRC-V2.0 against its schema": "every one valid",
+  "CAV-BRR-V2.0 against its schema": "every one valid",
+  "CAV-MRC-V2.0 against its schema": "every one valid",
+  "CAV-MRP-V2.0 against its schema": "every one valid",
+  "CAV-RDS-V2.0 against its schema": "every one valid",
+  "CAV-WDT-V2.0 against its schema": "every one valid",
+  "CAV-WHC-V2.0 against its schema": "every one valid",
+  "CAV-WHR-V2.0 against its schema": "every one valid",
+  "a free road to the Destination": "no collision; Destination reached; within the speed limit; in its lane on the straights; did not slide",
+  "a slower vehicle cuts in": "no collision; Destination reached; within the speed limit; in its lane on the straights; did not slide",
+  "a vehicle ahead brakes hard": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide",
+  "a vehicle ahead slows and stops": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide",
+  "a vehicle ahead slows and stops, on ice": "collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide; the ice found from the tyres",
+  "a vehicle ahead slows and stops, on ice, in freezing snow": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide; the ice expected from the weather"
+}

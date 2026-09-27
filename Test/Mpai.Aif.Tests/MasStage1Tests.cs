@@ -251,11 +251,15 @@ public class MasStage1Tests
     // ONE STEP OF THE LOOP: what was sensed, the AMS-MAS Message, the commands, the
     // Responses to them.
     private sealed record Stepped(Simulation.Sensed Sensed, JsonNode Message, IReadOnlyList<(string DataType, string Json)> Commands,
-                                  IReadOnlyList<(string DataType, string Json)> Responses);
+                                  IReadOnlyList<(string DataType, string Json)> Responses,
+                                  JsonNode? Attitude = null, JsonNode? Road = null, JsonNode? Answer = null);
 
     // The loop of Step 4 on a scenario, moved by its mechanics, until the CAV arrives,
-    // collides or 90 s have gone; each step given to see.
-    private static Simulation Loop(Simulation sim, Action<Stepped> each)
+    // collides or 90 s have gone; each step given to see. With the MAS (Step 6): AMI
+    // follows from MSA's Spatial Attitude, on the MAS's frame; ICA reads the tyres and
+    // the weather; MRA answers each AMS-MAS Message, and TOA hears the answer at the
+    // next step - the Road State, and the MAS's frame.
+    private static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false)
     {
         sim.Mechanical(seed: 9);
         var fed = new FullEnvironmentDescription(AmsProvider.Fed);
@@ -264,17 +268,47 @@ public class MasStage1Tests
         msp.Follow(AmsStage1Tests.PathOf(sim));
         var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
         var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
+        var msa = new MasSpatialAttitudeGeneration(MasProvider.Msa, new Dictionary<string, string>
+        {
+            ["InitialHeading"] = (sim.Path.At(0).Heading * 180 / Math.PI).ToString(System.Globalization.CultureInfo.InvariantCulture)
+        });
+        var ica = new IceConditionAnalysis(MasProvider.Ica, new Dictionary<string, string>());
+        var mra = new MasResponseAnalysis(MasProvider.Mra);
+        IReadOnlyList<(string DataType, string Json)> responses = [];
         for (var steps = 0; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
         {
             var sensed = sim.Sense(camera: false);
             var bed = JsonNode.Parse(TruthBed.Of(sim, sensed))!;
+            JsonNode attitude = bed["EgoSpatialAttitude"]!;
+            JsonNode? road = null;
+            if (mas)
+            {
+                foreach (var (dataType, json) in responses)
+                {
+                    var response = JsonNode.Parse(json)!;
+                    if (dataType == MasTypes.WheelResponse) msa.Steered(response);
+                    ica.Responded(dataType, response);
+                }
+                foreach (var (_, json) in sensed.Messages.Where(m => m.DataType == MasTypes.Weather)) ica.Weather(JsonNode.Parse(json)!);
+                attitude = msa.Attitude(JsonNode.Parse(sensed.Messages.First(m => m.DataType == MasTypes.SpatialData).Json)!)!;
+                road = ica.State(attitude);
+                mra.Observe(attitude);
+                mra.Road(road);
+            }
             var described = fed.Describe(bed);
             toa.Observe(described);
             var message = toa.Refine(msp.Plan(described));
             ami.Accept(message);
-            var commands = ami.Commands(bed["EgoSpatialAttitude"]!);
+            var commands = ami.Commands(attitude);
+            JsonNode? answer = null;
+            if (mas)
+            {
+                answer = mra.Answer(message);
+                toa.Answered(answer!);
+            }
             sim.Actuate(commands);
-            each(new Stepped(sensed, message, commands, sim.Advance()));
+            responses = sim.Advance();
+            each(new Stepped(sensed, message, commands, responses, mas ? attitude : null, road, answer));
         }
         return sim;
     }
@@ -320,6 +354,77 @@ public class MasStage1Tests
         File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mas-stage1-closed-loop.json"),
             JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
         Expected.Match("mas-stage1-closed-loop.json", result);
+    }
+
+    // STEP 6 (M3237 3.6, 3.7): the loop closed through the whole MAS - AMI following
+    // from MSA's Spatial Attitude, the Trajectory on the MAS's frame; ICA's Road State
+    // and MRA's answer heard by TOA - on the scenarios of Step 4, and the one on ice in
+    // freezing snow, which the weather sensors report. Judged as Step 4, and on ice:
+    // whether ICA found it, and how. Reported as Step 4, and: where ICA first said the
+    // road was icy, the lowest friction it estimated, where it said so on a dry road;
+    // how far MSA's Spatial Attitude was from the truth.
+    [Fact]
+    public void Step6ClosedLoop()
+    {
+        var result = new Dictionary<string, string>();
+        var report = new Dictionary<string, string>();
+        var everything = new List<(string DataType, string Json)>();
+        var scenarios = new Dictionary<string, Func<Simulation>>(Scenarios());
+        var map = RoadMap.Grid(3);
+        var route = map.FastestRoute("W00", "W21")!;
+        scenarios["a vehicle ahead slows and stops, on ice, in freezing snow"] = () => new Simulation(map, route,
+            [new ScenarioVehicle("ahead", 0, 45, [(0, 13.0), (8, 6.0), (14, 0.0)], CameraRenderer.Silver)], seed: 7, egoSpeed: 12)
+            { Surface = [(100, 300, 0.15)], Weather = (-3, 2) };
+        foreach (var (name, make) in scenarios)
+        {
+            var sim = make();
+            var corners = Corners(sim);
+            double straight = 0, corner = 0, overLimit = 0, hardest = 0, lowest = 1, msaError = 0;
+            double? iceAt = null, falseIceAt = null;
+            int steps = 0, emergencies = 0;
+            var skidded = false;
+            string? how = null;
+            Loop(sim, s =>
+            {
+                steps++;
+                var ego = s.Sensed.Truth["Ego"]!;
+                overLimit = Math.Max(overLimit, (double)ego["Speed"]! - (double)ego["SpeedLimit"]!);
+                emergencies += s.Commands.Count(c => c.DataType == MasTypes.BrakeCommand && c.Json.Contains("\"EmergencyBrakeFlag\":true"));
+                everything.AddRange(s.Commands);
+                everything.AddRange(s.Responses);
+                everything.AddRange(s.Sensed.Messages.Where(m => m.DataType == MasTypes.Weather));
+                everything.Add((MasTypes.RoadState, s.Road!.ToJsonString()));
+                everything.Add((MasTypes.Message, s.Answer!.ToJsonString()));
+                var surface = s.Road!["SurfaceCondition"]!;
+                lowest = Math.Min(lowest, (double)surface["FrictionCoefficientEstimate"]!);
+                if ((bool)surface["IcePresence"]!)
+                {
+                    if ((double)ego["Friction"]! < 0.3) { iceAt ??= (double)ego["S"]!; how ??= (string?)s.Road["DescrMetadata"]; }
+                    else falseIceAt ??= (double)ego["S"]!;
+                }
+                var pose = MasTypes.Pose(s.Attitude!);
+                msaError = Math.Max(msaError, Math.Sqrt(Math.Pow(pose.East - (double)ego["East"]!, 2) + Math.Pow(pose.North - (double)ego["North"]!, 2)));
+                hardest = Math.Max(hardest, -sim.EgoAcceleration);
+                skidded |= sim.Mechanics!.Skidding;
+                if (corners.Any(c => Math.Abs(sim.EgoS - c) < 25)) corner = Math.Max(corner, Math.Abs(sim.EgoOffset));
+                else straight = Math.Max(straight, Math.Abs(sim.EgoOffset));
+            }, mas: true);
+            var inLane = straight <= (RoadMap.LaneWidth - 1.8) / 2;
+            var icy = sim.Surface.Count > 0;
+            result[name] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Arrived ? "Destination reached" : "Destination not reached")}; " +
+                           $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; " +
+                           $"{(inLane ? "in its lane on the straights" : "out of its lane on a straight")}; {(skidded ? "slid" : "did not slide")}" +
+                           (icy ? $"; {(iceAt is null ? "the ice not found" : how!.Contains("Weather") ? "the ice expected from the weather" : "the ice found from the tyres")}" : "");
+            report[name] = result[name] + $"; off the lane's centre at most {straight:0.00} m on the straights, {corner:0.00} m at the corners; " +
+                           $"hardest braking {hardest:0.0} m/s2; {emergencies} Emergency Brake Command(s); {steps} steps; " +
+                           $"lowest friction estimated {lowest:0.00}" + (iceAt is { } at ? $", ice first said at {at:0} m (the ice from {sim.Surface[0].From:0} m)" : "") +
+                           (falseIceAt is { } f ? $", ice said on a dry road at {f:0} m" : "") +
+                           $"; MSA at most {msaError:0.0} m from the truth; corners at {string.Join(", ", corners.Select(c => c.ToString("0")))} m";
+        }
+        foreach (var (key, value) in Validity(everything)) result[key] = value;
+        File.WriteAllText(Path.Combine(Repository.Root, "Test", "Reports", "mas-stage1-mas.json"),
+            JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+        Expected.Match("mas-stage1-mas.json", result);
     }
 
     // Where the Route turns: the distance along it of each way point between segments.
@@ -490,7 +595,8 @@ public class MasStage1Tests
         {
             [MasTypes.BrakeCommand] = "BrakeCommand", [MasTypes.BrakeResponse] = "BrakeResponse", [MasTypes.MotorCommand] = "MotorCommand",
             [MasTypes.MotorResponse] = "MotorResponse", [MasTypes.WheelCommand] = "WheelCommand", [MasTypes.WheelResponse] = "WheelResponse",
-            [MasTypes.SpatialData] = "SpatialData"
+            [MasTypes.SpatialData] = "SpatialData", [MasTypes.RoadState] = "RoadState", [MasTypes.Message] = "AMSMASMessage",
+            [MasTypes.Weather] = "WeatherData"
         };
         var result = new Dictionary<string, string>();
         foreach (var group in objects.GroupBy(o => o.DataType).OrderBy(g => g.Key))

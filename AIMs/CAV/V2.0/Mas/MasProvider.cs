@@ -7,9 +7,9 @@ namespace Mpai.Cav.Mas;
 // The MAS itself is a graph the Controller builds from its Metadata.
 public sealed class MasProvider : IAimProvider
 {
-    public const string Ami = "1CAV-AMI-V2.0-I01", Msa = "1CAV-MSA-V2.0-I01";
+    public const string Ami = "1CAV-AMI-V2.0-I01", Msa = "1CAV-MSA-V2.0-I01", Ica = "1CAV-ICA-V2.0-I01", Mra = "1CAV-MRA-V2.0-I01";
 
-    public bool CanCreate(string aimName) => aimName is Ami or Msa;
+    public bool CanCreate(string aimName) => aimName is Ami or Msa or Ica or Mra;
 
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(MasProvider).Assembly.Location : null;
 
@@ -21,6 +21,8 @@ public sealed class MasProvider : IAimProvider
     {
         Ami => new AmsMasMessageInterpretation(aimName, settings),
         Msa => new MasSpatialAttitudeGeneration(aimName, settings),
+        Ica => new IceConditionAnalysis(aimName, settings),
+        Mra => new MasResponseAnalysis(aimName),
         _ => throw new ArgumentException($"{aimName} is not an AIM of MAS Stage 1.")
     };
 }
