@@ -1,6 +1,6 @@
 { "$schema":  "https://json-schema.org/draft/2020-12/schema",
   "$id":      "https://schemas.mpai.community/CAV2/V2.0/data/BrakeStates.json",
-  "title":    "Brake States V1.1",
+  "title":    "Brake States V2.0",
   "type":     "string",
   "enum":     [ "Normal", "WheelStopped", "Braking", "Released", "Hold", "EmergencyBraking", "ABSActive", "TractionControlActive", "RegenerativeBraking",
                 "Overheated", "Degraded", "Fault", "Unavailable", "PreCharge", "PressureBuildUp", "PressureDecay", "HydraulicSaturation",

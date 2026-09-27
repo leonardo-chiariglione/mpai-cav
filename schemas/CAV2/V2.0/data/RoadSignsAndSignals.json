@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/RoadSignsAndSignals.json",
-  "title":                        "Road Signs and Signals V1.1",
+  "title":                        "Road Signs and Signals V2.0",
   "description":                  "Road signs, signals, and markings per the Vienna Convention on Road Signs and Signals.",
   "type":                         "object",
   "additionalProperties":         false,

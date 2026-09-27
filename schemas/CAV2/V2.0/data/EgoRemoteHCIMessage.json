@@ -1,6 +1,6 @@
 { "$schema":                          "https://json-schema.org/draft/2020-12/schema",
   "$id":                              "https://schemas.mpai.community/CAV2/V2.0/data/EgoRemoteHCIMessage.json",
-  "title":                            "Ego Remote HCI Message V1.1",
+  "title":                            "Ego Remote HCI Message V2.0",
   "type":                             "object",
   "additionalProperties":             false,
   "required":                         [ "Header", "EgoRemoteHCIMessageID", "EgoRemoteHCIMessage" ],

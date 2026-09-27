@@ -1,6 +1,6 @@
 { "$schema":          "https://json-schema.org/draft/2020-12/schema",
   "$id":              "https://schemas.mpai.community/CAV2/V2.0/data/Road.json",
-  "title":            "Road V1.1",
+  "title":            "Road V2.0",
   "type":             "object",
   "required":         [ "Header", "RoadID", "MapProvider", "MapVersion", "Segments", "Trace"],
   "properties":       {

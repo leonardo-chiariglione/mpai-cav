@@ -1,6 +1,6 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
   "$id":                        "https://schemas.mpai.community/CAV2/V2.0/data/TrafficSignObjects.json",
-  "title":                      "Traffic Sign Object V1.1",
+  "title":                      "Traffic Sign Object V2.0",
   "description":                "Perceived traffic sign objects.",
   "type":                       "object",
   "additionalProperties":       false,

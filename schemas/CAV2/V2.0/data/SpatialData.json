@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/SpatialData.json",
-  "title":                        "Spatial Data V1.1",
+  "title":                        "Spatial Data V2.0",
   "description":                  "Spatial Data produced by the Motion Actuation Subsystem describing the Spatial Attitude of the Connected Autonomous Vehicle.",
   "type":                         "object",
   "additionalProperties":         false,

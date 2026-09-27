@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/WheelCommand.json",
-  "title":                        "Wheel Command V1.1",
+  "title":                        "Wheel Command V2.0",
   "description":                  "A Data Type representing a steering command directed to a specific wheel of the Connected Autonomous Vehicle.",
   "type":                         "object",
   "additionalProperties":         false,

@@ -1,6 +1,6 @@
 { "$schema":    "https://json-schema.org/draft/2020-12/schema",
   "$id":        "https://schemas.mpai.community/CAV2/V2.0/data/MotorStates.json",
-  "title":      "Motor States V1.1",
+  "title":      "Motor States V2.0",
   "description":"Enumerates motor states for CAV Motion Actuation.",
   "type":       "string",
   "enum":       [ "Normal", "LossOfTraction", "Idle", "Active", "Starting", "Stopping", "DeratedThermal", "DeratedVoltage", "DeratedCurrent", "Saturated",

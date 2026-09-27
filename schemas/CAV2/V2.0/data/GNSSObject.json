@@ -1,6 +1,6 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$id":                  "https://schemas.mpai.community/CAV2/V2.0/data/GNSSObject.json",
-  "title":                "GNSS Object V1.1",
+  "title":                "GNSS Object V2.0",
   "type":                 "object",
   "additionalProperties": false,
   "required":             [ "Header", "GNSSObjectID", "GNSSData" ],

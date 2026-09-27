@@ -1,6 +1,6 @@
 { "$schema":        "https://json-schema.org/draft/2020-12/schema",
   "$id":            "https://schemas.mpai.community/CAV2/V2.0/data/WheelStates.json",
-  "title":          "WheelStates V1.1",
+  "title":          "WheelStates V2.0",
   "description":    "Enumerates wheel actuator states for CAV Motion Actuation.",
   "type":           "string",
   "enum":           [ "Normal", "Hold", "ActiveSteering", "Released", "Stuck", "MechanicalStopReached", "Overheated", "Degraded", "Fault", "Unavailable", 

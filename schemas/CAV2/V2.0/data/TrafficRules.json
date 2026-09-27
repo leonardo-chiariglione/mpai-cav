@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/TrafficRules.json",
-  "title":                        "Traffic Rules V1.1",
+  "title":                        "Traffic Rules V2.0",
   "description":                  "Traffic rules mapped to Chapter II of the Vienna Convention on Road Traffic.",
   "type":                         "object",
   "additionalProperties":         false,

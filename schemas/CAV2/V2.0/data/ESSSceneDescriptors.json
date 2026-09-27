@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/ESSSceneDescriptors.json",
-  "title":                        "ESS Scene Descriptors V1.1",
+  "title":                        "ESS Scene Descriptors V2.0",
   "type":                         "object",
   "properties":                   {
 

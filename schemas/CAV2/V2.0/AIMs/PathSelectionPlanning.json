@@ -1,7 +1,7 @@
 { "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/PathSelectionPlanning.json",
-  "title": "Path Selection Planning V1.1",
+  "title": "Path Selection Planning V2.0",
 
   "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-PSP-V2.0" },
 

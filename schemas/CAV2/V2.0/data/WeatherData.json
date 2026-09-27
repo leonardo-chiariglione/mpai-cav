@@ -1,6 +1,6 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
   "$id":                        "https://schemas.mpai.community/CAV2/V2.0/data/WeatherData.json",
-  "title":                      "Weather Data V1.1",
+  "title":                      "Weather Data V2.0",
   "description":                "Weather Data representing the meteorological conditions relevant to the operation of a Connected Autonomous Vehicle.",
   "type":                       "object",
   "additionalProperties":       false,

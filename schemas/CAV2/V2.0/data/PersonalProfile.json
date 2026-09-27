@@ -1,6 +1,6 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
   "$id":                        "https://schemas.mpai.community/CAV2/V2.0/data/PersonalProfile.json",
-  "title":                      "Personal Profile V1.1",
+  "title":                      "Personal Profile V2.0",
   "type":                       "object",
   "additionalProperties":       false,
   "required":                   [ "Header", "PersonalProfileID", "PersonalProfileData" ],

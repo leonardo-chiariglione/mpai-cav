@@ -1,6 +1,6 @@
 { "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "$id":                          "https://schemas.mpai.community/CAV2/V2.0/data/WheelResponse.json",
-  "title":                        "Wheel Response V1.1",
+  "title":                        "Wheel Response V2.0",
   "description":                  "A Data Type representing the measured state and condition of a specific wheel of the Connected Autonomous Vehicle in response to a steering command.",
   "type":                         "object",
   "additionalProperties":         false,
