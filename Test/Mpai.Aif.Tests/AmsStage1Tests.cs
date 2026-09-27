@@ -502,7 +502,7 @@ public class AmsStage1Tests
             api.StopFlow(ams);
 
             // The AMS Data: one for each AMS-MAS Message, valid, carrying what 3.8 says.
-            var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V1.1", "data", "AMSData.json"))];
+            var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "CAV2", "V2.0", "data", "AMSData.json"))];
             var valid = data.Count(d => { using var doc = JsonDocument.Parse(d.ToJsonString()); lock (AIF.Metadata.PublishedSchemas.Lock) return schema.Evaluate(doc.RootElement).IsValid; });
             var ids = data.Select(d => (string?)d["AMSMASMessage"]?["AMSMASMessageID"]).ToHashSet();
             result["AMS-MAS Messages given out"] = messages.Count > 0 ? "some" : "none";
