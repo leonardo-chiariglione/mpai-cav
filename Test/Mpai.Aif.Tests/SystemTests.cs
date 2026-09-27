@@ -108,11 +108,16 @@ public class SystemTests
 
     // THE PORTS NO CODE READS OR WRITES, in an L3 and all it contains: a Port of a
     // basic AIM whose code never names its Data Type, and a Port of a composite that
-    // no line of its Topology connects; and a Port its L2 declares that its L3 leaves
-    // out, which therefore nothing implements. (A basic AIM without code is counted
-    // above; its Ports are not listed one by one.)
-    private static IEnumerable<string> Unimplemented(string instance, CodeIndex code, AmdStore store, IReadOnlyDictionary<string, JsonNode> l2s)
+    // no line of its Topology connects. (A basic AIM without code is counted above;
+    // its Ports are not listed one by one. Optional Ports of an L2 that the L3 leaves
+    // out are not listed: what the Standard offers beyond what is implemented is for later.) A Port counts only where the
+    // composite containing the AIM connects it: the same AIM serves several
+    // composites - a LiDAR Object Acquisition captures the environment in the ESS
+    // and the cabin in HCI - and what one of them does not connect is not its concern.
+    private static IEnumerable<string> Unimplemented(string instance, CodeIndex code, AmdStore store, IReadOnlyDictionary<string, JsonNode> l2s,
+                                                     Func<string, IReadOnlyList<string>, int, bool>? connected = null)
     {
+        connected ??= (_, _, _) => true;
         if (store.FindByAimName(instance) is not { } id) yield break;
         var amd = store.GetAMD(id).RootElement;
         var type = CodeIndex.TypeOf(instance);
@@ -126,20 +131,10 @@ public class SystemTests
             ? s.EnumerateArray().Select(x => x.GetProperty("Identifier").GetProperty("AIMName").GetString() ?? "").ToList()
             : [];
 
-        if (l2s.TryGetValue(type, out var l2))
-            foreach (var p in l2["ExternalPorts"]!.AsArray())
-            {
-                var direction = (string?)p!["Direction"] ?? "";
-                var types = p["DataType"] is JsonArray a ? a.Select(x => (string?)x ?? "").ToList() : [(string?)p["DataType"] ?? ""];
-                var number = (int?)p["PortNumber"] ?? 1;
-                if (!ports.Any(q => q.Direction == direction && q.Types.Intersect(types).Any() && q.Number == number))
-                    yield return $"{type} {direction} {types[0]} (in the L2 only)";
-            }
-
         if (subs.Count == 0)
         {
             if (code.Handles(type) is not { } handled) yield break;
-            foreach (var p in ports.Where(p => !p.Types.Any(handled.Contains)))
+            foreach (var p in ports.Where(p => connected(p.Direction, p.Types, p.Number) && !p.Types.Any(handled.Contains)))
                 yield return $"{type} {p.Direction} {p.Types[0]}";
             yield break;
         }
@@ -151,12 +146,26 @@ public class SystemTests
                                     Number: e.End.TryGetProperty("PortNumber", out var pn) && pn.ValueKind == JsonValueKind.Number ? pn.GetInt32() : 1))
                       .ToList();
         // An Input Port is where a line's Output end is the boundary, and the reverse.
-        foreach (var p in ports.Where(p => !ends.Any(e => e.Side == (p.Direction == "Input" ? "Output" : "Input") &&
+        foreach (var p in ports.Where(p => connected(p.Direction, p.Types, p.Number) &&
+                                           !ends.Any(e => e.Side == (p.Direction == "Input" ? "Output" : "Input") &&
                                                           p.Types.Contains(e.DataType) && e.Number == p.Number)))
             yield return $"{type} {p.Direction} {p.Types[0]} (not connected)";
+
+        // What this composite connects of each Sub-AIM: a line's Output end is the
+        // Sub-AIM's Output Port, its Input end an Input Port; no Port Number cited, any.
+        var subEnds = amd.GetProperty("Topology").EnumerateArray()
+                         .SelectMany(l => new[] { (Direction: "Output", End: l.GetProperty("Output")), (Direction: "Input", End: l.GetProperty("Input")) })
+                         .Select(e => (Aim: e.End.GetProperty("AIMName").GetString() ?? "", e.Direction,
+                                       DataType: e.End.GetProperty("DataType").GetString() ?? "",
+                                       Number: e.End.TryGetProperty("PortNumber", out var pn) && pn.ValueKind == JsonValueKind.Number ? pn.GetInt32() : (int?)null))
+                         .ToList();
         foreach (var sub in subs)
-            foreach (var m in Unimplemented(sub, code, store, l2s))
+        {
+            bool Connected(string direction, IReadOnlyList<string> types, int number) =>
+                subEnds.Any(e => e.Aim == sub && e.Direction == direction && types.Contains(e.DataType) && (e.Number is null || e.Number == number));
+            foreach (var m in Unimplemented(sub, code, store, l2s, Connected))
                 yield return m;
+        }
     }
 
     // WHICH CODE IMPLEMENTS WHICH AIM, AND WHICH DATA TYPES THAT CODE NAMES. An AIM
