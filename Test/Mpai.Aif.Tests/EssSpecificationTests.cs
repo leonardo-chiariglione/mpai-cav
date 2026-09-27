@@ -34,7 +34,11 @@ public class EssSpecificationTests
         "CAV2/V2.0/AIMs/AutonomousMotionSubsystem.json", "CAV2/V2.0/AIMs/FullEnvironmentDescription.json",
         "CAV2/V2.0/AIMs/RouteSelectionPlanning.json", "CAV2/V2.0/AIMs/TrajectoryPlanningAndDecision.json",
         "CAV2/V2.0/AIMs/PathSelectionPlanning.json", "CAV2/V2.0/AIMs/MotionSelectionPlanning.json",
-        "CAV2/V2.0/AIMs/TrafficObstacleAvoidance.json", "CAV2/V2.0/AIMs/AMSMemory.json"
+        "CAV2/V2.0/AIMs/TrafficObstacleAvoidance.json", "CAV2/V2.0/AIMs/AMSMemory.json",
+        // The MAS (M3237): brought from D:\AI, aligned with the L3s of Stage 1.
+        "CAV2/V2.0/AIMs/MotionActuationSubsystem.json", "CAV2/V2.0/AIMs/MASSpatialAttitudeGeneration.json",
+        "CAV2/V2.0/AIMs/IceConditionAnalysis.json", "CAV2/V2.0/AIMs/MASResponseAnalysis.json",
+        "CAV2/V2.0/AIMs/AMSMASMessageInterpretation.json"
     ];
 
     private static JsonObject Load(string relative) =>
