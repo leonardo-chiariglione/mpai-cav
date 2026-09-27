@@ -41,6 +41,19 @@ public sealed class Simulation
     public double EgoAcceleration { get; private set; }
     public bool Collided { get; private set; }
 
+    // WITH ITS MECHANICAL SUBSYSTEMS (M3237 3.1): the ego is the vehicle the MAS's
+    // commands move, not the model of Phase 8. Its place on the Route is its
+    // position projected on it; Offset how far left of its lane's centreline it is.
+    public Vehicle? Mechanics { get; private set; }
+    public double EgoOffset { get; private set; }
+    public bool LeftLane { get; private set; }
+
+    // The road's friction along the Route: dry but for the stretches given.
+    public IReadOnlyList<(double From, double To, double Friction)> Surface { get; init; } = [];
+    public const double DryFriction = 0.9;
+    public double FrictionAt(double s) => Surface.Where(x => s >= x.From && s < x.To).Select(x => x.Friction).DefaultIfEmpty(DryFriction).First();
+    private long spatialData;
+
     private readonly List<(ScenarioVehicle Spec, double S, double Speed)> others;
     private readonly Random noise, grain;
     private double odoX, odoY;
@@ -56,6 +69,19 @@ public sealed class Simulation
     }
 
     public bool Arrived => EgoS >= Path.Length - 0.5;
+
+    // From now on the ego is moved by its mechanical subsystems.
+    public Vehicle Mechanical(int seed)
+    {
+        var (east, north, heading, _) = Path.At(EgoS);
+        return Mechanics = new Vehicle(east, north, heading, EgoSpeed, seed);
+    }
+
+    // The commands of the step, to the devices that execute them.
+    public void Actuate(IEnumerable<(string DataType, string Json)> commands)
+    {
+        foreach (var (dataType, json) in commands) Mechanics!.Command(dataType, JsonNode.Parse(json)!);
+    }
 
     private static double SpeedOf(ScenarioVehicle v, double t) => v.Speeds.Last(p => p.From <= t || p == v.Speeds[0]).Speed;
 
@@ -89,9 +115,11 @@ public sealed class Simulation
         var boxes = new (int X, int Y, int W, int H)[inView.Count];
         if (camera)
         {
-            (boxes, var png) = CameraRenderer.Render(EgoS, inView.Select(o => (o.Ahead, -o.Spec.LaneAt(Time) * RoadMap.LaneWidth, o.Spec.Paint)).ToArray(), grain);
+            (boxes, var png) = CameraRenderer.Render(EgoS, inView.Select(o => (o.Ahead, -o.Spec.LaneAt(Time) * RoadMap.LaneWidth + EgoOffset, o.Spec.Paint)).ToArray(), grain);
             messages.Add(("OSD-BVO-V1.5", Frame(ms0, png)));
         }
+
+        if (Mechanics is not null) messages.Add(("CAV-SPD-V2.0", Mechanics.SpatialData($"SPD{++spatialData:D6}", ms0)));
 
         var vehicles = new JsonArray();
         for (var i = 0; i < inView.Count; i++)
@@ -107,7 +135,10 @@ public sealed class Simulation
             ["Ego"] = new JsonObject
             {
                 ["S"] = Math.Round(EgoS, 3), ["Speed"] = Math.Round(EgoSpeed, 3), ["Acceleration"] = Math.Round(EgoAcceleration, 3),
-                ["East"] = Math.Round(east, 3), ["North"] = Math.Round(north, 3), ["Segment"] = segment.Id, ["SpeedLimit"] = segment.SpeedLimit
+                ["East"] = Math.Round(east, 3), ["North"] = Math.Round(north, 3), ["Segment"] = segment.Id, ["SpeedLimit"] = segment.SpeedLimit,
+                ["Offset"] = Math.Round(EgoOffset, 3), ["LeftLane"] = LeftLane,
+                ["Friction"] = FrictionAt(EgoS), ["Steer"] = Mechanics is null ? null : Math.Round(Mechanics.Steer * 180 / Math.PI, 3),
+                ["Skidding"] = Mechanics?.Skidding, ["AbsActive"] = Mechanics?.AbsActive
             },
             ["Gap"] = GapAhead() is { } g ? Math.Round(g, 3) : null,
             ["Collided"] = Collided,
@@ -129,11 +160,34 @@ public sealed class Simulation
     // of its Route; every other vehicle moves towards the speed of its scenario.
     public void Advance(double acceleration)
     {
+        if (Mechanics is not null) throw new InvalidOperationException("The ego is moved by its mechanical subsystems: Actuate, then Advance().");
         EgoAcceleration = Math.Clamp(acceleration, -MaxDeceleration, MaxAcceleration);
         var speed = Math.Max(0, EgoSpeed + EgoAcceleration * Step);
         EgoS = Math.Min(Path.Length, EgoS + (EgoSpeed + speed) / 2 * Step);
         EgoSpeed = EgoS >= Path.Length ? 0 : speed;
         StepNumber++;
+        MoveOthers();
+    }
+
+    // THE STEP WITH THE MECHANICAL SUBSYSTEMS: the vehicle moves as its devices act,
+    // on the friction of the road where it is; its place on the Route follows. The
+    // devices' Responses to the step's commands are returned.
+    public IReadOnlyList<(string DataType, string Json)> Advance()
+    {
+        var vehicle = Mechanics ?? throw new InvalidOperationException("Mechanical() first.");
+        vehicle.Friction = FrictionAt(EgoS);
+        vehicle.Step(Step);
+        (EgoS, EgoOffset) = Path.Project(vehicle.East, vehicle.North, EgoS);
+        EgoSpeed = vehicle.Speed;
+        EgoAcceleration = vehicle.Acceleration;
+        LeftLane |= Math.Abs(EgoOffset) > (RoadMap.LaneWidth - 1.8) / 2;
+        StepNumber++;
+        MoveOthers();
+        return vehicle.Responses((Start + TimeSpan.FromSeconds(Time)).ToUnixTimeMilliseconds());
+    }
+
+    private void MoveOthers()
+    {
         for (var i = 0; i < others.Count; i++)
         {
             var (spec, s, v) = others[i];

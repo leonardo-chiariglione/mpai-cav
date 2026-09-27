@@ -14,7 +14,7 @@
     "WheelID":                    { "type": "string", "description": "Identifier of the wheel being commanded." },
     "WheelCommandTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Wheel Command instance was produced." },
 
-    "WheelCommand":               { "type": "object", "additionalProperties": false, "required": [ "WheelCommandTime", "Angle" ],
+    "WheelCommand":               { "type": "object", "additionalProperties": false, "required": [ "Angle" ],
                                     "description": "Set of steering command parameters.", "properties": {
       "Angle":                    { "type": "number", "minimum": -90, "maximum": 90, "description": "Desired steering angle in degrees (–90 to +90)." },
       "SteeringMode":             { "type": "string", "enum": [ "ManualAssist", "SteerByWire", "ActiveSteering", "EmergencyOverride",

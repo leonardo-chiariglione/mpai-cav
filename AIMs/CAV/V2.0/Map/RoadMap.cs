@@ -204,4 +204,27 @@ public sealed class RoutePath
         var along = s - leg.S;
         return (leg.East + along * Math.Cos(leg.Heading), leg.North + along * Math.Sin(leg.Heading), leg.Heading, leg.Segment);
     }
+
+    // A POINT PLACED ON THE LINE: the distance along it of the nearest point, and how
+    // far to its left (positive) or right the point is. Near is the distance the
+    // point was last placed at: of the legs within 30 m of it the nearest is taken,
+    // so that where the line doubles back a point is not placed on the other side.
+    public (double S, double Offset) Project(double east, double north, double near)
+    {
+        (double S, double Offset, double Distance)? best = null;
+        for (var i = 0; i < legs.Count; i++)
+        {
+            var leg = legs[i];
+            var length = (i + 1 < legs.Count ? legs[i + 1].S : Length) - leg.S;
+            if (leg.S > near + 30 || leg.S + length < near - 30) continue;
+            var (dx, dy) = (east - leg.East, north - leg.North);
+            var (cos, sin) = (Math.Cos(leg.Heading), Math.Sin(leg.Heading));
+            var along = Math.Clamp(dx * cos + dy * sin, 0, length);
+            var offset = -dx * sin + dy * cos;
+            var (px, py) = (leg.East + along * cos, leg.North + along * sin);
+            var distance = Math.Sqrt((east - px) * (east - px) + (north - py) * (north - py));
+            if (best is null || distance < best.Value.Distance) best = (leg.S + along, offset, distance);
+        }
+        return best is { } b ? (b.S, b.Offset) : (near, 0);
+    }
 }

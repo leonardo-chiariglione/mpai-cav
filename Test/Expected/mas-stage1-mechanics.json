@@ -1,0 +1,16 @@
+{
+  "CAV-BRC-V2.0 against its schema": "every one valid",
+  "CAV-BRR-V2.0 against its schema": "every one valid",
+  "CAV-MRC-V2.0 against its schema": "every one valid",
+  "CAV-MRP-V2.0 against its schema": "every one valid",
+  "CAV-SPD-V2.0 against its schema": "every one valid",
+  "CAV-WHC-V2.0 against its schema": "every one valid",
+  "CAV-WHR-V2.0 against its schema": "every one valid",
+  "a steady turn, 10 m/s, 5 degrees, dry": "yaw rate within 5 % of 0.312 rad/s",
+  "braking from 20 m/s, dry, ABS": "stopped in within 5 % of 25 m; ABS active; offset 0.00 m",
+  "braking from 20 m/s, icy, ABS": "stopped in within 5 % of 129 m; ABS active; offset 0.00 m",
+  "braking from 20 m/s, icy, no ABS": "stopped in within 5 % of 150 m; wheels locked; offset 0.00 m",
+  "full torque from standstill, 10 s": "within grip and power; speed reached 40 m/s",
+  "the odometer against the distance travelled": "1.5 % long",
+  "too sharp a turn on ice, 15 m/s, 20 degrees": "the vehicle slides"
+}
