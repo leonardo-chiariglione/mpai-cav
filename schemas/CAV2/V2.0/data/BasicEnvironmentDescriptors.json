@@ -19,7 +19,7 @@
                             "description": "What the CAV perceives around it, fused from every Environment Sensing Technology and from the Offline Map: moving and static objects, and the elements of the road." },
     "BasicAudioVisualSceneDescriptors": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json",
                             "description": "Optional: the audio-visual part of the environment in the form MPAI-OSD specifies, for applications that consume it." },
-    "WeatherData":        { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/WeatherData.json",
+    "WeatherData":        { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/WeatherData.json",
                             "description": "The Weather Data the descriptors were produced under." },
     "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":      { "type": "string", "maxLength": 2048 } },

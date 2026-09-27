@@ -45,7 +45,7 @@ public sealed class EssInTheLoop : IDisposable
             if ((long)(double)json["BasicEnvironmentDescriptorsTime"]!["SimpleTimeData"]![0]!["StartTime"]! == sensed.FrameMs) descriptors = json;
         }
         var alerts = new List<JsonNode>();
-        while (api.OutputRead(Ess, "CAV-ALT-V1.1", 1, 0) is { Error: AifError.OK, Json: { } a }) alerts.Add(JsonNode.Parse(a)!);
+        while (api.OutputRead(Ess, "CAV-ALT-V2.0", 1, 0) is { Error: AifError.OK, Json: { } a }) alerts.Add(JsonNode.Parse(a)!);
         return (descriptors, alerts);
     }
 
@@ -62,7 +62,7 @@ public sealed class EssInTheLoop : IDisposable
 // Message of that frame read back - the simulation waits for it.
 public sealed class CavInTheLoop : IDisposable
 {
-    public const string Ams = "1CAV-AMS-V1.1-I01";
+    public const string Ams = "1CAV-AMS-V2.0-I01";
     private readonly EssInTheLoop ess = new();
     private readonly Mpai.Aif.Api.ControllerApi api;
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p8s8-" + Guid.NewGuid().ToString("N"));
@@ -283,14 +283,14 @@ public class AmsStage1Tests
 
     public static string Destination(string wayPoint, long ms = 0) => new JsonObject
     {
-        ["Header"] = "CAV-AHM-V1.1", ["AMSHCIMessageID"] = "AHM-" + wayPoint, ["AMSHCIMessageTime"] = EssJson.SimpleTime("AHM-" + wayPoint + "-T", ms),
+        ["Header"] = "CAV-AHM-V2.0", ["AMSHCIMessageID"] = "AHM-" + wayPoint, ["AMSHCIMessageTime"] = EssJson.SimpleTime("AHM-" + wayPoint + "-T", ms),
         ["HCIMessage"] = new JsonObject
         {
             ["RequestedRoutes"] = new JsonArray(new JsonObject
             {
                 ["Route"] = new JsonObject
                 {
-                    ["Header"] = "CAV-RTE-V1.1", ["RouteID"] = "REQ-" + wayPoint, ["OfflineMapID"] = "",
+                    ["Header"] = "CAV-RTE-V2.0", ["RouteID"] = "REQ-" + wayPoint, ["OfflineMapID"] = "",
                     ["RouteSegments"] = new JsonArray(new JsonObject { ["WayPoint1ID"] = "HERE", ["WayPoint2ID"] = wayPoint })
                 }
             })
@@ -474,7 +474,7 @@ public class AmsStage1Tests
     [Fact]
     public void Step7MemoryAndRecord()
     {
-        const string ams = "1CAV-AMS-V1.1-I01";
+        const string ams = "1CAV-AMS-V2.0-I01";
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
         var location = Path.Combine(Path.GetTempPath(), "mpai-p8s7-" + Guid.NewGuid().ToString("N"));
         var result = new Dictionary<string, string>();

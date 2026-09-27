@@ -26,7 +26,7 @@ namespace Mpai.Cav.Ess;
 public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDisposable
 {
     public const string Frame = "OSD-BVO-V1.5", Attitude = "OSD-OSA-V1.5", Prior = "CAV-BED-V2.0",
-                        Descriptors = "OSD-BVS-V1.5", Alert = "CAV-ALT-V1.1";
+                        Descriptors = "OSD-BVS-V1.5", Alert = "CAV-ALT-V2.0";
     private static readonly HashSet<string> RoadUsers = ["car", "truck", "bus", "motorcycle", "bicycle", "person"];
 
     private readonly YoloxObjectDetector detector;

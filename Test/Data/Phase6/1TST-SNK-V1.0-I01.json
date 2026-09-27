@@ -8,9 +8,9 @@
 
   "ExternalPorts":    [{"Name": "BasicVisualObject",          "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpatialAttitude",            "Direction": "Input",  "DataType": "OSD-OSA-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "GNSSObject",                 "Direction": "Input",  "DataType": "CAV-GNO-V1.1",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "WeatherData",                "Direction": "Input",  "DataType": "CAV-WDT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "FullEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-FED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "GNSSObject",                 "Direction": "Input",  "DataType": "CAV-GNO-V2.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "WeatherData",                "Direction": "Input",  "DataType": "CAV-WDT-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "FullEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-FED-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Counts",                     "Direction": "Output", "DataType": "TST-TXT-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],

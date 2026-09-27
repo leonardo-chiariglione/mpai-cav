@@ -25,7 +25,7 @@ namespace Mpai.Osd.VisualScene;
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 //  FUTURE INPUT (reference model, not yet in the system): AVS is also to
-//  receive the PREVIOUS cycle's Full Environment Descriptors (CAV-FED-V1.1)
+//  receive the PREVIOUS cycle's Full Environment Descriptors (CAV-FED-V2.0)
 //  as prior context - FED(t-1) -> AVS(t) - to inform the current scene
 //  description (temporal continuity, tracking, disambiguation).
 //
@@ -34,7 +34,7 @@ namespace Mpai.Osd.VisualScene;
 //  MPAI-PTF Data Exchange Metadata (DataXMData -> PTF/V1.0): it is external,
 //  provenance/authorisation/confidence-checked data, to be trust-evaluated,
 //  NOT treated as HCI-internal state. (FED from a REMOTE CAV crosses the same
-//  way, arriving in the Ego-Remote HCI Message (CAV-ERH-V1.1), also PTF-borne.)
+//  way, arriving in the Ego-Remote HCI Message (CAV-ERH-V2.0), also PTF-borne.)
 //
 //  Depends on: fused AudioVisualSceneDescriptors (OSD-BMS) and the FED type,
 //  neither of which exists yet. Add when those are built.

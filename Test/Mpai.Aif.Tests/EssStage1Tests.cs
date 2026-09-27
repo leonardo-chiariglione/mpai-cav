@@ -159,7 +159,7 @@ public class EssStage1Tests
         var schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
         Json.Schema.JsonSchema Schema(string rel) => schemas[Path.GetFullPath(Path.Combine(Repository.Schemas, rel))];
         var descriptorsSchema = Schema("OSD/V1.5/data/BasicVisualSceneDescriptors.json");
-        var alertSchema = Schema("CAV2/V1.1/data/Alert.json");
+        var alertSchema = Schema("CAV2/V2.0/data/Alert.json");
         bool Valid(Json.Schema.JsonSchema s, string json)
         {
             using var doc = JsonDocument.Parse(json);
@@ -334,7 +334,7 @@ public class EssStage1Tests
         var bedOut = records.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-BED-V2.0")
             .Select(r => (Json: JsonNode.Parse((string)r["Json"]!)!, Stamp: DateTimeOffset.Parse((string)r["Stamp"]!)))
             .Select(b => (b.Json, b.Stamp, Ms: Ms(b.Json["BasicEnvironmentDescriptorsTime"]))).ToList();
-        var alertOut = records.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-ALT-V1.1")
+        var alertOut = records.Where(r => (string)r["Direction"]! == "Out" && (string)r["DataType"]! == "CAV-ALT-V2.0")
             .Select(r => (Ms: Ms(JsonNode.Parse((string)r["Json"]!)!["AlertTime"]), Stamp: DateTimeOffset.Parse((string)r["Stamp"]!))).ToList();
 
         var toBed = bedOut.Where(b => frameIn.ContainsKey(b.Ms)).Select(b => (b.Stamp - frameIn[b.Ms]).TotalMilliseconds).Order().ToList();
@@ -416,7 +416,7 @@ public class EssStage1Tests
             on Start:
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
-                stream Gnss (CAV-GNO-V1.1) from record "drive"
+                stream Gnss (CAV-GNO-V2.0) from record "drive"
                 wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
             """), CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(19));

@@ -1,5 +1,5 @@
 {
-  "TST-ESB: a GNSS Object written": "OK 'OSD-BVO-V1.5:0 OSD-OSA-V1.5:0 CAV-GNO-V1.1:1 CAV-WDT-V1.1:0 CAV-FED-V1.1:0'",
+  "TST-ESB: a GNSS Object written": "OK 'OSD-BVO-V1.5:0 OSD-OSA-V1.5:0 CAV-GNO-V2.0:1 CAV-WDT-V2.0:0 CAV-FED-V2.0:0'",
   "TST-MPC against the schema": "valid",
   "TST-MPC: rules given, then a write": "OK; #1 'k: NotAuthorised'; #3 'Notes: OK'",
   "TST-MPC: the other AIM reads it": "OK; #2 'NotFound'",

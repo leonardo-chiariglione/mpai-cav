@@ -1,10 +1,10 @@
 {
-  "CAV-AMS-V1.1": "wired",
+  "CAV-AMS-V2.0": "wired",
   "CAV-AUS-V2.0": "wired",
   "CAV-ESS-V2.0": "wired",
   "CAV-LIS-V2.0": "wired",
   "CAV-RAS-V2.0": "wired",
-  "CAV-TPD-V1.1": "wired",
+  "CAV-TPD-V2.0": "wired",
   "CAV-ULS-V2.0": "wired",
   "CAV-VIS-V2.0": "wired"
 }

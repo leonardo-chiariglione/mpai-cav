@@ -25,7 +25,7 @@
       "Length":           { "type": "number", "description": "m" },
       "SpeedLimit":       { "type": "number", "description": "m/s" },
       "Lanes":            { "type": "integer", "minimum": 1 } } } },
-    "WeatherData":        { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/WeatherData.json" },
+    "WeatherData":        { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/WeatherData.json" },
     "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":      { "type": "string", "maxLength": 2048 } },
 

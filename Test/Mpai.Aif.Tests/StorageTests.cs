@@ -92,7 +92,7 @@ public class StorageTests
             using var api = Api();
             const string esb = "1TST-ESB-V1.0-I01";
             api.StartFlow(esb);
-            api.InputWrite(esb, "CAV-GNO-V1.1", 1, """{"Header":"CAV-GNO-V1.1","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
+            api.InputWrite(esb, "CAV-GNO-V2.0", 1, """{"Header":"CAV-GNO-V2.0","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
             var counts = api.OutputRead(esb, Text, 1, 2000);
             api.StopFlow(esb);
             result["TST-ESB: a GNSS Object written"] = $"{counts.Error} '{counts.Json}'";
@@ -382,7 +382,7 @@ public sealed class StorageAims : IAimProvider
     // TST-SNK: what arrived on each input of the boundary of ESS Stage 1, counted.
     private sealed class Sink(string id) : IAimProcessor, IAimRunner
     {
-        private static readonly string[] Inputs = ["OSD-BVO-V1.5", "OSD-OSA-V1.5", "CAV-GNO-V1.1", "CAV-WDT-V1.1", "CAV-FED-V1.1"];
+        private static readonly string[] Inputs = ["OSD-BVO-V1.5", "OSD-OSA-V1.5", "CAV-GNO-V2.0", "CAV-WDT-V2.0", "CAV-FED-V2.0"];
         public string InstanceId { get; } = id;
         public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("TST-SNK runs continuously.");
 

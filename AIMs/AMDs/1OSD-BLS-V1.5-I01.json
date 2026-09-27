@@ -8,9 +8,9 @@
 
   "ExternalPorts":        [{"Name": "BasicLiDARObject",            "Direction": "Input",  "DataType": "OSD-BLO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "BasicEnvironmentDescriptors", "Direction": "Input",  "DataType": "CAV-BED-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicLiDARSceneDescriptors",  "Direction": "Output", "DataType": "OSD-BLS-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "Alert",                       "Direction": "Output", "DataType": "CAV-ALT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "Alert",                       "Direction": "Output", "DataType": "CAV-ALT-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
 

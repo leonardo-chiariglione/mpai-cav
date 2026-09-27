@@ -30,7 +30,7 @@ namespace Mpai.Cav.Ess;
 // Nothing is given out before the ego Spatial Attitude is known: it is the frame.
 public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDictionary<string, string> settings) : IAimProcessor, IAimRunner
 {
-    public const string Visual = "OSD-BVS-V1.5", Attitude = "OSD-OSA-V1.5", Weather = "CAV-WDT-V1.1", Full = "CAV-FED-V1.1",
+    public const string Visual = "OSD-BVS-V1.5", Attitude = "OSD-OSA-V1.5", Weather = "CAV-WDT-V2.0", Full = "CAV-FED-V2.0",
                         Descriptors = "CAV-BED-V2.0";
     private const double Alpha = 0.5, Beta = 0.3;
 

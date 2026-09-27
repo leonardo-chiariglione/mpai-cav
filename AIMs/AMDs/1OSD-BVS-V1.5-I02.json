@@ -7,7 +7,7 @@
                        {"Name": "SpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "BasicEnvironmentDescriptors", "Direction": "Input", "DataType": "CAV-BED-V2.0", "IsOptional": true, "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "BasicVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "Alert", "Direction": "Output", "DataType": "CAV-ALT-V1.1", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "Alert", "Direction": "Output", "DataType": "CAV-ALT-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1OSD-BVS-V1.5-I02.json", "BinaryName": "Mpai.Cav.Ess", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.0", "Source": "AIMStorage"}],

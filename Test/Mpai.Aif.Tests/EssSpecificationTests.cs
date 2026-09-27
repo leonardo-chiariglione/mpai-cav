@@ -31,10 +31,10 @@ public class EssSpecificationTests
         "OSD/V1.5/AIMs/BasicRADARSceneDescription.json", "OSD/V1.5/AIMs/BasicLiDARSceneDescription.json",
         "OSD/V1.5/AIMs/BasicUltrasoundSceneDescription.json", "OSD/V1.5/AIMs/BasicOfflineMapSceneDescription.json",
         // The AMS (M3233): brought from D:\AI, aligned with the L3s of Stage 1.
-        "CAV2/V1.1/AIMs/AutonomousMotionSubsystem.json", "CAV2/V1.1/AIMs/FullEnvironmentDescription.json",
-        "CAV2/V1.1/AIMs/RouteSelectionPlanning.json", "CAV2/V1.1/AIMs/TrajectoryPlanningAndDecision.json",
-        "CAV2/V1.1/AIMs/PathSelectionPlanning.json", "CAV2/V1.1/AIMs/MotionSelectionPlanning.json",
-        "CAV2/V1.1/AIMs/TrafficObstacleAvoidance.json", "CAV2/V1.1/AIMs/AMSMemory.json"
+        "CAV2/V2.0/AIMs/AutonomousMotionSubsystem.json", "CAV2/V2.0/AIMs/FullEnvironmentDescription.json",
+        "CAV2/V2.0/AIMs/RouteSelectionPlanning.json", "CAV2/V2.0/AIMs/TrajectoryPlanningAndDecision.json",
+        "CAV2/V2.0/AIMs/PathSelectionPlanning.json", "CAV2/V2.0/AIMs/MotionSelectionPlanning.json",
+        "CAV2/V2.0/AIMs/TrafficObstacleAvoidance.json", "CAV2/V2.0/AIMs/AMSMemory.json"
     ];
 
     private static JsonObject Load(string relative) =>

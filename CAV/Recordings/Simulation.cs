@@ -80,7 +80,7 @@ public sealed class Simulation
 
         var (east, north, _, segment) = Path.At(EgoS);
         var (lat, lon) = Map.Geodetic(east + Gaussian(GnssSigma), north + Gaussian(GnssSigma));
-        messages.Add(("CAV-GNO-V1.1", Gnss(ms0, lat, lon)));
+        messages.Add(("CAV-GNO-V2.0", Gnss(ms0, lat, lon)));
 
         // Positions are of each vehicle's centre; the camera is at the ego's front, so
         // it sees another's rear at the distance between centres less a length -
@@ -185,7 +185,7 @@ public sealed class Simulation
         var nmea = Nmea.Gga(utc, lat, lon) + "\r\n";
         return new JsonObject
         {
-            ["Header"] = "CAV-GNO-V1.1", ["GNSSObjectID"] = $"GNO{ms}", ["GNSSObjectTime"] = SimpleTime($"GNO{ms}-T", ms),
+            ["Header"] = "CAV-GNO-V2.0", ["GNSSObjectID"] = $"GNO{ms}", ["GNSSObjectTime"] = SimpleTime($"GNO{ms}-T", ms),
             ["GNSSData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(Encoding.ASCII.GetBytes(nmea)) }),
             ["GNSSDataQualifier"] = new JsonObject
             {

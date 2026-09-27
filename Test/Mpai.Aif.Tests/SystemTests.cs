@@ -44,11 +44,11 @@ public class SystemTests
     {
         var subsystems = new (string Subsystem, string Standard, string Instance)[]
         {
-            ("CAV (Connected Autonomous Operation)", "CAV-CAO-V1.1", "1CAV-CAO-V1.1-I01"),
+            ("CAV (Connected Autonomous Operation)", "CAV-CAO-V2.0", "1CAV-CAO-V2.0-I01"),
             ("Human-CAV Interaction (HCI)",          "MMC-HCI-V2.5", "1MMC-HCI-V2.5-I01"),
-            ("Environment Sensing (ESS)",            "CAV-ESS-V1.1", "1CAV-ESS-V1.1-I01"),
-            ("Autonomous Motion (AMS)",              "CAV-AMS-V1.1", "1CAV-AMS-V1.1-I01"),
-            ("Motion Actuation (MAS)",               "CAV-MAS-V1.1", "1CAV-MAS-V1.1-I01")
+            ("Environment Sensing (ESS)",            "CAV-ESS-V2.0", "1CAV-ESS-V2.0-I01"),
+            ("Autonomous Motion (AMS)",              "CAV-AMS-V2.0", "1CAV-AMS-V2.0-I01"),
+            ("Motion Actuation (MAS)",               "CAV-MAS-V2.0", "1CAV-MAS-V2.0-I01")
         };
 
         var l2s = Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
@@ -171,9 +171,9 @@ public class SystemTests
     // WHICH CODE IMPLEMENTS WHICH AIM, AND WHICH DATA TYPES THAT CODE NAMES. An AIM
     // has code where a plugin declares it (AimName => "CAE-AII-V2.5") or a provider
     // creates it ("CVE-VII-V1.0" => new ViiAimProcessor(...), or Fed => new
-    // FullEnvironmentDescription(...) with Fed = "1CAV-FED-V1.1-I01"). The Data Types
+    // FullEnvironmentDescription(...) with Fed = "1CAV-FED-V2.0-I01"). The Data Types
     // it reads or writes are those its classes name - a literal, or a constant
-    // (AmsTypes.Hci = "CAV-AHM-V1.1"). A mention in a comment counts too: this is a
+    // (AmsTypes.Hci = "CAV-AHM-V2.0"). A mention in a comment counts too: this is a
     // survey, not a proof.
     private sealed class CodeIndex
     {
@@ -227,7 +227,7 @@ public class SystemTests
 
         public bool HasCode(string aimType) => classesOf.ContainsKey(aimType);
 
-        // An AIM Instance ("1CAV-FED-V1.1-I01"), not a Data Type ("CAV-INT-V1.1").
+        // An AIM Instance ("1CAV-FED-V2.0-I01"), not a Data Type ("CAV-INT-V2.0").
         private static bool IsInstance(string value) => Regex.IsMatch(value, @"-I\d+$");
 
         // The Data Types the code of an AIM names; null when it has no code.

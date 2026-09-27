@@ -69,9 +69,9 @@ public class SyntheticDriveTests
             $"{(double)farthest["AheadDistance"]!:0.0} m: {(int)farthest["AheadBox"]![2]!} px wide; {(double)nearest["AheadDistance"]!:0.0} m: {(int)nearest["AheadBox"]![2]!} px wide";
 
         // As a record, played by a StoredRecord.
-        var location = Path.Combine(Path.GetTempPath(), "mpai-phase6-" + Guid.NewGuid().ToString("N"), "private", "1CAV-ESS-V1.1-I01");
+        var location = Path.Combine(Path.GetTempPath(), "mpai-phase6-" + Guid.NewGuid().ToString("N"), "private", "1CAV-ESS-V2.0-I01");
         var store = new RuledStore(() => location, () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
-        var id = drive.WriteRecord(store.For(new StorageHolder("1CAV-ESS-V1.1-I01", "SyntheticDrive"), "", ""), messages);
+        var id = drive.WriteRecord(store.For(new StorageHolder("1CAV-ESS-V2.0-I01", "SyntheticDrive"), "", ""), messages);
         var ua = store.For(StorageHolder.UserAgent, "", "");
         var inputs = await new StoredRecord(ua, id).InputsAsync();
         ua.MPAI_AIFM_RuledStorage_Trace(id + "/header", out var trace);
@@ -92,14 +92,14 @@ public class SyntheticDriveTests
     }
 
     // THE DRIVE PLAYED INTO THE BOUNDARY OF ESS STAGE 1 (M3219 3.7): written as a
-    // record of 1CAV-ESS-V1.1-I01, played by a workflow into TST-ESB - the inputs
+    // record of 1CAV-ESS-V2.0-I01, played by a workflow into TST-ESB - the inputs
     // of ESS Stage 1, counted - and recorded there: the same data received. The
     // pace is reported, not judged.
     [Fact]
     public async Task IntoEssStage1()
     {
         var result = new Dictionary<string, string>();
-        const string esb = "1TST-ESB-V1.0-I01", ess = "1CAV-ESS-V1.1-I01";
+        const string esb = "1TST-ESB-V1.0-I01", ess = "1CAV-ESS-V2.0-I01";
         var location = Path.Combine(Path.GetTempPath(), "mpai-phase6-" + Guid.NewGuid().ToString("N"));
         var drive = new SyntheticDrive(11, TimeSpan.FromSeconds(4));
         var (messages, _) = drive.Make();
@@ -120,7 +120,7 @@ public class SyntheticDriveTests
             on Start:
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
-                stream Gnss (CAV-GNO-V1.1) from record "drive"
+                stream Gnss (CAV-GNO-V2.0) from record "drive"
                 wait 7s
             """), CancellationToken.None);
         Thread.Sleep(200);

@@ -8,8 +8,8 @@ namespace Mpai.Cav.Ams;
 // the Controller builds from their Metadata.
 public sealed class AmsProvider : IAimProvider
 {
-    public const string Fed = "1CAV-FED-V1.1-I01", Rsp = "1CAV-RSP-V1.1-I01", Psp = "1CAV-PSP-V1.1-I01",
-                        Msp = "1CAV-MSP-V1.1-I01", Toa = "1CAV-TOA-V1.1-I01", Amm = "1CAV-AMM-V1.1-I01";
+    public const string Fed = "1CAV-FED-V2.0-I01", Rsp = "1CAV-RSP-V2.0-I01", Psp = "1CAV-PSP-V2.0-I01",
+                        Msp = "1CAV-MSP-V2.0-I01", Toa = "1CAV-TOA-V2.0-I01", Amm = "1CAV-AMM-V2.0-I01";
 
     public bool CanCreate(string aimName) => aimName is Fed or Rsp or Psp or Msp or Toa or Amm;
 

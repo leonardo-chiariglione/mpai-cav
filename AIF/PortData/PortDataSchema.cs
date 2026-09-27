@@ -50,11 +50,11 @@ public static class PortDataSchema
 
         // The Data Types of the Environment Sensing Subsystem (M3219 3.6).
         ["OSD-OSA-V1.5"] = "OSD/V1.5/data/SpatialAttitude.json",
-        ["CAV-GNO-V1.1"] = "CAV2/V1.1/data/GNSSObject.json",
-        ["CAV-WDT-V1.1"] = "CAV2/V1.1/data/WeatherData.json",
-        ["CAV-FED-V1.1"] = "CAV2/V1.1/data/FullEnvironmentDescriptors.json",
-        ["CAV-BED-V1.1"] = "CAV2/V1.1/data/BasicEnvironmentDescriptors.json",
-        ["CAV-ALT-V1.1"] = "CAV2/V1.1/data/Alert.json"
+        ["CAV-GNO-V2.0"] = "CAV2/V2.0/data/GNSSObject.json",
+        ["CAV-WDT-V2.0"] = "CAV2/V2.0/data/WeatherData.json",
+        ["CAV-FED-V2.0"] = "CAV2/V2.0/data/FullEnvironmentDescriptors.json",
+        ["CAV-BED-V2.0"] = "CAV2/V2.0/data/BasicEnvironmentDescriptors.json",
+        ["CAV-ALT-V2.0"] = "CAV2/V2.0/data/Alert.json"
     };
 
     // ONE EVALUATION AT A TIME, under the lock of the published schemas: the
