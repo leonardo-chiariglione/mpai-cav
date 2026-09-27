@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 
 using AIF.Controller;
 using AIF.Store;
@@ -35,7 +37,8 @@ public class SystemTests
 
     // Where the CAV stands, for each subsystem and for the whole CAV: whether its
     // L2 is in this repository, which of its Sub-AIMs have any code, its L3,
-    // whether it loads, and whether the exchange executor could run it.
+    // whether it loads, whether the exchange executor could run it - and the Ports
+    // it declares that no code reads or writes: declared, not implemented.
     [Fact]
     public void CavStatus()
     {
@@ -53,13 +56,8 @@ public class SystemTests
                            .Select(MetadataTests.TryParse)
                            .Where(n => n?["Identifier"]?["AIMName"] is not null)
                            .ToDictionary(n => n!["Identifier"]!["AIMName"]!.GetValue<string>(), n => n!);
-        // An AIM has code if a plugin declares it: AimName => "OSD-BVS-V1.5". A mere
-        // mention of the name, in a comment or a data type, does not count.
-        var code = Directory.EnumerateFiles(Path.Combine(Repository.Root, "AIMs"), "*Plugin.cs", SearchOption.AllDirectories)
-                            .SelectMany(f => System.Text.RegularExpressions.Regex
-                                             .Matches(File.ReadAllText(f), "AimName\\s*=>\\s*\"([^\"]+)\"")
-                                             .Select(m => m.Groups[1].Value))
-                            .ToHashSet(StringComparer.Ordinal);
+        // An AIM has code if a plugin or a provider creates it (CodeIndex).
+        var code = new CodeIndex(Repository.Root);
 
         var store = new AmdStore(Repository.Amds);
         store.Scan();
@@ -75,7 +73,7 @@ public class SystemTests
             {
                 var subs = (l2["SubAIMs"]?.AsArray() ?? new JsonArray())
                            .Select(s => s?["Identifier"]?["AIMName"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();
-                var withCode = subs.Where(code.Contains).ToList();
+                var withCode = subs.Where(code.HasCode).ToList();
                 parts.Add($"L2 {standard} present; code for {withCode.Count} of {subs.Count} Sub-AIMs" +
                           (withCode.Count > 0 ? $" ({string.Join(", ", withCode)})" : ""));
             }
@@ -94,6 +92,11 @@ public class SystemTests
 
                 parts.Add(FindLoop(Edges(MetadataTests.TryParse(file)!)) is not null
                     ? "its Topology has a loop, so the exchange executor cannot run it" : "no loop");
+
+                var missing = Unimplemented(instance, code, store, l2s).Distinct().ToList();
+                parts.Add(missing.Count == 0
+                    ? "every declared Port of an AIM with code is implemented"
+                    : "declared, not implemented: " + string.Join(", ", missing));
             }
 
             parts.Add("not run");
@@ -101,6 +104,143 @@ public class SystemTests
         }
 
         Expected.Match("cav-status.json", result);
+    }
+
+    // THE PORTS NO CODE READS OR WRITES, in an L3 and all it contains: a Port of a
+    // basic AIM whose code never names its Data Type, and a Port of a composite that
+    // no line of its Topology connects; and a Port its L2 declares that its L3 leaves
+    // out, which therefore nothing implements. (A basic AIM without code is counted
+    // above; its Ports are not listed one by one.)
+    private static IEnumerable<string> Unimplemented(string instance, CodeIndex code, AmdStore store, IReadOnlyDictionary<string, JsonNode> l2s)
+    {
+        if (store.FindByAimName(instance) is not { } id) yield break;
+        var amd = store.GetAMD(id).RootElement;
+        var type = CodeIndex.TypeOf(instance);
+        var ports = amd.GetProperty("ExternalPorts").EnumerateArray().Select(p => (
+            Direction: p.GetProperty("Direction").GetString() ?? "",
+            Types: p.GetProperty("DataType").ValueKind == JsonValueKind.Array
+                ? p.GetProperty("DataType").EnumerateArray().Select(x => x.GetString() ?? "").ToList()
+                : [p.GetProperty("DataType").GetString() ?? ""],
+            Number: p.TryGetProperty("PortNumber", out var n) && n.ValueKind == JsonValueKind.Number ? n.GetInt32() : 1)).ToList();
+        var subs = amd.TryGetProperty("SubAIMs", out var s) && s.ValueKind == JsonValueKind.Array
+            ? s.EnumerateArray().Select(x => x.GetProperty("Identifier").GetProperty("AIMName").GetString() ?? "").ToList()
+            : [];
+
+        if (l2s.TryGetValue(type, out var l2))
+            foreach (var p in l2["ExternalPorts"]!.AsArray())
+            {
+                var direction = (string?)p!["Direction"] ?? "";
+                var types = p["DataType"] is JsonArray a ? a.Select(x => (string?)x ?? "").ToList() : [(string?)p["DataType"] ?? ""];
+                var number = (int?)p["PortNumber"] ?? 1;
+                if (!ports.Any(q => q.Direction == direction && q.Types.Intersect(types).Any() && q.Number == number))
+                    yield return $"{type} {direction} {types[0]} (in the L2 only)";
+            }
+
+        if (subs.Count == 0)
+        {
+            if (code.Handles(type) is not { } handled) yield break;
+            foreach (var p in ports.Where(p => !p.Types.Any(handled.Contains)))
+                yield return $"{type} {p.Direction} {p.Types[0]}";
+            yield break;
+        }
+
+        var ends = amd.GetProperty("Topology").EnumerateArray()
+                      .SelectMany(l => new[] { (Side: "Output", End: l.GetProperty("Output")), (Side: "Input", End: l.GetProperty("Input")) })
+                      .Where(e => (e.End.GetProperty("AIMName").GetString() ?? "") == "")
+                      .Select(e => (e.Side, DataType: e.End.GetProperty("DataType").GetString() ?? "",
+                                    Number: e.End.TryGetProperty("PortNumber", out var pn) && pn.ValueKind == JsonValueKind.Number ? pn.GetInt32() : 1))
+                      .ToList();
+        // An Input Port is where a line's Output end is the boundary, and the reverse.
+        foreach (var p in ports.Where(p => !ends.Any(e => e.Side == (p.Direction == "Input" ? "Output" : "Input") &&
+                                                          p.Types.Contains(e.DataType) && e.Number == p.Number)))
+            yield return $"{type} {p.Direction} {p.Types[0]} (not connected)";
+        foreach (var sub in subs)
+            foreach (var m in Unimplemented(sub, code, store, l2s))
+                yield return m;
+    }
+
+    // WHICH CODE IMPLEMENTS WHICH AIM, AND WHICH DATA TYPES THAT CODE NAMES. An AIM
+    // has code where a plugin declares it (AimName => "CAE-AII-V2.5") or a provider
+    // creates it ("CVE-VII-V1.0" => new ViiAimProcessor(...), or Fed => new
+    // FullEnvironmentDescription(...) with Fed = "1CAV-FED-V1.1-I01"). The Data Types
+    // it reads or writes are those its classes name - a literal, or a constant
+    // (AmsTypes.Hci = "CAV-AHM-V1.1"). A mention in a comment counts too: this is a
+    // survey, not a proof.
+    private sealed class CodeIndex
+    {
+        private static readonly Regex Aim = new(@"^\d?[A-Z]{3}-[A-Z0-9]{3}-V\d+\.\d+(-I\d+)?$");
+        private readonly Dictionary<string, HashSet<string>> classesOf = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<string>> classFiles = new(StringComparer.Ordinal);       // a class name may be defined in several files
+        private readonly Dictionary<string, string> constant = new(StringComparer.Ordinal);                // the first of a name: a provider's key
+        private readonly Dictionary<string, HashSet<string>> constants = new(StringComparer.Ordinal);     // every value of a name
+        private readonly Dictionary<string, string> qualified = new(StringComparer.Ordinal);              // Class.Name -> its value
+        private readonly Dictionary<string, string> text = new(StringComparer.Ordinal);
+
+        public static string TypeOf(string aim) => Regex.Replace(Regex.Replace(aim, @"^\d+", ""), @"-I\d+$", "");
+
+        public CodeIndex(string root)
+        {
+            var sep = Path.DirectorySeparatorChar;
+            foreach (var dir in new[] { "AIMs", "MPAIApps", "CAV" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
+                foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories)
+                                           .Where(f => !f.Contains($"{sep}obj{sep}") && !f.Contains($"{sep}bin{sep}")))
+                    text[f] = File.ReadAllText(f);
+            foreach (var (f, t) in text)
+            {
+                var declared = Regex.Matches(t, @"\b(?:class|record)\s+(\w+)").Select(m => (m.Index, Name: m.Groups[1].Value)).ToList();
+                foreach (var c in declared) { if (!classFiles.TryGetValue(c.Name, out var fs)) classFiles[c.Name] = fs = new List<string>(); fs.Add(f); }
+                foreach (Match m in Regex.Matches(t, @"\b(\w+)\s*=\s*""(\d?[A-Z]{3}-[A-Z0-9]{3}-V\d+\.\d+(?:-I\d+)?)"""))
+                {
+                    var (name, value) = (m.Groups[1].Value, m.Groups[2].Value);
+                    constant.TryAdd(name, value);
+                    if (!constants.TryGetValue(name, out var all)) constants[name] = all = new HashSet<string>(StringComparer.Ordinal);
+                    all.Add(value);
+                    if (declared.LastOrDefault(c => c.Index < m.Index).Name is { } owner) qualified.TryAdd(owner + "." + name, value);
+                }
+            }
+            foreach (var (_, t) in text)
+            {
+                foreach (Match m in Regex.Matches(t, @"(?:""([^""]+)""|\b(\w+))\s*=>\s*new\s+(\w+)\s*\("))
+                {
+                    var key = m.Groups[1].Success ? m.Groups[1].Value : constant.GetValueOrDefault(m.Groups[2].Value);
+                    if (key is not null && Aim.IsMatch(key)) Add(TypeOf(key), m.Groups[3].Value);
+                }
+                if (Regex.Match(t, @"AimName\s*=>\s*""([^""]+)""") is { Success: true } plugin)
+                    foreach (Match m in Regex.Matches(t, @"new\s+(\w+)\s*\(")) Add(TypeOf(plugin.Groups[1].Value), m.Groups[1].Value);
+            }
+        }
+
+        private void Add(string aimType, string cls)
+        {
+            if (!classesOf.TryGetValue(aimType, out var set)) classesOf[aimType] = set = new HashSet<string>(StringComparer.Ordinal);
+            set.Add(cls);
+        }
+
+        public bool HasCode(string aimType) => classesOf.ContainsKey(aimType);
+
+        // An AIM Instance ("1CAV-FED-V1.1-I01"), not a Data Type ("CAV-INT-V1.1").
+        private static bool IsInstance(string value) => Regex.IsMatch(value, @"-I\d+$");
+
+        // The Data Types the code of an AIM names; null when it has no code.
+        public HashSet<string>? Handles(string aimType)
+        {
+            if (!classesOf.TryGetValue(aimType, out var classes)) return null;
+            var types = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var f in classes.SelectMany(c => classFiles.GetValueOrDefault(c) ?? []).Distinct())
+            {
+                var t = text[f];
+                foreach (Match m in Regex.Matches(t, @"""([A-Z]{3}-[A-Z0-9]{3}-V\d+\.\d+|boolean|integer|number|string|uint8\[\])""")) types.Add(m.Groups[1].Value);
+                // Class.Name: that class's constant; a bare Name: any constant of that name.
+                foreach (Match m in Regex.Matches(t, @"\b(\w+)\.(\w+)\b"))
+                    if (qualified.TryGetValue(m.Groups[1].Value + "." + m.Groups[2].Value, out var q)) { if (!IsInstance(q)) types.Add(q); }
+                    else if (constants.TryGetValue(m.Groups[2].Value, out var named))
+                        foreach (var v in named.Where(v => !IsInstance(v))) types.Add(v);
+                foreach (Match m in Regex.Matches(t, @"(?<![\w.])(\w+)\b(?!\.)"))
+                    if (constants.TryGetValue(m.Groups[1].Value, out var all))
+                        foreach (var v in all.Where(v => !IsInstance(v))) types.Add(v);
+            }
+            return types;
+        }
     }
 
     // ---------------------------------------------------------------------
