@@ -78,8 +78,13 @@ app.MapGet("/avatar/{file}", (string file) =>
         ? Results.File(Path.Combine(assets, file), type)
         : Results.NotFound());
 
-app.MapGet("/mas/MPAI-MAS.orch", () =>
-    File.Exists(masOrch) ? Results.File(masOrch, "text/plain; charset=utf-8") : Results.NotFound());
+// NEVER FROM THE BROWSER'S CACHE: a workflow changed on disk is the one run
+// next, not a copy the browser kept (it did, and ran the old one).
+app.MapGet("/mas/MPAI-MAS.orch", (HttpContext ctx) =>
+{
+    ctx.Response.Headers.CacheControl = "no-cache";
+    return File.Exists(masOrch) ? Results.File(masOrch, "text/plain; charset=utf-8") : Results.NotFound();
+});
 
 // THE SERVICE, THROUGH THIS ORIGIN. A development convenience accepts the
 // Service's development certificate; a Service reached over a network presents

@@ -10,6 +10,16 @@
 <body>
     <div id="app"><div class="loading">Loading the MPAI client...</div></div>
     <div id="blazor-error-ui">Something went wrong. <a href="" class="reload">Reload</a></div>
+    <script>
+        // What the page would otherwise swallow, written to the console with its stack;
+        // and the moment "Something went wrong" appears.
+        window.addEventListener('error', e => console.error('PAGE ERROR:', e.message, e.error && e.error.stack));
+        window.addEventListener('unhandledrejection', e => console.error('UNHANDLED REJECTION:', e.reason && (e.reason.stack || e.reason)));
+        new MutationObserver(() => {
+            const ui = document.getElementById('blazor-error-ui');
+            if (ui && getComputedStyle(ui).display !== 'none') console.error('ERROR UI SHOWN at ' + new Date().toISOString());
+        }).observe(document.getElementById('blazor-error-ui'), { attributes: true });
+    </script>
     <script src="js/rca.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>

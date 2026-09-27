@@ -20,4 +20,9 @@ builder.Services.AddScoped(_ =>
     return http;
 });
 
+// WHAT WOULD OTHERWISE GO UNSEEN: an exception no code awaits is written to the
+// console with its stack, so that "Something went wrong" always says what did.
+AppDomain.CurrentDomain.UnhandledException += (_, e) => Console.Error.WriteLine("UNHANDLED: " + e.ExceptionObject);
+TaskScheduler.UnobservedTaskException += (_, e) => { Console.Error.WriteLine("UNOBSERVED: " + e.Exception); e.SetObserved(); };
+
 await builder.Build().RunAsync();

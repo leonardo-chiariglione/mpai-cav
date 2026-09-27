@@ -4,7 +4,8 @@
 #
 #  This is not an App: it is the container the Apps run in, and it belongs to
 #  the client. It welcomes a person, offers what the Service has, runs the App
-#  they choose, and asks whether they want another.
+#  they choose, and asks whether they want another: yes, the list again; else
+#  it says goodbye and ends.
 #
 #  It runs over 1MAS-APP-V1.0-I01 and nothing else: it speaks, and the Apps it
 #  runs do the work. Each of those runs under a Controller of its own.
@@ -37,6 +38,32 @@ on Start:
         offer Again (OSD-BTO-V1.5:1) = "Do you want to try another App?"
         ask   AgainSpeech (OSD-BSO-V1.5), AgainFaceDescriptors (PAF-FDO-V1.6)
         present AgainSpeech, AgainFaceDescriptors
+
+        # --- what the person answers decides what follows ---
+
+        # spoken, it goes to the Module to be recognised; typed, it is already text
+        acquire Reply (OSD-BSO-V1.5) via VAD
+             or ReplyText (OSD-BTO-V1.5)
+        branch on Reply {
+            offer Reply (OSD-BSO-V1.5:1)
+            ask   ReplyText (OSD-BTO-V1.5:1)
+        }
+
+        branch on ReplyText contains "yes" {
+
+            offer Choose (OSD-BTO-V1.5:1) = "Please choose an App."
+            ask   ChooseSpeech (OSD-BSO-V1.5), ChooseFaceDescriptors (PAF-FDO-V1.6)
+            present ChooseSpeech, ChooseFaceDescriptors
+
+        } else {
+
+            offer Farewell (OSD-BTO-V1.5:1) = "Thank you for using MPAI as a
+                Service. Goodbye."
+            ask   FarewellSpeech (OSD-BSO-V1.5), FarewellFaceDescriptors (PAF-FDO-V1.6)
+            present FarewellSpeech, FarewellFaceDescriptors
+            end
+
+        }
 
 on Stop:
     ask Controller to stop

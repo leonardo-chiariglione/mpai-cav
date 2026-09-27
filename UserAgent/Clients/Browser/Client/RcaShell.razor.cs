@@ -110,7 +110,7 @@ public partial class RcaShell : ComponentBase
 
             // MPAI-MAS is the client's own; every other App comes from the Service.
             var text = appId == "MAS"
-                ? await Http.GetStringAsync("mas/MPAI-MAS.orch")
+                ? await WebAppDirectory.FreshAsync(Http, "mas/MPAI-MAS.orch")
                 : await directory.WorkflowAsync(appId);
             var workflow = new WorkflowReader().Read(text);
             if (appId != "MAS") _sourceLanguage = null;
@@ -149,6 +149,14 @@ public partial class RcaShell : ComponentBase
     }
 
     private void Stop() => (_appStopping ?? _stopping)?.Cancel();
+
+    // STOP, AND HOW IT WAS PRESSED: a click has a click count, a key (Enter or
+    // Space on the focused button) has none. Said on the status line and the console.
+    private void StopClicked(MouseEventArgs e)
+    {
+        Status($"Stop pressed {(e.Detail == 0 ? "from the keyboard" : "by a click")}, stopping {(_appStopping is not null ? "the App" : "MPAI as a Service")}");
+        Stop();
+    }
 
     // ---- sources and presenters --------------------------------------------
 

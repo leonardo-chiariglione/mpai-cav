@@ -3,21 +3,26 @@
 
   "APIProfile":       "Basic",
   "OnDegraded":       "Continue",
-  "Description":      "MPAI as a Service App: the Module the MPAI-MAS workflow runs over. It lets a User Agent that has not yet chosen an App speak to the person through a Speaking Avatar. Response and Scene Rendering renders the Text supplied by the User Agent into the Machine Speech and the lip-synced Machine Face Descriptors; when the User Agent also supplies a Personal Status, speech and face are rendered with it, otherwise neutrally. Acquisition and delivery are the User Agent, not sub-AIMs.",
+  "Description":      "MPAI as a Service App: the Module the MPAI-MAS workflow runs over. It lets a User Agent that has not yet chosen an App speak to the person through a Speaking Avatar. Response and Scene Rendering renders the Text supplied by the User Agent into the Machine Speech and the lip-synced Machine Face Descriptors; when the User Agent also supplies a Personal Status, speech and face are rendered with it, otherwise neutrally. Automatic Speech Recognition hears the person's spoken reply to a question the Module asked - another App or not - and gives it as Text. Acquisition and delivery are the User Agent, not sub-AIMs.",
 
   "InternalTypes":    [],
 
   "ExternalPorts":    [{"Name": "UAText",                "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "Output": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UAPersonalStatus",      "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "IsOptional": true,              "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "ReplySpeech",           "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "IsOptional": true,              "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "OutputSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "OutputFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                  "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "OutputFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "ReplyText",             "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true,              "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } }],
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-RSR-V1.6-I01", "AIMName": "1PAF-RSR-V1.6-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal" } }],
 
   "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "UAText" },                "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "UAText" } },
                        { "Output": { "AIMName": "",                  "PortName": "UAPersonalStatus" },      "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "UAPersonalStatus" } },
                        { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "OutputSpeech" },          "Input": { "AIMName": "",                  "PortName": "OutputSpeech" } },
-                       { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "OutputFaceDescriptors" }, "Input": { "AIMName": "",                  "PortName": "OutputFaceDescriptors" } }],
+                       { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "OutputFaceDescriptors" }, "Input": { "AIMName": "",                  "PortName": "OutputFaceDescriptors" } },
+                       { "Output": { "AIMName": "",                  "PortName": "ReplySpeech" },           "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "ResponseSpeech", "PortNumber": 2, "DataType": "OSD-BSO-V1.5" } },
+                       { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "TextQuestion", "PortNumber": 2, "DataType": "OSD-BTO-V1.5" }, "Input": { "AIMName": "",       "PortName": "ReplyText" } }],
 
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MAS-APP-V1.0-I01.json",
                         "MASPort":           443,

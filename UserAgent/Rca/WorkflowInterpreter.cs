@@ -261,7 +261,8 @@ public sealed class WorkflowInterpreter
     private async Task GiveAsync(Step step, CancellationToken stop)
     {
         pending.TryGetValue(Module, out var inputs);
-        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>());
+        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>(),
+                                              step.Ports.Select(p => (p.DataType, p.PortNumber)).ToList());
         pending.Remove(Module);
 
         // WHAT THE WORKFLOW DOES WHEN ITS MODULE DEGRADES (M3213 3.5). The
@@ -499,7 +500,8 @@ public sealed class WorkflowInterpreter
                 var words = Literal(step.Port!.DataType, Fill(step.Literal ?? ""));
                 say($"[C] say {step.Port.DataType}:{step.Port.PortNumber}");
                 var said = await north.AdvanceAsync(Module, new List<ControllerApi.Datum>
-                    { new ControllerApi.Datum(step.Port.DataType, step.Port.PortNumber, words) });
+                    { new ControllerApi.Datum(step.Port.DataType, step.Port.PortNumber, words) },
+                    step.Ports!.Select(p => (p.DataType, p.PortNumber)).ToList());
                 if (!said.Ok) throw new InvalidOperationException($"{Module} returned {said.Error}.");
 
                 var spoken = new Dictionary<string, string>();

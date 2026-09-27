@@ -108,7 +108,8 @@ if ($Full) {
     Write-Host ""
     Write-Host "THE APPS BY VOICE (M3207 3.6) - to be checked by the author, in the browser and on the desktop:" -ForegroundColor Yellow
     @(
-        'MPAI-MAS  welcome spoken; the list of Apps shown; an App chosen by voice starts it; Stop returns to the list',
+        'MPAI-MAS  welcome spoken; the list of Apps shown; an App chosen by voice starts it; Stop returns to the list;',
+        '          "another App?" answered "yes" shows the list again, "no" (spoken or typed) says goodbye and ends',
         'MAD       two spoken turns, the second referring to the first; typing instead of speaking works',
         'AMQ       "yes"; a picture chosen; a spoken question answered about it; "no" ends',
         'MAT       a pair of languages chosen; a spoken sentence said in the other language, and shown',

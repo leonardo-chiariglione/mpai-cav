@@ -4,6 +4,8 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
+
 namespace Mpai.RcaWeb.Mas;
 
 // WHAT A SERVICE OFFERS, asked from a browser. The same requests as
@@ -74,7 +76,19 @@ public sealed class WebAppDirectory
         return apps;
     }
 
-    public Task<string> WorkflowAsync(string appId) => http.GetStringAsync($"{apps}Apps/{appId}");
+    public Task<string> WorkflowAsync(string appId) => FreshAsync(http, $"{apps}Apps/{appId}");
+
+    // A WORKFLOW IS NEVER TAKEN FROM THE BROWSER'S CACHE: the browser keeps a
+    // response it may reuse without asking, and ran an old workflow so. Asked
+    // each time; the server says whether it changed.
+    public static async Task<string> FreshAsync(HttpClient http, string url)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.SetBrowserRequestCache(BrowserRequestCache.NoCache);
+        using var response = await http.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync();
+    }
 
     // How many clients are using the Service now, this one included; null when the
     // Service does not say.

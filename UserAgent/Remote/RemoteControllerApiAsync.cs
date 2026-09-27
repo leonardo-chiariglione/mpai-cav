@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -71,7 +72,15 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
     // ONE EXCHANGE. The inputs are written, then every Output Port the client can
     // read is asked for; the first read closes the exchange on the Service and
     // runs the Module on what was written.
-    public async Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs)
+    public Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs) =>
+        AdvanceAsync(moduleName, inputs, Array.Empty<(string, int)>());
+
+    // ONLY WHAT IS WANTED, when the caller says: asking for every Data Type the
+    // client knows on four Ports each is thirty requests a step, nearly all of them
+    // "no such output". The Service discards a run's outputs at the next input, so
+    // one not asked for is never served to a later step. Nothing said, all asked.
+    public async Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs,
+                                                         IReadOnlyCollection<(string DataType, int PortNumber)> wanted)
     {
         if (!modules.ContainsKey(moduleName))
         {
@@ -94,9 +103,11 @@ public sealed class RemoteControllerApiAsync : IAsyncControllerApi
         }
 
         var outputs = new List<ControllerApi.Datum>();
-        foreach (var dataType in codecs.KnownDataTypes)
+        var asked = wanted.Count > 0
+            ? wanted.Where(w => codecs.Knows(w.DataType)).Distinct().ToList()
+            : codecs.KnownDataTypes.SelectMany(t => Enumerable.Range(1, 4).Select(n => (t, n))).ToList();
+        foreach (var (dataType, portNumber) in asked)
         {
-            for (int portNumber = 1; portNumber <= 4; portNumber++)
             {
                 var response = await http.GetAsync($"{root}/{mid}/Output/{Segment(dataType, portNumber)}");
                 if (!response.IsSuccessStatusCode) continue;

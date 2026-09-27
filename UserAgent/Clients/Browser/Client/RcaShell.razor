@@ -81,7 +81,7 @@
     }
     else
     {
-      <button class="stop" disabled="@(!stopEnabled)" @onclick="Stop">Stop</button>
+      <button class="stop" disabled="@(!stopEnabled)" @onclick="StopClicked">Stop</button>
     }
     <textarea id="typed" rows="3" disabled="@(!typing)" @bind="typedText" @bind:event="oninput" @bind:after="OnTypedInput"
               @onkeydown="OnTypedKey"></textarea>

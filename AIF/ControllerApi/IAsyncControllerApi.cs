@@ -14,6 +14,14 @@ public interface IAsyncControllerApi
 {
     Task<AifError>             StartFlowAsync(string moduleName);
     Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs);
+
+    // THE SAME EXCHANGE, SAYING WHAT IS WANTED: the Output Ports the caller will
+    // read. An implementation that must ask for each output separately - over
+    // MPAI-MAS - asks for these only; one that gets them all at once ignores it.
+    Task<ControllerApi.Result> AdvanceAsync(string moduleName, IEnumerable<ControllerApi.Datum> inputs,
+                                            IReadOnlyCollection<(string DataType, int PortNumber)> wanted) =>
+        AdvanceAsync(moduleName, inputs);
+
     Task                       StopFlowAsync(string moduleName);
     Task<AifError>             InputWriteAsync(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1);
     Task<ControllerApi.Read>   OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1);
