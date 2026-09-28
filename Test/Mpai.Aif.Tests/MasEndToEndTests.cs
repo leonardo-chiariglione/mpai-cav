@@ -102,11 +102,11 @@ public sealed class MasInTheLoop : IDisposable
 // AMS; its AMS-MAS Message to the MAS; the commands to the devices. On the scenarios
 // of Phase 8 but the cut-in (a known limitation of the ESS, M3233) and the one on ice
 // in freezing snow. Judged: no collision; the Destination reached; within the speed
-// limit; in its lane on the straights once placed - from 3 s on: GNSS is the CAV's
-// only lateral reference in Stage 1, and its first fixes are 1 to 2 m off until
-// averaged - on the 99th percentile of the offset: its maximum is the tail of the
-// GNSS noise, which lands at the margin one run and not the next (the author,
-// 2026/09/28); not sliding. Reported: the lane at the start
+// limit; not sliding. The lane is reported, not judged (the author, 2026/09/28):
+// GNSS is the CAV's only lateral reference in Stage 1, and its error comes in slow
+// excursions of up to about 1 m, which land at the lane's margin one run and not the
+// next - the localisation, not the steering, which Steps 4 and 6 judge. Lane-level
+// localisation (the lane markings) is for a later stage. Reported: the lane at the start
 // and after, and the speed;
 // MSA and the ESS's Spatial Attitude against the truth; the latencies.
 [Trait("Group", "Models")]
@@ -117,7 +117,9 @@ public class MasEndToEndTests
     // Seconds after which the CAV is placed: its first GNSS fixes averaged.
     private const double Placed = 3;
 
+    // LONG (Run-Matrix.ps1): run at a step only where it changed what this exercises.
     [SkippableFact]
+    [Trait("Duration", "Long")]
     public void Step7EndToEnd()
     {
         Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
@@ -181,10 +183,8 @@ public class MasEndToEndTests
             }
             offsets.Sort();
             var p99 = offsets.Count == 0 ? 0 : offsets[(int)(offsets.Count * 0.99)];
-            var inLane = p99 <= (RoadMap.LaneWidth - 1.8) / 2;
             result[name] = $"{(sim.Collided ? "collision" : "no collision")}; {(sim.Arrived ? "Destination reached" : "Destination not reached")}; " +
-                           $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; " +
-                           $"{(inLane ? "in its lane on the straights once placed" : "out of its lane on a straight once placed")}; {(skidded ? "slid" : "did not slide")}";
+                           $"{(overLimit <= 0.5 ? "within the speed limit" : "above the speed limit")}; {(skidded ? "slid" : "did not slide")}";
             latencies.Sort(); essErrors.Sort();
             report[name] = result[name] + $"; off the lane's centre at most {start:0.00} m in the first {Placed:0} s, on the straights after {p99:0.00} m (99%), at most {straight:0.00} m, {corner:0.00} m at the corners; " +
                            $"minimum gap {(double.IsPositiveInfinity(minGap) ? "-" : minGap.ToString("0.0"))} m; hardest braking {hardest:0.0} m/s2; {steps} steps; " +

@@ -570,7 +570,9 @@ public class AmsStage1Tests
     // is not driven into; but the cutting-in vehicle changes lane 5 m ahead, unseen,
     // and nothing tells the ESS it is now in the ego's lane. Near-range sensing
     // (ultrasound, RADAR) is for the phase that adds sensors.
+    // LONG (Run-Matrix.ps1): run at a step only where it changed what this exercises.
     [SkippableFact]
+    [Trait("Duration", "Long")]
     public void Step8EndToEnd()
     {
         Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");

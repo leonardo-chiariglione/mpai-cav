@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   The test matrix of M3207: builds the entry projects, runs the tests, and reports
   what blocks a step apart from what only informs.
@@ -19,8 +19,13 @@
 .PARAMETER Full
   Also the Service tests of MAS-App (a few minutes, mostly loading the models),
   and the checklist of the Apps by voice. For the end of a phase.
+
+.PARAMETER Long
+  The tests marked Duration=Long - the CAV end to end with the detector, about half
+  an hour - whatever the step changed. Without it they run only where the step (the
+  files git sees changed) touches what they exercise; with -Full, always.
 #>
-param([switch]$Quick, [switch]$Full)
+param([switch]$Quick, [switch]$Full, [switch]$Long)
 
 $ErrorActionPreference = 'Stop'
 $root    = Split-Path -Parent $PSScriptRoot
@@ -90,13 +95,34 @@ function RunTests([string]$filter, [string]$name) {
     return ,$lines
 }
 
+# THE LONG TESTS (the author, 2026/09/28): the CAV end to end with the detector.
+# They run at a step only where it changed something they exercise - the AIF, the
+# CAV and OSD AIMs and their L3s and settings, the simulation, the models, the CAV
+# and OSD schemas, their own tests - and at the end of a phase (-Full) always. Every
+# other blocking test runs at every step.
+$exercised = @(
+    '^AIF/', '^AIMs/CAV/', '^AIMs/OSD/', '^AIMs/Core/', '^AIMs/AMDs/1(CAV|OSD)-', '^AIMs/aim-settings\.json$',
+    '^CAV/', '^Models/', '^schemas/(CAV2|OSD|TFA|PAF)/',
+    '^Test/Mpai\.Aif\.Tests/(AmsStage1Tests|EssStage1Tests|MasEndToEndTests|MasStage1Tests|TruthBed|DrivePorts|Expected|Timing)\.cs$',
+    '^Test/Mpai\.Aif\.Tests/Mpai\.Aif\.Tests\.csproj$', '^Test/Expected/(ams|ess|mas)-stage1-end-to-end\.json$', '^Test/Run-Matrix\.ps1$'
+)
+$changed = @(& git -C $root status --porcelain --untracked-files=all 2>$null | ForEach-Object { ($_.Substring(3) -split ' -> ')[-1].Trim('"') })
+$touching = @($changed | Where-Object { $path = $_; $exercised | Where-Object { $path -match $_ } })
+$runLong = $Full -or $Long -or $touching.Count -gt 0
+$why = if ($Full) { 'the end of a phase (-Full)' } elseif ($Long) { 'asked for (-Long)' }
+       elseif ($runLong) { "the step changed $($touching.Count) file(s) they exercise, e.g. $($touching[0])" }
+       else { 'the step changed nothing they exercise' }
+
 Write-Host "Testing..." -ForegroundColor Cyan
 $blockingFilter    = if ($Quick) { 'Blocks=Yes&Group=Fast' } else { 'Blocks=Yes' }
+if (-not $runLong) { $blockingFilter += '&Duration!=Long' }
 $informativeFilter = if ($Full)  { 'Blocks=No' } else { 'Blocks=No&Group!=Service' }
 
 foreach ($l in (RunTests $blockingFilter 'blocking'))       { $blocking.Add($l);    if ($l.StartsWith('FAIL')) { $failedBlocking = $true } }
 foreach ($l in (RunTests $informativeFilter 'informative')) { $informative.Add($l) }
 
+Write-Host ""
+Write-Host "LONG TESTS: $(if ($runLong) { 'run' } else { 'not run' }) - $why" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "BLOCKING - the AIF and the CAV: these decide whether the step may be committed" -ForegroundColor Yellow
 $blocking    | ForEach-Object { Write-Host "  $_" -ForegroundColor ($(if ($_.StartsWith('FAIL')) { 'Red' } else { 'Gray' })) }

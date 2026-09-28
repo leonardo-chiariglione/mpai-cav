@@ -317,7 +317,9 @@ public class EssStage1Tests
     // the vehicle ahead in the descriptors, the Alert. The pace of the playback. Then
     // the same drive with the camera stopped at 10 s: the describer DEGRADED, the
     // Subsystem going on.
+    // LONG (Run-Matrix.ps1): run at a step only where it changed what this exercises.
     [SkippableFact]
+    [Trait("Duration", "Long")]
     public async Task Step6EndToEnd()
     {
         Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
