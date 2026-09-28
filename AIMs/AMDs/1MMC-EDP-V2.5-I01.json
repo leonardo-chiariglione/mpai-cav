@@ -20,6 +20,7 @@
                            {"Name": "MachinePersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AMSHCIMessageIn",         "Direction": "Input",  "DataType": "CAV-AHM-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "BasicOfflineMapObject",   "Direction": "Input",  "DataType": "OSD-BOO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EgoRemoteHCIMessageIn",   "Direction": "Input",  "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AMSHCIMessageOut",        "Direction": "Output", "DataType": "CAV-AHM-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EgoRemoteHCIMessageOut",  "Direction": "Output", "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],

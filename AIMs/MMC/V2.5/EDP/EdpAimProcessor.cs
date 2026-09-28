@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIF.Controller;
+using AIF.SharedStorage;
 
 using Mpai.Core;
 using Mpai.Core.OSD;
@@ -21,6 +23,12 @@ namespace Mpai.Mmc.Edp;
 // Personal Status (how the machine chooses to present itself), and an updated
 // Summary. The LLM is asked to return a small JSON block so the machine's Personal
 // Status is structured enough to drive avatar rendering downstream.
+//
+// IN THE CAV (M3243 3.2): given the Offline Map, or an AMS-HCI Message, EDP holds
+// the passenger's dialogue about where to go (CavDialogue): what the passenger says,
+// understood against the places the map names, becomes an AMS-HCI Message to the
+// AMS; what the AMS answers is told the passenger. Its state is the AIM's Private
+// Storage.
 public sealed class EdpAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
@@ -48,8 +56,19 @@ public sealed class EdpAimProcessor : IAimProcessor
     private readonly string _outPsPort;      // MMC-EPS
     private readonly string _outSummaryPort; // MMC-SUM
 
-    public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports)
+    private readonly string _mapPort;        // OSD-BOO (the CAV's Offline Map)
+    private readonly string _ahmInPort;      // CAV-AHM, from the AMS
+    private readonly string _ahmOutPort;     // CAV-AHM, to the AMS
+    private readonly ISharedStorage? _private;
+    private string? _cavState;               // where no Private Storage is given
+    private const string CavKey = "cav-dialogue";
+
+    public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports, ISharedStorage? privateStorage = null)
     {
+        _private          = privateStorage;
+        _mapPort          = ports.InputOrDefault("OSD-BOO-V1.5", "");
+        _ahmInPort        = ports.InputOrDefault("CAV-AHM-V2.0", "");
+        _ahmOutPort       = ports.OutputOrDefault("CAV-AHM-V2.0", "");
         _instanceId       = instanceId;
         _llm              = llm;
         _summaryPort      = ports.Input("MMC-SUM-V2.5");
@@ -69,6 +88,7 @@ public sealed class EdpAimProcessor : IAimProcessor
 
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
+        if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
         string? userText = ReadText(message, _textPort);
         if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
@@ -182,6 +202,61 @@ public sealed class EdpAimProcessor : IAimProcessor
             MessageType = message.MessageType,
             Ports = ports
         });
+    }
+
+    // THE CAV'S DIALOGUE: null where this is not one - no map, no AMS-HCI Message,
+    // no dialogue begun.
+    private Message? Cav(Message message)
+    {
+        string? Port(string key) => key.Length > 0 && message.Ports.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;
+        var map = Port(_mapPort);
+        var ahm = Port(_ahmInPort);
+        var saved = LoadCav();
+        if (map is null && ahm is null && saved is null) return null;
+
+        var state = CavDialogue.Load(saved);
+        var dialogue = new CavDialogue((system, user) => _llm.ChatJsonAsync(system, user));
+        var replies = new List<string>();
+        JsonObject? toAms = null;
+        if (map is not null)
+        {
+            state.Places = CavDialogue.PlacesOf(JsonNode.Parse(map)!, out var mapId);
+            state.MapId = mapId;
+        }
+        if (ahm is not null && dialogue.Told(JsonNode.Parse(ahm)!, state) is { } told) replies.Add(told);
+        var text = ReadText(message, _textPort);
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            try
+            {
+                var (reply, send) = dialogue.HeardAsync(text, state).GetAwaiter().GetResult();
+                replies.Add(reply);
+                toAms = send;
+            }
+            catch (Exception ex)
+            {
+                return Message.Error(message.MessageId, _instanceId, $"LLM call failed (is Ollama running?): {ex.Message}");
+            }
+        }
+        SaveCav(CavDialogue.Save(state));
+
+        var ports = new Dictionary<string, string>();
+        if (replies.Count > 0) ports[_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(string.Join(" ", replies)));
+        if (toAms is not null && _ahmOutPort.Length > 0) ports[_ahmOutPort] = toAms.ToJsonString();
+        if (Port(_summaryPort) is { } summary) ports[_outSummaryPort] = summary;
+        return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
+    }
+
+    private string? LoadCav()
+    {
+        if (_private is null) return _cavState;
+        return _private.MPAI_AIFM_SharedStorage_Exists(CavKey) ? Encoding.UTF8.GetString(_private.MPAI_AIFM_SharedStorage_Get(CavKey)) : null;
+    }
+
+    private void SaveCav(string state)
+    {
+        if (_private is null) _cavState = state;
+        else _private.MPAI_AIFM_SharedStorage_Put(CavKey, Encoding.UTF8.GetBytes(state));
     }
 
     // Verbalise the user's Personal Status into a natural phrase for the prompt,

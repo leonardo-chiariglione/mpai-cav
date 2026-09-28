@@ -51,9 +51,8 @@ public sealed class OllamaClient : IDisposable
     }
 
     // Send a system + user prompt, return the assistant's text reply.
-    public async Task<string> ChatAsync(string system, string user)
-    {
-        var request = new
+    public Task<string> ChatAsync(string system, string user) =>
+        PostAsync(new
         {
             model = _model,
             stream = false,
@@ -62,8 +61,26 @@ public sealed class OllamaClient : IDisposable
                 new { role = "system", content = system },
                 new { role = "user",   content = user }
             }
-        };
+        });
 
+    // The same, the reply a JSON object, and the same reply to the same prompt
+    // (temperature 0): for understanding, where what is understood is then checked.
+    public Task<string> ChatJsonAsync(string system, string user) =>
+        PostAsync(new
+        {
+            model = _model,
+            stream = false,
+            format = "json",
+            options = new { temperature = 0, seed = 1 },
+            messages = new[]
+            {
+                new { role = "system", content = system },
+                new { role = "user",   content = user }
+            }
+        });
+
+    private async Task<string> PostAsync(object request)
+    {
         var json = JsonSerializer.Serialize(request);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var response = await _http.PostAsync("/api/chat", content).ConfigureAwait(false);

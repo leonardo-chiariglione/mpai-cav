@@ -1,0 +1,16 @@
+{
+  "a choice of the second Route": "the second executed",
+  "a place": "understood as its way point, requested",
+  "a place named ambiguously": "not sent; asked which",
+  "a place the map does not have": "not sent; the places told",
+  "every AMS-HCI Message against its schema": "valid",
+  "no": "nothing sent; the CAV stays",
+  "on the way": "told",
+  "resume": "sent",
+  "stop": "sent",
+  "suspend": "sent",
+  "the Routes told": "with their times",
+  "the answer to which": "understood, requested",
+  "the arrival": "told",
+  "yes": "the first Route executed"
+}

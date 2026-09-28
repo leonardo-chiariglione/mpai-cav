@@ -7,7 +7,8 @@ namespace Mpai.Cav.Map;
 // road segments between them, each with its direction of travel, its lanes and its
 // speed limit; on a local frame of east and north metres from an origin, whose
 // geodetic coordinates the map states. Made from a seed, as the drives are.
-public sealed record WayPoint(string Id, double East, double North);
+// A way point; some are places with a name, which the passenger may ask for (M3243).
+public sealed record WayPoint(string Id, double East, double North, string? Name = null);
 public sealed record RoadSegment(string Id, string From, string To, double SpeedLimit, int Lanes);
 
 public sealed class RoadMap
@@ -28,6 +29,10 @@ public sealed class RoadMap
     }
 
     public WayPoint Point(string id) => points[id];
+
+    // The same map, some of its way points named.
+    public RoadMap Named(IReadOnlyDictionary<string, string> names) =>
+        new(Id, OriginLat, OriginLon, WayPoints.Select(w => names.TryGetValue(w.Id, out var n) ? w with { Name = n } : w).ToList(), Segments);
 
     public double Length(RoadSegment s)
     {
@@ -101,9 +106,9 @@ public sealed class RoadMap
     }
 
     // THE MAP AS GEOJSON, a format the Offline Map Qualifier admits (TFA): each way
-    // point a Point, each segment a LineString from its first way point to its
-    // second, with its speed limit and lanes; the map's identifier and origin as
-    // members of the collection.
+    // point a Point, with its Name where it is a place; each segment a LineString
+    // from its first way point to its second, with its speed limit and lanes; the
+    // map's identifier and origin as members of the collection.
     public JsonObject ToGeoJson()
     {
         JsonArray Position(WayPoint w) { var (lat, lon) = Geodetic(w.East, w.North); return new JsonArray(Math.Round(lon, 8), Math.Round(lat, 8)); }
@@ -112,7 +117,7 @@ public sealed class RoadMap
             features.Add(new JsonObject
             {
                 ["type"] = "Feature", ["geometry"] = new JsonObject { ["type"] = "Point", ["coordinates"] = Position(w) },
-                ["properties"] = new JsonObject { ["WayPointID"] = w.Id }
+                ["properties"] = w.Name is null ? new JsonObject { ["WayPointID"] = w.Id } : new JsonObject { ["WayPointID"] = w.Id, ["Name"] = w.Name }
             });
         foreach (var s in Segments)
             features.Add(new JsonObject
@@ -138,7 +143,8 @@ public sealed class RoadMap
             var c = f!["geometry"]!["coordinates"]!.AsArray();
             var (lon, lat) = ((double)c[0]!, (double)c[1]!);
             return new WayPoint((string)f["properties"]!["WayPointID"]!,
-                Math.Round((lon - lon0) * Math.PI / 180 * earth * Math.Cos(lat0 * Math.PI / 180), 3), Math.Round((lat - lat0) * Math.PI / 180 * earth, 3));
+                Math.Round((lon - lon0) * Math.PI / 180 * earth * Math.Cos(lat0 * Math.PI / 180), 3), Math.Round((lat - lat0) * Math.PI / 180 * earth, 3),
+                (string?)f["properties"]!["Name"]);
         }).ToList();
         var segments = features.Where(f => (string)f!["geometry"]!["type"]! == "LineString").Select(f =>
         {

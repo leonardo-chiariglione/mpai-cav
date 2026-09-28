@@ -23,6 +23,7 @@
                      {"Name": "EditedSummary",         "Direction": "Output", "DataType": "MMC-SUM-V2.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "HCIMemoryData",         "Direction": "Output", "DataType": "MMC-HMD-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AMSHCIMessageIn",         "Direction": "Input",  "DataType": "CAV-AHM-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicOfflineMapObject",   "Direction": "Input",  "DataType": "OSD-BOO-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "EgoRemoteHCIMessageIn",   "Direction": "Input",  "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AMSHCIMessageOut",        "Direction": "Output", "DataType": "CAV-AHM-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "EgoRemoteHCIMessageOut",  "Direction": "Output", "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
