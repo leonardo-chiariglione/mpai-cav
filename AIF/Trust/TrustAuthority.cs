@@ -68,7 +68,7 @@ public static class ExternalSigning
                 ["Header"] = "PTF-SEC-V1.0",
                 ["Identity"] = new JsonObject { ["Issuer"] = $"urn:mpai:ptf:authority:{authority}", ["CredentialRef"] = $"urn:mpai:ptf:cav:{anchor.AnchorId}" },
                 ["Transmission"] = new JsonObject { ["Protocol"] = "Custom" },
-                ["Integrity"] = new JsonObject { ["Hash"] = new JsonObject { ["Algorithm"] = "SHA-256", ["Value"] = hash }, ["KeyID"] = anchor.AnchorId }
+                ["Integrity"] = new JsonObject { ["Hash"] = new JsonObject { ["Algorithm"] = "PTF-ALGO-HASH-SHA256", ["Value"] = hash }, ["KeyID"] = anchor.AnchorId }
             }
         };
         var signature = key.SignData(PtfCanonical.Bytes(obj), HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);

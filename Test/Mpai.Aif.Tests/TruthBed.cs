@@ -11,6 +11,43 @@ namespace Mpai.Aif.Tests;
 // the ESS gets wrong.
 public static class TruthBed
 {
+    // PERFECT PERCEPTION FROM ANOTHER VEHICLE of the simulation (M3241: CAV A, its
+    // motion scripted): where it is - on the Route, in its lane - and what is ahead of
+    // it within 90 m, what a nearer vehicle in its lane hides left out.
+    public static string OfVehicle(Simulation sim, Simulation.Sensed sensed, string id)
+    {
+        var around = sim.Around();
+        var me = around.First(a => a.Id == id);
+        var s = sim.EgoS + me.Ahead + Simulation.VehicleLength;
+        var (east, north, heading, _) = sim.Path.At(s);
+        (east, north) = (east - Math.Sin(heading) * me.Lane * Mpai.Cav.Map.RoadMap.LaneWidth, north + Math.Cos(heading) * me.Lane * Mpai.Cav.Map.RoadMap.LaneWidth);
+        var ms = sensed.FrameMs;
+        var attitude = EssJson.Attitude($"{id}-EGO{sim.StepNumber}", ms, (east, north, 0), (0.1, 0.1, 0.1),
+            (me.Speed * Math.Cos(heading), me.Speed * Math.Sin(heading), 0),
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO{sim.StepNumber}-O", ["Orientation"] = new JsonArray(0.0, 0.0, heading * 180 / Math.PI) });
+        // The others, and the ego, as seen from it.
+        var others = around.Where(a => a.Id != id).Select(a => (Id: a.Id, Lane: a.Lane - me.Lane, Distance: a.Ahead - me.Ahead - Simulation.VehicleLength, Speed: a.Speed)).ToList();
+        others.Add((Id: "ego", Lane: -me.Lane, Distance: -me.Ahead - 2 * Simulation.VehicleLength, Speed: sim.EgoSpeed));
+        others = others.Where(v => v.Distance > 2 && v.Distance < 90).ToList();
+        others = others.Where(v => !others.Any(o => o.Lane == v.Lane && o.Distance < v.Distance)).ToList();
+        var objects = new JsonArray();
+        foreach (var v in others)
+            objects.Add(new JsonObject
+            {
+                ["BasicEnvironmentObjectID"] = v.Id,
+                ["InstanceIdentifier"] = EssJson.Identifier("car", 1),
+                ["SpatialAttitude"] = EssJson.Attitude($"{id}-{v.Id}-{sim.StepNumber}", ms, (v.Distance, v.Lane * 3.5, 0), (0.1, 0.1, 0.1), (v.Speed - me.Speed, 0, 0)),
+                ["ExistenceConfidence"] = 1.0, ["Motion"] = "Dynamic",
+                ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual" })
+            });
+        return new JsonObject
+        {
+            ["Header"] = "CAV-BED-V2.0", ["BasicEnvironmentDescriptorsID"] = $"{id}-TRUTH{sim.StepNumber:D6}",
+            ["BasicEnvironmentDescriptorsTime"] = EssJson.SimpleTime($"{id}-TRUTH{sim.StepNumber:D6}-T", ms),
+            ["EgoSpatialAttitude"] = attitude, ["BasicEnvironmentObjectCount"] = objects.Count, ["BasicEnvironmentObjects"] = objects
+        }.ToJsonString();
+    }
+
     // occlude: a vehicle behind a nearer one in its lane is not seen (the camera's
     // view); known: vehicles given all the same, wherever they are - as a Remote CAV
     // would report them (M3241).

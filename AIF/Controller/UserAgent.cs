@@ -925,12 +925,19 @@ public sealed class UserAgent
     public bool IsContinuous(int moduleId) =>
         _running.TryGetValue(moduleId, out var module) && module.Continuous is not null;
 
-    public async Task<AifError> ContinuousWriteAsync(int moduleId, string dataType, int portNumber, string json, int timeoutMs)
+    public async Task<AifError> ContinuousWriteAsync(int moduleId, string dataType, int portNumber, string json, int timeoutMs,
+                                                     string? from = null, DateTimeOffset? fromStamp = null)
     {
         // A Module its policy stopped (OnDegraded StopModule) takes no more, as in
         // an exchange.
         if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null || module.Host.IsStopped) return AifError.NotStarted;
-        return await module.Continuous.WriteBoundaryAsync(dataType, portNumber, json, timeoutMs);
+        return await module.Continuous.WriteBoundaryAsync(dataType, portNumber, json, timeoutMs, from, fromStamp);
+    }
+
+    public async Task<(AifError, string?, DateTimeOffset)> ContinuousReadStampedAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
+    {
+        if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null, default);
+        return await module.Continuous.ReadBoundaryStampedAsync(dataType, portNumber, timeoutMs);
     }
 
     public async Task<(AifError, string?)> ContinuousReadAsync(int moduleId, string dataType, int portNumber, int timeoutMs)

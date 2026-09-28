@@ -334,7 +334,8 @@ public sealed partial class ContinuousExecutor
 
     // ---- the boundary (M3215 3.3) ------------------------------------------------
 
-    public async ValueTask<AifError> WriteBoundaryAsync(string dataType, int portNumber, string json, int timeoutMs)
+    public async ValueTask<AifError> WriteBoundaryAsync(string dataType, int portNumber, string json, int timeoutMs,
+                                                        string? from = null, DateTimeOffset? fromStamp = null)
     {
         if (!writers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return AifError.NoSuchPort;
         var all = true;
@@ -342,7 +343,8 @@ public sealed partial class ContinuousExecutor
         foreach (var end in ends)
         {
             // Recorded once, as the first of its Channels stamps it.
-            var written = new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json), RecordAsInput = first };
+            var written = new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json), RecordAsInput = first,
+                                            From = from, FromStamp = fromStamp };
             first = false;
             all &= await end.WriteAsync(written, timeoutMs);
         }
@@ -351,9 +353,16 @@ public sealed partial class ContinuousExecutor
 
     public async ValueTask<(AifError, string?)> ReadBoundaryAsync(string dataType, int portNumber, int timeoutMs)
     {
-        if (!readers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return (AifError.NoSuchPort, null);
+        var (error, json, _) = await ReadBoundaryStampedAsync(dataType, portNumber, timeoutMs);
+        return (error, json);
+    }
+
+    // With its stamp: what an External Output Port gives another Controller carries it.
+    public async ValueTask<(AifError, string?, DateTimeOffset)> ReadBoundaryStampedAsync(string dataType, int portNumber, int timeoutMs)
+    {
+        if (!readers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return (AifError.NoSuchPort, null, default);
         var message = await ReadAnyAsync(ends, timeoutMs, CancellationToken.None);
-        return message is null ? (AifError.NotProduced, null) : (AifError.OK, Payloads.Inline(message.Json));
+        return message is null ? (AifError.NotProduced, null, default) : (AifError.OK, Payloads.Inline(message.Json), message.Stamp);
     }
 
     // MPAI_AIFU_Payload_Put: the User Agent places a payload for a boundary Input

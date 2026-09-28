@@ -140,9 +140,57 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     public void StopFlow(string moduleName)
     {
+        List<AIF.Channels.ExternalHub>? hubs;
         lock (_tables)
+        {
             if (_running.Remove(moduleName, out var started))
                 _ua.MPAI_AIFU_MODULE_Stop(started.Id);
+            _external.Remove(moduleName, out hubs);
+        }
+        foreach (var hub in hubs ?? []) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    // THE EXTERNAL PORTS OF A MODULE JOINED TO OTHER CONTROLLERS (M3205 3.3; M3241 3.2):
+    // its boundary Ports marked IsRemote. What its External Output Ports give is sent,
+    // with its stamp, to the Controllers in range the hub links; what they send is
+    // written to its External Input Ports with their controllerID and stamp. sign and
+    // verify: the Controller's trust (CityTrust). The hub ends when the Module stops.
+    private readonly Dictionary<string, List<AIF.Channels.ExternalHub>> _external = new();
+
+    public AIF.Channels.ExternalHub StartExternal(string moduleName, AIF.Channels.ExternalHub.Options options,
+                                                  Func<string, string>? sign = null, Func<string, string, string?>? verify = null)
+    {
+        int id;
+        IReadOnlyList<RuntimePort> ports;
+        lock (_tables)
+        {
+            if (!_running.TryGetValue(moduleName, out var started) || !_ua.IsContinuous(started.Id))
+                throw new InvalidOperationException($"{moduleName} is not a continuous Module started here.");
+            id = started.Id;
+            ports = (_ua.BoundaryPorts(id) ?? Array.Empty<RuntimePort>()).Where(p => p.IsRemote).ToList();
+        }
+        var hub = new AIF.Channels.ExternalHub(options)
+        {
+            Outputs = ports.Where(p => p.Direction == "Output").Select(p => (p.DataType, p.PortNumber ?? 1)).ToList(),
+            ReadOutput = async (dataType, portNumber, timeoutMs) =>
+            {
+                var (error, json, stamp) = await _ua.ContinuousReadStampedAsync(id, dataType, portNumber, timeoutMs);
+                return error == AifError.OK && json is not null ? (json, stamp) : null;
+            },
+            Deliver = async m =>
+            {
+                if (!ports.Any(p => p.Direction == "Input" && p.Accepts(m.DataType))) return;
+                await _ua.ContinuousWriteAsync(id, m.DataType, m.PortNumber, m.Json, 1000, m.From, m.Stamp);
+            },
+            Sign = sign, Verify = verify
+        };
+        lock (_tables)
+        {
+            if (!_external.TryGetValue(moduleName, out var list)) _external[moduleName] = list = new();
+            list.Add(hub);
+        }
+        hub.Start();
+        return hub;
     }
 
     // The boundary key the Controller routes on: DataType + PortNumber. Ports of
@@ -477,11 +525,15 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     public void Dispose()
     {
+        List<AIF.Channels.ExternalHub> hubs;
         lock (_tables)
         {
             foreach (var started in _running.Values) _ua.MPAI_AIFU_MODULE_Stop(started.Id);
             _running.Clear();
+            hubs = _external.Values.SelectMany(h => h).ToList();
+            _external.Clear();
         }
+        foreach (var hub in hubs) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
         (_provider as IDisposable)?.Dispose();
     }
 }

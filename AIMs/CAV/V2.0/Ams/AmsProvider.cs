@@ -21,7 +21,7 @@ public sealed class AmsProvider : IAimProvider
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage,
                                 ISharedStorage? privateStorage, IRuledStorage? moduleStorage) => aimName switch
     {
-        Fed => new FullEnvironmentDescription(aimName),
+        Fed => new FullEnvironmentDescription(aimName, settings),
         Rsp => new RouteSelectionPlanning(aimName),
         Psp => new PathSelectionPlanning(aimName),
         Msp => new MotionSelectionPlanning(aimName, settings),

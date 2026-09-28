@@ -48,6 +48,11 @@ public sealed class PortMessage
     // the write goes to several Channels.
     public bool RecordAsInput { get; init; }
 
+    // FROM ANOTHER CONTROLLER (M3205 3.3; M3241 3.2): the Controller that wrote it -
+    // its controllerID - and its stamp there. Null for a Message written here.
+    public string? From { get; init; }
+    public DateTimeOffset? FromStamp { get; init; }
+
     // Set by the writer's end.
     public DateTimeOffset Stamp { get; internal set; }
     public long Written { get; internal set; }          // monotonic, Stopwatch ticks

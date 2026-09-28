@@ -260,7 +260,9 @@ public class MasStage1Tests
     // the weather; MRA answers each AMS-MAS Message, and TOA hears the answer at the
     // next step - the Road State, and the MAS's frame.
     // bedOf: what the CAV perceives, the ground truth by default (TruthBed).
-    internal static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false, Func<Simulation, Simulation.Sensed, string>? bedOf = null)
+    // remote: before each step's description, what the CAV's FED hears from Remote CAVs.
+    internal static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false, Func<Simulation, Simulation.Sensed, string>? bedOf = null,
+                                    Action<FullEnvironmentDescription, Simulation.Sensed>? remote = null)
     {
         sim.Mechanical(seed: 9);
         var fed = new FullEnvironmentDescription(AmsProvider.Fed);
@@ -296,6 +298,7 @@ public class MasStage1Tests
                 mra.Observe(attitude);
                 mra.Road(road);
             }
+            remote?.Invoke(fed, sensed);
             var described = fed.Describe(bed);
             toa.Observe(described);
             var message = toa.Refine(msp.Plan(described));

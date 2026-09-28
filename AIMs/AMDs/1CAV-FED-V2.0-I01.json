@@ -5,6 +5,8 @@
   "InternalTypes":    [],
   "ExternalPorts":    [{"Name": "BasicEnvironmentDescriptors", "Direction": "Input", "DataType": "CAV-BED-V2.0", "Depth": 16, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "BasicOfflineMapObject", "Direction": "Input", "DataType": "OSD-BOO-V1.5", "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EgoRemoteAMSMessageIn", "Direction": "Input", "DataType": "CAV-ERA-V2.0", "IsOptional": true, "Depth": 16, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EgoRemoteAMSMessageOut", "Direction": "Output", "DataType": "CAV-ERA-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FullEnvironmentDescriptors", "Direction": "Output", "DataType": "CAV-FED-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],
