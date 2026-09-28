@@ -4,7 +4,7 @@
   "description":                  "A Data Type representing the measured state and condition of a specific wheel of the Connected Autonomous Vehicle in response to a steering command.",
   "type":                         "object",
   "additionalProperties":         false,
-  "required":                     [ "Header", "WheelResponseID", "WheelID", "WheelResponse" ],
+  "required":                     [ "Header", "WheelResponseID", "WheelID", "WheelResponseTime", "WheelResponse" ],
   "properties":                   {
 
     "Header":                     { "type": "string", "const": "CAV-WHR-V1.1", "description": "Wheel Response Header – Standard CAV-WHR-Vx.y." },
@@ -13,7 +13,7 @@
     "WheelID":                    { "type": "string", "description": "Identifier of the wheel reporting the response." },
     "WheelResponseTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time this Wheel Response instance was produced." },
 
-    "WheelResponse":              { "type": "object", "additionalProperties": false, "required": [ "WheelResponseTime", "WheelState", "WheelAngle" ],
+    "WheelResponse":              { "type": "object", "additionalProperties": false, "required": [ "WheelState", "WheelAngle" ],
                                     "description": "Set of measured wheel response parameters.", "properties": {
       "WheelState":               { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/WheelStates.json", "description": "Current state of the wheel." },
       "WheelAngle":               { "type": "number", "minimum": -90, "maximum": 90, "description": "Measured steering angle in degrees (–90 to +90)." },

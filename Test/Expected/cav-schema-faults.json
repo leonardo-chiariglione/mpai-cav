@@ -1,0 +1,12 @@
+{
+  "V1.1 AMS Data without its identifier": "invalid",
+  "V1.1 AMS Data, its identifier alone": "valid",
+  "V1.1 Wheel Command with its time": "valid",
+  "V1.1 Wheel Command without its time": "invalid",
+  "V1.1 Wheel Response with its time": "valid",
+  "V1.1 Wheel Response without its time": "invalid",
+  "V2.0 Wheel Command with its time": "valid",
+  "V2.0 Wheel Command without its time": "invalid",
+  "V2.0 Wheel Response with its time": "valid",
+  "V2.0 Wheel Response without its time": "invalid"
+}

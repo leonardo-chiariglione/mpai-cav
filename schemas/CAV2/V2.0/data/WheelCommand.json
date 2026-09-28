@@ -4,7 +4,7 @@
   "description":                  "A Data Type representing a steering command directed to a specific wheel of the Connected Autonomous Vehicle.",
   "type":                         "object",
   "additionalProperties":         false,
-  "required":                     [ "Header", "WheelCommandID", "WheelID", "WheelCommand" ],
+  "required":                     [ "Header", "WheelCommandID", "WheelID", "WheelCommandTime", "WheelCommand" ],
   "properties":                   {
 
     "Header":                     { "type": "string", "const": "CAV-WHC-V2.0", "description": "Wheel Command Header – Standard CAV-WHC-Vx.y." },

@@ -4,7 +4,7 @@
   "description":                  "A Data Type representing the measured state and condition of a specific wheel of the Connected Autonomous Vehicle in response to a steering command.",
   "type":                         "object",
   "additionalProperties":         false,
-  "required":                     [ "Header", "WheelResponseID", "WheelID", "WheelResponse" ],
+  "required":                     [ "Header", "WheelResponseID", "WheelID", "WheelResponseTime", "WheelResponse" ],
   "properties":                   {
 
     "Header":                     { "type": "string", "const": "CAV-WHR-V2.0", "description": "Wheel Response Header – Standard CAV-WHR-Vx.y." },

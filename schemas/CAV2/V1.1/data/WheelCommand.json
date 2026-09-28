@@ -4,7 +4,7 @@
   "description":                  "A Data Type representing a steering command directed to a specific wheel of the Connected Autonomous Vehicle.",
   "type":                         "object",
   "additionalProperties":         false,
-  "required":                     [ "Header", "WheelCommandID", "WheelID", "WheelCommand" ],
+  "required":                     [ "Header", "WheelCommandID", "WheelID", "WheelCommandTime", "WheelCommand" ],
   "properties":                   {
 
     "Header":                     { "type": "string", "const": "CAV-WHC-V1.1", "description": "Wheel Command Header – Standard CAV-WHC-Vx.y." },
@@ -14,7 +14,7 @@
     "WheelID":                    { "type": "string", "description": "Identifier of the wheel being commanded." },
     "WheelCommandTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time this Wheel Command instance was produced." },
 
-    "WheelCommand":               { "type": "object", "additionalProperties": false, "required": [ "WheelCommandTime", "Angle" ],
+    "WheelCommand":               { "type": "object", "additionalProperties": false, "required": [ "Angle" ],
                                     "description": "Set of steering command parameters.", "properties": {
       "Angle":                    { "type": "number", "minimum": -90, "maximum": 90, "description": "Desired steering angle in degrees (–90 to +90)." },
       "SteeringMode":             { "type": "string", "enum": [ "ManualAssist", "SteerByWire", "ActiveSteering", "EmergencyOverride",
