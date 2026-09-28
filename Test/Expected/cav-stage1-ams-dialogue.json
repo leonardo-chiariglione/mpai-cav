@@ -1,0 +1,12 @@
+{
+  "Execute": "the Route selected driven",
+  "Resume": "Executing; the CAV drives on",
+  "Stop": "Stopped; the CAV halts at a way point; Resume does not move it",
+  "Suspend": "Suspended; the CAV halts at a way point",
+  "a Destination changed while driving": "the new Routes proposed, the CAV driving on; the one selected driven to arrival",
+  "a place the map does not have": "no Route proposed; the CAV stands",
+  "arrival": "Arrived told; the CAV stands at the Destination; no collision",
+  "before Execute": "the CAV stands",
+  "every AMS-HCI Message against its schema": "valid",
+  "the Routes proposed": "the one of least time first, an alternative; each segment timed"
+}

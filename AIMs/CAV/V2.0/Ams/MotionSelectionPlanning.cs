@@ -11,8 +11,10 @@ namespace Mpai.Cav.Ams;
 // Path, by the Intelligent Driver Model - its desired speed the speed limit of the
 // segment the CAV is on, following the object ahead in the CAV's lane at a time gap,
 // never nearer than a minimum gap, stopping at the end of the Path as behind a
-// vehicle stopped there. The object ahead predicted at its speed. Settings: DesiredSpeed
-// (m/s; the limit where absent), TimeGap, MinimumGap, Acceleration, Deceleration.
+// vehicle stopped there. The object ahead predicted at its speed. Before a Path -
+// the Route not yet executed (M3243 3.1) - the Path is where the CAV stands: it holds.
+// Settings: DesiredSpeed (m/s; the limit where absent), TimeGap, MinimumGap,
+// Acceleration, Deceleration.
 //
 // THE OBJECTS BEYOND THE ONE FOLLOWED (M3241): a vehicle reported by a Remote CAV,
 // hidden from the CAV by the one it follows, lowers the acceleration too - at each
@@ -48,7 +50,6 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
                 if (json["PathResponse"] is { } p) Follow(p);
                 continue;
             }
-            if (path is null) continue;
             await ports.WriteAsync(AmsTypes.Trajectory, 1, Plan(json).ToJsonString());
         }
     }
@@ -131,7 +132,8 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
     public JsonObject Plan(JsonNode fed)
     {
         var ms = AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]);
-        var (east, north, _, speed) = AmsTypes.Ego(fed["EgoSpatialAttitude"]!);
+        var (east, north, heading, speed) = AmsTypes.Ego(fed["EgoSpatialAttitude"]!);
+        if (path is null) (path, corners) = ([(0, east, north, heading)], []);   // no Route yet: hold where it stands
         var desired = EssJson.Setting(settings, "DesiredSpeed", (double?)fed["RoadAhead"]?[0]?["SpeedLimit"] ?? 13.9);
         var s = Along(east, north);
 

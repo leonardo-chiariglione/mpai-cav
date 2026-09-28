@@ -289,7 +289,16 @@ public class AmsStage1Tests
         return ports.Written;
     }
 
-    public static string Destination(string wayPoint, long ms = 0) => new JsonObject
+    // The Destination, requested and executed in one message: the CAV drives the
+    // first Route proposed at once (M3243 3.1); execute false: only requested.
+    public static string Destination(string wayPoint, long ms = 0, bool execute = true)
+    {
+        var message = DestinationRequest(wayPoint, ms);
+        if (execute) message["HCIMessage"]!["RouteCommand"] = "Execute";
+        return message.ToJsonString();
+    }
+
+    private static JsonObject DestinationRequest(string wayPoint, long ms) => new()
     {
         ["Header"] = "CAV-AHM-V2.0", ["AMSHCIMessageID"] = "AHM-" + wayPoint, ["AMSHCIMessageTime"] = EssJson.SimpleTime("AHM-" + wayPoint + "-T", ms),
         ["HCIMessage"] = new JsonObject
@@ -303,7 +312,7 @@ public class AmsStage1Tests
                 }
             })
         }
-    }.ToJsonString();
+    };
 
     // The least time over every simple path of the map - by enumeration, not by the A* the
     // AIM uses - from a way point to another.

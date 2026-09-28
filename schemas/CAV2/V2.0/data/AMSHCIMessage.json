@@ -28,6 +28,12 @@
     "AMSMessage":               { "type": "object", "additionalProperties": false, "description": "Data in message from AMS to HCI.", "properties": {
       "RouteList":              { "type": "array",  "items": { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/Route.json" }, 
                                   "description": "List of candidate Routes provided in response to an HCI request." },
+      "RouteStatus":            { "type": "object", "additionalProperties": false, "required": ["RouteID", "Status"],
+                                  "description": "State of the Route the CAV was commanded to drive: in answer to a Route Command, and on arrival.",
+                                  "properties": {
+                                    "RouteID": { "type": "string", "description": "Identifier of the Route this state refers to." },
+                                    "Status":  { "type": "string", "enum": ["Executing", "Suspended", "Stopped", "Arrived"],
+                                                 "description": "Executing: the CAV drives the Route; Suspended: halted, to be resumed; Stopped: halted, the Route abandoned; Arrived: stopped at the Route's destination." } } },
       "FailureID":              { "type": "string", "description": "Identifier of a CAV equipment failure condition (e.g. battery low, mechanical failure)." },
       "CAVState":               { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/CAVState.json", "description": "Current CAV State." },
       "RoadState":              { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/RoadState.json", "description": "Current Road State." } } },

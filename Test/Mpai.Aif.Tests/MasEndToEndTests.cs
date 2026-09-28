@@ -211,7 +211,8 @@ public sealed class AmsInTheLoop : IDisposable
 
     // cavId: the CAV's identity in its city (M3241), which FED sends its Full
     // Environment Descriptors with.
-    public AmsInTheLoop(Simulation sim, string destination, string? cavId = null)
+    // destination: none - HCI gives it later (Say).
+    public AmsInTheLoop(Simulation sim, string? destination, string? cavId = null)
     {
         var path = Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
         if (cavId is not null)
@@ -226,7 +227,17 @@ public sealed class AmsInTheLoop : IDisposable
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
         api.SharedStorageInit(Ams, location);
         api.InputWrite(Ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
-        api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
+        if (destination is not null) Say(AmsStage1Tests.Destination(destination));
+    }
+
+    // What the AMS told HCI: each AMS-HCI Message, in order.
+    public List<JsonNode> Told { get; } = [];
+
+    // An AMS-HCI Message from HCI.
+    public void Say(string message)
+    {
+        var written = api.InputWrite(Ams, AmsTypes.Hci, 1, message, 5000);
+        if (written != AifError.OK) throw new InvalidOperationException($"the AMS-HCI Message not written: {written}");
     }
 
     // data: each AMS Data the step gave, to see.
@@ -242,6 +253,7 @@ public sealed class AmsInTheLoop : IDisposable
             if (AmsTypes.Ms(m["AMSMASMessageTime"]) == frameMs) message = m;
         }
         while (api.OutputRead(Ams, AmsTypes.Data, 1, data is null ? 0 : 50) is { Error: AifError.OK, Json: { } d }) data?.Invoke(d);
+        while (api.OutputRead(Ams, AmsTypes.Hci, 1, 0) is { Error: AifError.OK, Json: { } h }) Told.Add(JsonNode.Parse(h)!);
         return message;
     }
 

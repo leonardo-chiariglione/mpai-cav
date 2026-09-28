@@ -5,7 +5,7 @@
   "each decision kept with the FED it was taken on": "yes",
   "every AMS-MAS Message has its AMS Data": "yes",
   "its header": "always true",
-  "its record, read back": "In CAV-AHM-V2.0, In CAV-BED-V2.0, In OSD-BOO-V1.5, Out CAV-AMD-V2.0, Out CAV-AMM-V2.0",
+  "its record, read back": "In CAV-AHM-V2.0, In CAV-BED-V2.0, In OSD-BOO-V1.5, Out CAV-AHM-V2.0, Out CAV-AMD-V2.0, Out CAV-AMM-V2.0",
   "the AMS Data valid against its schema": "all",
   "the AMS recorded without being asked": "yes"
 }
