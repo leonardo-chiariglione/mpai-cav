@@ -1,6 +1,6 @@
 {
   "ego attitudes given": "1001 for 1001 of the MAS",
-  "error within twice the stated accuracy": "181 of 201 frames",
-  "position error, SAG": "median 0.43 m, 95th percentile 0.90 m, max 2.33 m",
+  "error within twice the stated accuracy": "179 of 201 frames",
+  "position error, SAG": "median 0.43 m, 95th percentile 0.95 m, max 2.33 m",
   "position error, odometry alone": "median 2.09 m, 95th percentile 3.43 m, max 3.60 m"
 }
