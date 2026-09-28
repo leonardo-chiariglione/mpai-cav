@@ -14,8 +14,9 @@ namespace Mpai.Cav.Mas;
 // ABS acts, a braked wheel slips as far as ABS lets it, or the motor loses traction,
 // the tyres are at their limit: the friction is what was asked, over g and the share
 // ABS keeps (AbsShare). When more is asked and given than the friction estimated,
-// the friction is at least that. An estimate is forgotten Memory metres after the
-// last evidence. Until the tyres say otherwise, the Weather Data: below 0 degrees C
+// the friction is at least that - of the road just run, so forgotten GripMemory
+// metres on (M3237, Step 7: grip proven before an icy stretch is not grip on it). A
+// limit reached is forgotten Memory metres after the last. Until the tyres say otherwise, the Weather Data: below 0 degrees C
 // with precipitation, or ice reported, the road may be icy (IcyFriction); with rain,
 // wet (WetFriction); without either, the road is taken as dry (DryFriction), with
 // little confidence.
@@ -27,13 +28,14 @@ public sealed class IceConditionAnalysis(string instanceId, IReadOnlyDictionary<
 {
     private const double G = 9.81;
     private readonly double wheelbase = EssJson.Setting(settings, "Wheelbase", 2.8), absShare = EssJson.Setting(settings, "AbsShare", 0.95),
-                            memory = EssJson.Setting(settings, "Memory", 100), dry = EssJson.Setting(settings, "DryFriction", 0.9),
+                            memory = EssJson.Setting(settings, "Memory", 100), gripMemory = EssJson.Setting(settings, "GripMemory", 10), dry = EssJson.Setting(settings, "DryFriction", 0.9),
                             wet = EssJson.Setting(settings, "WetFriction", 0.6), icy = EssJson.Setting(settings, "IcyFriction", 0.15),
                             iceBelow = EssJson.Setting(settings, "IceBelow", 0.3), slipLimit = EssJson.Setting(settings, "SlipLimit", 0.1);
     private readonly string cav = settings.TryGetValue("CAVID", out var id) ? id : "CAV-1";
 
     private double? friction;                                 // from the tyres
     private double confidence, run, lastLimit, angle;
+    private bool proven;                                      // the estimate is a lower bound, not a limit reached
     private (double East, double North)? last;
     private bool atLimit;                                     // since the last Spatial Attitude
     private bool wasAtLimit;                                  // at the last one
@@ -117,10 +119,10 @@ public sealed class IceConditionAnalysis(string instanceId, IReadOnlyDictionary<
         {
             var limit = Math.Clamp(asked / absShare, 0.05, 1);
             if (wasAtLimit && friction is { } previous) limit = Math.Max(limit, previous);
-            (friction, confidence, lastLimit) = (limit, 0.9, run);
+            (friction, confidence, lastLimit, proven) = (limit, 0.9, run, false);
         }
-        else if (asked > (friction ?? prior) && asked > 0.05) (friction, confidence, lastLimit) = (Math.Min(1, asked), 0.7, run);
-        else if (friction is not null && run - lastLimit > memory) friction = null;
+        else if (asked > (friction ?? prior) && asked > 0.05) (friction, confidence, lastLimit, proven) = (Math.Min(1, asked), 0.7, run, true);
+        else if (friction is not null && run - lastLimit > (proven ? gripMemory : memory)) friction = null;
         wasAtLimit = atLimit && asked > 0.03;
         atLimit = false;
 

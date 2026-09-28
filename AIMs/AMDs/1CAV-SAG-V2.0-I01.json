@@ -5,6 +5,7 @@
   "InternalTypes":    [],
   "ExternalPorts":    [{"Name": "GNSSObject", "Direction": "Input", "DataType": "CAV-GNO-V2.0", "IsOptional": true, "Depth": 4, "MaxAge": 2000, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "Depth": 16, "MaxAge": 2000, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "BasicOfflineMapObject", "Direction": "Input", "DataType": "OSD-BOO-V1.5", "IsOptional": true, "Depth": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "EgoSpatialAttitude", "Direction": "Output", "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],

@@ -17,7 +17,7 @@ namespace Mpai.Cav.Ams;
 // Attitude.
 // - On a road whose friction the Road State estimates, no deceleration beyond what
 //   it gives, and no faster than the CAV can still stop behind the object ahead - if
-//   that stops too - braking at FrictionMargin of it.
+//   that stops too, with all the grip - braking at FrictionMargin of it.
 // - The Trajectory on the MAS's frame: the MAS says where the CAV was at an instant
 //   on its own frame, the Full Environment Descriptors of that instant where on the
 //   AMS's; the turn and the shift between the two, smoothed (FrameWeight), move each
@@ -116,12 +116,13 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
             brake = Math.Min(Math.Min(emergency, grip), Math.Max(needed, -own));
         }
 
-        // On a road that grips less: no faster than stopping behind the object ahead allows.
+        // On a road that grips less: no faster than stopping behind the object ahead
+        // allows - it may brake with all the grip, the CAV plans on FrictionMargin of it.
         if (friction is not null && gap is { } g3 && closing is { } c3)
         {
             var available = grip * frictionMargin;
             var lead = Math.Max(0, speed - c3);
-            var safe = Math.Sqrt(Math.Max(0, 2 * available * (g3 - stopGap) + lead * lead));
+            var safe = Math.Sqrt(Math.Max(0, 2 * available * (g3 - stopGap) + lead * lead * frictionMargin));
             if (speed > safe) brake = Math.Max(brake, available);
         }
 

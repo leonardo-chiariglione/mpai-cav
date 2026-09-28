@@ -12,6 +12,6 @@
   "a slower vehicle cuts in": "no collision; Destination reached; within the speed limit; in its lane on the straights; did not slide",
   "a vehicle ahead brakes hard": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide",
   "a vehicle ahead slows and stops": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide",
-  "a vehicle ahead slows and stops, on ice": "collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide; the ice found from the tyres",
+  "a vehicle ahead slows and stops, on ice": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide; the ice found from the tyres",
   "a vehicle ahead slows and stops, on ice, in freezing snow": "no collision; Destination not reached; within the speed limit; in its lane on the straights; did not slide; the ice expected from the weather"
 }

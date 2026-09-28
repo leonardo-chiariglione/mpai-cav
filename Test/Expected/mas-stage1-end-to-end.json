@@ -1,0 +1,6 @@
+{
+  "a free road to the Destination": "no collision; Destination reached; within the speed limit; out of its lane on a straight once placed; did not slide",
+  "a vehicle ahead brakes hard": "no collision; Destination not reached; within the speed limit; in its lane on the straights once placed; did not slide",
+  "a vehicle ahead slows and stops": "no collision; Destination not reached; within the speed limit; in its lane on the straights once placed; did not slide",
+  "a vehicle ahead slows and stops, on ice, in freezing snow": "no collision; Destination not reached; within the speed limit; in its lane on the straights once placed; slid"
+}

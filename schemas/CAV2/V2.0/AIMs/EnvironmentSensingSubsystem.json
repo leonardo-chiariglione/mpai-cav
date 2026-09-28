@@ -75,6 +75,7 @@
                        {"Output": {"AIMName": "OSD-BUS-V1.5", "PortName": "BasicUltrasoundSceneDescriptors"}, "Input": {"AIMName": "CAV-BED-V2.0", "PortName": "BasicUltrasoundSceneDescriptors"}},
                        {"Output": {"AIMName": "OSD-BUS-V1.5", "PortName": "Alert"}, "Input": {"AIMName": "", "PortName": "Alert"}},
                        {"Output": {"AIMName": "", "PortName": "BasicOfflineMapObject"}, "Input": {"AIMName": "OSD-BOS-V1.5", "PortName": "BasicOfflineMapObject"}},
+                       {"Output": {"AIMName": "", "PortName": "BasicOfflineMapObject"}, "Input": {"AIMName": "CAV-SAG-V2.0", "PortName": "BasicOfflineMapObject", "DataType": "OSD-BOO-V1.5"}},
                        {"Output": {"AIMName": "CAV-SAG-V2.0", "PortName": "EgoSpatialAttitude"}, "Input": {"AIMName": "OSD-BOS-V1.5", "PortName": "EgoSpatialAttitude"}},
                        {"Output": {"AIMName": "OSD-BOS-V1.5", "PortName": "BasicOfflineMapSceneDescriptors"}, "Input": {"AIMName": "CAV-BED-V2.0", "PortName": "BasicOfflineMapSceneDescriptors"}},
                        {"Output": {"AIMName": "CAV-SAG-V2.0", "PortName": "EgoSpatialAttitude"}, "Input": {"AIMName": "CAV-BED-V2.0", "PortName": "EgoSpatialAttitude"}},

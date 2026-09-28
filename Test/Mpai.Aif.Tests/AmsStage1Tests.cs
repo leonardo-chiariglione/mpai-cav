@@ -29,6 +29,14 @@ public sealed class EssInTheLoop : IDisposable
 
     public ControllerApiStatus Status => new(api.Status(Ess));
 
+    // The Offline Map, whose origin anchors the ESS's frame (Spatial Attitude
+    // Generation; M3237, Step 7).
+    public void Know(string offlineMapObject)
+    {
+        var written = api.InputWrite(Ess, "OSD-BOO-V1.5", 1, offlineMapObject, 5000);
+        if (written != AifError.OK) throw new InvalidOperationException($"the Offline Map not written: {written}");
+    }
+
     public (JsonNode? Descriptors, List<JsonNode> Alerts) Step(Simulation.Sensed sensed, int timeoutMs = 60_000)
     {
         foreach (var (dataType, json) in sensed.Messages)

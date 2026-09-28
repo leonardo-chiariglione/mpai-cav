@@ -228,7 +228,9 @@ public sealed class WorkflowInterpreter
                         while (!token.IsCancellationRequested)
                         {
                             var read = await north.OutputReadAsync(Module, port.DataType, port.PortNumber, 200);
-                            if (read.Ok && read.Json is not null) await device.DeliverAsync(port.DataType, read.Json, token);
+                            // Once at its safe state, a device is given nothing more: the
+                            // Module may still be commanding it.
+                            if (read.Ok && read.Json is not null && Volatile.Read(ref safeStopped) == 0) await device.DeliverAsync(port.DataType, read.Json, token);
                         }
                     }
                     catch (OperationCanceledException) { }

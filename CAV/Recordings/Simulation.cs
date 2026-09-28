@@ -210,7 +210,9 @@ public sealed class Simulation
         {
             var (spec, s, v) = others[i];
             var target = SpeedOf(spec, Time);
-            var next = target > v ? Math.Min(target, v + MaxAcceleration * Step) : Math.Max(target, v - Math.Min(spec.Braking, MaxDeceleration) * Step);
+            // No vehicle brakes harder than the road under it lets it (M3237, Step 7).
+            var braking = Math.Min(Math.Min(spec.Braking, MaxDeceleration), FrictionAt(s) * Vehicle.G);
+            var next = target > v ? Math.Min(target, v + MaxAcceleration * Step) : Math.Max(target, v - braking * Step);
             others[i] = (spec, s + (v + next) / 2 * Step, next);
         }
         if (GapAhead() is { } gap && gap < 0) Collided = true;
