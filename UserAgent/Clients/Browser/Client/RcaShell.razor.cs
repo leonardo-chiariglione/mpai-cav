@@ -129,7 +129,13 @@ public partial class RcaShell : ComponentBase
             using var appStop = appId == "MAS" ? null : new CancellationTokenSource();
             _appStopping = appStop;
             try     { await interpreter.RunAsync(workflow, appStop?.Token ?? _stopping?.Token ?? default); }
-            finally { _appStopping = null; }
+            finally
+            {
+                _appStopping = null;
+                // THE LANGUAGE AN APP WAS GIVEN IS THAT APP'S: what the person says to
+                // MPAI-MAS after it is in no language chosen for it.
+                if (appId != "MAS") _sourceLanguage = null;
+            }
 
             Status($"{app?.Name ?? appId} finished");
         }
