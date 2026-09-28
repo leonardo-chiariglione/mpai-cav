@@ -36,6 +36,7 @@
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ams\Mpai.Cav.Ams.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Mas\Mpai.Cav.Mas.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />
   </ItemGroup>
 
   <ItemGroup>

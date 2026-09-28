@@ -59,7 +59,9 @@ public sealed class CavDialogue
         var (intent, place, choice) = Parse(raw);
         place = Grounded(place, text);
 
-        if (intent == "destination" || (s.Asking.Count > 0 && place.Length > 0))
+        // A place named is a Destination - "no, take me to the station" too - unless
+        // what was said is a command.
+        if (intent == "destination" || (place.Length > 0 && (s.Asking.Count > 0 || intent is "no" or "other")))
         {
             var among = s.Asking.Count > 0 ? s.Asking : s.Places;
             var matches = Match(place, among);
@@ -161,12 +163,12 @@ public sealed class CavDialogue
     }
 
     // The place in the passenger's own words: of what the model gives, only the words
-    // the passenger said - a model told the names may give one for words that fit two.
+    // the passenger said - a model told the names may give one for words that fit
+    // two, or one where none was named.
     private static string Grounded(string place, string said)
     {
         var spoken = Words(said).ToHashSet();
-        var kept = Words(place).Where(spoken.Contains).ToList();
-        return kept.Count > 0 ? string.Join(" ", kept) : place;
+        return string.Join(" ", Words(place).Where(spoken.Contains));
     }
 
     // The places whose name the words said fit: every word said that is not a
