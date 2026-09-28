@@ -205,10 +205,23 @@ public sealed class AmsInTheLoop : IDisposable
     private const string Ams = CavInTheLoop.Ams;
     private readonly ControllerApi api;
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p9-ams-" + Guid.NewGuid().ToString("N"));
+    private readonly string? settings;
 
-    public AmsInTheLoop(Simulation sim, string destination)
+    public ControllerApi Api => api;
+
+    // cavId: the CAV's identity in its city (M3241), which FED sends its Full
+    // Environment Descriptors with.
+    public AmsInTheLoop(Simulation sim, string destination, string? cavId = null)
     {
-        api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
+        var path = Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
+        if (cavId is not null)
+        {
+            var all = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            all[AmsProvider.Fed] = new JsonObject { ["CAVID"] = cavId };
+            path = settings = Path.Combine(Path.GetTempPath(), $"mpai-p10-settings-{Guid.NewGuid():N}.json");
+            File.WriteAllText(path, all.ToJsonString());
+        }
+        api = new ControllerApi(Repository.Amds, path, new AmsProvider());
         var started = api.StartFlow(Ams);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
         api.SharedStorageInit(Ams, location);
@@ -216,7 +229,8 @@ public sealed class AmsInTheLoop : IDisposable
         api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
     }
 
-    public JsonNode? Step(JsonNode bed, IEnumerable<JsonNode> alerts, JsonNode? answer, long frameMs, int timeoutMs = 5000)
+    // data: each AMS Data the step gave, to see.
+    public JsonNode? Step(JsonNode bed, IEnumerable<JsonNode> alerts, JsonNode? answer, long frameMs, int timeoutMs = 5000, Action<string>? data = null)
     {
         foreach (var alert in alerts) api.InputWrite(Ams, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
         if (answer is not null) api.InputWrite(Ams, AmsTypes.Message, 1, answer.ToJsonString(), timeoutMs);
@@ -227,7 +241,7 @@ public sealed class AmsInTheLoop : IDisposable
             var m = JsonNode.Parse(json)!;
             if (AmsTypes.Ms(m["AMSMASMessageTime"]) == frameMs) message = m;
         }
-        while (api.OutputRead(Ams, AmsTypes.Data, 1, 0) is { Error: AifError.OK }) { }
+        while (api.OutputRead(Ams, AmsTypes.Data, 1, data is null ? 0 : 50) is { Error: AifError.OK, Json: { } d }) data?.Invoke(d);
         return message;
     }
 
@@ -235,7 +249,7 @@ public sealed class AmsInTheLoop : IDisposable
     {
         api.StopFlow(Ams);
         api.Dispose();
-        try { Directory.Delete(location, recursive: true); } catch { }
+        try { Directory.Delete(location, recursive: true); if (settings is not null) File.Delete(settings); } catch { }
     }
 }
 

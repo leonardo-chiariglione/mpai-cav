@@ -103,8 +103,8 @@ function RunTests([string]$filter, [string]$name) {
 $exercised = @(
     '^AIF/', '^AIMs/CAV/', '^AIMs/OSD/', '^AIMs/Core/', '^AIMs/AMDs/1(CAV|OSD)-', '^AIMs/aim-settings\.json$',
     '^CAV/', '^Models/', '^schemas/(CAV2|OSD|TFA|PAF)/',
-    '^Test/Mpai\.Aif\.Tests/(AmsStage1Tests|EssStage1Tests|MasEndToEndTests|MasStage1Tests|TruthBed|DrivePorts|Expected|Timing)\.cs$',
-    '^Test/Mpai\.Aif\.Tests/Mpai\.Aif\.Tests\.csproj$', '^Test/Expected/(ams|ess|mas)-stage1-end-to-end\.json$', '^Test/Run-Matrix\.ps1$'
+    '^Test/Mpai\.Aif\.Tests/(AmsStage1Tests|EssStage1Tests|MasEndToEndTests|MasStage1Tests|RemoteEndToEndTests|RemoteStage1Tests|TruthBed|DrivePorts|Expected|Timing)\.cs$',
+    '^Test/Mpai\.Aif\.Tests/Mpai\.Aif\.Tests\.csproj$', '^Test/Expected/(ams|ess|mas|remote)-stage1-end-to-end\.json$', '^Test/Run-Matrix\.ps1$'
 )
 $changed = @(& git -C $root status --porcelain --untracked-files=all 2>$null | ForEach-Object { ($_.Substring(3) -split ' -> ')[-1].Trim('"') })
 $touching = @($changed | Where-Object { $path = $_; $exercised | Where-Object { $path -match $_ } })
