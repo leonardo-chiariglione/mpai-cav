@@ -18,8 +18,11 @@ namespace Mpai.Cav.Ess;
 //    trained on photographs stops recognising a vehicle a few metres ahead), and what
 //    was in front of the ego does not vanish because it is no longer recognised. An
 //    unseen track moves by its own speed - the ego's added to its relative velocity
-//    when last seen - less the ego's speed now: a stopped vehicle stays where it is
-//    while the ego brakes, and is dropped when the ego reaches it;
+//    when last seen - less the ego's speed now, its own speed falling at
+//    UnseenDeceleration m/s2: what is not seen may have stopped (M3237, Step 8: the
+//    estimate lags, and a stopped vehicle's track drifted away at the lag until it
+//    was dropped, and the ego moved off into it). A stopped vehicle stays where it
+//    is, and is dropped when the ego reaches it;
 //  - the Basic Environment Descriptors V2.0 on the ego frame, given out and returned
 //    to the describer as its prior;
 //  - where no descriptors come for Quiet milliseconds of the ego's time (1 s: longer
@@ -52,6 +55,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
     private readonly long quiet = (long)EssJson.Setting(settings, "Quiet", 1000);
     private readonly double keepNear = EssJson.Setting(settings, "KeepNear", 15);
     private readonly long keepFor = (long)EssJson.Setting(settings, "KeepFor", 0);   // 0: no limit
+    private readonly double unseenDeceleration = EssJson.Setting(settings, "UnseenDeceleration", 3);
     private readonly double laneHalf = EssJson.Setting(settings, "LaneHalfWidth", 1.75);
     private readonly List<Track> tracks = [];
     private JsonNode? ego, weather;
@@ -105,7 +109,13 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
         foreach (var t in tracks)
         {
             if (t.Misses == 0) { t.X += t.Vx * dt; t.Y += t.Vy * dt; }
-            else t.X += (t.Speed - egoSpeed) * dt;                   // unseen: its own speed, the ego's now
+            else
+            {
+                // Unseen: its own speed, falling - it may have stopped - the ego's now.
+                var next = Math.Max(0, t.Speed - unseenDeceleration * dt);
+                t.X += ((t.Speed + next) / 2 - egoSpeed) * dt;
+                t.Speed = next;
+            }
         }
 
         var free = new HashSet<Track>(tracks);
