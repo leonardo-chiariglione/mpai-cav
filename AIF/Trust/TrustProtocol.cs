@@ -39,14 +39,22 @@ public sealed class TrustProtocol
     private readonly Attestation.Policy? requires;
     private readonly Action<string, string, string, string?>? record;
 
+    // THE CREDENTIAL OF THIS END, where an authority admitted it (M3241 3.1: the Trust
+    // Authority of a city): presented with this end's anchor in every message, so that
+    // an end that does not know the anchor trusts it through the authority. And the
+    // anchors of the other ends so trusted, by their identifiers.
+    private readonly JsonObject? credential;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, JsonObject> credited = new();
+
     // record: each check of the other end, as a Trust Operation - its type, the type
     // and identifier of what was checked, and why it failed where it did - for the
     // Trace of this end (M3223 3.6).
     public TrustProtocol(TrustAnchorKey self, ECDsa key, IEnumerable<JsonObject> trusted, Func<DateTimeOffset>? now = null,
                          IRootOfTrust? attestor = null, Attestation.Policy? requires = null,
-                         Action<string, string, string, string?>? record = null)
+                         Action<string, string, string, string?>? record = null, JsonObject? credential = null)
     {
         this.record = record;
+        this.credential = credential;
         this.self = self;
         this.key = key;
         this.trusted = trusted;
@@ -75,14 +83,18 @@ public sealed class TrustProtocol
     // certificate: where it has a root of trust.
     private JsonObject Presented(JsonObject message, string otherCertificate)
     {
-        if (attestor is not null)
-            message["Presentation"] = new JsonObject
-            {
-                ["TrustAnchor"] = self.Object(),
-                ["AttestationEvidence"] = attestor.Evidence(Id, Convert.FromHexString(otherCertificate))
-            };
+        if (attestor is null && credential is null) return message;
+        var presentation = new JsonObject { ["TrustAnchor"] = self.Object() };
+        if (attestor is not null) presentation["AttestationEvidence"] = attestor.Evidence(Id, Convert.FromHexString(otherCertificate));
+        if (credential is not null) presentation["Credential"] = credential.DeepClone();
+        message["Presentation"] = presentation;
         return message;
     }
+
+    // The anchor of an end this end trusts - given it, or trusted through an
+    // authority's credential - by its identifier; null where it trusts none.
+    public JsonObject? AnchorOf(string anchorId) =>
+        trusted.FirstOrDefault(a => (string?)a["AnchorID"] == anchorId) ?? credited.GetValueOrDefault(anchorId);
 
     // THE ANSWER: the host's, to a request received on a link whose certificates are
     // these. Signed whether it admits the requester or not; the requester it admits,
@@ -148,7 +160,11 @@ public sealed class TrustProtocol
         if ((string?)message["Header"] != Header || (string?)message["MessageType"] != type) return $"not a {type}";
         var keyId = (string?)message["KeyID"] ?? "";
         anchor = trusted.FirstOrDefault(a => (string?)a["AnchorID"] == keyId);
-        if (anchor is null) return $"foreign: {keyId} is not an anchor this end trusts";
+        if (anchor is null)
+        {
+            anchor = Credited(message, keyId, out var why);
+            if (anchor is null) return $"foreign: {keyId} is not an anchor this end trusts{why}";
+        }
         var t = now();
         if (TrustAnchorKey.ValidityOf(anchor) is not var (notBefore, notAfter) || t < notBefore || t > notAfter)
             return $"expired: the anchor {keyId} is not valid now";
@@ -161,6 +177,24 @@ public sealed class TrustProtocol
         if (!string.Equals(namedCertificate, ownCertificate, StringComparison.OrdinalIgnoreCase))
             return "not for this link: it names another certificate";
         return null;
+    }
+
+    // AN ANCHOR THIS END DOES NOT KNOW, presented with a credential for it issued by an
+    // anchor it trusts - the Trust Authority of a city: trusted, and remembered. Its
+    // signature on the message, its time and link are checked as any other's.
+    private JsonObject? Credited(JsonObject message, string keyId, out string why)
+    {
+        why = "";
+        if (message["Presentation"]?["TrustAnchor"] is not JsonObject presented || message["Presentation"]?["Credential"] is not JsonObject credential)
+            return null;
+        if ((string?)presented["AnchorID"] != keyId) { why = ", and the anchor it presents is another's"; return null; }
+        if ((string?)credential["Subject"]?["InstanceID"] != keyId) { why = ", and its credential is for another"; return null; }
+        var outcome = PtfCredential.CheckCredential(credential, presented,
+            id => trusted.FirstOrDefault(a => (string?)a["AnchorID"] == id) is { } issuer ? TrustAnchorKey.KeyOf(issuer) : null, now());
+        record?.Invoke("VerifyCredential", "InstanceCredential", (string?)credential["InstanceCredentialID"] ?? "", outcome == PtfCredential.Outcome.Valid ? null : outcome.ToString());
+        if (outcome != PtfCredential.Outcome.Valid) { why = $", and its credential is {outcome}"; return null; }
+        credited[keyId] = presented;
+        return presented;
     }
 
     private JsonObject Time() => new()

@@ -1,0 +1,9 @@
+{
+  "A's Message at B": "signed by A, verified, given on",
+  "a CAV admitted by Milan": "not linked: unknown to Turin",
+  "a CAV whose credential has expired": "not linked: expired",
+  "a CAV whose credential is forged in Turin's name": "not linked: its credential's signature invalid",
+  "a Message altered after it was signed": "refused: Tampered",
+  "a Message signed in another CAV's name": "refused: NotTheSender",
+  "two CAVs admitted by Turin": "linked"
+}

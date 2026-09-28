@@ -29,10 +29,14 @@ public class ExternalTransportTests
         public readonly List<string> Said = [];
 
         public Cav(string id, string moduleType, string key, UdpDiscovery discovery, Func<string, bool> inRange)
+            : this(id, moduleType, new KeyAdmission(key), discovery, inRange) { }
+
+        public Cav(string id, string moduleType, ILinkAdmission admission, UdpDiscovery discovery, Func<string, bool> inRange,
+                   Func<string, string>? sign = null, Func<string, string, string?>? verify = null)
         {
             Hub = new ExternalHub(new ExternalHub.Options
             {
-                ControllerId = id, ModuleType = moduleType, Discovery = discovery, Admission = new KeyAdmission(key), InRange = inRange,
+                ControllerId = id, ModuleType = moduleType, Discovery = discovery, Admission = admission, InRange = inRange,
                 AnnounceEvery = TimeSpan.FromMilliseconds(100), LeaveAfter = TimeSpan.FromSeconds(1)
             })
             {
@@ -42,7 +46,8 @@ public class ExternalTransportTests
                     using var cancel = new CancellationTokenSource(timeout);
                     try { return await Gives.Reader.ReadAsync(cancel.Token); } catch (OperationCanceledException) { return null; }
                 },
-                Deliver = m => { Got.Enqueue((m, DateTimeOffset.UtcNow)); return Task.CompletedTask; }
+                Deliver = m => { Got.Enqueue((m, DateTimeOffset.UtcNow)); return Task.CompletedTask; },
+                Sign = sign, Verify = verify
             };
             Hub.Said += line => { lock (Said) Said.Add(line); };
             Hub.Start();
@@ -59,6 +64,79 @@ public class ExternalTransportTests
     }
 
     private static string Message(string id) => JsonSerializer.Serialize(new { Header = Era, EgoRemoteAMSMessageID = id });
+
+    // STEP 3 (M3241 3.1, 3.3): THE TRUST AUTHORITY OF A CITY. Turin admits CAV-A and
+    // CAV-B; Milan admits CAV-M; Turin admitted CAV-E yesterday for an hour; CAV-F
+    // presents a credential in Turin's name from a key that is not Turin's. Every hub
+    // signs what it sends and verifies what it receives; CAV-T alters what it sends
+    // after signing it; CAV-I signs in CAV-A's name. Judged: A and B linked, their
+    // Messages verified and given on; Milan's CAV, the expired and the forged
+    // credentials never linked, each for its reason; the altered Message and the one
+    // in another's name refused.
+    [Fact]
+    public async Task Step3ACityOfTrust()
+    {
+        var result = new Dictionary<string, string>();
+        var port = 42000 + Environment.ProcessId % 1000;
+        var turin = new AIF.Trust.TrustAuthority("Turin");
+        var milan = new AIF.Trust.TrustAuthority("Milan");
+        var impostor = new AIF.Trust.TrustAuthority("Turin");                  // another key, in Turin's name
+        var discoveries = new List<UdpDiscovery>();
+        UdpDiscovery Medium() { var d = new UdpDiscovery(port); discoveries.Add(d); return d; }
+        var cavs = new Dictionary<string, Cav>();
+        Cav Make(string id, AIF.Trust.TrustAuthority by, AIF.Trust.TrustAuthority.Admission admission, Func<string, string>? alter = null, string? signAs = null)
+        {
+            var trust = new AIF.Controller.CityTrust(by, admission);
+            Func<string, string> sign = json =>
+            {
+                var signed = trust.Sign(json);
+                if (signAs is not null) signed = signed.Replace($"\"KeyID\":\"{id}\"", $"\"KeyID\":\"{signAs}\"");
+                return alter?.Invoke(signed) ?? signed;
+            };
+            return cavs[id] = new Cav(id, Ams, trust.Admission, Medium(), _ => true, sign, trust.Verify);
+        }
+        try
+        {
+            Make("CAV-A", turin, turin.Admit("CAV-A"));
+            Make("CAV-B", turin, turin.Admit("CAV-B"));
+            Make("CAV-M", milan, milan.Admit("CAV-M"));
+            Make("CAV-E", turin, turin.Admit("CAV-E", TimeSpan.FromHours(1), DateTimeOffset.UtcNow.AddDays(-1)));
+            Make("CAV-F", turin, impostor.Admit("CAV-F"));
+            Make("CAV-T", turin, turin.Admit("CAV-T"), alter: json => json.Replace("\"T1\"", "\"T2\""));
+            Make("CAV-I", turin, turin.Admit("CAV-I"), signAs: "CAV-A");
+
+            var (a, b) = (cavs["CAV-A"], cavs["CAV-B"]);
+            result["two CAVs admitted by Turin"] = await Until(() => a.Hub.Linked.Contains("CAV-B") && b.Hub.Linked.Contains("CAV-A"), 5000) ? "linked" : "not linked";
+            await Until(() => b.Hub.Linked.Contains("CAV-T") && b.Hub.Linked.Contains("CAV-I"), 5000);
+            await Task.Delay(1500);
+            foreach (var (id, what) in new[] { ("CAV-M", "a CAV admitted by Milan"), ("CAV-E", "a CAV whose credential has expired"), ("CAV-F", "a CAV whose credential is forged in Turin's name") })
+            {
+                var linked = cavs.Values.Any(c => c != cavs[id] && c.Hub.Linked.Contains(id)) || cavs[id].Hub.Linked.Count > 0;
+                var said = cavs.Values.SelectMany(c => { lock (c.Said) return c.Said.ToList(); }).FirstOrDefault(l => l.Contains(id) && l.Contains("not linked"))
+                           ?? cavs[id].Said.FirstOrDefault(l => l.Contains("not linked")) ?? "";
+                var reason = said.Contains("UnknownIssuer") || said.Contains("not an anchor this end trusts") && !said.Contains("credential is") ? "unknown to Turin"
+                           : said.Contains("Expired") ? "expired" : said.Contains("InvalidSignature") ? "its credential's signature invalid" : said;
+                result[what] = linked ? "linked" : $"not linked: {reason}";
+            }
+
+            await a.Gives.Writer.WriteAsync((Message("A1"), DateTimeOffset.UtcNow));
+            var got = await Until(() => b.Got.Any(g => g.Message.Json.Contains("\"A1\"")), 3000);
+            var message = got ? b.Got.First(g => g.Message.Json.Contains("\"A1\"")).Message.Json : "";
+            result["A's Message at B"] = !got ? "not given on" : message.Contains("\"KeyID\":\"CAV-A\"") && message.Contains("PTF-DEM-V1.0") ? "signed by A, verified, given on" : "given on unsigned";
+            await cavs["CAV-T"].Gives.Writer.WriteAsync((Message("T1"), DateTimeOffset.UtcNow));
+            await cavs["CAV-I"].Gives.Writer.WriteAsync((Message("I1"), DateTimeOffset.UtcNow));
+            await Until(() => b.Hub.Refused >= 2, 3000);
+            string Refusal(string from) { lock (b.Said) return b.Said.FirstOrDefault(l => l.StartsWith($"from {from}, refused")) is { } l ? l[(l.IndexOf("refused: ") + 9)..] : "given on"; }
+            result["a Message altered after it was signed"] = b.Got.Any(g => g.Message.From == "CAV-T") ? "given on" : $"refused: {Refusal("CAV-T")}";
+            result["a Message signed in another CAV's name"] = b.Got.Any(g => g.Message.From == "CAV-I") ? "given on" : $"refused: {Refusal("CAV-I")}";
+        }
+        finally
+        {
+            foreach (var c in cavs.Values) await c.DisposeAsync();
+            foreach (var d in discoveries) await d.DisposeAsync();
+        }
+        Expected.Match("external-trust.json", result);
+    }
 
     [Fact]
     public async Task Step2BetweenControllers()

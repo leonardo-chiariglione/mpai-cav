@@ -109,6 +109,14 @@ public sealed class ExternalHub : IAsyncDisposable
     // that waits up to the timeout for the next Message of one of them.
     public required Func<ExternalMessage, Task> Deliver { get; init; }
     public IReadOnlyList<(string DataType, int PortNumber)> Outputs { get; init; } = [];
+
+    // THE CONTROLLER'S TRUST (M3241 3.1, 3.3): what its Module sends signed; what it
+    // receives verified against the Controller the link admitted - null where it is
+    // accepted, else why not; refused, it is said and given to no one.
+    public Func<string, string>? Sign { get; init; }
+    public Func<string, string, string?>? Verify { get; init; }
+    public long Refused => Interlocked.Read(ref refused);
+    private long refused;
     public Func<string, int, int, Task<(string Json, DateTimeOffset Stamp)?>>? ReadOutput { get; init; }
 
     private readonly Options options;
@@ -222,6 +230,12 @@ public sealed class ExternalHub : IAsyncDisposable
     {
         if ((string?)frame["Kind"] != "External") return;
         Interlocked.Increment(ref received);
+        if (Verify?.Invoke(from, (string)frame["Json"]!) is { } why)
+        {
+            Interlocked.Increment(ref refused);
+            Said?.Invoke($"from {from}, refused: {why}");
+            return;
+        }
         await Deliver(new ExternalMessage((string)frame["DataType"]!, (int)frame["PortNumber"]!, (string)frame["Json"]!, from,
                                           DateTimeOffset.Parse((string)frame["Stamp"]!, System.Globalization.CultureInfo.InvariantCulture)));
     };
@@ -235,7 +249,7 @@ public sealed class ExternalHub : IAsyncDisposable
             try { next = await ReadOutput!(dataType, portNumber, 200); }
             catch (Exception) when (stop.IsCancellationRequested) { break; }
             if (next is not { } m) continue;
-            await SendAsync(dataType, portNumber, m.Json, m.Stamp);
+            await SendAsync(dataType, portNumber, Sign?.Invoke(m.Json) ?? m.Json, m.Stamp);
         }
     }
 
