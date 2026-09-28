@@ -165,6 +165,12 @@ public sealed class Simulation
         return new Sensed(messages, truth, ms0);
     }
 
+    // Every other vehicle as it is now: its lane, how far ahead of the ego's front
+    // its rear is (negative behind), its speed - seen or not (M3241: what a Remote CAV
+    // may report).
+    public IReadOnlyList<(string Id, int Lane, double Ahead, double Speed)> Around() =>
+        others.Select(o => (o.Spec.Id, o.Spec.LaneAt(Time), o.S - EgoS - VehicleLength, o.Speed)).ToList();
+
     // The gap to the nearest vehicle ahead in the ego's lane, bumper to bumper.
     public double? GapAhead()
     {

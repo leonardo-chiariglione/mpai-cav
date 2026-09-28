@@ -14,6 +14,10 @@ namespace Mpai.Cav.Ams;
 // vehicle stopped there. The object ahead predicted at its speed. Settings: DesiredSpeed
 // (m/s; the limit where absent), TimeGap, MinimumGap, Acceleration, Deceleration.
 //
+// THE OBJECTS BEYOND THE ONE FOLLOWED (M3241): a vehicle reported by a Remote CAV,
+// hidden from the CAV by the one it follows, lowers the acceleration too - at each
+// point the lowest the model gives against each object ahead in the lane.
+//
 // AT A CORNER OF THE PATH (M3237, found in Step 4: a CAV that moves as a vehicle does
 // cannot turn at the speed limit): where the Path turns by more than 20 degrees the
 // desired speed is at most what a turn of CornerRadius metres allows at
@@ -131,8 +135,9 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
         var desired = EssJson.Setting(settings, "DesiredSpeed", (double?)fed["RoadAhead"]?[0]?["SpeedLimit"] ?? 13.9);
         var s = Along(east, north);
 
-        // The object ahead in the CAV's lane: its gap, and its speed.
-        double? leadGap = null, leadSpeed = null;
+        // The objects ahead in the CAV's lane: their gaps, and their speeds; the nearest
+        // is the one followed.
+        var ahead = new List<(double Gap, double Speed)>();
         foreach (var o in fed["FullEnvironmentObjects"]?.AsArray() ?? [])
         {
             if ((int?)o?["Placement"]?["Lane"] != 0) continue;
@@ -141,8 +146,13 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             var p = EssJson.Vector(b["SpatialAttitude"]?["Position"]?["CartPosition"]);
             var v = EssJson.Vector(b["SpatialAttitude"]?["Position"]?["CartVelocity"]);
             if (p is null || p.Value.X <= 0) continue;
-            if (leadGap is null || p.Value.X < leadGap) { leadGap = p.Value.X; leadSpeed = Math.Max(0, speed + (v?.X ?? 0)); }
+            ahead.Add((p.Value.X, Math.Max(0, speed + (v?.X ?? 0))));
         }
+        ahead.Sort((x, y) => x.Gap.CompareTo(y.Gap));
+        double? leadGap = ahead.Count > 0 ? ahead[0].Gap : null, leadSpeed = ahead.Count > 0 ? ahead[0].Speed : null;
+        // Those beyond it (M3241: a vehicle a Remote CAV reports, hidden by the one
+        // followed): each may only lower the acceleration - multi-anticipation.
+        var beyond = ahead.Skip(1).Select(x => (Position: s + x.Gap, x.Speed)).ToList();
         var end = path![^1].S;
 
         var id = $"TRJ{++count:D6}";
@@ -153,7 +163,9 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             // Behind the nearer of the object ahead and the end of the Path.
             var (gap, closing) = (end + minimumGap - pos, v0);
             if (lead - pos < gap) (gap, closing) = (lead - pos, v0 - (leadSpeed ?? 0));
-            var a = Math.Clamp(Idm(v0, CornerLimit(pos, desired), gap, closing), -9, acceleration);
+            var a = Idm(v0, CornerLimit(pos, desired), gap, closing);
+            foreach (var (position, lspeed) in beyond) a = Math.Min(a, Idm(v0, CornerLimit(pos, desired), position - pos, v0 - lspeed));
+            a = Math.Clamp(a, -9, acceleration);
             var (e, n, h) = At(pos);
             var point = EssJson.Attitude($"{id}-{k}", ms + (long)Math.Round(t * 1000), (e, n, 0), (0.5, 0.5, 0.1), (v0 * Math.Cos(h), v0 * Math.Sin(h), 0));
             point["Position"]!["CartAccel"] = EssJson.Triple((a * Math.Cos(h), a * Math.Sin(h), 0));
@@ -162,6 +174,7 @@ public sealed class MotionSelectionPlanning(string instanceId, IReadOnlyDictiona
             pos += (v0 + next) / 2 * Step;
             v0 = next;
             if (leadSpeed is { } ls) lead += ls * Step;
+            for (var j = 0; j < beyond.Count; j++) beyond[j] = (beyond[j].Position + beyond[j].Speed * Step, beyond[j].Speed);
         }
         return new JsonObject
         {

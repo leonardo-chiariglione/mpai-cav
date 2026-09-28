@@ -250,7 +250,7 @@ public class MasStage1Tests
 
     // ONE STEP OF THE LOOP: what was sensed, the AMS-MAS Message, the commands, the
     // Responses to them.
-    private sealed record Stepped(Simulation.Sensed Sensed, JsonNode Message, IReadOnlyList<(string DataType, string Json)> Commands,
+    internal sealed record Stepped(Simulation.Sensed Sensed, JsonNode Message, IReadOnlyList<(string DataType, string Json)> Commands,
                                   IReadOnlyList<(string DataType, string Json)> Responses,
                                   JsonNode? Attitude = null, JsonNode? Road = null, JsonNode? Answer = null);
 
@@ -259,7 +259,8 @@ public class MasStage1Tests
     // follows from MSA's Spatial Attitude, on the MAS's frame; ICA reads the tyres and
     // the weather; MRA answers each AMS-MAS Message, and TOA hears the answer at the
     // next step - the Road State, and the MAS's frame.
-    private static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false)
+    // bedOf: what the CAV perceives, the ground truth by default (TruthBed).
+    internal static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false, Func<Simulation, Simulation.Sensed, string>? bedOf = null)
     {
         sim.Mechanical(seed: 9);
         var fed = new FullEnvironmentDescription(AmsProvider.Fed);
@@ -278,7 +279,7 @@ public class MasStage1Tests
         for (var steps = 0; steps < 900 && !sim.Arrived && !sim.Collided; steps++)
         {
             var sensed = sim.Sense(camera: false);
-            var bed = JsonNode.Parse(TruthBed.Of(sim, sensed))!;
+            var bed = JsonNode.Parse((bedOf ?? ((m, x) => TruthBed.Of(m, x)))(sim, sensed))!;
             JsonNode attitude = bed["EgoSpatialAttitude"]!;
             JsonNode? road = null;
             if (mas)

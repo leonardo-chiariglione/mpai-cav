@@ -1,0 +1,5 @@
+{
+  "known, against unknown": "less hard braking",
+  "the stopped vehicle known, as A would report it": "no collision",
+  "the stopped vehicle unknown until seen": "no collision"
+}
