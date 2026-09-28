@@ -186,12 +186,14 @@ public sealed class RemoteLink : IAsyncDisposable
                             link.OnRequest = frame =>
                             {
                                 var (answer, admits) = admission.Answer(frame, own, tls.RemoteCertificate);
-                                admittedOnce.TrySetResult(admits);
+                                // The link handed over before its answer leaves: what the other
+                                // end sends once admitted finds its handlers set (M3241, Step 2).
+                                if (admits && admittedOnce.TrySetResult(true)) admitted(link);
+                                else admittedOnce.TrySetResult(admits);
                                 return Task.FromResult<JsonObject?>(answer);
                             };
                             link.Start();
-                            if (await admittedOnce.Task) admitted(link);
-                            else
+                            if (!await admittedOnce.Task)
                             {
                                 await Task.Delay(500);                      // the refusal sent before the link is closed
                                 await link.DisposeAsync();

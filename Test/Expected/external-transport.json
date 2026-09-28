@@ -1,0 +1,10 @@
+{
+  "A's Output Port to B's Input Port": "delivered, with A's controllerID and stamp",
+  "B's Output Port to A's Input Port": "delivered",
+  "a CAV gone silent": "left",
+  "a CAV of another city": "not linked",
+  "a Controller of another type of Module": "not linked",
+  "back in range": "linked again",
+  "out of range": "left, nothing delivered",
+  "two CAVs of a city, in range": "linked"
+}
