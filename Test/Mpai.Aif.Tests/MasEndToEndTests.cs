@@ -82,8 +82,17 @@ public sealed class MasInTheLoop : IDisposable
     {
         Write(MasTypes.Message, message.ToJsonString(), timeoutMs);
         following = true;
-        var ms = MasTypes.Ms(message["AMSMASMessageTime"]);
-        return ReadAt(MasTypes.Message, j => MasTypes.Ms(j["AMSMASMessageTime"]), ms, timeoutMs);
+        // The answer to this Message, which names it: its time is that of the MAS's
+        // latest Spatial Attitude, which may be of the frame before when MRA reads the
+        // Message first - a race that made a step wait for an answer already given.
+        var id = (string?)message["AMSMASMessageID"];
+        while (true)
+        {
+            var read = api.OutputRead(Mas, MasTypes.Message, 1, timeoutMs);
+            if (read.Error != AifError.OK) throw new InvalidOperationException($"no answer from the MAS to {id}: {read.Error}");
+            var json = JsonNode.Parse(read.Json!)!;
+            if ((string?)json["DescrMetadata"] == $"The answer to {id}.") return json;
+        }
     }
 
     public void Dispose()

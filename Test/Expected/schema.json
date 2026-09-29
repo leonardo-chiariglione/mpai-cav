@@ -28,6 +28,7 @@
   "CAV2/V2.0/AIMs/AudioSensors.json": "valid",
   "CAV2/V2.0/AIMs/AutonomousMotionSubsystem.json": "valid",
   "CAV2/V2.0/AIMs/BasicEnvironmentDescription.json": "valid",
+  "CAV2/V2.0/AIMs/ConnectedAutonomousOperation.json": "valid",
   "CAV2/V2.0/AIMs/EnvironmentSensingSubsystem.json": "valid",
   "CAV2/V2.0/AIMs/FullEnvironmentDescription.json": "valid",
   "CAV2/V2.0/AIMs/IceConditionAnalysis.json": "valid",

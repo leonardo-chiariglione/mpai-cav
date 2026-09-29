@@ -184,7 +184,8 @@ public sealed class CavDialogue
         }).ToList();
     }
 
-    private static readonly HashSet<string> Fillers = ["the", "a", "an", "to", "one", "please", "go", "take", "me", "at", "of"];
+    // Words that name no place - "one" as speech recognition may also write it, "1".
+    private static readonly HashSet<string> Fillers = ["the", "a", "an", "to", "one", "1", "please", "go", "take", "me", "at", "of"];
     private static List<string> Words(string s) =>
         s.ToLowerInvariant().Split([' ', ',', '.', '!', '?', '\'', '"'], StringSplitOptions.RemoveEmptyEntries).Where(w => !Fillers.Contains(w)).ToList();
 

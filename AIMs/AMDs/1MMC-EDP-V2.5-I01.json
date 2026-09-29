@@ -7,7 +7,7 @@
   "InternalTypes":        [],
 
   "ExternalPorts":        [{"Name": "Summary",               "Direction": "Input",  "DataType": "MMC-SUM-V2.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "TextObject",            "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                                      "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TextObject",            "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true,                  "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "TextDescriptors",       "Direction": "Input",  "DataType": "MMC-TDO-V2.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "PersonalStatus",        "Direction": "Input",  "DataType": "MMC-EPS-V2.5",                  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "UserID",                "Direction": "Input",  "DataType": "OSD-IID-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},

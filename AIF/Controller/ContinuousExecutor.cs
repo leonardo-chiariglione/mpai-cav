@@ -189,6 +189,27 @@ public sealed partial class ContinuousExecutor
                 // An output of a nested composite is followed from its inside.
             }
 
+        // A WRITER THAT NEVER WRITES (M3243 3.7, found in Step 4). An AIM the adapter
+        // fires, no Input Port of which is connected, is never fired: what it would
+        // write is not connected either, and a Port that would read it waits for
+        // nothing. Followed through: in a CAV whose cabin has no camera, the visual
+        // branch of HCI writes nothing, and the audio-visual alignment fires on the
+        // audio alone.
+        var silent = new HashSet<string>();
+        for (var changed = true; changed;)
+        {
+            changed = false;
+            var fed = byWriter.Where(w => w.Key.IsBoundary || !silent.Contains(w.Key.Aim)).SelectMany(w => w.Value).Select(t => t.Aim).ToHashSet();
+            foreach (var leaf in leaves.Values)
+            {
+                if (silent.Contains(leaf.AIMName) || fed.Contains(leaf.AIMName) || leaf.Period is not null || !runsHere(leaf.AIMName)) continue;
+                if (host.Processor(leaf.AIMName) is null or IAimRunner) continue;
+                silent.Add(leaf.AIMName);
+                changed = true;
+            }
+        }
+        foreach (var writer in byWriter.Keys.Where(w => !w.IsBoundary && silent.Contains(w.Aim)).ToList()) byWriter.Remove(writer);
+
         foreach (var (writer, sinks) in byWriter)
         {
             // A Channel that touches an AIM on another machine crosses the Remote

@@ -2,6 +2,7 @@
   "Header":               "MMC-HCI-V2.5",
 
   "APIProfile":           "Basic",
+  "OnDegraded":           "Continue",
   "Description":          "Human-CAV Interaction (full reference). From the acquired Audio and Visual Input the scene is described (Basic Audio/Visual Scene Description) and aligned (Audio-Visual Alignment), its objects are identified per modality (Audio/Visual Scene object Identification dispatching to Speaker/Face Recognition and Audio/Visual Instance Identification), identities are reconciled (ID Reconciliation), the speech is recognised and understood (Automatic Speech Recognition, Natural Language Understanding), the entity's Personal Status is extracted (Personal Status Extraction), the machine's response is produced aware of meaning, feeling, scene geometry and identity (Entity Dialogue Processing), and rendered as a Speaking Avatar (Response and Scene Rendering). HCI Memory threads the dialogue (Machine/Human Text and Personal Status). Acquisition and delivery are the User Agent's. The reconciled User ID is exposed at the boundary (OutputUserID) so the User Agent can decide whether to accept and continue or reject and terminate; the user\u0027s recognised text is exposed as OutputRecognisedText (OSD-BTO #2) so the User Agent can read intent (consent, stop).",
 
   "InternalTypes":        [{"Name": "AudioSceneDescriptors",         "DataType": "OSD-BAS-V1.5"},
