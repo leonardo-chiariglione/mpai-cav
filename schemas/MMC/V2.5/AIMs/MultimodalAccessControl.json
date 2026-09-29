@@ -10,7 +10,8 @@
                      {"Name": "PersonalStatus", "DataType": "MMC-EPS-V2.5"}],
 
   "ExternalPorts":   [{"Name": "FaceObject",      "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechObject",    "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicSpeechObject",    "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "Prompt",          "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "Response",        "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "VocalResponse",   "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "", "Protocol": "", "IsRemote": ""},
@@ -22,7 +23,8 @@
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "" } }],
 
   "Topology":        [{ "Output": { "AIMName": "",             "PortName": "FaceObject" },             "Input": { "AIMName": "PAF-FIR-V1.6", "PortName": "InputVisual", "DataType": "OSD-BVO-V1.5" } },
-                     { "Output": { "AIMName": "",             "PortName": "SpeechObject" },           "Input": { "AIMName": "MMC-SIR-V2.5", "PortName": "InputSpeech", "DataType": "OSD-BSO-V1.5" } },
+                     { "Output": { "AIMName": "",             "PortName": "BasicSpeechObject" },           "Input": { "AIMName": "MMC-SIR-V2.5", "PortName": "InputSpeech", "DataType": "OSD-BSO-V1.5" } },
+                     { "Output": { "AIMName": "",             "PortName": "Prompt" },                 "Input": { "AIMName": "PAF-RSR-V1.6", "PortName": "TextObject", "DataType": "OSD-BTO-V1.5", "PortNumber": 1 } },
                      { "Output": { "AIMName": "PAF-FIR-V1.6", "PortName": "FaceID" },                 "Input": { "AIMName": "OSD-IDR-V1.5", "PortName": "FaceID",         "PortNumber": 1 } },
                      { "Output": { "AIMName": "MMC-SIR-V2.5", "PortName": "OutputSpeakerID", "DataType": "OSD-IID-V1.5" },        "Input": { "AIMName": "OSD-IDR-V1.5", "PortName": "SpeakerID",      "PortNumber": 2 } },
                      { "Output": { "AIMName": "OSD-IDR-V1.5", "PortName": "PersonalStatus" },         "Input": { "AIMName": "PAF-RSR-V1.6", "PortName": "PersonalStatus" } },

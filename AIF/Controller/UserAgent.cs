@@ -379,6 +379,37 @@ public sealed class UserAgent
     // session ends are this session's (M3219 3.1).
     private string _session = Guid.NewGuid().ToString("N");
 
+    // THE SESSIONS OF THE CLIENTS OF A SERVICE (M3245 3.3). A Service's Controller
+    // serves many clients, each in a session of its own: the User Agent says, for
+    // an exchange of a Module, whose session it serves; the data that exchange
+    // keeps for its session are that client's. Without one, the User Agent's own.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _sessions = new(StringComparer.Ordinal);
+
+    public void MPAI_AIFU_Session_Serve(string moduleName, string? session)
+    {
+        if (session is null) { _sessions.TryRemove(moduleName, out _); return; }
+        AIF.SharedStorage.RuledStore.Started(session);
+        _sessions[moduleName] = session;
+    }
+
+    // A client's session ended: what its exchanges kept for the session is
+    // deleted - now, not when next read.
+    public void MPAI_AIFU_Session_End(string session)
+    {
+        AIF.SharedStorage.RuledStore.Ended(session);
+        AIF.SharedStorage.RuledStore.SweepAll();
+    }
+
+    // HOW LONG DATA OF A CATEGORY IS KEPT AT A LOCATION (M3245 3.3), where its writer
+    // does not say: a deployment's decision - on a server, what the persons of a
+    // session register, as long as the session.
+    public AifError MPAI_AIFU_SharedStorage_Keep(string location, string category, AIF.SharedStorage.StorageTime time)
+    {
+        if (string.IsNullOrWhiteSpace(location)) return AifError.Failed;
+        AIF.SharedStorage.RuledStore.SharedAt(location, () => Clock.Now).Keep(category, time);
+        return AifError.OK;
+    }
+
     public AifError MPAI_AIFU_Controller_Initialize()
     {
         AIF.SharedStorage.RuledStore.Ended(_session);
@@ -387,7 +418,7 @@ public sealed class UserAgent
         _controller = new Controller(_store);
         _controller.SetSharedStorageRoot(_sharedStorageRoot);
         _controller.InstanceOf = module => _instances.GetValueOrDefault(module, "");
-        _controller.SessionOf  = () => _session;
+        _controller.SessionOf  = module => _sessions.TryGetValue(module, out var s) ? s : _session;
         _controller.Now        = () => Clock.Now;
         return AifError.OK;
     }

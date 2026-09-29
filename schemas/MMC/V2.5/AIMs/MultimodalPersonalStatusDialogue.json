@@ -27,7 +27,7 @@
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "" } }],
 
   "Topology":        [{ "Output": { "AIMName": "",             "PortName": "InputSpeech" },            "Input": { "AIMName": "MMC-ASR-V2.5", "PortName": "InputSpeech", "PortNumber": 1 } },
-                     { "Output": { "AIMName": "",             "PortName": "InputSpeech" },            "Input": { "AIMName": "MMC-PSE-V2.5", "PortName": "SpeechObject", "DataType": "OSD-BSO-V1.5" } },
+                     { "Output": { "AIMName": "",             "PortName": "InputSpeech" },            "Input": { "AIMName": "MMC-PSE-V2.5", "PortName": "BasicSpeechObject", "DataType": "OSD-BSO-V1.5" } },
                      { "Output": { "AIMName": "",             "PortName": "InputFace" },              "Input": { "AIMName": "MMC-PSE-V2.5", "PortName": "FaceObject", "DataType": "OSD-BVO-V1.5" } },
                      { "Output": { "AIMName": "MMC-ASR-V2.5", "PortName": "OutputText", "PortNumber": 1, "DataType": "OSD-BTO-V1.5" },             "Input": { "AIMName": "MMC-NLU-V2.5", "PortName": "RecognisedText",       "PortNumber": 2 } },
                      { "Output": { "AIMName": "MMC-NLU-V2.5", "PortName": "TextPersonalStatus" },     "Input": { "AIMName": "MMC-PSE-V2.5", "PortName": "TextPersonalStatus" } },

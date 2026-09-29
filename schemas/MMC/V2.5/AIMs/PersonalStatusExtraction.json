@@ -10,7 +10,7 @@
 
   "ExternalPorts":   [{"Name": "TextObject",          "Direction": "Input",  "DataType": "OSD-TXO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextDescriptors",     "Direction": "Input",  "DataType": "MMC-TXD-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechObject",        "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicSpeechObject",        "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "SpeechDescriptors",   "Direction": "Input",  "DataType": "MMC-SDO-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FaceObject",          "Direction": "Input",  "DataType": ["OSD-BVO-V1.5", "OSD-VIO-V1.5"], "PortNumber": 1, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FaceDescriptors",     "Direction": "Input",  "DataType": "PAF-FDO-V1.6",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
@@ -33,7 +33,7 @@
                      { "Output": { "AIMName": "",             "PortName": "TextDescriptors" },                       "Input": { "AIMName": "MMC-PTI-V2.5", "PortName": "TextDescriptors",      "PortNumber": 1 } },
                      { "Output": { "AIMName": "MMC-ETD-V2.5", "PortName": "TextDescriptors" },                       "Input": { "AIMName": "MMC-PTI-V2.5", "PortName": "TextDescriptors",      "PortNumber": 2 } },
                      { "Output": { "AIMName": "MMC-PTI-V2.5", "PortName": "TextPersonalStatus" },                    "Input": { "AIMName": "MMC-PMX-V2.5", "PortName": "TextPersonalStatus" } },
-                     { "Output": { "AIMName": "",             "PortName": "SpeechObject" },                          "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechObject" } },
+                     { "Output": { "AIMName": "",             "PortName": "BasicSpeechObject" },                          "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "BasicSpeechObject" } },
                      { "Output": { "AIMName": "",             "PortName": "SpeechDescriptors" },                     "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",    "PortNumber": 1 } },
                      { "Output": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechDescriptors" },                     "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",    "PortNumber": 2 } },
                      { "Output": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechPersonalStatus" },                  "Input": { "AIMName": "MMC-PMX-V2.5", "PortName": "SpeechPersonalStatus" } },

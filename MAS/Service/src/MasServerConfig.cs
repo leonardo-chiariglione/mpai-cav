@@ -129,6 +129,16 @@ public sealed class MasServerConfig
     // A Module with such a Sub-AIM and no host named for it is refused.
     public Dictionary<string, string>? AimHosts { get; init; }
 
+    // THE GALLERY OF REGISTERED PERSONS (M3245 3.2): where Access Control
+    // Registration registers and Access Control recognises - the Shared Storage of
+    // the two Modules. Absent means the repository's SharedStorage folder.
+    public string? Gallery { get; init; }
+
+    // FORGOTTEN WHEN THE SESSION CLOSES (M3245 3.3; the author): what a session
+    // registered is deleted when it closes - on the server. Absent or false: the
+    // gallery is kept, as a local Service's.
+    public bool ForgetOnClose { get; init; }
+
     // The key the AIM hosts were started with (AIF.AimHost --key).
     public string? AimHostKey { get; init; }
 

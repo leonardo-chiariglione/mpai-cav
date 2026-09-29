@@ -7,8 +7,8 @@
   "InternalTypes":   [ ],
 
   "ExternalPorts":   [{"Name": "UserCommand",  "Direction": "Input",  "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechObject", "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Hardware", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "BasicSpeechObject", "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Hardware", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicSpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

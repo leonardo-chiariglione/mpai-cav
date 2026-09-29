@@ -11,7 +11,7 @@
   "Description":  "This composite AIM extracts the Personal Status conveyed by Speech.",
 
   "ExternalPorts":  [
-    { "Name": "SpeechObject",         "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "BasicSpeechObject",         "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeechDescriptors",    "Direction": "Input",  "DataType": "MMC-SDO-V2.5",                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5",                                       "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
@@ -22,7 +22,7 @@
   ],
 
   "Topology":  [
-    { "Output": { "AIMName": "",             "PortName": "SpeechObject" },         "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechObject" } },
+    { "Output": { "AIMName": "",             "PortName": "BasicSpeechObject" },         "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "BasicSpeechObject" } },
     { "Output": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechDescriptors" },    "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",   "PortNumber": 1 } },
     { "Output": { "AIMName": "",             "PortName": "SpeechDescriptors" },    "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",   "PortNumber": 2 } },
     { "Output": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechPersonalStatus" }, "Input": { "AIMName": "",             "PortName": "SpeechPersonalStatus" } }

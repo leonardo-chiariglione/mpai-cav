@@ -6,7 +6,7 @@
                    },
     "Header":      "MMC-MAC-V2.5",
     "APIProfile":  "Basic",
-    "Description":  "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent\u0027s clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs.",
+    "Description":  "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent\u0027s clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response - and the words the User Agent gives at the Prompt input, as its workflow asks the User to look and to speak - and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs.",
     "InternalTypes":  [
                           {
                               "Name":  "FaceID",
@@ -36,9 +36,19 @@
                               "IsRemote":  false
                           },
                           {
-                              "Name":  "SpeechObject",
+                              "Name":  "BasicSpeechObject",
                               "Direction":  "Input",
                               "DataType":  "OSD-BSO-V1.5",
+                              "Technology":  "Software",
+                              "Protocol":  "",
+                              "IsRemote":  false
+                          },
+                          {
+                              "Name":  "Prompt",
+                              "Direction":  "Input",
+                              "DataType":  "OSD-BTO-V1.5",
+                              "IsOptional":  true,
+                              "Output":  1,
                               "Technology":  "Software",
                               "Protocol":  "",
                               "IsRemote":  false
@@ -111,6 +121,7 @@
                     }
                 ],
     "Topology":  [
+                     {"Output": {"AIMName": "", "PortName": "Prompt"}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Prompt", "DataType": "OSD-BTO-V1.5"}},
                      {
                          "Output":  {
                                         "AIMName":  "",
@@ -124,11 +135,11 @@
                      {
                          "Output":  {
                                         "AIMName":  "",
-                                        "PortName":  "SpeechObject"
+                                        "PortName":  "BasicSpeechObject"
                                     },
                          "Input":  {
                                        "AIMName": "1MMC-SIR-V2.5-I01",
-                                       "PortName":  "SpeechObject"
+                                       "PortName":  "BasicSpeechObject"
                                    }
                      },
                      {

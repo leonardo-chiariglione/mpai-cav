@@ -64,6 +64,13 @@ public interface IModuleRunner
     // Supply boundary inputs and run. Keys are "DataType#PortNumber".
     RunResult Run(string moduleName, IReadOnlyDictionary<string, string> inputs);
 
+    // The same, for a client's session: what the run keeps for the session is that
+    // client's, and deleted when it ends (M3245 3.3).
+    RunResult Run(string moduleName, IReadOnlyDictionary<string, string> inputs, string session) => Run(moduleName, inputs);
+
+    // A client's session ended.
+    void SessionEnded(string session) { }
+
     void Stop(string moduleName);
 }
 

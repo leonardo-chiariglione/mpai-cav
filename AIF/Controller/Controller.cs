@@ -32,7 +32,7 @@ public sealed class Controller
     private ISharedStorage? StorageFor(string moduleName, string aimName, Func<string?>? location) =>
         location is not null && InstanceOf is { } instance && SessionOf is { } session
             ? new SharedStorageHandle(() => location() ?? storageRoot, new StorageHolder(moduleName, aimName),
-                                      () => instance(moduleName), session, "local", Now ?? (() => DateTimeOffset.UtcNow))
+                                      () => instance(moduleName), () => session(moduleName), "local", Now ?? (() => DateTimeOffset.UtcNow))
             : location is not null
             ? new ModuleSharedStorage(() => location() ?? storageRoot, $"{moduleName}/{aimName}", "local")
             : storageRoot is null
@@ -42,7 +42,9 @@ public sealed class Controller
     // The instance of a Module that runs now, the session, and the time base: set
     // by the User Agent, for the handles under rules.
     public Func<string, string>? InstanceOf { get; set; }
-    public Func<string>? SessionOf { get; set; }
+    // The session a Module's exchange serves, by Module: one User Agent's own, or -
+    // a Service's Controller serving many clients - the client's (M3245 3.3).
+    public Func<string, string>? SessionOf { get; set; }
     public Func<DateTimeOffset>? Now { get; set; }
 
     // PRIVATE STORAGE (M3215 3.7): reachable only by its AIM Instance, held below

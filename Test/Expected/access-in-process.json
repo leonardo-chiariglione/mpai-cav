@@ -2,6 +2,7 @@
   "ACR": "both registered, face and voice",
   "MAC: Obama, not registered": "access refused",
   "MAC: Reagan, another photograph, his voice": "access granted",
+  "MAC: a prompt": "spoken; no verdict",
   "MAC: the author's face, Reagan's voice": "access refused",
   "MAC: the author, his voice": "access granted"
 }

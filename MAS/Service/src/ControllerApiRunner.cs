@@ -107,7 +107,14 @@ internal sealed class ControllerApiRunner : IModuleRunner
 
     public RunResult Run(
         string moduleName,
-        IReadOnlyDictionary<string, string> inputs)
+        IReadOnlyDictionary<string, string> inputs) => Run(moduleName, inputs, null);
+
+    public void SessionEnded(string session) => north.SessionEnded(session);
+
+    public RunResult Run(
+        string moduleName,
+        IReadOnlyDictionary<string, string> inputs,
+        string? session)
     {
         var data = new List<ControllerApi.Datum>();
         foreach (var pair in inputs)
@@ -121,7 +128,7 @@ internal sealed class ControllerApiRunner : IModuleRunner
         var turn = turns.GetOrAdd(moduleName, _ => new SemaphoreSlim(1, 1));
         ControllerApi.Result result;
         turn.Wait();
-        try { result = north.Advance(moduleName, data); }
+        try { result = session is null ? north.Advance(moduleName, data) : north.Advance(moduleName, data, session); }
         finally { turn.Release(); }
 
         if (result.Error != AifError.OK)

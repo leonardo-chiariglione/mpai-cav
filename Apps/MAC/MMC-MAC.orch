@@ -1,0 +1,43 @@
+# =============================================================================
+#  MMC-MAC.orch - Multimodal Access Control
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module. The User Agent offers the Controller data
+#  identified by Data Type and Port Number, and asks for data identified the
+#  same way. It names no AIM.
+#
+#  The person shows a face and says a sentence; the Module recognises the face
+#  and the voice against the gallery MMC-ACR registered into, and Identity
+#  Reconciliation checks whether they are one person in it (M3245). The verdict
+#  is at the boundary - Identification, a Boolean - and in the words the avatar
+#  speaks. The avatar also speaks the workflow's words, given at the Module's
+#  text input (OSD-BTO #1).
+# =============================================================================
+
+workflow MMC-MAC over 1MMC-MAC-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    offer Welcome (OSD-BTO-V1.5:1) = "Welcome to Multimodal Access Control.
+        Please look at the camera."
+    ask   WelcomeSpeech (OSD-BSO-V1.5), WelcomeFaceDescriptors (PAF-FDO-V1.6)
+    present WelcomeSpeech, WelcomeFaceDescriptors
+
+    acquire UserFace (OSD-BVO-V1.5) = { "Attributes": { "VisualObjectType": "Face" } }
+
+    offer Speak (OSD-BTO-V1.5:1) = "Now please say a short sentence."
+    ask   SpeakSpeech (OSD-BSO-V1.5), SpeakFaceDescriptors (PAF-FDO-V1.6)
+    present SpeakSpeech, SpeakFaceDescriptors
+
+    acquire UserSpeech (OSD-BSO-V1.5) via VAD
+
+    offer UserFace (OSD-BVO-V1.5)
+    offer UserSpeech (OSD-BSO-V1.5)
+    ask   Identification (boolean), VocalResponse (OSD-BSO-V1.5), FaceDescriptors (PAF-FDO-V1.6)
+    present VocalResponse, FaceDescriptors
+
+on Stop:
+
+    ask Controller to stop

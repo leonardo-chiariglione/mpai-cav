@@ -120,6 +120,27 @@ public sealed class RuledStore
     private readonly Func<DateTimeOffset> now;
     private readonly bool everyoneReads;
     private readonly Dictionary<string, StorageRule> rules = new(StringComparer.Ordinal);
+
+    // HOW LONG, WHERE THE WRITER DOES NOT SAY (M3245 3.3): the deployment's time for a
+    // category at this location; a writer may keep a datum for less, not for more.
+    private readonly Dictionary<string, StorageTime> kept = new(StringComparer.Ordinal);
+    public void Keep(string category, StorageTime time) { lock (one) kept[category] = time; }
+
+    // WHAT HAS LAPSED, DELETED: of every Shared Storage, now - a session ended.
+    public static void SweepAll()
+    {
+        foreach (var store in shared.Values) store.Sweep();
+    }
+
+    public int Sweep()
+    {
+        if (location() is not { } root || !Directory.Exists(root)) return 0;
+        var gone = 0;
+        lock (one)
+            foreach (var info in Directory.EnumerateFiles(root, "*.info"))
+                if (Load(KeyOf(info)) is null) gone++;
+        return gone;
+    }
     private readonly object one = new();
 
     // everyoneReads: a datum whose writer names no reader is read by every holder -
@@ -214,9 +235,11 @@ public sealed class RuledStore
     {
         var holder = by.Holder;
         string ruleText;
-        var effective = time ?? StorageTime.Scope;
+        StorageTime? deployed;
+        lock (one) deployed = kept.GetValueOrDefault(category);
+        var effective = time is not null && (deployed is null || time.NotLongerThan(deployed)) ? time : deployed ?? time ?? StorageTime.Scope;
         if (CentralControl is null || IsCentral(holder) || holder.Name == Controller)
-            ruleText = IsCentral(holder) ? "the central control's own" : "the writer's";
+            ruleText = IsCentral(holder) ? "the central control's own" : deployed is not null ? "the deployment's" : "the writer's";
         else
         {
             var rule = RuleOf(category);

@@ -7,7 +7,7 @@
   "InternalTypes":   [ ],
 
   "ExternalPorts":   [{"Name": "FaceObject",             "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechObject",           "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "BasicSpeechObject",           "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "PersonalStatus",         "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "Response",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "UserName",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "Technology": "", "Protocol": "", "IsRemote": ""},
@@ -19,7 +19,7 @@
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "" } }],
 
   "Topology":        [{ "Output": { "AIMName": "",             "PortName": "FaceObject" },                             "Input": { "AIMName": "PAF-EFD-V1.6", "PortName": "FaceObject" } },
-                     { "Output": { "AIMName": "",             "PortName": "SpeechObject" },                           "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechObject" } },
+                     { "Output": { "AIMName": "",             "PortName": "BasicSpeechObject" },                           "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "BasicSpeechObject" } },
                      { "Output": { "AIMName": "",             "PortName": "UserName",              "PortNumber": 2 }, "Input": { "AIMName": "PAF-EFD-V1.6", "PortName": "UserName" } },
                      { "Output": { "AIMName": "",             "PortName": "UserName",              "PortNumber": 2 }, "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "UserName" } },
                      { "Output": { "AIMName": "",             "PortName": "Response",              "PortNumber": 1 }, "Input": { "AIMName": "PAF-RSR-V1.6", "PortName": "TextObject", "DataType": "OSD-BTO-V1.5",            "PortNumber": 1 } },

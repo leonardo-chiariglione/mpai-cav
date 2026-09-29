@@ -103,6 +103,10 @@ public sealed class MasServer
     {
         public string Id { get; init; } = string.Empty;
 
+        // The client that made it (header MPAI-Client): when that client leaves, or
+        // is heard from no more, the session of this Controller Instance closes.
+        public string Client { get; init; } = string.Empty;
+
         // Module Instance id -> running Module.
         public ConcurrentDictionary<string, ModuleInstance> Modules { get; } = new();
     }
@@ -198,6 +202,7 @@ public sealed class MasServer
             if (method == "POST" && segs.Length == 1 && segs[0] == "Leave")
             {
                 if (client.Length > 0) clients.TryRemove(client, out _);
+                Left(client);
                 await Write(ctx, 200, "text/plain", "Goodbye.");
                 return;
             }
@@ -207,7 +212,10 @@ public sealed class MasServer
             {
                 var since = DateTimeOffset.UtcNow - ActiveWindow;
                 foreach (var old in clients.Where(c => c.Value < since).Select(c => c.Key).ToList())
+                {
                     clients.TryRemove(old, out _);
+                    Left(old);
+                }
                 await Write(ctx, 200, "application/json", $"{{\"activeClients\":{clients.Count}}}");
                 return;
             }
@@ -306,7 +314,7 @@ public sealed class MasServer
             // GET {cid}/MODULE/{mid}/Output/{pid}
             if (method == "GET" && segs.Length == 5 && segs[3] == "Output")
             {
-                await SendOutput(ctx, module, segs[4]);
+                await SendOutput(ctx, sci, module, segs[4]);
                 return;
             }
 
@@ -403,7 +411,7 @@ public sealed class MasServer
     private async Task CreateController(HttpContext ctx)
     {
         var id = Guid.NewGuid().ToString();
-        instances[id] = new Sci { Id = id };
+        instances[id] = new Sci { Id = id, Client = ctx.Request.Headers["MPAI-Client"].ToString() };
 
         Console.WriteLine($"[MAS] Controller Instance {id}");
 
@@ -415,11 +423,26 @@ public sealed class MasServer
 
     private async Task DeleteController(HttpContext ctx, string cid)
     {
+        Close(cid);
+        await Write(ctx, 200, "text/plain", "OK");
+    }
+
+    // THE SESSION CLOSED (M3245 3.3): the Controller Instance ends - its Modules
+    // stopped - and what its runs kept for the session goes with it.
+    private void Close(string cid)
+    {
         if (instances.TryRemove(cid, out var sci))
             foreach (var module in sci.Modules.Values)
                 runner.Stop(module.Name);
+        runner.SessionEnded(cid);
+        Console.WriteLine($"[MAS] Controller Instance {cid} closed");
+    }
 
-        await Write(ctx, 200, "text/plain", "OK");
+    // The sessions of a client that left, or is heard from no more.
+    private void Left(string client)
+    {
+        if (client.Length == 0) return;
+        foreach (var sci in instances.Values.Where(i => i.Client == client).ToList()) Close(sci.Id);
     }
 
     private async Task StartModule(HttpContext ctx, Sci sci)
@@ -507,7 +530,7 @@ public sealed class MasServer
         await Write(ctx, 200, "text/plain", "OK");
     }
 
-    private async Task SendOutput(HttpContext ctx, ModuleInstance module, string pid)
+    private async Task SendOutput(HttpContext ctx, Sci sci, ModuleInstance module, string pid)
     {
         if (!PortSegment.TryParse(pid, out var dataType, out var portNumber))
         {
@@ -540,7 +563,7 @@ public sealed class MasServer
         {
             if (module.Outputs is null)
             {
-                var result = runner.Run(module.Name, module.Inputs);
+                var result = runner.Run(module.Name, module.Inputs, sci.Id);
 
                 if (result.Error is not null)
                 {

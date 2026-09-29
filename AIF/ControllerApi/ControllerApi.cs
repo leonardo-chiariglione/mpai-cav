@@ -373,6 +373,22 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     public AifError SharedStorageInit(string moduleName, string location) => SharedStorageInit(moduleName, location, false);
 
+    // WHOSE SESSION AN EXCHANGE SERVES (M3245 3.3): a Service's Controller serves
+    // many clients; the data an exchange keeps for its session are that client's,
+    // and deleted when the client's session ends.
+    public Result Advance(string moduleName, IEnumerable<Datum> inputs, string session)
+    {
+        _ua.MPAI_AIFU_Session_Serve(moduleName, session);
+        try { return Advance(moduleName, inputs); }
+        finally { _ua.MPAI_AIFU_Session_Serve(moduleName, null); }
+    }
+
+    public void SessionEnded(string session) => _ua.MPAI_AIFU_Session_End(session);
+
+    // How long data of a category is kept at a location, where the writer does not say.
+    public AifError SharedStorageKeep(string location, string category, AIF.SharedStorage.StorageTime time) =>
+        _ua.MPAI_AIFU_SharedStorage_Keep(location, category, time);
+
     public AifError SharedStorageInit(string moduleName, string location, bool governs)
     {
         lock (_tables)
