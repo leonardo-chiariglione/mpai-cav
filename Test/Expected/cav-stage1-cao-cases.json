@@ -1,0 +1,7 @@
+{
+  "a Destination changed while driving": "the new Route proposed, the CAV driving on; agreed, driven to, arrived at",
+  "a Route declined": "the CAV stays until another is agreed",
+  "a place named ambiguously": "asked which",
+  "a place the map does not have": "told the places the CAV knows",
+  "then the hospital": "driven to, arrived at, told"
+}

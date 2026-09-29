@@ -75,6 +75,24 @@ public sealed class Simulation
     // stops where its brakes leave it, within 2 m.
     public bool Arrived => EgoS >= Path.Length - (Mechanics is null ? 0.5 : 2);
 
+    // THE EGO STARTING ALONG ITS ROUTE (M3243, Step 5): a CAV ahead of another on the
+    // same Route, each in a simulation of its own. Before Mechanical.
+    public void StartAt(double s)
+    {
+        if (Mechanics is not null) throw new InvalidOperationException("StartAt before Mechanical().");
+        EgoS = s;
+    }
+
+    // A VEHICLE MOVED FROM OUTSIDE (M3243, Step 5): another CAV, which a simulation of
+    // its own moves, placed at each step where that one has it; its scenario's speeds
+    // are then not followed.
+    public void Place(string id, double s, double speed)
+    {
+        var i = others.FindIndex(o => o.Spec.Id == id);
+        others[i] = (others[i].Spec, s, speed);
+        if (GapAhead() is { } gap && gap < 0) Collided = true;
+    }
+
     // From now on the ego is moved by its mechanical subsystems.
     public Vehicle Mechanical(int seed)
     {
