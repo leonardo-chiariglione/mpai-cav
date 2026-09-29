@@ -12,7 +12,10 @@ Tested on 2026/09/26 by following these steps in WSL (Ubuntu 26.04, .NET 10.0.12
 x86-64) into a folder of its own: the four Apps answered as on Windows - MAD "The
 capital of France is Paris.", AMQ "red", MAT "Buongiorno, come stai tu?", MPD
 "That's wonderful to hear!" - and the browser client, served by the installed host,
-offered the four Apps. What was not tested is listed at the end.
+offered the four Apps. Tested again on 2026/09/29 with the six Apps, by the author
+in a browser on Windows: the seven Modules loaded, MAC and ACR included; a person
+registered with ACR was admitted by MAC, and refused once the session had closed.
+What was not tested is listed at the end.
 
 ## What the server holds
 
@@ -53,6 +56,27 @@ MAS/Service/linux/package.sh ~/mpai-package /opt/mpai
 It publishes the Service and the client's host for linux-x64, and copies the Apps,
 the L3s, the schemas, the avatar and - from `Models` - the files `aim-settings.json`
 names, into `~/mpai-package`, laid out for `/opt/mpai`.
+
+**To send it** where the server is not reached directly - as a release, say - cut it
+into parts of at most 1,900 MB (a GitHub release takes files up to 2 GB), in Linux or
+WSL:
+
+```
+MAS/Service/linux/dist.sh ~/mpai-package ~/mpai-dist /opt/mpai
+```
+
+`dist.sh` takes a packaged folder or one already installed and set up (then Piper,
+whisper-cli, Ollama and llama3.2:3b travel with it, and `setup.sh` has nothing to
+download). It leaves out logs, downloaded sources, certificates and their keys and
+the gallery, and sets the paths for `/opt/mpai`. On the server, in the folder with
+the parts, as a user who may use `sudo`:
+
+```
+sha256sum -c SHA256SUMS
+cat thalia-linux.tar.part* | sudo tar xf - -C /opt
+```
+
+then continue with step 2 (the files are already in `/opt/mpai`).
 
 ## 2. On the server: the system, and the files
 
@@ -115,7 +139,7 @@ others).
 On the server:
 
 ```
-curl -s http://127.0.0.1:5005/MPAI/AIFU/Apps        # the Service: the four Apps
+curl -s http://127.0.0.1:5005/MPAI/AIFU/Apps        # the Service: the six Apps
 curl -sk https://localhost/MPAI/AIFU/Apps           # the same, through the client's host
 ```
 
@@ -159,8 +183,10 @@ reach. On the Service's machine, in `mas-server.json`:
 A Service that listens beyond loopback does not start without a token, and refuses
 every request without it (401). Let only the front end reach port 5005 (firewall),
 or give the Service a certificate (`CertificatePath`, `PrivateKeyPath`) and an
-`https` address: the token travels in each request, and the client's host does not
-check the Service's certificate. On the front end, install `client/` and
+`https` address: the token travels in each request. The client's host accepts the
+certificate of a Service on its own loopback as it is; a Service on another machine
+must present one the front end trusts (for a self-signed one, add it to the front
+end's trusted certificates). On the front end, install `client/` and
 `UserAgent/` only, and give the host the Service's address and token: in
 `mpai-client.service`, `--Service http://<service machine>:5005/`, and in
 `/opt/mpai/service-token.env` (readable by `mpai` only):
@@ -181,6 +207,10 @@ WSL's default networking (and mirrored networking, which would share it, needs
 Windows 11): Ollama runs in WSL, on another port than a Windows one (e.g. 11435, in
 `OllamaUrl`).
 
+The client's host may be started from any folder: published, it takes its own folder
+as its content root, and runs in Production unless `ASPNETCORE_ENVIRONMENT` says
+otherwise.
+
 ## Tested, and not tested
 
 Tested in WSL, beyond the steps above: the two-machine layout, with the Service
@@ -189,8 +219,6 @@ request without the token (401), a client's host without it got 401, and through
 host with it the four Apps answered.
 
 Not tested:
-
-- MAC and ACR on Linux (Phase 16): their AIMs run on .NET alone (SCRFD, ArcFace, ECAPA through ONNX Runtime), and were tested on Windows;
 
 - two real machines, and the Service over https;
 - desktop clients reaching a Service on another machine;
