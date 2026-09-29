@@ -33,6 +33,11 @@ public static class AimBinaries
         ["1PAF-FPE-V1.6-I01"] = typeof(FpeAimProcessor),
         ["1PAF-PSD-V1.6-I01"] = typeof(PsdAimProcessor),
         ["1PAF-GFD-V1.6-I01"] = typeof(GfdAimProcessor),
+        ["1PAF-FIR-V1.6-I01"] = typeof(Mpai.Paf.Fir.FirAimProcessor),
+        ["1MMC-SIR-V2.5-I01"] = typeof(Mpai.Mmc.Sir.SirAimProcessor),
+        ["1OSD-IDR-V1.5-I01"] = typeof(Mpai.Osd.Idr.IdrAimProcessor),
+        ["1PAF-EFD-V1.6-I01"] = typeof(Mpai.Paf.Efd.EfdAimProcessor),
+        ["1MMC-ESD-V2.5-I01"] = typeof(Mpai.Mmc.Esd.EsdAimProcessor),
     };
 
     public static string? Of(string aimName) => Processors.TryGetValue(aimName, out var type) ? type.Assembly.Location : null;

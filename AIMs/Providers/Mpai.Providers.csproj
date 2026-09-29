@@ -29,6 +29,12 @@
     <ProjectReference Include="..\MMC\V2.5\SPE\Mpai.Mmc.Spe.csproj" />
     <ProjectReference Include="..\PAF\V1.6\FPE\Mpai.Paf.Fpe.csproj" />
     <ProjectReference Include="..\MMC\V2.5\PMX\Mpai.Mmc.Pmx.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\SIR\Mpai.Mmc.Sir.csproj" />
+    <ProjectReference Include="..\OSD\V1.5\IDR\Mpai.Osd.Idr.csproj" />
+    <ProjectReference Include="..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\EFD\Mpai.Paf.Efd.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\ESD\Mpai.Mmc.Esd.csproj" />
   </ItemGroup>
 
 </Project>

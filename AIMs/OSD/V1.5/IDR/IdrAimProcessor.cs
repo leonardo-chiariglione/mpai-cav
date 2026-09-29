@@ -66,15 +66,15 @@ public sealed class IdrAimProcessor : IAimProcessor
 
         // Reconcile (may be one modality only; degrades gracefully).
         InstanceIdentifier reconciled = _idr.ReconcileIdentifiers(faceId, speakerId);
-        System.IO.File.AppendAllText(@"C:\Users\Leonardo\Downloads\mac-diag.log", "[IDR] faceId=" + (faceId == null || faceId.InstanceIdentifierData == null || faceId.InstanceIdentifierData.Count == 0 ? "nil" : faceId.InstanceIdentifierData[0].InstanceLabel) + " speakerId=" + (speakerId == null || speakerId.InstanceIdentifierData == null || speakerId.InstanceIdentifierData.Count == 0 ? "nil" : speakerId.InstanceIdentifierData[0].InstanceLabel) + System.Environment.NewLine);
 
-        // Decide: granted when the reconciled top candidate is a REAL subject -
-        // a named identity, not the coarse "person"/"face"/"speech" fallback.
-        var top = reconciled.InstanceIdentifierData.FirstOrDefault();
-        string? subject = top?.InstanceLabel;
-        bool granted = subject is not null
-                       && !string.IsNullOrWhiteSpace(subject)
-                       && !IsCoarse(subject);
+        // THE CHECK (M3245 3.4; the author): is this person in the gallery? Granted
+        // when the face and the voice both name one registered subject - a named
+        // identity, not the coarse "person"/"face"/"speech" fallback. A face of one
+        // and a voice of another is refused. The reconciled identity (the other
+        // mode: who the person is) is given as the User ID either way.
+        string? faceSubject = Top(faceId), speakerSubject = Top(speakerId);
+        string? subject = faceSubject;
+        bool granted = faceSubject is not null && faceSubject == speakerSubject;
 
         string responseText = granted
             ? $"Access granted. Welcome, {subject}."
@@ -104,6 +104,10 @@ public sealed class IdrAimProcessor : IAimProcessor
             }
         };
     }
+
+    // The subject an identity names first, where it names one.
+    private static string? Top(InstanceIdentifier? id) =>
+        id?.InstanceIdentifierData?.FirstOrDefault()?.InstanceLabel is { } label && !string.IsNullOrWhiteSpace(label) && !IsCoarse(label) ? label : null;
 
     private static bool IsCoarse(string label) =>
         label is "person" or "face" or "speech";
