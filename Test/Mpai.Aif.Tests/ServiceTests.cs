@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 namespace Mpai.Aif.Tests;
 
 // Starts the MAS-App Service of this repository for the Service tests (M3207 3.4):
-// from its own build output and from the repository's root, on port 5105 - never
-// 5005, where another Service may be running - with a configuration written for
+// from its own build output and from the repository's root, on port 5108 - never
+// 5005 or 5105, where the public Service runs (M3248) - with a configuration written for
 // the purpose. Stops it when the tests end. Where something it needs is absent,
 // it says what, and the tests are skipped rather than failed.
 public sealed class ServiceFixture : IDisposable
 {
-    public const string Url = "https://localhost:5105/";
+    public const string Url = "https://localhost:5108/";
 
     public string? SkipReason { get; }
     public string Log => log.ToString();
@@ -35,7 +35,7 @@ public sealed class ServiceFixture : IDisposable
             !Directory.Exists(Path.Combine(root, "Models")) ? "Models is absent: the model files are obtained separately." :
             !File.Exists(exe) ? "The Service is not built: " + exe :
             !OllamaHas("llama3.2:3b") ? "Ollama is not running with llama3.2:3b." :
-            PortInUse(5105) ? "Port 5105 is in use." :
+            PortInUse(5108) ? "Port 5108 is in use." :
             null;
         if (SkipReason is not null) return;
 
