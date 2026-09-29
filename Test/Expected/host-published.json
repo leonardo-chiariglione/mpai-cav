@@ -1,0 +1,13 @@
+{
+  "header Permissions-Policy": "camera=(self), microphone=(self)",
+  "header Referrer-Policy": "same-origin",
+  "header X-Content-Type-Options": "nosniff",
+  "header X-Frame-Options": "SAMEORIGIN",
+  "its client": "served",
+  "its content root": "its own folder",
+  "its icon": "served",
+  "its page": "served, naming its icon",
+  "the Service, through it": "reached",
+  "the client's files": "no symbols",
+  "the environment": "Production"
+}

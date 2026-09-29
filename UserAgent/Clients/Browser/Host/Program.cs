@@ -13,12 +13,17 @@
 // token: this host adds it to what it passes on - the ServiceToken setting, or the
 // MPAI_MAS_TOKEN environment variable the desktop client reads too.
 
+// PUBLISHED, OR RUN FROM ITS BUILD (M3248 3.1). Published - the client's files in a
+// wwwroot beside this program - it is a public server: its own folder its content
+// root, whatever folder it is started from, and Production unless told otherwise.
+// Run from its build, the client's files are served from the build output as
+// static web assets, which ASP.NET does in Development: that is then the default.
+var published = File.Exists(Path.Combine(AppContext.BaseDirectory, "wwwroot", "index.html"));
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
-    // The client's files are served from its build output as static web assets,
-    // which ASP.NET does in Development; that is this program's default.
-    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environments.Development
+    ContentRootPath = published ? AppContext.BaseDirectory : null,
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? (published ? Environments.Production : Environments.Development)
 });
 builder.WebHost.UseStaticWebAssets();
 builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "https://localhost:5010");
@@ -32,6 +37,22 @@ var assets  = Path.Combine(root, "UserAgent", "Assets");
 var masOrch = Path.Combine(root, "UserAgent", "Orchestration", "MPAI-MAS.orch");
 
 var app = builder.Build();
+// WHAT A PUBLIC SITE SENDS (M3248 3.1): HTTPS only from now on; content types as
+// declared; no referrer to other sites; framed by this origin only (the avatar's
+// page is); the camera and the microphone for this origin alone.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.Use(async (ctx, next) =>
+    {
+        var h = ctx.Response.Headers;
+        h["X-Content-Type-Options"] = "nosniff";
+        h["Referrer-Policy"] = "same-origin";
+        h["X-Frame-Options"] = "SAMEORIGIN";
+        h["Permissions-Policy"] = "camera=(self), microphone=(self)";
+        await next();
+    });
+}
 // _framework and the client's files are served by MapStaticAssets, the .NET 10 way,
 // compression included; the older UseBlazorFrameworkFiles would compete with it.
 app.UseStaticFiles();
@@ -86,12 +107,12 @@ app.MapGet("/mas/MPAI-MAS.orch", (HttpContext ctx) =>
     return File.Exists(masOrch) ? Results.File(masOrch, "text/plain; charset=utf-8") : Results.NotFound();
 });
 
-// THE SERVICE, THROUGH THIS ORIGIN. A development convenience accepts the
-// Service's development certificate; a Service reached over a network presents
-// one this machine trusts.
+// THE SERVICE, THROUGH THIS ORIGIN. A Service on this machine's loopback is
+// accepted as it is; one reached over a network presents a certificate this
+// machine trusts (M3248 3.1).
 var forward = new HttpClient(new HttpClientHandler
 {
-    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    ServerCertificateCustomValidationCallback = Mpai.Rca.ServiceCertificates.Validator(service)
 })
 { BaseAddress = service, Timeout = TimeSpan.FromMinutes(3) };
 

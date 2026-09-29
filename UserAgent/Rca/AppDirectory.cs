@@ -51,14 +51,11 @@ public sealed class AppDirectory : IDisposable
     {
         root = serviceUrl.TrimEnd('/');
         apps = $"{root}/MPAI/AIFU/" + (string.IsNullOrWhiteSpace(collection) ? "" : $"c/{Uri.EscapeDataString(collection.Trim())}/");
+        // A Service reached over a network presents a certificate this machine
+        // trusts; one on the loopback is accepted as it is (ServiceCertificates).
         var handler = new HttpClientHandler
         {
-            // A DEVELOPMENT CONVENIENCE, AND NOTHING ELSE. A Service reached over
-            // a network presents a certificate the client machine trusts; this
-            // accepts the development certificate so that one machine can be
-            // tried without one. It has no place in anything shipped.
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            ServerCertificateCustomValidationCallback = ServiceCertificates.Validator(new Uri(root + "/"))
         };
         http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
         if (!string.IsNullOrWhiteSpace(bearerToken))
