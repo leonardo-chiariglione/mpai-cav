@@ -1,7 +1,7 @@
 # Installing MPAI-MAS on a Linux server
 
-MPAI as a Service - MAS-App and the four Apps it offers (MAD, AMQ, MAT, MPD), with
-their AIMs and models - runs on Linux. Installed as described here, the server holds
+MPAI as a Service - MAS-App and the six Apps it offers (MAD, AMQ, MAT, MPD, and since
+Phase 16 MAC and ACR), with their AIMs and models - runs on Linux. Installed as described here, the server holds
 all of it: the **MAS Service** (the Apps' Modules, their AIMs, the models, Ollama)
 and the **browser client's host** (the page people open). People need only a
 browser, on any machine anywhere, many at once: `https://<server>/`. (The client's
@@ -23,7 +23,7 @@ Everything under one folder, `/opt/mpai` here (any other works: give it to
 |---|---|---|
 | `service/` | the MAS Service, published for linux-x64 | 29 MB |
 | `client/` | the browser client's host, with the client (WebAssembly) | 64 MB |
-| `Apps/`, `AMDs/`, `schemas/` | the four Apps, the L3s of the AIMs, the schemas | 2 MB |
+| `Apps/`, `AMDs/`, `schemas/` | the six Apps, the L3s of the AIMs, the schemas | 2 MB |
 | `UserAgent/` | the avatar and the client's workflow | 6 MB |
 | `Models/` | the model files the Apps use - only those | 6.8 GB |
 | `bin/` | Piper 1.2.0 (TTS), `whisper-cli` of whisper.cpp 1.9.3 (ASR) | 55 MB |
@@ -129,7 +129,9 @@ the microphone; AMQ also asks for a picture or the camera.
 | Setting | Here |
 |---|---|
 | `ListenUrl` | `http://127.0.0.1:5005/` - loopback. A Service reachable beyond loopback does not start without a `BearerToken`. |
-| `AppDirectory`, `Apps` | the four Apps |
+| `AppDirectory`, `Apps` | the six Apps |
+| `Gallery` | `/opt/mpai/gallery` - where Access Registration (ACR) registers persons and Access Control (MAC) recognises them; empty at installation |
+| `ForgetOnClose` | `true` - what a session registers (the descriptors of a face and a voice, and a name) is deleted when the session closes: the page is closed, or silent for 90 s. ACR's avatar tells the person so |
 | `AmdDirectory` | the L3s |
 | `SettingsPath` | `aim-settings.json` |
 | `SchemaDirectory` | the schemas: without it, a Service installed outside the repository validates nothing |
@@ -187,6 +189,8 @@ request without the token (401), a client's host without it got 401, and through
 host with it the four Apps answered.
 
 Not tested:
+
+- MAC and ACR on Linux (Phase 16): their AIMs run on .NET alone (SCRFD, ArcFace, ECAPA through ONNX Runtime), and were tested on Windows;
 
 - two real machines, and the Service over https;
 - desktop clients reaching a Service on another machine;

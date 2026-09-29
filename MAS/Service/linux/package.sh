@@ -6,7 +6,7 @@
 #
 # <folder> receives everything the server needs, laid out as it will be installed
 # under install-root (default /opt/mpai): the MAS Service and the browser client's
-# host, published for linux-x64; the four Apps, their L3s and the schemas; the avatar
+# host, published for linux-x64; the six Apps, their L3s and the schemas; the avatar
 # and the client's workflow; the model files the Apps use - and nothing else from
 # Models; the configuration, the settings, the systemd units, setup.sh and README.md.
 # Copy <folder> to install-root on the server, then run setup.sh there.
@@ -23,7 +23,7 @@ dotnet publish UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj -c Release -r l
 
 echo "== the Apps, their L3s, the schemas; the avatar and the client's workflow"
 mkdir -p "$out/Apps" "$out/UserAgent"
-for app in MAD AMQ MAT MPD; do cp -r "Apps/$app" "$out/Apps/"; done
+for app in MAD AMQ MAT MPD MAC ACR; do cp -r "Apps/$app" "$out/Apps/"; done
 rm -rf "$out/AMDs" "$out/schemas"
 cp -r AIMs/AMDs "$out/AMDs"
 cp -r schemas "$out/schemas"

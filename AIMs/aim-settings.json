@@ -137,5 +137,19 @@
     "1CAV-BED-V2.0-I01":  {
                               "Gate":  "3",
                               "DropAfterMisses":  "5"
+                          },
+    "1PAF-FIR-V1.6-I01":  {
+                              "ScrfdModel":  "Models\\scrfd_10g_bnkps.onnx",
+                              "ArcFaceModel":  "Models\\glintr100.onnx"
+                          },
+    "1PAF-EFD-V1.6-I01":  {
+                              "ScrfdModel":  "Models\\scrfd_10g_bnkps.onnx",
+                              "ArcFaceModel":  "Models\\glintr100.onnx"
+                          },
+    "1MMC-SIR-V2.5-I01":  {
+                              "EcapaModel":  "Models\\ecapa-tdnn.onnx"
+                          },
+    "1MMC-ESD-V2.5-I01":  {
+                              "EcapaModel":  "Models\\ecapa-tdnn.onnx"
                           }
 }

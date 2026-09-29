@@ -62,8 +62,11 @@ public sealed class AcrProvider : IAimProvider, IDisposable
     private ScrfdFaceDetector Scrfd(IReadOnlyDictionary<string, string> s) =>
         _scrfd ??= new ScrfdFaceDetector(Setting(s, "ScrfdModel", MpaiPaths.Model("scrfd_10g_bnkps.onnx")));
 
+    // A model's path, as the settings give it; a relative one is the repository's.
     private static string Setting(IReadOnlyDictionary<string, string> s, string key, string fallback) =>
-        s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
+        s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
+            ? (System.IO.Path.IsPathRooted(v) ? v : System.IO.Path.Combine(MpaiPaths.Root, v))
+            : fallback;
 
     public void Dispose() { _arcFace?.Dispose(); _ecapa?.Dispose(); _scrfd?.Dispose(); }
 }

@@ -87,5 +87,19 @@
   "1PAF-FPE-V1.6-I01": {
     "HseModel": "/opt/mpai/Models/hsemotion_enet_b0_8_va_mtl.onnx",
     "SHA256:HseModel": "C43E056AD388D4A8DC911832B8291435B2AF537F967E5870EBD731574EC7E812"
+  },
+  "1PAF-FIR-V1.6-I01": {
+    "ScrfdModel": "/opt/mpai/Models/scrfd_10g_bnkps.onnx",
+    "ArcFaceModel": "/opt/mpai/Models/glintr100.onnx"
+  },
+  "1PAF-EFD-V1.6-I01": {
+    "ScrfdModel": "/opt/mpai/Models/scrfd_10g_bnkps.onnx",
+    "ArcFaceModel": "/opt/mpai/Models/glintr100.onnx"
+  },
+  "1MMC-SIR-V2.5-I01": {
+    "EcapaModel": "/opt/mpai/Models/ecapa-tdnn.onnx"
+  },
+  "1MMC-ESD-V2.5-I01": {
+    "EcapaModel": "/opt/mpai/Models/ecapa-tdnn.onnx"
   }
 }
