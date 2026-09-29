@@ -141,6 +141,8 @@ if ($Full) {
         'AMQ       "yes"; a picture chosen; a spoken question answered about it; "no" ends',
         'MAT       a pair of languages chosen; a spoken sentence said in the other language, and shown',
         'MPD       the camera allowed; a happy sentence answered with a smile',
+        'ACR       a name typed, the face and a sentence given; the registration confirmed, and its deletion at the close said',
+        'MAC       the face and a sentence of the person ACR registered: access granted by name; of another person: refused',
         'Both      the same checks give the same result; Stop during any step returns to the list'
     ) | ForEach-Object { Write-Host "  [ ] $_" }
 }
