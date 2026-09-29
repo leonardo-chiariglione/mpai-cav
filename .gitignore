@@ -65,3 +65,6 @@ _removed/
 
 # backups made by the Apply/Prepare scripts
 _backup-*/
+
+# the public instance on Windows, published Release (MAS/Service/windows/publish.ps1)
+/deploy/
