@@ -216,7 +216,10 @@ public sealed class AimHost : IDisposable
         // Embed an AimContext in the message so the processor can honour
         // lifecycle signals without holding a reference to AimLifecycle.
         var context = await ContextAsync(instanceId);
-        return await processor.ProcessAsync(message with { Context = context });
+        if (!TurnTrace.Enabled) return await processor.ProcessAsync(message with { Context = context });
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try { return await processor.ProcessAsync(message with { Context = context }); }
+        finally { TurnTrace.Line($"aim {instanceId} {clock.ElapsedMilliseconds} ms"); }
     }
 
     // The implementation registered for an AIM.

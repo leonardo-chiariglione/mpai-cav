@@ -60,6 +60,13 @@ public sealed class FpeAimProcessor : IAimProcessor
             affect = _hse.Estimate(image);
 
         var fps = ToFacePersonalStatus(affect);
+        if (MpaiDiag.Enabled)
+        {
+            var frame = $"fpe-{DateTime.Now:HHmmss-fff}.jpg";
+            MpaiDiag.WriteBytes(frame, visual.Data);
+            MpaiDiag.Emotion("FPE", $"{affect.Emotion} {affect.Confidence:0.00} valence {affect.Valence:0.00} arousal {affect.Arousal:0.00}; " +
+                string.Join(", ", System.Linq.Enumerable.Select(System.Linq.Enumerable.OrderByDescending(affect.Probabilities, p => p.Value), p => $"{p.Key} {p.Value:0.00}")) + $"; frame {frame}");
+        }
 
         return System.Threading.Tasks.Task.FromResult(new Message
         {

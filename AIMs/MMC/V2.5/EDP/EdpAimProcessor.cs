@@ -175,6 +175,8 @@ public sealed class EdpAimProcessor : IAimProcessor
             Console.WriteLine($"[MMC-EDP-V2.5] emotion {emotion}, attitude {attitude}; model said: " +
                               (raw.Length > 200 ? raw[..200] + "..." : raw));
             machinePs = MachinePersonalStatus(emotion, attitude);
+            MpaiDiag.Emotion("EDP", $"told \"{userStatus}\" -> chose {emotion} ({machinePs.TextPersonalStatus?.TextEmotion?.Category} " +
+                $"{machinePs.TextPersonalStatus?.TextEmotion?.Degree:0.0}), attitude {attitude}; the model said: {raw}");
         }
         else
         {

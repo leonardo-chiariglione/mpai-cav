@@ -425,6 +425,7 @@ public partial class RcaShell : ComponentBase
     }
 
     private void Instruct(string text) { Instruction = text; Refresh(); }
-    private void Status(string text)   { StatusLine  = text; Refresh(); Console.WriteLine(text); }
+    // Each line with the local clock, as the Service's trace and rca.js have it.
+    private void Status(string text)   { StatusLine  = text; Refresh(); Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff}  {text}"); }
     private void Refresh() => _ = InvokeAsync(StateHasChanged);
 }

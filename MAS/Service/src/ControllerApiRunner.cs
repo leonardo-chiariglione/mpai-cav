@@ -127,9 +127,15 @@ internal sealed class ControllerApiRunner : IModuleRunner
 
         var turn = turns.GetOrAdd(moduleName, _ => new SemaphoreSlim(1, 1));
         ControllerApi.Result result;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         turn.Wait();
+        var waited = clock.ElapsedMilliseconds;
         try { result = session is null ? north.Advance(moduleName, data) : north.Advance(moduleName, data, session); }
-        finally { turn.Release(); }
+        finally
+        {
+            turn.Release();
+            AIF.Controller.TurnTrace.Line($"turn {moduleName} ({string.Join(", ", inputs.Keys)}): waited {waited} ms for the Module, ran {clock.ElapsedMilliseconds - waited} ms");
+        }
 
         if (result.Error != AifError.OK)
             return new RunResult { Error = result.Error.ToString() };

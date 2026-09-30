@@ -88,6 +88,7 @@ public sealed class SpeAimProcessor : IAimProcessor
         SocialAttitude? attitude = null;
         if (d >= 0.65)      attitude = SocialAttitude.Of(FactorLabel.Of("SOCIAL DOMINANCE/CONFIDENCE", "confident", null, Math.Clamp((d - 0.5) * 2, 0, 1)));
         else if (d <= 0.35) attitude = SocialAttitude.Of(FactorLabel.Of("AGGRESSION", "submissive", null, Math.Clamp((0.5 - d) * 2, 0, 1)));
+        MpaiDiag.Emotion("SPE", $"valence {v:0.000} arousal {ar:0.000} dominance {d:0.000} -> {emotionLabel.Category} {intensity:0.00}");
 
         return new SpeechPersonalStatus
         {

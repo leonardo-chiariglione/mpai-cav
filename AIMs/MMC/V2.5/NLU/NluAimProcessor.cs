@@ -154,6 +154,7 @@ public sealed class NluAimProcessor : IAimProcessor
         // Ensure at least one Factor is present: default to a calm Emotion.
         if (emotion is null && cognitiveState is null && socialAttitude is null)
             emotion = Emotion.Of(FactorLabel.Of("CALMNESS", "calm", null, 0.5));
+        MpaiDiag.Emotion("NLU", $"positive {pos} negative {neg} -> {emotion?.Category ?? "no emotion"}; \"{text}\"");
 
         return new TextPersonalStatus
         {

@@ -15,6 +15,13 @@ window.rca = (() => {
 
   const START = 0.015, QUIET = 0.012, PAUSE_MS = 900, MAX_MS = 20000, PREROLL_MS = 1000;
 
+  // THE TIMES OF A TURN, in the console (the author, 2026/09/30: Thalia answers
+  // late - where do the seconds go?): the local clock, as the Service's trace has it.
+  function stamp(what) {
+    const d = new Date(), p = (n, w) => String(n).padStart(w, '0');
+    console.log(`${p(d.getHours(), 2)}:${p(d.getMinutes(), 2)}:${p(d.getSeconds(), 2)}.${p(d.getMilliseconds(), 3)}  ${what}`);
+  }
+
   function level(x) {
     let sum = 0;
     for (let i = 0; i < x.length; i++) sum += x[i] * x[i];
@@ -60,13 +67,14 @@ window.rca = (() => {
       const rate = ctx.sampleRate;
       const before = ring.slice(), kept = [];
       let speaking = before.some(b => level(b) > START), quietMs = 0, spokenMs = 0, done = false;
-      if (speaking) kept.push(...before);
+      if (speaking) { kept.push(...before); stamp('speech: already started when listening began'); }
 
       function finish(keep) {
         if (done) return;
         done = true;
         hear = null;
         capture = null;
+        if (keep && speaking) stamp(`speech: ended, ${Math.round(spokenMs)} ms heard, the pause of ${PAUSE_MS} ms confirmed`);
         resolve(keep && speaking ? toPcm16k(kept, rate) : null);
       }
       capture = { abandon: () => finish(false) };
@@ -76,7 +84,7 @@ window.rca = (() => {
         if (!speaking) {
           before.push(block);
           trim(before, PREROLL_MS);
-          if (rms > START) { speaking = true; kept.push(...before); }
+          if (rms > START) { speaking = true; kept.push(...before); stamp('speech: started'); }
           return;
         }
         kept.push(block);
@@ -134,6 +142,7 @@ window.rca = (() => {
   function present(faceDescriptorsJson, speechWavBase64) {
     const frame = document.getElementById('avatar');
     if (!frame || !frame.contentWindow) return;
+    stamp(`present: to the avatar${speechWavBase64 ? ', with speech' : ''}`);
     frame.contentWindow.postMessage(
       { Kind: 'render', FaceDescriptors: faceDescriptorsJson || null, SpeechWavBase64: speechWavBase64 || '' },
       window.location.origin);
@@ -154,5 +163,5 @@ window.rca = (() => {
     });
   }
 
-  return { unlock, captureSpeech, abandonCapture, captureFrame, present, focus, presence };
+  return { unlock, captureSpeech, abandonCapture, captureFrame, present, focus, presence, stamp };
 })();
