@@ -49,11 +49,11 @@ public sealed class AmsMasMessageInterpretation(string instanceId, IReadOnlyDict
 
     public async Task RunAsync(IAimPorts ports, AimContext context)
     {
-        while (await ports.SelectAsync(-1, (MasTypes.Message, 1),
-                                       (MasTypes.BrakeResponse, 1), (MasTypes.MotorResponse, 1), (MasTypes.WheelResponse, 1)) is { } port)
+        // The Responses of the devices are not its concern: what was executed is MRA's
+        // to judge (Step 6; the author: the MAS executes).
+        while (await ports.SelectAsync(-1, (MasTypes.Message, 1)) is { } port)
         {
             if (await ports.ReadAsync(port.DataType, 1, 0) is not { } m) continue;
-            if (port.DataType != MasTypes.Message) continue;          // the Responses: what the devices achieved is MRA's to judge (Step 6)
             var (problem, commands) = Interpret(JsonNode.Parse(m.Json)!);
             if (problem is not null) context.Report(problem);
             foreach (var (dataType, json) in commands) await ports.WriteAsync(dataType, 1, json);

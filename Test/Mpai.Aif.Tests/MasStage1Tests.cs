@@ -286,12 +286,7 @@ public class MasStage1Tests
             JsonNode? road = null;
             if (mas)
             {
-                foreach (var (dataType, json) in responses)
-                {
-                    var response = JsonNode.Parse(json)!;
-                    if (dataType == MasTypes.WheelResponse) msa.Steered(response);
-                    ica.Responded(dataType, response);
-                }
+                foreach (var (dataType, json) in responses) ica.Responded(dataType, JsonNode.Parse(json)!);
                 foreach (var (_, json) in sensed.Messages.Where(m => m.DataType == MasTypes.Weather)) ica.Weather(JsonNode.Parse(json)!);
                 attitude = msa.Attitude(JsonNode.Parse(sensed.Messages.First(m => m.DataType == MasTypes.SpatialData).Json)!)!;
                 road = ica.State(attitude);

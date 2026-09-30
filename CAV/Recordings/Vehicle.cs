@@ -21,6 +21,9 @@ public sealed class Vehicle
     public const double MotorLag = 0.15, BrakeLag = 0.1, MaxSteer = 35 * Math.PI / 180, DefaultSteerRate = 30 * Math.PI / 180;
     public const double DragArea = 0.7, AirDensity = 1.2, RollingResistance = 0.012, AbsGrip = 0.95, LockedGrip = 0.8, AbsSlip = 0.12;
     public const double OdometerScale = 1.015, SpeedometerScale = 1.01;
+    // The gyroscope: a yaw rate with noise and a small constant bias, as an automotive
+    // inertial unit gives it (degrees/second).
+    public const double GyroNoise = 0.05, GyroBias = 0.02;
     private const int SubSteps = 10;
 
     // THE STATE: where the vehicle is, its heading (radians, anticlockwise from
@@ -55,6 +58,7 @@ public sealed class Vehicle
     private readonly List<(string Device, string Id)> commandedThisStep = [];
 
     private readonly Random noise;
+    private (double Heading, long Ms)? lastYaw;               // the heading at the last Spatial Data
     private long responses;
 
     public Vehicle(double east, double north, double heading, double speed, int seed)
@@ -242,7 +246,8 @@ public sealed class Vehicle
     }
 
     // THE SENSORS OF MOTION: the odometer reads long, the speedometer a little high,
-    // the accelerometer and the inclinometers with noise; the road is level.
+    // the accelerometer and the inclinometers with noise, the gyroscope with noise
+    // and a bias; the road is level.
     public string SpatialData(string id, long ms) => new JsonObject
     {
         ["Header"] = "CAV-SPD-V2.0", ["SpatialDataID"] = id, ["SpaceTime"] = SimpleTime(id + "-T", ms),
@@ -255,9 +260,18 @@ public sealed class Vehicle
             {
                 ["LongitudinalInclination"] = Math.Round(Gaussian(0.1), 3),
                 ["LateralInclination"] = Math.Round(Gaussian(0.1), 3)
-            }
+            },
+            ["GyroscopeData"] = new JsonObject { ["YawRate"] = Math.Round(YawRate(ms) + GyroBias + Gaussian(GyroNoise), 4) }
         }
     }.ToJsonString();
+
+    // How fast the vehicle turned since the last Spatial Data (degrees/second).
+    private double YawRate(long ms)
+    {
+        var rate = lastYaw is { } l && ms > l.Ms ? Math.IEEERemainder(Heading - l.Heading, 2 * Math.PI) * 180 / Math.PI / ((ms - l.Ms) / 1000.0) : 0;
+        lastYaw = (Heading, ms);
+        return rate;
+    }
 
     private double Gaussian(double sigma)
     {

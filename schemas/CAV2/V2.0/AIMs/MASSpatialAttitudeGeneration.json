@@ -8,11 +8,10 @@
   "Header":       "CAV-MSA-V2.0",
 
   "APIProfile":   "Basic",
-  "Description":  "This AIM computes the Spatial Attitude using Spatial Data and, for the heading, the angle of the steered wheels the Wheel Response reports.",
+  "Description":  "This AIM computes the Spatial Attitude of the CAV from its Spatial Data: the odometer, the speedometer, the accelerometer, the inclinometers and, for the heading, the gyroscope.",
 
   "ExternalPorts":  [
     { "Name": "SpatialData"     , "Direction": "Input"  , "DataType": "CAV-SPD-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "WheelResponse"   , "Direction": "Input"  , "DataType": "CAV-WHR-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpatialAttitude" , "Direction": "Output" , "DataType": "OSD-OSA-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
