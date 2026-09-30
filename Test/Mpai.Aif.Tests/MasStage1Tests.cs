@@ -232,8 +232,8 @@ public class MasStage1Tests
     // Phase 8, and the first of them on an icy stretch the AMS does not know of (ICA:
     // Step 6), on perfect perception - the AMS of Phase 8 in-process, its AMS-MAS
     // Message interpreted by AMI, whose commands move the vehicle. The Spatial
-    // Attitude AMI follows the Trajectory from is the truth, on the map's frame, until
-    // MSA gives it (Step 5). Judged: no collision; the Destination reached; within the
+    // Attitude AMI follows the Trajectory from is the one the Message carries: the
+    // AMS's, the truth here. Judged: no collision; the Destination reached; within the
     // speed limit; in its lane on the straights - not within 25 m of a corner of the
     // Route; not sliding. Reported: how far from the lane's centre, on the straights
     // and at the corners; the speed against the Trajectory's; the hardest braking; the
@@ -255,10 +255,10 @@ public class MasStage1Tests
                                   JsonNode? Attitude = null, JsonNode? Road = null, JsonNode? Answer = null);
 
     // The loop of Step 4 on a scenario, moved by its mechanics, until the CAV arrives,
-    // collides or 90 s have gone; each step given to see. With the MAS (Step 6): AMI
-    // follows from MSA's Spatial Attitude, on the MAS's frame; ICA reads the tyres and
-    // the weather; MRA answers each AMS-MAS Message, and TOA hears the answer at the
-    // next step - the Road State, and the MAS's frame.
+    // collides or 90 s have gone; each step given to see. With the MAS (Step 6): MSA
+    // makes the MAS's Spatial Attitude; ICA reads the tyres and the weather; MRA answers
+    // each AMS-MAS Message, and TOA hears the answer at the next step - the Road State.
+    // AMI follows from the Spatial Attitude the Message carries, the AMS's.
     // bedOf: what the CAV perceives, the ground truth by default (TruthBed).
     // remote: before each step's description, what the CAV's FED hears from Remote CAVs.
     internal static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false, Func<Simulation, Simulation.Sensed, string>? bedOf = null,
@@ -302,8 +302,7 @@ public class MasStage1Tests
             var described = fed.Describe(bed);
             toa.Observe(described);
             var message = toa.Refine(msp.Plan(described));
-            ami.Accept(message);
-            var commands = ami.Commands(attitude);
+            var commands = ami.Interpret(message).Commands;
             JsonNode? answer = null;
             if (mas)
             {
@@ -361,7 +360,7 @@ public class MasStage1Tests
     }
 
     // STEP 6 (M3237 3.6, 3.7): the loop closed through the whole MAS - AMI following
-    // from MSA's Spatial Attitude, the Trajectory on the MAS's frame; ICA's Road State
+    // from the Spatial Attitude the AMS-MAS Message carries; ICA's Road State
     // and MRA's answer heard by TOA - on the scenarios of Step 4, and the one on ice in
     // freezing snow, which the weather sensors report. Judged as Step 4, and on ice:
     // whether ICA found it, and how. Reported as Step 4, and: where ICA first said the

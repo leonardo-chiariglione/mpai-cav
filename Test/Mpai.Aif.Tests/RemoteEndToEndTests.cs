@@ -81,13 +81,14 @@ public class RemoteEndToEndTests
                 Volatile.Write(ref distance, Math.Abs(a.Ahead));
                 amsA?.Step(JsonNode.Parse(TruthBed.OfVehicle(sim, sensed, "A"))!, [], null, sensed.FrameMs);
 
-                var (attitude, commands) = mas.Sense(sensed, responses);
+                var attitude = mas.Sense(sensed, responses);
                 var toEss = sensed.Messages.Where(m => m.DataType is not MasTypes.SpatialData).Prepend((MasTypes.Attitude, attitude.ToJsonString())).ToList();
                 var (bed, alerts) = ess.Step(new Simulation.Sensed(toEss, sensed.Truth, sensed.FrameMs));
                 var time = sim.Time;
                 var message = amsB.Step(bed!, alerts, answer, sensed.FrameMs,
                     data: d => { if (knownAt is null && d.Contains("\"CAV-A/stopped\"") && d.Contains("\"Remote\"")) knownAt = time; });
-                if (message is not null) answer = mas.Answer(message);
+                List<(string DataType, string Json)> commands = [];
+                if (message is not null) (answer, commands) = mas.Answer(message);
 
                 if (double.IsNaN(speedAtPullOut) && sim.Time >= pullOut) speedAtPullOut = sim.EgoSpeed;
                 var stopped = sim.Around().First(x => x.Id == "stopped");

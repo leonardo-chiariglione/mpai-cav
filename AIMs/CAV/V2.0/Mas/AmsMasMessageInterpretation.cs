@@ -7,8 +7,11 @@ using Mpai.Cav.Ess;
 namespace Mpai.Cav.Mas;
 
 // AMS-MAS MESSAGE INTERPRETATION, STAGE 1 (CAV-AMI; M3237 3.4). The Trajectory of the
-// latest AMS-MAS Message followed, at each Spatial Attitude of the MAS, by the
-// commands of the mechanical subsystems.
+// latest AMS-MAS Message followed by the commands of the mechanical subsystems, at
+// each AMS-MAS Message, from the CAV's Spatial Attitude it carries - the AMS's: GNSS
+// and the MAS's own estimate combined by the ESS, on the Trajectory's frame (the
+// author: the MAS executes; it does not second-guess where the AMS says the CAV is).
+// A Message without one - a Suspend, a Resume - is followed from the last received.
 //
 // Longitudinally, the acceleration the Trajectory asks a moment ahead (Preview, the
 // lag of the devices) and a correction of the speed error (SpeedGain): the motor
@@ -35,6 +38,7 @@ public sealed class AmsMasMessageInterpretation(string instanceId, IReadOnlyDict
 
     private sealed record Point(long Ms, double East, double North, double Heading, double Speed, double Acceleration);
     private List<Point>? trajectory;
+    private JsonNode? attitude;                               // the CAV's, the last an AMS-MAS Message carried
     private bool suspended;
     private string? acting;                                   // "motor" or "brake"
     private double lastAngle;
@@ -45,22 +49,24 @@ public sealed class AmsMasMessageInterpretation(string instanceId, IReadOnlyDict
 
     public async Task RunAsync(IAimPorts ports, AimContext context)
     {
-        while (await ports.SelectAsync(-1, (MasTypes.Message, 1), (MasTypes.Attitude, 1),
+        while (await ports.SelectAsync(-1, (MasTypes.Message, 1),
                                        (MasTypes.BrakeResponse, 1), (MasTypes.MotorResponse, 1), (MasTypes.WheelResponse, 1)) is { } port)
         {
             if (await ports.ReadAsync(port.DataType, 1, 0) is not { } m) continue;
-            switch (port.DataType)
-            {
-                case MasTypes.Message:
-                    if (Accept(JsonNode.Parse(m.Json)!) is { } problem) context.Report(problem);
-                    continue;
-                case MasTypes.Attitude:
-                    foreach (var (dataType, json) in Commands(JsonNode.Parse(m.Json)!))
-                        await ports.WriteAsync(dataType, 1, json);
-                    continue;
-            }
-            // The Responses: what the devices achieved is MRA's to judge (Step 6).
+            if (port.DataType != MasTypes.Message) continue;          // the Responses: what the devices achieved is MRA's to judge (Step 6)
+            var (problem, commands) = Interpret(JsonNode.Parse(m.Json)!);
+            if (problem is not null) context.Report(problem);
+            foreach (var (dataType, json) in commands) await ports.WriteAsync(dataType, 1, json);
         }
+    }
+
+    // An AMS-MAS Message: accepted, and the commands from the Spatial Attitude it
+    // carries, or the last one received.
+    public (string? Problem, IReadOnlyList<(string DataType, string Json)> Commands) Interpret(JsonNode message)
+    {
+        var problem = Accept(message);
+        if (message["AMSMessage"]?["SpatialAttitude"] is { } carried) attitude = carried.DeepClone();
+        return (problem, attitude is null ? [] : Commands(attitude));
     }
 
     // An AMS-MAS Message: its Command, and its Trajectory. Null if accepted, else why not.

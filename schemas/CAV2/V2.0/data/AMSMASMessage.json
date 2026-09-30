@@ -17,6 +17,7 @@
 
     "AMSMessage":         { "type": "object", "additionalProperties": false, "description": "Data in message from AMS to MAS.", "properties": {
       "Trajectory":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Trajectory.json", "description": "Trajectory to be executed by the MAS." },
+      "SpatialAttitude":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "The CAV's Spatial Attitude as the AMS knows it - GNSS and the MAS's own estimate combined - on the frame of the Trajectory: what the MAS follows the Trajectory from." },
       "Command":          { "type": "string", "enum": [ "Execute", "Suspend", "Resume", "Change" ],
                             "description": "Command to apply to the current Trajectory." } } },
 

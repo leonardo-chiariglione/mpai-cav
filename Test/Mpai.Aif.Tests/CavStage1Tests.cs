@@ -37,9 +37,10 @@ public class CavStage1Tests
         public void Step()
         {
             var sensed = Sim.Sense(camera: false);
-            var (_, commands) = mas.Sense(sensed, responses);
+            mas.Sense(sensed, responses);
             var message = Ams.Step(JsonNode.Parse(TruthBed.Of(Sim, sensed))!, [], answer, sensed.FrameMs);
-            if (message is not null) answer = mas.Answer(message);
+            List<(string DataType, string Json)> commands = [];
+            if (message is not null) (answer, commands) = mas.Answer(message);
             Sim.Actuate(commands);
             responses = Sim.Advance();
             Hardest = Math.Max(Hardest, -Sim.EgoAcceleration);

@@ -11,30 +11,26 @@ namespace Mpai.Cav.Ams;
 // CAV's lane - in the latest Full Environment Descriptors - would be reached within
 // TimeToCollision seconds: the deceleration that stops the closing before the gap
 // falls below StopGap metres, at least the Trajectory's own, at most Emergency m/s2,
-// held over the Trajectory. The result is the AMS-MAS Message, the Command Execute.
+// held over the Trajectory. The result is the AMS-MAS Message, the Command Execute,
+// with the CAV's Spatial Attitude of the latest Full Environment Descriptors - GNSS
+// and the MAS's own estimate combined by the ESS, on the map's frame, the Trajectory's:
+// what the MAS follows the Trajectory from (the author: the MAS executes; the best
+// knowledge of where the CAV is is the AMS's).
 //
-// WITH THE ANSWER OF THE MAS (M3237 3.7, Step 6): its Road State and its Spatial
-// Attitude.
-// - On a road whose friction the Road State estimates, no deceleration beyond what
-//   it gives, and no faster than the CAV can still stop behind the object ahead - if
-//   that stops too, with all the grip - braking at FrictionMargin of it.
-// - The Trajectory on the MAS's frame: the MAS says where the CAV was at an instant
-//   on its own frame, the Full Environment Descriptors of that instant where on the
-//   AMS's; the turn and the shift between the two, smoothed (FrameWeight), move each
-//   point, velocity and acceleration of the Trajectory. Until the MAS has answered,
-//   the Trajectory is on the AMS's frame.
+// WITH THE ANSWER OF THE MAS (M3237 3.7, Step 6): its Road State. On a road whose
+// friction the Road State estimates, no deceleration beyond what it gives, and no
+// faster than the CAV can still stop behind the object ahead - if that stops too,
+// with all the grip - braking at FrictionMargin of it.
 public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDictionary<string, string> settings) : IAimProcessor, IAimRunner
 {
     private const double G = 9.81;
     private readonly double ttc = EssJson.Setting(settings, "TimeToCollision", 2), emergency = EssJson.Setting(settings, "Emergency", 6),
                             stopGap = EssJson.Setting(settings, "StopGap", 2), alertWindow = EssJson.Setting(settings, "AlertWindow", 300),
-                            frictionMargin = EssJson.Setting(settings, "FrictionMargin", 0.7), frameWeight = EssJson.Setting(settings, "FrameWeight", 0.2);
+                            frictionMargin = EssJson.Setting(settings, "FrictionMargin", 0.7);
     private JsonNode? fed;
     private long? lastAlert;
     private long count;
     private double? friction;
-    private (double Turn, double East, double North)? frame;
-    private readonly Queue<(long Ms, double East, double North, double Heading)> egos = new();
 
     public string InstanceId { get; } = instanceId;
     public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("CAV-TOA runs continuously.");
@@ -55,35 +51,14 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
         }
     }
 
-    public void Observe(JsonNode fed)
-    {
-        this.fed = fed;
-        if (fed["EgoSpatialAttitude"] is { } ego)
-        {
-            var (east, north, heading, _) = AmsTypes.Ego(ego);
-            egos.Enqueue((AmsTypes.Ms(ego["SpatialAttitudeTime"]), east, north, heading));
-            while (egos.Count > 100) egos.Dequeue();
-        }
-    }
+    public void Observe(JsonNode fed) => this.fed = fed;
 
     public void Alerted(JsonNode alert) => lastAlert = Math.Max(lastAlert ?? long.MinValue, AmsTypes.Ms(alert["AlertTime"]));
 
-    // THE ANSWER OF THE MAS: the friction of the road; the frame of the MAS against
-    // the AMS's, where the AMS knows where the CAV was at the same instant.
+    // THE ANSWER OF THE MAS: the friction of the road.
     public void Answered(JsonNode answer)
     {
-        var mas = answer["MASMessage"];
-        if ((double?)mas?["RoadState"]?["SurfaceCondition"]?["FrictionCoefficientEstimate"] is { } mu) friction = mu;
-        if (mas?["SpatialAttitude"] is not { } attitude) return;
-        var ms = AmsTypes.Ms(attitude["SpatialAttitudeTime"]);
-        var (east, north, heading, _) = AmsTypes.Ego(attitude);
-        var at = egos.Where(e => Math.Abs(e.Ms - ms) <= 50).Cast<(long Ms, double East, double North, double Heading)?>().FirstOrDefault();
-        if (at is not { } ams) return;
-        var turn = Math.IEEERemainder(heading - ams.Heading, 2 * Math.PI);
-        var (shiftEast, shiftNorth) = (east - (ams.East * Math.Cos(turn) - ams.North * Math.Sin(turn)), north - (ams.East * Math.Sin(turn) + ams.North * Math.Cos(turn)));
-        frame = frame is { } f
-            ? (f.Turn + frameWeight * Math.IEEERemainder(turn - f.Turn, 2 * Math.PI), f.East + frameWeight * (shiftEast - f.East), f.North + frameWeight * (shiftNorth - f.North))
-            : (turn, shiftEast, shiftNorth);
+        if ((double?)answer["MASMessage"]?["RoadState"]?["SurfaceCondition"]?["FrictionCoefficientEstimate"] is { } mu) friction = mu;
     }
 
     public JsonObject Refine(JsonNode trajectory)
@@ -146,30 +121,21 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
                 sa["CartAccel"] = EssJson.Triple((-brake * Math.Cos(h), -brake * Math.Sin(h), 0));
             }
         }
-        if (frame is { } f) OnMasFrame(points, f);
         return Message(refined, ms);
     }
 
-    // Each point, velocity and acceleration turned and shifted onto the MAS's frame.
-    private static void OnMasFrame(JsonArray points, (double Turn, double East, double North) f)
+    private JsonObject Message(JsonNode trajectory, long ms)
     {
-        var (cos, sin) = (Math.Cos(f.Turn), Math.Sin(f.Turn));
-        (double, double, double) Turned((double X, double Y, double Z) v) => (v.X * cos - v.Y * sin, v.X * sin + v.Y * cos, v.Z);
-        foreach (var point in points)
+        var ams = new JsonObject { ["Trajectory"] = trajectory };
+        if (fed?["EgoSpatialAttitude"] is { } ego) ams["SpatialAttitude"] = ego.DeepClone();
+        ams["Command"] = "Execute";
+        return new()
         {
-            var sa = point!["ExpectedSpaceTime"]!["SpatialAttitude1"]!["Position"]!;
-            if (EssJson.Vector(sa["CartPosition"]) is { } p) { var (x, y, z) = Turned(p); sa["CartPosition"] = EssJson.Triple((x + f.East, y + f.North, z)); }
-            if (EssJson.Vector(sa["CartVelocity"]) is { } v) sa["CartVelocity"] = EssJson.Triple(Turned(v));
-            if (EssJson.Vector(sa["CartAccel"]) is { } a) sa["CartAccel"] = EssJson.Triple(Turned(a));
-        }
+            ["Header"] = AmsTypes.Message, ["AMSMASMessageID"] = $"AMM{++count:D6}",
+            ["AMSMASMessageTime"] = EssJson.SimpleTime($"AMM{count:D6}-T", ms),
+            ["AMSMessage"] = ams
+        };
     }
-
-    private JsonObject Message(JsonNode trajectory, long ms) => new()
-    {
-        ["Header"] = AmsTypes.Message, ["AMSMASMessageID"] = $"AMM{++count:D6}",
-        ["AMSMASMessageTime"] = EssJson.SimpleTime($"AMM{count:D6}-T", ms),
-        ["AMSMessage"] = new JsonObject { ["Trajectory"] = trajectory, ["Command"] = "Execute" }
-    };
 
     public static double Speed(JsonNode point)
     {

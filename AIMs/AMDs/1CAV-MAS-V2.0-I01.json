@@ -39,7 +39,6 @@
                        {"Output": {"AIMName": "", "PortName": "WheelResponse"}, "Input": {"AIMName": "1CAV-MRA-V2.0-I01", "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0"}},
                        {"Output": {"AIMName": "", "PortName": "WheelResponse"}, "Input": {"AIMName": "1CAV-MSA-V2.0-I01", "PortName": "WheelResponse", "DataType": "CAV-WHR-V2.0"}},
                        {"Output": {"AIMName": "1CAV-MSA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}, "Input": {"AIMName": "", "PortName": "SpatialAttitude"}},
-                       {"Output": {"AIMName": "1CAV-MSA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}, "Input": {"AIMName": "1CAV-AMI-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}},
                        {"Output": {"AIMName": "1CAV-MSA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}, "Input": {"AIMName": "1CAV-ICA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}},
                        {"Output": {"AIMName": "1CAV-MSA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}, "Input": {"AIMName": "1CAV-MRA-V2.0-I01", "PortName": "SpatialAttitude", "DataType": "OSD-OSA-V1.5"}},
                        {"Output": {"AIMName": "1CAV-ICA-V2.0-I01", "PortName": "WeatherDataOut", "DataType": "CAV-WDT-V2.0"}, "Input": {"AIMName": "", "PortName": "WeatherDataOut"}},

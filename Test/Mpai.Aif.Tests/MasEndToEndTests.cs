@@ -16,8 +16,9 @@ namespace Mpai.Aif.Tests;
 // THE MAS IN THE LOOP: the Module 1CAV-MAS-V2.0-I01 under the Controller, fed a
 // simulation step by step. Each step, the devices' Responses of the last step, the
 // Weather Data and the Spatial Data written to its boundary; its Spatial Attitude
-// read, and the commands AMI gave at it; then the AMS-MAS Message of the step, and
-// MRA's answer read. The simulation waits for the MAS.
+// read; then the AMS-MAS Message of the step, and MRA's answer and the commands AMI
+// gave on it - from the CAV's Spatial Attitude the Message carries - read. The
+// simulation waits for the MAS.
 public sealed class MasInTheLoop : IDisposable
 {
     public const string Mas = "1CAV-MAS-V2.0-I01";
@@ -25,6 +26,7 @@ public sealed class MasInTheLoop : IDisposable
     private readonly string settings = Path.Combine(Path.GetTempPath(), "mpai-p9-settings-" + Guid.NewGuid().ToString("N") + ".json");
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p9-" + Guid.NewGuid().ToString("N"));
     private bool following;
+    private long? lastMs;                                     // of the CAV's Spatial Attitude the last Message carried
 
     // The MAS with its heading at Start (degrees): MSA's setting, the repository's
     // settings otherwise.
@@ -58,30 +60,37 @@ public sealed class MasInTheLoop : IDisposable
         }
     }
 
-    // A step: the MAS's Spatial Attitude, and the commands AMI gave at it.
-    public (JsonNode Attitude, List<(string DataType, string Json)> Commands) Sense(Simulation.Sensed sensed, IEnumerable<(string DataType, string Json)> responses, int timeoutMs = 10_000)
+    // A step: the MAS's Spatial Attitude.
+    public JsonNode Sense(Simulation.Sensed sensed, IEnumerable<(string DataType, string Json)> responses, int timeoutMs = 10_000)
     {
         foreach (var (dataType, json) in responses) Write(dataType, json, timeoutMs);
         foreach (var (dataType, json) in sensed.Messages.Where(m => m.DataType is MasTypes.Weather or MasTypes.SpatialData)) Write(dataType, json, timeoutMs);
         var attitude = ReadAt(MasTypes.Attitude, j => MasTypes.Ms(j["SpatialAttitudeTime"]), sensed.FrameMs, timeoutMs);
+        while (api.OutputRead(Mas, MasTypes.Weather, 1, 0) is { Error: AifError.OK }) { }   // for the ESS: given it from the sensors here
+        return attitude;
+    }
+
+    // The AMS-MAS Message of the step: MRA's answer to it, and the commands AMI gave
+    // on it - at the time of the CAV's Spatial Attitude it carries.
+    public (JsonNode Answer, List<(string DataType, string Json)> Commands) Answer(JsonNode message, int timeoutMs = 10_000)
+    {
+        Write(MasTypes.Message, message.ToJsonString(), timeoutMs);
+        following |= message["AMSMessage"]?["Trajectory"] is not null;
+        if (message["AMSMessage"]?["SpatialAttitude"] is { } carried) lastMs = MasTypes.Ms(carried["SpatialAttitudeTime"]);
         var commands = new List<(string, string)>();
-        if (following)
+        if (following && lastMs is { } ms)
         {
             // The Wheel Command comes last: once it is out, so are the others.
-            var wheel = ReadAt(MasTypes.WheelCommand, j => MasTypes.Ms(j["WheelCommandTime"]), sensed.FrameMs, timeoutMs);
+            var wheel = ReadAt(MasTypes.WheelCommand, j => MasTypes.Ms(j["WheelCommandTime"]), ms, timeoutMs);
             foreach (var type in new[] { MasTypes.BrakeCommand, MasTypes.MotorCommand })
                 while (api.OutputRead(Mas, type, 1, 0) is { Error: AifError.OK, Json: { } c }) commands.Add((type, c));
             commands.Add((MasTypes.WheelCommand, wheel.ToJsonString()));
         }
-        while (api.OutputRead(Mas, MasTypes.Weather, 1, 0) is { Error: AifError.OK }) { }   // for the ESS: given it from the sensors here
-        return (attitude, commands);
+        return (Answered(message, timeoutMs), commands);
     }
 
-    // The AMS-MAS Message of the step, and MRA's answer to it.
-    public JsonNode Answer(JsonNode message, int timeoutMs = 10_000)
+    private JsonNode Answered(JsonNode message, int timeoutMs)
     {
-        Write(MasTypes.Message, message.ToJsonString(), timeoutMs);
-        following = true;
         // The answer to this Message, which names it: its time is that of the MAS's
         // latest Spatial Attitude, which may be of the frame before when MRA reads the
         // Message first - a race that made a step wait for an answer already given.
@@ -167,12 +176,13 @@ public class MasEndToEndTests
                 var sensed = sim.Sense();
                 var ego = sensed.Truth["Ego"]!;
                 var clock = System.Diagnostics.Stopwatch.StartNew();
-                var (attitude, commands) = mas.Sense(sensed, responses);
+                var attitude = mas.Sense(sensed, responses);
                 // The MAS's Spatial Attitude of the instant first: a GNSS fix is set against it.
                 var toEss = sensed.Messages.Where(m => m.DataType is not MasTypes.SpatialData).Prepend((MasTypes.Attitude, attitude.ToJsonString())).ToList();
                 var (bed, alerts) = ess.Step(new Simulation.Sensed(toEss, sensed.Truth, sensed.FrameMs));
                 var message = ams.Step(bed!, alerts, answer, sensed.FrameMs);
-                if (message is not null) answer = mas.Answer(message);
+                List<(string DataType, string Json)> commands = [];
+                if (message is not null) (answer, commands) = mas.Answer(message);
                 latencies.Add(clock.Elapsed.TotalMilliseconds);
 
                 var pose = MasTypes.Pose(attitude);
@@ -361,8 +371,10 @@ public class MasDeliverTests
         public void Dispose() { stop.Cancel(); try { stepping.Wait(); } catch { } }
     }
 
-    // THE PLANNER standing in for the AMS: one AMS-MAS Message, 10 m/s along the
-    // Route's first leg (east) for 60 s; then, if told, one with nothing to follow.
+    // THE PLANNER standing in for the AMS: every 100 ms an AMS-MAS Message, 10 m/s along
+    // the Route's first leg (east) for 60 s, with the CAV's Spatial Attitude - here the
+    // simulation's, where the AMS gives its own; then, if told, one with nothing to
+    // follow, and no more.
     private sealed class PlannerDevice(Simulation sim, TimeSpan? faultAfter) : IDevice
     {
         public Task DeliverAsync(string dataType, string json, CancellationToken cancel) => Task.CompletedTask;
@@ -378,18 +390,24 @@ public class MasDeliverTests
                 point["Position"]!["CartAccel"] = Mpai.Cav.Ess.EssJson.Triple((0, 0, 0));
                 points.Add(new JsonObject { ["ExpectedSpaceTime"] = Mpai.Cav.Ess.EssJson.SpaceTime($"P-{k}-ST", t0 + k * 100, point) });
             }
-            yield return (MasTypes.Message, new JsonObject
+            var trajectory = new JsonObject { ["Header"] = "OSD-TRJ-V1.5", ["TrajectoryID"] = "PLAN1-TRJ", ["TrajectoryTime"] = Mpai.Cav.Ess.EssJson.SimpleTime("PLAN1-TRJ-T", t0), ["Trajectory"] = points };
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            for (var n = 1; faultAfter is not { } until || clock.Elapsed < until; n++)
             {
-                ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = "PLAN1", ["AMSMASMessageTime"] = Mpai.Cav.Ess.EssJson.SimpleTime("PLAN1-T", t0),
-                ["AMSMessage"] = new JsonObject
+                var ms = sim.Start.ToUnixTimeMilliseconds() + (long)Math.Round(sim.Time * 1000);
+                var heading = sim.Mechanics?.Heading ?? 0;
+                var attitude = Mpai.Cav.Ess.EssJson.Attitude($"PLAN{n}-SA", ms, (sim.Mechanics?.East ?? 0, sim.Mechanics?.North ?? 0, 0), (0.5, 0.5, 0.1),
+                    (sim.EgoSpeed * Math.Cos(heading), sim.EgoSpeed * Math.Sin(heading), 0),
+                    new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"PLAN{n}-SA-O", ["Orientation"] = new JsonArray(0.0, 0.0, Math.Round(heading * 180 / Math.PI, 3)) });
+                yield return (MasTypes.Message, new JsonObject
                 {
-                    ["Trajectory"] = new JsonObject { ["Header"] = "OSD-TRJ-V1.5", ["TrajectoryID"] = "PLAN1-TRJ", ["TrajectoryTime"] = Mpai.Cav.Ess.EssJson.SimpleTime("PLAN1-TRJ-T", t0), ["Trajectory"] = points },
-                    ["Command"] = "Execute"
-                }
-            }.ToJsonString());
-            if (faultAfter is { } after)
+                    ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = $"PLAN{n}", ["AMSMASMessageTime"] = Mpai.Cav.Ess.EssJson.SimpleTime($"PLAN{n}-T", ms),
+                    ["AMSMessage"] = new JsonObject { ["Trajectory"] = trajectory.DeepClone(), ["SpatialAttitude"] = attitude, ["Command"] = "Execute" }
+                }.ToJsonString());
+                await Task.Delay(100, cancel);
+            }
+            if (faultAfter is not null)
             {
-                await Task.Delay(after, cancel);
                 yield return (MasTypes.Message, new JsonObject
                 {
                     ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = "PLAN2", ["AMSMASMessageTime"] = Mpai.Cav.Ess.EssJson.SimpleTime("PLAN2-T", t0),

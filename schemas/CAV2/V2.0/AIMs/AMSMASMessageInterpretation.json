@@ -12,7 +12,6 @@
 
   "ExternalPorts":  [
     { "Name": "AMSMASMessageIn" , "Direction": "Input"  , "DataType": "CAV-AMM-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "SpatialAttitude" , "Direction": "Input"  , "DataType": "OSD-OSA-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "BrakeResponse"   , "Direction": "Input"  , "DataType": "CAV-BRR-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "MotorResponse"   , "Direction": "Input"  , "DataType": "CAV-MRP-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "WheelResponse"   , "Direction": "Input"  , "DataType": "CAV-WHR-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
