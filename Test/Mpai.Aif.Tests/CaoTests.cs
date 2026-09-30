@@ -34,6 +34,8 @@ public sealed class CaoInTheLoop : IDisposable
     // What the CAV said: its text, in order; and the AMS Data of each step.
     public List<string> Said { get; } = [];
     public List<string> Recognised { get; } = [];
+    // What the CAV said, as the cabin's loudspeaker gives it: its speech, in order.
+    public List<byte[]> Spoken { get; } = [];
 
     // The AMS Data of the last step: the decision, and the Full Environment
     // Descriptors it was taken on.
@@ -95,7 +97,8 @@ public sealed class CaoInTheLoop : IDisposable
         // What the CAV says, and what HCI heard.
         while (api.OutputRead(Cao, "OSD-BTO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } t }) Said.Add(MpaiJson.FromJson<BasicTextObject>(t)?.GetText() ?? "");
         while (api.OutputRead(Cao, "OSD-BTO-V1.5", 2, 0) is { Error: AifError.OK, Json: { } r }) Recognised.Add(MpaiJson.FromJson<BasicTextObject>(r)?.GetText() ?? "");
-        foreach (var type in new[] { "OSD-BSO-V1.5", "PAF-FDO-V1.6", "OSD-IID-V1.5" })
+        while (api.OutputRead(Cao, "OSD-BSO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } sp }) Spoken.Add(MpaiJson.FromJson<BasicSpeechObject>(sp)?.Data ?? []);
+        foreach (var type in new[] { "PAF-FDO-V1.6", "OSD-IID-V1.5" })
             while (api.OutputRead(Cao, type, 1, 0) is { Error: AifError.OK }) { }
         return commands;
     }
