@@ -1,0 +1,15 @@
+{
+  "Basic Object without a Trace": "valid",
+  "Licence saying IsFirstLicence": "invalid",
+  "Licence saying nothing: the root one by default": "valid",
+  "Licence, a subsequent one": "valid",
+  "Licence, the root one": "valid",
+  "Object with its ObjectSpaceTime": "valid",
+  "Object without its ObjectSpaceTime": "invalid",
+  "Simple Contract at Status Final": "valid",
+  "Simple Contract at a Status other than Model or Final": "invalid",
+  "Simple Contract without its Status": "invalid",
+  "Transaction with its sender and receiver": "valid",
+  "Transaction without its receiver": "invalid",
+  "Transaction without its sender": "invalid"
+}

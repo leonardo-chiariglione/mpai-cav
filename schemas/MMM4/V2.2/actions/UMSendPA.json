@@ -5,7 +5,7 @@
   "required":               [ "Header", "MInstanceID", "Time", "UMSendPARQ", "UMSendPARS" ],
   "properties":             {
 
-    "Header":               { "type": "string", "pattern": "^USP-1SP-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "Header":               { "type": "string", "const": "MMM-1SP-V2.2" },
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
     "UMSendPAID":           { "type": "string" },

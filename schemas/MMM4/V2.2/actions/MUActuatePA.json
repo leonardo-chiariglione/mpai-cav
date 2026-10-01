@@ -5,7 +5,7 @@
   "required":                 [ "Header", "Time" ],
   "properties":               {
 
-    "Header":                 { "type": "string", "pattern": "MMM-3CP-V2.2" },
+    "Header":                 { "type": "string", "const": "MMM-3CP-V2.2" },
     "MInstanceID":            { "type": "string" },
     "UEnvironmentID":         { "type": "string" },
     "MUActuatePAID":          { "type": "string" },

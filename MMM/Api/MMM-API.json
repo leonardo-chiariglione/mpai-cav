@@ -6695,6 +6695,9 @@
      "Rules": {
       "$ref": "#/components/schemas/MMM4_V22_Rules"
      },
+     "Rights": {
+      "$ref": "#/components/schemas/MMM4_V22_Rights"
+     },
      "PMetadata": {
       "type": "array",
       "items": {
@@ -9239,13 +9242,12 @@
      "LicensorID",
      "LicenseeID",
      "LicensorRights",
-     "LicenseeRights",
-     "IsFirstLicence"
+     "LicenseeRights"
     ],
     "properties": {
      "Header": {
       "type": "string",
-      "pconstattern": "MMM-LIC-V2.2}$"
+      "const": "MMM-LIC-V2.2"
      },
      "MInstanceID": {
       "type": "string",
@@ -10454,7 +10456,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "pattern": "MMM-3CP-V2.2"
+      "const": "MMM-3CP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -11911,7 +11913,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-PDT-V2.2}$"
+      "const": "MMM-PDT-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -13509,7 +13511,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-PRV-V2.2$"
+      "const": "MMM-PRV-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14421,7 +14423,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "pattern": "^MMM-MSP-V[0-9],{1,2},[.][0-9],{1,2}$"
+      "const": "MMM-RSP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -15809,13 +15811,13 @@
      "MInstanceID",
      "SimpleContractID",
      "SimpleContractTime",
-     "SimpleContractStatus"
+     "Status"
     ],
     "additionalProperties": false,
     "properties": {
      "Header": {
       "type": "string",
-      "consts": "MMM-SCT-V2.2"
+      "const": "MMM-SCT-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -15828,6 +15830,13 @@
      },
      "SimpleContractTime": {
       "$ref": "#/components/schemas/OSD_V15_SimpleTime"
+     },
+     "Status": {
+      "type": "string",
+      "enum": [
+       "Model",
+       "Final"
+      ]
      },
      "SenderData": {
       "type": "object",
@@ -15866,7 +15875,7 @@
          "$ref": "#/components/schemas/MMM4_V22_Value"
         },
         "ValueToSender": {
-         "$ref": "#/components/schemas/MMM4_V22_Rights"
+         "$ref": "#/components/schemas/MMM4_V22_Value"
         },
         "ReceiverWalletID": {
          "type": "string"
@@ -16164,7 +16173,8 @@
      "MInstanceID",
      "MEnvironmentID",
      "TransactionID",
-     "TransactionData"
+     "SenderData",
+     "ReceiverData"
     ],
     "additionalProperties": false,
     "properties": {
@@ -16857,7 +16867,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "pattern": "^USP-1SP-V[0-9],{1,2},[.][0-9],{1,2}$"
+      "const": "MMM-1SP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -17091,7 +17101,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "consts": "MMM-VLP-V2.2"
+      "const": "MMM-VLP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -18163,7 +18173,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "pattern": "^MMM-BLO-V[0-9],{1,2},[.][0-9],{1,2}$"
+      "const": "OSD-BLC-V1.5"
      },
      "MInstanceID": {
       "type": "string"
@@ -18237,8 +18247,7 @@
     "required": [
      "Header",
      "BasicObjectID",
-     "BasicObjectSpaceTime",
-     "Trace"
+     "BasicObjectSpaceTime"
     ],
     "additionalProperties": false,
     "properties": {
@@ -19469,6 +19478,9 @@
      },
      "ObjectTime": {
       "$ref": "#/components/schemas/OSD_V15_Time"
+     },
+     "ObjectSpaceTime": {
+      "$ref": "#/components/schemas/OSD_V15_SpaceTime"
      },
      "BasicObjectCount": {
       "type": "integer"

@@ -5,7 +5,7 @@
   "required":               [ "Header", "Time" ],
   "properties":             {
 
-    "Header":               { "type": "string", "consts": "MMM-VLP-V2.2" },
+    "Header":               { "type": "string", "const": "MMM-VLP-V2.2" },
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
     "ValidatePAID":         { "type": "string" },

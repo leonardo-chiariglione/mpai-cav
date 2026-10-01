@@ -6,7 +6,7 @@
   "required":                   [ "Header", "FaceDescriptorsObjectID", "FaceDescriptorsData" ],
   "properties":                 {
 
-    "Header":                   { "type": "string", "pattern": "^PAF-FDO-V[0-9]{1,2}[.][0-9]{1,2}$",
+    "Header":                   { "type": "string", "const": "PAF-FDO-V1.6",
                                   "description": "Face Descriptors Object Header â€“ Standard PAF-FDO-Vx.y" },
     "MInstanceID":              { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Face is or is intended to be located." },
     "UEnvironmentID":           { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Face is or is intended to be located." },

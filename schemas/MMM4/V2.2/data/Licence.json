@@ -3,10 +3,10 @@
   "title":                    "Licence V2.2",
   "type":                     "object",
   "additionalProperties":     false,
-  "required":                 [ "Header", "LicenceID", "LicensorID", "LicenseeID", "LicensorRights", "LicenseeRights", "IsFirstLicence" ],
+  "required":                 [ "Header", "LicenceID", "LicensorID", "LicenseeID", "LicensorRights", "LicenseeRights" ],
   "properties":               {
 
-    "Header":                 { "type": "string", "pconstattern": "MMM-LIC-V2.2}$" },
+    "Header":                 { "type": "string", "const": "MMM-LIC-V2.2" },
     "MInstanceID":            { "type": "string", "minLength": 1 },
     "MEnvironmentID":         { "type": "string" },
     "LicenceID":              { "type": "string", "minLength": 1 },

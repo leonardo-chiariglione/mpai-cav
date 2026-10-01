@@ -2,7 +2,7 @@
   "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "title":                        "Basic Object V1.5",
   "description":                  "Atomic object carrying data, media qualifiers, spatiotemporal context, and annotations.",
-  "type":                         "object", "required": [ "Header", "BasicObjectID", "BasicObjectSpaceTime", "Trace" ],
+  "type":                         "object", "required": [ "Header", "BasicObjectID", "BasicObjectSpaceTime" ],
   "additionalProperties":         false,
   "properties":                   {
 

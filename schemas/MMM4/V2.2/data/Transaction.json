@@ -2,7 +2,7 @@
   "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Transaction.json",
   "title":                  "Transaction V2.2",
   "type":                   "object",
-  "required":               [ "Header", "MInstanceID", "MEnvironmentID", "TransactionID", "TransactionData" ],
+  "required":               [ "Header", "MInstanceID", "MEnvironmentID", "TransactionID", "SenderData", "ReceiverData" ],
   "additionalProperties":   false,
   "properties":             {
 

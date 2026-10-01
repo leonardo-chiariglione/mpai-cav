@@ -6,7 +6,7 @@
   "additionalProperties":           false,
   "properties":                     {
 
-    "Header":                       { "type": "string", "pattern": "^MMM-BLO-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "Header":                       { "type": "string", "const": "OSD-BLC-V1.5" },
     "MInstanceID":                  { "type": "string" },
     "UEnvironment":                 { "type": "string" },
     "BasicLocationObjectID":        { "type": "string" },

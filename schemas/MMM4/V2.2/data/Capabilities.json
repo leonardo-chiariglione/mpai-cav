@@ -49,6 +49,7 @@
       "ItemTypes":            { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/AnyItem.json" } },
       "QualifierTypes":       { "type": "array", "items": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" } },
       "Rules":                { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rules.json" },
+      "Rights":               { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },
       "PMetadata":            { "type": "array", "items": { "type": "string" } },
       "IMetadata":            { "type": "array", "items": { "type": "string" } } } },
 

@@ -12,6 +12,7 @@
     "UEnvironmentID":               { "type": "string" },
     "ObjectID":                     { "type": "string" },
     "ObjectTime":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "ObjectSpaceTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
 
     "BasicObjectCount":             { "type": "integer" },
     "BasicObjects":                 { "type": "array", "items": { "type": "object", "required": [ "BasicObjectIDOrBasicObject" ],

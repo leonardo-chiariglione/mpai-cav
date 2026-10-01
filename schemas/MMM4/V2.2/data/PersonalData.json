@@ -4,7 +4,7 @@
   "type":                   "object", 
   "properties":             {
 
-    "Header":               { "type": "string", "const": "MMM-PDT-V2.2}$" },
+    "Header":               { "type": "string", "const": "MMM-PDT-V2.2" },
     "MInstanceID":          { "type": "string" },
     "MEnvironmentID":       { "type": "string" },
     "PersonalDataID":       { "type": "string" },

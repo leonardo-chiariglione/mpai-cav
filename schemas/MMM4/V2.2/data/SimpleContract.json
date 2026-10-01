@@ -2,15 +2,16 @@
   "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/SimpleContract.json",
   "title":                      "Simple Contract V2.2",
   "type":                       "object",
-  "required":                   ["Header", "MInstanceID", "SimpleContractID", "SimpleContractTime", "SimpleContractStatus"],
+  "required":                   ["Header", "MInstanceID", "SimpleContractID", "SimpleContractTime", "Status"],
   "additionalProperties":       false,
   "properties":                 {
 
-    "Header":                   { "type": "string", "consts": "MMM-SCT-V2.2" },
+    "Header":                   { "type": "string", "const": "MMM-SCT-V2.2" },
     "MInstanceID":              { "type": "string" },
     "MEnvironmentID":           { "type": "string" },
     "SimpleContractID":         { "type": "string" },
     "SimpleContractTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Status":                   { "type": "string", "enum": [ "Model", "Final" ] },
 
     "SenderData":               { "type": "object", "additionalProperties": false, "properties": {
       "SenderID":               { "type": "string" },
@@ -23,7 +24,7 @@
     "ReceiverData":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
       "ReceiverID":             { "type": "string" },
       "ReceiverPostValue":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
-      "ValueToSender":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },
+      "ValueToSender":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
       "ReceiverWalletID":       { "type": "string" } } } },
 
     "ServiceProviderData":      { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
