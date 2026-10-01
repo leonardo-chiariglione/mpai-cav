@@ -1,0 +1,22 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/AnyItem.json",
+  "title":                "Any Item V2.2",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "ItemName", "ItemValueOrRef", "MInstanceID", "MEnvironmentID" ],
+  "properties":           {
+
+    "ItemName":           { "type": "string" },
+    "ItemValueOrRef":     { "$ref": "#/$defs/ValueOrRef" },
+
+    "MInstanceID":        { "type": "string" },
+    "MEnvironmentID":     { "type": "string" },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                {
+    "ValueOrRef":         { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                          { "type": "object", "additionalProperties": true },
+                          { "type": "string", "format": "uri" } ] } } } }
+

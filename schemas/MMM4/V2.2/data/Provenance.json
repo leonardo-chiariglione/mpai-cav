@@ -1,0 +1,113 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/Provenance.json",
+  "title":                    "Provenance V2.2",
+  "type":                     "object",
+  "required":                 [ "Header", "MInstanceID", "ProvenanceID", "AssetID", "ProvenanceData" ],
+  "additionalProperties":     false,
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "MMM-PRV-V2.2$" },
+    "MInstanceID":            { "type": "string" },
+    "MEnvironmentID":         { "type": "string" },
+    "ProvenanceID":           { "type": "string" },
+    "ProvenanceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "AssetID":                { "type": "string" },
+
+    "ProvenanceData":         { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ProvenanceEvent" } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+
+  "$defs":                    {
+    "ProvenanceEventBase":    { "type": "object", "required": [ "EventID","EventType","Time","ProcessID" ], "additionalProperties": false, 
+                                "properties": {
+      "EventID":              { "type": "string" },
+      "EventType":            { "type": "string", "enum": [ "create","modify","convert","transfer", "transaction","authorise","revoke", "import","export" ] },
+      "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "ProcessID":            { "type": "string" },
+      "Justification":        { "type": [ "string", "null" ] } } },
+
+    "CreateEvent":            { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "NewItemID","AuthorServiceID" ], "properties": {
+      "EventType":            { "const": "create" },
+      "NewItemID":            { "type": "string" },
+      "AuthorServiceID":      { "type": "string" } } } ] },
+
+    "ModifyEvent":            { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "OldItemID","NewItemID","ServiceID" ], "properties": {
+      "EventType":            { "const": "modify" },
+      "OldItemID":            { "type": "string" },
+      "NewItemID":            { "type": "string" },
+      "ServiceID":            { "type": "string" } } } ] },
+
+    "ConvertEvent":           { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "OldItemID","NewItemID","ServiceID" ], "properties": {
+      "EventType":            { "const": "convert" },
+      "OldItemID":            { "type": "string" },
+      "NewItemID":            { "type": "string" },
+      "Qualifier":            { "type": [ "string", "object" ] },
+      "ServiceID":            { "type": "string" } } } ] },
+
+    "TransferEvent":          { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "ItemID","FromUserID","ToUserID" ], "properties": {
+      "EventType":            { "const": "transfer" },
+      "ItemID":               { "type": "string" },
+      "FromUserID":           { "type": "string" },
+      "ToUserID":             { "type": "string" } } } ] },
+
+    "TransactionEvent":       { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "TransactionID","ItemID","SenderUserID","ReceiverUserID" ], "properties": {
+      "EventType":            { "const": "transaction" },
+      "TransactionID":        { "type": "string" },
+      "ItemID":               { "type": "string" },
+      "SenderUserID":         { "type": "string" },
+      "ReceiverUserID":       { "type": "string" } } } ] },
+
+    "AuthoriseEvent":         { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "RightsGranted","ToProcessID" ], "properties": {
+      "EventType":            { "const": "authorise" },
+      "RightsGranted":        { "type": "array", "items": { "type": "string" } },
+      "ToProcessID":          { "type": "string" } } } ] },
+
+    "RevokeEvent":            { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "RightsRevoked","FromProcessID" ], "properties": {
+      "EventType":            { "const": "revoke" },
+      "RightsRevoked":        { "type": "array", "items": { "type": "string" } },
+      "FromProcessID":        { "type": "string" } } } ] },
+
+    "ImportEvent":            { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "NewItemID","UEnvironmentLocation","ServiceID" ], "properties": {
+      "EventType":            { "const": "import" },
+      "NewItemID":            { "type": "string" },
+      "UEnvironmentLocation": { "type": "string" },
+      "ServiceID":            { "type": "string" } } } ] },
+
+    "ExportEvent":            { "allOf": [
+                              { "$ref": "#/$defs/ProvenanceEventBase" },
+                              { "type": "object", "required": [ "ItemID","UEnvironmentLocation","ServiceID" ], "properties": {
+      "EventType":            { "const": "export" },
+      "ItemID":               { "type": "string" },
+      "UEnvironmentLocation": { "type": "string" },
+      "ServiceID":            { "type": "string" } } } ] },
+
+    "ProvenanceEvent":        { "oneOf": [
+                              { "$ref": "#/$defs/CreateEvent" },
+                              { "$ref": "#/$defs/ModifyEvent" },
+                              { "$ref": "#/$defs/ConvertEvent" },
+                              { "$ref": "#/$defs/TransferEvent" },
+                              { "$ref": "#/$defs/TransactionEvent" },
+                              { "$ref": "#/$defs/AuthoriseEvent" },
+                              { "$ref": "#/$defs/RevokeEvent" },
+                              { "$ref": "#/$defs/ImportEvent" },
+                              { "$ref": "#/$defs/ExportEvent" } ] } } }
+

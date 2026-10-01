@@ -1,0 +1,32 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/Wallet.json",
+  "title":                "Wallet V2.2",
+  "type":                 "object",
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "MMM-WAL-V2.2" },
+    "MInstanceID":        { "type": "string" },
+    "MEnvironmentID":     { "type": "string" },
+    "WalletID":           { "type": "string" },
+    "WalletTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "AccountID":          { "type": "string" },
+
+    "AssetsOrIDs":        { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ItemOrID.json#/$defs/AssetOrID" } },
+
+    "LicencesOrIDs":      { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ItemOrID.json#/$defs/LicenceOrID" } },
+
+    "RightsOrIDs":        { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ItemOrID.json#/$defs/RightsOrID" } },
+
+    "TransactionsOrIDs":  { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ItemOrID.json#/$defs/TransactionOrID" } },
+
+    "Value":              { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } },
+
+    "CryptographicKeys":  { "type": "array", "items": { "type": "object", "additionalProperties": false,
+                            "required": [ "KeyID", "Type", "PublicKey" ], "properties": {
+      "KeyID":            { "type": "string" },
+      "Type":             { "type": "string" },
+      "PublicKey":        { "type": "string" } } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

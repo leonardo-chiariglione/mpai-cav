@@ -1,0 +1,92 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/actions/AuthenticatePAnew.json",
+  "title":                "AuthenticatePA",
+  "type":                 "object",
+  "required":             [ "Header", "Time" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "pattern": "^MMM-AUP-V[0-9],{1,2},[.][0-9],{1,2}$" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "AuthenticatePAID":   { "type": "string" },
+    "AuthenticatePATime": { "type": "string" },
+
+    "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "AuthenticatePARQ":   { "type": "object", "properties": {
+      "RQ1":              { "type": "object", "required": ["Complement","Authentication"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "Authentication": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Authentication.json" } } },
+      "RQ2":              { "type": "object", "required": ["Complement","Rights"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "Rights":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RQ3":              { "type": "object", "required": ["Complement","SPM"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "SPM":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } }, "additionalProperties": false },
+
+    "AuthenticatePAWF":   { "type": "object", "additionalProperties": false, "properties": {
+      "Input":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/AuthenticatePA.json#/properties/AuthenticatePARQ" },
+      "Actions":          { "type": "array", "items": { "anyOf": [
+                              { "type": "object", "required": [ "Condition" ], "additionalProperties": false, "properties": {
+        "Condition":      { "$ref": "#/$defs/Condition" } } },
+                              { "type": "object", "required": [ "Action" ], "additionalProperties": false, "properties": {
+        "Action":         { "$ref": "#/$defs/Action" } } } ] } },
+      "Output":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/AuthenticatePA.json#/properties/AuthenticatePARS" } } },
+
+    "AuthenticatePARS":   { "type": "object", "properties": {
+      "RS1":              { "type": "object", "required": ["Complement","Authentication"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "Authentication": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Authentication.json" } } },
+      "RS2":              { "type": "object", "required": ["Complement","Rights"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "Rights":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RS3":              { "type": "object", "required": ["Complement","SPM"], "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "SPM":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } },
+      "RS4":              { "type": "object", "additionalProperties": false, "properties": {
+        "Complement":     { "type": "string", "enum": [ "With" ] },
+        "PAStatus":       { "type": "array", "items": { "oneOf": [
+                              { "type": "object", "required": [ "Err" ], "additionalProperties": false, "properties": {
+        "Err":            { "type": "string", "enum": [ "FaultyPA", "IncID", "MLocOOR", "InsRights", "InsValue" ] } } },
+                              { "type": "object", "required": [ "Ack" ], "additionalProperties": false, "properties": {
+        "Ack":            { "type": "string", "enum": [ "Ack" ] } } }
+                          ] } } } } }, "additionalProperties": false },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [              { "required": [ "AuthenticatePARQ" ], "not": { "required": [ "AuthenticatePARS" ] } },
+                          { "required": [ "AuthenticatePARS" ], "not": { "required": [ "AuthenticatePARQ" ] } } ],
+
+  "$defs":                {
+
+    "Condition":          { "type": "object", "required": [ "CondExpr" ], "additionalProperties": false, "properties": {
+      "CondExpr":         { "type": "array", "items": { "$ref": "#/$defs/CondTerm" } },
+      "Actions":          { "type": "array", "items": { "anyOf": [
+                              { "type": "object", "required": [ "Condition" ], "additionalProperties": false, "properties": {
+        "Condition":      { "$ref": "#/$defs/Condition" } } },
+                              { "type": "object", "required": [ "Action" ], "additionalProperties": false, "properties": {
+        "Action":         { "$ref": "#/$defs/Action" } } }
+                          ] } } } },
+
+    "CondTerm":           { "type": "object", "required": [ "LValue", "RValue", "Operator" ], "additionalProperties": false, "properties": {
+      "LValue":           { "$ref": "#/$defs/Operand" },
+      "RValue":           { "$ref": "#/$defs/Operand" },
+      "Operator":         { "type": "string", "enum": [ "GT", "EQ", "LT", "GE", "LE", "NE" ] },
+      "Linkage":          { "type": "string", "enum": [ "AND", "OR", "EMPTY" ] } } },
+
+    "Operand":            { "type": "array", "items": { "oneOf": [
+                              { "type": "object", "required": [ "String" ],   "additionalProperties": false, "properties": { "String":   { "type": "string" } } },
+                              { "type": "object", "required": [ "Number" ],   "additionalProperties": false, "properties": { "Number":   { "type": "string" } } },
+                              { "type": "object", "required": [ "Function" ], "additionalProperties": false, "properties": { "Function": { "type": "string" } } },
+                              { "type": "object", "required": [ "MemberOf" ], "additionalProperties": false, "properties": { "MemberOf": { "type": "string" } } }
+                          ] } },
+
+    "Action":             { "type": "object", "required": [ "Task", "Name" ], "additionalProperties": false, "properties": {
+      "Task":             { "type": "string" },
+      "Name":             { "type": "string" },
+      "Input":            { "type": "array", "items": { "type": "object", "required": [ "Parameter", "Value" ], "additionalProperties": false, "properties": {
+        "Parameter":      { "type": "string" },
+        "Value":          { "type": "string" } } } } } } }
+}
+

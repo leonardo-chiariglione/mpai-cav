@@ -1,0 +1,21 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/CertificateObject.json",
+  "title":                  "Certificate Object V2.2",
+  "type":                   "object",
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-CTO-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "CertificateID":        { "type": "string" },
+    "UEnvironment":         { "type": "string" },
+    "CertificateTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"},
+
+    "CertificateData":      { "type": "array", "items": { "anyOf": [
+                            { "type": "object", "properties": { "DataLength": { "type": "integer" }, "DataURI": { "type": "string", "format": "uri" } } },
+                            { "type": "object", "properties": { "Data": { "type": "string" } } },
+                            { "type": "object", "properties": { "ID": { "type": "string" } } } ] } },
+
+    "CertificateQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/CertificateQualifier.json" },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }                            

@@ -1,0 +1,23 @@
+{ "$id":                          "https://schemas.mpai.community/TFA/V1.5/data/InterpretationQualifier.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+
+  "title":                        "Interpretation Qualifier V1.5", "description": "Subtypes, formats, and attributes for Interpretation content. ",
+                                  "type": "object", "required": [ "Header", "InterpretationQualifierID", "SubTypes", "Formats" ],
+                                  "additionalProperties": false, "properties": {
+
+    "Header":                     { "type": "string", "const": "TFA-IFQ-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "InterpretationQualifierID":  { "type": "string" },
+    "InterpretationQualifierTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                    { "type": "object", "additionalProperties": false },
+
+    "Formats":                     { "type": "object", "additionalProperties": false, "properties": {
+      "MPAIFormat":               { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/BasicInterpretation.json" },
+      "OtherFormats":             { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/InterpretationFormats.json" } } },
+
+    "Attributes":                 { "type": "object", "additionalProperties": true },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

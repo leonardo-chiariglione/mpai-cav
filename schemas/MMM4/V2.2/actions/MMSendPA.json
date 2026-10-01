@@ -1,0 +1,50 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/actions/MMSendPA.json",
+  "title":                  "MMSendPA",
+  "type":                   "object",
+  "required":               [ "Header", "Time" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-MSP-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "MMSendPAID":           { "type": "string" },
+    "MMSendPATime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "MMSendPARQ":           { "type": "object", "properties": {
+      "RQ1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "Nil" },
+        "Message":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Message.json" } } },
+      "RQ2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "To" },
+        "To":               { "type": "array", "items": { "type": "string" } } } },
+      "RQ3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RQ4":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } } },
+
+    "MMSendPARS":           { "type": "object", "properties": {
+      "RS1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RS2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } },
+      "RS3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "PAStatus":         { "type": "array", "items": { "oneOf": [
+                            { "type": "object", "properties": {
+          "Err":            { "type": "string", "enum": [ "FaultyPA", "IncID", "InsRights", "InsValue" ] } } },
+                            { "type": "object", "properties": {
+          "Ack":            { "type": "string", "enum": [ "Ack" ] } } } ] } } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [                { "required": [ "MMSendPARQ" ], "not": { "required": [ "MMSendPARS" ] } },
+                            { "required": [ "MMSendPARS" ], "not": { "required": [ "MMSendPARQ" ] } } ] }
+

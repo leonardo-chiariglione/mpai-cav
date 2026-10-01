@@ -1,0 +1,29 @@
+{ "$id":                          "https://schemas.mpai.community/TFA/V1.5/data/ContractQualifier.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "title":                        "Contract Qualifier V1.5",
+  "description":                  "Subtypes, formats and implementation-defined attributes of contracts.",
+  "type":                         "object",
+  "required":                     [ "Header", "ContractQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties": false,  "properties": {
+
+    "Header":                     { "type": "string", "const": "TFA-CCQ-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "ContractQualifierID":        { "type": "string" },
+    "ContractQualifierTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                    { "type": "object", "additionalProperties": false, "properties": {
+      "Categories":               { "type": "array", "items": { "type": "string", "enum": [ "Blockchain", "NonBlockchain" ] },
+                                    "minItems": 1, "uniqueItems": true } } },
+
+    "Formats":                     { "type": "object", "additionalProperties": false, "properties": {
+      "NonExecutable":            { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/NonExContractFormats.json" },
+      "NonBlockChainExecutable":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/NonBlCProgramFormats.json" },
+      "BlockChainExecutable":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/BlCProgramFormats.json" },
+      "MPAIContractFormat":       { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/SimpleContract.json" },
+      "OtherContractFormats":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/ContractFormats.json" } } },
+
+    "Attributes":                 { "type": "object", "additionalProperties": true },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

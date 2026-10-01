@@ -1,0 +1,12 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/ItemOrID.json",
+  "title":                "Item or ID V2.2",
+  "$defs":                {
+    "AssetOrID":          { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Asset.json" },           { "type": "string" } ] },
+    "DiscoveryOrID":      { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/DiscoveryObject.json" },       { "type": "string" } ] },    
+    "InterpretationOrID": { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/InterpretationObject.json" }, { "type": "string" } ] },
+    "LicenceOrID":        { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Licence.json" },         { "type": "string" } ] },
+    "MessageOrID":        { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Message.json" },         { "type": "string" } ] },    "RightsOrID":         { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },          { "type": "string" } ] },
+    "RulesOrID":          { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rules.json" },           { "type": "string" } ] },
+    "TransactionOrID":    { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Transaction.json" },     { "type": "string" } ] },
+    "WalletOrID":         { "oneOf": [ { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Wallet.json" },          { "type": "string" } ] } } }

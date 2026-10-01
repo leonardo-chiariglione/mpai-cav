@@ -1,0 +1,30 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/BasicDiscovery.json",
+  "title":                  "Basic Discovery V2.2",
+  "type":                   "object",
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-BDV-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironment":         { "type": "string" },
+    "BasicDiscoveryID":     { "type": "string" },
+    "BasicDiscoveryTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"},
+
+    "DiscoveryRequest":     { "type": "object", "properties": {
+      "Items":              { "type": "array", "items": { "type": "object", "properties": { "ItemID": { "type": "string" } } } },
+      "MLocations":         { "type": "array", "items": { "type": "object", "properties": {
+                              "MLocation": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json" } } } },
+      "Entities":           { "type": "array", "items": { "type": "object", "properties": {
+                              "Entity": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json" } } } },
+      "Processes":          { "type": "array", "items": { "type": "object", "properties": { "ItemID": { "type": "string" } } } } } },
+
+    "DiscoveryResponse":    { "type": "object", "properties": {
+      "Items":              { "type": "array", "items": { "type": "object", "properties": { "ItemID": { "type": "string" } } } },
+      "MLocations":         { "type": "array", "items": { "type": "object", "properties": {
+                              "MLocation": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json" } } } },
+      "Entities":           { "type": "array", "items": { "type": "object", "properties": {
+                              "Entity": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json" } } } },
+      "Processes":          { "type": "array", "items": { "type": "object", "properties": { "ItemID": { "type": "string" } } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

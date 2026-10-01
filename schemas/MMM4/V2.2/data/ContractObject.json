@@ -1,0 +1,28 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/ContractObject.json",
+  "title":                "Contract Object V2.2",
+  "type":                 "object",
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "^MMM-CTO-V2.2" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "ContractID":         { "type": "string" },
+    "ContractTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "ContractData":       { "type": "array", "items": { "anyOf": [
+                          { "type": "object", "properties": {
+      "DataLength":       { "type": "integer" },
+      "DataURI":          { "type": "string", "format": "uri" } } },
+                          { "type": "object", "properties": {
+      "Data":             { "type": "string" } } },
+                          { "type": "object", "properties": {
+      "DataID":           { "type": "string" } } } ] } },
+
+    "ContractQualifier":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ContractQualifier.json" },
+    "ContractStatus":     { "type": "string", "enum": [ "Model", "Final" ] },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+
+

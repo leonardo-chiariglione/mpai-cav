@@ -1,0 +1,28 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Event.json",
+  "title":                  "Event V2.2",
+  "type":                   "object",
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-EVT-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "EventID":              { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "EventTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "BasicEvent":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/BasicEvent.json" },
+
+    "EventOrBasicEvent":    { "description": "A (possibly nested) structure composed of Events or BasicEvents.",
+                              "type": "array", "items": { "$ref": "#/$defs/EventOrBasicEvent" } },
+
+    "Condition":            { "type": "object", "properties": {
+      "If":                 { "type": "string", "enum": ["If"] },
+      "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                  {
+    "EventOrBasicEvent":    { "description": "Either an Event (this schema) or a BasicEvent.", "oneOf": [
+                            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Event.json" },
+                            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/BasicEvent.json" } ] } } }

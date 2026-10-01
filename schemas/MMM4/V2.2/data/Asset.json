@@ -1,0 +1,34 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Asset.json",
+  "title":                  "Asset V2.2",
+  "type":                   "object",
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-ASS-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "AssetID":              { "type": "string" },
+    "SourceItemID":         { "type": "string" },
+    "AssetTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "Capabilities":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json" },
+
+    "Provenance":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Provenance.json" },
+
+    "MarketClass":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/MarketClasses.json" },
+
+    "ValueMetadata":        { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ValueMetadataIDs.json" } },
+
+    "CurrencyID":           { "oneOf": [
+                            { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/RealCurrencies.json" },
+                            { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/VirtualCurrencies.json" } ] },
+
+    "ServicePricingModel":  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" },
+
+    "MarketplacePolicy":    { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/MarketplacePolicyIDs.json" },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "allOf": [                { "if":   { "properties": { "MarketClass": { "const": "MC-Service" } } },
+                              "then": { "required": [ "ServicePricingModel" ] } } ] }                            

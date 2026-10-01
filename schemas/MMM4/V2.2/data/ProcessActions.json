@@ -1,0 +1,56 @@
+{ "$schema":                 "https://json-schema.org/draft/2020-12/schema",
+  "$id":                     "https://schemas.mpai.community/MMM4/V2.2/data/ProcessActions.json",
+  "title":                   "Process Actions V2.2", 
+  "type":                    "object", 
+  "properties":              {
+
+    "Header":                { "type": "string", "const": "MMM-PAT-V2.2" },
+    "MInstanceID":           { "type": "string" },
+    "MEnvironmentID":        { "type": "string" },
+    "MEnvironmentTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ProcessActions":        { "type": "object", "properties": {
+
+      "MM-Send":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MMSendPA.json" },
+      "Resolve":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/ResolvePA.json" },
+
+      "License":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Licence.json" },
+      "Post":                { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/PostPA.json" },
+      "Transact":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/TransactPA.json" },
+
+      "Execute":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/ExecutePA.json" },
+
+      "MU-Actuate":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MUActuatePA.json" },
+      "MU-Add":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MUAddPA.json" },
+      "MU-Animate":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MUAnimatePA.json" },
+      "MU-Move":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MUMovePA.json" },
+      "MU-Send":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MUSendPA.json" },
+
+      "Hide":                { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/HidePA.json" },
+      "Identify":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/IdentifyPA.json" },
+      "Modify":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/ModifyPA.json" },
+      "Register":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/RegisterPA.json" },
+
+      "UM-Actuate":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/UMActuatePA.json" },
+      "UM-Capture":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/UMCapturePA.json" },
+      "UM-Send":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/UMSendPA.json" },
+
+      "Authenticate":        { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/AuthenticatePA.json" },
+      "Discover":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/DiscoverPA.json" },
+      "Interpret":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/InterpretPA.json" },
+
+      "Author":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/AuthorPA.json" },
+      "Convert":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/ConvertPA.json" },
+
+      "MM-Add":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MMAddPA.json" },
+      "MM-Animate":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MMAnimatePA.json" },
+      "MM-Capture":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MMCapturePA.json" },
+      "MM-Move":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/MMMovePA.json" },
+
+      "Property Change":     { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/PropertyChangePA.json" },
+
+      "Rights Change":       { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/RightsChangePA.json" },
+      "Validate":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/actions/ValidatePA.json" } } },
+
+    "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":         { "type": "string", "maxLength": 2048 } } }

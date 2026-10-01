@@ -1,0 +1,21 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/SimpleCertificate.json",
+  "title":                      "Simple Certificate V2.2",
+  "type":                       "object",
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "MMM-SCF-V2.2" },
+    "MInstanceID":              { "type": "string" },
+    "MEnvironmentID":           { "type": "string" },
+    "SimpleCertificateID":      { "type": "string" },
+    "SimpleCertificateTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "CertificationAuthorityID": { "type": "string" },
+
+    "ProcessID":                { "type": "string" },
+
+    "CertifiedActions":         { "type": "array", "items": { "type": "object", "properties": {
+      "ProcessAction":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessActions.json" } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

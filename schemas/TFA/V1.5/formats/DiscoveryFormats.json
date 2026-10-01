@@ -1,0 +1,14 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/DiscoveryFormats.json",
+  "title": "Discovery Formats V1.5", "type": "string", "oneOf": [
+    { "const": "OGC API Records",              "description": "REST API for discovering metadata records/cataloÃ‰Â¡s of geospatial resources." },
+    { "const": "STAC",                         "description": "SpatioTemporal Asset Catalogs: JSON catalog, collection, item, and searchable API." },
+    { "const": "W3C DCAT",                     "description": "RDF vocabulary for interoperable data catalogs enabling federated dataset discovery." },
+    { "const": "OAI-PMH",                      "description": "Metadata harvesting protocol (XML over HTTP) with six verbs; Dublin Core required." },
+    { "const": "OpenSearch Description",       "description": "XML descriptor advertising onÃ¢â‚¬â€˜site search endpoints and result formats." },
+    { "const": "Sitemaps",                     "description": "XML URL inclusion lists plus sitemap indexes to aid crawler discovery." },
+    { "const": "Schema.org SearchAction",      "description": "Structured data describing an internal search EntryPoint and query input." },
+    { "const": "WebFinger",                    "description": "WellÃ¢â‚¬â€˜known endpoint for JSON Resource Descriptors; resolves actors/services." },
+    { "const": "ActivityPub Actor Discovery",  "description": "WebFinger-driven discovery of ActivityPub actor documents (application/activity+json)." },
+    { "const": "Atom / AtomPub",               "description": "Web feeds and publishing protocol for discovery of new/updated resources." },
+    { "const": "ROLIE",                        "description": "Atom-based discovery/exchange of security automation information." } ] }

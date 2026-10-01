@@ -1,0 +1,5 @@
+
+{ "$schema":  "https://json-schema.org/draft/2020-12/schema",
+  "$id":      "https://schemas.mpai.community/MMM4/V2.2/formats/PriceModels.json",
+  "title":    "Price Models V2.2", "type": "string",
+              "enum": [ "PM-one_time", "PM-subscription", "PM-pay_per_use", "PM-pay_per_time", "PM-freemium", "PM-tiered", "PM-ad_supported", "PM-hybrid", "PM-NotSpecified" ] }

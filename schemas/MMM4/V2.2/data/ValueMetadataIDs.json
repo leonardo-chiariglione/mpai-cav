@@ -1,0 +1,8 @@
+{ "$schema":     "https://json-schema.org/draft/2020-12/schema",
+  "$id":         "https://schemas.mpai.community/MMM4/V2.2/data/ValueMetadataIDs.json",
+  "title":       "Value Metadata IDs V2.2",
+  "description": "Enumerated Value Metadata identifiers. Keep fallback pattern until the enum is complete.",
+  "$comment":    "Populate the enum with authoritative VM-* codes. Remove the pattern fallback when finalized.",
+
+  "oneOf":       [ { "type": "string", "enum": [ "VM-ListPrice", "VM-Discount", "VM-VATIncluded", "VM-Region", "VM-LicenseScope" ] },
+                   { "type": "string", "pattern": "^VM-[A-Za-z0-9_-]{2,48}$" } ] }

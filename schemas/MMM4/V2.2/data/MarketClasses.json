@@ -1,0 +1,5 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMM4/V2.2/data/MarketClasses.json",
+  "title": "Market Classes V2.2",
+  "type": "string", "enum": [ "MC-Service", "MC-DigitalCollectible", "MC-VirtualAsset", "MC-PhysicalGood", "MC-Experience", "MC-AccessRight", "MC-Donation" ] }
+

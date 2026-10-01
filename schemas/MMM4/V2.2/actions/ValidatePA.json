@@ -1,0 +1,56 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/actions/ValidatePA.json",
+  "title":                  "Validate PA V2.2",
+  "type":                   "object",
+  "required":               [ "Header", "Time" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "consts": "MMM-VLP-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ValidatePAID":         { "type": "string" },
+    "ValidatePATime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "ValidatePARQ":         { "type": "object", "properties": {
+
+      "RQ1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Authentication":   { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Authentication.json" } } },
+
+      "RQ2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+
+      "RQ3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } } },
+
+    "ValidatePARS":         { "type": "object", "properties": {
+
+      "RS1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Authentication":   { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Authentication.json" } } },
+
+      "RS2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+
+      "RS3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } },
+
+      "RS4":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "PAStatus":         { "type": "array", "items": { "oneOf": [
+                            { "type": "object", "properties": {
+          "Err":            { "type": "string", "enum": [ "FaultyPA", "IncID", "LocOOR", "InsRights", "InsValue" ] } } },
+                            { "type": "object", "properties": {
+          "Ack":            { "type": "string", "enum": [ "Ack" ] } } } ] } } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [                { "required": [ "ValidatePARQ" ], "not": { "required": [ "ValidatePARS" ] } },
+                            { "required": [ "ValidatePARS" ], "not": { "required": [ "ValidatePARQ" ] } } ] }

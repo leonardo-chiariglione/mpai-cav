@@ -1,0 +1,26 @@
+{ "$id":                        "https://schemas.mpai.community/TFA/V1.5/data/CertificateQualifier.json",
+  "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "title":                      "Certificate Qualifier V1.5",
+  "description":                "Qualifier for certificates describing subtypes, formats, and implementation-defined attributes.",
+  "type":                       "object", "required": [ "Header", "CertificateQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties":       false,
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "TFA-CTQ-V1.5" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "CertificateQualifierID":   { "type": "string" },
+    "CertificateQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                  { "type": "object", "additionalProperties": false, "properties": {
+      "Categories":             { "type": "array", "items": { "type": "string", "enum": [ "Real", "Virtual" ] },
+                                  "minItems": 1, "uniqueItems": true } } },
+
+    "Formats":                   { "type": "object", "additionalProperties": false, "properties": {
+      "MPAICertificateFormat":  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/SimpleCertificate.json" },
+      "OtherCertificateFormats":{ "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/CertificateFormats.json" } } },
+
+    "Attributes":               { "type": "object", "additionalProperties": true },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

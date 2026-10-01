@@ -1,0 +1,63 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/FaultBehaviourReport.json",
+  "title":                      "Fault Behaviour Report V2.2",
+  "description":                "Message with suspected fraudulent-deceptive-non-compliant behaviour.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "ReportID", "ReportTime", "ReporterProcess", "SuspectedCategory", "SubjectReferences" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "MMM-FBR-V2.2" },
+    "MInstanceID":              { "type": "string" },
+    "MEnvironmentID":           { "type": "string" },
+    "ReportID":                 { "type": "string" },
+    "ReportTime":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ReporterProcess":          { "description": "Reporting Process ID.", "type": "string", "minLength": 1 },
+
+    "ReceivingService":         { "description": "ID of Service receiving the report.", "type": "string" },
+
+    "SuspectedCategory":        { "description": "Category of suspected behaviour.", "type": "string",
+                                  "enum": [ "Fraud", "Deception", "Misrepresentation", "NonCompliance", "AbusiveInteraction", "Other" ] },
+
+    "SuspectedCategoryDetail":  { "description": "Detail when SuspectedCategory is Other or to refine categorisation.", "type": "string" },
+
+    "SuspectedActionWindow":    { "description": "Time window during which the suspected behaviour occurred.",
+                                  "type": "object", "additionalProperties": false, "required": [ "StartTime" ], "properties": {
+                                  "TimeWindow": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+    "SubjectReferences":        { "description": "References to Items/Processes involved in or evidencing the suspected behaviour.",
+                                 "type": "object", "additionalProperties": false, "required": [ "Transactions" ], "properties": {
+      "Transactions":           { "description": "Transaction Item IDs relevant to the report.",
+                                  "type": "array", "items": { "type": "string" }, "minItems": 0 },
+      "Items":                  { "description": "Other Items relevant to report (e.g., assets, marketplace listings, messages).",
+                                  "type": "array", "items": { "type": "string" }, "minItems": 0 },
+      "Processes":              { "description": "Identifiers of Processes suspected to be involved.",
+                                  "type": "array", "items": { "type": "string" }, "minItems": 0 },
+      "ActivityData":           { "description": "Activity Data IDs supporting the report (if accessible to the reporter).",
+                                  "type": "array", "items": { "type": "string" }, "minItems": 0 } } },
+
+    "RuleContext":              { "description": "Reference to Rules believed to apply.", "type": "object", "additionalProperties": false, "properties": {
+      "RuleSetId":              { "type": "string" },
+      "RuleVersionId":          { "type": "string" },
+      "EffectiveTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+    "Confidentiality":          { "description": "Optional confidentiality marking for access control under Rules.",
+                                  "type": "string", "enum": [ "Public", "Restricted", "Confidential" ] },
+
+    "ProtectedMetadataHandling":{ "description": "Statement about protected metadata handling / selective disclosure.",
+                                  "type": "object", "additionalProperties": false, "properties": {
+      "RequiresAuthenticate":   { "type": "boolean" },
+      "RedactedFields":         { "type": "array", "items": { "type": "string" } },
+      "DisclosurePolicyRef":    { "type": "string" } } },
+
+    "Attachments":              { "description": "Supporting Items (e.g., provenance, error reports) referenced by identifier.",
+                                 "type": "array", "items": { "type": "string" } },
+
+    "ReporterStatement":        { "description": "Optional human- or process-generated narrative statement.", "type": "string" },
+
+    "Signature":                { "description": "Signature or reference to a signature Item, if the report is signed.",
+                                 "type": "string" },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

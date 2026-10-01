@@ -1,0 +1,61 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/actions/ConvertPA.json",
+  "title":                "ConvertPA",
+  "type":                 "object",
+  "required":             [ "Header", "Time" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "MMM-CVP-V2.2" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "ConvertPAID":        { "type": "string" },
+    "ConvertPATime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ConvertPARQ":        { "type": "object", "properties": {
+      "RQ1":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "Nil" },
+        "ItemID":         { "type": "string" } } },
+      "RQ2":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "At" },
+        "DProcessID":     { "type": "string" } } },
+      "RQ3":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "At" },
+        "MLocation":      { "type": "string" } } },
+      "RQ4":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "ModelQualifier": { "type": "string" } } },
+      "RQ5":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "At" },
+        "RProcessID":     { "type": "string" } } },
+      "RQ6":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "Rights":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RQ7":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "SPM":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } } },
+
+    "ConvertPARS":        { "type": "object", "properties": {
+      "RS1":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "Nil" },
+        "Item":           { "type": "string" } } },
+      "RS2":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "Rights":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RS3":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "SPM":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } },
+      "RS4":              { "type": "object", "properties": {
+        "Complement":     { "type": "string", "const": "With" },
+        "PAStatus":       { "type": "array", "items": { "oneOf": [
+                          { "type": "object", "properties": {
+          "Err":          { "type": "string", "enum": [ "FaultyPA", "IncID", "MLocOOR", "InsRights", "InsValue", "QualNS" ] } } },
+                          { "type": "object", "properties": {
+          "Ack":          { "type": "string", "enum": [ "Ack" ] } } } ] } } } } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [              { "required": [ "ConvertPARQ" ], "not": { "required": [ "ConvertPARS" ] } },
+                          { "required": [ "ConvertPARS" ], "not": { "required": [ "ConvertPARQ" ] } } ] }

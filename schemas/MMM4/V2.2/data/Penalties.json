@@ -1,20 +1,20 @@
 { "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json",
-  "title":                    "Rights V2.2",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/Penalties.json",
+  "title":                    "Penalties V2.2",
   "type":                     "object",
   "additionalProperties":     false,
-  "required":                 [ "Header", "RightsData" ],
+  "required":                 [ "Header", "PenaltiesData" ],
   "properties":               {
 
-    "Header":                 { "type": "string", "const": "^MMM-RGT-V2.2$" },
+    "Header":                 { "type": "string", "const": "MMM-RGT-V2.2" },
     "MInstanceID":            { "type": "string" },
     "UEnvironmentID":         { "type": "string" },
     "MEnvironmentID":         { "type": "string" },
-    "RightsID":               { "type": "string" },
-    "RightsTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "PenaltiesID":            { "type": "string" },
+    "PenaltiesTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "RightsData":             { "type": "array", "minItems": 1, "items": { 
-                                "type": "object", "additionalProperties": false, "required": [ "RightsID", "DeonticVerb", "PAIDOrPA", "Level" ], "properties": {
+    "PenaltiesData":          { "type": "array", "minItems": 1, "items": { 
+                                "type": "object", "additionalProperties": false, "required": [ "PenaltiesID", "DeonticVerb", "PAIDOrPA", "Level" ], "properties": {
 
       "DeonticVerb":          { "type": "string", "enum": [ "Must", "May", "May Not" ] },
 
@@ -23,8 +23,8 @@
         "ProcessAction":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessAction.json" } } },
                               { "type": "object", "additionalProperties": false,"required": [ "ProcessActionID" ], "properties": {
         "ProcessActionID":    { "type": "string" },
-        "Status":             { "type": "string", "enum": [ "Model", "Final" ], "default": "Model" },
-        "Level":              { "type": "string", "enum": [ "Internal", "Acquired", "Granted" ] } } } ] } } } } },
+
+        "Status":             { "type": "string", "enum": [ "Model", "Final" ], "default": "Model" } } } ] } } } } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

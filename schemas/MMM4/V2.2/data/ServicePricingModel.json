@@ -1,0 +1,167 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json",
+  "title":                  "Service Pricing Model V2.2",
+  "type":                   "object",
+  "required":               [ "ModelType", "CurrencyObject" ],
+  "additionalProperties":   false,
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "^MMM-SPM-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "SPMID":                { "type": "string" },
+    "SPMTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SPMContext":           { "type": "string", "enum": [ "Service", "AssetPosting" ],
+                              "description": "Indicates whether this SPM describes a service or asset being posted in a marketplace." },
+
+    "ModelType":            { "type": "string", "description": "Primary pricing model. Use 'hybrid' when combining multiple models.",
+                              "enum": [ "OneTime","Subscription","PayPerUse","PayPerTime", "Freemium","Tiered","AdSupported","Hybrid" ] },
+
+    "CurrencyObject":       { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/CurrencyObject.json" },
+
+    "OneTime":              { "type": "object", "required": [ "Price" ], "additionalProperties": false, "properties": {
+      "Price":              { "type": "number", "minimum": 0 },
+      "IncludesUpdates":    { "type": "boolean" },
+      "SupportWindow":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } },
+
+    "Subscription":         { "type": "object", "required": [ "RecurringPrice" ], "additionalProperties": false, "properties": {
+      "RecurringPrice":     { "type": "number", "minimum": 0 },
+      "BillingPeriod":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/BillingPeriods.json" },
+      "CommitmentTerm":     { "type": "string", "description": "Time or fixed term." },
+      "AutoRenew":          { "type": "boolean" },
+      "Trial":              { "type": "object", "required": [ "Duration" ], "additionalProperties": false, "properties": {
+        "Duration":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Price":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } } } } },
+
+    "PayPerUse":            { "type": "object", "required": [ "Meter","Unit","Rate" ], "additionalProperties": false, "properties": {
+      "Meter":              { "type": "string", "description": "What is metered (e.g., requests, GB, minutes, transactions)." },
+      "Unit":               { "type": "string", "description": "Unit of measure (e.g., request, GB, minute)." },
+      "Rate":               { "type": "number", "minimum": 0 },
+      "MinCommit":          { "type": "number", "minimum": 0 },
+      "FreeQuota":          { "type": "number", "minimum": 0 },
+      "OverageRate":        { "type": "number", "minimum": 0 },
+      "Tiers":              { "type": "array", "items": { "type": "object", "required": [ "Threshold","Rate" ],
+                              "additionalProperties": false, "properties": {
+        "Threshold":        { "type": "number", "minimum": 0 },
+        "Rate":             { "type": "number", "minimum": 0 } } } } } },
+
+    "PayPerTime":           { "type": "object", "required": [ "Window","Price" ], "additionalProperties": false, "properties": {
+      "Window":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "Price":              { "type": "number", "minimum": 0 },
+      "GracePeriod":        { "type": "string", "description": "Time (e.g., PT10M)." } } },
+
+    "Freemium":             { "type": "object", "additionalProperties": false, "properties": {
+      "FreeFeatures":       { "type": "array", "items": { "type": "string" } },
+      "UpgradePath":        { "type": "string" },
+      "UsageLimits":        { "type": "object", "required": [ "Meter","Unit","Limit" ], "additionalProperties": false, "properties": {
+        "Meter":            { "type": "string" },
+        "Unit":             { "type": "string" },
+        "Limit":            { "type": "number", "minimum": 0 } } } } },
+
+    "Tiered":               { "type": "object", "required": [ "Tiers" ], "additionalProperties": false, "properties": {
+      "Tiers":              { "type": "array", "items": { "type": "object", "required": [ "Name","Price" ],
+                              "additionalProperties": false, "properties": {
+        "Name":             { "type": "string" },
+        "Features":         { "type": "array", "items": { "type": "string" } },
+        "Price":            { "type": "number", "minimum": 0 },
+        "BillingPeriod":    { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/BillingPeriods.json" },
+        "Limits":           { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } } } } } } },
+
+    "AdSupported":          { "type": "object", "additionalProperties": false, "properties": {
+      "AdProvider":         { "type": "string" },
+      "PrivacyPolicyUrl":   { "type": "string", "format": "uri" },
+      "OptOutAvailable":    { "type": "boolean" } } },
+
+    "Discounts":            { "type": "array", "items": { "type": "object", "required": [ "Type","Value" ], "additionalProperties": false,
+                              "properties": {
+      "Type":               { "type": "string", "enum": [ "Percentage","Fixed","PromoCode" ] },
+      "Value":              { "type": "number", "minimum": 0 },
+      "AppliesTo":          { "type": "string" },
+      "Validity":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } } },
+
+    "Hybrid":               { "type": "array", "description": "Composed multiple models.", "items": { "type": "object",
+                              "required": [ "Ref" ], "additionalProperties": false, "properties": {
+      "Ref":                { "type": "string",
+                              "enum": [ "OneTime","Subscription","PayPerUse","PayPerTime", "Freemium","Tiered","AdSupported" ] },
+      "Weight":             { "type": "number", "minimum": 0 } } } },
+
+    "AssetPosting":         { "type": "object", "additionalProperties": false, "properties": {
+      "SenderPreValue":     { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
+      "SenderPostValue":    { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
+      "ReceiverPostValue":  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
+      "ValueToSender":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" },
+      "SenderWalletID":     { "type": "string" },
+      "ServiceProviderWalletID": { "type": "string" },
+      "ServiceProviderLicence":  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Licence.json" },
+      "ReceiverLicence":    { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Licence.json" },
+      "TransactionsOrIDs":  { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/EntityOrID.json#/$defs/TransactionOrID" } } } },
+
+    "SPMStatus":            { "type": "string", "enum": [ "Model","Final" ] },
+
+    "Chosen":               { "type": "object", "description": "Frozen snapshot of the chosen model.",
+                              "required": [ "ModelType","Parameters" ], "additionalProperties": false, "properties": {
+      "ModelType":          { "type": "string",
+                              "enum": [ "OneTime","Subscription","PayPerUse","PayPerTime", "Freemium","Tiered","AdSupported","Hybrid" ] },
+
+      "Parameters":         { "type": "object", "description": "Parameters corresponding to the chosen pricing model.",
+                              "additionalProperties": true, "properties": {
+
+      "EffectivePeriod":    { "type": "object",  "description": "Validity window for the selected option.",
+                              "required": [ "Start","End" ], "additionalProperties": false, "properties": {
+        "Start":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "End":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } },
+
+      "Allowances":         { "type": "array", "description": "Frozen quota units included.", "items": {
+                              "type": "object", "required": [ "Meter","Unit","Quantity" ], "additionalProperties": false, "properties": {
+        "Meter":            { "type": "string" },
+        "Unit":             { "type": "string" },
+        "Quantity":         { "type": "number", "minimum": 0 },
+        "Window":           { "type": "string" },
+        "Rollover":         { "type": "boolean" } } } },
+
+      "Overage":            { "type": "object", "additionalProperties": false, "properties": {
+        "Rate":             { "type": "number", "minimum": 0 },
+        "Unit":             { "type": "string" } } },
+
+      "RateLimit":          { "type": "object", "additionalProperties": false, "properties": {
+        "MaxPerWindow":     { "type": "number", "minimum": 0 },
+        "Window":           { "type": "string" },
+        "Burst":            { "type": "number", "minimum": 0 } } } } },
+
+      "PriceBreakdown":     { "type": "object", "description": "Optional breakdown of base price, discounts, and net price.",
+                              "additionalProperties": true } } },
+
+    "Settlement":           { "type": "object", "description": "Payment proof for the selected Service Pricing Model.",
+                              "required": [ "Transaction" ], "additionalProperties": false, "properties": {
+      "SettlementTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "TargetID":           { "type": "string", "description": "ID of service-asset-licence relevant to settlement." },
+      "Transaction":        { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Transaction.json" },
+      "Evidence":           { "type": "array", "description": "Optional receipts, hashes or provider references.",
+                              "items": { "type": "object", "required": [ "Type","ID" ], "additionalProperties": true, "properties": {
+        "Type":             { "type": "string" },
+        "ID":               { "type": "string" } } } } } },
+
+    "DataXMData":           {"$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "allOf":                  [ { "if": { "properties": { "ModelType": { "const": "OneTime" } } },
+                                "then": { "required": [ "OneTime" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "Subscription" } } },
+                                "then": { "required": [ "Subscription" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "PayPerTime" } } },
+                                "then": { "required": [ "PayPerTime" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "Freemium" } } },
+                                "then": { "required": [ "Freemium" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "Tiered" } } },
+                                "then": { "required": [ "Tiered" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "AdSupported" } } },
+                                "then": { "required": [ "AdSupported" ] } },
+
+                              { "if": { "properties": { "ModelType": { "const": "Hybrid" } } },
+                                "then": { "required": [ "Hybrid" ] } } ] }

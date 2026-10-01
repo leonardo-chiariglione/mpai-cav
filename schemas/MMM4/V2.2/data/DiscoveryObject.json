@@ -1,0 +1,26 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/DiscoveryObject.json",
+  "title":                "Discovery Object V2.2",
+  "type":                 "object",
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "MMM-DSO-V2.2" },
+    "MInstanceID":        { "type": "string" },
+    "MEnvironmentID":     { "type": "string" },
+    "DiscoveryObjectID":  { "type": "string" },
+    "DiscoveryObjectTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "DiscoveryObjectData":{ "type": "array", "items": { "anyOf": [
+                          { "type": "object", "properties": {
+      "DataLength":       { "type": "integer" },
+      "DataURI":          { "type": "string", "format": "uri" } } },
+                          { "type": "object", "properties": {
+      "Data":             { "type": "string" } } },
+                          { "type": "object", "properties": {
+      "DataID":           { "type": "string" } } } ] } },
+
+    "DiscoveryQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/DiscoveryQualifier.json" }, 
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

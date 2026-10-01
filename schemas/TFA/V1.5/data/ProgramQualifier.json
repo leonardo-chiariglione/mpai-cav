@@ -1,0 +1,24 @@
+{ "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/ProgramQualifier.json",
+  "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "title":                  "Program Qualifier V1.5",
+  "description":            "Qualifier describing subtypes, formats, and implementation-defined attributes of program.",
+  "type":                   "object",
+  "required":               [ "Header", "ProgramQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties":   false,
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "TFA-PRQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ProgramQualifierID":   { "type": "string" },
+    "ProgramQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":              { "type": "object", "additionalProperties": false },
+
+    "Formats":               { "type": "object", "additionalProperties": false, "properties": {
+        "ContentFormat":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/ProgramFormats.json" } } },
+
+    "Attributes":           { "type": "object", "additionalProperties": true },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

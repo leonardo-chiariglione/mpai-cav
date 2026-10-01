@@ -1,0 +1,4 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessKinds.json",
+  "title": "Process Kinds V2.2",
+  "type": "string", "enum": [ "App", "Device", "Service", "User", "human", "Autonomous" ] }

@@ -1,0 +1,15 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/EntityOrID.json",
+  "title":                "Entity Or ID V2.2",
+  "description":          "A union type allowing an entity to be specified either inline or by reference ID.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "properties":           {
+    "EntityID":           { "type": "string" },
+    "Entity":             { "type": "object" } },
+
+  "$defs":                {
+    "TransactionOrID":    { "oneOf": [
+                          { "type": "object", "required": [ "TransactionID" ], "additionalProperties": false, "properties": {
+      "TransactionID":    { "type": "string" } } },
+                          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Transaction.json" } ] } } }

@@ -1,0 +1,8 @@
+{
+  "Baseline Profile paths": "present",
+  "Item and Capabilities paths (GET)": "6",
+  "Process Action paths (POST)": "30",
+  "cycles among the component schemas": "none",
+  "every MMM V2.2 data schema a component": "yes",
+  "unresolved $refs": "none"
+}

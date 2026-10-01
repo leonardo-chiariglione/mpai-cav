@@ -1,0 +1,39 @@
+{
+  "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/BasicInterpretation.json",
+  "title":                      "Basic Interpretation V2.2",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "MInstanceID", "BasicInterpretationID", "BasicInterpretation" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "MMM-BIT-V2.2" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironment":             { "type": "string" },
+    "BasicInterpretationID":    { "type": "string" },
+    "BasicInterpretationTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "BasicInterpretation":      { "type": "array", "items": { "oneOf": [
+
+                                { "type": "object", "required": [ "Request" ], "additionalProperties": false, "properties": {
+      "Request":                { "type": "object", "additionalProperties": false, "properties": {
+
+        "ModelRights":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },
+
+          "InfoObject":         { "type": "array", "items": { "oneOf": [
+
+                                { "type": "object", "additionalProperties": false, "properties": {
+            "MLocation":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json" } } },
+
+                                { "type": "object", "additionalProperties": false, "properties": {
+            "PerceptibleEntity":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json" } } },
+
+                                { "type": "object", "additionalProperties": false, "properties": {
+          "ItemID":             { "type": "string" } } }  ] } } } } } },
+
+                                { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties": {
+      "Response":               { "type": "object", "additionalProperties": false, "properties": {
+        "PerceptibleEntity":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json" } } } } } ] } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

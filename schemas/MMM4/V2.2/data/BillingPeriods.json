@@ -1,0 +1,7 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/MMM4/V2.2/data/BillingPeriods.json",
+  "title":   "Billing Periods V1.5",
+  "type":    "string",
+  "enum":    [ "per-second", "per-minute", "hourly", "daily", "weekly", "biweekly", "fortnightly", "semimonthly",
+               "monthly", "bimonthly", "quarterly", "semiannual", "yearly", "biennial", "triennial" ] }
+

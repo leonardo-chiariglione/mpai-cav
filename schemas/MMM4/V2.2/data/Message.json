@@ -1,0 +1,32 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Message.json",
+  "title":                  "Message V2.2", "type": "object", "properties": {
+
+    "Header":               { "type": "string", "const": "MMM-MSG-V2.2" },
+
+    "MInstanceID":          { "type": "string" },
+    "MessageID":            { "type": "string" },
+
+    "MessageData":          { "type": "array", "items": { "anyOf": [
+
+                            { "type": "object", "properties": { "MessageID": { "type": "string" } } },
+                            { "type": "object", "properties": { "MessageData": { "type": "string" } } },
+                            { "type": "object", "properties": {
+                                "DataLength":  { "type": "integer" },
+                                "DataURI":     { "type": "string", "format": "uri" } } } ] } },
+
+    "Rights":                 { "$ref": "#/$defs/Rights" },
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "Trace":                  { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                    {
+
+    "Rights":                 { "type": "array", "minItems": 1, "items": { "oneOf": [
+
+      { "type": "object", "additionalProperties": false, "required": [ "Right" ], "properties":
+        { "Right": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+
+      { "type": "object", "additionalProperties": false, "required": [ "RightID" ], "properties":
+        { "RightID": { "type": "string" } } } ] } } } }
+

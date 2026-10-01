@@ -1,0 +1,18 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/ActivityData.json",
+  "title":                  "ActivityData V2.2",
+  "type":                   "object",
+  "properties":             {
+     "Header":              { "type": "string", "const": "MMM-ACD-V2.2" },
+     "MInstanceID":         { "type": "string" },
+     "MIEnvironment":       { "type": "string" },
+     "ActivityDataID":      { "type": "string" },
+     "ActivityDataTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+     "ActivityData":        { "type": "array", "items": { "oneOf": [ { 
+       "IPPMessage":        { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/IPPMessage.json" } },
+                            { "type": "object", "properties": { 
+       "IPPMessageID":      { "type": "string" } } } ] } },
+       
+     "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+     "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

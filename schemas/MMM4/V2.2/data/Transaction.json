@@ -1,0 +1,53 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Transaction.json",
+  "title":                  "Transaction V2.2",
+  "type":                   "object",
+  "required":               [ "Header", "MInstanceID", "MEnvironmentID", "TransactionID", "TransactionData" ],
+  "additionalProperties":   false,
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "^MMM-TRA-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "TransactionID":        { "type": "string" },
+    "TransactionTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "AssetID":              { "type": "array", "items": { "oneOf": [
+                            { "type": "object", "additionalProperties": false, "required": [ "ItemID" ], "properties": {
+      "ItemID":             { "type": "string" } } },
+                            { "type": "object", "additionalProperties": false, "required": [ "ProcessID" ], "properties": {
+      "ProcessID":          { "type": "string" } } } ] } },
+
+    "SenderData":           { "type": "object", "additionalProperties": false, "required": [ "SenderID", "SenderWalletID" ], "properties": {
+      "SenderID":           { "type": "string" },
+      "SToSPValues":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ServiceID", "WalletID", "Value" ], "properties": {
+        "ServiceID":        { "type": "string" },
+        "WalletID":         { "type": "string" },
+        "Value":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } } } },
+      "SenderRightsID":     { "type": "string" },
+      "SenderWalletID":     { "type": "string" } } },
+
+    "ReceiverData":         { "type": "object", "additionalProperties": false, "required": [ "ReceiverID", "ReceiverWalletID" ], "properties": {
+      "ReceiverID":         { "type": "string" },
+      "RToSValue":          { "type": "array", "items": { "type": "object", "properties": {
+        "ServiceID":        { "type": "string" },
+        "WalletID":         { "type": "string" },
+        "Value":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } } } },
+      "ReceiverRightsID":   { "type": "string" },
+      "ReceiverWalletID":   { "type": "string" } } },
+
+    "ServiceProvidersData": { "type": "array", "items": { "type": "object", "additionalProperties": false,
+                              "required": [ "ServiceProviderID", "SPWalletID" ], "properties": {
+      "ServiceProviderID":  { "type": "string" },
+      "ServiceRightsID":    { "type": "array", "description": "Rights held or exercised by the Service Provider.", "items": { "type": "string" } },
+      "SPWalletID":         { "type": "string" },
+      "SPValue":            { "type": "array", "description": "Optional value exchanged with each SP.", "items": {
+                              "type": "object", "additionalProperties": false, "required": [ "Value" ], "properties": {
+        "Value":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } } } } } } },
+
+    "TransactionParentID":  { "type": "string" },
+
+    "TransactionStatus":    { "type": "string", "enum": [ "Model", "Final", "Pending", "Rejected", "Failed", "Cancelled" ] },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

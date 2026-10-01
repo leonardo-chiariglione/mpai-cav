@@ -1,0 +1,48 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/Process.json",
+  "title":                    "Process V2.2",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "ProcessID", "ProcessType" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "MMM-ACC-V2.2" },
+    "MInstanceID":            { "type": "string" },
+    "MEnvironmentID":         { "type": "string" },
+    "ProcessID":              { "type": "string", "description": "Identifier of the Process." },
+    "ProcessTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SourceProcessID":        { "type": "string", "description": "Identifier of spawning Process." },
+
+    "ProcessType":            { "type": "string", "enum": [ "App", "Device", "Service", "User" ], "description": "Process type." },
+
+    "InRights":               { "type": "array", "items": { "$ref": "#/$defs/RightsRef" }, "description": "Rights the Process holds." },
+
+    "OutRights":              { "type": "array", "items": { "$ref": "#/$defs/RightsRef" }, "description": "Rights others may acquire to act on this Process." },
+
+    "ExternalRights":         { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["ProcessID","Rights"], "properties": {
+      "ProcessID":            { "type": "string" },
+      "Rights":               { "type": "array", "items": { "$ref": "#/$defs/RightsRef" }, "description": "Rights ProcessIF acquired to act on this Process." } } } },
+
+    "Capabilities":           { "$ref": "#/$defs/CapabilitiesRef", "description": "Capabilities of the Process." },
+
+    "HumanID":                { "type": "string", "description": "ID of human responsible for the Process." },
+
+    "WalletID":               { "type": "string", "description": "Wallet associated with the Process." },
+
+    "DataXMData":             {"$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "allOf": [                  { "if":   { "properties": { "ProcessType": { "const": "User" } },
+                                          "required":   [ "ProcessType" ] },
+                                "then": { "properties": { "HumanID": { "type": "string" } } } } ],
+
+  "$defs": {
+
+    "RightsRef":              { "description": "Either an embedded Rights object or a Rights ID.", "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },
+                                  { "type": "string" } ] },
+
+    "CapabilitiesRef":        { "description": "Either a Capabilities object or its ID string.", "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json" },
+                                  { "type": "string" } ] } } }

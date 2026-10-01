@@ -1,0 +1,36 @@
+{ "$schema":                    "http://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/PersonalProfile.json",
+  "title":                      "PersonalProfile",
+  "type":                       "object",
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "MMM-PPR-V2.2" },
+    "MInstanceID":              { "type": "string" },
+    "humanID":                  { "type": "string" },
+    "PersonalProfileID":        { "type": "string" },
+    "PersonaProfileTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "PersonalProfile":          { "type": "object", "properties": {
+      "Data":                   { "type": "array", "items": { "type": "object", "properties": {
+        "FirstName":            { "type": "string" },
+        "LastName":             { "type": "string" },
+        "Age":                  { "type": "string" },
+        "Nationality":          { "type": "string" },
+        "Email":                { "type": "string" } } } },
+
+      "Processes":              { "type": "array", "items": { "type": "object", "properties": {
+
+        "ProcessIDOrProcess":   { "type": "array", "items": { "anyOf": [
+                                { "type": "object", "properties": {
+          "Process":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProgramObject.json" } } },
+                                { "type": "object", "properties": {
+          "ProcessID":          { "type": "string" } } } ] } },
+
+        "PersonaIDOrPersona":   { "type": "array", "items": { "anyOf": [
+                                { "type": "object", "properties": {
+          "Persona":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" } } },
+                                { "type": "object", "properties": {
+          "PersonaID":          { "type": "string" } } } ] } } } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

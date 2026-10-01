@@ -1,0 +1,8 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMM4/V2.2/data/MarketplacePolicyIDs.json",
+  "title": "Marketplace Policy IDs V2.2", "description": "Enumerated MPOL-* identifiers for marketplace policies.",
+  "$comment": "Replace placeholders with authoritative MPOL-* codes; remove fallback when finalized.",
+
+  "oneOf": [
+    { "type": "string", "enum": ["MPOL-Standard","MPOL-Enterprise","MPOL-NonProfit","MPOL-RegulatedRegion","MPOL-Student"] },
+    { "type": "string", "pattern": "^MPOL-[A-Za-z0-9_-]{2,48}$" } ] }

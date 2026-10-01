@@ -1,0 +1,24 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/data/FinancialErrorReport.json",
+  "title":                "Financial Error Report V2.2",
+  "type":                 "object",
+  "required":             [ "Transaction", "AccessibleData", "ErrorDetectedTime", "FERCreationTime" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "MMM-CTO-V2.2" },
+    "MInstanceID":        { "type": "string" },
+    "MEnvironmentID":     { "type": "string" },
+    "ReportId":           { "type": "string" },
+    "ReportTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Transaction":        { "description": "Reference to the Transaction error being reported.", "type": "string" },
+
+    "AssetProvenance":    { "description": "The Provenance of the Asset with Transaction error.", "type": "object" },
+
+    "AccessibleData":     { "description": "The data that the Transact Service may access per its Capabilities.", "type": "object" },
+
+    "ErrorDetectedTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

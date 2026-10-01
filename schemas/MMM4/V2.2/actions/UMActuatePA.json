@@ -1,0 +1,51 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMM4/V2.2/actions/UMActuatePA.json",
+  "title":                "UM Actuate PA V2.2",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "MInstanceID", "Time" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "MMM-1AP-V2.2",
+                            "description": "UM-Actuate PA Header – Standard MMM-1AP-V2.2" },
+    "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance where this PA is executed." },
+    "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment where the capture takes place." },
+    "UMActuatePAID":      { "type": "string", "description": "Unique identifier of this UM-Actuate PA instance." },
+    "UMActuatePATime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                            "description": "Time this UM-Actuate PA was produced." },
+
+    "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                            "description": "Time of PA Request emission and PA Request execution." },
+
+    "UMActuatePARQ":      { "type": "object", "additionalProperties": false,
+                            "description": "UM-Actuate PA Request: captures a scene from the Universe, identifies it, and places it in the M-Instance.", "properties": {
+      "RQ1":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "Nil" },  "ULocation":       { "type": "string" } },
+                            "description": "U-Location where the scene is captured." },
+      "RQ2":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "Qualifiers":      { "type": "array", "items": { "type": "string" } } },
+                            "description": "Qualifiers of the Data to be captured." },
+      "RQ3":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "At" },   "MLocation":       { "type": "string" } },
+                            "description": "M-Location where the identified Item is to be placed." },
+      "RQ4":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "SpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } },
+                            "description": "Spatial Attitude of the Item at the M-Location." },
+      "RQ5":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "Rights":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } },
+                            "description": "Model Rights requested on the final Item." },
+      "RQ6":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "SPM":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } },
+                            "description": "Service Pricing Model for this PA." } } },
+
+    "UMActuatePARS":      { "type": "object", "additionalProperties": false, "description": "UM-Actuate PA Response: the MM-Added Item and its final Rights.", "properties": {
+      "RS1":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "Nil" },  "ItemID":   { "type": "string" } },
+                            "description": "ID of the Item produced and MM-Added by the Locate Service." },
+      "RS2":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "Rights":   { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } },
+                            "description": "Final Rights: intersection of Rights granted by Import Service and Locate Service." },
+      "RS3":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "SPM":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } },
+                            "description": "Service Pricing Model confirmation." },
+      "RS4":              { "type": "object", "properties": { "Complement": { "type": "string", "const": "With" }, "PAStatus": { "type": "array", "items": { "oneOf": [
+                          { "type": "object", "properties": { "Ack": { "type": "string", "enum": [ "Ack" ] } } },
+                          { "type": "object", "properties": { "Err": { "type": "string", "enum": [ "FaultyPA", "IncID", "IncDQ", "InsRights", "InsValue", "ULocOOR", "MLocOOR", "QualNS" ] } } } ] },
+                            "description": "PA Status: Ack on success, or error from any of the three orchestrated services." } } } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "MPAI-PTF Data Exchange Metadata." },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata (plain text, max 2048 characters)." } },
+
+  "oneOf": [              { "required": [ "UMActuatePARQ" ], "not": { "required": [ "UMActuatePARS" ] } },
+                          { "required": [ "UMActuatePARS" ], "not": { "required": [ "UMActuatePARQ" ] } } ] }

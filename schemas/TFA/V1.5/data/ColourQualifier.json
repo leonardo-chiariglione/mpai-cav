@@ -1,0 +1,16 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json",
+  "title":                  "Colour Qualifier V1.5", "type": "object", "additionalProperties": false,
+                            "required": [ "Header", "ColourQualifierID", "Formats" ], "properties": {
+
+    "Header":               { "type": "string", "const": "TFA-CLQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ColourQualifierID":    { "type": "string" },
+    "ColourQualifierTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Formats":               { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/ColourSpaces.json" },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }
+

@@ -1,0 +1,24 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/RItem.json",
+  "title":                  "R-Item V2.2",
+  "type":                   "object",
+  "required":               [ "Header", "MInstanceID", "RItemID" ],
+  "additionalProperties":   false,
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-RIT-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "RItemID":              { "type": "string" },
+    "RItemTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "RItemType":            { "type": "string", "enum": [ "R-Object", "S-Object", "M-Object" ] },
+
+    "Rights":               { "type": "array", "minItems": 1, "items": { "oneOf": [
+                            { "type": "object", "additionalProperties": false, "required": [ "Right" ], "properties": {
+      "Right":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+                            { "type": "object", "additionalProperties": false, "required": [ "RightID" ], "properties": {
+      "RightID":            { "type": "string" } } } ] } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

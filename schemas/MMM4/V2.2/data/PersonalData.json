@@ -1,0 +1,29 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/PersonalData.json",
+  "title":                  "Personal Data V2.2", 
+  "type":                   "object", 
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-PDT-V2.2}$" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "PersonalDataID":       { "type": "string" },
+    "PersonalDataTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "AccountID":            { "type": "string" },
+
+    "Processes":            { "type": "array", "items": { "type": "object", "properties": {
+      "ProcessID":          { "type": "string" },
+      "ActivityData":       { "type": "array", "items": { "type": "object", "properties": {
+                              "ActivityDataID": { "type": "string" } } } } } } },
+
+    "RightsOrRightsID":     { "$ref": "#/$defs/RightsOrRightsID" },
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                  {
+
+    "RightsOrRightsID":     { "type": "array", "items": { "oneOf": [ { 
+       "Rights":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } },
+                            { "type": "object", "properties": { 
+       "RightsID":          { "type": "string" } } } ] } } } }

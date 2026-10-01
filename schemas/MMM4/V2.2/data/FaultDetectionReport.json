@@ -1,0 +1,71 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/FaultDetectionReport.json",
+  "title":                      "Fault Detection Report V2.2",
+  "description":                "Report emitted by host M-Instance A to notify M-Instance B that B's Process infringed A's Rules.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "ReportId", "HostMInstance", "ForeignMInstance", "DetectedByProcess", "ForeignProcessId",
+                                  "EventType", "Severity", "Confidence", "ReportCreationTime", "RuleContext", "Evidence", "ActionTakenInA" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "MMM-FDR-V2.2" },
+    "ReportId":                 { "type": "string", "minLength": 1 },
+    "Nonce":                    { "type": "string", "minLength": 8, "description": "Anti-replay/idempotency token." },
+
+    "CorrelationIds":           { "type": "array", "items": { "type": "string" } },
+
+    "HostMInstance":            { "type": "string", "minLength": 1 },
+    "ForeignMInstance":         { "type": "string", "minLength": 1 },
+
+    "DetectedByProcess":        { "type": "string", "minLength": 1 },
+    "ForeignProcessId":         { "type": "string", "minLength": 1, "description": "Identifier of foreign Process as recognised by A." },
+
+    "ForeignProcessGlobalId":   { "type": "string", "description": "ID of foreign Process (as issued by B or a global namespace)." },
+
+    "EventType":                { "type": "string",
+                                  "enum": [ "RULE_VIOLATION_ATTEMPT", "RIGHTS_MISUSE_ATTEMPT", "IDENTITY_SPOOFING_ATTEMPT",
+                                            "MARKETPLACE_DECEPTION_SIGNAL", "OTHER" ] },
+
+    "Severity":                 { "type": "string", "enum": [ "info", "warning", "major", "critical" ] },
+
+    "Confidence":               { "oneOf": [
+                                { "type": "number", "minimum": 0, "maximum": 1 },
+                                { "type": "string", "enum": ["low","medium","high"] } ] },
+
+    "Time":                     { "description": "A time interval; StartTime is required, EndTime optional.",
+                                  "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ReportCreationTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "SuspectedActionWindow":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "RuleContext":              { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
+                                  "required": ["RuleSetId"], "properties": {
+      "RuleSetId":              { "type": "string" },
+      "RuleVersionId":          { "type": "string" },
+      "EffectiveTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } } },
+
+    "Evidence":                 { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["type","id"],
+                                  "properties": { "type": { "type": "string", "enum": [ "activity","item","provenance","process","transaction","other" ] },
+      "id":                     { "type": "string" },
+      "hash":                   { "type": "string", "pattern": "^[A-Za-z0-9_+-]+:[A-Fa-f0-9]{64}$", "description": "algo:hex (e.g., sha256:...)."} } } },
+
+    "ActionTakenInA":           { "type": "string" },
+    "RequestedActionInB":       { "type": "string" },
+
+    "ContactEndpoint":          { "type": "string", "format": "uri" },
+
+    "Transport":                { "type": "object", "additionalProperties": false, "required": ["profile","version"], "properties": {
+      "profile":                { "type": "string", "enum": [ "HTTPS-mTLS", "DIDComm", "Custom" ] },
+      "version":                { "type": "string" } } },
+
+    "Confidentiality":          { "type": "string", "enum": [ "Public","Restricted","Confidential" ], "default": "Restricted" },
+
+    "ProtectedMetadataHandling":{ "type": "object", "additionalProperties": false, "properties": {
+      "RequiresAuthenticate":   { "type": "boolean" },
+      "RedactedFields":         { "type": "array", "items": { "type": "string" } },
+      "DisclosurePolicyRef":    { "type": "string" } } },
+
+    "Signature":                { "type": "string", "description": "Detached JWS/COSE or reference to Signature Item." },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,9 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/NonExContractFormats.json",
+  "title":   "Non-Ex Contract Formats V1.5", "type":    "string", "oneOf": [
+  { "const": "JSON",
+    "description": "JavaScript Object Notation Ã¢â‚¬â€ a lightweight, human-readable data structure format often used for declarative specifications, configurations, and contract-like documents that describe fields, constraints, or terms but contain no executable logic." },
+  { "const": "RDF",
+    "description": "Resource Description Framework Ã¢â‚¬â€ a semantic-graph representation used to declare relationships, vocabularies, and contract semantics in a machine-interpretable but non-executable form." },
+  { "const": "XML",
+    "description": "Extensible Markup Language Ã¢â‚¬â€ a structured markup system for defining declarative schemas, rules, or contract documents where the content expresses semantics but cannot perform computation." } ] }

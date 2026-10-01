@@ -1,0 +1,6 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/ColourSpaces.json",
+  "title":   "Colour Spaces V1.5",
+  "type":    "string", "enum": [ "AdobeRGB", "BT.2020", "BT.2100", "BT.601", "BT.709", "CIELAB", "CIELUV", "CIEXYZ", "CMYK",
+                                 "Display-P3", "HSI", "HSL", "HSV", "RGB", "sRGB", "YCbCr", "YPbPr" ] }
+  

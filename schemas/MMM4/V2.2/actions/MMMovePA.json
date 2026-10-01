@@ -1,0 +1,55 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/actions/MMMovePA.json",
+  "title":                  "MM Move PA V2.2",
+  "type":                   "object",
+  "required":               [ "Header", "Time" ],
+  "properties": {
+
+    "Header":               { "type": "string", "const": "MMM-2MP-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "MMMovePAID":           { "type": "string" },
+    "MMMovePATime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "MMMovePARQ":           { "type": "object", "properties": {
+      "RQ1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "Nil" },
+        "ItemID":           { "type": "string" } } },
+      "RQ2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "From" },
+        "PointOfView1":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } },
+      "RQ3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "To" },
+        "PointOfView2":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } },
+      "RQ4":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SpatialAttitude":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
+      "RQ5":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RQ6":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } } },
+
+    "MMMovePARS":           { "type": "object", "properties": {
+      "RS1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RS2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } },
+      "RS3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "PAStatus":         { "type": "array", "items": { "oneOf": [
+                            { "type": "object", "properties": {
+          "Err":            { "type": "string", "enum": [ "Clash", "FaultyPA", "IncID", "MLocOOR", "InsRights", "InsValue" ] } } },
+                            { "type": "object", "properties": {
+          "Ack":            { "type": "string", "enum": [ "Ack" ] } } } ] } } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [                { "required": [ "MMMovePARQ" ], "not": { "required": [ "MMMovePARS" ] } },
+                            { "required": [ "MMMovePARS" ], "not": { "required": [ "MMMovePARQ" ] } } ] }

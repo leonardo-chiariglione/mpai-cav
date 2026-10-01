@@ -1,0 +1,62 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/MMM4/V2.2/data/Resolution.json",
+  "title":                      "Resolution V2.2",
+  "type":                       "object",
+  "required":                   [ "Header", "ResolutionTime" ],
+  "additionalProperties":       false,
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "^MMM-RES-V2.2" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "ResolutionID":             { "type": "string" },
+    "ResolutionTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Sequence":                 { "type": "array", "items": { "oneOf": [
+
+                                { "type": "object", "required": [ "ProcAToResolARequest" ], "additionalProperties": false, "properties": {
+    "ProcAToResolARequest":     { "type": "array", "items": { "type": "object", "required": [ "Partners" ], "additionalProperties": false, "properties": {
+      "Partners":               { "type": "array", "items": { "type": "object", "required": [ "Rights", "MInstances" ], "additionalProperties": false, "properties": {
+        "Rights":               { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" },
+        "MInstances":           { "type": "object", "required": [ "MInstanceID", "Processes" ], "additionalProperties": false, "properties": {
+          "MInstanceID":        { "type": "string" },
+          "Processes":          { "type": "array", "items": { "type": "object", "required": [ "ProcessID", "Rights" ], "additionalProperties": false, "properties": {
+              "ProcessID":      { "type": "string" },
+              "Rights":         { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } } } } } } } } } } } } },
+
+                                { "type": "object", "required": [ "ResolAToResolBRequest" ], "additionalProperties": false, "properties": {
+    "ResolAToResolBRequest":    { "type": "array", "items": { "type": "object", "required": [ "Processes" ], "additionalProperties": false, "properties": {
+      "Processes":              { "type": "array", "items": { "type": "object", "required": [ "ProcessID", "Rights" ], "additionalProperties": false, "properties": {
+        "ProcessID":            { "type": "string" },
+        "Rights":               { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } } } } } } } },
+
+                                { "type": "object", "required": [ "ResolBToProcessBRequest" ], "additionalProperties": false, "properties": {
+    "ResolBToProcessBRequest":  { "type": "array", "items": { "type": "object", "required": [ "Processes" ], "additionalProperties": false, "properties": {
+      "Processes":              { "type": "array", "items": { "type": "object", "required": [ "ProcessID", "Rights" ], "additionalProperties": false, "properties": {
+        "ProcessID":            { "type": "string" },
+        "Rights":               { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } } } } } } } },
+
+                                { "type": "object", "required": [ "ProcessBToResolBResponse" ], "additionalProperties": false, "properties": {
+    "ProcessBToResolBResponse": { "type": "boolean" } } },
+
+                                { "type": "object", "required": [ "ResolBToResolAResponse" ], "additionalProperties": false, "properties": {
+"ResolBToResolAResponse":       { "type": "array", "items": { "oneOf": [
+                                { "type": "object", "required": [ "Error" ], "additionalProperties": false, "properties": {
+      "Error":                  { "type": "string", "enum": [ "Error" ] } } },
+                                { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties": {
+      "Response":               { "type": "array", "items": { "type": "object", "required": [ "ProcessID", "JoinYN" ], "additionalProperties": false, "properties": {
+        "ProcessID":            { "type": "string" },
+        "JoinYN":               { "type": "boolean" } } } } } } ] } } } },
+
+                                { "type": "object", "required": [ "ResolAToProcessAResponse" ], "additionalProperties": false, "properties": {
+"ResolAToProcessAResponse":     { "type": "array", "items": { "oneOf": [
+                                { "type": "object", "required": [ "Error" ], "additionalProperties": false, "properties": {
+      "Error":                  { "type": "string", "enum": [ "Error" ] } } },
+                                { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties": {
+      "Response":               { "type": "array", "items": { "type": "object", "required": [ "MInstanceID", "ProcessID", "JoinYN" ], "additionalProperties": false, "properties": {
+        "MInstanceID":          { "type": "string" },
+        "ProcessID":            { "type": "string" },
+        "JoinYN":               { "type": "boolean" } } } } } } ] } } } } ] } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

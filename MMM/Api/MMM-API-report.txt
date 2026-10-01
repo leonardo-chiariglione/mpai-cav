@@ -1,0 +1,26 @@
+MMM-API.json: 36 paths, 317 component schemas
+rule 1 (no DataXMData inside a DEM) applied in 15 schemas
+rule 2 (an identifier below the top) applied at 15 references:
+  TFA_V15_LocationQualifier -> OSD_V15_LocationObject
+  OSD_V15_LocationObject__SubLocIDOrSubLoc -> OSD_V15_LocationObject
+  OSD_V15_LocationObject__LocationOrBasicLocation -> OSD_V15_LocationObject__LocationOrBasicLocation
+  TFA_V15_VisualQualifier -> OSD_V15_BoundingBox
+  OSD_V15_VisualObject__SubVObjectIDOrSubVObject -> OSD_V15_VisualObject
+  OSD_V15_VisualObject__BVObjectOrVObject -> OSD_V15_VisualObject__BVObjectOrVObject
+  OSD_V15_TextObject__SubTObjectIDOrSubTObject -> OSD_V15_TextObject
+  OSD_V15_TextObject__BTObjectOrTObject -> OSD_V15_TextObject__BTObjectOrTObject
+  OSD_V15_Object__SubObjectIDOrSubObject -> OSD_V15_Object
+  OSD_V15_Object__BasicObjectOrObject -> OSD_V15_Object__BasicObjectOrObject
+  OSD_V15_SceneDescriptors__SubSceneIDOrSubScene -> OSD_V15_SceneDescriptors
+  OSD_V15_SceneDescriptors__BasicSceneOrScene -> OSD_V15_SceneDescriptors__BasicSceneOrScene
+  OSD_V15_3DModelObject__Sub3ObjectIDOrSub3Object -> OSD_V15_3DModelObject
+  OSD_V15_3DModelObject__B3ObjectOr3Object -> OSD_V15_3DModelObject__B3ObjectOr3Object
+  MMM4_V22_Event__EventOrBasicEvent -> MMM4_V22_Event
+corrected $refs of the schemas (0):
+faults reported (6):
+  MMM4_V22_Capabilities__MInstanceCapabilities: requires 'Rights', which is not one of its properties
+  MMM4_V22_Transaction: requires 'TransactionData', which is not one of its properties
+  MMM4_V22_Licence: requires 'IsFirstLicence', which is not one of its properties
+  OSD_V15_BasicObject: requires 'Trace', which is not one of its properties
+  OSD_V15_Object: requires 'ObjectSpaceTime', which is not one of its properties
+  MMM4_V22_SimpleContract: requires 'SimpleContractStatus', which is not one of its properties

@@ -1,0 +1,4 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/BlCProgramFormats.json",
+  "title":   "BlC Program Formats V1.5",
+  "type":    "string", "enum": [ "Cairo", "Huff", "Michelson", "Move", "Rust-WASM", "Solidity", "Teal", "Vyper" ] }

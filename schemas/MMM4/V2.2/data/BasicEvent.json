@@ -1,0 +1,18 @@
+{ "$schema":          "https://json-schema.org/draft/2020-12/schema",
+  "$id":              "https://schemas.mpai.community/MMM4/V2.2/data/BasicEvent.json",
+  "title":            "Basic Event V2.2",
+  "type":             "object",
+  "properties":       {
+
+    "Header":         { "type": "string", "const": "MMM-BEV-V2.2" },
+    "MInstanceID":    { "type": "string" },
+    "BasicEventID":   { "type": "string" },
+    "UEnvironment":   { "type": "string" },
+    "BasicEventTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"},
+
+    "PA1":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessAction.json" },
+    "LogOp":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/LogicOperators.json" },
+    "PA2":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessAction.json" },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,4 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMM4/V2.2/data/Profiles.json",
+  "title": "Profiles V2.2",
+  "type": "array", "items": { "type": "string", "enum": [ "Baseline", "Finance", "Management", "High" ] } }

@@ -1,0 +1,52 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/actions/ExecutePA.json",
+  "title":                  "ExecutePA",
+  "type":                   "object",
+  "required":               [ "Header", "Time" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-EXP-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ExecutePAID":          { "type": "string" },
+    "ExecutePATime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ExecutePARQ":          { "type": "object", "properties": {
+      "RQ1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "Nil" },
+        "ProgramID":        { "type": "string" } } },
+      "RQ2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "ItemIDs":          { "type": "array", "items": { "type": "string" } } } },
+      "RQ3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RQ4":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "At" },
+        "ProcessID":        { "type": "string" } } },
+      "RQ5":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "SPM":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json" } } } } },
+
+    "ExecutePARS":          { "type": "object", "properties": {
+      "RS1":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "Nil" },
+        "ItemIDs":          { "type": "array", "items": { "type": "string" } } } },
+      "RS2":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+      "RS3":                { "type": "object", "properties": {
+        "Complement":       { "type": "string", "const": "With" },
+        "PAStatus":         { "type": "array", "items": { "oneOf": [
+                            { "type": "object", "properties": {
+          "Err":            { "type": "string", "enum": [ "FaultyPA", "IncID", "InsRights", "InsValue" ] } } },
+                            { "type": "object", "properties": {
+          "Ack":            { "type": "string", "enum": [ "Ack" ] } } } ] } } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "oneOf": [                { "required": [ "ExecutePARQ" ], "not": { "required": [ "ExecutePARS" ] } },
+                            { "required": [ "ExecutePARS" ], "not": { "required": [ "ExecutePARQ" ] } } ] }

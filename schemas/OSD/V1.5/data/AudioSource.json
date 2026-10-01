@@ -1,0 +1,40 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/AudioSource.json",
+  "title":                    "Audio Source V1.5",
+  "type":                     "object",
+  "required":                 ["Header", "MInstanceID", "AudioSourceID", "AudioSourceSpaceTime"],
+  "additionalProperties":     false,
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "OSD-AUS-V1.5" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "AudioSourceID":          { "type": "string" },
+
+    "AudioSourceSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "Timbre":                 { "type": "object", "description": "Characteristics that distinguish different instruments even when they have the same pitch and loudness: Attack, Overtones, Resonance",
+                                "additionalProperties": false, "properties": {      
+      "Attack":               { "type": "number", "minimum": 0, "description": "The initial time taken by sound to reach its peak, in ms" },
+      "Overtones":            { "type": "array", "items": { "type": "number" }, "description": "Additional frequencies that are multiples of the fundamental, in Hz" },
+      "Resonance":            { "type": "array", "description": "Matrix of emphasised frequencies creating a more intense tone, in Hz and dB",
+                                "items": { "type": "array", "items": { "type": "number" } } } } },
+
+    "AudioSourceType":        { "type": "array", "items": { "oneOf": [
+                              { "type": "object", "required": ["Diffuseness"], "additionalProperties": false, "properties": {
+      "Diffuseness":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" } } },
+                              { "type": "object", "required": ["DirectionalPatterns"], "additionalProperties": false, "properties": {
+      "DirectionalPatterns":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" } } },
+                              { "type": "object", "required": ["SizeAndShape"], "additionalProperties": false, "properties": {
+        "SizeAndShape":       { "type": "object", "required": ["FreqDirInt", "SizeAndShape"], "additionalProperties": false, "properties": {
+        "FreqDirInt":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" },
+        "SizeAndShape":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" } } } } } ] } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "$defs": {
+
+    "3DModelEventIDOr3DModelEvent":       { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelEventDescriptors.json" },
+                              { "type": "string" } ] } } } }

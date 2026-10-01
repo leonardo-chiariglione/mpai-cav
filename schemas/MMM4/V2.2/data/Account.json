@@ -1,0 +1,24 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Account.json",
+  "title":                  "Account V2.2",
+  "description":            "Account object of the MMM V2.2 suite.",
+  "required":               [ "Header", "MInstanceID", "HumanID", "MEnvironmentID", "AccountID" ],
+  "type":                   "object",
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-ACC-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "AccountID":            { "type": "string" },
+    "AccountTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    
+    "AccountLevel":         { "type": "string" },
+    "HumanID":              { "type": "string" },
+    "PersonalProfileID":    { "type": "string" },
+
+    "Items":                { "type": "array", "items": { "type": "object", "properties": { "ItemID": { "type": "string" } } } },
+
+    "Processes":            { "type": "array", "items": { "type": "object", "properties": { "ProcessID": { "type": "string" } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

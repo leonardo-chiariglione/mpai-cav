@@ -1,0 +1,48 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json",
+  "title":                          "Light Source V1.5",
+  "type":                           "object",
+  "required":                       [ "Header", "LightSourceID", "LightSourceSpaceTime", "LightSourceType", "ColourInformation" ],
+  "additionalProperties":           false,
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "OSD-LTS-V1.5" },
+    "MInstanceID":                  { "type": "string" },
+    "LightSourceID":                { "type": "string" },
+    "LightSourceTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "LightSourceSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "LightSourceType":              { "type": "array", "minItems": 1, "items": { "oneOf": [
+                                    { "type": "object", "required": ["Point"], "additionalProperties": false, "properties": {
+      "Point":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json" } } },
+                                    { "type": "object", "required": ["Directional"], "additionalProperties": false, "properties": {
+      "Directional":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } },
+                                    { "type": "object", "required": ["SkyLight"], "additionalProperties": false, "properties": {
+      "SkyLight":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } },
+                                    { "type": "object", "required": ["Spotlight"], "additionalProperties": false, "properties": {
+      "Spotlight":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+      "Angle":                      { "type": "number", "minimum": 0, "maximum": 180 },
+      "Blend":                      { "type": "number", "minimum": 0, "maximum": 1 } } },
+                                    { "type": "object", "required": ["Area"], "additionalProperties": false, "properties": {
+      "Area":                       { "type": "object", "required": ["PointOfView", "Area"], "additionalProperties": false, "properties": {
+        "PointOfView":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+        "Area":                     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" } } } } } ] } },
+
+    "ColourInformation":            { "type": "object", "required": ["ColourData", "ColourSpace"], "additionalProperties": false, "properties": {
+      "ColourData":                 { "type": "string" },
+      "ColourSpace":                { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json" } } },
+
+    "Intensity":                    { "type": "number", "description": "The light sourceâ€™s intensity measured in Watt." },
+
+    "LightSourceRights":            { "$ref": "#/$defs/Rights" },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                          {
+    "Rights":                       { "type": "array", "minItems": 1, "items": { "oneOf": [
+                                    { "type": "object", "additionalProperties": false, "required": [ "Right" ], "properties": {
+      "Right":                      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } },
+                                    { "type": "object", "additionalProperties": false, "required": [ "RightID" ], "properties": {
+      "RightID":                    { "type": "string" } } } ] } } } }

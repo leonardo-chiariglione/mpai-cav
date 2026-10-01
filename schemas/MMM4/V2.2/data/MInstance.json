@@ -1,0 +1,24 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/MInstance.json",
+  "title":                    "MInstance V2.2", "type": "object", "properties": {
+
+    "Header":                 { "type": "string", "const": "^MMM-MIN-V2.2" },
+    "MInstanceID":            { "type": "string" },
+
+    "MCapabilities":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json" },
+
+    "Rules":                  { "$ref": "#/$defs/RulesOrRulesID"  },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                    {
+
+    "RulesOrRulesID":         { "type": "array", "minItems": 1, "items": { "oneOf": [
+
+                              { "type": "object", "additionalProperties": false, "required": [ "Rule" ], "properties": { 
+      "Rules":                 { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rules.json" } } },
+
+                              { "type": "object", "additionalProperties": false, "required": [ "RuleID" ], "properties": { 
+      "RuleID":               { "type": "string" } } } ] } } } }
+

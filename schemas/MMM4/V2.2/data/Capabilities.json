@@ -1,0 +1,78 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json",
+  "title":                    "Capabilities V2.2",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "MInstanceID", "MEnvironmentID", "CapabilitiesID", "WalletID", "ItemCapabilities",
+                                "MInstanceCapabilities", "ProcessCapabilities", "DataXMData" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "MMM-CPB-V2.2" },
+    "MInstanceID":            { "type": "string" },
+    "MEnvironmentID":         { "type": "string" },
+    "CapabilitiesID":         { "type": "string" },
+    "CapabilitiesTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "WalletID":               { "type": "string" },
+
+    "ItemCapabilities":       { "$ref": "#/$defs/ItemCapabilities" },
+    "MInstanceCapabilities":  { "$ref": "#/$defs/MInstanceCapabilities" },
+    "ProcessCapabilities":    { "$ref": "#/$defs/ProcessCapabilities" },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                    {
+
+    "ItemCapabilities":       { "type": "object", "additionalProperties": false,
+                                "required": [ "Processes", "ProcessActions", "ItemMetadata" ], "properties": {
+
+      "Processes":            { "type": "array",
+                                "description": "Processes with the Rights they hold.",
+                                "items": { "type": "object", "additionalProperties": false,
+                                          "required": [ "ProcessID", "Rights" ], "properties": {
+        "ProcessID":          { "type": "string" },
+        "Rights":             { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } } },
+
+      "ProcessActions":       { "type": "array", "description": "Actions each Process can perform on the Item.",
+                                "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/AnyProcessAction.json" } },
+
+      "ItemMetadata":         { "type": "array", "description": "Metadata used by Rights and Rules.",
+                                "items": { "type": "string" } } } },
+
+    "MInstanceCapabilities":  { "type": "object", "additionalProperties": false,
+                                "required": [ "CoordinateType", "Profile", "Actions", "ItemTypes", "QualifierTypes",
+                                              "Rules", "Rights", "PMetadata", "IMetadata" ], "properties": {
+      "CoordinateType":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/CoordinateTypes.json" },
+      "Profile":              { "type": "string", "enum": [ "Baseline", "Finance", "Management", "High" ] },
+      "Actions":              { "type": "array", "items": { "type": "string" } },
+      "ItemTypes":            { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/AnyItem.json" } },
+      "QualifierTypes":       { "type": "array", "items": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" } },
+      "Rules":                { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rules.json" },
+      "PMetadata":            { "type": "array", "items": { "type": "string" } },
+      "IMetadata":            { "type": "array", "items": { "type": "string" } } } },
+
+    "ProcessCapabilities":    { "type": "object", "additionalProperties": false,
+                                "required": [ "HumanID", "SupportedApps", "Actions", "ProcessMetadata", "Processes", "ItemsTypes",
+                                              "ItemMetadata", "ItemQualifiers", "TransactionInfo", "CapabilityChange", "MInstances" ], 
+                                "properties": {
+
+      "HumanID":              { "type": "string" },
+      "SupportedApps":        { "type": "array", "items": { "type": "string" } },
+      "Actions":              { "type": "array", "items": { "type": "string" } },
+      "ProcessMetadata":      { "type": "array", "items": { "type": "string" } },
+        "Processes":          { "type": "array", "description": "Processes with the Rights they hold.",
+                                "items": { "type": "object", "additionalProperties": false, "required": [ "ProcessID", "Rights" ], "properties": {
+          "ProcessID":        { "type": "string" },
+          "Rights":           { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json" } } } },
+
+      "ItemsTypes":           { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/AnyItem.json" } },
+      "ItemMetadata":         { "type": "array", "items": { "type": "string" } },
+      "ItemQualifiers":       { "type": "array", "items": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" } },
+
+      "TransactionInfo":      { "type": "object", "description": "Information available before transaction execution.",
+                                "additionalProperties": true },
+
+      "CapabilityChange":     { "type": "string", "description": "Process followed when capabilities change." },
+
+      "MInstances":           { "type": "array", "description": "M-Instances with mutual recognition.", "items": { "type": "string" } } } } } }

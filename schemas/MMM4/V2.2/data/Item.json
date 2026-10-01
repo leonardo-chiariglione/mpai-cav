@@ -1,0 +1,33 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/Item.json",
+  "title":                  "Process V2.2",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               [ "ItemID" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMM-ITM-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "MEnvironmentID":       { "type": "string" },
+    "ItemID":               { "type": "string" },
+    "ItemTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "SourceItemID":         { "type": "string", "description": "Identifier of the Item that spawned this Item." },
+
+    "ItemData":             { "type": "array", "items": { "anyOf": [
+                            { "type": "object", "properties": { "Length": { "type": "integer" }, "DataURI": { "type": "string", "format": "uri" } } },
+                            { "type": "object", "properties": { "Data":   { "type": "string" } } },
+                            { "type": "object", "properties": { "DataID": { "type": "string" } } } ] } },
+
+    "ItemQualifier":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" },
+
+    "ICapabilities":        { "description": "Either an ItemCapabilities object or its ID string.", "oneOf": [
+                            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json#/$defs/ItemCapabilities" },
+                            { "type": "string" } ] },
+
+    "ItemStatus":           { "type": "string", "enum": [ "Model", "Final" ] },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "allOf": [                { "if": { "properties": { "ProcessType": { "const": "User" } }, "required": [ "ProcessType" ] },
+                              "then": { "properties": { "HumanID": { "type": "string" } } } } ] }                              

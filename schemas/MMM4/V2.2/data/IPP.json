@@ -1,0 +1,31 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/IPP.json",
+  "title":                    "IPP V2.2",
+  "type":                     "object",
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "MMM-IPP-V2.2" },
+    "MInstanceID":            { "type": "string" },
+    "MEnvironmentID":         { "type": "string" },
+    "IPPID":                  { "type": "string" },
+    "IPPTime":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "IPPData":                { "type": "array", "items": { "type": "object", "properties": {
+
+      "MessageID":            { "type": "string" },
+      "ResponseID":           { "type": "string" },
+      "SourceProcessID":      { "type": "string" },
+
+      "ProcessAction":        { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessAction.json" },
+
+      "ResolutionServiceID":  { "type": "string" },
+      "DestinationProcessID": { "type": "string" },
+
+      "IPPStatus":            { "type": "array", "items": { "oneOf": [
+                              { "type": "object", "properties": { "Ack": { "type": "string" } } },
+                              { "type": "object", "properties": { "Err": { "type": "string" } } } ] } } } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }
+
+

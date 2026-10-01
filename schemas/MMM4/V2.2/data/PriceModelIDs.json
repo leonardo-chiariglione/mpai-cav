@@ -1,0 +1,11 @@
+{ "$schema":     "https://json-schema.org/draft/2020-12/schema",
+  "$id":         "https://schemas.mpai.community/MMM4/V2.2/formats/PriceModelIDs.json",
+  "title":       "Price Model IDs V2.2",
+  "description": "Enumerated PM-* identifiers for Service Pricing Models.",
+  "$comment":    "Replace placeholders with authoritative PM-* codes; remove fallback when finalized.",
+                 "oneOf": [
+                 { "type": "string", "enum": [ "PM-BasicOneTime", "PM-StdSubscription", "PM-PPU-Requests", "PM-PPU-Storage", "PM-Tiered-StartupPro", "PM-AdSupported" ] },
+                 { "type": "string", "pattern": "^PM-[A-Za-z0-9_-]{2,48}$" } ] }
+
+
+
