@@ -10,9 +10,9 @@
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
     "RightsChangePAID":     { "type": "string" },
-    "RightsChangePATime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "RightsChangePATime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
     "RightsChangePARQ":     { "type": "object", "properties": {
 

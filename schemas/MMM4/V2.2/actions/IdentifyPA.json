@@ -8,8 +8,8 @@
     "Header":               { "type": "string", "const": "MMM-IDF-V2.2" },
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
-    "AuthenticatePAID":     { "type": "string" },
-    "AuthenticatePATime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "IdentifyPAID":         { "type": "string" },
+    "IdentifyPATime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
     "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 

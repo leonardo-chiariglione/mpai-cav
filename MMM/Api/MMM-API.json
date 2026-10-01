@@ -8626,10 +8626,10 @@
      "UEnvironmentID": {
       "type": "string"
      },
-     "AuthenticatePAID": {
+     "IdentifyPAID": {
       "type": "string"
      },
-     "AuthenticatePATime": {
+     "IdentifyPATime": {
       "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
@@ -10080,7 +10080,7 @@
       "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MMMovePARQ": {
       "type": "object",
@@ -10287,7 +10287,7 @@
       "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MMSendPARQ": {
       "type": "object",
@@ -10468,7 +10468,7 @@
       "type": "string"
      },
      "MUActuatePATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
       "$ref": "#/components/schemas/OSD_V15_SimpleTime"
@@ -10688,10 +10688,10 @@
       "type": "string"
      },
      "MUAddPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MUAddPARQ": {
       "type": "object",
@@ -10883,10 +10883,10 @@
       "type": "string"
      },
      "MUAnimatePATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MUAnimatePARQ": {
       "type": "object",
@@ -11090,10 +11090,10 @@
       "type": "string"
      },
      "MUMovePATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MUMovePARQ": {
       "type": "object",
@@ -11309,10 +11309,10 @@
       "type": "string"
      },
      "MUSendPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "MUSendPARQ": {
       "type": "object",
@@ -11622,10 +11622,10 @@
       "type": "string"
      },
      "ModifyPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "ModifyPARQ": {
       "type": "object",
@@ -12118,10 +12118,10 @@
       "type": "string"
      },
      "PostPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "PostPARQ": {
       "type": "object",
@@ -13978,10 +13978,10 @@
       "type": "string"
      },
      "RegisterPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "RegisterPARQ": {
       "type": "object",
@@ -14435,10 +14435,10 @@
       "type": "string"
      },
      "ResolvePATime": {
-      "type": "string"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "ResolvePARQ": {
       "type": "object",
@@ -14717,10 +14717,10 @@
       "type": "string"
      },
      "RightsChangePATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "RightsChangePARQ": {
       "type": "object",
@@ -16667,10 +16667,10 @@
       "type": "string"
      },
      "UMCapturePATime": {
-      "type": "string"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "UMCapturePARQ": {
       "type": "object",
@@ -16879,10 +16879,10 @@
       "type": "string"
      },
      "UMSendPATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "UMSendPARQ": {
       "type": "object",
@@ -17113,10 +17113,10 @@
       "type": "string"
      },
      "ValidatePATime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Time": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "ValidatePARQ": {
       "type": "object",

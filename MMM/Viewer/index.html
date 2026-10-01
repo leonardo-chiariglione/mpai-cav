@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-Instance viewer</title>
+<!--
+  THE M-ENVIRONMENT OF AN M-INSTANCE, AS IT CAN BE SEEN (MMM-TEC V2.2). The page reads
+  the M-Instance's snapshot (./state) twice a second and draws it: its M-Locations as
+  pads on the ground, a Location placed at another (a Room on its Parcel) as a room
+  there, shown only once perceptible; each Persona, with its 3D Model, where MM-Add
+  and MM-Move put it, walking there when it moves. The Process Actions just performed
+  are listed in the corner.
+-->
+<style>
+  :root { --bg: #1d2128; --panel: rgba(20,24,30,.82); --text: #e6e8eb; --muted: #9aa3ad; --ok: #6fcf97; --no: #eb5757; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, Arial, sans-serif; overflow: hidden; }
+  #panel { position: absolute; top: 12px; left: 12px; max-width: min(420px, calc(100vw - 24px)); background: var(--panel); border-radius: 8px; padding: 10px 12px; }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; }
+  #recent div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ok { color: var(--ok); } .no { color: var(--no); } .muted { color: var(--muted); }
+  .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+
+// ---------------------------------------------------------------- the stage
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+const labels = new CSS2DRenderer(); labels.setSize(innerWidth, innerHeight);
+Object.assign(labels.domElement.style, { position: 'absolute', top: '0', pointerEvents: 'none' });
+document.body.appendChild(labels.domElement);
+
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2a3038);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3a3a, 1.0));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(8, 14, 10); sun.castShadow = true;
+Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20 }); sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x3b4450, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+// The camera frames the M-Environment (about 30 m across) whatever the window's shape.
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+function frame() {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  const halfWidth = 16, hfov = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
+  const dist = Math.max(halfWidth / Math.tan(hfov / 2), 14);
+  const dir = new THREE.Vector3(0, 0.55, 0.83).normalize();
+  controls.target.set(1, 0.5, 1); camera.position.copy(controls.target).addScaledVector(dir, dist); controls.update();
+}
+frame();
+addEventListener('resize', () => { frame(); renderer.setSize(innerWidth, innerHeight); labels.setSize(innerWidth, innerHeight); });
+
+function label(text) {
+  const d = document.createElement('div'); d.className = 'label'; d.textContent = text;
+  return new CSS2DObject(d);
+}
+
+// ---------------------------------------------------------------- Locations
+// An M-Location: a pad on the ground, its name and owner above it. A Location placed
+// at another: a room - floor, glass walls - drawn only when perceptible.
+const drawn = new Map();   // ID -> { object, kind, ... }
+
+function pad(t) {
+  const g = new THREE.Group();
+  const color = t.Public ? 0x4f6d8c : 0x5d8a5a;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(t.Size, 0.06, t.Size), new THREE.MeshStandardMaterial({ color, roughness: 0.9 }));
+  m.position.y = 0.03; m.receiveShadow = true; g.add(m);
+  const l = label(''); l.position.set(0, 0.1, t.Size / 2 + 0.4); g.add(l); g.userData.label = l;
+  return g;
+}
+
+function room(t) {
+  const g = new THREE.Group(); const s = t.Size, h = 2.6;
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(s, 0.08, s), new THREE.MeshStandardMaterial({ color: 0xb59a74, roughness: 0.7 }));
+  floor.position.y = 0.1; floor.receiveShadow = true; g.add(floor);
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0xcfe6ff, transparent: true, opacity: 0.22, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false });
+  const frame = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+  for (const [x, z, w, d] of [[0, -s / 2, s, 0.05], [-s / 2, 0, 0.05, s], [s / 2, 0, 0.05, s], [-s / 4 - 0.3, s / 2, s / 2 - 0.6, 0.05], [s / 4 + 0.3, s / 2, s / 2 - 0.6, 0.05]]) {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), glass); wall.position.set(x, h / 2 + 0.1, z); g.add(wall);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(w || 0.05, 0.08, d || 0.05), frame); top.position.set(x, h + 0.1, z); g.add(top);
+  }
+  const l = label(''); l.position.set(0, h + 0.5, 0); g.add(l); g.userData.label = l;
+  return g;
+}
+
+// ---------------------------------------------------------------- Personae
+// Their 3D Models (Rocketbox, MMM/Viewer/personae): the opacity material made
+// transparent; measured as their skeleton poses them; arms brought down from the
+// T-pose they come in.
+const loader = new GLTFLoader(); const models = new Map();
+async function persona(t) {
+  const file = t.Model ?? 'Persona1.glb';
+  if (!models.has(file)) models.set(file, loader.loadAsync('personae/' + file));
+  const gltf = await models.get(file);
+  const root = cloneSkinned(gltf.scene);   // one per Persona, the skeleton bound to its own bones
+  root.traverse(o => {
+    if (o.isMesh) {
+      o.castShadow = true; o.frustumCulled = false;
+      for (const m of [].concat(o.material)) if (/opacity/i.test(m.name)) { m.transparent = true; m.alphaTest = 0.35; m.side = THREE.DoubleSide; }
+    }
+    // Biped upper arms (Bip01 L/R UpperArm): about their local X, down to the sides.
+    if (o.isBone && /L.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(78));
+    if (o.isBone && /R.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(-78));
+  });
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root, true); const h = box.max.y - box.min.y;
+  root.scale.setScalar(1.7 / h); root.updateMatrixWorld(true);
+  box.setFromObject(root, true); root.position.y -= box.min.y;
+  const g = new THREE.Group(); g.add(root);
+  const l = label(t.ID); l.position.set(0, 1.95, 0); g.add(l); g.userData.label = l;
+  return g;
+}
+
+// ---------------------------------------------------------------- the M-Instance
+async function refresh() {
+  let state;
+  try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
+  document.getElementById('title').textContent = `M-Instance ${state.MInstanceID} - ${state.Performed} Process Actions`;
+  document.getElementById('recent').innerHTML = (state.Recent ?? []).slice().reverse().map(a =>
+    `<div><span class="${a.Http < 300 ? 'ok' : 'no'}">${a.Http} ${a.Status}</span> ${a.Source} → ${a.Action} (${a.Destination})</div>`).join('') || 'no Process Action yet';
+
+  const seen = new Set();
+  for (const t of state.Things) {
+    seen.add(t.ID);
+    const isRoom = t.Kind === 'Location' && t.At;
+    const shape = t.Kind === 'Persona' ? 'persona' : isRoom ? 'room' : t.Kind === 'Location' ? 'pad' : null;
+    if (!shape) continue;
+    let d = drawn.get(t.ID);
+    if (d && d.shape !== shape) { scene.remove(d.object); d.object.userData.label?.element.remove(); drawn.delete(t.ID); d = null; }
+    if (!d) {
+      const object = shape === 'persona' ? await persona(t) : shape === 'room' ? room(t) : pad(t);
+      object.position.set(t.X, 0, t.Z); scene.add(object);
+      d = { object, shape, target: new THREE.Vector3(t.X, 0, t.Z) }; drawn.set(t.ID, d);
+    }
+    d.target.set(t.X, isRoom ? 0.06 : 0, t.Z);
+    if (t.Kind === 'Persona' && t.At) {
+      const at = state.Things.find(x => x.ID === t.At);
+      d.target.y = at?.At ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
+    }
+    // Shown: what is perceptible and placed - a Persona once added, a Location that is
+    // a place of its own or has been placed (a Room on its Parcel).
+    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At);
+    const l = d.object.userData.label;
+    if (l) l.visible = d.object.visible;
+    if (l) l.element.textContent = t.Kind === 'Persona' ? `${t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
+  }
+  for (const [id, d] of drawn) if (!seen.has(id)) { d.object.visible = false; if (d.object.userData.label) d.object.userData.label.visible = false; }
+}
+
+// Personae walk to where they now are, at about 2 m/s, facing the way they go.
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.1);
+  for (const d of drawn.values()) {
+    const p = d.object.position, to = d.target, dist = p.distanceTo(to);
+    if (dist > 0.01) {
+      const step = Math.min(dist, 2.0 * dt * Math.max(1, dist / 3));
+      const dir = to.clone().sub(p).normalize();
+      if (Math.hypot(dir.x, dir.z) > 0.2) d.object.rotation.y = Math.atan2(dir.x, dir.z);
+      p.addScaledVector(dir, step);
+    }
+  }
+  controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
+});
+await refresh(); setInterval(refresh, 500);
+window.viewerReady = true;
+</script>
+</body>
+</html>

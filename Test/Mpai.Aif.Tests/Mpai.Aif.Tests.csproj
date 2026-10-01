@@ -38,6 +38,9 @@
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />
     <ProjectReference Include="..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />
+    <ProjectReference Include="..\..\MMM\Server\Mpai.Mmm.Server.csproj" />
+    <ProjectReference Include="..\..\MMM\Client\Mpai.Mmm.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>

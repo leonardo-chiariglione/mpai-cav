@@ -9,9 +9,9 @@
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
     "ValidatePAID":         { "type": "string" },
-    "ValidatePATime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "ValidatePATime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "Time":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
     "ValidatePARQ":         { "type": "object", "properties": {
 

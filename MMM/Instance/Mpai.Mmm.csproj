@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mpai.Mmm: an M-Instance of MMM-TEC V2.2: its Processes and Items, the Services
+       that perform the Process Actions, the Rights that allow them, its Activity
+       Data. No HTTP here: the server (MMM/Server) puts it behind the MMM-API. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Mmm</RootNamespace>
+    <AssemblyName>Mpai.Mmm</AssemblyName>
+  </PropertyGroup>
+
+  <!-- The schemas of the Items, to check every Item a Process Action carries. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\AIF\Metadata\AIF.Metadata.csproj" />
+  </ItemGroup>
+
+</Project>

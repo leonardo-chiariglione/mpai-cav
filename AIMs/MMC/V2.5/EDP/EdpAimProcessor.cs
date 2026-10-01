@@ -63,8 +63,14 @@ public sealed class EdpAimProcessor : IAimProcessor
     private string? _cavState;               // where no Private Storage is given
     private const string CavKey = "cav-dialogue";
 
-    public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports, ISharedStorage? privateStorage = null)
+    // WHO SPEAKS: the persona interacting with the person - Thalia in MPAI as a
+    // Service, the CAV in the car. Given by the provider, which knows where EDP runs.
+    private readonly string _persona;
+
+    public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports, ISharedStorage? privateStorage = null,
+                           string persona = "Thalia")
     {
+        _persona          = persona;
         _private          = privateStorage;
         _mapPort          = ports.InputOrDefault("OSD-BOO-V1.5", "");
         _ahmInPort        = ports.InputOrDefault("CAV-AHM-V2.0", "");
@@ -122,7 +128,7 @@ public sealed class EdpAimProcessor : IAimProcessor
         // (e.g. anonymous dialogue), we neither ask the LLM for affect nor emit a
         // machine EPS - the avatar renders neutrally.
         string system = affect
-            ? "You are the CAV, a courteous conversational machine holding a face-to-face " +
+            ? $"You are {_persona}, a courteous conversational machine holding a face-to-face " +
               "conversation with a person. Reply naturally and briefly to what the person said. " +
               "Adapt your TONE to be appropriate and empathetic to how the person seems to feel, " +
               "but NEVER mention, describe, name, or refer to their emotion, mood, feelings, or " +
@@ -134,7 +140,7 @@ public sealed class EdpAimProcessor : IAimProcessor
               "\"attitude\" (one of respectful, friendly, confident, neutral), " +
               "\"summary\" (a one-sentence updated running summary). " +
               "Output ONLY the JSON object and nothing else - no code fences, no prose before or after."
-            : "You are the CAV, a courteous conversational machine holding a face-to-face " +
+            : $"You are {_persona}, a courteous conversational machine holding a face-to-face " +
               "conversation with a person. Reply naturally and briefly to what the person said. " +
               "Return ONLY your spoken reply as plain text - no JSON, no labels, no commentary.";
 
@@ -172,8 +178,9 @@ public sealed class EdpAimProcessor : IAimProcessor
             responseText = rt;
             // What the model chose - the only place it can be seen.
             var raw = reply.Replace('\n', ' ').Trim();
-            Console.WriteLine($"[MMC-EDP-V2.5] emotion {emotion}, attitude {attitude}; model said: " +
-                              (raw.Length > 200 ? raw[..200] + "..." : raw));
+            // The words of the dialogue are the person's: in the log only with diagnostics on.
+            Console.WriteLine($"[MMC-EDP-V2.5] emotion {emotion}, attitude {attitude}" + (MpaiDiag.Enabled
+                              ? "; model said: " + (raw.Length > 200 ? raw[..200] + "..." : raw) : ""));
             machinePs = MachinePersonalStatus(emotion, attitude);
             MpaiDiag.Emotion("EDP", $"told \"{userStatus}\" -> chose {emotion} ({machinePs.TextPersonalStatus?.TextEmotion?.Category} " +
                 $"{machinePs.TextPersonalStatus?.TextEmotion?.Degree:0.0}), attitude {attitude}; the model said: {raw}");

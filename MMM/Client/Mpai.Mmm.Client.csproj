@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mpai.Mmm.Client: a Process's side of the MMM-API: one call per Process
+       Action, its token and an Idempotency-Key on each; the Items read. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Mmm.Client</RootNamespace>
+    <AssemblyName>Mpai.Mmm.Client</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Instance\Mpai.Mmm.csproj" />
+  </ItemGroup>
+
+</Project>

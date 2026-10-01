@@ -90,7 +90,7 @@ public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDi
             "1MMC-SPE-V2.5-I01" => new SpeAimProcessor(aimName, w2v2 ??= new Wav2Vec2EmotionEstimator(Setting(settings, "W2v2Model", Path.Combine(MpaiPaths.Root, "Models", "w2v2-emotion", "model.onnx"))), ports),
             "1PAF-FPE-V1.6-I01" => new FpeAimProcessor(aimName, hse ??= new HSEmotionEstimator(Setting(settings, "HseModel", MpaiPaths.Model("hsemotion_enet_b0_8_va_mtl.onnx"))), ports),
             "1MMC-PMX-V2.5-I01" => new PmxAimProcessor(aimName, ports),
-            "1MMC-EDP-V2.5-I01" => new EdpAimProcessor(aimName, llm ??= new OllamaClient(Setting(settings, "OllamaModel", "llama3.2:3b")), ports, privateStorage),
+            "1MMC-EDP-V2.5-I01" => new EdpAimProcessor(aimName, llm ??= new OllamaClient(Setting(settings, "OllamaModel", "llama3.2:3b")), ports, privateStorage, persona: "the CAV"),
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, ports),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), ports),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, ports),

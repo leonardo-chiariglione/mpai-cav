@@ -5,7 +5,7 @@
 #  This is not an App: it is the container the Apps run in, and it belongs to
 #  the client. It welcomes a person, offers what the Service has, runs the App
 #  they choose, and asks whether they want another: yes, the list again; else
-#  it says goodbye and ends.
+#  it says goodbye and ends. Its welcome says what becomes of the person's data.
 #
 #  It runs over 1MAS-APP-V1.0-I01 and nothing else: it speaks, and the Apps it
 #  runs do the work. Each of those runs under a Controller of its own.
@@ -17,9 +17,13 @@ on Start:
 
     ask Controller to start
 
-    offer Welcome (OSD-BTO-V1.5:1) = "Welcome to MPAI as a Service.
-        Choose an App and enjoy."
+    # Said once, at the start, and written in the text window: what becomes of
+    # the person's data.
+    offer Welcome (OSD-BTO-V1.5:1) = "Welcome to MPAI as a Service. My name is
+        Thalia. Any text, audio, and visual data of yours that I may have captured
+        will be removed at the end of this session."
     ask   WelcomeSpeech (OSD-BSO-V1.5), WelcomeFaceDescriptors (PAF-FDO-V1.6)
+    display Welcome
     present WelcomeSpeech, WelcomeFaceDescriptors
 
     # With others using the Service now, she says so; alone, she says nothing.

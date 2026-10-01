@@ -108,9 +108,12 @@ public sealed class WhisperAsrAim : IAsrAim
 
     private BasicTextObject Heard(string recognisedText, string sounds, BasicSpeechObject speech)
     {
+        // What a person said is theirs: the log says that something was heard, and
+        // what only when diagnostics are on (MpaiDiag).
         System.Console.WriteLine(recognisedText.Length == 0 && sounds.Length > 0
-            ? $"[MMC-ASR-V2.5] heard only a sound: {sounds} - ignored"
-            : $"[MMC-ASR-V2.5] heard: {recognisedText}");
+            ? $"[MMC-ASR-V2.5] heard only a sound{(MpaiDiag.Enabled ? $": {sounds}" : "")} - ignored"
+            : MpaiDiag.Enabled ? $"[MMC-ASR-V2.5] heard: {recognisedText}"
+                               : $"[MMC-ASR-V2.5] heard {recognisedText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length} words");
 
         return BasicTextObject.FromText(recognisedText, BuildTextQualifier(speech));
     }
