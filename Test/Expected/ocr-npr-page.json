@@ -1,0 +1,9 @@
+{
+  "a Visual Object naming a file, without its data": "0 lines, no image",
+  "every line a box within the page and a confidence": "yes",
+  "the Text Object valid against OSD-TXO-V1.5": "yes",
+  "the headline, the first line": "yes",
+  "the ports of the L3": "OSD-BVO-V1.5#1 in, OSD-TXO-V1.5#1 out",
+  "the words of the truth read, at least 95%": "yes",
+  "what OCR outputs": "OSD-TXO-V1.5"
+}

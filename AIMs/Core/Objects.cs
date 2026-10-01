@@ -211,6 +211,7 @@ public sealed class Orientation
     // Named "EulerAngles" rather than the schema's literal "Orientation" to
     // avoid a property sharing the exact name of its own containing class -
     // same reasoning as BasicAudioSceneDescriptorsEntries.
+    [System.Text.Json.Serialization.JsonPropertyName("Orientation")]
     public double[] EulerAngles { get; init; } = new double[3];   // required: (alpha, beta, gamma) degrees
     public double[]? OrientAccuracy { get; init; }
     public double[]? OrientVelocity { get; init; }
@@ -227,7 +228,21 @@ public sealed class OrientationGeneral
     public ObjectType? ObjectType { get; init; }
     public string? MediaType { get; init; }   // MediaType.* constant
 }
-public sealed class DataExchangeMetadata { }      // PTF/V1.0/data/DataExchangeMetadata.json
+// PTF/V1.0/data/DataExchangeMetadata.json - only what is used so far: the data it is
+// about, the Process that made it, and the confidence in it.
+public sealed class DataExchangeMetadata
+{
+    public string Header { get; init; } = "PTF-DEM-V1.0";
+    public string DataID { get; init; } = "";
+    public List<ProcessInstanceRef> Source { get; init; } = new();
+    public double? Confidence { get; init; }   // 0..1
+}
+
+public sealed class ProcessInstanceRef
+{
+    public string? AIMID { get; init; }
+    public string? ImplementerAIMID { get; init; }
+}
 public sealed class PersonalStatus { }            // MMC/V2.5/data/PersonalStatus.json
 // VisualQualifier is now defined in VisualQualifier.cs (TFA/V1.5 schema).
 
@@ -612,19 +627,24 @@ public sealed class TextObject
     public int? SubTextObjectCount { get; init; }
     public List<SubTextObjectEntry> SubTextObjects { get; init; } = new();
 
+    public DataExchangeMetadata? DataXMData { get; init; }
+    public string? DescrMetadata { get; init; }
+
     // Wrap a single Basic Text Object as a one-element Text Object (Object subsumes Basic).
     public static TextObject FromBasic(BasicTextObject basic) => new()
     {
         TextObjectID = Guid.NewGuid().ToString(),
         BasicTextObjectCount = 1,
-        BasicTextObjects = new() { new BasicTextObjectEntry { BTObjectIDOrBTObject = basic } }
+        BasicTextObjects = new() { new BasicTextObjectEntry { BTObjectIDOrBTObject = [basic] } }
     };
 }
 
 public sealed class BasicTextObjectEntry
 {
     public SpaceTime? BasicTextObjectSpaceTime { get; init; }
-    public BasicTextObject? BTObjectIDOrBTObject { get; init; }   // object or id-string (simplified to object)
+    // The schema's array of one: the Basic Text Object (its ID alone, the schema's other
+    // choice, is not used).
+    public List<BasicTextObject>? BTObjectIDOrBTObject { get; init; }
 }
 
 public sealed class SubTextObjectEntry

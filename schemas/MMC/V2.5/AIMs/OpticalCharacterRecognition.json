@@ -1,0 +1,21 @@
+{
+  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-OCR-V2.5"},
+
+  "Header":           "MMC-OCR-V2.5",
+
+  "APIProfile":       "Basic",
+
+  "Description":      "This AIM receives the image of a page as a Basic Visual Object and produces a Text Object: the lines of text found on the page, in reading order, each a Basic Text Object with its box on the page and its confidence. The box of a line is the Space-Time of the line in the Text Object: SpatialAttitude1 is its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down). The confidence of a line is in its Data Exchange Metadata.",
+
+  "ExternalPorts":    [{"Name": "PageImage", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "PageText", "Direction": "Output", "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+
+  "Implementations":  [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+
+  "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                       {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                       {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */"},
+                       {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"}],
+
+  "DataXMData":       {}
+}

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- MMC-OCR-V2.5, Optical Character Recognition: the lines of a page's image as a
+       Text Object. RapidOcrNet (Apache-2.0) with the PaddleOCR PP-OCRv5 models; it
+       brings SkiaSharp with its native libraries for Windows and Linux. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Aims.Ocr</RootNamespace>
+    <AssemblyName>Mpai.Mmc.Ocr</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <PackageReference Include="RapidOcrNet" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>

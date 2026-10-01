@@ -1,0 +1,28 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "MMC-OCR-V2.5-I01", "AIMName": "1MMC-OCR-V2.5-I01"},
+  "Header":               "MMC-OCR-V2.5",
+
+  "APIProfile":           "Basic",
+  "Description":          "Optical Character Recognition. Receives the image of a page as a Basic Visual Object and produces a Text Object: the lines of text found on the page, in reading order, each a Basic Text Object with its box on the page and its confidence. A box is given by the Space-Time of the line in the Text Object: SpatialAttitude1 its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down); the Text Object's own Space-Time is the whole image.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "PageImage", "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PageText",  "Direction": "Output", "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/OCR",
+                            "MASPort":          443,
+                            "BinaryName":       "Mpai.Mmc.Ocr",
+                            "Architecture":     "x86-64",
+                            "OperatingSystem":  "Windows",
+                            "Version":          "2.5",
+                            "Source":           "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "0.5 GB", "Request": "1 GB",   "Maximum": "2 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "Medium", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/"}]}

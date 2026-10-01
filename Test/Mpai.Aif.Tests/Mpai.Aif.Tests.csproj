@@ -41,6 +41,7 @@
     <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />
     <ProjectReference Include="..\..\MMM\Server\Mpai.Mmm.Server.csproj" />
     <ProjectReference Include="..\..\MMM\Client\Mpai.Mmm.Client.csproj" />
+    <ProjectReference Include="..\..\AIMs\MMC\V2.5\OCR\Mpai.Mmc.Ocr.csproj" />
   </ItemGroup>
 
   <ItemGroup>

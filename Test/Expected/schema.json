@@ -60,6 +60,7 @@
   "MMC/V2.5/AIMs/MultimodalAnonymousTranslation.json": "valid",
   "MMC/V2.5/AIMs/MultimodalPersonalStatusDialogue.json": "valid",
   "MMC/V2.5/AIMs/NaturalLanguageUnderstanding.json": "valid",
+  "MMC/V2.5/AIMs/OpticalCharacterRecognition.json": "valid",
   "MMC/V2.5/AIMs/PSSpeechInterpretation.json": "valid",
   "MMC/V2.5/AIMs/PersonalStatusExtraction.json": "valid",
   "MMC/V2.5/AIMs/PersonalStatusMultiplexing.json": "valid",
