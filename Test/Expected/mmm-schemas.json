@@ -1,0 +1,8 @@
+{
+  "Penalties with the Header of Rights": "invalid",
+  "Penalties, a May become a May Not": "valid",
+  "Rights granted to Friend2 on Room1": "valid",
+  "Rights with the Header as a pattern": "invalid",
+  "Rights without its identifier": "invalid",
+  "Rights without the Level of a Right": "invalid"
+}

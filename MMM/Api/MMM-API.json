@@ -6876,7 +6876,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-CTO-V2.2"
+      "const": "MMM-CTO-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -9389,7 +9389,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-MIN-V2.2"
+      "const": "MMM-MIN-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -11801,12 +11801,13 @@
     "additionalProperties": false,
     "required": [
      "Header",
+     "PenaltiesID",
      "PenaltiesData"
     ],
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-RGT-V2.2"
+      "const": "MMM-PNL-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -11830,7 +11831,6 @@
        "type": "object",
        "additionalProperties": false,
        "required": [
-        "PenaltiesID",
         "DeonticVerb",
         "PAIDOrPA",
         "Level"
@@ -11842,6 +11842,14 @@
           "Must",
           "May",
           "May Not"
+         ]
+        },
+        "Level": {
+         "type": "string",
+         "enum": [
+          "Internal",
+          "Acquired",
+          "Granted"
          ]
         },
         "PAIDOrPA": {
@@ -12982,7 +12990,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-PRT-V2.2}$"
+      "const": "MMM-PRT-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14090,7 +14098,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-RES-V2.2"
+      "const": "MMM-RES-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14581,12 +14589,13 @@
     "additionalProperties": false,
     "required": [
      "Header",
+     "RightsID",
      "RightsData"
     ],
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-RGT-V2.2$"
+      "const": "MMM-RGT-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14610,7 +14619,6 @@
        "type": "object",
        "additionalProperties": false,
        "required": [
-        "RightsID",
         "DeonticVerb",
         "PAIDOrPA",
         "Level"
@@ -14622,6 +14630,14 @@
           "Must",
           "May",
           "May Not"
+         ]
+        },
+        "Level": {
+         "type": "string",
+         "enum": [
+          "Internal",
+          "Acquired",
+          "Granted"
          ]
         },
         "PAIDOrPA": {
@@ -14659,14 +14675,6 @@
                "Final"
               ],
               "default": "Model"
-             },
-             "Level": {
-              "type": "string",
-              "enum": [
-               "Internal",
-               "Acquired",
-               "Granted"
-              ]
              }
             }
            }
@@ -14905,12 +14913,13 @@
     "additionalProperties": false,
     "required": [
      "Header",
+     "RightsID",
      "RightsData"
     ],
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-RGT-V2.2$"
+      "const": "MMM-RGT-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14934,7 +14943,6 @@
        "type": "object",
        "additionalProperties": false,
        "required": [
-        "RightsID",
         "DeonticVerb",
         "PAIDOrPA",
         "Level"
@@ -14946,6 +14954,14 @@
           "Must",
           "May",
           "May Not"
+         ]
+        },
+        "Level": {
+         "type": "string",
+         "enum": [
+          "Internal",
+          "Acquired",
+          "Granted"
          ]
         },
         "PAIDOrPA": {
@@ -14983,14 +14999,6 @@
                "Final"
               ],
               "default": "Model"
-             },
-             "Level": {
-              "type": "string",
-              "enum": [
-               "Internal",
-               "Acquired",
-               "Granted"
-              ]
              }
             }
            }
@@ -15111,7 +15119,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-SPM-V2.2"
+      "const": "MMM-SPM-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -16162,7 +16170,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-TRA-V2.2"
+      "const": "MMM-TRA-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -17014,7 +17022,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "^MMM-UMM-V2.2"
+      "const": "MMM-UMM-V2.2"
      },
      "MInstanceID": {
       "type": "string"

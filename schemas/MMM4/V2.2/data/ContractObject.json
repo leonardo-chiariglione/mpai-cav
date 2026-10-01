@@ -4,7 +4,7 @@
   "type":                 "object",
   "properties":           {
 
-    "Header":             { "type": "string", "const": "^MMM-CTO-V2.2" },
+    "Header":             { "type": "string", "const": "MMM-CTO-V2.2" },
     "MInstanceID":        { "type": "string" },
     "UEnvironmentID":     { "type": "string" },
     "ContractID":         { "type": "string" },

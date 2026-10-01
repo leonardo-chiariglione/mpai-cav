@@ -5,7 +5,7 @@
   "type":                   "object", 
   "properties":             {
 
-    "Header":               { "type": "string", "const": "^MMM-PRT-V2.2}$" },
+    "Header":               { "type": "string", "const": "MMM-PRT-V2.2" },
     "MInstanceID":          { "type": "string" },
     "humanID":              { "type": "string" },
 

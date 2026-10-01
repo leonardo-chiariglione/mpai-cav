@@ -6,7 +6,7 @@
   "additionalProperties":   false,
   "properties":             {
 
-    "Header":               { "type": "string", "const": "^MMM-SPM-V2.2" },
+    "Header":               { "type": "string", "const": "MMM-SPM-V2.2" },
     "MInstanceID":          { "type": "string" },
     "MEnvironmentID":       { "type": "string" },
     "SPMID":                { "type": "string" },

@@ -4,7 +4,7 @@
   "type":                "object",
   "properties":          {
 
-    "Header":            { "type": "string", "const": "^MMM-UMM-V2.2" },
+    "Header":            { "type": "string", "const": "MMM-UMM-V2.2" },
     "MInstanceID":       { "type": "string" },
     "MEnvironmentID":    { "type": "string" },
     "UEnvironmentID":    { "type": "string" },

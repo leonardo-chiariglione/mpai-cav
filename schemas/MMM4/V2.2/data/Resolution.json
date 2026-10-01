@@ -6,7 +6,7 @@
   "additionalProperties":       false,
   "properties":                 {
 
-    "Header":                   { "type": "string", "const": "^MMM-RES-V2.2" },
+    "Header":                   { "type": "string", "const": "MMM-RES-V2.2" },
     "MInstanceID":              { "type": "string" },
     "UEnvironmentID":           { "type": "string" },
     "ResolutionID":             { "type": "string" },

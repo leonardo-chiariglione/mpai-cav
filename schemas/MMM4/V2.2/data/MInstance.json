@@ -2,7 +2,7 @@
   "$id":                      "https://schemas.mpai.community/MMM4/V2.2/data/MInstance.json",
   "title":                    "MInstance V2.2", "type": "object", "properties": {
 
-    "Header":                 { "type": "string", "const": "^MMM-MIN-V2.2" },
+    "Header":                 { "type": "string", "const": "MMM-MIN-V2.2" },
     "MInstanceID":            { "type": "string" },
 
     "MCapabilities":          { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Capabilities.json" },
