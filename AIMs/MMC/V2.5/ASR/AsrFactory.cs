@@ -6,7 +6,10 @@ namespace Mpai.Aims.Asr;
 // Builds the Whisper-backed ASR AIM from deployment settings, so tool and
 // model locations live in configuration, not in code.
 //
-// Settings: ExecutablePath, ModelPath, LanguageCode; optional Threads, AudioContext
+// Settings: ExecutablePath, ModelPath, LanguageCode; optional ServerPath, Threads,
+// AudioContext. ServerPath (whisper-server) keeps the model loaded between turns;
+// without it whisper-cli loads it at every turn. AudioContext fixes the encoder
+// window; without it the window is sized to each recording.
 public static class AsrFactory
 {
     public static WhisperAsrAim Create(
@@ -25,6 +28,11 @@ public static class AsrFactory
                     settings.TryGetValue("LanguageCode", out var language)
                         ? language
                         : "en",
+
+                ServerPath =
+                    settings.TryGetValue("ServerPath", out var server) && !string.IsNullOrWhiteSpace(server)
+                        ? Mpai.Core.MpaiPaths.Resolve(server)
+                        : null,
 
                 Threads      = Number(settings, "Threads"),
                 AudioContext = Number(settings, "AudioContext")

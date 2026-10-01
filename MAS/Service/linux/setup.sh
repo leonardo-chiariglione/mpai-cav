@@ -32,16 +32,21 @@ fi
 bin/piper/piper --version
 
 echo "== whisper.cpp 1.9.3 (ASR), built here, one file"
-if [ ! -x bin/whisper-cli ]; then
+# whisper-server keeps the model loaded between turns; whisper-cli is the fallback.
+if [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ]; then
     [ -f src/whisper.cpp-v1.9.3.tar.gz ] || curl -sSL -o src/whisper.cpp-v1.9.3.tar.gz https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/refs/tags/v1.9.3
     tar xzf src/whisper.cpp-v1.9.3.tar.gz -C src
     (cd src/whisper.cpp-1.9.3 && cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DWHISPER_BUILD_TESTS=OFF > /dev/null \
-        && cmake --build build -j"$(nproc)" --target whisper-cli > /dev/null)
+        && cmake --build build -j"$(nproc)" --target whisper-cli whisper-server > /dev/null)
     cp src/whisper.cpp-1.9.3/build/bin/whisper-cli bin/whisper-cli
+    cp src/whisper.cpp-1.9.3/build/bin/whisper-server bin/whisper-server
 fi
 hash=$(sha256sum bin/whisper-cli | cut -d' ' -f1 | tr a-f A-F)
 sed -i "s#\"SHA256:ExecutablePath\": \"[^\"]*\"#\"SHA256:ExecutablePath\": \"$hash\"#" aim-settings.json
 echo "whisper-cli $hash, written into aim-settings.json"
+hash=$(sha256sum bin/whisper-server | cut -d' ' -f1 | tr a-f A-F)
+sed -i "s#\"SHA256:ServerPath\": \"[^\"]*\"#\"SHA256:ServerPath\": \"$hash\"#" aim-settings.json
+echo "whisper-server $hash, written into aim-settings.json"
 
 echo "== Ollama 0.34.4 and llama3.2:3b (EDP, in MAD and MPD)"
 if [ ! -x ollama/bin/ollama ]; then

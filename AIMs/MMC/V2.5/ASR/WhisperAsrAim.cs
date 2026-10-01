@@ -16,11 +16,16 @@ public sealed class WhisperAsrConfiguration
     public required string ModelPath { get; init; }        // ggml-*.bin
     public string LanguageCode { get; init; } = "en";      // model language (e.g. base.en)
 
-    // SPEED, TRADED KNOWINGLY. Null leaves whisper-cli's own default.
-    //   Threads      - CPU threads; whisper-cli uses 4 unless told, whatever the machine has.
+    // whisper-server(.exe): where named, the model is loaded once and kept, and every
+    // turn is answered by it; where not, whisper-cli loads it at every turn.
+    public string? ServerPath { get; init; }
+
+    // SPEED, TRADED KNOWINGLY. Null leaves whisper's own default.
+    //   Threads      - CPU threads; whisper uses 4 unless told, whatever the machine has.
     //   AudioContext - encoder window in 20 ms steps (1500 = the full 30 s). Whisper
     //                  encodes the whole window however short the utterance, so a
     //                  smaller one is much faster - and anything spoken beyond it is lost.
+    //                  Null: sized to each recording (see Window), so nothing is lost.
     public int? Threads { get; init; }
     public int? AudioContext { get; init; }
 }
@@ -45,15 +50,26 @@ public sealed class WhisperAsrAim : IAsrAim
 
     public async Task<BasicTextObject> ProcessAsync(BasicSpeechObject speech)
     {
+        var bytes = ToWavBytes(speech);
+        int window = _config.AudioContext ?? Window(bytes);
+
+        if (_config.ServerPath is { Length: > 0 } server)
+        {
+            var language = EnglishOnly ? null : PrimaryLanguage(Language(speech));
+            var said = await WhisperServer.For(server, _config.ModelPath, _config.Threads)
+                                          .TranscribeAsync(bytes, language, window);
+            return Heard(Clean(said.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None), out var noise), noise, speech);
+        }
+
         var wav = Path.Combine(Path.GetTempPath(), $"asr_{Guid.NewGuid():N}.wav");
-        await File.WriteAllBytesAsync(wav, ToWavBytes(speech));
+        await File.WriteAllBytesAsync(wav, bytes);
 
         try
         {
             var psi = new ProcessStartInfo
             {
                 FileName = _config.ExecutablePath,
-                Arguments = BuildArguments(wav, speech),
+                Arguments = BuildArguments(wav, speech, window),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -80,19 +96,46 @@ public sealed class WhisperAsrAim : IAsrAim
             await process.WaitForExitAsync();
             var output = stdoutTask.Result;
 
-            var recognisedText = ExtractTranscription(output, out var sounds);
-
-            System.Console.WriteLine(recognisedText.Length == 0 && sounds.Length > 0
-                ? $"[MMC-ASR-V2.5] heard only a sound: {sounds} - ignored"
-                : $"[MMC-ASR-V2.5] heard: {recognisedText}");
-
-            return BasicTextObject.FromText(recognisedText, BuildTextQualifier(speech));
+            // whisper-cli writes each segment as "[timestamps] text".
+            var segments = Array.FindAll(output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None), l => l.StartsWith('['));
+            return Heard(Clean(segments, out var sounds), sounds, speech);
         }
         finally
         {
             try { File.Delete(wav); } catch { }
         }
     }
+
+    private BasicTextObject Heard(string recognisedText, string sounds, BasicSpeechObject speech)
+    {
+        System.Console.WriteLine(recognisedText.Length == 0 && sounds.Length > 0
+            ? $"[MMC-ASR-V2.5] heard only a sound: {sounds} - ignored"
+            : $"[MMC-ASR-V2.5] heard: {recognisedText}");
+
+        return BasicTextObject.FromText(recognisedText, BuildTextQualifier(speech));
+    }
+
+    // THE WINDOW FITS THE RECORDING. Whisper encodes its whole window whatever is in
+    // it, so a window much longer than the speech wastes time, and one shorter loses
+    // the end of it. The recording, with 5 s to spare (whisper misreads the last
+    // words of a window it fills), never less than 512 (~10 s), never more than the
+    // model's 1500 (30 s).
+    private static int Window(byte[] wav)
+    {
+        double seconds = 30;
+        if (wav.Length > 44 && wav[0] == (byte)'R')
+        {
+            int byteRate = BitConverter.ToInt32(wav, 28);
+            if (byteRate > 0) seconds = (wav.Length - 44) / (double)byteRate;
+        }
+        return Math.Clamp((int)Math.Ceiling((seconds + 5) * 50), 512, 1500);
+    }
+
+    private bool EnglishOnly =>
+        Path.GetFileNameWithoutExtension(_config.ModelPath).EndsWith(".en", StringComparison.OrdinalIgnoreCase);
+
+    private string? Language(BasicSpeechObject speech) =>
+        speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? _config.LanguageCode;
 
     // Produce a valid WAV byte[] for whisper-cli from the Speech Object.
     // Pass through a RIFF/WAVE container; otherwise wrap the raw PCM in a WAV
@@ -142,24 +185,16 @@ public sealed class WhisperAsrAim : IAsrAim
         return ms.ToArray();
     }
 
-    private string BuildArguments(string wav, BasicSpeechObject speech)
+    private string BuildArguments(string wav, BasicSpeechObject speech, int window)
     {
-        var arguments = $"-m \"{_config.ModelPath}\" -f \"{wav}\"";
+        var arguments = $"-m \"{_config.ModelPath}\" -f \"{wav}\" -ac {window}";
 
         if (_config.Threads is > 0 and var threads)
             arguments += $" -t {threads}";
-        if (_config.AudioContext is > 0 and var context)
-            arguments += $" -ac {context}";
 
-        var language =
-            speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode
-            ?? _config.LanguageCode;
+        var language = Language(speech);
 
-        var englishOnly =
-            System.IO.Path.GetFileNameWithoutExtension(_config.ModelPath)
-                  .EndsWith(".en", StringComparison.OrdinalIgnoreCase);
-
-        if (!englishOnly && !string.IsNullOrWhiteSpace(language))
+        if (!EnglishOnly && !string.IsNullOrWhiteSpace(language))
         {
             arguments += $" -l {PrimaryLanguage(language)}";
         }
@@ -197,16 +232,14 @@ public sealed class WhisperAsrAim : IAsrAim
     // has no words. sounds: the captions taken out, for the log.
     private static readonly Regex Caption = new(@"\([^()]*\)|\[[^\[\]]*\]", RegexOptions.Compiled);
 
-    private static string ExtractTranscription(string output, out string sounds)
+    private static string Clean(string[] lines, out string sounds)
     {
         var sb = new StringBuilder();
         var heard = new System.Collections.Generic.List<string>();
 
-        foreach (var line in output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
+        foreach (var line in lines)
         {
-            if (!line.StartsWith('[')) continue;
-
-            var cleaned = Regex.Replace(line, @"^\[[^\]]+\]\s*", "").Trim();      // the timestamps
+            var cleaned = Regex.Replace(line, @"^\[\d\d:[^\]]*-->[^\]]*\]\s*", "").Trim();   // the timestamps
             foreach (Match caption in Caption.Matches(cleaned)) heard.Add(caption.Value);
             cleaned = Regex.Replace(Caption.Replace(cleaned, " "), @"\s+", " ").Trim();
 

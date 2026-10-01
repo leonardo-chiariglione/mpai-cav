@@ -39,14 +39,28 @@ public sealed class SummaryDataItem
 // Minimal client for a local Ollama server (http://127.0.0.1:11434). Uses the
 // /api/chat endpoint with stream disabled, and returns the assistant's message
 // content. HttpClient + System.Text.Json only - no external package.
+//
+// THE SAME MODEL, THE SAME WAY, ON EVERY MACHINE. Ollama chooses a context from the
+// memory it finds - 4096 tokens on a 4 GB card, 32768 on a 24 GB one, whose cache is
+// larger to set up and to fill at every request - and unloads a model 5 minutes after
+// its last use, so the first turn after a pause loads it again. The context is
+// therefore stated (always the same: a different one reloads the model), and the
+// model kept loaded.
 public sealed class OllamaClient : IDisposable
 {
     private readonly HttpClient _http;
     private readonly string _model;
+    private readonly int _context;
+    private readonly int _keepAlive;
 
-    public OllamaClient(string model = "llama3.1", string baseUrl = "http://127.0.0.1:11434")
+    // context: tokens of prompt and answer. keepAliveSeconds: how long the model stays
+    // loaded after a request; negative, for as long as Ollama runs.
+    public OllamaClient(string model = "llama3.1", string baseUrl = "http://127.0.0.1:11434",
+                        int context = 4096, int keepAliveSeconds = -1)
     {
         _model = model;
+        _context = context;
+        _keepAlive = keepAliveSeconds;
         _http = new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromMinutes(5) };
     }
 
@@ -56,6 +70,8 @@ public sealed class OllamaClient : IDisposable
         {
             model = _model,
             stream = false,
+            keep_alive = _keepAlive,
+            options = new { num_ctx = _context },
             messages = new[]
             {
                 new { role = "system", content = system },
@@ -71,7 +87,8 @@ public sealed class OllamaClient : IDisposable
             model = _model,
             stream = false,
             format = "json",
-            options = new { temperature = 0, seed = 1 },
+            keep_alive = _keepAlive,
+            options = new { temperature = 0, seed = 1, num_ctx = _context },
             messages = new[]
             {
                 new { role = "system", content = system },

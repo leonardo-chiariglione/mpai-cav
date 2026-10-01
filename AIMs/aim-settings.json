@@ -93,11 +93,12 @@
                           },
     "1MMC-ASR-V2.5-I01":  {
                               "ExecutablePath":  "Models\\Whisper\\bin\\whisper-cli.exe",
+                              "ServerPath":  "Models\\Whisper\\bin\\whisper-server.exe",
                               "ModelPath":  "Models\\Whisper\\models\\ggml-small.bin",
                               "LanguageCode":  "en",
                               "Threads":  "8",
-                              "AudioContext":  "768",
                               "SHA256:ExecutablePath":  "800A0FD754AFA75E109C7248286AD735670FB6B23D92CA5D12604647EF638A65",
+                              "SHA256:ServerPath":  "9EB6EE297215F07BA77A6D588A6A2715F2235F665528529C377B775BBAB3CD2D",
                               "SHA256:ModelPath":  "1BE3A9B2063867B937E64E2EC7483364A79917E157FA98C5D94B5C1FFFEA987B"
                           },
     "1MMC-EDP-V2.5-I01":  {
