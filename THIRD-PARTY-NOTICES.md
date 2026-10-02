@@ -19,3 +19,9 @@ mapping.
 `UserAgent/Assets/studio.hdr`, the studio lighting of the avatar page, is an image
 whose origin is not recorded; it can be replaced by any equirectangular HDR, such as
 the CC0 studio HDRIs of Poly Haven.
+
+**Obtained separately, not in the repository.** The spatial renderer of CAE-AOD
+(`AIMs/CAE3/V1.0/AOD/Spatial`) calls Steam Audio 4.8.1 by Valve Corporation, under the
+Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0), whose native library
+is put in `Models/SteamAudio` (`docs/models-provenance.md`). OCR uses RapidOcrNet
+(Apache-2.0, a NuGet package) with PaddleOCR's PP-OCRv5 models (Apache-2.0).

@@ -83,7 +83,13 @@
                               "SHA256:VoiceConfig:it":  "AEA19C0A7FCE29FBC359B93F10E7902854401E4C95AE2EA328AE516B15D296CF"
                           },
     "1CAE-AOD-V1.0-I01":  {
-                              "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut"
+                              "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut",
+                              "SteamAudio":  "Models\\SteamAudio",
+                              "Layout":  "Binaural",
+                              "SteamAudioWindows":  "Models\\SteamAudio\\windows-x64\\phonon.dll",
+                              "SteamAudioLinux":  "Models\\SteamAudio\\linux-x64\\libphonon.so",
+                              "SHA256:SteamAudioWindows":  "CA3DBC01DBC24492717011E80F6A51404CA143AE344CA660971D2C983F1E058D",
+                              "SHA256:SteamAudioLinux":  "FAF7C4D69E0F104366F6553CDA38D3F946F761F7DB223BAF12663F6FBF2387DA"
                           },
     "1MMC-OCR-V2.5-I01":  {
                               "DetModel":  "Models\\OCR\\ch_PP-OCRv5_server_det.onnx",

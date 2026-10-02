@@ -583,7 +583,30 @@ public sealed class Timbre
 public sealed class Reflectivity { public double EarlyReflectionTime { get; init; } public double LateReflectionTime { get; init; } }
 public sealed class Reverberation { public Plot? RT60 { get; init; } public Plot? RT30 { get; init; } public Plot? RT20 { get; init; } public double? EDT { get; init; } }
 public sealed class Doppler { public double? DirectSoundFactor { get; init; } public double? IndirectSound { get; init; } }
-public sealed class Plot { }   // OSD/V1.5/data/Plot.json ÃƒÂ¢Ã¢â€šÂ¬Ã¯Â¿Â½?not yet provided
+// OSD/V1.5/data/Plot.json: values over 2, 3 or 4 dimensions - a directional
+// pattern, a spectrogram, a reverberation time by band.
+public sealed class Plot
+{
+    public string Header { get; init; } = "OSD-PLT-V1.5";
+    public string? MInstanceID { get; init; }
+    public string? UEnvironmentID { get; init; }
+    public string? PlotID { get; init; }
+    public SimpleTime? PlotTime { get; init; }
+
+    // The schema's Plot; named Data in C# so the property does not share its class's name.
+    [System.Text.Json.Serialization.JsonPropertyName("Plot")]
+    public PlotData? Data { get; init; }
+
+    public DataExchangeMetadata? DataXMData { get; init; }
+    public string? DescrMetadata { get; init; }
+}
+
+public sealed class PlotData
+{
+    [System.Text.Json.Serialization.JsonPropertyName("2D")] public List<List<double>>? TwoD { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("3D")] public List<List<List<double>>>? ThreeD { get; init; }
+    [System.Text.Json.Serialization.JsonPropertyName("4D")] public List<List<List<List<double>>>>? FourD { get; init; }
+}
 
 // ---------------------------------------------------------------------------
 //  Basic Visual Object ÃƒÂ¢Ã¢â€šÂ¬Ã¯Â¿Â½?atomic visual unit (Data + Visual Qualifier).
