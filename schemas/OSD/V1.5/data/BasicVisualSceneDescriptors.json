@@ -9,7 +9,8 @@
     "BasicVisualSceneDescriptorsID",
     "BVSDescriptorsSpaceTime",
     "VisualObjectCount",
-    "BasicVisualSceneDescriptors"
+    "BasicVisualSceneDescriptors",
+    "UserPoV"
   ],
   "additionalProperties": false,
   "properties": {
@@ -32,8 +33,9 @@
     "BVSDescriptorsSpaceTime": {
       "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
     },
-    "ViewerPointOfView": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+    "UserPoV": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+      "description": "Where the Scene is seen from - for a captured Scene, the camera."
     },
     "GravityValue": {
       "type": "number"
@@ -49,18 +51,19 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "VObjectIDOrVObject",
-          "PointOfView"
+          "VObjectIDOrVObject"
         ],
         "properties": {
           "VisualObjectSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
+            "description": "Where the member is in the Scene."
           },
           "VObjectIDOrVObject": {
             "$ref": "#/$defs/ObjectIDOrObject"
           },
-          "PointOfView": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+          "UserPoV": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+            "description": "Where this member is seen from in this Scene; absent, the Scene's UserPoV applies."
           }
         }
       }
@@ -79,12 +82,9 @@
       "minItems": 1,
       "maxItems": 1,
       "items": {
-        "anyOf": [
+        "oneOf": [
           {
             "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json"
-          },
-          {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json"
           },
           {
             "type": "string"

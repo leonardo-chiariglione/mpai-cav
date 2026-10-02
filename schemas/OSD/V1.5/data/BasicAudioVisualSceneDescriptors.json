@@ -25,18 +25,10 @@
 
     "AVObjectCount":              { "type": "integer", "minimum": 0 },
 
-    "BasicAVSceneDescriptorsData":{ "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "BXSSpaceTime", "BXSOrBXSID" ], "properties": {
+    "BasicAVSceneDescriptorsData":{ "type": "array", "minItems": 1, "description": "The Basic Scenes, none of any medium required, at least one.", "items": { "type": "object", "additionalProperties": false, "required": [ "BXSSpaceTime", "BXSOrBXSID" ], "properties": {
       "BXSSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
       "UserPoV":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where this member is heard and seen from in this Scene; absent, the Scene's UserPoV applies." },
-      "BXSOrBXSID":               { "description": "A Basic Object of any medium, or a Basic Scene Descriptors of any medium, or its ID. Basic Scenes are to leave in the OSD revision that makes a Basic Audio-Visual Scene a set of Basic Objects only.", "anyOf": [
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicLiDARObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundObject.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapObject.json" },
+      "BXSOrBXSID":               { "description": "A Basic Scene Descriptors of any medium - audio, speech, visual, 3D Model, LiDAR, RADAR, ultrasound, offline map, or its ID. A Basic Audio-Visual Scene Descriptors is not nested in another: that is an Audio-Visual Scene Descriptors.", "anyOf": [
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechSceneDescriptors.json" },
@@ -45,7 +37,6 @@
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapSceneDescriptors.json" },
-                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json" },
                                   { "type": "string" } ] } } } },
     "AlignedMMObjects":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "AlignmentCode", "AlignedObjects" ], "properties": {
       "AlignmentCode":            { "type": "string" },

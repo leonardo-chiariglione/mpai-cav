@@ -9,9 +9,11 @@ namespace Mpai.Aif.Tests;
 // 2026/10/02). The Acoustic Profile has an Object part and a Scene part; a Basic
 // Audio Scene is made of Basic Audio Objects, with a UserPoV, a member's UserPoV,
 // a Closed Space and the Scene's acoustics; a Basic Audio-Visual Scene (BMS) holds
-// a voice over music - a Basic Audio Object and a Basic Speech Object - and still
-// holds the Basic Scenes CAV builds it from. What the C# classes write is checked
-// against the schemas; what is not valid says why.
+// Basic Scenes only, of any medium, at least one (the author, 2026/10/02): a voice
+// over music is the Basic Audio Scene of the music and the Basic Speech Scene of
+// the voice; a Basic Object is not a member, nor is another BMS. A Basic Visual
+// Scene holds Basic Visual Objects and is seen from its UserPoV. What the C#
+// classes write is checked against the schemas; what is not valid says why.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class AudioSceneSchemaTests
@@ -60,9 +62,20 @@ public class AudioSceneSchemaTests
             UserPoV = User(0), ClosedSpace = new JsonArray("room-1"), AcousticProfile = room,
             BasicAVSceneDescriptorsData =
             [
-                new BasicAVSceneEntry { BXSSpaceTime = At("m", 1), BXSOrBXSID = new { Header = "OSD-BAO-V1.5", BasicAudioObjectID = "music" } },
-                new BasicAVSceneEntry { BXSSpaceTime = At("v", -1), UserPoV = User(0.5), BXSOrBXSID = new { Header = "OSD-BSO-V1.5", BasicSpeechObjectID = "voice" } }
+                new BasicAVSceneEntry { BXSSpaceTime = At("m", 1), BXSOrBXSID = bas },
+                new BasicAVSceneEntry { BXSSpaceTime = At("v", -1), UserPoV = User(0.5), BXSOrBXSID = "BSS-voice" }
             ]
+        };
+        var objects = new BasicAudioVisualSceneDescriptors
+        {
+            MInstanceID = "M", BasicAVSceneDescriptorsID = "of-objects", BAVSDescriptorsSpaceTime = At("obj", 0), AVObjectCount = 1,
+            BasicAVSceneDescriptorsData = [new BasicAVSceneEntry { BXSSpaceTime = At("m", 1), BXSOrBXSID = music }]
+        };
+        var bvs = new BasicVisualSceneDescriptors
+        {
+            MInstanceID = "M", BasicVisualSceneDescriptorsID = "camera", BVSDescriptorsSpaceTime = At("bvs", 0), VisualObjectCount = 1,
+            UserPoV = User(0),
+            BasicVisualSceneDescriptorsEntries = [new BasicVisualSceneEntry { VisualObjectSpaceTime = At("car", 8), VObjectIDOrVObject = new BasicVisualObject { BasicVisualObjectID = "car" } }]
         };
         var cav = new BasicAudioVisualSceneDescriptors
         {
@@ -75,7 +88,9 @@ public class AudioSceneSchemaTests
             ["an Object's Acoustic Profile, as the Object part"] = Check("CAE3/V1.0/data/AcousticProfile.json", voice),
             ["a Scene's Acoustic Profile, as the Scene part"] = Check("CAE3/V1.0/data/AcousticProfile.json", room),
             ["a Basic Audio Scene with its UserPoV, a member's UserPoV, a Closed Space and its acoustics"] = Check("OSD/V1.5/data/BasicAudioSceneDescriptors.json", bas),
-            ["a voice over music, a BMS of a Basic Audio Object and a Basic Speech Object"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", bms),
+            ["a voice over music, a BMS of a Basic Audio Scene and a Basic Speech Scene"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", bms),
+            ["a BMS of a Basic Audio Object, refused"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", objects).StartsWith("not valid") ? "refused" : "accepted",
+            ["a Basic Visual Scene of a Basic Visual Object, seen from its UserPoV"] = Check("OSD/V1.5/data/BasicVisualSceneDescriptors.json", bvs),
             ["a BMS as CAV builds it, of Basic Scenes"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", cav)
         });
     }

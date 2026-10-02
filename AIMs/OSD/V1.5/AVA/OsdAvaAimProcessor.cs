@@ -69,7 +69,7 @@ public sealed class OsdAvaAimProcessor : IAimProcessor
                 {
                     VisualObjectSpaceTime = lidarSpaceTime,      // resolved from LiDAR
                     VObjectIDOrVObject    = v[i].VObjectIDOrVObject,
-                    PointOfView           = v[i].PointOfView
+                    UserPoV               = v[i].UserPoV
                 });
             }
         }
@@ -80,7 +80,7 @@ public sealed class OsdAvaAimProcessor : IAimProcessor
             MInstanceID                        = bvs.MInstanceID,
             BasicVisualSceneDescriptorsID      = bvs.BasicVisualSceneDescriptorsID,
             BVSDescriptorsSpaceTime            = bvs.BVSDescriptorsSpaceTime,
-            ViewerPointOfView                  = bvs.ViewerPointOfView,
+            UserPoV                            = bvs.UserPoV,
             VisualObjectCount                  = alignedVisualEntries.Count,
             BasicVisualSceneDescriptorsEntries = alignedVisualEntries
         };

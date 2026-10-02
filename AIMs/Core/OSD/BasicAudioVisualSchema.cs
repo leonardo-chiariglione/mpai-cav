@@ -24,11 +24,13 @@ namespace Mpai.Core.OSD;
 //  might hold a BAS + a BVS + a BLS, aligned, so "this face" (visual) and
 //  "this voice direction" (audio) are registered to the same space.
 //
-//  RECURSIVE: a BMS entry may itself be a BMS (which in turn groups, say, a
-//  BUS + a BSS). So the entry's scene reference includes BMS among its options.
+//  NOT RECURSIVE (the author, 2026/10/02): a BMS holds Basic Scenes only, of
+//  any medium, none required but at least one; a BMS is not nested in another
+//  - that is the Audio-Visual Scene Descriptors (MSD) - and a Basic Object is
+//  not a member.
 //
-//  The schema's per-entry choice is anyOf[ the modality Basic scenes | BMS |
-//  an ID string ]. Following the same simplification used by the audio/visual
+//  The schema's per-entry choice is anyOf[ the modality Basic Scenes | an ID
+//  string ]. Following the same simplification used by the audio/visual
 //  scene types, the C# entry carries a single nullable object reference to the
 //  contained scene (its concrete BXS type checked at use), not a strict
 //  discriminated union - since the modality Basic-scene types share no common
@@ -80,12 +82,10 @@ public sealed class BasicAVSceneEntry
     // Where this member is heard and seen from; absent, the Scene's UserPoV.
     public PointOfView? UserPoV { get; init; }
 
-    // A Basic Object of any medium (since 2026/10/02), or the contained Basic
-    // Scene Descriptor (BAS / BVS / BSS / B3S / BLS / BRS / BUS / BOS) - to leave
-    // in the OSD revision that makes a BMS a set of Basic Objects only - or a
-    // nested BasicAudioVisualSceneDescriptors, or an ID string. Typed as object because
-    // these share no common base type (all Basic, no hierarchy); the concrete
-    // type is checked at use (e.g. `entry.BXSOrBXSID is BasicAudioSceneDescriptors`).
+    // The contained Basic Scene Descriptors (BAS / BSS / BVS / B3S / BLS / BRS /
+    // BUS / BOS), or its ID string. Typed as object because these share no
+    // common base type (all Basic, no hierarchy); the concrete type is checked
+    // at use (e.g. `entry.BXSOrBXSID is BasicAudioSceneDescriptors`).
     public object? BXSOrBXSID { get; init; }
 }
 

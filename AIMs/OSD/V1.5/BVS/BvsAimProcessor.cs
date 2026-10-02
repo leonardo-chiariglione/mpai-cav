@@ -44,12 +44,13 @@ public sealed class BvsAimProcessor : IAimProcessor
             Header                          = "OSD-BVS-V1.5",
             BasicVisualSceneDescriptorsID   = System.Guid.NewGuid().ToString(),
             VisualObjectCount               = 1,
+            // The camera's place is not known here: at the origin, looking ahead.
+            UserPoV                         = new PointOfView { PointOfViewID = "camera" },
             BasicVisualSceneDescriptorsEntries = new List<BasicVisualSceneEntry>
             {
                 new BasicVisualSceneEntry
                 {
-                    VObjectIDOrVObject = obj,
-                    PointOfView        = new PointOfView()   // resolved downstream (AVA + LiDAR)
+                    VObjectIDOrVObject = obj   // placed downstream (AVA + LiDAR)
                 }
             }
         };

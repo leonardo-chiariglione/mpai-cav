@@ -84,12 +84,17 @@ public sealed class AvsVisualPipeline
                 // whole source image is carried; EXTENSION POINT: crop to the
                 // face box so FIR receives just the face region.
                 VObjectIDOrVObject = visual,
-                PointOfView = new PointOfView
+                // Where the face is: bearing only (r unknown without depth),
+                // (r=0, phi=azimuth, theta=elevation), until LiDAR fusion
+                // supplies depth.
+                VisualObjectSpaceTime = new SpaceTime
                 {
-                    PointOfViewID = Guid.NewGuid().ToString(),
-                    // Bearing only (r unknown without depth): (r=0, phi=azimuth, theta=elevation).
-                    SpherPosition = new double[] { 0.0, azimuth, elevation }
-                    // CartPosition left at origin until LiDAR fusion supplies depth.
+                    SpaceTimeID = Guid.NewGuid().ToString(),
+                    SpatialAttitude1 = new SpatialAttitude
+                    {
+                        ObjectSpatialAttitudeID = Guid.NewGuid().ToString(),
+                        Position = new Position { PositionID = Guid.NewGuid().ToString(), SpherPosition = new double[] { 0.0, azimuth, elevation } }
+                    }
                 }
             });
         }
@@ -98,6 +103,8 @@ public sealed class AvsVisualPipeline
         {
             BasicVisualSceneDescriptorsID = Guid.NewGuid().ToString(),
             VisualObjectCount = entries.Count,
+            // The camera's place is not known here: at the origin, looking ahead.
+            UserPoV = new PointOfView { PointOfViewID = "camera" },
             BasicVisualSceneDescriptorsEntries = entries
             // EXTENSION POINTs: crop each face to its own BasicVisualObject;
             // add body detection (also valid OSD-BVS objects); fuse with the

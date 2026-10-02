@@ -132,17 +132,18 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
     {
         ["Header"] = Descriptors, ["MInstanceID"] = "", ["BasicVisualSceneDescriptorsID"] = id,
         ["BVSDescriptorsSpaceTime"] = EssJson.SpaceTime(id + "-ST", ms),
+        // Where the Scene is seen from: the camera, at its height, looking ahead.
+        ["UserPoV"] = new JsonObject
+        {
+            ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = $"{id}-POV",
+            ["General"] = new JsonObject { ["CoordType"] = "Cartesian", ["ObjectType"] = "Generic", ["MediaType"] = "Visual" },
+            ["CartPosition"] = new JsonArray(0.0, 0.0, height), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
+        },
         ["VisualObjectCount"] = objects.Count,
         ["BasicVisualSceneDescriptors"] = new JsonArray(objects.Select(o => (JsonNode)new JsonObject
         {
             ["VisualObjectSpaceTime"] = EssJson.SpaceTime($"{id}-O{o.Index}-ST", ms, Placed($"{id}-O{o.Index}", ms, o)),
-            ["VObjectIDOrVObject"] = new JsonArray(VisualObject(id, ms, o)),
-            ["PointOfView"] = new JsonObject
-            {
-                ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = $"{id}-POV",
-                ["General"] = new JsonObject { ["CoordType"] = "Cartesian", ["ObjectType"] = "Generic", ["MediaType"] = "Visual" },
-                ["CartPosition"] = new JsonArray(0.0, 0.0, height), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
-            }
+            ["VObjectIDOrVObject"] = new JsonArray(VisualObject(id, ms, o))
         }).ToArray())
     };
 
