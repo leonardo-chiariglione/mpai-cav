@@ -18,6 +18,7 @@ public sealed class AoaAimProcessor : IAimProcessor
 {
     private readonly string                 _inputPort;
     private readonly string                 _outputPort;
+    private readonly string                 _storedPort;   // a stored Object, BAO or AUO; "" when the L3 has none
     private readonly IAudioAcquisitionAim   _aoa;
     private readonly IStartStopAcquisition? _startStop;
     private readonly System.TimeSpan        _duration;
@@ -36,10 +37,27 @@ public sealed class AoaAimProcessor : IAimProcessor
         _duration   = duration ?? System.TimeSpan.FromSeconds(5);
         _inputPort  = ports.InputOrDefault("OSD-BAO-V1.5", PortKey.Of("OSD-BAO-V1.5", 1));
         _outputPort = ports.Output("OSD-BAO-V1.5");
+        _storedPort = ports.InputOrDefault("OSD-BAO-V1.5", 2, "");
     }
 
     public async Task<Message> ProcessAsync(Message message)
     {
+        // A STORED OBJECT IS READ AND FORWARDED AS IT IS (the author, 2026/10/02):
+        // a Basic Audio Object or an Audio Object, its Header saying which.
+        if (_storedPort.Length > 0 && message.Ports.TryGetValue(_storedPort, out var storedJson) &&
+            !string.IsNullOrWhiteSpace(storedJson))
+        {
+            var header = System.Text.Json.Nodes.JsonNode.Parse(storedJson)?["Header"]?.GetValue<string>() ?? "OSD-BAO-V1.5";
+            return new Message
+            {
+                MessageId   = message.MessageId,
+                MessageType = header == "OSD-AUO-V1.5" ? "AudioObject" : "BasicAudioObject",
+                DataType    = header,
+                Payload     = storedJson,
+                Ports       = new Dictionary<string, string> { [_outputPort] = storedJson }
+            };
+        }
+
         // Use the piped input audio if the Controller delivered one.
         if (message.Ports.TryGetValue(_inputPort, out var suppliedJson) &&
             !string.IsNullOrWhiteSpace(suppliedJson))

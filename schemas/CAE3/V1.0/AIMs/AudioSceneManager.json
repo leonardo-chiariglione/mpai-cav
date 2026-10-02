@@ -7,7 +7,7 @@
 
   "Description":      "This AIM captures Basic Audio Objects (Audio Object Acquisition), edits them and composes Objects (Audio Object Editing), composes Scenes and sets their User Point of View (Audio Scene Editing), and plays Objects and Scenes (Audio Object Delivery), which renders a Scene for the User from the User Point of View. Each User action is a User Command, on the Command Port of the AIM it directs: an interactive session is a sequence of runs, what is open held by each AIM between them and the Objects and Scenes in Shared Storage. The same functions apply to Speech Objects and Scenes; speech and audio heard together are composed in Multimodal Objects and Scene Descriptors.",
 
-  "InternalTypes":    [{"Name": "AcquiredAudioObject", "DataType": "OSD-BAO-V1.5"},
+  "InternalTypes":    [{"Name": "AcquiredAudioObject", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]},
                        {"Name": "EditedAudioObject", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]},
                        {"Name": "SceneDescriptors", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"]},
                        {"Name": "PlayedAudio", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]}],
@@ -32,7 +32,7 @@
                        {"Output": {"AIMName": "", "PortName": "AcquisitionCommand", "PortNumber": 1}, "Input": {"AIMName": "CAE-AOA-V1.0", "PortName": "AcquisitionCommand"}},
                        {"Output": {"AIMName": "CAE-AOA-V1.0", "PortName": "AcquiredAudioObject"}, "Input": {"AIMName": "CAE-AOE-V1.0", "PortName": "AcquiredAudioObject"}},
                        {"Output": {"AIMName": "", "PortName": "ObjectCommand", "PortNumber": 2}, "Input": {"AIMName": "CAE-AOE-V1.0", "PortName": "ObjectCommand"}},
-                       {"Output": {"AIMName": "", "PortName": "AudioObject", "PortNumber": 2}, "Input": {"AIMName": "CAE-AOE-V1.0", "PortName": "AudioObject"}},
+                       {"Output": {"AIMName": "", "PortName": "AudioObject", "PortNumber": 2}, "Input": {"AIMName": "CAE-AOA-V1.0", "PortName": "AudioObject", "PortNumber": 2}},
                        {"Output": {"AIMName": "CAE-AOE-V1.0", "PortName": "EditedAudioObject"}, "Input": {"AIMName": "CAE-ASE-V1.0", "PortName": "EditedAudioObject"}},
                        {"Output": {"AIMName": "CAE-AOE-V1.0", "PortName": "EditedAudioObject"}, "Input": {"AIMName": "CAE-AOD-V1.0", "PortName": "EditedAudioObject"}},
                        {"Output": {"AIMName": "", "PortName": "SceneCommand", "PortNumber": 3}, "Input": {"AIMName": "CAE-ASE-V1.0", "PortName": "SceneCommand"}},

@@ -14,7 +14,8 @@ namespace Mpai.Aif.Tests;
 // Acquisition, Audio Object Editing, Audio Scene Editing, Audio Object Delivery -
 // and a session is a sequence of runs, one per User action, the Objects and Scenes
 // in the Module's Shared Storage. Judged: a sound captured from the device is a
-// Basic Audio Object, played as it is; a User Command places it, with a second
+// Basic Audio Object, played as it is; a stored Object is read by Audio Object
+// Acquisition and forwarded, opened and played; a User Command places it, with a second
 // sound, in a Basic Audio Scene heard from the User's Point of View - the Scene
 // leaves the Module and is played, rendered for the User, in stereo; every output
 // valid against its schema.
@@ -81,6 +82,12 @@ public class AsmModuleTests
             var second = Played();
             r["a sound from the device, played"] = first.StartsWith('{') ? $"{JsonNode.Parse(first)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", first)}" : first;
             r["a second sound, played"] = second.StartsWith('{') ? $"{JsonNode.Parse(second)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", second)}" : second;
+
+            // 1b. A stored Object, read by Audio Object Acquisition and forwarded: Audio
+            // Object Editing opens it, and it is played.
+            api.InputWrite(Asm, "OSD-BAO-V1.5", 2, first);
+            var stored = Played();
+            r["a stored Object, read, forwarded and played"] = stored.StartsWith('{') ? $"{JsonNode.Parse(stored)!["Header"]} {JsonNode.Parse(stored)!["BasicAudioObjectID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", stored)}" : stored;
 
             // 2. One User Command: both in a Basic Audio Scene, heard from the User.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };

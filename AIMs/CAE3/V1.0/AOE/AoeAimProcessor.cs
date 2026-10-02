@@ -98,6 +98,7 @@ public sealed class AoeAimProcessor : IAimProcessor
             if (_aoe.Has(basic.BasicAudioObjectID))
             {
                 _openBasicId = basic.BasicAudioObjectID;
+                _openObjectId = _openBasicId;   // a Basic Audio Object opened is what is open
                 Console.WriteLine($"[CAE-AOE-V1.0] opened basic {_openBasicId}");
             }
             else

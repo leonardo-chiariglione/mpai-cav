@@ -2,13 +2,14 @@
   "Header":               "CAE-AOA-V1.0",
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Object Acquisition. Captures a Basic Audio Object from a device - audio at 48 kHz - as a Basic Audio Object: a captured sound is a single sound. Stored Objects reach Audio Object Editing directly.",
+  "Description":          "Audio Object Acquisition. Captures a Basic Audio Object from a device - audio at 48 kHz: a captured sound is a single sound. It also reads stored Objects, Basic Audio Objects or Audio Objects, and forwards each as it is, its Header saying which it is.",
 
   "InternalTypes":        [],
 
   "ExternalPorts":        [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "InputAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false},
-                           {"Name": "OutputAudio", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "InputAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false, "IsOptional": true, "PortNumber": 1},
+                           {"Name": "StoredAudio", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputAudio", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
   "Topology":             [],
