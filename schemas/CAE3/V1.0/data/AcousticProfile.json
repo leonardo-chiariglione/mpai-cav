@@ -1,6 +1,6 @@
 { "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json",
-  "title":                    "Acoustic Profile V1.5",
+  "$id":                      "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json",
+  "title":                    "Acoustic Profile V1.0",
   "description":              "The acoustics of an Object or of a Scene. An Object's: its frequency range, spectrogram, loudness and directional patterns (#/$defs/Object). A Scene's: its reflectivity, reverberation, diffusion, absorption and Doppler effect (#/$defs/Scene). A Data Type refers to the one it has.",
   "anyOf":                    [ { "$ref": "#/$defs/Object" }, { "$ref": "#/$defs/Scene" } ],
 
@@ -9,7 +9,7 @@
     "Object":                 { "type": "object", "required": ["Header", "AcousticProfileID", "FrequencyRange", "Loudness"], "additionalProperties": false,
                                 "description": "The acoustics of an Object: what it sounds like, and how it radiates.", "properties": {
 
-      "Header":               { "type": "string", "const": "OSD-OAC-V1.5" },
+      "Header":               { "type": "string", "const": "CAE-ACP-V1.0" },
       "MInstanceID":          { "type": "string" },
       "UEnvironmentID":       { "type": "string" },
       "AcousticProfileID":    { "type": "string", "description": "Unique identifier for this AcousticProfile" },
@@ -31,7 +31,7 @@
     "Scene":                  { "type": "object", "required": ["Header", "AcousticProfileID"], "additionalProperties": false,
                                 "description": "The acoustics of a Scene: what happens to the sound of its Objects on the way to the listener.", "properties": {
 
-      "Header":               { "type": "string", "const": "OSD-OAC-V1.5" },
+      "Header":               { "type": "string", "const": "CAE-ACP-V1.0" },
       "MInstanceID":          { "type": "string" },
       "UEnvironmentID":       { "type": "string" },
       "AcousticProfileID":    { "type": "string", "description": "Unique identifier for this AcousticProfile" },

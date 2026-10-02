@@ -545,7 +545,7 @@ public sealed class BasicAudioObjectProperties
 }
 
 // ---------------------------------------------------------------------------
-//  Acoustic Profile ÃƒÂ¢Ã¢â€šÂ¬Ã¯Â¿Â½?OSD/V1.5/data/AcousticProfile.json
+//  Acoustic Profile - CAE3/V1.0/data/AcousticProfile.json (moved from OSD, 2026/10/02)
 // ---------------------------------------------------------------------------
 // One Data Type with two parts (the author, 2026/10/02): an Object's acoustics -
 // FrequencyRange, Spectrogram, Loudness, DirectionalPatterns - and a Scene's -
@@ -553,7 +553,7 @@ public sealed class BasicAudioObjectProperties
 // the part it is: schemas refer to #/$defs/Object or #/$defs/Scene.
 public sealed class AcousticProfile
 {
-    public string Header { get; init; } = "OSD-OAC-V1.5";
+    public string Header { get; init; } = "CAE-ACP-V1.0";
     public string? MInstanceID { get; init; }
     public string? UEnvironmentID { get; init; }
     public string AcousticProfileID { get; init; } = "";

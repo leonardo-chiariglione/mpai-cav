@@ -72,8 +72,8 @@ public class AudioSceneSchemaTests
 
         Expected.Match("audio-scene-schemas.json", new Dictionary<string, string>
         {
-            ["an Object's Acoustic Profile, as the Object part"] = Check("OSD/V1.5/data/AcousticProfile.json", voice),
-            ["a Scene's Acoustic Profile, as the Scene part"] = Check("OSD/V1.5/data/AcousticProfile.json", room),
+            ["an Object's Acoustic Profile, as the Object part"] = Check("CAE3/V1.0/data/AcousticProfile.json", voice),
+            ["a Scene's Acoustic Profile, as the Scene part"] = Check("CAE3/V1.0/data/AcousticProfile.json", room),
             ["a Basic Audio Scene with its UserPoV, a member's UserPoV, a Closed Space and its acoustics"] = Check("OSD/V1.5/data/BasicAudioSceneDescriptors.json", bas),
             ["a voice over music, a BMS of a Basic Audio Object and a Basic Speech Object"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", bms),
             ["a BMS as CAV builds it, of Basic Scenes"] = Check("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", cav)

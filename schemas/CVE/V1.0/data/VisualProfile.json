@@ -1,0 +1,54 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/CVE/V1.0/data/VisualProfile.json",
+  "title":                    "Visual Profile V1.0",
+  "description":              "How an Object or a Scene looks, as the Acoustic Profile says how it sounds. An Object's: its colour, metalness, roughness, transparency and emission - what it looks like wherever it is (#/$defs/Object). A Scene's: its light sources, its ambient light and its atmosphere - what the space does to what is seen in it (#/$defs/Scene). A Data Type refers to the one it has. Like the Acoustic Profile, it belongs to Basic Objects and Basic Scenes.",
+  "anyOf":                    [ { "$ref": "#/$defs/Object" }, { "$ref": "#/$defs/Scene" } ],
+
+  "$defs":                    {
+
+    "Object":                 { "type": "object", "required": ["Header", "VisualProfileID"], "additionalProperties": false,
+                                "description": "How an Object looks wherever it is.", "properties": {
+
+      "Header":               { "type": "string", "const": "CVE-VSP-V1.0" },
+      "MInstanceID":          { "type": "string" },
+      "UEnvironmentID":       { "type": "string" },
+      "VisualProfileID":      { "type": "string" },
+      "VisualProfileTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+      "Colour":               { "$ref": "#/$defs/Colour", "description": "The colour of the surface under white light." },
+      "Metalness":            { "type": "number", "minimum": 0, "maximum": 1, "description": "0 a dielectric surface, 1 a metal." },
+      "Roughness":            { "type": "number", "minimum": 0, "maximum": 1, "description": "0 a mirror-like surface, 1 a fully matte one." },
+      "Transparency":         { "type": "number", "minimum": 0, "maximum": 1, "description": "Fraction of the light reaching the surface that passes through it." },
+      "Emission":             { "type": "object", "additionalProperties": false, "description": "The light the Object itself gives.", "properties": {
+        "Colour":             { "$ref": "#/$defs/Colour" },
+        "Luminance":          { "type": "number", "minimum": 0, "description": "In candela per square metre." } } },
+
+      "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+      "DescrMetadata":        { "type": "string", "maxLength": 2048 } } },
+
+    "Scene":                  { "type": "object", "required": ["Header", "VisualProfileID"], "additionalProperties": false,
+                                "description": "What the space does to what is seen in it.", "properties": {
+
+      "Header":               { "type": "string", "const": "CVE-VSP-V1.0" },
+      "MInstanceID":          { "type": "string" },
+      "UEnvironmentID":       { "type": "string" },
+      "VisualProfileID":      { "type": "string" },
+      "VisualProfileTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+      "LightSources":         { "type": "array", "description": "The Light Sources of the Scene.", "items": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json" },
+                              { "type": "string" } ] } } },
+      "AmbientLight":         { "type": "object", "additionalProperties": false, "description": "The light reaching every point from no particular direction.", "properties": {
+        "Colour":             { "$ref": "#/$defs/Colour" },
+        "Illuminance":        { "type": "number", "minimum": 0, "description": "In lux." } } },
+      "Atmosphere":           { "type": "object", "additionalProperties": false, "description": "What the air does to the light.", "properties": {
+        "Visibility":         { "type": "number", "minimum": 0, "description": "The distance, in metres, at which an object can still be seen." },
+        "FogColour":          { "$ref": "#/$defs/Colour" } } },
+
+      "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+      "DescrMetadata":        { "type": "string", "maxLength": 2048 } } },
+
+    "Colour":                 { "type": "object", "required": ["ColourData", "ColourSpace"], "additionalProperties": false,
+                                "description": "A colour, as a Light Source states it: its value in a colour space.", "properties": {
+      "ColourData":           { "type": "string" },
+      "ColourSpace":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json" } } } } }

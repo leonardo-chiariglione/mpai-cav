@@ -48,7 +48,7 @@
       "description": "The Closed Space the Scene is in, placed by BASSpaceTime; it applies to the members of this Scene also when the Scene is in an Audio Scene Descriptors with a Closed Space of its own."
     },
     "AcousticProfile": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Scene"
+      "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene"
     },
     "BasicAudioSceneDescriptorsData": {
       "type": "array",

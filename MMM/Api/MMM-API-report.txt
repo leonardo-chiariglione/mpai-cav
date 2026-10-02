@@ -1,4 +1,4 @@
-MMM-API.json: 36 paths, 317 component schemas
+MMM-API.json: 36 paths, 316 component schemas
 rule 1 (no DataXMData inside a DEM) applied in 15 schemas
 rule 2 (an identifier below the top) applied at 15 references:
   TFA_V15_LocationQualifier -> OSD_V15_LocationObject

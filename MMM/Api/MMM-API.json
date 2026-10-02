@@ -3996,6 +3996,73 @@
      }
     }
    },
+   "CAE3_V10_AcousticProfile__Object": {
+    "type": "object",
+    "required": [
+     "Header",
+     "AcousticProfileID",
+     "FrequencyRange",
+     "Loudness"
+    ],
+    "additionalProperties": false,
+    "description": "The acoustics of an Object: what it sounds like, and how it radiates.",
+    "properties": {
+     "Header": {
+      "type": "string",
+      "const": "CAE-ACP-V1.0"
+     },
+     "MInstanceID": {
+      "type": "string"
+     },
+     "UEnvironmentID": {
+      "type": "string"
+     },
+     "AcousticProfileID": {
+      "type": "string",
+      "description": "Unique identifier for this AcousticProfile"
+     },
+     "AcousticProfileTime": {
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
+     },
+     "FrequencyRange": {
+      "type": "object",
+      "required": [
+       "MinFrequencyHz",
+       "MaxFrequencyHz"
+      ],
+      "additionalProperties": false,
+      "description": "Nominal frequency bounds of the audio object in Hz",
+      "properties": {
+       "MinFrequencyHz": {
+        "type": "number",
+        "minimum": 0
+       },
+       "MaxFrequencyHz": {
+        "type": "number",
+        "minimum": 0
+       }
+      }
+     },
+     "Spectrogram": {
+      "$ref": "#/components/schemas/OSD_V15_Plot"
+     },
+     "Loudness": {
+      "type": "number",
+      "description": "Perceptual loudness (e.g., LUFS in dB)"
+     },
+     "DirectionalPatterns": {
+      "$ref": "#/components/schemas/OSD_V15_Plot",
+      "description": "How the Object radiates by direction, relative to the orientation of its Space-Time: gain in dB by azimuth and elevation (a 2D Plot), or by azimuth, elevation and frequency band (a 3D Plot). As DirectionalPatterns of the Audio Source. Absent, the Object radiates alike in every direction."
+     },
+     "DataXMData": {
+      "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata"
+     },
+     "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    }
+   },
    "Complement": {
     "description": "An Item or a Process: by its identifier, as a Statused Reference, or the Item itself.",
     "oneOf": [
@@ -13301,7 +13368,7 @@
           "const": "With"
          },
          "AcousticProfile": {
-          "$ref": "#/components/schemas/OSD_V15_AcousticProfile"
+          "$ref": "#/components/schemas/CAE3_V10_AcousticProfile__Object"
          }
         }
        },
@@ -17672,139 +17739,6 @@
      ]
     }
    },
-   "OSD_V15_AcousticProfile": {
-    "title": "Acoustic Profile V1.5",
-    "description": "Frequency range, timbre, spectrum, loudness, reflectivity, reverberation, diffusion, absorption.",
-    "type": "object",
-    "required": [
-     "Header",
-     "AcousticProfileID",
-     "FrequencyRange",
-     "Loudness"
-    ],
-    "additionalProperties": false,
-    "properties": {
-     "Header": {
-      "type": "string",
-      "const": "OSD-OAC-V1.5"
-     },
-     "MInstanceID": {
-      "type": "string"
-     },
-     "UEnvironmentID": {
-      "type": "string"
-     },
-     "AcousticProfileID": {
-      "type": "string",
-      "description": "Unique identifier for this AcousticProfile"
-     },
-     "AcousticProfileTime": {
-      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
-     },
-     "FrequencyRange": {
-      "type": "object",
-      "required": [
-       "MinFrequencyHz",
-       "MaxFrequencyHz"
-      ],
-      "additionalProperties": false,
-      "description": "Nominal frequency bounds of the audio object in Hz",
-      "properties": {
-       "MinFrequencyHz": {
-        "type": "number",
-        "minimum": 0
-       },
-       "MaxFrequencyHz": {
-        "type": "number",
-        "minimum": 0
-       }
-      }
-     },
-     "Spectrogram": {
-      "$ref": "#/components/schemas/OSD_V15_Plot"
-     },
-     "Loudness": {
-      "type": "number",
-      "description": "Perceptual loudness (e.g., LUFS in dB)"
-     },
-     "Reflectivity": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "required": [
-        "EarlyReflectionTime",
-        "LateReflectionTime"
-       ],
-       "additionalProperties": false,
-       "properties": {
-        "EarlyReflectionTime": {
-         "type": "number",
-         "minimum": 0
-        },
-        "LateReflectionTime": {
-         "type": "number",
-         "minimum": 0
-        }
-       }
-      }
-     },
-     "Reverberation": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "additionalProperties": false,
-       "properties": {
-        "RT60": {
-         "$ref": "#/components/schemas/OSD_V15_Plot"
-        },
-        "RT30": {
-         "$ref": "#/components/schemas/OSD_V15_Plot"
-        },
-        "RT20": {
-         "$ref": "#/components/schemas/OSD_V15_Plot"
-        },
-        "EDT": {
-         "type": "number",
-         "minimum": 0
-        }
-       }
-      }
-     },
-     "Diffusion": {
-      "type": "number",
-      "minimum": 0
-     },
-     "Absorption": {
-      "type": "number",
-      "minimum": 0
-     },
-     "Doppler": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "additionalProperties": false,
-       "properties": {
-        "DirectSoundFactor": {
-         "type": "number",
-         "minimum": 0,
-         "maximum": 1
-        },
-        "IndirectSound": {
-         "type": "number",
-         "minimum": 0
-        }
-       }
-      }
-     },
-     "DataXMData": {
-      "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata"
-     },
-     "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-     }
-    }
-   },
    "OSD_V15_Annotation_InDEM": {
     "title": "Annotation V1.5",
     "type": "object",
@@ -18131,7 +18065,7 @@
         "$ref": "#/components/schemas/OSD_V15_InstanceIdentifier"
        },
        "AcousticProfile": {
-        "$ref": "#/components/schemas/OSD_V15_AcousticProfile"
+        "$ref": "#/components/schemas/CAE3_V10_AcousticProfile__Object"
        },
        "EulerAngles": {
         "type": "object",
@@ -18687,7 +18621,7 @@
         }
        },
        "AcousticProfile": {
-        "$ref": "#/components/schemas/OSD_V15_AcousticProfile"
+        "$ref": "#/components/schemas/CAE3_V10_AcousticProfile__Object"
        },
        "EulerAngles": {
         "type": "object",
@@ -19893,7 +19827,7 @@
       "type": "string"
      },
      "PlotTime": {
-      "$ref": "#/components/schemas/OSD_V15_Time"
+      "$ref": "#/components/schemas/OSD_V15_SimpleTime"
      },
      "Plot": {
       "type": "object",
@@ -19928,51 +19862,11 @@
           "items": {
            "type": "array",
            "items": {
-            "type": "array",
-            "items": {
-             "type": "number"
-            }
+            "type": "number"
            }
           }
          }
         }
-       }
-      }
-     },
-     "DataXMData": {
-      "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata"
-     },
-     "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-     }
-    }
-   },
-   "OSD_V15_Point": {
-    "title": "Point V1.5",
-    "type": "object",
-    "properties": {
-     "Header": {
-      "type": "string",
-      "const": "OSD-PNT-V1.5"
-     },
-     "MInstanceID": {
-      "type": "string"
-     },
-     "UEnvironmentID": {
-      "type": "string"
-     },
-     "Coordinates": {
-      "type": "object",
-      "properties": {
-       "X": {
-        "type": "number"
-       },
-       "Y": {
-        "type": "number"
-       },
-       "Z": {
-        "type": "number"
        }
       }
      },
@@ -20480,7 +20374,14 @@
    },
    "OSD_V15_RightParallelepiped": {
     "title": "Right Parallelepiped V1.5",
+    "description": "A rectangle (2D) given by 3 of its vertices not on a straight line, or a right parallelepiped (3D) given by 4 of its vertices not on a plane: a vertex, then the three vertices adjacent to it. From the first vertex, the second gives the parallelepiped's Right, the third its Front and the fourth its Up; its faces are named accordingly: Floor (through the first, second and third vertices) and Ceiling opposite; Back (through the first, second and fourth) and Front opposite; Left (through the first, third and fourth) and Right opposite.",
     "type": "object",
+    "required": [
+     "Header",
+     "Dimensions",
+     "CartPositions"
+    ],
+    "additionalProperties": false,
     "properties": {
      "Header": {
       "type": "string",
@@ -20498,16 +20399,32 @@
      "RightParallelepipedSpaceTime": {
       "$ref": "#/components/schemas/OSD_V15_SpaceTime"
      },
-     "RightParallelepiped": {
+     "Dimensions": {
+      "type": "string",
+      "enum": [
+       "2D",
+       "3D"
+      ]
+     },
+     "Precision": {
+      "type": "string",
+      "enum": [
+       "Single",
+       "Double"
+      ],
+      "description": "Precision of the coordinates."
+     },
+     "CartPositions": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 3,
       "maxItems": 4,
+      "description": "The Positions of the selected vertices of the rectangle (3) or parallelepiped (4), in metres.",
       "items": {
-       "type": "object",
-       "properties": {
-        "Point": {
-         "$ref": "#/components/schemas/OSD_V15_Point"
-        }
+       "type": "array",
+       "minItems": 3,
+       "maxItems": 3,
+       "items": {
+        "type": "number"
        }
       }
      },
@@ -20518,7 +20435,41 @@
       "type": "string",
       "maxLength": 2048
      }
-    }
+    },
+    "allOf": [
+     {
+      "if": {
+       "properties": {
+        "Dimensions": {
+         "const": "2D"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "CartPositions": {
+         "maxItems": 3
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "Dimensions": {
+         "const": "3D"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "CartPositions": {
+         "minItems": 4
+        }
+       }
+      }
+     }
+    ]
    },
    "OSD_V15_SceneDescriptors": {
     "title": "Scene Descriptors V1.5",
@@ -23966,7 +23917,7 @@
         }
        },
        "AcousticProfile": {
-        "$ref": "#/components/schemas/OSD_V15_AcousticProfile"
+        "$ref": "#/components/schemas/CAE3_V10_AcousticProfile__Object"
        },
        "Device": {
         "type": "object",

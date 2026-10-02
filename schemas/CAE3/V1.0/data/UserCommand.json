@@ -33,7 +33,7 @@
       "MovedObjects":           { "type": "object", "additionalProperties": false, "properties": {
         "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
+          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
           "OldSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
           "NewSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
 
@@ -46,7 +46,7 @@
       "ModifiedObjects":        { "type": "object", "additionalProperties": false, "properties": {
         "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
+          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } } } },
 
     "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
