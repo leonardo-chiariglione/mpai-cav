@@ -45,6 +45,7 @@
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOE\Mpai.Cae.Aoe.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOD\Mpai.Cae.Aod.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
   </ItemGroup>
 
   <ItemGroup>

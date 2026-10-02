@@ -1,9 +1,11 @@
 {
   "1CAE-AII-V2.5-I01": "loads",
+  "1CAE-AOA-V1.0-I01": "loads",
   "1CAE-AOD-V1.0-I01": "loads",
   "1CAE-AOE-V1.0-I01": "loads",
   "1CAE-ASE-V1.0-I01": "loads",
   "1CAE-ASI-V2.5-I01": "loads",
+  "1CAE-ASM-V1.0-I01": "loads (composite)",
   "1CAE-QCV-V1.0-I01": "loads",
   "1CAV-AMI-V2.0-I01": "loads",
   "1CAV-AMM-V2.0-I01": "loads",

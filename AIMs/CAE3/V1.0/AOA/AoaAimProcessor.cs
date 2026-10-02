@@ -34,8 +34,8 @@ public sealed class AoaAimProcessor : IAimProcessor
         _aoa        = aoa;
         _startStop  = aoa as IStartStopAcquisition;
         _duration   = duration ?? System.TimeSpan.FromSeconds(5);
-        _inputPort  = ports.InputOrDefault("OSD-AUO-V1.5", PortKey.Of("OSD-AUO-V1.5", 1));
-        _outputPort = ports.Output("OSD-AUO-V1.5");
+        _inputPort  = ports.InputOrDefault("OSD-BAO-V1.5", PortKey.Of("OSD-BAO-V1.5", 1));
+        _outputPort = ports.Output("OSD-BAO-V1.5");
     }
 
     public async Task<Message> ProcessAsync(Message message)
@@ -48,7 +48,7 @@ public sealed class AoaAimProcessor : IAimProcessor
             {
                 MessageId   = message.MessageId,
                 MessageType = "BasicAudioObject",
-                DataType    = "OSD-AUO-V1.5",
+                DataType    = "OSD-BAO-V1.5",
                 Payload     = suppliedJson,
                 Ports       = new Dictionary<string, string> { [_outputPort] = suppliedJson }
             };
@@ -86,7 +86,7 @@ public sealed class AoaAimProcessor : IAimProcessor
         {
             MessageId   = message.MessageId,
             MessageType = "BasicAudioObject",
-            DataType    = "OSD-AUO-V1.5",
+            DataType    = "OSD-BAO-V1.5",
             Payload     = json,
             Ports       = new Dictionary<string, string> { [_outputPort] = json }
         };

@@ -8,9 +8,9 @@
   "Description":      "This AIM plays Audio Objects and Audio Scenes. A Basic Audio Object is played as it is, or, when it states a User Point of View, heard from there; an Audio Object is heard as a scene of its Basic Audio Objects; a Basic Audio Scene or an Audio Scene is rendered from its User Point of View, each member from its own if it has one, by spatial rendering - distance and air attenuation, the directional patterns of the Basic Audio Objects' Acoustic Profiles, binaural or onto a loudspeaker layout. What is played is also output, as a Basic Audio Object.",
 
   "ExternalPorts":    [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "InputAudio", "Direction": "Input", "DataType": ["OSD-AUO-V1.5", "OSD-BAO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-ASD-V1.5", "OSD-BAS-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "OutputAudio", "Direction": "Output", "DataType": ["OSD-AUO-V1.5", "OSD-BAO-V1.5"], "Technology": "Hardware", "Protocol": "", "IsRemote": ""}],
+                       {"Name": "InputAudio", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "OutputAudio", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Hardware", "Protocol": "", "IsRemote": ""}],
 
   "Implementations":  [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

@@ -46,9 +46,9 @@ public sealed class AodAimProcessor : IAimProcessor
     {
         InstanceId  = instanceId;
         _aod        = aod;
-        _audioPort  = ports.Input("OSD-AUO-V1.5");                       // or OSD-BAO-V1.5: one Port
-        _scenePort  = ports.InputOrDefault("OSD-ASD-V1.5", "");          // or OSD-BAS-V1.5: one Port
-        _outputPort = ports.Output("OSD-AUO-V1.5");
+        _audioPort  = ports.Input("OSD-BAO-V1.5");                       // or OSD-AUO-V1.5: one Port
+        _scenePort  = ports.InputOrDefault("OSD-BAS-V1.5", "");          // or OSD-ASD-V1.5: one Port
+        _outputPort = ports.Output("OSD-BAO-V1.5");
         _steamAudio = steamAudioFolder ?? MpaiPaths.Resolve("Models/SteamAudio");
         _layout     = Enum.TryParse<SpatialRenderer.Layout>(layout, true, out var l) ? l : SpatialRenderer.Layout.Binaural;
     }

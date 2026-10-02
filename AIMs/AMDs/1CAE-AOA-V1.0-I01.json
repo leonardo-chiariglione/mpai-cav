@@ -1,0 +1,23 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "CAE-AOA-V1.0-I01", "AIMName": "1CAE-AOA-V1.0-I01"},
+  "Header":               "CAE-AOA-V1.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "Audio Object Acquisition. Captures a Basic Audio Object from a device - audio at 48 kHz - as a Basic Audio Object: a captured sound is a single sound. Stored Objects reach Audio Object Editing directly.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "InputAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Hardware", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputAudio", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE3/V1.0/AOA", "MASPort": 443, "BinaryName": "Mpai.Cae.Aoa", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.0", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "Medium", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/asm/v1-0/"}]}
