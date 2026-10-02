@@ -1,0 +1,22 @@
+{
+  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOE-V1.0"},
+
+  "Header":           "CAE-AOE-V1.0",
+
+  "APIProfile":       "Basic",
+
+  "Description":      "This AIM edits an Audio Object and composes Audio Objects into one. One Object is open at a time, so a User Command need not name its target: it acts on what is open. The Object Port accepts a Basic Audio Object or a full Audio Object and the AIM knows which it was given from the value's Header - an Object holding one Object is Basic, an Object holding more than one is full, so the kind is a fact about the content rather than a declaration about the channel. Composing a Basic Audio Object with another Object produces a full Audio Object; removing all but one produces a Basic Audio Object again.",
+
+  "ExternalPorts":    [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+
+  "Implementations":  [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
+
+  "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Request": "/* GB */", "Maximum": "/* GB */"},
+                       {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":       {},
+
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]
+}

@@ -1,0 +1,23 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "CAE-AOE-V1.0-I01", "AIMName": "1CAE-AOE-V1.0-I01"},
+  "Header":               "CAE-AOE-V1.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "Audio Object Editing. Edits Basic Audio Objects and composes Basic and full Audio Objects into Audio Objects (CAE-ASM). One Object is open at a time, so a User Command need not name its target. The Object Port accepts a Basic Audio Object or a full one and its Header says which arrived; opening is done by Port, creation opens implicitly, and acting is done by User Command. An Audio Object has no Acoustic Profile of its own: its Basic Audio Objects have one each. Every edit is a new version in Shared Storage.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE3/V1.0/AOE", "MASPort": 443, "BinaryName": "Mpai.Cae.Aoe", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.0", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "1 GB", "Request": "2 GB", "Maximum": "4 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

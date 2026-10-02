@@ -1,0 +1,9 @@
+{
+  "1 a BAO arriving: what AOE gives back": "OSD-BAO-V1.5 BAO000001, valid",
+  "2 its Acoustic Profile modified": "BAO000002, loudness -18, valid",
+  "3 two BAOs composed": "OSD-AUO-V1.5 AUO000001 of 2 Basic and 0 sub-Objects, Acoustic Profile of its own: none, valid",
+  "4 two BAOs placed in a scene": "OSD-BAS-V1.5 of 2 members, UserPoV set, valid",
+  "5 an Audio Object placed in a scene": "OSD-ASD-V1.5, valid",
+  "6 the User Commands": "valid",
+  "7 versions kept in Shared Storage": "BAO 3, AUO 1, BAS 3, ASD 1"
+}

@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 // AudioObject and the other OSD audio schema types live in Mpai.Core.OSD,
 // a separate namespace within the same assembly - as AoeAim's own using list
@@ -56,7 +59,9 @@ public sealed class UserCommandData
 
 // An identifier or the object itself: OSD ObjectOrID. Carrying only the
 // identifier is the usual case, and the AIM fetches the content from Shared
-// Storage.
+// Storage. In JSON it is what the schema says - the Object, or its ID as a
+// string - and the converter below reads and writes it so.
+[JsonConverter(typeof(ManagedObjectConverter))]
 public sealed class ManagedObject
 {
     public string? ObjectID { get; init; }
@@ -114,4 +119,37 @@ public sealed class ObjectChange
     // Present on ChangedObjects in the schema; describes the object's own
     // nature rather than its placement.
     public object? Qualifier { get; init; }
+}
+
+public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>
+{
+    public override ManagedObject? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String) return new ManagedObject { ObjectID = reader.GetString() };
+        var node = JsonNode.Parse(ref reader);
+        var json = node?.ToJsonString() ?? "{}";
+        return node?["Header"]?.GetValue<string>() switch
+        {
+            "OSD-AUO-V1.5" => Of(JsonSerializer.Deserialize<AudioObject>(json, options), o => o.AudioObjectID, o => new() { AudioObject = o }),
+            "OSD-BAO-V1.5" => Of(JsonSerializer.Deserialize<BasicAudioObject>(json, options), o => o.BasicAudioObjectID, o => new() { BasicAudioObject = o }),
+            "OSD-BSO-V1.5" => Of(JsonSerializer.Deserialize<BasicSpeechObject>(json, options), o => o.BasicSpeechObjectID, o => new() { SpeechObject = o }),
+            "OSD-BVO-V1.5" => Of(JsonSerializer.Deserialize<BasicVisualObject>(json, options), o => o.BasicVisualObjectID, o => new() { VisualObject = o }),
+            _ => new ManagedObject { ObjectID = node?["ObjectID"]?.GetValue<string>() }
+        };
+    }
+
+    private static ManagedObject Of<T>(T? value, Func<T, string> id, Func<T, ManagedObject> make) where T : class =>
+        value is null ? new ManagedObject() : Merge(make(value), id(value));
+
+    private static ManagedObject Merge(ManagedObject m, string id) => new()
+    {
+        ObjectID = id, AudioObject = m.AudioObject, BasicAudioObject = m.BasicAudioObject, SpeechObject = m.SpeechObject, VisualObject = m.VisualObject
+    };
+
+    public override void Write(Utf8JsonWriter writer, ManagedObject value, JsonSerializerOptions options)
+    {
+        object? whole = (object?)value.AudioObject ?? (object?)value.BasicAudioObject ?? (object?)value.SpeechObject ?? value.VisualObject;
+        if (whole is null) writer.WriteStringValue(value.ObjectID ?? "");
+        else JsonSerializer.Serialize(writer, whole, whole.GetType(), options);
+    }
 }

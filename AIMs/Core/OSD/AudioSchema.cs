@@ -147,13 +147,29 @@ public sealed class AudioObject
 public sealed class BasicAudioObjectEntry
 {
     public SpaceTime? BasicAudioObjectSpaceTime { get; init; }   // fixed: confirmed SpaceTime by the corrected schema
-    public BasicAudioObject? BAObjectIDOrBAObject { get; init; }   // object or id-string (simplified to object)
+    // In C# the member itself; in JSON the schema's BAObjectIDOrBAObject, an array of one.
+    [JsonIgnore]
+    public BasicAudioObject? BAObjectIDOrBAObject { get; init; }
+    [JsonPropertyName("BAObjectIDOrBAObject")]
+    public List<BasicAudioObject>? BAObjectIDOrBAObjectArray
+    {
+        get => BAObjectIDOrBAObject is null ? null : [BAObjectIDOrBAObject];
+        init => BAObjectIDOrBAObject = value?.FirstOrDefault();
+    }
 }
 
 public sealed class SubAudioObjectEntry
 {
     public SpaceTime? SubAudioObjectSpaceTime { get; init; }   // fixed: confirmed SpaceTime by the corrected schema
-    public AudioObject? SubAObjectIDOrSubAObject { get; init; }   // object or id-string (simplified to object)
+    // In C# the member itself; in JSON the schema's SubAObjectIDOrSubAObject, an array of one.
+    [JsonIgnore]
+    public AudioObject? SubAObjectIDOrSubAObject { get; init; }
+    [JsonPropertyName("SubAObjectIDOrSubAObject")]
+    public List<AudioObject>? SubAObjectIDOrSubAObjectArray
+    {
+        get => SubAObjectIDOrSubAObject is null ? null : [SubAObjectIDOrSubAObject];
+        init => SubAObjectIDOrSubAObject = value?.FirstOrDefault();
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -253,13 +269,29 @@ public sealed class AudioSceneDescriptors
 public sealed class AudioSceneObjectEntry
 {
     public SpaceTime? AudioObjectSpaceTime { get; init; }   // fixed: schema's $ref corrected from SimpleTime to SpaceTime
-    public AudioObject? ObjectIDOrObject { get; init; }   // object or id-string (simplified to object)
+    // In C# the member itself; in JSON the schema's ObjectIDOrObject, an array of one.
+    [JsonIgnore]
+    public AudioObject? ObjectIDOrObject { get; init; }
+    [JsonPropertyName("ObjectIDOrObject")]
+    public List<AudioObject>? ObjectIDOrObjectArray
+    {
+        get => ObjectIDOrObject is null ? null : [ObjectIDOrObject];
+        init => ObjectIDOrObject = value?.FirstOrDefault();
+    }
 }
 
 public sealed class SubAudioSceneEntry
 {
     public SpaceTime? SubAudioSceneSpaceTime { get; init; }
-    public AudioSceneDescriptors? SubAudioSceneIDOrSubAudioScene { get; init; }   // object or id-string (simplified to object); recursive
+    // In C# the member itself; in JSON the schema's SubASceneIDOrSubAScene, an array of one.
+    [JsonIgnore]
+    public AudioSceneDescriptors? SubAudioSceneIDOrSubAudioScene { get; init; }
+    [JsonPropertyName("SubASceneIDOrSubAScene")]
+    public List<AudioSceneDescriptors>? SubAudioSceneIDOrSubAudioSceneArray
+    {
+        get => SubAudioSceneIDOrSubAudioScene is null ? null : [SubAudioSceneIDOrSubAudioScene];
+        init => SubAudioSceneIDOrSubAudioScene = value?.FirstOrDefault();
+    }
 }
 
 // ---------------------------------------------------------------------------

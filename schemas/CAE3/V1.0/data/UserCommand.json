@@ -1,0 +1,60 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/CAE3/V1.0/data/UserCommand.json",
+  "title":                      "User Command V1.0",
+  "description":                "Audio or Visual Scene Editing Commands.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "UserCommandID", "UserCommandTime", "UserCommandData" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "CAE-UCM-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "UserCommandID":            { "type": "string" },
+    "UserCommandTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "UserCommandData":          { "type": "object", "additionalProperties": false, "properties": {
+      "UserPoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+      "LUFS":                   { "type": "number" },
+
+      "AcquiredObject":         { "$ref": "#/$defs/ManagedObject" },
+      "DeliveredObject":        { "$ref": "#/$defs/ManagedObject" },
+
+      "AddedObjects":           { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+
+      "RemovedObjects":         { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+
+      "MovedObjects":           { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
+          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
+          "OldSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+          "NewSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+
+      "ChangedObjects":         { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+          "Qualifier":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" } } } } } },
+
+      "ModifiedObjects":        { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
+          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } },
+
+  "$defs": {
+  "ManagedObject":              { "anyOf": [
+                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/3DModelObjectOrID" },
+                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/AudioObjectOrID" },
+                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/SpeechObjectOrID" },
+                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/VisualObjectOrID" } ] } } }
