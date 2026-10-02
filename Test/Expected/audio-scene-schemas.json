@@ -1,0 +1,7 @@
+{
+  "a BMS as CAV builds it, of Basic Scenes": "valid",
+  "a Basic Audio Scene with its UserPoV, a member's UserPoV, a Closed Space and its acoustics": "valid",
+  "a Scene's Acoustic Profile, as the Scene part": "valid",
+  "a voice over music, a BMS of a Basic Audio Object and a Basic Speech Object": "valid",
+  "an Object's Acoustic Profile, as the Object part": "valid"
+}

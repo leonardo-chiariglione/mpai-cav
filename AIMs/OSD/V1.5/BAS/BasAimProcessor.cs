@@ -48,8 +48,7 @@ public sealed class BasAimProcessor : IAimProcessor
             {
                 new BasicAudioSceneEntry
                 {
-                    AudioObjectIDOrAudioObject = obj,
-                    PointOfView                = new PointOfView()   // from mic-array acquisition
+                    AudioObjectIDOrAudioObject = obj
                 }
             }
         };

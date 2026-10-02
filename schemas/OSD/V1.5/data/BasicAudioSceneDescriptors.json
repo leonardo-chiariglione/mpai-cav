@@ -10,7 +10,7 @@
     "BASSpaceTime",
     "AudioObjectCount",
     "BasicAudioSceneDescriptorsData",
-    "ListenerPointOfView"
+    "UserPoV"
   ],
   "additionalProperties": false,
   "properties": {
@@ -36,18 +36,19 @@
     "BASSpaceTime": {
       "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
     },
-    "ListenerPointOfView": {
+    "UserPoV": {
       "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
-    },
-    "GravityValue": {
-      "type": "number"
     },
     "AudioObjectCount": {
       "type": "integer",
       "minimum": 0
     },
+    "ClosedSpace": {
+      "$ref": "#/$defs/ClosedSpaceIDOrClosedSpace",
+      "description": "The Closed Space the Scene is in, placed by BASSpaceTime; it applies to the members of this Scene also when the Scene is in an Audio Scene Descriptors with a Closed Space of its own."
+    },
     "AcousticProfile": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json"
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Scene"
     },
     "BasicAudioSceneDescriptorsData": {
       "type": "array",
@@ -55,8 +56,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "AObjectIDOrAObject",
-          "PointOfView"
+          "AObjectIDOrAObject"
         ],
         "properties": {
           "AudioObjectSpaceTime": {
@@ -65,8 +65,9 @@
           "AObjectIDOrAObject": {
             "$ref": "#/$defs/ObjectIDOrObject"
           },
-          "PointOfView": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+          "UserPoV": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+            "description": "Where this member is heard from in this Scene; absent, the Scene's UserPoV applies."
           }
         }
       }
@@ -80,6 +81,21 @@
     }
   },
   "$defs": {
+    "ClosedSpaceIDOrClosedSpace": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
     "ObjectIDOrObject": {
       "type": "array",
       "minItems": 1,

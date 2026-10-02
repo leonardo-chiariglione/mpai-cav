@@ -26,16 +26,10 @@
       "SubSpeechObjectSpaceTime":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space Time of a Speech Object in the Speech Object." },
       "SubSObjectIDOrSubSObject":               { "$ref": "#/$defs/SubSObjectIDOrSubSObject", "description": "A Speech Object in the Speech Object." } } } },
 
-    "BSObjectOrSObject":                        { "$ref": "#/$defs/BSObjectOrSObject", "description": "A Basic Speech Object or Speech Object." },
-
     "DataXMData":                               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json", "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Speech Object instance in a trusted data exchange context." },
     "DescrMetadata":                            { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Speech Object instance (plain text, max 2048 characters)." } },
 
   "$defs":                                      {
-
-    "BSObjectOrSObject":                        { "type": "array", "items": { "oneOf": [
-                                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
-                                                { "$ref": "#/$defs/BSObjectOrSObject" } ] } },
 
     "BSObjectIDOrBSObject":                     { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
                                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },

@@ -18,7 +18,9 @@
       "ChildObjectID":              { "type": "string" },
       "ChildObjectSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
 
-    "ListenerPointOfView":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+    "UserPoV":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+    "DeviceID":                     { "type": "string" },
 
     "BasicAudioObjectData":         { "type": "array", "items": { "anyOf": [
                                     { "type": "object", "properties": {
@@ -33,7 +35,7 @@
       "BasicAudioObjectSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
       "Level":                      { "type": "number" },
       "PerceptStatus":              { "type": "boolean" },
-      "AcousticProfile":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json" },
+      "AcousticProfile":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
       "BasicAudioObjectIdentifier": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InstanceIdentifier.json" } } },
     "AudioQualifier":               { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json" },
 

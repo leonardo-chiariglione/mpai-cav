@@ -14,13 +14,29 @@
 
     "BAVSDescriptorsSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
 
+    "UserPoV":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where the Scene is heard and seen from." },
+    "ClosedSpace":                { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json" },
+                                  { "type": "string" } ] },
+                                    "description": "The Closed Space the Scene is in, placed by BAVSDescriptorsSpaceTime; it applies to the members of this Scene also when the Scene is in an Audio-Visual Scene Descriptors with a Closed Space of its own." },
+    "AcousticProfile":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Scene" },
+
     "GravityValue":               { "type": "number" },
 
     "AVObjectCount":              { "type": "integer", "minimum": 0 },
 
     "BasicAVSceneDescriptorsData":{ "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "BXSSpaceTime", "BXSOrBXSID" ], "properties": {
       "BXSSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
-      "BXSOrBXSID":               { "anyOf": [
+      "UserPoV":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where this member is heard and seen from in this Scene; absent, the Scene's UserPoV applies." },
+      "BXSOrBXSID":               { "description": "A Basic Object of any medium, or a Basic Scene Descriptors of any medium, or its ID. Basic Scenes are to leave in the OSD revision that makes a Basic Audio-Visual Scene a set of Basic Objects only.", "anyOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicLiDARObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechSceneDescriptors.json" },

@@ -87,7 +87,7 @@
             "Frequency":          { "type": "number" },
             "InterchannTimeDiff": { "type": "number" } } } } } } } } },
 
-      "AcousticProfile":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json" },
+      "AcousticProfile":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
 
       "Device":                   { "type": "object", "additionalProperties": false, "properties": {
 

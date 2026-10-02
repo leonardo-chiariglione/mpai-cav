@@ -45,7 +45,7 @@
 
       "Basic3DModelObjectIdentifier": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InstanceIdentifier.json" },
 
-      "AcousticProfile":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json" },
+      "AcousticProfile":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json#/$defs/Object" },
 
       "EulerAngles":                  { "type": "object", "properties": {
         "alpha":                      { "type": "number" },

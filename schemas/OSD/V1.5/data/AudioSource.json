@@ -31,10 +31,4 @@
         "SizeAndShape":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" } } } } } ] } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
-
-  "$defs": {
-
-    "3DModelEventIDOr3DModelEvent":       { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
-                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelEventDescriptors.json" },
-                              { "type": "string" } ] } } } }
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

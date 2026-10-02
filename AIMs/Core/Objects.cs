@@ -301,6 +301,9 @@ public sealed class BasicSpeechObject
     public byte[] Data { get; init; } = [];                    // inline speech data (e.g. WAV/PCM)
     public SpeechQualifier? SpeechQualifier { get; init; }
 
+    // Where the Object is heard from when heard on its own, as a Basic Audio Object's.
+    public PointOfView? UserPoV { get; init; }
+
     public DataExchangeMetadata? DataXMData { get; init; }
     public string? DescrMetadata { get; init; }
 
@@ -407,10 +410,11 @@ public sealed class BasicAudioObject
     // Object and CAE-AOE had nowhere to put one.
     //
     // A lone Basic Object sits at the origin - it is what is being auditioned.
-    // What moves is the EAR. When the Object is later placed in a Scene, the
-    // Scene's ListenerPointOfView overrides this one, per the rule that an
-    // entity keeps its own attributes unless the context provides them.
-    public PointOfView? ListenerPointOfView { get; init; }
+    // What moves is the EAR. When the Object is placed in a Scene, the member's
+    // UserPoV, else the Scene's, applies instead (the author, 2026/10/02); this
+    // one counts only when the Object is heard alone. UserPoV, not
+    // ListenerPointOfView: the user is neutral, for audio and visual alike.
+    public PointOfView? UserPoV { get; init; }
 
     public BasicAudioObjectProperties? BasicAudioObjectProperties { get; init; }
     public AudioQualifier? AudioQualifier { get; init; }
@@ -476,14 +480,14 @@ public sealed class BasicAudioObject
         ParentObjects = ParentObjects,
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
-        ListenerPointOfView = ListenerPointOfView,
+        UserPoV = UserPoV,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,
         DescrMetadata = DescrMetadata
     };
 
-    // ListenerPointOfView was added to this class after WithId was written, and
+    // The listener (now UserPoV) was added to this class after WithId was written, and
     // WithId did not copy it - so a listener set before storing was silently
     // dropped on the way in. Adding a field to a hand-written copy method means
     // finding every such method; there was one, and it had been missed.
@@ -497,7 +501,7 @@ public sealed class BasicAudioObject
         ParentObjects = ParentObjects,
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
-        ListenerPointOfView = listener,
+        UserPoV = listener,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,
@@ -543,17 +547,22 @@ public sealed class BasicAudioObjectProperties
 // ---------------------------------------------------------------------------
 //  Acoustic Profile ÃƒÂ¢Ã¢â€šÂ¬Ã¯Â¿Â½?OSD/V1.5/data/AcousticProfile.json
 // ---------------------------------------------------------------------------
+// One Data Type with two parts (the author, 2026/10/02): an Object's acoustics -
+// FrequencyRange, Spectrogram, Loudness, DirectionalPatterns - and a Scene's -
+// Reflectivity, Reverberation, Diffusion, Absorption, Doppler. An instance fills
+// the part it is: schemas refer to #/$defs/Object or #/$defs/Scene.
 public sealed class AcousticProfile
 {
-    public string Header { get; init; } = "OSD-ACP-V1.5";
+    public string Header { get; init; } = "OSD-OAC-V1.5";
     public string? MInstanceID { get; init; }
     public string? UEnvironmentID { get; init; }
     public string AcousticProfileID { get; init; } = "";
     public SpaceTime? AcousticProfileTime { get; init; }
 
-    public FrequencyRange FrequencyRange { get; init; } = new();
+    public FrequencyRange? FrequencyRange { get; init; }
     public Plot? Spectrogram { get; init; }
-    public double Loudness { get; init; }
+    public double? Loudness { get; init; }
+    public Plot? DirectionalPatterns { get; init; }   // gain by direction, relative to the Object's orientation
     public List<Reflectivity>? Reflectivity { get; init; }
     public List<Reverberation>? Reverberation { get; init; }
     public double? Diffusion { get; init; }

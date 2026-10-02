@@ -19,9 +19,6 @@
 
     "UserPoV":                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
 
-    "AVObjectProperties":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AcousticProfile.json",
-                                          "description": "Acoustic properties of this Audio-Visual Object." },
-
     "BasicAVObjectCount":               { "type": "integer", "minimum": 0, "description": "Number of Basic Audio-Visual Objects contained in this Audio-Visual Object." },
 
     "BasicAVObjects":                   { "type": "array", "minItems": 0, "description": "Set of Basic Audio-Visual Objects contained in this Audio-Visual Object.",

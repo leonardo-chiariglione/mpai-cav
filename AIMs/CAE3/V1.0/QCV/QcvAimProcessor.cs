@@ -113,7 +113,7 @@ public sealed class QcvAimProcessor : IAimProcessor
             ParentObjects        = bao.ParentObjects,
             ChildObjects         = bao.ChildObjects,
             BasicAudioObjectData = new List<BasicAudioObjectDataItem> { new InlineAudioData(outB64) },
-            ListenerPointOfView  = bao.ListenerPointOfView,
+            UserPoV              = bao.UserPoV,
             BasicAudioObjectProperties = bao.BasicAudioObjectProperties,
             AudioQualifier       = WithTargetFormat(bao.AudioQualifier),
             DataXMData           = bao.DataXMData,

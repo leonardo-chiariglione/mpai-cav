@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 
 using Mpai.Core;
 
@@ -44,6 +45,13 @@ public sealed class BasicAudioVisualSceneDescriptors
     // The common reference frame for all contained modality scenes.
     public SpaceTime? BAVSDescriptorsSpaceTime { get; init; }
 
+    // Where the Scene is heard and seen from, the Closed Space (OSD-CSP) it is
+    // in, and the Scene part of the Acoustic Profile - optional, added 2026/10/02
+    // so that a BMS can hold speech and audio together for CAE-ASM.
+    public PointOfView? UserPoV { get; init; }
+    public JsonArray? ClosedSpace { get; init; }
+    public AcousticProfile? AcousticProfile { get; init; }
+
     public double? GravityValue { get; init; }
 
     public int AVObjectCount { get; init; }
@@ -69,9 +77,13 @@ public sealed class BasicAVSceneEntry
     // frame. Required - it is what keeps the fused modalities registered.
     public SpaceTime BXSSpaceTime { get; init; } = new();
 
-    // The contained Basic Scene Descriptor (BAS / BVS / BSS / B3S / BLS / BRS /
-    // BUS / BOS), or a nested BasicAudioVisualSceneDescriptors (recursion), or
-    // an ID string referencing one in the Repository. Typed as object because
+    // Where this member is heard and seen from; absent, the Scene's UserPoV.
+    public PointOfView? UserPoV { get; init; }
+
+    // A Basic Object of any medium (since 2026/10/02), or the contained Basic
+    // Scene Descriptor (BAS / BVS / BSS / B3S / BLS / BRS / BUS / BOS) - to leave
+    // in the OSD revision that makes a BMS a set of Basic Objects only - or a
+    // nested BasicAudioVisualSceneDescriptors, or an ID string. Typed as object because
     // these share no common base type (all Basic, no hierarchy); the concrete
     // type is checked at use (e.g. `entry.BXSOrBXSID is BasicAudioSceneDescriptors`).
     public object? BXSOrBXSID { get; init; }
