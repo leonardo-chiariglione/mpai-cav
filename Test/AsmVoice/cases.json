@@ -1,0 +1,665 @@
+{
+ "scene": {
+  "members": {
+   "violin": [
+    -1.5,
+    2.0
+   ],
+   "cello": [
+    1.5,
+    2.0
+   ],
+   "voice": [
+    0.0,
+    3.0
+   ],
+   "drums": [
+    0.0,
+    -2.0
+   ],
+   "piano": [
+    -3.0,
+    0.0
+   ]
+  },
+  "library": [
+   "flute",
+   "rain",
+   "applause"
+  ]
+ },
+ "cases": [
+  {
+   "request": "play the scene",
+   "expected": [
+    {
+     "act": "play",
+     "target": "scene"
+    }
+   ]
+  },
+  {
+   "request": "play everything",
+   "expected": [
+    {
+     "act": "play",
+     "target": "scene"
+    }
+   ]
+  },
+  {
+   "request": "let me hear it",
+   "expected": [
+    {
+     "act": "play",
+     "target": "scene"
+    }
+   ]
+  },
+  {
+   "request": "play the violin on its own",
+   "expected": [
+    {
+     "act": "play",
+     "target": "violin"
+    }
+   ]
+  },
+  {
+   "request": "stop",
+   "expected": [
+    {
+     "act": "stop"
+    }
+   ]
+  },
+  {
+   "request": "that's enough, stop playing",
+   "expected": [
+    {
+     "act": "stop"
+    }
+   ]
+  },
+  {
+   "request": "move the violin to the left",
+   "expected": [
+    {
+     "act": "move",
+     "target": "violin",
+     "direction": "left",
+     "amount": [
+      0.9,
+      1.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "move the violin a bit to the left",
+   "expected": [
+    {
+     "act": "move",
+     "target": "violin",
+     "direction": "left",
+     "amount": [
+      0.4,
+      0.6
+     ]
+    }
+   ]
+  },
+  {
+   "request": "shift the cello slightly right",
+   "expected": [
+    {
+     "act": "move",
+     "target": "cello",
+     "direction": "right",
+     "amount": [
+      0.4,
+      0.6
+     ]
+    }
+   ]
+  },
+  {
+   "request": "bring the voice closer",
+   "expected": [
+    {
+     "act": "move",
+     "target": "voice",
+     "direction": "closer"
+    }
+   ]
+  },
+  {
+   "request": "bring the voice much closer",
+   "expected": [
+    {
+     "act": "move",
+     "target": "voice",
+     "direction": "closer",
+     "amount": [
+      1.9,
+      2.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "push the drums farther away",
+   "expected": [
+    {
+     "act": "move",
+     "target": "drums",
+     "direction": "farther"
+    }
+   ]
+  },
+  {
+   "request": "move the piano two metres forward",
+   "expected": [
+    {
+     "act": "move",
+     "target": "piano",
+     "direction": "front",
+     "amount": [
+      1.9,
+      2.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "put the cello a little further back",
+   "expected": [
+    {
+     "act": "move",
+     "target": "cello",
+     "direction": "back",
+     "amount": [
+      0.4,
+      0.6
+     ]
+    }
+   ]
+  },
+  {
+   "request": "raise the voice by half a metre",
+   "expected": [
+    {
+     "act": "move",
+     "target": "voice",
+     "direction": "up",
+     "amount": [
+      0.4,
+      0.6
+     ]
+    }
+   ]
+  },
+  {
+   "request": "lower the piano a metre",
+   "expected": [
+    {
+     "act": "move",
+     "target": "piano",
+     "direction": "down",
+     "amount": [
+      0.9,
+      1.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "shift the fiddle a little to the left",
+   "expected": [
+    {
+     "act": "move",
+     "target": "violin",
+     "direction": "left",
+     "amount": [
+      0.4,
+      0.6
+     ]
+    }
+   ]
+  },
+  {
+   "request": "the singer should be nearer",
+   "expected": [
+    {
+     "act": "move",
+     "target": "voice",
+     "direction": "closer"
+    }
+   ]
+  },
+  {
+   "request": "move the keyboard to the right by three metres",
+   "expected": [
+    {
+     "act": "move",
+     "target": "piano",
+     "direction": "right",
+     "amount": [
+      2.9,
+      3.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "turn the violin towards me",
+   "expected": [
+    {
+     "act": "turn",
+     "target": "violin",
+     "towards": "user"
+    }
+   ]
+  },
+  {
+   "request": "make the cello face me",
+   "expected": [
+    {
+     "act": "turn",
+     "target": "cello",
+     "towards": "user"
+    }
+   ]
+  },
+  {
+   "request": "turn the voice away from me",
+   "expected": [
+    {
+     "act": "turn",
+     "target": "voice",
+     "towards": "away"
+    }
+   ]
+  },
+  {
+   "request": "point the drums to the left",
+   "expected": [
+    {
+     "act": "turn",
+     "target": "drums",
+     "towards": "left"
+    }
+   ]
+  },
+  {
+   "request": "make the drums louder",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "drums",
+     "change": [
+      1,
+      30
+     ]
+    }
+   ]
+  },
+  {
+   "request": "the drums are too loud",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "drums",
+     "change": [
+      -30,
+      -1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "turn down the piano a lot",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "piano",
+     "change": [
+      -30,
+      -5
+     ]
+    }
+   ]
+  },
+  {
+   "request": "a little more cello",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "cello",
+     "change": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "request": "make everything quieter",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "scene",
+     "change": [
+      -30,
+      -1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "the voice should be 6 dB louder",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "voice",
+     "change": [
+      5.5,
+      6.5
+     ]
+    }
+   ]
+  },
+  {
+   "request": "add the flute",
+   "expected": [
+    {
+     "act": "add",
+     "target": "flute"
+    }
+   ]
+  },
+  {
+   "request": "put the rain in the scene",
+   "expected": [
+    {
+     "act": "add",
+     "target": "rain"
+    }
+   ]
+  },
+  {
+   "request": "bring in the applause behind me",
+   "expected": [
+    {
+     "act": "add",
+     "target": "applause",
+     "direction": "back"
+    }
+   ]
+  },
+  {
+   "request": "take out the drums",
+   "expected": [
+    {
+     "act": "remove",
+     "target": "drums"
+    }
+   ]
+  },
+  {
+   "request": "I don't want the piano anymore",
+   "expected": [
+    {
+     "act": "remove",
+     "target": "piano"
+    }
+   ]
+  },
+  {
+   "request": "remove the voice",
+   "expected": [
+    {
+     "act": "remove",
+     "target": "voice"
+    }
+   ]
+  },
+  {
+   "request": "I want to listen from the stage",
+   "expected": [
+    {
+     "act": "listen_from",
+     "direction": "front"
+    }
+   ]
+  },
+  {
+   "request": "let me sit next to the cello",
+   "expected": [
+    {
+     "act": "listen_from",
+     "target": "cello"
+    }
+   ]
+  },
+  {
+   "request": "move me two metres back",
+   "expected": [
+    {
+     "act": "listen_from",
+     "direction": "back",
+     "amount": [
+      1.9,
+      2.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "undo that",
+   "expected": [
+    {
+     "act": "undo"
+    }
+   ]
+  },
+  {
+   "request": "go back one step",
+   "expected": [
+    {
+     "act": "undo"
+    }
+   ]
+  },
+  {
+   "request": "save the scene",
+   "expected": [
+    {
+     "act": "save"
+    }
+   ]
+  },
+  {
+   "request": "keep this version",
+   "expected": [
+    {
+     "act": "save"
+    }
+   ]
+  },
+  {
+   "request": "move the violin to the left and play the scene",
+   "expected": [
+    {
+     "act": "move",
+     "target": "violin",
+     "direction": "left"
+    },
+    {
+     "act": "play",
+     "target": "scene"
+    }
+   ]
+  },
+  {
+   "request": "take out the drums and add the rain",
+   "expected": [
+    {
+     "act": "remove",
+     "target": "drums"
+    },
+    {
+     "act": "add",
+     "target": "rain"
+    }
+   ]
+  },
+  {
+   "request": "make the voice louder and bring it closer",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "voice",
+     "change": [
+      1,
+      30
+     ]
+    },
+    {
+     "act": "move",
+     "target": "voice",
+     "direction": "closer"
+    }
+   ]
+  },
+  {
+   "request": "move the violent to the left",
+   "expected": [
+    {
+     "act": "move",
+     "target": "violin",
+     "direction": "left"
+    }
+   ]
+  },
+  {
+   "request": "play the seen",
+   "expected": [
+    {
+     "act": "play",
+     "target": "scene"
+    }
+   ]
+  },
+  {
+   "request": "make the cello quite her",
+   "expected": [
+    {
+     "act": "volume",
+     "target": "cello",
+     "change": [
+      -30,
+      -1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "turn the drums towards me",
+   "expected": [
+    {
+     "act": "turn",
+     "target": "drums",
+     "towards": "user"
+    }
+   ]
+  },
+  {
+   "request": "at the flute",
+   "expected": [
+    {
+     "act": "add",
+     "target": "flute"
+    }
+   ]
+  },
+  {
+   "request": "move the piano too metres forward",
+   "expected": [
+    {
+     "act": "move",
+     "target": "piano",
+     "direction": "front",
+     "amount": [
+      1.9,
+      2.1
+     ]
+    }
+   ]
+  },
+  {
+   "request": "save the sin",
+   "expected": [
+    {
+     "act": "save"
+    }
+   ]
+  },
+  {
+   "request": "move it to the left",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "make it louder",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "add the trumpet",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "turn the guitar towards me",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "move the instrument closer",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "put something nice in the corner",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  },
+  {
+   "request": "what is the weather like",
+   "expected": [
+    {
+     "act": "ask"
+    }
+   ]
+  }
+ ]
+}

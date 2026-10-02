@@ -1,0 +1,8 @@
+{
+  "the User Commands valid against their schema": "all",
+  "the requests understood right, at least 75%": "yes",
+  "through EDP: move it to the left": "a question, no command",
+  "through EDP: move the violin to the left": "the violin to x = -2.5; said \"I moved the violin 1 m to your left.\"",
+  "through EDP: play the scene": "a Delivered Object",
+  "through EDP: undo": "Text For UA \"undo\", no User Command"
+}

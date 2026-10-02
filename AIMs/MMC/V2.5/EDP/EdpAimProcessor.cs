@@ -59,6 +59,9 @@ public sealed class EdpAimProcessor : IAimProcessor
     private readonly string _mapPort;        // OSD-BOO (the CAV's Offline Map)
     private readonly string _ahmInPort;      // CAV-AHM, from the AMS
     private readonly string _ahmOutPort;     // CAV-AHM, to the AMS
+    private readonly string _asmScenePort;   // OSD-BAS (or OSD-ASD), the Scene the User speaks of (CAE-ASM)
+    private readonly string _ucmOutPort;     // CAE-UCM, the User Commands for CAE-ASM
+    private readonly string _tfuOutPort;     // MMC-TFU, what only the User Agent does (undo, save, stop)
     private readonly ISharedStorage? _private;
     private string? _cavState;               // where no Private Storage is given
     private const string CavKey = "cav-dialogue";
@@ -75,6 +78,9 @@ public sealed class EdpAimProcessor : IAimProcessor
         _mapPort          = ports.InputOrDefault("OSD-BOO-V1.5", "");
         _ahmInPort        = ports.InputOrDefault("CAV-AHM-V2.0", "");
         _ahmOutPort       = ports.OutputOrDefault("CAV-AHM-V2.0", "");
+        _asmScenePort     = ports.InputOrDefault("OSD-BAS-V1.5", "");
+        _ucmOutPort       = ports.OutputOrDefault("CAE-UCM-V1.0", "");
+        _tfuOutPort       = ports.OutputOrDefault("MMC-TFU-V1.5", "");
         _instanceId       = instanceId;
         _llm              = llm;
         _summaryPort      = ports.Input("MMC-SUM-V2.5");
@@ -95,6 +101,7 @@ public sealed class EdpAimProcessor : IAimProcessor
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
+        if (Asm(message) is { } asm) return System.Threading.Tasks.Task.FromResult(asm);
         string? userText = ReadText(message, _textPort);
         if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
@@ -215,6 +222,32 @@ public sealed class EdpAimProcessor : IAimProcessor
 
     // THE CAV'S DIALOGUE: null where this is not one - no map, no AMS-HCI Message,
     // no dialogue begun.
+    // IN AUDIO SCENE MANAGEMENT (AsmDialogue): given the Scene the User is editing,
+    // what the User says becomes User Commands, and EDP says what was done or asks.
+    private Message? Asm(Message message)
+    {
+        if (_asmScenePort.Length == 0 || !message.Ports.TryGetValue(_asmScenePort, out var sceneJson) || string.IsNullOrWhiteSpace(sceneJson)) return null;
+        var text = ReadText(message, _textPort);
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        var scene = MpaiJson.FromJson<BasicAudioSceneDescriptors>(sceneJson);
+        if (scene is null) return null;
+        AsmDialogue.Turn turn;
+        try
+        {
+            turn = new AsmDialogue((system, turns, schema) => _llm.ChatSchemaAsync(system, turns, schema))
+                .HeardAsync(text, scene).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            return Message.Error(message.MessageId, _instanceId, $"LLM call failed (is Ollama running?): {ex.Message}");
+        }
+        var ports = new Dictionary<string, string> { [_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(turn.Reply)) };
+        if (turn.Command is not null && _ucmOutPort.Length > 0) ports[_ucmOutPort] = MpaiJson.ToJson(turn.Command);
+        if (turn.ForUA is not null && _tfuOutPort.Length > 0) ports[_tfuOutPort] = MpaiJson.ToJson(turn.ForUA);
+        if (message.Ports.TryGetValue(_summaryPort, out var summary) && !string.IsNullOrWhiteSpace(summary)) ports[_outSummaryPort] = summary;
+        return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
+    }
+
     private Message? Cav(Message message)
     {
         string? Port(string key) => key.Length > 0 && message.Ports.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;

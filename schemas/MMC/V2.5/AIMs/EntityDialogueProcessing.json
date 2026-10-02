@@ -2,7 +2,7 @@
   "Header":            "MMC-EDP-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "This AIM implements the Entity Dialogue Processing function: it produces the Machine Text and Machine Personal Status from the human Text, its Text Descriptors, the human Personal Status and identity, the identifiers of the scene objects and the Basic Audio and Visual Scene Geometries, using the running Summary as dialogue memory.",
+  "Description":      "This AIM implements the Entity Dialogue Processing function: it produces the Machine Text and Machine Personal Status from the human Text, its Text Descriptors, the human Personal Status and identity, the identifiers of the scene objects and the Basic Audio and Visual Scene Geometries, using the running Summary as dialogue memory. In Audio Scene Management (CAE-ASM), given the Audio Scene the User edits, it turns what the User says into User Commands for CAE-ASM, says what was done or asks when the request is unclear, and tells the User Agent, as Text For UA, what only the User Agent does: undo, save, stop.",
 
   "InternalTypes":   [ ],
 
@@ -26,7 +26,10 @@
                      {"Name": "BasicOfflineMapObject",   "Direction": "Input",  "DataType": "OSD-BOO-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "EgoRemoteHCIMessageIn",   "Direction": "Input",  "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AMSHCIMessageOut",        "Direction": "Output", "DataType": "CAV-AHM-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "EgoRemoteHCIMessageOut",  "Direction": "Output", "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "EgoRemoteHCIMessageOut",  "Direction": "Output", "DataType": "CAV-ERH-V2.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "UserCommand", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "TextForUA", "Direction": "Output", "DataType": "MMC-TFU-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

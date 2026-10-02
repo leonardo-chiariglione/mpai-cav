@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -94,6 +96,20 @@ public sealed class OllamaClient : IDisposable
                 new { role = "system", content = system },
                 new { role = "user",   content = user }
             }
+        });
+
+    // The same, the reply forced to a JSON Schema (Ollama's structured output): the
+    // model can only answer with what the schema allows.
+    public Task<string> ChatSchemaAsync(string system, IEnumerable<(string Role, string Content)> turns, JsonNode schema) =>
+        PostAsync(new
+        {
+            model = _model,
+            stream = false,
+            format = schema,
+            keep_alive = _keepAlive,
+            options = new { temperature = 0, seed = 1, num_ctx = _context },
+            messages = new[] { new { role = "system", content = system } }
+                .Concat(turns.Select(t => new { role = t.Role, content = t.Content })).ToArray()
         });
 
     private async Task<string> PostAsync(object request)
