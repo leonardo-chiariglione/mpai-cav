@@ -98,6 +98,7 @@
       "OverallConfidence":          { "type": "number", "minimum": 0, "maximum": 1, "description": "Overall confidence in the fused result [0..1]." } } },
 
     "Predictions":                  { "type": "object", "additionalProperties": false, "properties": {
+      "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Predictions come true." },
       "TrafficFlowForecast":        { "type": "array", "items": { "$ref": "#/$defs/TrafficFlow" }, "description": "Forecasted traffic flow states." },
       "WeatherEvolution":           { "type": "array", "items": { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/WeatherData.json" }, "description": "Forecasted weather evolution." },
       "HazardPropagation":          { "type": "array", "items": { "$ref": "#/$defs/Hazard" }, "description": "Predicted hazard propagation." } } },
@@ -106,10 +107,12 @@
                                       "description": "Sequence of Points of View defining a polyline." },
 
     "Sign":                         { "type": "object", "additionalProperties": false, "properties": {
+      "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Sign is there and of the stated Type." },
       "Type":                       { "type": "string", "description": "Type of road sign." },
       "Location":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Location of the road sign." } } },
 
     "DetectedObject":               { "type": "object", "additionalProperties": false, "properties": {
+      "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Object exists and is of the stated Class, at the stated Pose." },
       "ID":                         { "type": "string", "description": "Identifier of the detected object." },
       "Class":                      { "type": "string", "description": "Classification of the detected object." },
       "Pose":                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Pose of the detected object." },

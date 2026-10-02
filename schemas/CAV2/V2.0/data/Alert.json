@@ -7,6 +7,7 @@
 
   "properties":                     {
 
+    "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Alert is warranted - that the Objects it names require urgent consideration." },
     "Header":                       { "type": "string", "const": "CAV-ALT-V2.0",
                                       "description": "Alert Header – Standard CAV-ALT-Vx.y" },
     "MInstanceID":                  { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Alert." },

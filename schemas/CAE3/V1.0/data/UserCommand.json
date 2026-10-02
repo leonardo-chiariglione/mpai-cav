@@ -7,6 +7,7 @@
   "required":                   [ "Header", "UserCommandID", "UserCommandTime", "UserCommandData" ],
   "properties":                 {
 
+    "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
     "Header":                   { "type": "string", "const": "CAE-UCM-V1.0" },
     "MInstanceID":              { "type": "string" },
     "UEnvironmentID":           { "type": "string" },

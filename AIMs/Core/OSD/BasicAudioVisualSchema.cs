@@ -109,6 +109,12 @@ public sealed class AlignedMMObject
     // constituents' own PointOfViews (those stay on the original scene entries).
     public PointOfView? AlignmentPointOfView { get; init; }
 
+    // How likely it is that the constituents are the same entity, [0, 1]; e.g. a
+    // horn heard by a microphone array of limited accuracy, aligned to a car. Two
+    // alignments competing for one constituent each carry their own. Optional, as
+    // every Confidence (the author, 2026/10/03).
+    public double? Confidence { get; init; }
+
     // The constituent objects fused into this entity (audio + visual, extensible),
     // or their id-string references. At least one; typically two.
     public List<object> AlignedObjects { get; init; } = new();

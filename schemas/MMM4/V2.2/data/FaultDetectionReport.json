@@ -5,7 +5,7 @@
   "type":                       "object",
   "additionalProperties":       false,
   "required":                   [ "Header", "ReportId", "HostMInstance", "ForeignMInstance", "DetectedByProcess", "ForeignProcessId",
-                                  "EventType", "Severity", "Confidence", "ReportCreationTime", "RuleContext", "Evidence", "ActionTakenInA" ],
+                                  "EventType", "Severity", "ReportCreationTime", "RuleContext", "Evidence", "ActionTakenInA" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "MMM-FDR-V2.2" },

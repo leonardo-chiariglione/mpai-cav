@@ -26,7 +26,7 @@
 
   "$defs":                {
     "BasicEnvironmentObject": { "type": "object", "additionalProperties": false,
-                            "required": [ "BasicEnvironmentObjectID", "SpatialAttitude", "ExistenceConfidence" ],
+                            "required": [ "BasicEnvironmentObjectID", "SpatialAttitude" ],
                             "properties": {
       "BasicEnvironmentObjectID": { "type": "string",
                             "description": "Kept from one instance of the descriptors to the next for as long as the object is perceived: a track." },

@@ -41,6 +41,7 @@
     "AlignedMMObjects":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "AlignmentCode", "AlignedObjects" ], "properties": {
       "AlignmentCode":            { "type": "string" },
       "AlignmentPointOfView":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+      "Confidence":               { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Aligned Objects are the same entity - for instance, that a horn heard by a microphone array of limited accuracy is emitted by this car. Two alignments competing for the same Object carry each its own Confidence." },
       "AlignedObjects":           { "type": "array", "items": { "anyOf": [
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },

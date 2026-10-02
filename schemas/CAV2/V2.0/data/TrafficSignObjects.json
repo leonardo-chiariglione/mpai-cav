@@ -19,12 +19,13 @@
       "TrafficObjects":         { "type": "array", "description": "Set of Traffic Objects.",
                                   "items": { "type": "object", "additionalProperties": false, "required": [ "TrafficObject" ], "properties": {
         "TrafficObject":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PerceptibleEntity.json", "description": "Individual Traffic Object (Perceptible Entities)." },
-        "RecognisedRoadSign":   { "type": "object", "additionalProperties": false, "required": [ "Sign", "Confidence" ],
+        "RecognisedRoadSign":   { "type": "object", "additionalProperties": false, "required": [ "Sign" ],
                                   "description": "Recognised road sign linked to the Road Signs and Signals schema.", "properties": {
           "Sign":               { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/RoadSignsAndSignals.json#" },
           "Confidence":         { "type": "number", "minimum": 0, "maximum": 1 } } },
         "TextObjects":          { "type": "array", "description": "Text Objects related to the Traffic Object.",
                                   "items": { "type": "object", "additionalProperties": false, "required": [ "TextObject", "SpatialAttitude" ], "properties": {
+          "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Text Object reads what the sign says." },
           "TextObject":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextObject.json", "description": "A specific Text Object." },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Text Object's Spatial Attitude." } } } },
         "PriorityInformation":  { "type": "string", "enum": [ "Police", "Ambulance", "Hazard" ], "description": "One of Police, Ambulance, Hazard." } } } } } } },
