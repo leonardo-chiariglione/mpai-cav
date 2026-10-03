@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\..\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
     <ProjectReference Include="..\..\..\PAF\V1.6\GBD\Mpai.Paf.Gbd.csproj" />
     <ProjectReference Include="..\..\..\PAF\V1.6\SAS\Mpai.Paf.Sas.csproj" />
+    <ProjectReference Include="..\..\..\PAF\V1.6\SAR\Mpai.Paf.Sar.csproj" />
   </ItemGroup>
 
 </Project>

@@ -16,6 +16,7 @@ using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;    // GfdAimProcessor
 using Mpai.Paf.Gbd;         // GbdAimProcessor
 using Mpai.Paf.Sas;         // SasAimProcessor
+using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace Mpai.Providers;
 
@@ -44,7 +45,8 @@ public sealed class MpdProvider : IAimProvider, IDisposable
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SPE-V2.5-I01" or "1PAF-FPE-V1.6-I01"
                 or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"
                 or "1PAF-GFD-V1.6-I01"
-                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01";
+                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01"
+                or "1PAF-SAR-V1.6-I01";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
@@ -60,6 +62,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-SAR-V1.6-I01" => new SarAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"MpdProvider does not provide '{aimName}'.")
         };
 

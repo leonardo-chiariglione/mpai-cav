@@ -77,9 +77,12 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 | MAT | `MMC-MAT-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-TTT` (M2M100 translation), `PAF-RSR` (avatar speaks the translation) |
 
 `PAF-RSR` (Response and Scene Rendering) is a composite realised by its leaves
-`PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS`; it is shared by all the apps.
+`PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS` + `PAF-SAR`; it is shared by all the apps.
 It takes the reply's Text and an Avatar - the model the client holds - and outputs a
-Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Live capture
+Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Given a
+scene - Audio, a 3D Model Scene, a Point of View - `PAF-SAR` (Scene and Avatar Rendering) also
+places the avatar in it: the 3D Model Scene with the avatar (`OSD-B3S`), which the client's 3D
+page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and the 3D scene. Live capture
 uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
 `MMC-SOD`.
 

@@ -36,6 +36,7 @@ using Mpai.Aims.Tts;        // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;         // GfdAimProcessor
 using Mpai.Paf.Gbd;         // GbdAimProcessor
 using Mpai.Paf.Sas;         // SasAimProcessor
+using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace HciApp;
 
@@ -113,6 +114,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             "PAF-GFD-V1.6" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "PAF-GBD-V1.6" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "PAF-SAS-V1.6" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "PAF-SAR-V1.6" => new SarAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
 
             _ => throw new NotSupportedException($"HciProvider does not provide '{aimName}'.")
         };

@@ -230,23 +230,38 @@ function prepare(root) {
   root.position.y -= box.min.y;                    // standing on the ground
   return holder;
 }
+// The speaking avatar is a member too (Scene and Avatar Rendering places it, naming its
+// 3D Model): the animated avatar this page has is moved there, not loaded again.
+let speakingAvatar = null;                         // the animated avatar, once loaded
+const avatarName = AVATAR_URL.split('/').pop();
+function attitudeOf(item) {
+  const attitude = item['3DModelObjectSpaceTime'] && item['3DModelObjectSpaceTime'].SpatialAttitude1;
+  const position = attitude && attitude.Position && attitude.Position.CartPosition;
+  const yaw = attitude && attitude.Orientation && attitude.Orientation.Orientation ? attitude.Orientation.Orientation[2] : 0;
+  return { position, yaw };
+}
 async function setModelScene(b3d) {
   if (typeof b3d === 'string') b3d = JSON.parse(b3d);
   const items = (b3d && b3d.Basic3DModelSceneDescriptors) || [];
   const placed = [];
   for (const item of items) {
     const src = modelOf(item); if (!src) continue;
+    if (speakingAvatar && src.key.split('/').pop() === avatarName) {
+      const { position, yaw } = attitudeOf(item);
+      if (position) { const p = toThree(position); speakingAvatar.position.set(p.x, p.y, p.z); }
+      speakingAvatar.rotation.y = THREE.MathUtils.degToRad(yaw || 0);
+      placed.push(null);
+      continue;
+    }
     try {
       const holder = prepare(cloneSkinned((await loadModel(src)).scene));
-      const attitude = item['3DModelObjectSpaceTime'] && item['3DModelObjectSpaceTime'].SpatialAttitude1;
-      const position = attitude && attitude.Position && attitude.Position.CartPosition;
+      const { position, yaw } = attitudeOf(item);
       if (position) { const p = toThree(position); holder.position.set(p.x, groundY + p.y, p.z); }
-      const yaw = attitude && attitude.Orientation && attitude.Orientation.Orientation ? attitude.Orientation.Orientation[2] : 0;
       holder.rotation.y = THREE.MathUtils.degToRad(yaw || 0);
       placed.push(holder);
     } catch (e) { console.warn('3D Model not loaded', src.key, e); }
   }
-  modelScene.clear(); for (const h of placed) modelScene.add(h);
+  modelScene.clear(); for (const h of placed) if (h) modelScene.add(h);
   (document.getElementById('status') || {}).textContent = `3D Model Scene: ${placed.length} of ${items.length} object(s)`;
   return placed.length;
 }
@@ -372,6 +387,7 @@ function setEmotion(category, intensity=0.9) {
 const loader = new GLTFLoader();
 loader.load(AVATAR_URL, (gltf) => {
   const avatar = gltf.scene;
+  speakingAvatar = avatar;
   avatar.traverse(o => {
     if (o.isMesh && o.morphTargetDictionary) morphMeshes.push(o);
   });

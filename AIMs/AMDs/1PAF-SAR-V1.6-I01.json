@@ -1,0 +1,32 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-SAR-V1.6-I01", "AIMName": "1PAF-SAR-V1.6-I01"},
+  "Header":           "PAF-SAR-V1.6",
+
+  "APIProfile":       "Basic",
+  "Description":      "Scene and Avatar Rendering: places the Speaking Avatar in a Scene seen and heard from a Point of View and produces the Scene as data. This Implementation produces the 3D alternative: the 3D Model Scene with the Avatar placed - for a 3D Model Object Delivery to draw - and the Multimodal Scene of the Audio Scene, the Speech Scene (the Avatar's speech at its mouth) and the 3D Model Scene. It takes Basic Audio and Basic 3D Models; the Audio, the 3D Model and the Point of View are kept until replaced.",
+
+  "ExternalPorts":    [{"Name": "SpeakingAvatar",  "Direction": "Input",  "DataType": "XRV-SAV-V1.0",                                                                         "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Audio",           "Direction": "Input",  "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5", "OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "3DModel",         "Direction": "Input",  "DataType": ["OSD-B3O-V1.5", "OSD-3DO-V1.5", "OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PointOfView",     "Direction": "Input",  "DataType": "OSD-OPV-V1.5",                                                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AudioScene",      "Direction": "Output", "DataType": "OSD-BAS-V1.5",                                                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "VisualScene",     "Direction": "Output", "DataType": "OSD-BVS-V1.5",                                                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MultimodalScene", "Direction": "Output", "DataType": "OSD-BMS-V1.5",                                                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "3DModelScene",    "Direction": "Output", "DataType": ["OSD-B3S-V1.5", "OSD-3SD-V1.5"],                                 "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/SAR",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Paf.Sar",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.6",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.1 GB", "Request": "0.2 GB", "Maximum": "0.5 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Low",    "Maximum": "Medium"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
