@@ -9,7 +9,10 @@
 
   "ExternalPorts":    [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+                       {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "SpeechToTranslate", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "TargetLanguage", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""}],
 
   "Implementations":  [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

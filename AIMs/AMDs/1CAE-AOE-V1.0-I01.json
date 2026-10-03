@@ -2,13 +2,16 @@
   "Header":               "CAE-AOE-V1.0",
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Object Editing. Edits Basic Audio Objects and composes Basic and full Audio Objects into Audio Objects (CAE-ASM). One Object is open at a time, so a User Command need not name its target. The Object Port accepts a Basic Audio Object or a full one and its Header says which arrived; opening is done by Port, creation opens implicitly, and acting is done by User Command. An Audio Object has no Acoustic Profile of its own: its Basic Audio Objects have one each. Every edit is a new version in Shared Storage.",
+  "Description":          "Audio Object Editing. Edits Basic Audio Objects and composes Basic and full Audio Objects into Audio Objects (CAE-ASM). One Object is open at a time, so a User Command need not name its target. The Object Port accepts a Basic Audio Object or a full one and its Header says which arrived; opening is done by Port, creation opens implicitly, and acting is done by User Command. An Audio Object has no Acoustic Profile of its own: its Basic Audio Objects have one each. Every edit is a new version in Shared Storage. A Speech Object arriving is kept in Shared Storage. A User Command naming Translated Objects sends each Speech Object, read from Shared Storage, to be translated, with a Language Selector for the target language its Speech Qualifier states.",
 
   "InternalTypes":        [],
 
   "ExternalPorts":        [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "AudioObject", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechToTranslate", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TargetLanguage", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
   "Topology":             [],

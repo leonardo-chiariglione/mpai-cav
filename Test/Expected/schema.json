@@ -72,6 +72,7 @@
   "MMC/V2.5/AIMs/SpeechObjectAcquisition.json": "valid",
   "MMC/V2.5/AIMs/SpeechPersonalStatusExtraction.json": "valid",
   "MMC/V2.5/AIMs/TextAndImageQuery.json": "valid",
+  "MMC/V2.5/AIMs/TextAndSpeechTranslation.json": "valid",
   "MMC/V2.5/AIMs/TextToSpeech.json": "valid",
   "MMC/V2.5/AIMs/TextToTextTranslation.json": "valid",
   "OSD/V1.5/AIMs/AudioVisualAlignment.json": "valid",

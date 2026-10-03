@@ -45,6 +45,14 @@ public sealed class AoeAimProcessor : IAimProcessor
     private readonly string _objectPort;
     private readonly string _outputPort;
 
+    // SPEECH TRANSLATION (the author, 2026/10/03). A Speech Object arriving is kept;
+    // a command naming Translated Objects sends one Speech Object, read from Shared
+    // Storage, to Text and Speech Translation, with a Language Selector for the
+    // target language. "" when the L3 has no such Port.
+    private readonly string _speechPort;       // OSD-BSO in
+    private readonly string _toTranslatePort;  // OSD-BSO out
+    private readonly string _languagePort;     // OSD-SEL out
+
     // What is open, between runs. The run is stateless; the AIM is not. That is
     // what lets an interactive session be a sequence of runs rather than one
     // long one, with the assets themselves in Shared Storage.
@@ -65,6 +73,10 @@ public sealed class AoeAimProcessor : IAimProcessor
         _basicPort   = ports.Input("OSD-BAO-V1.5");
         _objectPort  = ports.Input("OSD-AUO-V1.5");
         _outputPort  = ports.Output("OSD-AUO-V1.5");
+
+        _speechPort      = ports.InputOrDefault("OSD-BSO-V1.5", "");
+        _toTranslatePort = ports.OutputOrDefault("OSD-BSO-V1.5", "");
+        _languagePort    = ports.OutputOrDefault("OSD-SEL-V1.5", "");
     }
 
     public Task<Message> ProcessAsync(Message message)
@@ -110,43 +122,56 @@ public sealed class AoeAimProcessor : IAimProcessor
             }
         }
 
+        // A Speech Object arriving: kept, under its identifier.
+        if (_speechPort.Length > 0 && message.Ports.TryGetValue(_speechPort, out var speechJson) && !string.IsNullOrWhiteSpace(speechJson))
+            Console.WriteLine($"[CAE-AOE-V1.0] kept speech {_aoe.KeepSpeech(MpaiJson.FromJson<BasicSpeechObject>(speechJson))}");
+
         // 2. acting, by Command.
+        var translation = new Dictionary<string, string>();
         if (message.Ports.TryGetValue(_commandPort, out var commandJson))
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             Apply(command);
+            Translate(command, translation);
+        }
+
+        Message With(Message m)
+        {
+            foreach (var (port, json) in translation) m.Ports[port] = json;
+            return m;
         }
 
         // 3. the open object, as it now stands.
         if (_openObjectId is null)
-            return Task.FromResult(Nothing(message));
+            return Task.FromResult(With(Nothing(message)));
 
         // A Basic Audio Object open goes out as itself, not as an Audio Object of
         // one: an Object holding one Object is Basic.
         if (_openObjectId.StartsWith("BAO", StringComparison.Ordinal))
-            return Task.FromResult(new Message
+            return Task.FromResult(With(new Message
             {
                 MessageId   = Guid.NewGuid().ToString(),
                 MessageType = "BasicAudioObject",
                 DataType    = "OSD-BAO-V1.5",
                 Ports       = { [_outputPort] = MpaiJson.ToJson(_aoe.Get(_openObjectId)) }
-            });
+            }));
 
         var materialised = _aoe.Materialize(_openObjectId);
 
-        return Task.FromResult(new Message
+        return Task.FromResult(With(new Message
         {
             MessageId   = Guid.NewGuid().ToString(),
             MessageType = "AudioObject",
             DataType    = "OSD-AUO-V1.5",
             Ports       = { [_outputPort] = MpaiJson.ToJson(materialised) }
-        });
+        }));
     }
 
     private void Apply(UserCommand command)
     {
         var data = command.UserCommandData;
         if (data is null) return;
+        if (data.AddedObjects is null && data.ChangedObjects is null && data.ModifiedObjects is null) return;   // not an edit (a translation, say)
 
         if (_openObjectId is null)
         {
@@ -217,6 +242,34 @@ public sealed class AoeAimProcessor : IAimProcessor
                 }
             }
         }
+    }
+
+    // TRANSLATED OBJECTS: the Speech Object named, as Shared Storage holds it, and a
+    // Language Selector from the language its Qualifier states to the one the
+    // command's Speech Qualifier states. Text and Speech Translation translates one
+    // Speech Object at a time: the first named is sent, any other is reported.
+    private void Translate(UserCommand command, Dictionary<string, string> outputs)
+    {
+        if (command.UserCommandData?.TranslatedObjects is not { Objects.Count: > 0 } translated) return;
+        if (_toTranslatePort.Length == 0 || _languagePort.Length == 0)
+        {
+            Console.WriteLine("[CAE-AOE-V1.0] a translation was asked, and this AIM has no Port to send it on.");
+            return;
+        }
+        var entry = translated.Objects[0];
+        var id = entry.ObjectID?.ObjectID ?? entry.ObjectID?.SpeechObject?.BasicSpeechObjectID;
+        var speech = id is null ? null : _aoe.GetSpeech(id);
+        if (speech is null || entry.TargetLanguage is not { Length: > 0 } target)
+        {
+            Console.WriteLine($"[CAE-AOE-V1.0] cannot translate {id ?? "an unnamed object"}: {(speech is null ? "no such Speech Object" : "no target language")}.");
+            return;
+        }
+        var source = speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode;
+        outputs[_toTranslatePort] = MpaiJson.ToJson(speech);
+        outputs[_languagePort]    = MpaiJson.ToJson(BasicSelectorObject.Languages(source, target));
+        Console.WriteLine($"[CAE-AOE-V1.0] translating {id} from {source ?? "its language"} into {target}");
+        if (translated.Objects.Count > 1)
+            Console.WriteLine($"[CAE-AOE-V1.0] {translated.Objects.Count - 1} more Speech Object(s) named: one at a time.");
     }
 
     // The Basic Audio Object inside a composed one. Materialize expands the

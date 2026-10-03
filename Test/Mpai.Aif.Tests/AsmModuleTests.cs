@@ -4,6 +4,7 @@ using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Aims.Audio.Spatial;
 using Mpai.Cae.Asm;
+using Mpai.Providers;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
@@ -64,7 +65,7 @@ public class AsmModuleTests
         File.WriteAllText(settings, all.ToJsonString());
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, _ => new AsmProvider(Repository.Amds));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MatProvider(store)));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();

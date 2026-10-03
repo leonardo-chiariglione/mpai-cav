@@ -2,7 +2,7 @@
   "Header":               "CAE-ASE-V1.0",
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Scene Editing. Composes Basic Audio Scenes of Basic Audio Objects, and Audio Scenes of Objects and Scenes (CAE-ASM). One Scene is open at a time, so a User Command need not name it; opening is done by Port and creation opens implicitly. Objects arrive from CAE-AOE across the Topology. The User Point of View is set on the Scene; a member placed by its Space-Time may have its own. Every edit is a new version in Shared Storage.",
+  "Description":          "Audio Scene Editing. Composes Basic Audio Scenes of Basic Audio Objects, and Audio Scenes of Objects and Scenes (CAE-ASM). One Scene is open at a time, so a User Command need not name it; opening is done by Port and creation opens implicitly. Objects arrive from CAE-AOE across the Topology. The User Point of View is set on the Scene; a member placed by its Space-Time may have its own. Every edit is a new version in Shared Storage. A translated Speech Object replaces the original in Shared Storage, under its identifier and with the Speech Qualifier the Translated Objects command states: every Scene holding it then holds the translation, at its place.",
 
   "InternalTypes":        [],
 
@@ -10,7 +10,9 @@
                            {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ObjectCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TranslatedSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
   "Topology":             [],

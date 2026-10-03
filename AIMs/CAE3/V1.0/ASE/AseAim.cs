@@ -394,6 +394,18 @@ public sealed class AseAim
     // (ref:{id}:*) and every id that references it (refby:{id}:*). Used by
     // the UI to decide whether a Delete is safe and, if not, to show and
     // optionally cascade over exactly the assets involved - one level only.
+    // A TRANSLATION REPLACES ITS ORIGINAL (the author, 2026/10/03): under the
+    // original's identifier, so every Scene holding it holds the translation, at its
+    // place. False when there is no such Speech Object to replace.
+    public bool ReplaceSpeech(string id, BasicSpeechObject translation, SpeechQualifier? target)
+    {
+        if (SpeechStore.Get(storage, id) is not { } original) return false;
+        SpeechStore.Put(storage, SpeechStore.Replacing(original, translation, target));
+        return true;
+    }
+
+    public BasicSpeechObject? GetSpeech(string id) => SpeechStore.Get(storage, id);
+
     public IReadOnlyList<string> ReferencedBy(string assetId) =>
         storage.List($"refby:{assetId}:").Select(k => k[$"refby:{assetId}:".Length..]).ToList();
 

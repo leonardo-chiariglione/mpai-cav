@@ -48,6 +48,17 @@ public sealed class AseAimProcessor : IAimProcessor
     private readonly string _povPort;
     private readonly string _outputPort;
 
+    // SPEECH TRANSLATION (the author, 2026/10/03): the translation from Text and
+    // Speech Translation, and the command that asked for it - which names the
+    // Speech Object it replaces and the Qualifier of the translation. "" when the
+    // L3 has no such Port.
+    private readonly string _objectCommandPort;   // CAE-UCM #2
+    private readonly string _translatedPort;      // OSD-BSO
+
+    // The translation asked for and not yet arrived: in continuous execution the
+    // command and the translation come in different runs.
+    private ObjectTranslation? _pending;
+
     // What is open, between runs: its identifier says Basic (BAS) or full (ASD).
     private string? _openSceneId;
     private bool OpenIsBasic => _openSceneId?.StartsWith("BAS", StringComparison.Ordinal) == true;
@@ -72,6 +83,9 @@ public sealed class AseAimProcessor : IAimProcessor
         _scenePort   = ports.Input("OSD-ASD-V1.5");    // or OSD-BAS-V1.5: one Port
         _povPort     = ports.Input("OSD-OPV-V1.5");
         _outputPort  = ports.Output("OSD-ASD-V1.5");   // or OSD-BAS-V1.5: one Port
+
+        _objectCommandPort = ports.InputOrDefault("CAE-UCM-V1.0", 2, "");
+        _translatedPort    = ports.InputOrDefault("OSD-BSO-V1.5", "");
     }
 
     public Task<Message> ProcessAsync(Message message)
@@ -98,6 +112,22 @@ public sealed class AseAimProcessor : IAimProcessor
                 _openSceneId = id;
                 Console.WriteLine($"[CAE-ASE-V1.0] opened {_openSceneId}");
             }
+        }
+
+        // A translation asked for: kept until the translation arrives.
+        if (_objectCommandPort.Length > 0 && message.Ports.TryGetValue(_objectCommandPort, out var objectCommandJson) &&
+            MpaiJson.FromJson<UserCommand>(objectCommandJson).UserCommandData?.TranslatedObjects?.Objects is { Count: > 0 } asked)
+            _pending = asked[0];
+
+        // A translation: it replaces the Speech Object the command named.
+        if (_translatedPort.Length > 0 && _pending is { } entry &&
+            message.Ports.TryGetValue(_translatedPort, out var translatedJson))
+        {
+            _pending = null;
+            var id = entry.ObjectID?.ObjectID ?? entry.ObjectID?.SpeechObject?.BasicSpeechObjectID;
+            var replaced = id is not null && _ase.ReplaceSpeech(id, MpaiJson.FromJson<BasicSpeechObject>(translatedJson), entry.SpeechQualifier);
+            Console.WriteLine(replaced ? $"[CAE-ASE-V1.0] {id} replaced by its translation into {entry.TargetLanguage}"
+                                       : $"[CAE-ASE-V1.0] no Speech Object {id} to replace");
         }
 
         PointOfView? pov = null;

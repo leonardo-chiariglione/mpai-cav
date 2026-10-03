@@ -46,7 +46,7 @@ public sealed class UserCommandData
     public PointOfView? UserPoV { get; init; }
     public double?      LUFS    { get; init; }
 
-    // The seven operations. Exactly one is expected to be populated.
+    // The eight operations. Exactly one is expected to be populated.
     public ManagedObject?   AcquiredObject  { get; init; }
     public ManagedObject?   DeliveredObject { get; init; }
 
@@ -55,6 +55,10 @@ public sealed class UserCommandData
     public ObjectMovements?  MovedObjects    { get; init; }
     public ObjectChanges?    ChangedObjects  { get; init; }
     public ObjectChanges?    ModifiedObjects { get; init; }
+
+    // Speech Objects to translate (the author, 2026/10/03), with Text and Speech
+    // Translation; each translation replaces its original, at its place.
+    public ObjectTranslations? TranslatedObjects { get; init; }
 }
 
 // An identifier or the object itself: OSD ObjectOrID. Carrying only the
@@ -105,6 +109,23 @@ public sealed class ObjectMovement
 // The two carry the same fields today because the schema declares them so; a
 // reader cannot tell them apart from the names alone, which is worth
 // remembering when reading a Command.
+// Speech Objects and the Speech Qualifier of each one's translation: its
+// Attributes.Metadata.Language states the target language. The source language
+// is the one the Speech Object's own Qualifier states.
+public sealed class ObjectTranslations
+{
+    public List<ObjectTranslation> Objects { get; init; } = new();
+}
+
+public sealed class ObjectTranslation
+{
+    public ManagedObject?   ObjectID        { get; init; }
+    public SpeechQualifier? SpeechQualifier { get; init; }
+
+    [JsonIgnore]
+    public string? TargetLanguage => SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode;
+}
+
 public sealed class ObjectChanges
 {
     public List<ObjectChange> Objects { get; init; } = new();

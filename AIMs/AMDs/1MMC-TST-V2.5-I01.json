@@ -1,0 +1,41 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-TST-V2.5-I01", "AIMName": "1MMC-TST-V2.5-I01"},
+  "Header":           "MMC-TST-V2.5",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Text and Speech Translation: translates a Speech Object, or a Text Object, into the language the Language Selector names, and gives the translated Text Object and Speech Object. Automatic Speech Recognition recognises the speech; Text-to-Text Translation translates the text; Text-To-Speech speaks the translation in a voice of the target language. Used by Audio Scene Management to translate the Speech Objects of a Scene.",
+
+  "InternalTypes":    [{"Name": "RecognisedText", "DataType": "OSD-BTO-V1.5"},
+                       {"Name": "TranslatedText", "DataType": "OSD-BTO-V1.5"}],
+
+  "ExternalPorts":    [{"Name": "InputSpeech",      "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "InputText",        "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 1,                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "OutputText",       "Direction": "Output", "DataType": "OSD-BTO-V1.5",                                         "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "OutputSpeech",     "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                         "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTT-V2.5-I01", "AIMName": "1MMC-TTT-V2.5-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I01", "AIMName": "1MMC-TTS-V2.5-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "", "PortName": "InputSpeech" }, "Input": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "InputSpeech" } },
+                       { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "RecognisedText" }, "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "RecognisedText", "PortNumber": 2 } },
+                       { "Output": { "AIMName": "", "PortName": "InputText" }, "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "InputText", "PortNumber": 1 } },
+                       { "Output": { "AIMName": "", "PortName": "LanguageSelector" }, "Input": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "LanguageSelector", "PortNumber": 1 } },
+                       { "Output": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "TranslatedText" }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "TranslatedText" } },
+                       { "Output": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "TranslatedText" }, "Input": { "AIMName": "", "PortName": "OutputText" } },
+                       { "Output": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "OutputSpeech" }, "Input": { "AIMName": "", "PortName": "OutputSpeech" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-TST-V2.5-I01.json",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Mmc.Tst",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "2.5",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "2 GB",   "Request": "4 GB", "Maximum": "10 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

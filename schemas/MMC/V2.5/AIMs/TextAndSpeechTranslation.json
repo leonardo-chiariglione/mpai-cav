@@ -1,0 +1,48 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/TextAndSpeechTranslation.json",
+  "title":                "Text and Speech Translation V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TST-V2.5"},
+  "Header":               "MMC-TST-V2.5",
+
+  "APIProfile":           "Basic",
+  "Description":          "Text and Speech Translation. Accepts a Speech Object or a Text Object, translates into the language named by the Language Selector, and produces the translated Text Object and Speech Object. Acquisition and delivery are NOT SubAIMs of this Composite AIM: they interact with the user directly, and therefore belong to the User Agent, travelling with it when the User Agent becomes a Remote Client Application. Speech Object Acquisition and Speech Object Delivery remain AIMs in their own right where they capture from or deliver to a source outside the AIF.",
+
+  "InternalTypes":        [{"Name": "RecognisedText", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"]},
+                           {"Name": "TranslatedText", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"]}],
+
+  "ExternalPorts":        [{"Name": "InputSpeech",      "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "InputText",        "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 1,                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MediaSelector",    "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputText",       "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputSpeech",     "Direction": "Output", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [{ "Identifier": { "ImplementerID": "/* from IIDRA */", "ImplementationID": "/* from Implementer */", "AIMName": "MMC-ASR-V2.5" } },
+                           { "Identifier": { "ImplementerID": "/* from IIDRA */", "ImplementationID": "/* from Implementer */", "AIMName": "MMC-TTT-V2.5" } },
+                           { "Identifier": { "ImplementerID": "/* from IIDRA */", "ImplementationID": "/* from Implementer */", "AIMName": "MMC-TTS-V2.5" } }],
+
+  "Topology":             [{ "Output": { "AIMName": "",             "PortName": "InputSpeech"                       }, "Input": { "AIMName": "MMC-ASR-V2.5", "PortName": "InputSpeech"                       } },
+                           { "Output": { "AIMName": "MMC-ASR-V2.5", "PortName": "OutputText"                        }, "Input": { "AIMName": "MMC-TTT-V2.5", "PortName": "RecognisedText",   "PortNumber": 2 } },
+                           { "Output": { "AIMName": "",             "PortName": "InputText"                         }, "Input": { "AIMName": "MMC-TTT-V2.5", "PortName": "InputText",        "PortNumber": 1 } },
+                           { "Output": { "AIMName": "",             "PortName": "LanguageSelector", "PortNumber": 1 }, "Input": { "AIMName": "MMC-TTT-V2.5", "PortName": "LanguageSelector", "PortNumber": 1 } },
+                           { "Output": { "AIMName": "",             "PortName": "MediaSelector",    "PortNumber": 2 }, "Input": { "AIMName": "MMC-TTT-V2.5", "PortName": "MediaSelector",    "PortNumber": 2 } },
+                           { "Output": { "AIMName": "MMC-TTT-V2.5", "PortName": "TranslatedText"                    }, "Input": { "AIMName": "MMC-TTS-V2.5", "PortName": "InputText"                         } },
+                           { "Output": { "AIMName": "MMC-TTT-V2.5", "PortName": "TranslatedText"                    }, "Input": { "AIMName": "",             "PortName": "OutputText"                        } },
+                           { "Output": { "AIMName": "MMC-TTS-V2.5", "PortName": "OutputSpeech"                      }, "Input": { "AIMName": "",             "PortName": "OutputSpeech"                      } }],
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",     "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class",  "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-speech-translation/"}]}

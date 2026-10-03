@@ -5,12 +5,14 @@
 
   "APIProfile":       "Basic",
 
-  "Description":      "This AIM captures Basic Audio Objects (Audio Object Acquisition), edits them and composes Objects (Audio Object Editing), composes Scenes and sets their User Point of View (Audio Scene Editing), and plays Objects and Scenes (Audio Object Delivery), which renders a Scene for the User from the User Point of View. Each User action is a User Command, on the Command Port of the AIM it directs: an interactive session is a sequence of runs, what is open held by each AIM between them and the Objects and Scenes in Shared Storage. The same functions apply to Speech Objects and Scenes; speech and audio heard together are composed in Multimodal Objects and Scene Descriptors.",
+  "Description":      "This AIM captures Basic Audio Objects (Audio Object Acquisition), edits them and composes Objects (Audio Object Editing), composes Scenes and sets their User Point of View (Audio Scene Editing), and plays Objects and Scenes (Audio Object Delivery), which renders a Scene for the User from the User Point of View. Each User action is a User Command, on the Command Port of the AIM it directs: an interactive session is a sequence of runs, what is open held by each AIM between them and the Objects and Scenes in Shared Storage. The same functions apply to Speech Objects and Scenes; speech and audio heard together are composed in Multimodal Objects and Scene Descriptors. Speech Translation: a User Command naming Translated Objects has each Speech Object translated by Text and Speech Translation (MMC-TST) into the language its Speech Qualifier states; the translation replaces the original, under its identifier, so every Scene holding it holds the translation, at its place.",
 
   "InternalTypes":    [{"Name": "AcquiredAudioObject", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]},
                        {"Name": "EditedAudioObject", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]},
                        {"Name": "SceneDescriptors", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"]},
-                       {"Name": "PlayedAudio", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]}],
+                       {"Name": "PlayedAudio", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"]},
+                       {"Name": "SpeechToTranslate", "DataType": "OSD-BSO-V1.5"},
+                       {"Name": "TargetLanguage", "DataType": "OSD-SEL-V1.5"}],
 
   "ExternalPorts":    [{"Name": "AudioSource", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Hardware", "Protocol": "", "IsRemote": ""},
                        {"Name": "AcquisitionCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
@@ -21,12 +23,15 @@
                        {"Name": "AudioObject", "Direction": "Input", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "AudioDestination", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Hardware", "Protocol": "", "IsRemote": ""}],
+                       {"Name": "AudioDestination", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Hardware", "Protocol": "", "IsRemote": ""},
+                       {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "TranslatedSpeech", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":          [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOA-V1.0", "Relation": "Internal"}},
                        {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOE-V1.0", "Relation": "Internal"}},
                        {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-ASE-V1.0", "Relation": "Internal"}},
-                       {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOD-V1.0", "Relation": "Internal"}}],
+                       {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOD-V1.0", "Relation": "Internal"}},
+                       {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TST-V2.5", "Relation": "Internal"}}],
 
   "Topology":         [{"Output": {"AIMName": "", "PortName": "AudioSource", "PortNumber": 1}, "Input": {"AIMName": "CAE-AOA-V1.0", "PortName": "AudioSource"}},
                        {"Output": {"AIMName": "", "PortName": "AcquisitionCommand", "PortNumber": 1}, "Input": {"AIMName": "CAE-AOA-V1.0", "PortName": "AcquisitionCommand"}},
@@ -41,7 +46,13 @@
                        {"Output": {"AIMName": "CAE-ASE-V1.0", "PortName": "SceneDescriptors"}, "Input": {"AIMName": "", "PortName": "AudioSceneDescriptors"}},
                        {"Output": {"AIMName": "CAE-ASE-V1.0", "PortName": "SceneDescriptors"}, "Input": {"AIMName": "CAE-AOD-V1.0", "PortName": "SceneDescriptors"}},
                        {"Output": {"AIMName": "", "PortName": "DeliveryCommand", "PortNumber": 4}, "Input": {"AIMName": "CAE-AOD-V1.0", "PortName": "DeliveryCommand"}},
-                       {"Output": {"AIMName": "CAE-AOD-V1.0", "PortName": "PlayedAudio"}, "Input": {"AIMName": "", "PortName": "AudioDestination"}}],
+                       {"Output": {"AIMName": "CAE-AOD-V1.0", "PortName": "PlayedAudio"}, "Input": {"AIMName": "", "PortName": "AudioDestination"}},
+                       {"Output": {"AIMName": "", "PortName": "SpeechObject"}, "Input": {"AIMName": "CAE-AOE-V1.0", "PortName": "SpeechObject"}},
+                       {"Output": {"AIMName": "", "PortName": "ObjectCommand"}, "Input": {"AIMName": "CAE-ASE-V1.0", "PortName": "ObjectCommand", "PortNumber": 2}},
+                       {"Output": {"AIMName": "CAE-AOE-V1.0", "PortName": "SpeechToTranslate"}, "Input": {"AIMName": "MMC-TST-V2.5", "PortName": "SpeechToTranslate"}},
+                       {"Output": {"AIMName": "CAE-AOE-V1.0", "PortName": "TargetLanguage"}, "Input": {"AIMName": "MMC-TST-V2.5", "PortName": "TargetLanguage"}},
+                       {"Output": {"AIMName": "MMC-TST-V2.5", "PortName": "TranslatedSpeech"}, "Input": {"AIMName": "CAE-ASE-V1.0", "PortName": "TranslatedSpeech"}},
+                       {"Output": {"AIMName": "MMC-TST-V2.5", "PortName": "TranslatedSpeech"}, "Input": {"AIMName": "", "PortName": "TranslatedSpeech"}}],
 
   "Implementations":  [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 
