@@ -95,13 +95,14 @@ public class HciSpeechTests
             var all = inputs.Any(i => i.DataType == "OSD-BAO-V1.5")
                 ? inputs.Append(new ControllerApi.Datum("OSD-BLO-V1.5", 1, MpaiJson.ToJson(new BasicLiDARObject { BasicLiDARObjectID = Guid.NewGuid().ToString("N"), BasicLiDARData = [] }))).ToList()
                 : inputs.ToList();
+            all.Add(TestAvatar.Datum);   // the Avatar the reply animates
             var clock = System.Diagnostics.Stopwatch.StartNew();
             var r = api.Advance(Hci, all);
             Seconds.Add(clock.Elapsed.TotalSeconds);
             if (r.Error != AifError.OK) throw new InvalidOperationException($"{said}: {r.Error} {JsonSerializer.Serialize(api.Status(Hci).Aims)}");
             var recognised = r.ByType("OSD-BTO-V1.5", 2) is { } t2 ? MpaiJson.FromJson<BasicTextObject>(t2)?.GetText() : null;
             var reply = r.ByType("OSD-BTO-V1.5", 1) is { } t1 ? MpaiJson.FromJson<BasicTextObject>(t1)?.GetText() : null;
-            var speech = r.ByType("OSD-BSO-V1.5") is { } s ? MpaiJson.FromJson<BasicSpeechObject>(s) : null;
+            var speech = TestAvatar.Speech(r);
             var sent = r.ByType("CAV-AHM-V2.0") is { } a ? JsonNode.Parse(a) : null;
             if (sent is not null) Sent.Add(sent);
             Turns.Add($"{said} | heard: {recognised ?? "-"} | answered: {reply ?? "-"} ({speech?.Data.Length ?? 0} bytes of speech){(sent is null ? "" : " | sent " + sent["HCIMessage"]!.ToJsonString())} | {clock.Elapsed.TotalSeconds:0.0} s");

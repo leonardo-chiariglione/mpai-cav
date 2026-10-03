@@ -93,14 +93,14 @@ public sealed class AvatarUaHost
             _ui.InvokeAsync(() => _web.CoreWebView2.PostWebMessageAsJson(json)).Task);
     }
 
-    // Present one Speaking Avatar on the renderer (used for a single turn, e.g. typed input).
+    // Present one utterance of the avatar on the renderer (used for a single turn, e.g. typed input).
     public async Task PresentAsync(AvatarUtterance avatar)
     {
         if (_renderer is null) return;
         await _ui.InvokeAsync(async () =>
         {
             var model = Basic3DModelObject.FromData(Array.Empty<byte>());
-            await _renderer.DeliverWithSpeechAsync(model, avatar.FaceDescriptors, avatar.MachineSpeechWav);
+            await _renderer.DeliverWithSpeechAsync(model, avatar.FaceDescriptors, avatar.MachineSpeechWav, avatar.BodyDescriptors);
         });
     }
 

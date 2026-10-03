@@ -266,21 +266,24 @@ public partial class RcaShell : ComponentBase
 
         devices.Run = async app => await RunAppAsync(app);
 
-        // THE AVATAR: speech and face together, and the time it takes to say it.
+        // THE AVATAR: a Speaking Avatar - speech, face and body together - and the
+        // time it takes to say it.
         devices.RegisterPresent("avatar", async data =>
         {
-            string? wavB64 = null, fdoJson = null;
-            double seconds = 0;
-            if (data.TryGetValue("OSD-BSO-V1.5", out var sj) && !string.IsNullOrWhiteSpace(sj))
-            {
-                var wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data;
-                if (wav is { Length: > 0 }) { wavB64 = Convert.ToBase64String(wav); seconds = SpeechPackaging.WavSeconds(wav); }
-            }
-            if (data.TryGetValue("PAF-FDO-V1.6", out var fj) && !string.IsNullOrWhiteSpace(fj)) fdoJson = fj;
-            if (wavB64 is null && fdoJson is null) return;
-            await Js.InvokeVoidAsync("rca.present", fdoJson, wavB64);
-            await Task.Delay(TimeSpan.FromSeconds(seconds + 0.8));
+            if (!data.TryGetValue("XRV-SAV-V1.0", out var sav) ||
+                AvatarUtterance.FromSpeakingAvatar(sav) is not { } utterance) return;
+            var wav = utterance.MachineSpeechWav;
+            await Js.InvokeVoidAsync("rca.present",
+                utterance.FaceDescriptors is null ? null : MpaiJson.ToJson(utterance.FaceDescriptors),
+                Convert.ToBase64String(wav),
+                utterance.BodyDescriptors is null ? null : MpaiJson.ToJson(utterance.BodyDescriptors));
+            await Task.Delay(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
         });
+
+        // THE AVATAR, AS AN INPUT: the model this client holds and draws (Thalia,
+        // Ready Player Me), by its identifier, for the Module to animate.
+        devices.RegisterAcquire("PAF-AVT-V1.6", (_, _) =>
+            Task.FromResult<string?>(AvatarUtterance.AvatarDatum("cav-avatar.glb")));
 
         // THE STAGE: a picture the person handed over.
         devices.RegisterPresent("stage", data =>

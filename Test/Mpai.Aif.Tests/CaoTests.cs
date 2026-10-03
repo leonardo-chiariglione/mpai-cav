@@ -10,6 +10,7 @@ using Mpai.Cav.Map;
 using Mpai.Cav.Mas;
 using Mpai.Cav.Recordings;
 using Mpai.Core;
+using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
@@ -54,6 +55,8 @@ public sealed class CaoInTheLoop : IDisposable
         if (started != AifError.OK) throw new InvalidOperationException($"{Cao} did not start: {started}");
         api.SharedStorageInit(Cao, location);
         Write("OSD-BOO-V1.5", 1, sim.Map.ToOfflineMapObject(0));
+        // The Avatar HCI's replies animate: given once, kept by Speaking Avatar Synthesis.
+        Write("PAF-AVT-V1.6", 1, TestAvatar.Datum.Json);
     }
 
     private void Write(string dataType, int port, string json, int timeoutMs = 10_000)
@@ -97,8 +100,8 @@ public sealed class CaoInTheLoop : IDisposable
         // What the CAV says, and what HCI heard.
         while (api.OutputRead(Cao, "OSD-BTO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } t }) Said.Add(MpaiJson.FromJson<BasicTextObject>(t)?.GetText() ?? "");
         while (api.OutputRead(Cao, "OSD-BTO-V1.5", 2, 0) is { Error: AifError.OK, Json: { } r }) Recognised.Add(MpaiJson.FromJson<BasicTextObject>(r)?.GetText() ?? "");
-        while (api.OutputRead(Cao, "OSD-BSO-V1.5", 1, 0) is { Error: AifError.OK, Json: { } sp }) Spoken.Add(MpaiJson.FromJson<BasicSpeechObject>(sp)?.Data ?? []);
-        foreach (var type in new[] { "PAF-FDO-V1.6", "OSD-IID-V1.5" })
+        while (api.OutputRead(Cao, "XRV-SAV-V1.0", 1, 0) is { Error: AifError.OK, Json: { } sp }) Spoken.Add(MpaiJson.FromJson<SpeakingAvatar>(sp)?.Speech()?.Data ?? []);
+        foreach (var type in new[] { "OSD-IID-V1.5" })
             while (api.OutputRead(Cao, type, 1, 0) is { Error: AifError.OK }) { }
         return commands;
     }

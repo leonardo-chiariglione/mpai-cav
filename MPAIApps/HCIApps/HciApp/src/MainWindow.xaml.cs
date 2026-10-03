@@ -35,7 +35,12 @@ public partial class MainWindow : Window
     private const string BLO = "OSD-BLO-V1.5";
     private const string BSO = "OSD-BSO-V1.5";
     private const string BTO = "OSD-BTO-V1.5";
-    private const string FDO = "PAF-FDO-V1.6";
+    private const string SAV = "XRV-SAV-V1.0";   // Speaking Avatar: speech, face and body
+    private const string AVT = "PAF-AVT-V1.6";   // the Avatar to animate
+
+    // The avatar this App holds and draws (Thalia, Ready Player Me), by its identifier:
+    // the Avatar input of every Module that renders with Response and Scene Rendering.
+    private static readonly string AvatarDatum = AvatarUtterance.AvatarDatum("cav-avatar.glb");
     private const string IID = "OSD-IID-V1.5";
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
@@ -180,10 +185,10 @@ public partial class MainWindow : Window
                 SetStatus("paused."); InstructionText.Text = "Press Start to resume.";
                 return;
             }
-            if (_lastReplyWav.Length > 0 || _lastFdo is not null)
+            if (_lastReply is { } reply)
             {
-                await _avatar!.PresentAsync(new AvatarUtterance(_lastReplyWav, _lastFdo));
-                await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(_lastReplyWav) + 0.3));
+                await _avatar!.PresentAsync(reply);
+                await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(reply.MachineSpeechWav) + 0.3));
             }
             SetVoice("your turn...");
         }
@@ -191,8 +196,7 @@ public partial class MainWindow : Window
 
     // Outputs read from the most recent front-end Advance.
     private string? _lastUserId;
-    private byte[]  _lastReplyWav = Array.Empty<byte>();
-    private FaceDescriptorsObject? _lastFdo;
+    private AvatarUtterance? _lastReply;
 
     // One front-end turn: supply the AUDIO scene (BAO) + face (BVO) + lidar; the
     // Module's front end describes and discriminates. Returns the recognised text
@@ -206,6 +210,7 @@ public partial class MainWindow : Window
         if (audio is not null) inputs.Add(new ControllerApi.Datum(BAO, MpaiJson.ToJson(audio)));
         var face = await Task.Run(() => CaptureFace());
         if (face is not null) inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
+        inputs.Add(new ControllerApi.Datum(AVT, AvatarDatum));
         inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(new BasicLiDARObject
         { BasicLiDARObjectID = Guid.NewGuid().ToString("N"), BasicLiDARData = new List<object>() })));
 
@@ -213,8 +218,7 @@ public partial class MainWindow : Window
         if (!r.Ok) { Diag("front-end Advance err=" + r.Error); return (null, face is not null); }
 
         _lastUserId   = r.ByType(IID);
-        _lastReplyWav = SpeechOf(r.ByType(BSO));
-        _lastFdo      = FdoOf(r.ByType(FDO));
+        _lastReply    = AvatarUtterance.FromSpeakingAvatar(r.ByType(SAV));
         string? recognised = TextOf(r.ByType(BTO, 2));
         return (recognised, face is not null);
     }
@@ -234,13 +238,15 @@ public partial class MainWindow : Window
     private async Task RenderPromptAsync(string words)
     {
         if (_north is null) return;
-        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        var inputs = new List<ControllerApi.Datum>
+        {
+            new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(AVT, AvatarDatum)
+        };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok) return;
-        byte[] wav = SpeechOf(r.ByType(BSO));
-        FaceDescriptorsObject? fdo = FdoOf(r.ByType(FDO));
-        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
-        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
+        if (!r.Ok || AvatarUtterance.FromSpeakingAvatar(r.ByType(SAV)) is not { } utterance) return;
+        await _avatar!.PresentAsync(utterance);
+        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
     }
 
     private async Task StopHciAsync()
@@ -278,10 +284,6 @@ public partial class MainWindow : Window
 
     private static string? TextOf(string? json)
     { if (string.IsNullOrWhiteSpace(json)) return null; try { return MpaiJson.FromJson<BasicTextObject>(json)?.GetText(); } catch { return null; } }
-    private static byte[] SpeechOf(string? json)
-    { if (string.IsNullOrWhiteSpace(json)) return Array.Empty<byte>(); try { return MpaiJson.FromJson<BasicSpeechObject>(json)?.Data ?? Array.Empty<byte>(); } catch { return Array.Empty<byte>(); } }
-    private static FaceDescriptorsObject? FdoOf(string? json)
-    { if (string.IsNullOrWhiteSpace(json)) return null; try { return MpaiJson.FromJson<FaceDescriptorsObject>(json); } catch { return null; } }
 
     private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
     private void SetFace(string s)   => Dispatcher.Invoke(() => FaceStatus.Text = s);

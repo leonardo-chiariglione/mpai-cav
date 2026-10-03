@@ -68,11 +68,11 @@ public class AccessServiceTests
                 if (client.StartFlow(module) is var started && started != AifError.OK) throw new InvalidOperationException($"{module}: {started}\n{log}");
             var registered = client.Advance("1MMC-ACR-V2.5-I01",
                 [new("OSD-BVO-V1.5", 1, AccessTests.Face("Leonardo Speaking.jpg")), new("OSD-BSO-V1.5", 1, AccessTests.Voice("My name is Leonardo, and I want to register.", voice)),
-                 new("OSD-BTO-V1.5", 2, AccessTests.Text(author)), new("OSD-BTO-V1.5", 1, AccessTests.Text("You are registered."))]);
+                 new("OSD-BTO-V1.5", 2, AccessTests.Text(author)), new("OSD-BTO-V1.5", 1, AccessTests.Text("You are registered.")), TestAvatar.Datum]);
             bool? Check(RemoteControllerApi api)
             {
                 var r = api.Advance("1MMC-MAC-V2.5-I01",
-                    [new("OSD-BVO-V1.5", 1, AccessTests.Face("Leonardo Speaking.jpg")), new("OSD-BSO-V1.5", 1, AccessTests.Voice("Good morning, I would like to come in, please.", voice))]);
+                    [new("OSD-BVO-V1.5", 1, AccessTests.Face("Leonardo Speaking.jpg")), new("OSD-BSO-V1.5", 1, AccessTests.Voice("Good morning, I would like to come in, please.", voice)), TestAvatar.Datum]);
                 return r.ByType("boolean") is { } b ? bool.Parse(b) : null;
             }
             var granted = Check(client);

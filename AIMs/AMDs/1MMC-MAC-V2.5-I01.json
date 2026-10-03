@@ -26,8 +26,7 @@
                           },
                           {"Name": "ResponseText", "DataType": "OSD-BTO-V1.5", "Output": 1}
                       ],
-    "ExternalPorts":  [
-                          {
+    "ExternalPorts":  [{
                               "Name":  "FaceObject",
                               "Direction":  "Input",
                               "DataType":  "OSD-BVO-V1.5",
@@ -62,30 +61,15 @@
                               "IsRemote":  false
                           },
                           {
-                              "Name":  "VocalResponse",
-                              "Direction":  "Output",
-                              "DataType":  "OSD-BSO-V1.5",
-                              "Technology":  "Software",
-                              "Protocol":  "",
-                              "IsRemote":  false
-                          },
-                          {
-                              "Name":  "FaceDescriptors",
-                              "Direction":  "Output",
-                              "DataType":  "PAF-FDO-V1.6",
-                              "Technology":  "Software",
-                              "Protocol":  "",
-                              "IsRemote":  false
-                          },
-                          {
                               "Name":  "Identification",
                               "Direction":  "Output",
                               "DataType":  "boolean",
                               "Technology":  "Software",
                               "Protocol":  "",
                               "IsRemote":  false
-                          }
-                      ],
+                          },
+                          {"Name": "Avatar",         "Direction": "Input",  "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
     "SubAIMs":  [
                     {
                         "Identifier":  {
@@ -120,8 +104,7 @@
                                        }
                     }
                 ],
-    "Topology":  [
-                     {"Output": {"AIMName": "", "PortName": "Prompt"}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Prompt", "DataType": "OSD-BTO-V1.5"}},
+    "Topology":  [{"Output": {"AIMName": "", "PortName": "Prompt"}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Prompt", "DataType": "OSD-BTO-V1.5"}},
                      {
                          "Output":  {
                                         "AIMName":  "",
@@ -194,26 +177,7 @@
                                        "PortName":  "Response"
                                    }
                      },
-                     {
-                         "Output":  {
-                                        "AIMName": "1PAF-RSR-V1.6-I01",
-                                        "PortName":  "VocalResponse"
-                                    },
-                         "Input":  {
-                                       "AIMName":  "",
-                                       "PortName":  "VocalResponse"
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1PAF-RSR-V1.6-I01",
-                                        "PortName":  "FaceDescriptors"
-                                    },
-                         "Input":  {
-                                       "AIMName":  "",
-                                       "PortName":  "FaceDescriptors"
-                                   }
-                     },
+                     { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
                      {
                          "Output":  {
                                         "AIMName": "1OSD-IDR-V1.5-I01",
@@ -223,8 +187,8 @@
                                        "AIMName":  "",
                                        "PortName":  "Identification"
                                    }
-                     }
-                 ],
+                     },
+                     { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Avatar" } }],
     "Implementations":  [
                             {
                                 "ImplementationURI":  "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-MAC-V2.5-I01.json",

@@ -12,9 +12,9 @@
                        {"Name": "LanguageSelector",       "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "UAText",                 "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Output": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextObject",             "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,              "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "MachineSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "TranslatedText",         "Direction": "Output", "DataType": "OSD-BTO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "TranslatedText",         "Direction": "Output", "DataType": "OSD-BTO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Avatar",         "Direction": "Input",  "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTT-V2.5-I01", "AIMName": "1MMC-TTT-V2.5-I01", "Relation": "Internal" } },
@@ -27,8 +27,8 @@
                        { "Output": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "TranslatedText" },         "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "TranslatedText" } },
                        { "Output": { "AIMName": "",                  "PortName": "UAText" },                 "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "UAText" } },
                        { "Output": { "AIMName": "1MMC-TTT-V2.5-I01", "PortName": "TranslatedText" },         "Input": { "AIMName": "",                  "PortName": "TranslatedText" } },
-                       { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineSpeech" },          "Input": { "AIMName": "",                  "PortName": "MachineSpeech" } },
-                       { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineFaceDescriptors" }, "Input": { "AIMName": "",                  "PortName": "MachineFaceDescriptors" } }],
+                       { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
+                       { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Avatar" } }],
 
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-MAT-V2.5-I01.json",
                         "MASPort":           443,

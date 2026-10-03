@@ -16,9 +16,9 @@
                            {"Name": "UserText",               "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,              "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "OutputText",             "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 1,                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "TextQuestion",           "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 2,                                  "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MachineSpeech",          "Direction": "Output", "DataType": "OSD-BSO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "OutputVisual",           "Direction": "Output", "DataType": "OSD-BVO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "OutputVisual",           "Direction": "Output", "DataType": "OSD-BVO-V1.5",                                                   "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Avatar",         "Direction": "Input",  "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal" } },
                            { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TIQ-V2.5-I01", "AIMName": "1MMC-TIQ-V2.5-I01", "Relation": "Internal" } },
@@ -34,8 +34,8 @@
                            { "Output": { "AIMName": "1MMC-TIQ-V2.5-I01", "PortName": "OutputText" },                             "Input": { "AIMName": "",                  "PortName": "OutputText" } },
                            { "Output": { "AIMName": "1MMC-ASR-V2.5-I01", "PortName": "TextQuestion",          "PortNumber": 2 }, "Input": { "AIMName": "",                  "PortName": "TextQuestion" } },
                            { "Output": { "AIMName": "1MMC-TIQ-V2.5-I01", "PortName": "OutputVisual" },                           "Input": { "AIMName": "",                  "PortName": "OutputVisual" } },
-                           { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineSpeech" },                          "Input": { "AIMName": "",                  "PortName": "MachineSpeech" } },
-                           { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "MachineFaceDescriptors" },                 "Input": { "AIMName": "",                  "PortName": "MachineFaceDescriptors" } }],
+                           { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
+                           { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Avatar" } }],
 
   "Implementations":      [{ "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-AMQ-V2.5-I01.json",
                              "BinaryName": "Mpai.Mmc.Amq",

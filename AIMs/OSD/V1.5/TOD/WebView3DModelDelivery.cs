@@ -36,18 +36,20 @@ public sealed class WebView3DModelDelivery : I3DModelDeliveryAim
         await _postToRenderer(message);
     }
 
-    // A convenience for the app: deliver model + face animation + the speech (WAV
-    // base64) together, so the renderer plays the audio and animates in sync.
+    // A convenience for the app: deliver model + face and body animation + the speech
+    // (WAV base64) together, so the renderer plays the audio and animates in sync.
     public async Task DeliverWithSpeechAsync(
         Basic3DModelObject model,
         FaceDescriptorsObject? faceAnimation,
-        byte[] speechWav)
+        byte[] speechWav,
+        BodyDescriptorsObject? bodyAnimation = null)
     {
         var message = MpaiJson.ToJson(new RendererMessage
         {
             Kind = "render",
             FaceDescriptors = faceAnimation is null ? null : MpaiJson.ToJson(faceAnimation),
-            SpeechWavBase64 = speechWav is { Length: > 0 } ? Convert.ToBase64String(speechWav) : null
+            SpeechWavBase64 = speechWav is { Length: > 0 } ? Convert.ToBase64String(speechWav) : null,
+            BodyDescriptors = bodyAnimation is null ? null : MpaiJson.ToJson(bodyAnimation)
         });
         await _postToRenderer(message);
     }
@@ -57,5 +59,6 @@ public sealed class WebView3DModelDelivery : I3DModelDeliveryAim
         public string Kind { get; init; } = "render";
         public string? FaceDescriptors { get; init; }
         public string? SpeechWavBase64 { get; init; }
+        public string? BodyDescriptors { get; init; }
     }
 }

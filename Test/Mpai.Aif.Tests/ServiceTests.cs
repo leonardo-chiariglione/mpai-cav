@@ -165,14 +165,14 @@ public class ServiceTests
         Assert.Equal(AifError.OK, a.StartFlow(MAD));
         Assert.Equal(AifError.OK, b.StartFlow(MAD));
 
-        var turn = Task.Run(() => b.Advance(MAD, new[] { Text(2, "Tell me a short story about a cat called Tom.") }));
+        var turn = Task.Run(() => b.Advance(MAD, new[] { Text(2, "Tell me a short story about a cat called Tom."), Avatar }));
         Thread.Sleep(1500);
         var stillRunning = !turn.IsCompleted;
         a.StopFlow(MAD);
         output.WriteLine($"A stopped MAD while B's turn was {(stillRunning ? "running" : "already done")}");
 
         Assert.True(Spoke(turn.Result), "B's turn that was running when A stopped did not answer with speech");
-        Assert.True(Spoke(b.Advance(MAD, new[] { Text(2, "What was the cat called?") })), "B's next turn did not answer with speech");
+        Assert.True(Spoke(b.Advance(MAD, new[] { Text(2, "What was the cat called?"), Avatar })), "B's next turn did not answer with speech");
         b.StopFlow(MAD);
     }
 
@@ -185,9 +185,9 @@ public class ServiceTests
 
         var measured = new Dictionary<string, double>
         {
-            ["typed MAD turn"]  = Median(MAD, new[] { Text(2, "Name one fruit. Answer in five words.") }),
-            ["spoken MAD turn"] = Median(MAD, new[] { Speech("question.wav") }),
-            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(2, "What color is the picture?") })
+            ["typed MAD turn"]  = Median(MAD, new[] { Text(2, "Name one fruit. Answer in five words."), Avatar }),
+            ["spoken MAD turn"] = Median(MAD, new[] { Speech("question.wav"), Avatar }),
+            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(2, "What color is the picture?"), Avatar })
         };
 
         var file = Path.Combine(Repository.Root, "Test", "Expected", "timing.json");
@@ -224,7 +224,7 @@ public class ServiceTests
             // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
             // the language model unreachable, say - returns quickly with nothing to
             // say, and would pass for a fast one.
-            Assert.True(r.ByType("OSD-BSO-V1.5") is not null, $"{module}: the turn produced no speech");
+            Assert.True(AvatarUtterance.FromSpeakingAvatar(r.ByType("XRV-SAV-V1.0")) is not null, $"{module}: the turn produced no speech");
         }
         client.StopFlow(module);
         times.Sort();
@@ -232,7 +232,7 @@ public class ServiceTests
     }
 
     private static ControllerApi.Result Ask(RemoteControllerApi client, string picture) =>
-        client.Advance(AMQ, new[] { Picture(picture), Text(2, "What color is the picture?") });
+        client.Advance(AMQ, new[] { Picture(picture), Text(2, "What color is the picture?"), Avatar });
 
     private static string Answer(ControllerApi.Result r)
     {
@@ -240,8 +240,12 @@ public class ServiceTests
         try { return json is null ? "" : MpaiJson.FromJson<BasicTextObject>(json).GetText(); } catch { return json ?? ""; }
     }
 
+    // The Speaking Avatar (XRV-SAV) carries the speech.
     private static bool Spoke(ControllerApi.Result r) =>
-        r.Ok && r.Outputs.Any(o => o.DataType == "OSD-BSO-V1.5" && o.Json.Length > 200);
+        r.Ok && AvatarUtterance.FromSpeakingAvatar(r.ByType("XRV-SAV-V1.0")) is { MachineSpeechWav.Length: > 200 };
+
+    // The Avatar the reply animates: every Module that renders with RSR takes one.
+    private static ControllerApi.Datum Avatar => new("PAF-AVT-V1.6", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
 
     private static string Data(string file) => Path.Combine(Repository.Root, "Test", "Data", file);
 

@@ -132,11 +132,11 @@ public class TrustServiceTests(ITestOutputHelper output)
             // A QUESTION TO MAD: its EDP on the host, asking Ollama.
             using var api = new RemoteControllerApi($"https://localhost:{Port}/", timeout: TimeSpan.FromMinutes(5));
             var clock = Stopwatch.StartNew();
-            var run = api.Advance(Mad, [new ControllerApi.Datum("OSD-BTO-V1.5", 2, MpaiJson.ToJson(BasicTextObject.FromText("What is the capital of Italy?")))]);
+            var run = api.Advance(Mad, [new ControllerApi.Datum("OSD-BTO-V1.5", 2, MpaiJson.ToJson(BasicTextObject.FromText("What is the capital of Italy?"))), TestAvatar.Datum]);
             var summary = run.Outputs.FirstOrDefault(o => o.DataType == "MMC-SUM-V2.5").Json ?? "";
             output.WriteLine($"MAD answered in {clock.ElapsedMilliseconds} ms: {summary}");
             result["MAD, asked the capital of Italy"] = $"{run.Error}; " + (summary.Contains("Rome") ? "it names Rome" : "it does not name Rome") +
-                                                        $"; speech {(run.Outputs.Any(o => o.DataType == "OSD-BSO-V1.5") ? "given" : "none")}";
+                                                        $"; speech {(TestAvatar.Speech(run) is not null ? "given" : "none")}";
         }
         finally
         {

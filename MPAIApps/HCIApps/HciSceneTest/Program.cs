@@ -24,7 +24,8 @@ internal static class Program
     private const string BVO = "OSD-BVO-V1.5";   // visual (face) input
     private const string BLO = "OSD-BLO-V1.5";   // lidar input
     private const string IID = "OSD-IID-V1.5";   // OutputUserID
-    private const string BSO = "OSD-BSO-V1.5";   // OutputSpeech
+    private const string SAV = "XRV-SAV-V1.0";   // SpeakingAvatar: speech, face and body
+    private const string AVT = "PAF-AVT-V1.6";   // Avatar input
     private const string BTO = "OSD-BTO-V1.5";   // OutputText
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
@@ -69,6 +70,10 @@ internal static class Program
             };
             inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(blo)));
             Console.WriteLine("built synthetic OSD-BLO.");
+
+            // --- the Avatar (PAF-AVT) the reply animates, by its model's identifier ---
+            inputs.Add(new ControllerApi.Datum(AVT, AvatarUtterance.AvatarDatum("cav-avatar.glb")));
+            Console.WriteLine("built PAF-AVT.");
             Console.WriteLine();
 
             Console.WriteLine("StartFlow(MMC-HCI)...");
@@ -76,14 +81,14 @@ internal static class Program
             Console.WriteLine($"  StartFlow -> {started}");
             if (started != AifError.OK) { Console.WriteLine("cannot start; aborting."); return; }
 
-            Console.WriteLine("Advance(MMC-HCI, [BAO, BVO, BLO])...");
+            Console.WriteLine("Advance(MMC-HCI, [BAO, BVO, BLO, AVT])...");
             var r = north.Advance(HciModule, inputs);
             Console.WriteLine($"  Advance -> Error={r.Error}  Ok={r.Ok}");
             Console.WriteLine();
 
             Console.WriteLine("--- outputs ---");
             Dump("OutputUserID (OSD-IID)", r.ByType(IID));
-            Dump("OutputSpeech (OSD-BSO)", r.ByType(BSO));
+            Dump("SpeakingAvatar (XRV-SAV)", r.ByType(SAV));
             Dump("OutputText   (OSD-BTO)", r.ByType(BTO));
 
             // decode the identity if present

@@ -13,6 +13,8 @@ using Mpai.Osd.VisualScene; // ScrfdFaceDetector
 using Mpai.Paf.Psd;         // PsdAimProcessor
 using Mpai.Aims.Tts;        // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;         // GfdAimProcessor
+using Mpai.Paf.Gbd;         // GbdAimProcessor
+using Mpai.Paf.Sas;         // SasAimProcessor
 
 namespace Mpai.Providers;
 
@@ -22,7 +24,7 @@ namespace Mpai.Providers;
 //   PAF-FIR - face recognition (SCRFD + ArcFace), against the gallery
 //   MMC-SIR - speaker recognition (ECAPA), against the gallery
 //   OSD-IDR - the check: the face and the voice of one registered person
-//   PAF-PSD, MMC-TTS, PAF-GFD - the Response and Scene Rendering leaves
+//   PAF-PSD, MMC-TTS, PAF-GFD, PAF-GBD, PAF-SAS - the Response and Scene Rendering leaves
 // THE GALLERY is the Module's Shared Storage, where the User Agent put it
 // (SharedStorageInit): on a Service, the one ACR registers into. FIR and SIR read
 // it again before each match, since it changes while the Module runs.
@@ -39,7 +41,8 @@ public sealed class MacProvider : IAimProvider, IDisposable
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1PAF-FIR-V1.6-I01" or "1MMC-SIR-V2.5-I01" or "1OSD-IDR-V1.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01";
+        aimName is "1PAF-FIR-V1.6-I01" or "1MMC-SIR-V2.5-I01" or "1OSD-IDR-V1.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
+                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
         => aimName switch
@@ -50,6 +53,8 @@ public sealed class MacProvider : IAimProvider, IDisposable
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"MacProvider does not provide '{aimName}'.")
         };
 

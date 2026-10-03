@@ -38,16 +38,17 @@ public sealed class Avatar
         AvatarData = new AvatarData { ModelOrModelID = [new AvatarModel { ModelID = modelId }] }
     };
 
-    // The same Avatar, speaking: its Model, the Speech, and the Face and Body
-    // Descriptors that animate it.
-    public Avatar Speaking(BasicSpeechObject speech, FaceDescriptorsObject? face, BodyDescriptorsObject? body) => new()
+    // The same Avatar, speaking: its Model, the Face and Body Descriptors that
+    // animate it and, when given, the Speech (a Speaking Avatar carries the Speech
+    // itself, once).
+    public Avatar Speaking(BasicSpeechObject? speech, FaceDescriptorsObject? face, BodyDescriptorsObject? body) => new()
     {
         MInstanceID = MInstanceID, UEnvironmentID = UEnvironmentID,
         AvatarID = AvatarID, AvatarSpaceTime = AvatarSpaceTime,
         AvatarData = new AvatarData
         {
             ModelOrModelID = AvatarData?.ModelOrModelID,
-            SpeechObjectOrSpeechObjectID = [new AvatarSpeech { SpeechObject = speech }],
+            SpeechObjectOrSpeechObjectID = speech is null ? null : [new AvatarSpeech { SpeechObject = speech }],
             FaceDescriptorsObject = face,
             BodyDescriptorsObject = body,
             Accessories = AvatarData?.Accessories

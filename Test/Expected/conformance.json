@@ -62,7 +62,9 @@
   "1PAF-EFD-V1.6-I01": "conforms",
   "1PAF-FIR-V1.6-I01": "conforms",
   "1PAF-FPE-V1.6-I01": "conforms",
+  "1PAF-GBD-V1.6-I01": "conforms",
   "1PAF-GFD-V1.6-I01": "conforms",
   "1PAF-PSD-V1.6-I01": "conforms",
-  "1PAF-RSR-V1.6-I01": "conforms"
+  "1PAF-RSR-V1.6-I01": "conforms",
+  "1PAF-SAS-V1.6-I01": "conforms"
 }

@@ -10,6 +10,8 @@ using Mpai.Mmc.Tiq;    // TiqAimProcessor, TiqFactory
 using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Paf.Gfd;    // GfdAimProcessor
+using Mpai.Paf.Gbd;         // GbdAimProcessor
+using Mpai.Paf.Sas;         // SasAimProcessor
 
 namespace Mpai.Providers;
 
@@ -19,7 +21,7 @@ namespace Mpai.Providers;
 //   MMC-ASR - speech to text (Whisper)             (question, when spoken)
 //   MMC-TIQ - text + image query (BLIP)            (the answer)
 //   MMC-TTS - text to speech (Piper)               (the spoken answer)
-//   PAF-PSD, PAF-GFD - RSR leaves, so the avatar can SPEAK with a face
+//   PAF-PSD, PAF-GFD, PAF-GBD, PAF-SAS - RSR leaves, so the avatar can SPEAK with a face
 // Acquisition and delivery (image, mic, speaker) are the User Agent, not sub-AIMs.
 public sealed class AmqProvider : IAimProvider
 {
@@ -33,7 +35,8 @@ public sealed class AmqProvider : IAimProvider
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-TIQ-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1PAF-GFD-V1.6-I01";
+        aimName is "1MMC-ASR-V2.5-I01" or "1MMC-TIQ-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1PAF-GFD-V1.6-I01"
+                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
@@ -42,6 +45,8 @@ public sealed class AmqProvider : IAimProvider
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"AmqProvider does not provide '{aimName}'.")
         };
 }

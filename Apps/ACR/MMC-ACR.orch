@@ -23,22 +23,28 @@ on Start:
 
     ask Controller to start
 
+    # The Avatar this client holds and draws: every utterance animates it.
+    acquire Avatar (PAF-AVT-V1.6)
+
     offer Welcome (OSD-BTO-V1.5:1) = "Welcome to Access Control Registration.
         Please type your name."
-    ask   WelcomeSpeech (OSD-BSO-V1.5), WelcomeFaceDescriptors (PAF-FDO-V1.6)
-    present WelcomeSpeech, WelcomeFaceDescriptors
+    offer Avatar (PAF-AVT-V1.6:1)
+    ask   WelcomeSpeakingAvatar (XRV-SAV-V1.0)
+    present WelcomeSpeakingAvatar
 
     acquire UserName (OSD-BTO-V1.5)
 
     offer Look (OSD-BTO-V1.5:1) = "Thank you, {UserName}. Please look at the camera."
-    ask   LookSpeech (OSD-BSO-V1.5), LookFaceDescriptors (PAF-FDO-V1.6)
-    present LookSpeech, LookFaceDescriptors
+    offer Avatar (PAF-AVT-V1.6:1)
+    ask   LookSpeakingAvatar (XRV-SAV-V1.0)
+    present LookSpeakingAvatar
 
     acquire UserFace (OSD-BVO-V1.5) = { "Attributes": { "VisualObjectType": "Face" } }
 
     offer Speak (OSD-BTO-V1.5:1) = "Now please say a short sentence, so that I can learn your voice."
-    ask   SpeakSpeech (OSD-BSO-V1.5), SpeakFaceDescriptors (PAF-FDO-V1.6)
-    present SpeakSpeech, SpeakFaceDescriptors
+    offer Avatar (PAF-AVT-V1.6:1)
+    ask   SpeakSpeakingAvatar (XRV-SAV-V1.0)
+    present SpeakSpeakingAvatar
 
     acquire UserSpeech (OSD-BSO-V1.5) via VAD
 
@@ -48,8 +54,9 @@ on Start:
     offer Registered (OSD-BTO-V1.5:1) = "{UserName}, you are registered: Multimodal
         Access Control will know your face and your voice. When you close the
         session, your face and speech descriptors will be deleted."
-    ask   RegisteredSpeech (OSD-BSO-V1.5), RegisteredFaceDescriptors (PAF-FDO-V1.6)
-    present RegisteredSpeech, RegisteredFaceDescriptors
+    offer Avatar (PAF-AVT-V1.6:1)
+    ask   RegisteredSpeakingAvatar (XRV-SAV-V1.0)
+    present RegisteredSpeakingAvatar
 
 on Stop:
 

@@ -139,12 +139,12 @@ window.rca = (() => {
   }
 
   // THE AVATAR: the same message the desktop sends it through WebView2.
-  function present(faceDescriptorsJson, speechWavBase64) {
+  function present(faceDescriptorsJson, speechWavBase64, bodyDescriptorsJson) {
     const frame = document.getElementById('avatar');
     if (!frame || !frame.contentWindow) return;
     stamp(`present: to the avatar${speechWavBase64 ? ', with speech' : ''}`);
     frame.contentWindow.postMessage(
-      { Kind: 'render', FaceDescriptors: faceDescriptorsJson || null, SpeechWavBase64: speechWavBase64 || '' },
+      { Kind: 'render', FaceDescriptors: faceDescriptorsJson || null, SpeechWavBase64: speechWavBase64 || '', BodyDescriptors: bodyDescriptorsJson || null },
       window.location.origin);
   }
 

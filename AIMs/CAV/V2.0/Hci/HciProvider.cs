@@ -24,6 +24,8 @@ using Mpai.Osd.VisualScene;
 using Mpai.Paf.Fir;
 using Mpai.Paf.Fpe;
 using Mpai.Paf.Gfd;
+using Mpai.Paf.Gbd;         // GbdAimProcessor
+using Mpai.Paf.Sas;         // SasAimProcessor
 using Mpai.Paf.Psd;
 
 namespace Mpai.Cav.Hci;
@@ -59,7 +61,7 @@ public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDi
         "1OSD-BAS-V1.5-I01", "1OSD-BVS-V1.5-I01", "1OSD-BLS-V1.5-I01", "1OSD-AVA-V1.5-I01", "1CAE-QCV-V1.0-I01", "1CAE-ASI-V2.5-I01",
         "1CAE-AII-V2.5-I01", "1CVE-VSI-V1.0-I01", "1CVE-VII-V1.0-I01", "1PAF-FIR-V1.6-I01", "1MMC-SIR-V2.5-I01", "1OSD-IDR-V1.5-I01",
         "1MMC-ASR-V2.5-I01", "1MMC-NLU-V2.5-I01", "1MMC-SPE-V2.5-I01", "1PAF-FPE-V1.6-I01", "1MMC-PMX-V2.5-I01", "1MMC-EDP-V2.5-I01",
-        "1PAF-PSD-V1.6-I01", "1MMC-TTS-V2.5-I01", "1PAF-GFD-V1.6-I01"
+        "1PAF-PSD-V1.6-I01", "1MMC-TTS-V2.5-I01", "1PAF-GFD-V1.6-I01", "1PAF-GBD-V1.6-I01", "1PAF-SAS-V1.6-I01"
     ];
 
     public bool CanCreate(string aimName) => Leaves.Contains(aimName);
@@ -94,6 +96,8 @@ public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDi
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, ports),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), ports),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, ports),
+            "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, ports),
+            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, ports),
             _ => throw new NotSupportedException($"the HCI provider does not build {aimName}.")
         };
     }

@@ -77,7 +77,7 @@ public class AccessTests
             foreach (var (name, photo, voice) in new[] { (author, "Leonardo Speaking.jpg", authorVoice), (reagan, "R.Reagan.jpg", reaganVoice) })
             {
                 var r = api.Advance(Acr, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)),
-                                          new("OSD-BTO-V1.5", 2, Text(name))]);
+                                          new("OSD-BTO-V1.5", 2, Text(name)), TestAvatar.Datum]);
                 if (r.Error != AifError.OK) throw new InvalidOperationException($"ACR, {name}: {r.Error} {JsonSerializer.Serialize(api.Status(Acr).Aims)}");
             }
             var registration = clock.Elapsed.TotalSeconds / 2;
@@ -89,7 +89,7 @@ public class AccessTests
             // MAC checks.
             (bool? Granted, string? Said) Check(string photo, string voice, string words)
             {
-                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice(words, voice))]);
+                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice(words, voice)), TestAvatar.Datum]);
                 if (r.Error != AifError.OK) throw new InvalidOperationException($"MAC, {photo}: {r.Error} {JsonSerializer.Serialize(api.Status(Mac).Aims)}");
                 var said = r.ByType("OSD-BTO-V1.5") is { } t ? MpaiJson.FromJson<BasicTextObject>(t)?.GetText() : null;
                 return (r.ByType("boolean") is { } b ? bool.Parse(b) : null, said);
@@ -111,8 +111,8 @@ public class AccessTests
             report["times"] = $"a registration {registration:0.0} s, a check {clock.Elapsed.TotalSeconds / cases.Length:0.0} s";
 
             // MAC speaks the words its workflow gives it (the author: its text input).
-            var prompt = api.Advance(Mac, [new("OSD-BTO-V1.5", 1, Text("Now please say a short sentence."))]);
-            result["MAC: a prompt"] = prompt.ByType("OSD-BSO-V1.5") is { } spoken && MpaiJson.FromJson<BasicSpeechObject>(spoken)?.Data.Length > 1000 && prompt.ByType("boolean") is null
+            var prompt = api.Advance(Mac, [new("OSD-BTO-V1.5", 1, Text("Now please say a short sentence.")), TestAvatar.Datum]);
+            result["MAC: a prompt"] = TestAvatar.Speech(prompt)?.Data.Length > 1000 && prompt.ByType("boolean") is null
                 ? "spoken; no verdict" : "not spoken, or a verdict given";
         }
         finally
@@ -151,10 +151,10 @@ public class AccessTests
             const string author = "Leonardo", reagan = "Ronald_Reagan";
             const string authorVoice = "en_GB-alan-medium", reaganVoice = "en_US-lessiac-medium";
             ControllerApi.Datum[] Registration(string name, string photo, string voice) =>
-                [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)), new("OSD-BTO-V1.5", 2, Text(name))];
+                [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("My name is " + name.Replace('_', ' ') + ", and I want to register.", voice)), new("OSD-BTO-V1.5", 2, Text(name)), TestAvatar.Datum];
             bool? Check(string photo, string voice)
             {
-                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("Good morning, I would like to come in, please.", voice))]);
+                var r = api.Advance(Mac, [new("OSD-BVO-V1.5", 1, Face(photo)), new("OSD-BSO-V1.5", 1, Voice("Good morning, I would like to come in, please.", voice)), TestAvatar.Datum]);
                 return r.ByType("boolean") is { } b ? bool.Parse(b) : null;
             }
 

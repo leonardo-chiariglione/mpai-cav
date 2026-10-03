@@ -10,19 +10,19 @@
   "ExternalPorts":    [{"Name": "UAText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Output": 1, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "UAPersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "ReplySpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "OutputSpeech", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "OutputFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": ""},
-                       {"Name": "ReplyText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+                       {"Name": "ReplyText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "Avatar",         "Direction": "Input",  "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":          [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "Internal"}},
                        {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "Internal"}}],
 
   "Topology":         [{"Output": {"AIMName": "", "PortName": "UAText"}, "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAText"}},
                        {"Output": {"AIMName": "", "PortName": "UAPersonalStatus"}, "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAPersonalStatus"}},
-                       {"Output": {"AIMName": "PAF-RSR-V1.6", "PortName": "OutputSpeech"}, "Input": {"AIMName": "", "PortName": "OutputSpeech"}},
-                       {"Output": {"AIMName": "PAF-RSR-V1.6", "PortName": "OutputFaceDescriptors"}, "Input": {"AIMName": "", "PortName": "OutputFaceDescriptors"}},
+                       { "Output": { "AIMName": "PAF-RSR-V1.6", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
                        {"Output": {"AIMName": "", "PortName": "ReplySpeech"}, "Input": {"AIMName": "MMC-ASR-V2.5", "PortName": "ResponseSpeech", "PortNumber": 2, "DataType": "OSD-BSO-V1.5"}},
-                       {"Output": {"AIMName": "MMC-ASR-V2.5", "PortName": "TextQuestion", "PortNumber": 2, "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "PortName": "ReplyText"}}],
+                       {"Output": {"AIMName": "MMC-ASR-V2.5", "PortName": "TextQuestion", "PortNumber": 2, "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "PortName": "ReplyText"}},
+                       { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "PAF-RSR-V1.6", "PortName": "Avatar" } }],
 
   "Implementations":  [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 

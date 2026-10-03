@@ -96,9 +96,9 @@ public sealed class RunResult
 //     Input/OSD-BTO-V1.5        -> PortNumber 1
 //     Input/OSD-BTO-V1.5:2      -> PortNumber 2
 //
-// PAF-RSR-V1.6 is why this is needed on the first Module an RCA touches rather
-// than someday: it declares three TextObject inputs, PortNumber 1, 2 and 3, one
-// for each sub-AIM that needs the text.
+// MMC-AMQ-V2.5 is why this is needed on the first Module an RCA touches rather
+// than someday: it declares two Speech inputs, PortNumber 1 for the question and
+// 2 for the reply, and two Text inputs the same way.
 public static class PortSegment
 {
     public static bool TryParse(

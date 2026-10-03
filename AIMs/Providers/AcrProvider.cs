@@ -14,6 +14,8 @@ using Mpai.Osd.VisualScene; // ScrfdFaceDetector  (EFD's detector)
 using Mpai.Paf.Psd;         // PsdAimProcessor
 using Mpai.Aims.Tts;        // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;         // GfdAimProcessor
+using Mpai.Paf.Gbd;         // GbdAimProcessor
+using Mpai.Paf.Sas;         // SasAimProcessor
 
 namespace Mpai.Providers;
 
@@ -22,7 +24,7 @@ namespace Mpai.Providers;
 // ONLY the leaf AIMs the topology names:
 //   PAF-EFD - Entity Face Description   (SCRFD + ArcFace -> the face descriptors)
 //   MMC-ESD - Entity Speech Description (ECAPA           -> the speech descriptors)
-//   PAF-PSD, MMC-TTS, PAF-GFD - the Response and Scene Rendering leaves
+//   PAF-PSD, MMC-TTS, PAF-GFD, PAF-GBD, PAF-SAS - the Response and Scene Rendering leaves
 // EFD and ESD use the feature extractors FIR and SIR use, so what ACR registers
 // MAC recognises. They register into the Module's Shared Storage, where the User
 // Agent put it: on a Service, the gallery MAC reads.
@@ -38,7 +40,8 @@ public sealed class AcrProvider : IAimProvider, IDisposable
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1PAF-EFD-V1.6-I01" or "1MMC-ESD-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01";
+        aimName is "1PAF-EFD-V1.6-I01" or "1MMC-ESD-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
+                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
         => aimName switch
@@ -48,6 +51,8 @@ public sealed class AcrProvider : IAimProvider, IDisposable
             "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"AcrProvider does not provide '{aimName}'.")
         };
 

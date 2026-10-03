@@ -149,8 +149,8 @@ public partial class MainWindow : Window
     // ---- the workflow ------------------------------------------------------
 
     // THE CLIENT SPEAKS BEFORE IT HAS AN APPLICATION. It drives the MPAI-MAS
-    // Module on the Service - start, offer the words at its Text Port, ask for
-    // the speech and the face descriptors, present them, stop - which is exactly
+    // Module on the Service - start, offer the words at its Text Port and its
+    // Avatar, ask for the Speaking Avatar, present it, stop - which is exactly
     // what a workflow's welcome does. That this is possible with no App chosen
     // is the point: the client holds nothing but the means to render.
     //
@@ -158,6 +158,12 @@ public partial class MainWindow : Window
     // Response and Scene Rendering, and that RSR sends it on to both Text-To-
     // Speech and Generative Face Description, is the Module's business.
     private const string MasModule = "1MAS-APP-V1.0-I01";
+
+    // THE AVATAR THIS CLIENT HOLDS: the model it draws (Thalia, Ready Player Me),
+    // by its identifier. A Module that renders with Response and Scene Rendering
+    // takes it as its Avatar input, animates it and gives it a voice; the client
+    // draws it with what comes back.
+    private const string AvatarModel = "cav-avatar.glb";
 
     private Task SpeakWelcomeAsync() =>
         SpeakAsync("Welcome to MPAI as a Service. Select an app and enjoy.");
@@ -171,22 +177,18 @@ public partial class MainWindow : Window
 
             var said = await Task.Run(() => north.Advance(MasModule, new List<ControllerApi.Datum>
             {
-                new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words)))
+                new ControllerApi.Datum("OSD-BTO-V1.5", 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+                new ControllerApi.Datum("PAF-AVT-V1.6", 1, AvatarUtterance.AvatarDatum(AvatarModel))
             }));
             north.StopFlow(MasModule);
 
             if (!said.Ok) return;
 
-            var speech = said.ByType("OSD-BSO-V1.5");
-            var face   = said.ByType("PAF-FDO-V1.6");
-            if (string.IsNullOrWhiteSpace(speech)) return;
+            // The Speaking Avatar: the speech, and the face and body that move with it.
+            if (AvatarUtterance.FromSpeakingAvatar(said.ByType("XRV-SAV-V1.0")) is not { } utterance) return;
 
-            var wav = MpaiJson.FromJson<BasicSpeechObject>(speech)?.Data ?? Array.Empty<byte>();
-            var fdo = string.IsNullOrWhiteSpace(face)
-                ? null : MpaiJson.FromJson<FaceDescriptorsObject>(face);
-
-            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo, null));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
+            await _avatar!.PresentAsync(utterance);
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.8));
         }
         catch (Exception ex)
         {
@@ -829,25 +831,22 @@ public partial class MainWindow : Window
 
             return MpaiJson.ToJson(got);
         });
-        // THE AVATAR. Speech and Face Descriptors are one utterance: the audio is
-        // played and the face is driven from the same clock, and the step does not
-        // finish until she has finished speaking.
+        // THE AVATAR. A Speaking Avatar is one utterance: the audio is played and the
+        // face and body are driven from the same clock, and the step does not finish
+        // until she has finished speaking.
         devices.RegisterPresent("avatar", async data =>
         {
-            byte[] wav = Array.Empty<byte>();
-            FaceDescriptorsObject? fdo = null;
+            if (!data.TryGetValue("XRV-SAV-V1.0", out var sav) ||
+                AvatarUtterance.FromSpeakingAvatar(sav) is not { } utterance) return;
 
-            if (data.TryGetValue("OSD-BSO-V1.5", out var sj) && !string.IsNullOrWhiteSpace(sj))
-                wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? Array.Empty<byte>();
-
-            if (data.TryGetValue("PAF-FDO-V1.6", out var fj) && !string.IsNullOrWhiteSpace(fj))
-                fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
-
-            if (wav.Length == 0 && fdo is null) return;
-
-            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo, null));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
+            await _avatar!.PresentAsync(utterance);
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.8));
         });
+
+        // THE AVATAR, AS AN INPUT. A Module that renders with Response and Scene
+        // Rendering asks for the Avatar to animate: the model this client holds.
+        devices.RegisterAcquire("PAF-AVT-V1.6", (_, _) =>
+            Task.FromResult<string?>(AvatarUtterance.AvatarDatum(AvatarModel)));
 
         // THE STAGE.
         // THE STAGE. What the App is working with - a picture the person chose, a

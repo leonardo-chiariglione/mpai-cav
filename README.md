@@ -71,13 +71,15 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 
 | App | Module (L3) | Leaf AIMs (via the app's provider) |
 |---|---|---|
-| MAC | `MMC-MAC-V2.5` | `PAF-FIR` (SCRFD+ArcFace face), `MMC-SIR` (ECAPA voice), `OSD-IDR` (reconcile), `PAF-RSR` -> `PAF-PSD` + `MMC-TTS` + `PAF-GFD` (avatar) |
+| MAC | `MMC-MAC-V2.5` | `PAF-FIR` (SCRFD+ArcFace face), `MMC-SIR` (ECAPA voice), `OSD-IDR` (reconcile), `PAF-RSR` -> `PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS` (avatar) |
 | ACR | `MMC-ACR-V2.5` | `PAF-EFD` (face descriptors), `MMC-ESD` (speech descriptors), `PAF-RSR` (avatar prompts) |
 | MAD | `MMC-MAD-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-EDP` (local LLM via Ollama), `PAF-RSR` (avatar reply) |
 | MAT | `MMC-MAT-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-TTT` (M2M100 translation), `PAF-RSR` (avatar speaks the translation) |
 
 `PAF-RSR` (Response and Scene Rendering) is a composite realised by its leaves
-`PAF-PSD` + `MMC-TTS` + `PAF-GFD`; it is shared by all three apps. Live capture
+`PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS`; it is shared by all the apps.
+It takes the reply's Text and an Avatar - the model the client holds - and outputs a
+Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Live capture
 uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
 `MMC-SOD`.
 
