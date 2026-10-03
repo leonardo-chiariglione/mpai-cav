@@ -16,7 +16,9 @@
     "Acoustic":               { "type": "object", "additionalProperties": false, "description": "How the surface acts on sound.", "properties": {
       "Absorption":           { "$ref": "#/$defs/ByBand", "description": "Fraction of the sound energy reaching the surface that it absorbs." },
       "Scattering":           { "type": "number", "minimum": 0, "maximum": 1, "description": "Fraction of the reflected energy scattered in random directions: 0 a mirror-like reflection, 1 a fully diffuse one." },
-      "Transmission":         { "$ref": "#/$defs/ByBand", "description": "Fraction of the sound energy reaching the surface that passes through it." } } },
+      "Transmission":         { "$ref": "#/$defs/ByBand", "description": "Fraction of the sound energy reaching the surface that passes through it." },
+      "BandScheme":           { "type": "string", "enum": [ "Octave", "ThirdOctave", "Other" ], "description": "The bands the per-band values are given in, by their centre frequencies: octave bands, one-third-octave bands, or others." },
+      "Incidence":            { "type": "string", "enum": [ "Random", "Normal" ], "description": "How the values were measured or estimated: for sound arriving from all directions (random incidence, as in a reverberation room, ISO 354), or perpendicular to the surface (normal incidence, as in an impedance tube, ISO 10534). Values of different incidence are not directly comparable." } } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":          { "type": "string", "maxLength": 2048 } },

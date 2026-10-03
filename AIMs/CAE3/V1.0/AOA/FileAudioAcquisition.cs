@@ -21,7 +21,7 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
 
     public FileAudioAcquisition(
         string sourcePath,
-        int sampleRate = 16000,
+        int sampleRate = 48000,
         int bits = 16,
         int channels = 1)
     {
@@ -47,10 +47,11 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
             "CAE-AOA-V1.0",
             $"acquired audio: {path}");
 
+        var data = File.ReadAllBytes(path);
         return Task.FromResult(
             BasicAudioObject.FromData(
-                File.ReadAllBytes(path),
-                BuildQualifier(path)));
+                data,
+                BuildQualifier(path, WavFormat(data))));
     }
 
     // The acquisition AIM determines the Qualifier: what was acquired, from
@@ -60,9 +61,16 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
     // SpeechQualifier because the audio one held speech's types and had nothing
     // that fitted a WAV - so an Audio Object was described in speech terms, and
     // nothing meaningful could be recorded about it.
+    //
+    // THE FILE SAYS WHAT IT IS. A WAV states its sampling rate, bit depth and
+    // channels; those are stated, not the defaults - a 48 kHz file is not labelled
+    // 16 kHz because the caller did not say. The constructor's values (48 kHz, 16
+    // bit, mono by default) apply only to a file with no WAV header.
     private AudioQualifier BuildQualifier(
-        string path)
+        string path,
+        (int Rate, int Bits, int Channels)? wav)
     {
+        var (sampleRate, bits, channels) = wav ?? (this.sampleRate, this.bits, this.channels);
         return new AudioQualifier
         {
             AudioQualifierID = Guid.NewGuid().ToString(),
@@ -119,6 +127,25 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
                 }
             }
         };
+    }
+
+    // The sampling rate, bit depth and channels a RIFF/WAVE file's "fmt " chunk
+    // states, or null when the data is not a WAV.
+    private static (int Rate, int Bits, int Channels)? WavFormat(byte[] data)
+    {
+        if (data.Length < 12 ||
+            System.Text.Encoding.ASCII.GetString(data, 0, 4) != "RIFF" ||
+            System.Text.Encoding.ASCII.GetString(data, 8, 4) != "WAVE") return null;
+        for (int pos = 12; pos + 8 <= data.Length;)
+        {
+            var id = System.Text.Encoding.ASCII.GetString(data, pos, 4);
+            var length = BitConverter.ToInt32(data, pos + 4);
+            if (id == "fmt " && pos + 8 + 16 <= data.Length)
+                return (BitConverter.ToInt32(data, pos + 12), BitConverter.ToInt16(data, pos + 22), BitConverter.ToInt16(data, pos + 10));
+            if (length < 0) return null;
+            pos += 8 + length + (length & 1);
+        }
+        return null;
     }
 
     // A SimpleTime naming one instant: start and end the same, absolute epoch

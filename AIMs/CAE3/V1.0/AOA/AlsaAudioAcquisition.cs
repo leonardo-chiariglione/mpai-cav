@@ -18,7 +18,11 @@ public sealed class AlsaAudioAcquisition : IAudioAcquisitionAim, IStartStopAcqui
     private readonly int _channels;
     private readonly string _executable;
 
-    public AlsaAudioAcquisition(int sampleRate = 16000, int bits = 16, int channels = 1, string executable = "arecord")
+    // 48 kHz BY DEFAULT: Audio Object Acquisition captures audio - music, sounds,
+    // a scene - at 48 kHz; speech is Speech Object Acquisition's, at 16 kHz (the
+    // GA's remark, 2026/10/02). A caller that wants speech for a recogniser asks
+    // for 16 kHz explicitly.
+    public AlsaAudioAcquisition(int sampleRate = 48000, int bits = 16, int channels = 1, string executable = "arecord")
     {
         _sampleRate = sampleRate;
         _bits = bits;

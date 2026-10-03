@@ -43,7 +43,7 @@ public sealed class MicArrayAudioAcquisition : IAudioAcquisitionAim, IStartStopA
     // microphone's PointOfView. It is the configuration AND the metadata emitted.
     public MicArrayAudioAcquisition(
         MicrophoneArrayGeometry geometry,
-        int sampleRate = 16000,
+        int sampleRate = 48000,   // 48 kHz: audio, not speech (the GA, 2026/10/02)
         int bits = 16,
         string executable = "arecord")
     {

@@ -17,7 +17,7 @@
 
     "AuthenticationResponse": { "type": "object", "properties": {
       "AnyItem":              { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/AnyItem.json" },
-      "Confidence":           { "type": "number" } } },
+      "Confidence":           { "type": "number", "minimum": 0, "maximum": 1 } } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":          { "type": "string", "maxLength": 2048 } },

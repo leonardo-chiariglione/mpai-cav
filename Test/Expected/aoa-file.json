@@ -1,0 +1,5 @@
+{
+  "a 22.05 kHz 16-bit stereo WAV": "22050 Hz, 16 bit, 2 channel(s)",
+  "a 48 kHz 16-bit mono WAV": "48000 Hz, 16 bit, 1 channel(s)",
+  "data with no WAV header: the defaults": "48000 Hz, 16 bit, 1 channel(s)"
+}
