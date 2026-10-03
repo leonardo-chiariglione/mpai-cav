@@ -182,6 +182,10 @@ public sealed class AimHost : IDisposable
     public Action<string, string>? AimStopped { get; set; }
     public Func<string, string, bool>? StopAimBy { get; set; }
 
+    // The Controller's Access, which the AIMs held here read (AIF V3.0, Storage 6):
+    // its store, or - on an AIM host - the Controller's, read over the link.
+    public IAccessReader? Access { get; set; }
+
     public bool IsDead(string aim)
     {
         lock (_module)
@@ -240,7 +244,7 @@ public sealed class AimHost : IDisposable
         lock (_module)
             if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
         return context.WithHost(text => Report(instanceId, text),
-            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"));
+            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"), Access);
     }
 
     // Completes when the Module is not paused.

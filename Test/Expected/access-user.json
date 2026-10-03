@@ -1,0 +1,11 @@
+{
+  "an AIM reads": "Get greeting: OK ciao; Get farewell: NotFound; List: greeting; Version: 3; Version of a Source not there: -1",
+  "the User creates a Source": "OK",
+  "the User deletes one": "OK; Version 3",
+  "the User deletes one not there": "NotFound",
+  "the User puts an item": "OK; Version 1",
+  "the User puts another": "OK; Version 2",
+  "the User writes a Source it did not create": "OK by provider-1; the User: NotAuthorised",
+  "the User writes a Source no one created": "NotFound",
+  "without an Access": "NotInitialized"
+}

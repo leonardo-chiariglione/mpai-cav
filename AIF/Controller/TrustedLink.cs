@@ -41,4 +41,8 @@ public sealed class TrustedLink(TrustProtocol protocol) : ILinkAdmission
         Answered?.Invoke((string?)request["KeyID"] ?? "", refused);
         return (new JsonObject { ["Ok"] = admitted is not null, ["Message"] = response }, admitted is not null);
     }
+
+    // The end the host admitted: the requester its TrustRequest named, which the
+    // request's signature proved.
+    public string? PeerOf(JsonObject opening) => (string?)opening["Message"]?["RequesterID"];
 }

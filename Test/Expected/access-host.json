@@ -1,0 +1,6 @@
+{
+  "a write asked of the Controller": "{\"Ok\":false,\"Outcome\":\"Refused\",\"Error\":\"Access is only read\"}",
+  "asked of the Controller": "Get my-vocabulary, Get my-vocabulary, List my-vocabulary, Version my-vocabulary, Version none",
+  "placed": "yes",
+  "the AIM on the host reads": "Get greeting: OK ciao; Get farewell: NotFound; List: greeting; Version: 1; Version of a Source not there: -1"
+}

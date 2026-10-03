@@ -112,7 +112,9 @@ public sealed class AimHostServer
                                     return reply["Ok"]?.GetValue<bool>() == true;
                                 }
                                 catch { return false; }
-                            }
+                            },
+                            // Access is the Controller's: read through it, over the link.
+                            Access = new RemoteAccess(link, module)
                         },
                         By = served
                     };

@@ -125,6 +125,7 @@ public readonly struct AimContext
     private readonly Func<int>?  _pauseRequests;
     private readonly Action<string>?     _report;
     private readonly Func<string, bool>? _stopAim;
+    private readonly IAccessReader?      _access;
 
     public static readonly AimContext None = new(CancellationToken.None, Task.CompletedTask);
 
@@ -160,18 +161,20 @@ public readonly struct AimContext
         _pauseRequests = pauseRequests;
     }
 
-    private AimContext(AimContext context, Action<string> report, Func<string, bool> stopAim)
+    private AimContext(AimContext context, Action<string> report, Func<string, bool> stopAim, IAccessReader? access)
     {
         StopToken      = context.StopToken;
         _pauseGate     = context._pauseGate;
         _pauseRequests = context._pauseRequests;
         _report        = report;
         _stopAim       = stopAim;
+        _access        = access;
     }
 
-    // The same context, with the two calls an AIM makes of its host.
-    public AimContext WithHost(Action<string> report, Func<string, bool> stopAim) =>
-        new(this, report, stopAim);
+    // The same context, with the calls an AIM makes of its host: and Access, where
+    // the Controller has one.
+    public AimContext WithHost(Action<string> report, Func<string, bool> stopAim, IAccessReader? access = null) =>
+        new(this, report, stopAim, access);
 
     // MPAI_AIFM_AIM_Report (M3203 4.11): something the AIM did or could not do.
     // The Controller conveys it, does not interpret it and takes no action on it;
@@ -181,6 +184,20 @@ public readonly struct AimContext
     // MPAI_AIFM_AIM_Stop, as the published V3.0 provides it: this AIM asks the
     // Controller to stop an AIM of its Module, which is then DEAD (StopAIM).
     public bool StopAim(string aimName) => _stopAim?.Invoke(aimName) ?? false;
+
+    // ACCESS (AIF V3.0, Basic API 4.11.3): the static or slowly changing data of the
+    // Controller, which an AIM reads and never writes. Without an Access nothing is
+    // found, and a Source's Version is -1.
+    public AccessOutcome MPAI_AIFM_Access_Get(string source, string key, out byte[] data)
+    {
+        data = [];
+        return _access?.Get(source, key, out data) ?? AccessOutcome.NotFound;
+    }
+
+    public IReadOnlyList<string> MPAI_AIFM_Access_List(string source, string prefix = "") =>
+        _access?.List(source, prefix) ?? [];
+
+    public long MPAI_AIFM_Access_Version(string source) => _access?.Version(source) ?? -1;
 
     // Convenience: await this to honour both Pause and Stop.
     // Call repeatedly at natural yield points inside ProcessAsync.

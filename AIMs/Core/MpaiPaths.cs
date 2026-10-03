@@ -69,4 +69,6 @@ public static class MpaiPaths
     public static string Assets        => System.IO.Path.Combine(Root, "UserAgent", "Assets");
     // The governed Shared Storage area (AIF Shared Storage backing folder).
     public static string SharedStorage => System.IO.Path.Combine(Root, "SharedStorage");
+    // Access, the Controller's static or slowly changing data (AIF V3.0, Storage 6).
+    public static string Access        => System.IO.Path.Combine(Root, "Access");
 }

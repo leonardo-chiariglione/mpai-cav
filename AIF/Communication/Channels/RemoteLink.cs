@@ -25,6 +25,10 @@ public interface ILinkAdmission
 
     // The host's end: its answer to the first frame, and whether it admits.
     (JsonObject Answer, bool Admits) Answer(JsonObject opening, X509Certificate2? own, X509Certificate? controller);
+
+    // The host's end: who the first frame of an admitted link says the other end is;
+    // null where the admission names no one.
+    string? PeerOf(JsonObject opening) => null;
 }
 
 // ADMITTED BY A KEY SHARED IN CONFIGURATION (M3217 3.3): where no Trust Anchor is
@@ -67,6 +71,10 @@ public sealed class RemoteLink : IAsyncDisposable
 
     // Why the link went, once it has.
     public string? LostReason { get; private set; }
+
+    // At the host's end, the other end as its admission named it (a Trust Anchor's
+    // identifier); null where none was named.
+    public string? Peer { get; private set; }
 
     private RemoteLink(Stream stream) => this.stream = stream;
 
@@ -188,6 +196,7 @@ public sealed class RemoteLink : IAsyncDisposable
                                 var (answer, admits) = admission.Answer(frame, own, tls.RemoteCertificate);
                                 // The link handed over before its answer leaves: what the other
                                 // end sends once admitted finds its handlers set (M3241, Step 2).
+                                if (admits) link.Peer = admission.PeerOf(frame);
                                 if (admits && admittedOnce.TrySetResult(true)) admitted(link);
                                 else admittedOnce.TrySetResult(admits);
                                 return Task.FromResult<JsonObject?>(answer);

@@ -88,6 +88,35 @@ public sealed class UserAgent
         return AifError.OK;
     }
 
+    // ACCESS (AIF V3.0, Storage 6): the static or slowly changing data the Modules of
+    // this Controller read. Where it is kept is the deployment's; null: there is none.
+    public AccessStore? Access { get; set; }
+
+    // MPAI_AIFU_Access_Create, _Put, _Delete (AIF V3.0, Basic API 3.9): the User's
+    // Sources, written through the User Agent. A Source the User creates has the User
+    // as its Writer; one a Provider created the User cannot write.
+    public AifError MPAI_AIFU_Access_Create(string source) =>
+        Access is null ? AifError.NotInitialized : ErrorOf(Access.Create(source, AccessStore.User));
+
+    public AifError MPAI_AIFU_Access_Put(string source, string key, byte[] data) =>
+        Access is null ? AifError.NotInitialized : ErrorOf(Access.Put(source, AccessStore.User, key, data));
+
+    public AifError MPAI_AIFU_Access_Delete(string source, string key) =>
+        Access is null ? AifError.NotInitialized : ErrorOf(Access.Delete(source, AccessStore.User, key));
+
+    private static AifError ErrorOf(AccessOutcome outcome) => outcome switch
+    {
+        AccessOutcome.OK            => AifError.OK,
+        AccessOutcome.NotFound      => AifError.NotFound,
+        AccessOutcome.NotAuthorised => AifError.NotAuthorised,
+        _                           => AifError.Failed               // Exists, Refused
+    };
+
+    // THE PROVIDERS' DOOR (AIF V3.0, Basic API 6): a listener on which Providers write
+    // their Sources, each on a link admitted by the Trust Protocol of this Controller.
+    public AccessProviderServer OpenAccessToProviders(AIF.Trust.TrustProtocol protocol, int port = 0) =>
+        new(Access ?? throw new InvalidOperationException("this Controller has no Access."), protocol, port);
+
     // THE TRANSPORTS OF THIS CONTROLLER (M3205 3.6.2, M3215 3.1): Controller, which
     // relays and can observe, and InProcess. The Channels of a Module use the one
     // its Output Ports declare, DefaultTransport where they declare none.
@@ -180,6 +209,8 @@ public sealed class UserAgent
                         return await RemoteTransport.ReceiveAsync(frame);
                     case "Time":                                   // the time base a host stamps on
                         return new JsonObject { ["Ok"] = true, ["Now"] = Clock.Now.ToString("O") };
+                    case "Access" when module is not null:          // an AIM there reading Access
+                        return RemoteAccess.Answer(Access, frame);
                     case "StopAim" when module is not null:
                         return new JsonObject
                         {
@@ -506,7 +537,7 @@ public sealed class UserAgent
         };
 
         var graph = _controller.RegisterAim(identifier);
-        var host  = new AimHost();
+        var host  = new AimHost { Access = Access };
         RunningModule? started = null;
 
         // THE CONTROLLER KEEPS WHAT IT HAS BUILT. Stopping a Module releases the
