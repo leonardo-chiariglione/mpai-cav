@@ -31,6 +31,12 @@ namespace Mpai.Paf.Sar;
 // until replaced, as Speaking Avatar Synthesis keeps the Avatar. Only the Speaking
 // Avatar is required. With no scene given at all there is nothing to place the
 // Avatar in, and nothing is produced.
+//
+// SO ARE THE AVATARS. Every Avatar placed stays in the Scene, by its ID, where it
+// was last placed - in a videoconference each participant's (the author, 2026/10/03:
+// RSR in the Avatar-Based Videoconference, its Client Receiver PDX -> SAS -> SAR).
+// The one speaking is placed anew by the rules above, and its speech alone is in
+// the Speech Scene.
 public sealed class SarAimProcessor : IAimProcessor
 {
     public const double Ahead = 1.5;      // metres between the Point of View and the Avatar
@@ -46,6 +52,10 @@ public sealed class SarAimProcessor : IAimProcessor
     private BasicAudioSceneDescriptors? _audio;
     private Basic3DModelSceneDescriptors? _model;
     private PointOfView? _pov;
+    private readonly List<PlacedAvatar> _avatars = new();   // in the order first placed
+
+    // An Avatar in the Scene: its ID, the 3D Model that shows it, where it is.
+    public sealed record PlacedAvatar(string Id, string Model, SpaceTime At);
 
     public string InstanceId { get; }
 
@@ -105,7 +115,7 @@ public sealed class SarAimProcessor : IAimProcessor
         if (_audio is null && _model is null && _pov is null)   // no scene: nothing to place the Avatar in
             return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "NoScene", Ports = new() });
 
-        var (b3s, bms) = Render(speaking, _audio, _model, _pov);
+        var (b3s, bms) = Render(speaking, _audio, _model, _pov, _avatars);
         var ports = new Dictionary<string, string>();
         if (_b3sPort.Length > 0) ports[_b3sPort] = MpaiJson.ToJson(b3s);
         if (_bmsPort.Length > 0) ports[_bmsPort] = MpaiJson.ToJson(bms);
@@ -120,20 +130,29 @@ public sealed class SarAimProcessor : IAimProcessor
 
     // The Avatar placed in the Scene: the 3D Model Scene with it, and the Multimodal
     // Scene of what is heard and seen.
+    // avatars: those already placed, updated with the one speaking (kept by the caller).
     public static (Basic3DModelSceneDescriptors Model, BasicAudioVisualSceneDescriptors Multimodal) Render(
-        SpeakingAvatar speaking, BasicAudioSceneDescriptors? audio, Basic3DModelSceneDescriptors? model, PointOfView? pov)
+        SpeakingAvatar speaking, BasicAudioSceneDescriptors? audio, Basic3DModelSceneDescriptors? model, PointOfView? pov,
+        List<PlacedAvatar>? avatars = null)
     {
+        avatars ??= new();
         var avatar = speaking.Avatar();
         var name = avatar?.ModelId() ?? avatar?.AvatarID ?? speaking.SpeakingAvatarID;
+        var id = avatar?.AvatarID is { Length: > 0 } a ? a : name;
         var mInstance = speaking.MInstanceID ?? model?.MInstanceID ?? "";
         var viewer = pov ?? model?.UserPoV ?? new PointOfView { PointOfViewID = "origin" };
         var placed = avatar?.AvatarSpaceTime
-                     ?? model?.Basic3DModelSceneItems.FirstOrDefault(i => i.Id == name)?.ModelObjectSpaceTime
+                     ?? model?.Basic3DModelSceneItems.FirstOrDefault(i => i.Id == id || i.Id == name)?.ModelObjectSpaceTime
                      ?? (pov is null ? At([0, 0, 0], 0) : InFrontOf(pov));
         var frame = model?.Basic3DModelSceneDescriptorsSpaceTime ?? At([0, 0, 0], 0);
 
-        var items = (model?.Basic3DModelSceneItems ?? []).Where(i => i.Id != name).ToList();
-        items.Add(new Basic3DModelSceneItem { ModelObjectSpaceTime = placed, ObjectIDOrObject = [JsonValue.Create(name)] });
+        var index = avatars.FindIndex(p => p.Id == id);
+        if (index < 0) avatars.Add(new PlacedAvatar(id, name, placed)); else avatars[index] = new PlacedAvatar(id, name, placed);
+        bool IsAvatar(Basic3DModelSceneItem i) => avatars.Any(p => i.Id == p.Id || i.Id == p.Model);
+
+        var items = (model?.Basic3DModelSceneItems ?? []).Where(i => !IsAvatar(i)).ToList();
+        foreach (var p in avatars)
+            items.Add(new Basic3DModelSceneItem { ModelObjectSpaceTime = p.At, ObjectIDOrObject = [JsonValue.Create(p.Model)] });
         var b3s = new Basic3DModelSceneDescriptors
         {
             MInstanceID = mInstance, UEnvironmentID = model?.UEnvironmentID,

@@ -1,0 +1,7 @@
+{
+  "Anna is heard": "anna-speech at (2, 1, 1.6) yaw -90",
+  "Anna speaks": "table.glb at (2, 0, 0) yaw 0; anna.glb at (2, 1, 0) yaw -90",
+  "Anna, moved by the Server, speaks again": "table.glb at (2, 0, 0) yaw 0; anna.glb at (2.5, 1, 0) yaw -90; bob.glb at (2, -1, 0) yaw 90",
+  "Bob is heard": "bob-speech at (2, -1, 1.6) yaw 90",
+  "Bob speaks": "table.glb at (2, 0, 0) yaw 0; anna.glb at (2, 1, 0) yaw -90; bob.glb at (2, -1, 0) yaw 90"
+}

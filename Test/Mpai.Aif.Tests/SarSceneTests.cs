@@ -105,4 +105,53 @@ public class SarSceneTests
 
         Expected.Match("sar-scene.json", r);
     }
+
+    // A MEETING (the Avatar-Based Videoconference's Client Receiver, PDX -> SAS -> SAR):
+    // each participant's Avatar placed by the Server at a seat, speaking in turn; all
+    // stay in the Scene, and only the one speaking is heard.
+    [Fact]
+    public async Task AvatarsOfAMeeting()
+    {
+        var store = new AIF.Store.AmdStore(Repository.Amds);
+        store.Scan();
+        var ports = AimPortReader.Load(store, "1PAF-SAR-V1.6-I01");
+        var sar = new SarAimProcessor("1PAF-SAR-V1.6-I01", ports);
+        string sav = ports.Input("XRV-SAV-V1.0"), model = ports.Input("OSD-B3S-V1.5"), pov = ports.Input("OSD-OPV-V1.5"),
+               b3sOut = ports.Output("OSD-B3S-V1.5"), bmsOut = ports.Output("OSD-BMS-V1.5");
+        string Says(string id, string glb, double[] seat, double yaw) => MpaiJson.ToJson(new SpeakingAvatar
+        {
+            MInstanceID = "M1", SpeakingAvatarID = $"{id}-says",
+            SpeakingAvatarData = new SpeakingAvatarData
+            {
+                Avatar = new Avatar
+                {
+                    AvatarID = id, AvatarSpaceTime = SarAimProcessor.At(seat, yaw),
+                    AvatarData = new AvatarData { ModelOrModelID = [new AvatarModel { ModelID = glb }] }
+                },
+                SpeechObject = new BasicSpeechObject { BasicSpeechObjectID = $"{id}-speech", Data = new byte[3200] }
+            }
+        });
+        async Task<Message> Run(Dictionary<string, string> inputs) => await sar.ProcessAsync(new Message { MessageId = "m", Ports = inputs });
+        string Seen(Message m) => string.Join("; ", MpaiJson.FromJson<Basic3DModelSceneDescriptors>(m.Ports[b3sOut])
+            .Basic3DModelSceneItems.Select(i => $"{i.Id} at {Where(i.ModelObjectSpaceTime)}"));
+        string Heard(Message m)
+        {
+            var bss = JsonDocument.Parse(m.Ports[bmsOut]).RootElement.GetProperty("BasicAVSceneDescriptorsData").EnumerateArray()
+                .First(e => e.GetProperty("BXSOrBXSID").GetProperty("Header").GetString() == "OSD-BSS-V1.5").GetProperty("BXSOrBXSID").GetRawText();
+            var item = MpaiJson.FromJson<BasicSpeechSceneDescriptors>(bss).BasicSpeechSceneItems.Single();
+            return $"{item.SpeechObject?.BasicSpeechObjectID} at {Where(item.ObjectSpaceTime)}";
+        }
+
+        var r = new Dictionary<string, string>();
+        await Run(new() { [model] = MpaiJson.ToJson(Room(("table.glb", [2, 0, 0], 0))), [pov] = MpaiJson.ToJson(Viewer(0, 0, 0)) });
+        var anna = await Run(new() { [sav] = Says("anna", "anna.glb", [2, 1, 0], -90) });
+        r["Anna speaks"] = Seen(anna);
+        r["Anna is heard"] = Heard(anna);
+        var bob = await Run(new() { [sav] = Says("bob", "bob.glb", [2, -1, 0], 90) });
+        r["Bob speaks"] = Seen(bob);
+        r["Bob is heard"] = Heard(bob);
+        var again = await Run(new() { [sav] = Says("anna", "anna.glb", [2.5, 1, 0], -90) });
+        r["Anna, moved by the Server, speaks again"] = Seen(again);
+        Expected.Match("sar-meeting.json", r);
+    }
 }
