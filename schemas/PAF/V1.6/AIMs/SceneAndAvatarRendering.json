@@ -1,0 +1,45 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/SceneAndAvatarRendering.json",
+  "title":                "Scene and Avatar Rendering V1.6",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-SAR-V1.6"},
+  "Header":               "PAF-SAR-V1.6",
+
+  "APIProfile":           "Basic",
+  "Description":          "Scene and Avatar Rendering: places a Speaking Avatar in a Scene seen and heard from a Point of View. It produces either a Basic Audio Scene - the Avatar's speech placed among the input Audio - and a Basic Visual Scene - what is seen, as 2D Visual Objects; or a Basic Audio-Visual Scene (Basic Audio, Speech and 3D Model Scenes) and the 3D Model Scene with the Avatar placed, which a 3D Model Object Delivery draws. It produces data; it does not play or draw.",
+
+  "ExternalPorts":        [{"Name": "SpeakingAvatar",     "Direction": "Input",  "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Audio",              "Direction": "Input",  "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5", "OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "3DModel",            "Direction": "Input",  "DataType": ["OSD-B3O-V1.5", "OSD-3DO-V1.5", "OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PointOfView",        "Direction": "Input",  "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioScene",         "Direction": "Output", "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VisualScene",        "Direction": "Output", "DataType": "OSD-BVS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MultimodalScene",    "Direction": "Output", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "3DModelScene",       "Direction": "Output", "DataType": ["OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [ ],
+
+  "Topology":             [ ],
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}

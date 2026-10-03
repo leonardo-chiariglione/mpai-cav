@@ -12,7 +12,7 @@ using AIF.Store;
 using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aif.Api;    // SpeakingAvatar
+using Mpai.Aif.Api;    // AvatarUtterance
 using Mpai.Osd.Tod;    // WebView3DModelDelivery
 using Mpai.Aims.Audio; // WasapiAudioAcquisition (the mic device - real-world edge)
 using Mpai.Aims.Speech;// SoaAimProcessor (Speech Object Acquisition - real-world edge)
@@ -94,7 +94,7 @@ public sealed class AvatarUaHost
     }
 
     // Present one Speaking Avatar on the renderer (used for a single turn, e.g. typed input).
-    public async Task PresentAsync(SpeakingAvatar avatar)
+    public async Task PresentAsync(AvatarUtterance avatar)
     {
         if (_renderer is null) return;
         await _ui.InvokeAsync(async () =>
@@ -108,7 +108,7 @@ public sealed class AvatarUaHost
     // to the app's handler -> present the returned Speaking Avatar -> wait for the avatar
     // to finish speaking -> listen again, until StopLoop. Empty captures (nobody spoke)
     // simply listen again. The handler runs off the UI thread.
-    public void StartLoop(Func<BasicSpeechObject, SpeakingAvatar> handleTurn)
+    public void StartLoop(Func<BasicSpeechObject, AvatarUtterance> handleTurn)
     {
         if (_running) return;
         _running = true;
@@ -123,7 +123,7 @@ public sealed class AvatarUaHost
         RunningChanged?.Invoke(false);
     }
 
-    private async Task LoopAsync(Func<BasicSpeechObject, SpeakingAvatar> handleTurn)
+    private async Task LoopAsync(Func<BasicSpeechObject, AvatarUtterance> handleTurn)
     {
         try
         {

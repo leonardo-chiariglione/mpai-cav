@@ -1,0 +1,6 @@
+{
+  "a Speaking Avatar: the Avatar with its Speech, Face and Body Descriptors": "valid",
+  "an Avatar that is only a Model, by ID": "valid",
+  "the Speaking Avatar keeps the Model": "avatars/thalia.glb",
+  "the Speaking Avatar's face and body": "face, BVH"
+}

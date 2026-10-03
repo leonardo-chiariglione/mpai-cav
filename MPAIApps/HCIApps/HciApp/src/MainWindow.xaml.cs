@@ -182,7 +182,7 @@ public partial class MainWindow : Window
             }
             if (_lastReplyWav.Length > 0 || _lastFdo is not null)
             {
-                await _avatar!.PresentAsync(new SpeakingAvatar(_lastReplyWav, _lastFdo));
+                await _avatar!.PresentAsync(new AvatarUtterance(_lastReplyWav, _lastFdo));
                 await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(_lastReplyWav) + 0.3));
             }
             SetVoice("your turn...");
@@ -239,7 +239,7 @@ public partial class MainWindow : Window
         if (!r.Ok) return;
         byte[] wav = SpeechOf(r.ByType(BSO));
         FaceDescriptorsObject? fdo = FdoOf(r.ByType(FDO));
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

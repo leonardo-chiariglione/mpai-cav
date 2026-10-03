@@ -93,5 +93,7 @@
   "PAF/V1.6/AIMs/GenerativeFaceDescription.json": "valid",
   "PAF/V1.6/AIMs/PSFaceInterpretation.json": "valid",
   "PAF/V1.6/AIMs/PersonalStatusDisplay.json": "valid",
-  "PAF/V1.6/AIMs/ResponseAndSceneRendering.json": "valid"
+  "PAF/V1.6/AIMs/ResponseAndSceneRendering.json": "valid",
+  "PAF/V1.6/AIMs/SceneAndAvatarRendering.json": "valid",
+  "PAF/V1.6/AIMs/SpeakingAvatarSynthesis.json": "valid"
 }

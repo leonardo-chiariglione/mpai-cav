@@ -185,7 +185,7 @@ public partial class MainWindow : Window
             var fdo = string.IsNullOrWhiteSpace(face)
                 ? null : MpaiJson.FromJson<FaceDescriptorsObject>(face);
 
-            await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo, null));
+            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo, null));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
         }
         catch (Exception ex)
@@ -845,7 +845,7 @@ public partial class MainWindow : Window
 
             if (wav.Length == 0 && fdo is null) return;
 
-            await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo, null));
+            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo, null));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.8));
         });
 
