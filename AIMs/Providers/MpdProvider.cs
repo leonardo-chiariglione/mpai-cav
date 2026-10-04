@@ -43,7 +43,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
 
     public bool CanCreate(string aimName) =>
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SPE-V2.5-I01" or "1PAF-FPE-V1.6-I01"
-                or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01"
+                or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01"
                 or "1PAF-GFD-V1.6-I01"
                 or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01"
                 or "1PAF-SAR-V1.6-I01";
@@ -57,7 +57,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
             "1PAF-FPE-V1.6-I01" => new FpeAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
             "1MMC-PMX-V2.5-I01" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-EDP-V2.5-I01" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
-            "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1MMC-PDX-V2.5-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

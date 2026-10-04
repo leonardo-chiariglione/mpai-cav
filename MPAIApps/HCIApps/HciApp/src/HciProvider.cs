@@ -109,7 +109,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             "PAF-FPE-V1.6" => new FpeAimProcessor(aimName, Hse(settings), AimPortReader.Load(_store, aimName)),
             "MMC-PMX-V2.5" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "MMC-EDP-V2.5" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName)),
-            "PAF-PSD-V1.6" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "MMC-PDX-V2.5" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "MMC-TTS-V2.5" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "PAF-GFD-V1.6" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "PAF-GBD-V1.6" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

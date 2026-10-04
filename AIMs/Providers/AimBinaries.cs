@@ -34,7 +34,7 @@ public static class AimBinaries
         ["1MMC-SPE-V2.5-I01"] = typeof(SpeAimProcessor),
         ["1MMC-PMX-V2.5-I01"] = typeof(PmxAimProcessor),
         ["1PAF-FPE-V1.6-I01"] = typeof(FpeAimProcessor),
-        ["1PAF-PSD-V1.6-I01"] = typeof(PsdAimProcessor),
+        ["1MMC-PDX-V2.5-I01"] = typeof(PsdAimProcessor),
         ["1PAF-GFD-V1.6-I01"] = typeof(GfdAimProcessor),
         ["1PAF-GBD-V1.6-I01"] = typeof(GbdAimProcessor),
         ["1PAF-SAS-V1.6-I01"] = typeof(SasAimProcessor),

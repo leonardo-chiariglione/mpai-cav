@@ -25,7 +25,7 @@ namespace Mpai.Providers;
 // ONLY the leaf AIMs the topology names:
 //   PAF-EFD - Entity Face Description   (SCRFD + ArcFace -> the face descriptors)
 //   MMC-ESD - Entity Speech Description (ECAPA           -> the speech descriptors)
-//   PAF-PSD, MMC-TTS, PAF-GFD, PAF-GBD, PAF-SAS - the Response and Scene Rendering leaves
+//   MMC-PDX, MMC-TTS, PAF-GFD, PAF-GBD, PAF-SAS - the Response and Scene Rendering leaves
 // EFD and ESD use the feature extractors FIR and SIR use, so what ACR registers
 // MAC recognises. They register into the Module's Shared Storage, where the User
 // Agent put it: on a Service, the gallery MAC reads.
@@ -41,7 +41,7 @@ public sealed class AcrProvider : IAimProvider, IDisposable
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? AimBinaries.Of(aimName) : null;
 
     public bool CanCreate(string aimName) =>
-        aimName is "1PAF-EFD-V1.6-I01" or "1MMC-ESD-V2.5-I01" or "1PAF-PSD-V1.6-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
+        aimName is "1PAF-EFD-V1.6-I01" or "1MMC-ESD-V2.5-I01" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
                 or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01"
                 or "1PAF-SAR-V1.6-I01";
 
@@ -50,7 +50,7 @@ public sealed class AcrProvider : IAimProvider, IDisposable
         {
             "1PAF-EFD-V1.6-I01" => new EfdAimProcessor(aimName, Scrfd(settings), ArcFace(settings), Gallery(storage, aimName), AimPortReader.Load(_store, aimName)),
             "1MMC-ESD-V2.5-I01" => new EsdAimProcessor(aimName, Ecapa(settings), Gallery(storage, aimName), AimPortReader.Load(_store, aimName)),
-            "1PAF-PSD-V1.6-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1MMC-PDX-V2.5-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),

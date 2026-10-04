@@ -68,6 +68,7 @@
   "MMC/V2.5/AIMs/NaturalLanguageUnderstanding.json": "valid",
   "MMC/V2.5/AIMs/OpticalCharacterRecognition.json": "valid",
   "MMC/V2.5/AIMs/PSSpeechInterpretation.json": "valid",
+  "MMC/V2.5/AIMs/PersonalStatusDemultiplexing.json": "valid",
   "MMC/V2.5/AIMs/PersonalStatusExtraction.json": "valid",
   "MMC/V2.5/AIMs/PersonalStatusMultiplexing.json": "valid",
   "MMC/V2.5/AIMs/SpeakerIdentityRecognition.json": "valid",
