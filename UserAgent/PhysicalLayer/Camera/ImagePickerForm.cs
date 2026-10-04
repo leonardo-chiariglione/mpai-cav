@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Mpai.Aims.Visual;
+namespace Mpai.PhysicalLayer;
 
 internal sealed class ImagePickerForm : Form
 {

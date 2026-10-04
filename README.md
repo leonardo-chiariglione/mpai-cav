@@ -85,9 +85,10 @@ places the avatar in it: the 3D Model Scene with the avatar (`OSD-B3S`), which t
 page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and the 3D scene; or, with
 its setting `SceneOutputs` at `2D` (or `Both`), the Audio Scene (`OSD-BAS`) with the avatar's speech and the
 Visual Scene (`OSD-BVS`) of an MP4 of the whole view, drawn off screen with that page in Edge or Chromium
-and encoded by ffmpeg. Live capture
-uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
-`MMC-SOD`.
+and encoded by ffmpeg. Capture and delivery are the User Agent's, never an AIM's: the
+Units of its Physical Layer (`UserAgent/PhysicalLayer`) - microphone with voice activity
+detection, camera (Windows Media Capture), loudspeaker, the avatar page - and a test
+(`UserAgentIsolationTests`) keeps every User Agent project free of AIM code.
 
 ---
 
@@ -106,7 +107,8 @@ UserAgent/      the User Agent
   Wdl/          the WDL reader
   Rca/          the workflow interpreter
   Remote/       the Controller API across MPAI-MAS (the UA, or a Controller, reaching a remote Controller)
-  UaKit/        Speaking-Avatar host, capture/present toolkit
+  PhysicalLayer/  the Units: microphone, camera, loudspeaker, avatar (not AIMs)
+  UaKit/        Speaking-Avatar host, on the Units
   Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD, MPAI-MAS)
   Assets/       avatar assets (glb, viewer HTML)
   Clients/      the MAS-App clients: Desktop (WPF) and Browser (Blazor Client and its Host)

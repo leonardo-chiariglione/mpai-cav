@@ -8,39 +8,34 @@ using System.Windows.Threading;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Web.WebView2.Core;
 
-using AIF.Store;
-using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aif.Api;    // AvatarUtterance
-using Mpai.Osd.Tod;    // WebView3DModelDelivery
-using Mpai.Aims.Audio; // WasapiAudioAcquisition (the mic device - real-world edge)
-using Mpai.Aims.Speech;// SoaAimProcessor (Speech Object Acquisition - real-world edge)
+using Mpai.Aif.Api;          // AvatarUtterance
+using Mpai.PhysicalLayer;    // the Units: Microphone, Avatar
 
 namespace Mpai.UaKit;
 
 // AvatarUaHost - the reusable plumbing shared by User Agent applications that
-// present a speaking avatar. It owns the real-world edges every such UA needs:
-//   - the OUTPUT edge: a WebView-hosted 3D avatar renderer (3OD's device), to which
-//     it delivers a Speaking Avatar (Machine Speech + Face Descriptors) for playback
-//     and lip-sync;
-//   - the INPUT edge: microphone capture via Speech Object Acquisition with
-//     voice-activity auto-stop, driving a continuous listen loop.
+// present a speaking avatar. It drives two Units of the User Agent's Physical Layer
+// (MPAI-AIF V3.0) - never an AIM:
+//   - the Avatar Unit: the WebView-hosted 3D page, to which it delivers a Speaking
+//     Avatar (speech + Face and Body Descriptors) for playback and lip-sync;
+//   - the Microphone Unit: speech with voice-activity auto-stop, driving a
+//     continuous listen loop.
 // The application supplies only two things: the WebView2 control to render into, and
 // a per-turn handler that takes the captured Speech Object and returns the Speaking
 // Avatar to present (typically a single call to the HCI API - Converse, Translate, ...).
 // This removes the duplicated WebView/capture/present code from each UA app.
 public sealed class AvatarUaHost
 {
-    private const string SoaModule = "1MMC-SOA-V2.5-I01";
-
     private readonly WebView2   _web;
     private readonly Dispatcher _ui;
     private readonly string     _amdDir;
     private readonly string     _assetsHost;   // virtual host name (e.g. "cavapp.local")
     private readonly string     _assetsDir;    // folder mapped to the virtual host (viewer + avatar)
 
-    private WebView3DModelDelivery? _renderer;
+    private AvatarUnit? _renderer;
+    private readonly MicrophoneUnit _microphone = new();
     private volatile bool           _running;
 
     // Raised when the listen loop starts or stops (true = running), on the UI thread,
@@ -89,7 +84,7 @@ public sealed class AvatarUaHost
             _assetsHost, _assetsDir, CoreWebView2HostResourceAccessKind.Allow);
         _web.CoreWebView2.Navigate($"https://{_assetsHost}/{viewerPage}");
 
-        _renderer = new WebView3DModelDelivery(json =>
+        _renderer = new AvatarUnit(json =>
             _ui.InvokeAsync(() => _web.CoreWebView2.PostWebMessageAsJson(json)).Task);
     }
 
@@ -97,11 +92,7 @@ public sealed class AvatarUaHost
     public async Task PresentAsync(AvatarUtterance avatar)
     {
         if (_renderer is null) return;
-        await _ui.InvokeAsync(async () =>
-        {
-            var model = Basic3DModelObject.FromData(Array.Empty<byte>());
-            await _renderer.DeliverWithSpeechAsync(model, avatar.FaceDescriptors, avatar.MachineSpeechWav, avatar.BodyDescriptors);
-        });
+        await _ui.InvokeAsync(() => _renderer.DeliverAsync(avatar.MachineSpeechWav, avatar.FaceDescriptors, avatar.BodyDescriptors));
     }
 
     // Start the continuous listen loop: capture a spoken turn (VAD auto-stop) -> hand it
@@ -150,50 +141,18 @@ public sealed class AvatarUaHost
     }
 
     // Capture one spoken turn from the microphone as a Speech Object, with voice-
-    // activity auto-stop (Speech Object Acquisition is the UA's real-world input edge).
-    // The recognition happens inside the Module, not here.
+    // activity auto-stop. The recognition happens inside the Module, not here.
     public BasicSpeechObject? CaptureSpeech()
     {
-        var store = new AmdStore(_amdDir);
-        store.Scan();
-        // Dispose the WASAPI device after each capture. Back-to-back captures (e.g.
-        // a greeting "yes" then a passphrase) must each start from a CLEAN mic - a
-        // lingering device keeps buffered audio (the tail of the previous utterance
-        // or the prompt's echo) that would trip the voice-activity START immediately
-        // and end the next capture on a fragment. One capture, one fresh device.
-        var mic = new WasapiAudioAcquisition(16000);   // speech to Whisper must be 16 kHz mono
-
-        // LET THE DEVICE SETTLE BEFORE ANYTHING IS RECORDED. A freshly created WASAPI
-        // device takes a few hundred milliseconds to start, and a person answering
-        // promptly speaks into that gap: "Yes, please" was reaching the recogniser as
-        // "Please", and a workflow branching on the answer read the wrong one.
-        //
-        // The wait is before the recording begins, so nothing spoken is lost - only
-        // the moment of silence that used to swallow the first syllable.
-        System.Threading.Thread.Sleep(400);
-
-        var soa = new SoaAimProcessor(SoaModule, mic, AimPortReader.Load(store, SoaModule), vadAutoStop: true);
-        var msg = new Message
-        {
-            MessageId = Guid.NewGuid().ToString(),
-            Ports = new Dictionary<string, string>()
-        };
-        var outcome = soa.ProcessAsync(msg).GetAwaiter().GetResult();
-        var speechJson = outcome.Ports.Values.FirstOrDefault() ?? "";
-        return string.IsNullOrWhiteSpace(speechJson) ? null : MpaiJson.FromJson<BasicSpeechObject>(speechJson);
+        var speech = _microphone.AcquireSpeechAsync().GetAwaiter().GetResult();
+        return speech.Data.Length == 0 ? null : speech;
     }
 
-    // CaptureAudio - the AUDIO ear. Unlike CaptureSpeech (which assumes speech),
-    // this captures raw sound with the CAE-AOA device and returns a Basic AUDIO
-    // Object (OSD-BAO). The caller does not know whether the sound is speech;
-    // discrimination happens downstream (the HCI Module's ASI). Mic is 16 kHz
-    // mono 16-bit; a fixed window is captured.
-    public BasicAudioObject? CaptureAudio(double seconds = 5.0)
-    {
-        var mic = new WasapiAudioAcquisition(16000);   // speech to Whisper must be 16 kHz mono   // 16 kHz mono 16-bit
-        return mic.AcquireAsync(new AcquisitionRequest { Duration = System.TimeSpan.FromSeconds(seconds) })
-                  .GetAwaiter().GetResult();
-    }
+    // CaptureAudio - the AUDIO ear. Unlike CaptureSpeech (which asserts speech),
+    // this captures raw sound and returns a Basic AUDIO Object (OSD-BAO): whether it
+    // is speech is decided downstream (the HCI Module's ASI). A fixed window.
+    public BasicAudioObject? CaptureAudio(double seconds = 5.0) =>
+        _microphone.AcquireAudioAsync(TimeSpan.FromSeconds(seconds)).GetAwaiter().GetResult();
 
     // Duration of a 16-bit PCM WAV, in seconds, from its bytes.
     public static double WavDurationSeconds(byte[] wav)

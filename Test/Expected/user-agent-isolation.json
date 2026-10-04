@@ -1,0 +1,11 @@
+{
+  "UserAgent/Clients/Browser/Client/RcaWeb.Client.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/Clients/Desktop/src/RcaApp.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/PhysicalLayer/Mpai.PhysicalLayer.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/Rca/Mpai.Rca.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/Remote/Mpai.Mas.Client.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/UaKit/Mpai.UaKit.csproj": "only the User Agent, Data Types and the Controller API",
+  "UserAgent/Wdl/Mpai.Wdl.csproj": "only the User Agent, Data Types and the Controller API",
+  "source files that construct or run an AIM": "none"
+}

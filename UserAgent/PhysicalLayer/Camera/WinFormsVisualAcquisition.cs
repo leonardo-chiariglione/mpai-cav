@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Visual;
+namespace Mpai.PhysicalLayer;
 
 public sealed class WinFormsVisualAcquisition : IVisualAcquisitionAim
 {

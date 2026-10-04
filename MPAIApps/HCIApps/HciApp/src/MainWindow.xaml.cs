@@ -9,7 +9,7 @@ using AIF.Store;
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aims.Visual;
+using Mpai.PhysicalLayer;   // CameraUnit
 using Mpai.UaKit;
 using Mpai.Aif.Api;
 
@@ -227,10 +227,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var frame = new WebcamVisualAcquisition()
-                .AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
-                .GetAwaiter().GetResult().Data;
-            return (frame is { Length: > 0 }) ? BasicVisualObject.FromFile("webcam.jpg", frame, "Face") : null;
+            return new CameraUnit().AcquireFaceAsync().GetAwaiter().GetResult();
         }
         catch { return null; }
     }

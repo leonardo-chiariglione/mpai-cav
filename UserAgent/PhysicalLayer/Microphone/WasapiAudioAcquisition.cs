@@ -8,7 +8,7 @@ using NAudio.Wave;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Audio;
+namespace Mpai.PhysicalLayer;
 
 // Audio Object Acquisition (CAE-AOA) on Windows. Device dependency lives ONLY
 // in this edge AIM. It acquires a Basic Audio Object from the microphone and

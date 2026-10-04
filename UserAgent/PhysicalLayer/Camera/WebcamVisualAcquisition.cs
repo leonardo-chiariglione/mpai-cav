@@ -7,7 +7,7 @@ using Windows.Storage.Streams;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Visual;
+namespace Mpai.PhysicalLayer;
 
 // Live camera Visual Object Acquisition using the NATIVE Windows Media Capture
 // API (Windows.Media.Capture) - no OpenCV. Grabs a single JPEG photo from the

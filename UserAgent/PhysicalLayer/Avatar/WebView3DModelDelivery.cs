@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Osd.Tod;
+namespace Mpai.PhysicalLayer;
 
 // 3D Model Object Delivery device that renders to a WebView-hosted 3D renderer.
 // It is 3OD's device (like WinmmSpeechDelivery is SOD's): 3OD calls DeliverAsync,
@@ -11,7 +11,7 @@ namespace Mpai.Osd.Tod;
 // the renderer. The actual message-post to the WebView is supplied by the host
 // application as a delegate, so this device carries no WebView2 dependency; the
 // app owns the display surface and wires the post.
-public sealed class WebView3DModelDelivery : I3DModelDeliveryAim
+public sealed class WebView3DModelDelivery
 {
     private readonly Func<string, Task> _postToRenderer;
 

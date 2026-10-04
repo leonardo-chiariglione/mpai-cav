@@ -6,9 +6,9 @@
        application. Which Modules run, which Ports they take and which they give,
        all come from the Workflow Description it is given.
 
-       IT HOLDS NO MODEL. Acquisition and delivery are the User Agent's, so the
-       AIMs that touch a device travel with it; everything that reasons stays on
-       the Service. -->
+       IT HOLDS NO MODEL AND NO AIM. Acquisition and delivery are the User Agent's:
+       the Units of its Physical Layer travel with it; everything that reasons stays
+       on the Service (MPAI-AIF V3.0; enforced by UserAgentIsolationTests). -->
 
   <PropertyGroup>
     <AssemblyName>RcaApp</AssemblyName>
@@ -34,14 +34,9 @@
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\UaKit\Mpai.UaKit.csproj" />
 
-    <!-- The devices. Acquisition and delivery are the User Agent's and travel
-         with it; nothing here reasons about what it captures. -->
-    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\CVE\V1.0\VOA\Mpai.Cve.Voa.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\CVE\V1.0\VOA.Windows\Mpai.Cve.Voa.Windows.csproj" />
+    <!-- The devices: the Units of the Physical Layer. Nothing here reasons about
+         what it captures. -->
+    <ProjectReference Include="..\..\..\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
   </ItemGroup>
 
 </Project>

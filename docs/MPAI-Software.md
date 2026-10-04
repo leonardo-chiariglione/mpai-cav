@@ -60,7 +60,7 @@ icon. The work is done by the Module on the Service.
 | `AIF/` | The Controller, the Controller API (`ControllerApi`, formerly called the North API), the wire form of each Data Type (`PortData`), the Store of L3s, and Communication (Shared and Global Storage). |
 | `AIMs/` | The AIMs, their L3s (`AIMs/AMDs/`), the shared data types (`AIMs/Core/`), and the providers that build each Module's AIMs (`AIMs/Providers/`). |
 | `MAS/` | MPAI-MAS: the server of its API (`Server`); the **Service** (`Service`, the program `MasService`, formerly `AmqServer`), which offers all four Apps; the Store of L3s (`Store/Service`) and its App (`Store/App`). |
-| `UserAgent/` | The User Agent: the WDL reader (`Wdl`), the workflow interpreter (`Rca`), the Controller API across MPAI-MAS (`Remote`), the desktop avatar library (`UaKit`), the avatar (`Assets`), and the client's own workflow, MPAI-MAS (`Orchestration`). |
+| `UserAgent/` | The User Agent: the WDL reader (`Wdl`), the workflow interpreter (`Rca`), the Controller API across MPAI-MAS (`Remote`), the Physical Layer's Units - microphone, camera, loudspeaker, avatar (`PhysicalLayer`), the desktop avatar library (`UaKit`), the avatar (`Assets`), and the client's own workflow, MPAI-MAS (`Orchestration`). |
 | `UserAgent/Clients/Desktop/` | The **desktop client** (Windows). |
 | `UserAgent/Clients/Browser/` | The **browser client**: `Client` (runs in the browser) and `Host` (serves it). |
 | `Apps/` | One folder per App: its workflow, `app.json` and icon. |

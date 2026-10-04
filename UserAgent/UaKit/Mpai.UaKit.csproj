@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- A User Agent kit: it reaches the real world through the Physical Layer's Units
+       and a Module through the Controller API only - no AIM, no Controller internals
+       (MPAI-AIF V3.0; enforced by UserAgentIsolationTests). -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -12,12 +15,8 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AIF\Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
-    <ProjectReference Include="..\..\AIMs\OSD\V1.5\TOD\Mpai.Osd.Tod.csproj" />
-    <ProjectReference Include="..\..\AIMs\MMC\V2.5\SOA\Mpai.Mmc.Soa.csproj" />
-    <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
+    <ProjectReference Include="..\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
   </ItemGroup>
 </Project>

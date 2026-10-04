@@ -11,7 +11,7 @@ using Microsoft.Win32;
 using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aims.Visual;
+using Mpai.PhysicalLayer;   // CameraUnit
 using Mpai.Aif.Api;
 using Mpai.Mas.Client;
 using Mpai.Rca;
@@ -774,12 +774,8 @@ public partial class MainWindow : Window
             // is a Face, the User Agent takes a frame from the camera.
             if ((wanted ?? "").Contains("\"Face\"", StringComparison.Ordinal))
             {
-                var frame = await Task.Run(() => new WebcamVisualAcquisition()
-                    .AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
-                    .GetAwaiter().GetResult().Data);
-                return frame is { Length: > 0 }
-                    ? MpaiJson.ToJson(BasicVisualObject.FromFile("webcam.jpg", frame, "Face"))
-                    : null;
+                var face = await Task.Run(() => new CameraUnit().AcquireFaceAsync());
+                return face is null ? null : MpaiJson.ToJson(face);
             }
 
             // ASKED AGAIN FOR WHAT WAS OFFERED, the person is not asked again. The

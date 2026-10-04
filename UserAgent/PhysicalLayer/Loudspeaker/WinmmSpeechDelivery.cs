@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using NAudio.Wave;
 using Mpai.Core;
 
-namespace Mpai.Aims.Speech;
+namespace Mpai.PhysicalLayer;
 
 // Speech Object Delivery (MMC-SOD) device on Windows. Renders a Speech Object to
 // the sound device, keeping it typed as speech throughout - the object is a Speech
@@ -15,7 +15,7 @@ namespace Mpai.Aims.Speech;
 //
 // The temporary file it plays from is removed afterwards - delivering to a
 // loudspeaker should not leave files behind.
-public sealed class WinmmSpeechDelivery : ISpeechDeliveryAim
+public sealed class WinmmSpeechDelivery
 {
     public async Task DeliverAsync(BasicSpeechObject speech)
     {

@@ -126,7 +126,7 @@ Every call it makes on the Controller API is awaited (`IAsyncControllerApi`),
 because a browser never lets WebAssembly block.
 
 - **Desktop** (`RcaApp`): sources are the microphone with voice activity
-  detection (via UaKit), the text box, the App list, the language picker, a
+  detection (the Microphone Unit of `UserAgent/PhysicalLayer`, via UaKit), the text box, the App list, the language picker, a
   file or the webcam; the avatar is `UserAgent/Assets/cav-webview.html` in WebView2.
   `MPAI_MAS_SERVER` sets the Service address (default `https://localhost:5005/`).
   It hands the interpreter `RemoteControllerApi` through `.Async()`, which makes
