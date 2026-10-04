@@ -2,6 +2,7 @@
   "a Scene alone": "SceneKept, 0 output(s)",
   "a Scene that has the Avatar": "table.glb at (3, 1, 0) yaw 90; cav-avatar.glb at (2, -1, 0) yaw 180",
   "an utterance with no Scene": "NoScene, 0 output(s)",
+  "at the Avatar PoV its requester gives": "table.glb at (3, 1, 0) yaw 90; cav-avatar.glb at (1, 2, 0) yaw 45",
   "the 3D Model Scene": "table.glb at (3, 1, 0) yaw 90; cav-avatar.glb at (1.5, 0, 0) yaw 0",
   "the 3D Model Scene is valid": "valid",
   "the Multimodal Scene holds": "OSD-BSS-V1.5, OSD-B3S-V1.5",

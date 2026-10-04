@@ -96,5 +96,6 @@
   "PAF/V1.6/AIMs/PersonalStatusDisplay.json": "valid",
   "PAF/V1.6/AIMs/ResponseAndSceneRendering.json": "valid",
   "PAF/V1.6/AIMs/SceneAndAvatarRendering.json": "valid",
+  "PAF/V1.6/AIMs/SpeakingAvatarFormation.json": "valid",
   "PAF/V1.6/AIMs/SpeakingAvatarSynthesis.json": "valid"
 }

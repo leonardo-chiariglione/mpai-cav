@@ -54,6 +54,13 @@ public class SarSceneTests
         }).ToList()
     };
 
+    // The Scene SAR takes: one Basic Multimodal Scene of the given Basic Scenes.
+    private static string SceneOf(params object[] members) => MpaiJson.ToJson(new BasicAudioVisualSceneDescriptors
+    {
+        BasicAVSceneDescriptorsID = "scene", AVObjectCount = members.Length,
+        BasicAVSceneDescriptorsData = members.Select(m => new BasicAVSceneEntry { BXSOrBXSID = m }).ToList()
+    });
+
     [Fact]
     public async Task TheAvatarPlacedInTheScene()
     {
@@ -67,15 +74,15 @@ public class SarSceneTests
             MInstanceID = "M1", SpeakingAvatarID = "thalia-says-hello",
             SpeakingAvatarData = new SpeakingAvatarData { Avatar = Avatar.OfModel(TestAvatar.Model, "thalia"), SpeechObject = speech }
         });
-        string sav = ports.Input("XRV-SAV-V1.0"), model = ports.Input("OSD-B3S-V1.5"), pov = ports.Input("OSD-OPV-V1.5"),
-               audio = ports.Input("OSD-BAS-V1.5"), b3sOut = ports.Output("OSD-B3S-V1.5"), bmsOut = ports.Output("OSD-BMS-V1.5");
+        string sav = ports.Input("XRV-SAV-V1.0"), scene = ports.Input("OSD-BMS-V1.5"), pov = ports.Input("OSD-OPV-V1.5", 1),
+               avatarPov = ports.Input("OSD-OPV-V1.5", 2), b3sOut = ports.Output("OSD-B3S-V1.5"), bmsOut = ports.Output("OSD-BMS-V1.5");
         async Task<Message> Run(Dictionary<string, string> inputs) => await sar.ProcessAsync(new Message { MessageId = "m", Ports = inputs });
 
         var r = new Dictionary<string, string>();
         var none = await Run(new() { [sav] = speaking });
         r["an utterance with no Scene"] = $"{none.MessageType}, {none.Ports.Count} output(s)";
 
-        var kept = await Run(new() { [model] = MpaiJson.ToJson(Room(("table.glb", [3, 1, 0], 90))), [pov] = MpaiJson.ToJson(Viewer(0, 0, 0)) });
+        var kept = await Run(new() { [scene] = SceneOf(Room(("table.glb", [3, 1, 0], 90))), [pov] = MpaiJson.ToJson(Viewer(0, 0, 0)) });
         r["a Scene alone"] = $"{kept.MessageType}, {kept.Ports.Count} output(s)";
 
         var first = await Run(new() { [sav] = speaking });
@@ -95,13 +102,23 @@ public class SarSceneTests
         r["the viewer turned left, the room kept"] = string.Join("; ", MpaiJson.FromJson<Basic3DModelSceneDescriptors>(turned.Ports[b3sOut])
             .Basic3DModelSceneItems.Select(i => $"{i.Id} at {Where(i.ModelObjectSpaceTime)}"));
 
-        var seated = await Run(new() { [model] = MpaiJson.ToJson(Room(("table.glb", [3, 1, 0], 90), (TestAvatar.Model, [2, -1, 0], 180))), [sav] = speaking });
+        var seated = await Run(new() { [scene] = SceneOf(Room(("table.glb", [3, 1, 0], 90), (TestAvatar.Model, [2, -1, 0], 180))), [sav] = speaking });
         r["a Scene that has the Avatar"] = string.Join("; ", MpaiJson.FromJson<Basic3DModelSceneDescriptors>(seated.Ports[b3sOut])
             .Basic3DModelSceneItems.Select(i => $"{i.Id} at {Where(i.ModelObjectSpaceTime)}"));
 
-        var heard = await Run(new() { [audio] = MpaiJson.ToJson(new BasicAudioObject { BasicAudioObjectID = "rain" }), [sav] = speaking });
+        var rain = new BasicAudioSceneDescriptors
+        {
+            BasicAudioSceneDescriptorsID = "rain", AudioObjectCount = 1,
+            BasicAudioSceneDescriptorsEntries = [new BasicAudioSceneEntry { AudioObjectIDOrAudioObject = new BasicAudioObject { BasicAudioObjectID = "rain" } }]
+        };
+        var heard = await Run(new() { [scene] = SceneOf(Room(("table.glb", [3, 1, 0], 90)), rain), [sav] = speaking });
         r["with Audio, the Multimodal Scene holds"] = string.Join(", ", JsonDocument.Parse(heard.Ports[bmsOut]).RootElement.GetProperty("BasicAVSceneDescriptorsData")
             .EnumerateArray().Select(e => e.GetProperty("BXSOrBXSID").GetProperty("Header").GetString()));
+
+        // The requester says where the Avatar goes (the author, 2026/10/04): the Avatar PoV.
+        var placed = await Run(new() { [scene] = SceneOf(Room(("table.glb", [3, 1, 0], 90))), [avatarPov] = MpaiJson.ToJson(new PointOfView { PointOfViewID = "seat", CartPosition = [1, 2, 0], Orientation = [0, 0, 45] }), [sav] = speaking });
+        r["at the Avatar PoV its requester gives"] = string.Join("; ", MpaiJson.FromJson<Basic3DModelSceneDescriptors>(placed.Ports[b3sOut])
+            .Basic3DModelSceneItems.Select(i => $"{i.Id} at {Where(i.ModelObjectSpaceTime)}"));
 
         Expected.Match("sar-scene.json", r);
     }
@@ -116,7 +133,7 @@ public class SarSceneTests
         store.Scan();
         var ports = AimPortReader.Load(store, "1PAF-SAR-V1.6-I01");
         var sar = new SarAimProcessor("1PAF-SAR-V1.6-I01", ports);
-        string sav = ports.Input("XRV-SAV-V1.0"), model = ports.Input("OSD-B3S-V1.5"), pov = ports.Input("OSD-OPV-V1.5"),
+        string sav = ports.Input("XRV-SAV-V1.0"), scene = ports.Input("OSD-BMS-V1.5"), pov = ports.Input("OSD-OPV-V1.5", 1),
                b3sOut = ports.Output("OSD-B3S-V1.5"), bmsOut = ports.Output("OSD-BMS-V1.5");
         string Says(string id, string glb, double[] seat, double yaw) => MpaiJson.ToJson(new SpeakingAvatar
         {
@@ -143,7 +160,7 @@ public class SarSceneTests
         }
 
         var r = new Dictionary<string, string>();
-        await Run(new() { [model] = MpaiJson.ToJson(Room(("table.glb", [2, 0, 0], 0))), [pov] = MpaiJson.ToJson(Viewer(0, 0, 0)) });
+        await Run(new() { [scene] = SceneOf(Room(("table.glb", [2, 0, 0], 0))), [pov] = MpaiJson.ToJson(Viewer(0, 0, 0)) });
         var anna = await Run(new() { [sav] = Says("anna", "anna.glb", [2, 1, 0], -90) });
         r["Anna speaks"] = Seen(anna);
         r["Anna is heard"] = Heard(anna);
@@ -227,7 +244,7 @@ public class SarVideoTests
         var pov = new PointOfView { PointOfViewID = "viewer", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
 
         var clock = System.Diagnostics.Stopwatch.StartNew();
-        var run = await sar.ProcessAsync(new Message { MessageId = "m", Ports = new() { [ports.Input("OSD-OPV-V1.5")] = MpaiJson.ToJson(pov), [ports.Input("XRV-SAV-V1.0")] = speaking } });
+        var run = await sar.ProcessAsync(new Message { MessageId = "m", Ports = new() { [ports.Input("OSD-OPV-V1.5", 1)] = MpaiJson.ToJson(pov), [ports.Input("XRV-SAV-V1.0")] = speaking } });
         var took = clock.Elapsed;
         var bas = run.Ports[ports.Output("OSD-BAS-V1.5")];
         var bvs = run.Ports[ports.Output("OSD-BVS-V1.5")];

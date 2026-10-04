@@ -71,17 +71,18 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 
 | App | Module (L3) | Leaf AIMs (via the app's provider) |
 |---|---|---|
-| MAC | `MMC-MAC-V2.5` | `PAF-FIR` (SCRFD+ArcFace face), `MMC-SIR` (ECAPA voice), `OSD-IDR` (reconcile), `PAF-RSR` -> `PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS` (avatar) |
+| MAC | `MMC-MAC-V2.5` | `PAF-FIR` (SCRFD+ArcFace face), `MMC-SIR` (ECAPA voice), `OSD-IDR` (reconcile), `PAF-RSR` -> `PAF-PSD` + `MMC-TTS` + `PAF-SAF` (avatar) |
 | ACR | `MMC-ACR-V2.5` | `PAF-EFD` (face descriptors), `MMC-ESD` (speech descriptors), `PAF-RSR` (avatar prompts) |
 | MAD | `MMC-MAD-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-EDP` (local LLM via Ollama), `PAF-RSR` (avatar reply) |
 | MAT | `MMC-MAT-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-TTT` (M2M100 translation), `PAF-RSR` (avatar speaks the translation) |
 
-`PAF-RSR` (Response and Scene Rendering) is a composite realised by its leaves
-`PAF-PSD` + `MMC-TTS` + `PAF-GFD` + `PAF-GBD` + `PAF-SAS` + `PAF-SAR`; it is shared by all the apps.
+`PAF-RSR` (Response and Scene Rendering) is a composite of `PAF-PSD` + `MMC-TTS` + `PAF-SAF`,
+and `PAF-SAF` (Speaking Avatar Formation) a composite of `PAF-GFD` + `PAF-GBD` + `PAF-SAS`; it is shared by all the apps.
 It takes the reply's Text and an Avatar - the model the client holds - and outputs a
-Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Given a
-scene - Audio, a 3D Model Scene, a Point of View - `PAF-SAR` (Scene and Avatar Rendering) also
-places the avatar in it: the 3D Model Scene with the avatar (`OSD-B3S`), which the client's 3D
+Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Whoever
+requested it places it: `PAF-SAR` (Scene and Avatar Rendering), a separate AIM, takes the Speaking
+Avatar, a Scene (`OSD-BMS` of an Audio Scene and a 3D Model Scene), a Point of View and the Avatar PoV
+where the requester wants the avatar, and gives the 3D Model Scene with the avatar (`OSD-B3S`), which the client's 3D
 page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and the 3D scene; or, with
 its setting `SceneOutputs` at `2D` (or `Both`), the Audio Scene (`OSD-BAS`) with the avatar's speech and the
 Visual Scene (`OSD-BVS`) of an MP4 of the whole view, drawn off screen with that page in Edge or Chromium

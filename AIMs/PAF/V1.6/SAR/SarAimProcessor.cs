@@ -25,14 +25,19 @@ namespace Mpai.Paf.Sar;
 //     Face and Body Descriptors, seen from the Point of View (SceneVideo: the User
 //     Agent's page, drawn off screen; settings Browser and FFmpeg, else found).
 //
-// WHERE THE AVATAR IS. Its own Space-Time, when the Avatar has one; else where the
-// input 3D Model Scene already has a member naming it; else 1.5 m in front of the
-// Point of View, turned to face it; else at the origin. Positions are in metres -
+// WHERE THE AVATAR IS. Its own Space-Time, when the Avatar has one; else the Avatar
+// PoV its requester gives (the author, 2026/10/04: the User Agent that asks for the
+// Speaking Avatar knows where to place it); else where the 3D Model Scene already has
+// a member naming it; else 1.5 m in front of the Point of View, turned to face it;
+// else at the origin. Positions are in metres -
 // X ahead, Y left, Z up - and Orientation is (roll, pitch, yaw) in degrees. A 3D
 // Model faces -X at yaw 0, so an Avatar given the Point of View's yaw faces the
 // viewer.
 //
-// THE SCENE IS KEPT. Audio, 3D Model and Point of View are given when they change -
+// THE SCENE. One Basic Multimodal Scene (the author, 2026/10/04: "I would keep BMS as
+// input"): its Audio Scene and its 3D Model Scene are what the Avatar is placed in.
+//
+// THE SCENE IS KEPT. The Scene, the Point of View and the Avatar PoV are given when they change -
 // the room once, the viewpoint when the user moves - and used for every utterance
 // until replaced, as Speaking Avatar Synthesis keeps the Avatar. Only the Speaking
 // Avatar is required. With no scene given at all there is nothing to place the
@@ -49,9 +54,9 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
     public const double MouthHeight = 1.6;
 
     private readonly string _avatarPort;  // XRV-SAV
-    private readonly string _audioPort;   // OSD-BAO / OSD-BAS
-    private readonly string _modelPort;   // OSD-B3O / OSD-B3S
-    private readonly string _povPort;     // OSD-OPV
+    private readonly string _scenePort;   // OSD-BMS
+    private readonly string _povPort;     // OSD-OPV #1, the Point of View
+    private readonly string _avatarPovPort; // OSD-OPV #2, where the Avatar is placed
     private readonly string _b3sPort;     // OSD-B3S out
     private readonly string _bmsPort;     // OSD-BMS out
     private readonly string _basPort;     // OSD-BAS out
@@ -63,6 +68,7 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
     private BasicAudioSceneDescriptors? _audio;
     private Basic3DModelSceneDescriptors? _model;
     private PointOfView? _pov;
+    private PointOfView? _avatarPov;
     private readonly List<PlacedAvatar> _avatars = new();   // in the order first placed
 
     // An Avatar in the Scene: its ID, the 3D Model that shows it, where it is.
@@ -78,9 +84,9 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
         _threeD = !outputs.Equals("2D", StringComparison.OrdinalIgnoreCase);
         InstanceId  = instanceId;
         _avatarPort = ports.Input("XRV-SAV-V1.0");
-        _audioPort  = ports.Input("OSD-BAS-V1.5");
-        _modelPort  = ports.Input("OSD-B3S-V1.5");
-        _povPort    = ports.Input("OSD-OPV-V1.5");
+        _scenePort  = ports.Input("OSD-BMS-V1.5");
+        _povPort    = ports.Input("OSD-OPV-V1.5", 1);
+        _avatarPovPort = ports.InputOrDefault("OSD-OPV-V1.5", 2, "");
         _b3sPort    = ports.Output("OSD-B3S-V1.5");
         _bmsPort    = ports.Output("OSD-BMS-V1.5");
         _basPort    = ports.OutputOrDefault("OSD-BAS-V1.5", "");
@@ -93,37 +99,23 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
             port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
         if (Json(_povPort) is { } pov) _pov = MpaiJson.FromJson<PointOfView>(pov);
-        if (Json(_audioPort) is { } audio)
+        if (Json(_avatarPovPort) is { } avatarPov) _avatarPov = MpaiJson.FromJson<PointOfView>(avatarPov);
+        if (Json(_scenePort) is { } scene)
         {
-            if (Header(audio) == "OSD-BAO-V1.5")
+            // Its members: the Audio Scene and the 3D Model Scene the Avatar is placed in.
+            _audio = null; _model = null;
+            foreach (var entry in JsonNode.Parse(scene)?["BasicAVSceneDescriptorsData"]?.AsArray() ?? [])
             {
-                var bao = MpaiJson.FromJson<BasicAudioObject>(audio);
-                _audio = new BasicAudioSceneDescriptors
+                if (entry?["BXSOrBXSID"] is not JsonObject member) continue;
+                var json = member.ToJsonString();
+                switch ((string?)member["Header"])
                 {
-                    BasicAudioSceneDescriptorsID = Guid.NewGuid().ToString(), AudioObjectCount = 1,
-                    BasicAudioSceneDescriptorsEntries = [new BasicAudioSceneEntry { AudioObjectSpaceTime = bao.BasicAudioObjectTime, AudioObjectIDOrAudioObject = bao }]
-                };
+                    case "OSD-BAS-V1.5": _audio = MpaiJson.FromJson<BasicAudioSceneDescriptors>(json); break;
+                    case "OSD-B3S-V1.5": _model = MpaiJson.FromJson<Basic3DModelSceneDescriptors>(json); break;
+                    default: message.Context.Report($"Scene member {(string?)member["Header"]} is not rendered: this Implementation takes a Basic Audio Scene (OSD-BAS) and a Basic 3D Model Scene (OSD-B3S)."); break;
+                }
             }
-            else if (Header(audio) == "OSD-BAS-V1.5") _audio = MpaiJson.FromJson<BasicAudioSceneDescriptors>(audio);
-            else message.Context.Report($"Audio {Header(audio)} is not rendered: this Implementation takes Basic Audio (OSD-BAO, OSD-BAS).");
-        }
-        if (Json(_modelPort) is { } model)
-        {
-            if (Header(model) == "OSD-B3S-V1.5") _model = MpaiJson.FromJson<Basic3DModelSceneDescriptors>(model);
-            else if (Header(model) == "OSD-B3O-V1.5")
-            {
-                var b3o = JsonNode.Parse(model)!.AsObject();
-                _model = new Basic3DModelSceneDescriptors
-                {
-                    Basic3DModelSceneDescriptorsID = Guid.NewGuid().ToString(), ModelObjectCount = 1,
-                    Basic3DModelSceneItems = [new Basic3DModelSceneItem
-                    {
-                        ModelObjectSpaceTime = MpaiJson.FromJson<Basic3DModelObject>(model).Basic3DModelObjectSpaceTime,
-                        ObjectIDOrObject = [b3o]
-                    }]
-                };
-            }
-            else message.Context.Report($"3D Model {Header(model)} is not rendered: this Implementation takes Basic 3D Models (OSD-B3O, OSD-B3S).");
+            _pov ??= JsonNode.Parse(scene)?["UserPoV"] is JsonObject seen ? MpaiJson.FromJson<PointOfView>(seen.ToJsonString()) : null;
         }
 
         var speaking = Json(_avatarPort) is { } sav ? MpaiJson.FromJson<SpeakingAvatar>(sav) : null;
@@ -132,7 +124,7 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
         if (_audio is null && _model is null && _pov is null)   // no scene: nothing to place the Avatar in
             return new Message { MessageId = message.MessageId, MessageType = "NoScene", Ports = new() };
 
-        var (b3s, bms, mouth) = Render(speaking, _audio, _model, _pov, _avatars);
+        var (b3s, bms, mouth) = Render(speaking, _audio, _model, _pov, _avatars, _avatarPov);
         var ports = new Dictionary<string, string>();
         if (_threeD && _b3sPort.Length > 0) ports[_b3sPort] = MpaiJson.ToJson(b3s);
         if (_threeD && _bmsPort.Length > 0) ports[_bmsPort] = MpaiJson.ToJson(bms);
@@ -258,7 +250,7 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
     // avatars: those already placed, updated with the one speaking (kept by the caller).
     public static (Basic3DModelSceneDescriptors Model, BasicAudioVisualSceneDescriptors Multimodal, SpaceTime Mouth) Render(
         SpeakingAvatar speaking, BasicAudioSceneDescriptors? audio, Basic3DModelSceneDescriptors? model, PointOfView? pov,
-        List<PlacedAvatar>? avatars = null)
+        List<PlacedAvatar>? avatars = null, PointOfView? avatarPov = null)
     {
         avatars ??= new();
         var avatar = speaking.Avatar();
@@ -267,6 +259,7 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
         var mInstance = speaking.MInstanceID ?? model?.MInstanceID ?? "";
         var viewer = pov ?? model?.UserPoV ?? new PointOfView { PointOfViewID = "eyes", CartPosition = [0, 0, MouthHeight] };
         var placed = avatar?.AvatarSpaceTime
+                     ?? (avatarPov is null ? null : At(avatarPov.CartPosition, avatarPov.Orientation.Length > 2 ? avatarPov.Orientation[2] : 0))
                      ?? model?.Basic3DModelSceneItems.FirstOrDefault(i => i.Id == id || i.Id == name)?.ModelObjectSpaceTime
                      ?? (pov is null ? At([0, 0, 0], 0) : InFrontOf(pov));
         var frame = model?.Basic3DModelSceneDescriptorsSpaceTime ?? At([0, 0, 0], 0);

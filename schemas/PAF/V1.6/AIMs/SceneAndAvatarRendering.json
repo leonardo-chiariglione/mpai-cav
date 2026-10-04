@@ -7,16 +7,18 @@
   "Header":               "PAF-SAR-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "Scene and Avatar Rendering: places a Speaking Avatar in a Scene seen and heard from a Point of View. It produces either a Basic Audio Scene - the Avatar's speech placed among the input Audio - and a Basic Visual Scene - what is seen, as 2D Visual Objects; or a Basic Audio-Visual Scene (Basic Audio, Speech and 3D Model Scenes) and the 3D Model Scene with the Avatar placed, which a 3D Model Object Delivery draws. It produces data; it does not play or draw.",
+  "Description":          "Scene and Avatar Rendering: places a Speaking Avatar - at the Avatar PoV the requester gives - in a Basic Multimodal Scene seen and heard from the Point of View, and produces the Scene as data: either a Basic Audio Scene (the avatar's speech among the scene's audio) and a Basic Visual Scene (what is seen, as 2D Visual Objects), or the Basic Multimodal Scene and the 3D Model Scene with the avatar placed, which a 3D Model Object Delivery draws. It produces data; it does not play or draw.",
 
-  "ExternalPorts":        [{"Name": "SpeakingAvatar",     "Direction": "Input",  "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "Audio",              "Direction": "Input",  "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5", "OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "3DModel",            "Direction": "Input",  "DataType": ["OSD-B3O-V1.5", "OSD-3DO-V1.5", "OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "PointOfView",        "Direction": "Input",  "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioScene",         "Direction": "Output", "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VisualScene",        "Direction": "Output", "DataType": "OSD-BVS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MultimodalScene",    "Direction": "Output", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "3DModelScene",       "Direction": "Output", "DataType": ["OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "SpeakingAvatar", "Direction": "Input", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "PointOfView", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "Scene", "Direction": "Input", "DataType": ["OSD-BMS-V1.5", "OSD-MSD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "AvatarPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "AudioScene", "Direction": "Output", "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "VisualScene", "Direction": "Output", "DataType": "OSD-BVS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MultimodalScene", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "3DModelScene", "Direction": "Output", "DataType": ["OSD-B3S-V1.5", "OSD-3SD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

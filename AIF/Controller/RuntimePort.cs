@@ -68,9 +68,9 @@ public sealed class RuntimePort
 
     // M3194 NUMBER 4 - INPUT. Declared by a composite on its own Input
     // ExternalPorts: every Port of one Data Type meant to receive ONE shared
-    // external supply carries the same "Input" value. PAF-RSR's two Text Ports
+    // external supply carries the same "Input" value: e.g. two Text Ports
     // (PortNumber 1 to Text-To-Speech, 2 to Generative Face Description) both
-    // declare Input 1. Null when the AMD states none. Independent of PortNumber:
+    // declaring Input 1. Null when the AMD states none. Independent of PortNumber:
     // PortNumber says which internal recipient a Port is; Input says which
     // external supply feeds it.
     public int? InputGroup { get; init; }
