@@ -35,6 +35,13 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
     };
 
     // -- enum <-> wire ---------------------------------------------------------
+
+    // The video coding formats of a 2D dynamic Visual Object (TFA Visual2DDynamicFormats).
+    private static readonly HashSet<string> VideoCodings = ["AVC", "AV1", "EVC", "HEVC", "LCEVC", "VVC"];
+
+    private static string DynamicToWire(string coding) =>
+        VideoCodings.Contains(coding) ? coding
+            : throw new ArgumentException($"'{coding}' is not a 2D dynamic Visual format (AVC, AV1, EVC, HEVC, LCEVC, VVC).");
     private static readonly Dictionary<ColourFormat, string> ColourToWire = new()
     {
         [ColourFormat.ACES2065_1]   = "ACES2065-1",
@@ -240,6 +247,11 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
             {
                 ["Static"] = StaticToWire(still)
             };
+        else if (format.Content?.TwoD?.Dynamic?.OtherContentFormat is { } coding)
+            content["2D"] = new JsonObject
+            {
+                ["Dynamic"] = new JsonObject { ["OtherContentFormat"] = DynamicToWire(coding) }
+            };
 
         if (content.Count > 0) wire["Content"] = content;
 
@@ -404,6 +416,11 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
             twoD = new Visual2D
             {
                 Static = Enum.Parse<Visual2DStaticFormat>((string)still!)
+            };
+        else if (wire["Content"]?["2D"]?["Dynamic"]?["OtherContentFormat"] is { } coding)
+            twoD = new Visual2D
+            {
+                Dynamic = new Visual2DDynamic { OtherContentFormat = DynamicToWire((string)coding!) }
             };
 
         VisualContentFormat? content = null;

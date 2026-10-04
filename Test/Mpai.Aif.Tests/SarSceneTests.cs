@@ -252,7 +252,7 @@ public class SarVideoTests
             ["the Audio Scene is valid"] = Check("OSD/V1.5/data/BasicAudioSceneDescriptors.json", bas),
             ["the speech heard"] = $"{heard.AudioObjectIDOrAudioObject?.BasicAudioObjectID}, {heard.AudioObjectIDOrAudioObject?.Data.Length} bytes",
             ["the Visual Scene, its Visual Object as it leaves the Controller, is valid"] = Check("OSD/V1.5/data/BasicVisualSceneDescriptors.json", AsWire(bvs)),
-            ["the Visual Object"] = $"{seen.FileName}, {seen.VisualQualifier?.Format?.Transport?.FileFormat}, {seen.VisualQualifier?.Format?.Content?.TimeSampling?.Time} frames a second",
+            ["the Visual Object"] = $"{seen.FileName}, {seen.VisualQualifier?.Format?.Content?.TwoD?.Dynamic?.OtherContentFormat} in {seen.VisualQualifier?.Format?.Transport?.FileFormat}, {seen.VisualQualifier?.Format?.Content?.TimeSampling?.Time} frames a second",
             ["the video: codec, width, height, frames"] = streams
         };
         Console.WriteLine($"[SAR] a 2-second utterance drawn in {took.TotalSeconds:0.0} s");

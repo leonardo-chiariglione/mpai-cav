@@ -203,8 +203,8 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
         };
     }
 
-    // The Visual Scene seen: one Visual Object, the video of the whole view - an MP4 at
-    // SceneVideo.Fps frames a second.
+    // The Visual Scene seen: one Visual Object, the video of the whole view - AVC (H.264)
+    // in an MP4, at SceneVideo.Fps frames a second.
     public static BasicVisualSceneDescriptors Seen(byte[] mp4, Basic3DModelSceneDescriptors seen) => new()
     {
         MInstanceID = seen.MInstanceID, BasicVisualSceneDescriptorsID = Guid.NewGuid().ToString(),
@@ -220,7 +220,11 @@ public sealed class SarAimProcessor : IAimProcessor, IAsyncDisposable
                     VisualQualifierID = Guid.NewGuid().ToString(),
                     Format = new VisualFormat
                     {
-                        Content = new VisualContentFormat { TimeSampling = new VisualTimeSampling { Time = SceneVideo.Fps } },
+                        Content = new VisualContentFormat
+                        {
+                            TimeSampling = new VisualTimeSampling { Time = SceneVideo.Fps },
+                            TwoD = new Visual2D { Dynamic = new Visual2DDynamic { OtherContentFormat = "AVC" } }   // H.264
+                        },
                         Transport = new VisualTransport { FileFormat = VisualFileFormat.MP4 }
                     }
                 }
