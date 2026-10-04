@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,9 +7,14 @@ using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Cae.Aoe;
+using Mpai.Cae.Aoe;
 
-// CAE-AOE-V1.0 — the AIF-facing half of Audio Object Editing.
+namespace Mpai.Cae.Ase;
+
+// OBJECT EDITING, the half of Audio Scene Editing that was Audio Object Editing
+// (CAE-AOE) until the author's decision of 2026/10/04 - "ASE is ASM": one AIM
+// executes every User Command, on Objects and on Scenes. AseAimProcessor gives it
+// the Ports; what it does is unchanged.
 //
 // OPEN BY PORT, ACT BY COMMAND.
 //
@@ -36,7 +41,7 @@ namespace Mpai.Cae.Aoe;
 //
 // The engine underneath is AoeAim, unchanged. This class adds no editing
 // behaviour: it turns Ports into calls and a result into a Port.
-public sealed class AoeAimProcessor : IAimProcessor
+internal sealed class ObjectEditing
 {
     private readonly AoeAim _aoe;
 
@@ -59,25 +64,24 @@ public sealed class AoeAimProcessor : IAimProcessor
     private string? _openObjectId;
     private string? _openBasicId;
 
-    public string InstanceId { get; }
-
-    public AoeAimProcessor(
-        string        instanceId,
-        AoeAim        aoe,
-        AimPortReader ports)
+    public ObjectEditing(AoeAim aoe, string commandPort, string objectPort, string outputPort,
+                         string speechPort, string toTranslatePort, string languagePort)
     {
-        InstanceId   = instanceId;
         _aoe         = aoe;
+        _commandPort = commandPort;
+        _basicPort   = objectPort;    // one Port takes either kind; the Header says which
+        _objectPort  = objectPort;
+        _outputPort  = outputPort;
 
-        _commandPort = ports.Input("CAE-UCM-V1.0");
-        _basicPort   = ports.Input("OSD-BAO-V1.5");
-        _objectPort  = ports.Input("OSD-AUO-V1.5");
-        _outputPort  = ports.Output("OSD-AUO-V1.5");
-
-        _speechPort      = ports.InputOrDefault("OSD-BSO-V1.5", "");
-        _toTranslatePort = ports.OutputOrDefault("OSD-BSO-V1.5", "");
-        _languagePort    = ports.OutputOrDefault("OSD-SEL-V1.5", "");
+        _speechPort      = speechPort;
+        _toTranslatePort = toTranslatePort;
+        _languagePort    = languagePort;
     }
+
+    // Whether this run brings anything for Object Editing.
+    public bool Concerned(Message message) =>
+        message.Ports.ContainsKey(_commandPort) || message.Ports.ContainsKey(_objectPort) ||
+        (_speechPort.Length > 0 && message.Ports.ContainsKey(_speechPort));
 
     public Task<Message> ProcessAsync(Message message)
     {
@@ -91,7 +95,7 @@ public sealed class AoeAimProcessor : IAimProcessor
             if (!string.IsNullOrWhiteSpace(opened.AudioObjectID))
             {
                 _openObjectId = opened.AudioObjectID;
-                Console.WriteLine($"[CAE-AOE-V1.0] opened {_openObjectId}");
+                Console.WriteLine($"[CAE-ASE-V1.0] opened {_openObjectId}");
             }
         }
 
@@ -111,20 +115,20 @@ public sealed class AoeAimProcessor : IAimProcessor
             {
                 _openBasicId = basic.BasicAudioObjectID;
                 _openObjectId = _openBasicId;   // a Basic Audio Object opened is what is open
-                Console.WriteLine($"[CAE-AOE-V1.0] opened basic {_openBasicId}");
+                Console.WriteLine($"[CAE-ASE-V1.0] opened basic {_openBasicId}");
             }
             else
             {
                 var asset     = _aoe.CreateObject(basic);
                 _openObjectId = asset.AssetId;
                 _openBasicId  = BasicOf(_openObjectId);
-                Console.WriteLine($"[CAE-AOE-V1.0] created and opened {_openObjectId}");
+                Console.WriteLine($"[CAE-ASE-V1.0] created and opened {_openObjectId}");
             }
         }
 
         // A Speech Object arriving: kept, under its identifier.
         if (_speechPort.Length > 0 && message.Ports.TryGetValue(_speechPort, out var speechJson) && !string.IsNullOrWhiteSpace(speechJson))
-            Console.WriteLine($"[CAE-AOE-V1.0] kept speech {_aoe.KeepSpeech(MpaiJson.FromJson<BasicSpeechObject>(speechJson))}");
+            Console.WriteLine($"[CAE-ASE-V1.0] kept speech {_aoe.KeepSpeech(MpaiJson.FromJson<BasicSpeechObject>(speechJson))}");
 
         // 2. acting, by Command.
         var translation = new Dictionary<string, string>();
@@ -175,7 +179,7 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         if (_openObjectId is null)
         {
-            Console.WriteLine("[CAE-AOE-V1.0] a Command arrived with nothing open - ignored.");
+            Console.WriteLine("[CAE-ASE-V1.0] a Command arrived with nothing open - ignored.");
             return;
         }
 
@@ -188,7 +192,7 @@ public sealed class AoeAimProcessor : IAimProcessor
                 if (childId is null) continue;
 
                 _openObjectId = _aoe.AddSubObject(_openObjectId, childId).AssetId;
-                Console.WriteLine($"[CAE-AOE-V1.0] added {childId} -> {_openObjectId}");
+                Console.WriteLine($"[CAE-ASE-V1.0] added {childId} -> {_openObjectId}");
             }
         }
 
@@ -202,7 +206,7 @@ public sealed class AoeAimProcessor : IAimProcessor
                     _openObjectId,
                     placement: Placement(entry.SpatialAttitude)).AssetId;
 
-                Console.WriteLine($"[CAE-AOE-V1.0] changed (external) -> {_openObjectId}");
+                Console.WriteLine($"[CAE-ASE-V1.0] changed (external) -> {_openObjectId}");
             }
         }
 
@@ -221,7 +225,7 @@ public sealed class AoeAimProcessor : IAimProcessor
 
             if (basicId is null)
             {
-                Console.WriteLine("[CAE-AOE-V1.0] nothing open has a Basic Audio Object to modify.");
+                Console.WriteLine("[CAE-ASE-V1.0] nothing open has a Basic Audio Object to modify.");
             }
             else
             {
@@ -238,7 +242,7 @@ public sealed class AoeAimProcessor : IAimProcessor
                     _openBasicId = edited;
                     basicId = edited;
 
-                    Console.WriteLine($"[CAE-AOE-V1.0] modified (internal) -> {edited}");
+                    Console.WriteLine($"[CAE-ASE-V1.0] modified (internal) -> {edited}");
                 }
             }
         }
@@ -253,7 +257,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         if (command.UserCommandData?.TranslatedObjects is not { Objects.Count: > 0 } translated) return;
         if (_toTranslatePort.Length == 0 || _languagePort.Length == 0)
         {
-            Console.WriteLine("[CAE-AOE-V1.0] a translation was asked, and this AIM has no Port to send it on.");
+            Console.WriteLine("[CAE-ASE-V1.0] a translation was asked, and this AIM has no Port to send it on.");
             return;
         }
         var entry = translated.Objects[0];
@@ -261,15 +265,15 @@ public sealed class AoeAimProcessor : IAimProcessor
         var speech = id is null ? null : _aoe.GetSpeech(id);
         if (speech is null || entry.TargetLanguage is not { Length: > 0 } target)
         {
-            Console.WriteLine($"[CAE-AOE-V1.0] cannot translate {id ?? "an unnamed object"}: {(speech is null ? "no such Speech Object" : "no target language")}.");
+            Console.WriteLine($"[CAE-ASE-V1.0] cannot translate {id ?? "an unnamed object"}: {(speech is null ? "no such Speech Object" : "no target language")}.");
             return;
         }
         var source = speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode;
         outputs[_toTranslatePort] = MpaiJson.ToJson(speech);
         outputs[_languagePort]    = MpaiJson.ToJson(BasicSelectorObject.Languages(source, target));
-        Console.WriteLine($"[CAE-AOE-V1.0] translating {id} from {source ?? "its language"} into {target}");
+        Console.WriteLine($"[CAE-ASE-V1.0] translating {id} from {source ?? "its language"} into {target}");
         if (translated.Objects.Count > 1)
-            Console.WriteLine($"[CAE-AOE-V1.0] {translated.Objects.Count - 1} more Speech Object(s) named: one at a time.");
+            Console.WriteLine($"[CAE-ASE-V1.0] {translated.Objects.Count - 1} more Speech Object(s) named: one at a time.");
     }
 
     // The Basic Audio Object inside a composed one. Materialize expands the
@@ -287,7 +291,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         }
         catch (Exception failure)
         {
-            Console.WriteLine($"[CAE-AOE-V1.0] could not read the basic component: {failure.Message}");
+            Console.WriteLine($"[CAE-ASE-V1.0] could not read the basic component: {failure.Message}");
             return null;
         }
     }

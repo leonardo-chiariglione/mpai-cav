@@ -3,9 +3,6 @@
                               "DurationSeconds":  "5",
                               "QuestionAudio":  "D:\\AI\\MPAIApps\\AudioIn\\question-spoken.wav"
                           },
-    "1MMC-SOD-V2.5-I01":  {
-                              "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut"
-                          },
     "1CVE-VOA-V1.0-I01":  {
                               "SourceHint":  "D:\\AI\\MPAIApps\\VisualIn",
                               "ImageFile":  "D:\\AI\\MPAIApps\\VisualIn\\zebra.jpg"
@@ -82,8 +79,7 @@
                               "SHA256:Voice:it":  "6FC918B5A0EA6137382833DDDFA567BFFBE6A5060C02043C87192EE59C04210C",
                               "SHA256:VoiceConfig:it":  "AEA19C0A7FCE29FBC359B93F10E7902854401E4C95AE2EA328AE516B15D296CF"
                           },
-    "1CAE-AOD-V1.0-I01":  {
-                              "OutputFolder":  "D:\\AI\\MPAIApps\\AudioOut",
+    "UserAgent:SpatialAudio":  {
                               "SteamAudio":  "Models\\SteamAudio",
                               "Layout":  "Binaural",
                               "SteamAudioWindows":  "Models\\SteamAudio\\windows-x64\\phonon.dll",

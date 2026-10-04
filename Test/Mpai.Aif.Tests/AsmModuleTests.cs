@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIF.Controller;
 using Mpai.Aif.Api;
-using Mpai.Aims.Audio.Spatial;
+using Mpai.SpatialAudio;
 using Mpai.Cae.Asm;
 using Mpai.Providers;
 using Mpai.Core;
@@ -10,16 +10,16 @@ using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
-// CAE-ASM STEP 5: AUDIO SCENE MANAGEMENT AS ONE MODULE (the author's goal,
-// 2026/10/02). The Controller composes CAE-ASM from its L3 - Audio Object
-// Acquisition, Audio Object Editing, Audio Scene Editing, Audio Object Delivery -
-// and a session is a sequence of runs, one per User action, the Objects and Scenes
-// in the Module's Shared Storage. Judged: a sound captured from the device is a
-// Basic Audio Object, played as it is; a stored Object is read by Audio Object
-// Acquisition and forwarded, opened and played; a User Command places it, with a second
-// sound, in a Basic Audio Scene heard from the User's Point of View - the Scene
-// leaves the Module and is played, rendered for the User, in stereo; every output
-// valid against its schema.
+// AUDIO SCENE MANAGEMENT AS ONE MODULE (the author's goal, 2026/10/02; "ASE is ASM",
+// 2026/10/04). The Controller composes CAE-ASM from its L3 - Audio Scene Editing and
+// Text and Speech Translation - and a session is a sequence of runs, one per User
+// action, the Objects and Scenes in the Module's Shared Storage. Capture and hearing
+// are the User Agent's. Judged: a sound the User Agent captured enters as a Basic
+// Audio Object and comes back as the open Object; given again by its identifier, it
+// is opened from Shared Storage; a Scene Command places it, with a second sound, in a
+// Basic Audio Scene heard from the User's Point of View - the Scene leaves the Module,
+// and the User Agent's spatial audio renders it in stereo; every output valid against
+// its schema.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
 public class AsmModuleTests
@@ -61,7 +61,6 @@ public class AsmModuleTests
         Directory.CreateDirectory(work);
         var settings = Path.Combine(work, "aim-settings.json");
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
-        all[AsmProvider.Aod] = new JsonObject { ["SteamAudio"] = Steam, ["OutputFolder"] = Path.Combine(work, "played"), ["Layout"] = "Binaural" };
         File.WriteAllText(settings, all.ToJsonString());
 
         var r = new Dictionary<string, string>();
@@ -71,7 +70,7 @@ public class AsmModuleTests
             r["the Module starts"] = api.StartFlow(Asm).ToString();
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
-            // 1. Two sounds from the device: each a Basic Audio Object, played as it is.
+            // 1. Two sounds the User Agent captured: each a Basic Audio Object, back as the open Object.
             string Played()
             {
                 var read = api.OutputRead(Asm, "OSD-BAO-V1.5", 1, 60_000);
@@ -81,18 +80,17 @@ public class AsmModuleTests
             var first = Played();
             api.InputWrite(Asm, "OSD-BAO-V1.5", 1, MpaiJson.ToJson(Captured("high", 880)));
             var second = Played();
-            r["a sound from the device, played"] = first.StartsWith('{') ? $"{JsonNode.Parse(first)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", first)}" : first;
-            r["a second sound, played"] = second.StartsWith('{') ? $"{JsonNode.Parse(second)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", second)}" : second;
+            r["a sound the User Agent captured, the open Object"] = first.StartsWith('{') ? $"{JsonNode.Parse(first)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", first)}" : first;
+            r["a second sound, the open Object"] = second.StartsWith('{') ? $"{JsonNode.Parse(second)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", second)}" : second;
 
-            // 1b. A stored Object, read by Audio Object Acquisition and forwarded: Audio
-            // Object Editing opens it, and it is played.
-            api.InputWrite(Asm, "OSD-BAO-V1.5", 2, first);
+            // 1b. An Object of Shared Storage, given by its identifier: opened.
+            api.InputWrite(Asm, "OSD-BAO-V1.5", 1, first);
             var stored = Played();
-            r["a stored Object, read, forwarded and played"] = stored.StartsWith('{') ? $"{JsonNode.Parse(stored)!["Header"]} {JsonNode.Parse(stored)!["BasicAudioObjectID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", stored)}" : stored;
+            r["an Object of Shared Storage, opened"] = stored.StartsWith('{') ? $"{JsonNode.Parse(stored)!["Header"]} {JsonNode.Parse(stored)!["BasicAudioObjectID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", stored)}" : stored;
 
             // 2. One User Command: both in a Basic Audio Scene, heard from the User.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Command(new UserCommandData
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandData
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "BAO000001" }, SpatialAttitude = At(-1.5, 1.5) },
@@ -102,13 +100,13 @@ public class AsmModuleTests
             r["the Scene leaving the Module"] = scene.Error == AifError.OK
                 ? $"{JsonNode.Parse(scene.Json!)!["BasicAudioSceneDescriptorsData"]!.AsArray().Count} members, {Valid("OSD/V1.5/data/BasicAudioSceneDescriptors.json", scene.Json!)}"
                 : $"nothing ({scene.Error})";
-            var rendered = Played();
-            if (rendered.StartsWith('{'))
+            if (scene.Error == AifError.OK)
             {
-                var wav = MpaiJson.FromJson<BasicAudioObject>(rendered)!.Data;
-                r["the Scene played"] = $"{BitConverter.ToInt16(wav, 22)} channels at {BitConverter.ToInt32(wav, 24)} Hz, {Valid("OSD/V1.5/data/BasicAudioObject.json", rendered)}";
+                // What the User Agent's Loudspeaker Unit would play.
+                var heard = MpaiJson.ToJson(new AudioRendering(Steam).Render(scene.Json!));
+                var wav = MpaiJson.FromJson<BasicAudioObject>(heard)!.Data;
+                r["the Scene heard by the User"] = $"{BitConverter.ToInt16(wav, 22)} channels at {BitConverter.ToInt32(wav, 24)} Hz, {Valid("OSD/V1.5/data/BasicAudioObject.json", heard)}";
             }
-            else r["the Scene played"] = rendered;
         }
         finally
         {

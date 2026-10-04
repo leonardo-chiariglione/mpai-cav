@@ -5,7 +5,7 @@ using System.Linq;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Aims.Audio.Spatial;
+namespace Mpai.SpatialAudio;
 
 // FROM AN AUDIO SCENE TO WHAT THE RENDERER TAKES. A Basic Audio Scene places Basic
 // Audio Objects; an Audio Scene places Basic and full Audio Objects and sub-scenes,

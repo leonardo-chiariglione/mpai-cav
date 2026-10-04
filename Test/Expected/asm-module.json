@@ -1,8 +1,8 @@
 {
-  "a second sound, played": "OSD-BAO-V1.5, valid",
-  "a sound from the device, played": "OSD-BAO-V1.5, valid",
-  "a stored Object, read, forwarded and played": "OSD-BAO-V1.5 BAO000001, valid",
+  "a second sound, the open Object": "OSD-BAO-V1.5, valid",
+  "a sound the User Agent captured, the open Object": "OSD-BAO-V1.5, valid",
+  "an Object of Shared Storage, opened": "OSD-BAO-V1.5 BAO000001, valid",
   "the Module starts": "OK",
-  "the Scene leaving the Module": "2 members, valid",
-  "the Scene played": "2 channels at 48000 Hz, valid"
+  "the Scene heard by the User": "2 channels at 48000 Hz, valid",
+  "the Scene leaving the Module": "2 members, valid"
 }

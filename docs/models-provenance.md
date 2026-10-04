@@ -89,11 +89,11 @@ Each voice also needs its companion `.onnx.json` config from the same folder.
 3. Several ONNX files are **conversions** of upstream PyTorch/TF models (ECAPA, YAMNet, w2v2-emotion, BLIP, M2M100). The "source" is the original model; the ONNX may be a community export or a self-export — record which you actually used for reproducibility.
 4. **Provenance is unverified.** This table is derived from filenames only; no URLs were found in the codebase. Before publishing licence/attribution notes, confirm each origin and check its licence (InsightFace non-commercial terms, Piper voice licences, Llama licence, PaddleOCR/Apache, etc.).
 
-## Steam Audio (CAE-AOD's spatial renderer)
+## Steam Audio (the User Agent's spatial renderer)
 
 | File | Size | What | Source (confirmed) | Licence |
 |---|---|---|---|---|
 | `SteamAudio/windows-x64/phonon.dll` | 53 MB | Steam Audio 4.8.1 native library, Windows x64 | Valve - `steamaudio_4.8.1.zip`, github.com/ValveSoftware/steam-audio/releases/tag/v4.8.1 (2026-02-11), `steamaudio/lib/windows-x64/phonon.dll` | Apache-2.0 |
 | `SteamAudio/linux-x64/libphonon.so` | 40 MB | Steam Audio 4.8.1 native library, Linux x64 | The same archive, `steamaudio/lib/linux-x64/libphonon.so` | Apache-2.0 |
 
-SHA-256 in `AIMs/aim-settings.json` (`1CAE-AOD-V1.0-I01`). The C API declarations of `AIMs/CAE3/V1.0/AOD/Spatial/SteamAudio.cs` follow the archive's `include/phonon.h`.
+SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.

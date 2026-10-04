@@ -139,7 +139,7 @@ public class AifAccessTests(ITestOutputHelper output)
 
         // Any AIM the host holds an L3 of; what it runs is the Reader.
         var store = new AmdStore(Mpai.Core.MpaiPaths.Amds); store.Scan();
-        var aim = "1CAE-AOE-V1.0-I01";
+        var aim = "1CAE-ASE-V1.0-I01";
         var server = new AIF.RemoteHost.AimHostServer(store, AIF.Store.AimSettings.Empty, new ReaderProvider(aim), Root());
         await using var listener = new AIF.Channels.RemoteLink.Listener(0, new AIF.Channels.KeyAdmission("k"), server.Serve);
         await using var link = await AIF.Channels.RemoteLink.ConnectAsync("localhost", listener.Port, "k");

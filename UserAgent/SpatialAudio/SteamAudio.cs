@@ -3,10 +3,10 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Mpai.Aims.Audio.Spatial;
+namespace Mpai.SpatialAudio;
 
 // STEAM AUDIO (Valve, Apache-2.0), version 4.8.1: the few functions of its C API
-// (phonon.h) that the spatial renderer of CAE-AOD calls, declared as the header
+// (phonon.h) that the User Agent's spatial renderer calls, declared as the header
 // declares them. The native library - phonon.dll on Windows, libphonon.so on
 // Linux - is not in the repository: it is obtained with Steam Audio's SDK and put
 // in Models/SteamAudio/<windows-x64 | linux-x64>, as the models are

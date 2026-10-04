@@ -12,7 +12,7 @@ Intelligence (<https://mpai.community>). Contact: secretariat@mpai.community.
 Relevant MPAI Technical Specifications:
 
 - **MPAI-AIF** - AI Framework (Controller, AIMs, AIWs/Modules, User Agent, Store): <https://mpai.community/standards/mpai-aif/>
-- **MPAI-MMC** - Multimodal Conversation (ASR, EDP dialogue, TTS, SIR/ESD speaker, SOA/SOD): <https://mpai.community/standards/mpai-mmc/>
+- **MPAI-MMC** - Multimodal Conversation (ASR, EDP dialogue, TTS, SIR/ESD speaker, SOA): <https://mpai.community/standards/mpai-mmc/>
 - **MPAI-PAF** - Portable Avatar Format (RSR rendering, PSD, GFD, FIR/EFD face): <https://mpai.community/standards/mpai-paf/>
 - **MPAI-OSD** - Object and Scene Description (IDR reconciliation, visual scene, time): <https://mpai.community/standards/mpai-osd/>
 

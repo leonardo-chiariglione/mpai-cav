@@ -4,9 +4,9 @@ using System.Linq;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Audio.Spatial;
+namespace Mpai.SpatialAudio;
 
-// THE SPATIAL AUDIO RENDERER OF CAE-AOD (the author, 2026/10/02: "ideally, an AOD
+// THE SPATIAL AUDIO RENDERER OF THE USER AGENT (the author, 2026/10/02: "ideally, an AOD
 // is a spatial audio renderer"), on Steam Audio. A scene is heard from a User
 // Point of View: each source - mono samples, a position and an orientation, a
 // gain, a directional pattern - reaches the user attenuated by distance and by the

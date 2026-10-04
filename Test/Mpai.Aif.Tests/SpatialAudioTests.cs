@@ -1,22 +1,22 @@
 using System.Text.Json;
-using Mpai.Aims.Audio;
-using Mpai.Aims.Audio.Spatial;
+using Mpai.SpatialAudio;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
-// CAE-ASM STEP 3: CAE-AOD AS A SPATIAL AUDIO RENDERER (the author, 2026/10/02:
-// "ideally, an AOD is a spatial audio renderer"; on Steam Audio, Apache-2.0). Judged,
+// THE USER AGENT'S SPATIAL AUDIO (the author, 2026/10/02: "ideally, an AOD is a
+// spatial audio renderer"; 2026/10/04: "AOD is UA's business"; on Steam Audio,
+// Apache-2.0). Judged,
 // with broadband noise heard binaurally: a source on the left is louder in the left
 // ear, on the right in the right ear; a source twice as far is about 6 dB quieter; a
 // source whose directional pattern is 20 dB down behind it is about 20 dB quieter
 // facing away than facing the user. Then a Basic Audio Scene of two sounds - 440 Hz
-// on the left, 880 Hz on the right - played through AOD's L3: a stereo Basic Audio
+// on the left, 880 Hz on the right - rendered as the User hears it: a stereo Basic Audio
 // Object at 48 kHz, valid against its schema, each tone stronger in its own ear.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
-public class AodRenderingTests
+public class SpatialAudioTests
 {
     private static readonly string Steam = Path.Combine(Repository.Root, "Models", "SteamAudio");
 
@@ -33,14 +33,8 @@ public class AodRenderingTests
         return s1 * s1 + s2 * s2 - c * s1 * s2;
     }
 
-    private sealed class Recorder : Mpai.Core.IAudioDeliveryAim
-    {
-        public readonly List<BasicAudioObject> Played = [];
-        public Task DeliverAsync(BasicAudioObject audio) { Played.Add(audio); return Task.CompletedTask; }
-    }
-
     [SkippableFact]
-    public async Task ScenesHeardFromTheUser()
+    public void ScenesHeardFromTheUser()
     {
         Skip.IfNot(SpatialRenderer.Available(Steam), "Models/SteamAudio is absent: Steam Audio is obtained separately (docs/models-provenance.md).");
         var r = new Dictionary<string, string>();
@@ -64,12 +58,7 @@ public class AodRenderingTests
             r["a pattern 20 dB down behind, facing away"] = Math.Abs(f - 20) < 1.5 ? "about 20 dB quieter" : $"{f:0.0} dB quieter";
         }
 
-        // 2. A Basic Audio Scene through AOD's L3.
-        var store = new AIF.Store.AmdStore(Repository.Amds);
-        store.Scan();
-        var ports = AIF.Controller.AimPortReader.Load(store, "1CAE-AOD-V1.0-I01");
-        var device = new Recorder();
-        var aod = new AodAimProcessor("1CAE-AOD-V1.0-I01", device, ports, Steam, "Binaural");
+        // 2. A Basic Audio Scene, as the User hears it.
         BasicAudioObject Sound(string id, double hz) => new()
         {
             BasicAudioObjectID = id,
@@ -95,12 +84,8 @@ public class AodRenderingTests
                 new BasicAudioSceneEntry { AudioObjectSpaceTime = Place(1.5, 1.5), AudioObjectIDOrAudioObject = Sound("high", 880) }
             ]
         };
-        var output = await aod.ProcessAsync(new AIF.Controller.Message
-        {
-            MessageId = Guid.NewGuid().ToString(),
-            Ports = new() { [ports.Input("OSD-BAS-V1.5")] = MpaiJson.ToJson(scene) }
-        });
-        var played = device.Played.Single();
+        var played = new AudioRendering(Steam).Render(MpaiJson.ToJson(scene));
+        var payload = MpaiJson.ToJson(played);
         var wav = played.Data;
         int channels = BitConverter.ToInt16(wav, 22), rate = BitConverter.ToInt32(wav, 24);
         var pcm = new short[(wav.Length - 44) / 2];
@@ -109,7 +94,7 @@ public class AodRenderingTests
         var schemas = AIF.Metadata.PublishedSchemas.At(Repository.Schemas);
         var bao = schemas[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD/V1.5/data/BasicAudioObject.json"))];
         bool valid; string why = "";
-        using (var doc = JsonDocument.Parse(output.Payload))
+        using (var doc = JsonDocument.Parse(payload))
             lock (AIF.Metadata.PublishedSchemas.Lock)
             {
                 var ev = bao.Evaluate(doc.RootElement, new Json.Schema.EvaluationOptions { OutputFormat = Json.Schema.OutputFormat.List });
@@ -117,9 +102,9 @@ public class AodRenderingTests
                 why = string.Join("; ", ev.Details.Where(x => x.Errors is { Count: > 0 }).Select(x => $"{x.InstanceLocation} {x.Errors!.First().Value}").Take(4));
             }
 
-        r["a Basic Audio Scene played"] = $"{output.DataType}, {channels} channels at {rate} Hz, {(valid ? "valid" : "not valid: " + why)}";
+        r["a Basic Audio Scene heard"] = $"{played.Header}, {channels} channels at {rate} Hz, {(valid ? "valid" : "not valid: " + why)}";
         r["440 Hz on the left"] = Energy(pcm, 2, 0, 440, rate) > Energy(pcm, 2, 1, 440, rate) * 2 ? "stronger in the left ear" : "not stronger in the left ear";
         r["880 Hz on the right"] = Energy(pcm, 2, 1, 880, rate) > Energy(pcm, 2, 0, 880, rate) * 2 ? "stronger in the right ear" : "not stronger in the right ear";
-        Expected.Match("aod-rendering.json", r);
+        Expected.Match("spatial-audio.json", r);
     }
 }

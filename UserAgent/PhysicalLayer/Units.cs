@@ -110,6 +110,30 @@ public sealed class CameraUnit
 public sealed class LoudspeakerUnit
 {
     public Task DeliverAsync(BasicSpeechObject speech) => new WinmmSpeechDelivery().DeliverAsync(speech);
+
+    // AN AUDIO OBJECT OR AN AUDIO SCENE, as the User hears it (the author, 2026/10/04:
+    // "AOD is UA's business"): rendered from the User Point of View by the spatial
+    // renderer (Mpai.SpatialAudio, Steam Audio in steamAudioFolder), then played.
+    // What was played is returned.
+    public async Task<BasicAudioObject> DeliverAsync(string objectOrScene, string steamAudioFolder,
+                                                     Mpai.SpatialAudio.SpatialRenderer.Layout layout = Mpai.SpatialAudio.SpatialRenderer.Layout.Binaural)
+    {
+        var heard = new Mpai.SpatialAudio.AudioRendering(steamAudioFolder, layout).Render(objectOrScene);
+        await PlayAsync(heard.Data);
+        return heard;
+    }
+
+    // A WAV, played to the end.
+    public static async Task PlayAsync(byte[] wav)
+    {
+        if (wav.Length == 0) return;
+        using var reader = new NAudio.Wave.WaveFileReader(new MemoryStream(wav));
+        using var output = new NAudio.Wave.WaveOutEvent();
+        output.Init(reader);
+        output.Play();
+        while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing)
+            await Task.Delay(100);
+    }
 }
 
 // AVATAR: the 3D page that draws and animates the speaking avatar (cav-webview.html,

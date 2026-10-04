@@ -48,7 +48,7 @@ public class AsmTranslationTests
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
             api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(english));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandData = new UserCommandData
