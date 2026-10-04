@@ -21,18 +21,15 @@ public interface IAim
     string AimIdentifier { get; }
 }
 
-// ---- Audio Object Acquisition (CAE-AOA) Ã¢â‚¬â€ device edge, environment-dependent.
-//      Acquires a Basic Audio Object from a device (microphone, network, disk).
-public interface IAudioAcquisitionAim : IAim
+// ---- Audio acquisition: a device of the User Agent's Physical Layer (the Microphone
+//      Unit), not an AIM. Acquires a Basic Audio Object from a microphone, a microphone
+//      array or a file.
+public interface IAudioAcquisition
 {
-    string IAim.AimName        => "Audio Object Acquisition";
-    string IAim.AimNameCompact => "AudioObjectAcquisition";
-    string IAim.AimIdentifier  => "CAE-AOA-V1.0";
-
     Task<BasicAudioObject> AcquireAsync(AcquisitionRequest request);
 }
 
-// Optional capability for an Audio Object Acquisition AIM: manual start/stop
+// Optional capability of an audio acquisition device: manual start/stop
 // (press-to-stop) instead of a fixed duration.
 public interface IStartStopAcquisition
 {
@@ -64,7 +61,7 @@ public interface ITiqAim : IAim
 // ---- Text-to-Text Translation (MMC-TTT) Ã¢â‚¬â€ environment-independent
 //
 // Declared HERE, with the other AIM interfaces, rather than beside its engine.
-// ITtsAim, IAsrAim and IAudioAcquisitionAim all live in Mpai.Core; ITttAim was
+// ITtsAim and IAsrAim live in Mpai.Core; ITttAim was
 // put in Mmc.Ttt when it was written, which made it the odd one out and meant
 // anyone declaring a field of this type needed a using nobody expected.
 public interface ITttAim : IAim
@@ -102,20 +99,16 @@ public interface IAudioDeliveryAim : IAim
     Task DeliverAsync(BasicAudioObject audio);
 }
 
-// ---- Visual Object Acquisition (CVE-VOA) Ã¢â‚¬â€ device edge, environment-dependent.
-//      Acquires a Basic Visual Object from a source (file now; camera later).
-public interface IVisualAcquisitionAim : IAim
+// ---- Visual acquisition: a device of the User Agent's Physical Layer (the Camera
+//      Unit), not an AIM. Acquires a Basic Visual Object from a camera or a file.
+public interface IVisualAcquisition
 {
-    string IAim.AimName        => "Visual Object Acquisition";
-    string IAim.AimNameCompact => "VisualObjectAcquisition";
-    string IAim.AimIdentifier  => "CVE-VOA-V1.0";
-
     Task<BasicVisualObject> AcquireAsync(VisualAcquisitionRequest request);
 }
 
 // ---- Visual Object Delivery (CVE-VOD) Ã¢â‚¬â€ device edge, environment-dependent.
 //      Delivers a Basic Visual Object to a destination (a window, a display,
-//      a file). The mirror of CVE-VOA, and the visual counterpart of CAE-AOD.
+//      a file). The mirror of visual acquisition, and the visual counterpart of CAE-AOD.
 public interface IVisualDeliveryAim : IAim
 {
     string IAim.AimName        => "Visual Object Delivery";

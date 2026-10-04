@@ -12,7 +12,7 @@ namespace Mpai.PhysicalLayer;
 // Live camera Visual Object Acquisition using the NATIVE Windows Media Capture
 // API (Windows.Media.Capture) - no OpenCV. Grabs a single JPEG photo from the
 // default camera and returns it as a Basic Visual Object, satisfying the same
-// IVisualAcquisitionAim contract as the other acquisitions, so it drops straight
+// IVisualAcquisition contract as the other acquisitions, so it drops straight
 // into the VOA slot in a provider.
 //
 // Windows Media Capture initialises the device, lets it settle, and captures one
@@ -21,7 +21,7 @@ namespace Mpai.PhysicalLayer;
 //
 // Diagnostics (content trace) are written to the user's Downloads folder, never
 // to the working tree.
-public sealed class WebcamVisualAcquisition : IVisualAcquisitionAim
+public sealed class WebcamVisualAcquisition : IVisualAcquisition
 {
 
     private readonly int _settleMs;
@@ -42,13 +42,13 @@ public sealed class WebcamVisualAcquisition : IVisualAcquisitionAim
     {
         byte[] jpeg = await CaptureJpegAsync();
         Diag("cam: jpeg bytes=" + jpeg.Length);
-        AimLog.Write("CVE-VOA-V1.0", $"acquired webcam frame: {jpeg.Length:N0} bytes JPEG (Windows Media Capture)");
+        AimLog.Write("CameraUnit", $"acquired webcam frame: {jpeg.Length:N0} bytes JPEG (Windows Media Capture)");
         var visual = BasicVisualObject.FromFile("webcam.jpg", jpeg, request.VisualObjectType);
 
         // WHAT THE CAMERA ACTUALLY PRODUCED, said once per acquisition. An AIM that
         // returns an empty Object and an AIM that was never reached look alike from
         // outside, and the difference is the whole diagnosis.
-        Mpai.Core.AimLog.Write("CVE-VOA-V1.0",
+        Mpai.Core.AimLog.Write("CameraUnit",
             $"acquired {jpeg.Length:N0} bytes JPEG; type={request.VisualObjectType ?? "(none)"}; " +
             $"Qualifier={(visual.VisualQualifier is null ? "NONE" : "present")}");
 

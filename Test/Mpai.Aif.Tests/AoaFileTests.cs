@@ -1,4 +1,4 @@
-using Mpai.Aims.Audio;
+using Mpai.PhysicalLayer;
 using Mpai.Core;
 
 namespace Mpai.Aif.Tests;

@@ -45,7 +45,7 @@
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOE\Mpai.Cae.Aoe.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\..\UserAgent\SpatialAudio\Mpai.SpatialAudio.csproj" />
-    <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
+    <ProjectReference Include="..\..\UserAgent\PhysicalLayer\Devices\Mpai.PhysicalLayer.Devices.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
   </ItemGroup>
 

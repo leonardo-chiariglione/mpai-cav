@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Audio;
+namespace Mpai.PhysicalLayer;
 
 // =============================================================================
-//  Microphone-Array Audio Object Acquisition (CAE-AOA, multichannel)
+//  Microphone-array audio acquisition (multichannel) - a device of the Microphone Unit
 // -----------------------------------------------------------------------------
 //  Extends the mono ALSA AOA (AlsaAudioAcquisition) to N-channel capture and,
 //  crucially, emits the array geometry the HCI MW's AVS audio pipeline needs to
 //  localise speaking humans (Direction-of-Arrival / sound-source localisation).
 //
-//  Contract: same IAudioAcquisitionAim / IStartStopAcquisition as the mono AOA,
+//  Contract: same IAudioAcquisition / IStartStopAcquisition as the mono microphone,
 //  so the MW attaches to a mono mic or an array WITHOUT knowing which. The only
 //  addition is Geometry: a MicrophoneArrayGeometry (CAE-MAG-V2.5) exposed
 //  alongside the BasicAudioObject, carrying each microphone's PointOfView ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â the
@@ -31,7 +31,7 @@ namespace Mpai.Aims.Audio;
 //  the real mono-AOA bodies (BuildQualifier made array-aware: SamplingMode
 //  "Array" for N > 2). Drop into AIMs/CAE3/V1.0/AOA/ and `dotnet build`.
 // =============================================================================
-public sealed class MicArrayAudioAcquisition : IAudioAcquisitionAim, IStartStopAcquisition
+public sealed class MicArrayAudioAcquisition : IAudioAcquisition, IStartStopAcquisition
 {
     private readonly int _sampleRate;
     private readonly int _bits;

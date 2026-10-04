@@ -7,7 +7,7 @@ using Mpai.Core;
 
 namespace Mpai.PhysicalLayer;
 
-public sealed class WinFormsVisualAcquisition : IVisualAcquisitionAim
+public sealed class WinFormsVisualAcquisition : IVisualAcquisition
 {
     private string? _folder;
 
@@ -59,7 +59,7 @@ public sealed class WinFormsVisualAcquisition : IVisualAcquisitionAim
         _folder = picker.Folder;
         var chosen = picker.SelectedImage;
         var bytes  = File.ReadAllBytes(chosen);
-        AimLog.Write("CVE-VOA-V1.0", $"acquired image: {chosen} ({bytes.Length:N0} bytes)");
+        AimLog.Write("CameraUnit", $"acquired image: {chosen} ({bytes.Length:N0} bytes)");
         return BasicVisualObject.FromFile(chosen, bytes);
     }
 }

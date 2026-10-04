@@ -21,7 +21,7 @@ public sealed class WinmmSpeechDelivery
     {
         if (speech.Data.Length == 0)
         {
-            AimLog.Write("MMC-SOD-V2.5", "no speech to play.");
+            AimLog.Write("LoudspeakerUnit", "no speech to play.");
             return;
         }
 
@@ -68,7 +68,7 @@ public sealed class WinmmSpeechDelivery
 
         try
         {
-            AimLog.Write("MMC-SOD-V2.5", $"speaking {speech.Data.Length:N0} bytes");
+            AimLog.Write("LoudspeakerUnit", $"speaking {speech.Data.Length:N0} bytes");
             using var output = new WaveOutEvent();
             output.Init(reader);
             output.Play();

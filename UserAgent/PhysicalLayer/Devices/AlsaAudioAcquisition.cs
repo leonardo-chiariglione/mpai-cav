@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Audio;
+namespace Mpai.PhysicalLayer;
 
-// Audio Object Acquisition (CAE-AOA) on Linux, via `arecord`. Same interface and
+// Audio acquisition on Linux, via `arecord` - a device of the Microphone Unit. Same interface and
 // same determined qualifier as the Windows AOA — that is what lets the core
 // (ASR-TIQ-TTS) attach to either edge without knowing which.
-public sealed class AlsaAudioAcquisition : IAudioAcquisitionAim, IStartStopAcquisition
+public sealed class AlsaAudioAcquisition : IAudioAcquisition, IStartStopAcquisition
 {
     private readonly int _sampleRate;
     private readonly int _bits;
@@ -57,7 +57,7 @@ public sealed class AlsaAudioAcquisition : IAudioAcquisitionAim, IStartStopAcqui
 
     // ---- press-to-stop acquisition ----
     //
-    // Windows had this and Linux did not, so MMC-SOA fell to its fixed-duration
+    // Windows had this and Linux did not, so speech capture fell to its fixed-duration
     // branch and the Stop button did nothing here: recording ended by the clock.
     //
     // arecord is asked for RAW PCM on stdout rather than a WAV file, and the WAV
@@ -177,7 +177,7 @@ public sealed class AlsaAudioAcquisition : IAudioAcquisitionAim, IStartStopAcqui
             BitConverter.GetBytes(value).CopyTo(pcm, i * 2);
         }
     }
-    // CAE-AOA acquires AUDIO, so it describes what it acquired with an
+    // The Microphone Unit acquires AUDIO here, so it describes what it acquired with an
     // AudioQualifier. It built a SpeechQualifier because the audio one held
     // speech's types and had nothing that fitted a WAV.
     private AudioQualifier BuildQualifier() => new AudioQualifier

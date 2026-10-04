@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Visual;
+namespace Mpai.PhysicalLayer;
 
-// Visual Object Acquisition (CVE-VOA) - file source. Reads an image from disk
+// Visual acquisition from a file - a device of the Camera Unit. Reads an image from disk
 // and produces a Basic Visual Object. Device dependency (a camera source, etc.)
 // would be a sibling implementation behind the same interface.
-public sealed class FileVisualAcquisition : IVisualAcquisitionAim
+public sealed class FileVisualAcquisition : IVisualAcquisition
 {
     private readonly string? _defaultPath;
 
@@ -26,7 +26,7 @@ public sealed class FileVisualAcquisition : IVisualAcquisitionAim
         var bytes = File.ReadAllBytes(path);
 
         AimLog.Write(
-            "CVE-VOA-V1.0",
+            "CameraUnit",
             $"acquired image: {path} ({bytes.Length:N0} bytes)");
 
         var visual = BasicVisualObject.FromFile(path, bytes);

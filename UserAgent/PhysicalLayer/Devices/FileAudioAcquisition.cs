@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 
 using Mpai.Core;
 
-namespace Mpai.Aims.Audio;
+namespace Mpai.PhysicalLayer;
 
-// Audio Object Acquisition (CAE-AOA) â€” file source.
+// Audio acquisition from a file - a device of the Microphone Unit.
 //
 // The source of an Audio Object need not be a microphone: a file and a network
 // stream are equally valid sources. This implementation reads a WAV file, so a
 // system can run with no capture device at all â€” headless, reproducible, and
 // portable to any platform.
-public sealed class FileAudioAcquisition : IAudioAcquisitionAim
+public sealed class FileAudioAcquisition : IAudioAcquisition
 {
     private readonly string sourcePath;
     private readonly int sampleRate;
@@ -44,7 +44,7 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
         }
 
         AimLog.Write(
-            "CAE-AOA-V1.0",
+            "MicrophoneUnit",
             $"acquired audio: {path}");
 
         var data = File.ReadAllBytes(path);
@@ -57,7 +57,7 @@ public sealed class FileAudioAcquisition : IAudioAcquisitionAim
     // The acquisition AIM determines the Qualifier: what was acquired, from
     // where, and in what format.
     //
-    // CAE-AOA acquires AUDIO, so this is an AudioQualifier. It built a
+    // The Microphone Unit acquires AUDIO here, so this is an AudioQualifier. It built a
     // SpeechQualifier because the audio one held speech's types and had nothing
     // that fitted a WAV - so an Audio Object was described in speech terms, and
     // nothing meaningful could be recorded about it.

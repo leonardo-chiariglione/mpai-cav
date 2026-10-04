@@ -10,8 +10,8 @@ namespace Mpai.Mmc.Sir;
 // MMC-SIR-V2.5 - Speaker Identity Recognition. Self-contained IAimProcessor.
 // Reads its own port names from 1MMC-SIR-V2.5-I01.json at startup.
 //
-// Consumes a Basic Speech Object (OSD-BSO-V1.5) - the mirror of what MMC-SOA
-// produces - which carries the time it was acquired. Embeds the speech with ECAPA, matches it against the shared
+// Consumes a Basic Speech Object (OSD-BSO-V1.5) - the mirror of what the Microphone
+// Unit captures as speech - which carries the time it was acquired. Embeds the speech with ECAPA, matches it against the shared
 // SubjectGallery, and emits the speaker identity as an Instance Identifier
 // (OSD-IID-V1.5): a ranked candidate list at the speaker layer, or the coarse
 // "speech" layer when no subject matches.

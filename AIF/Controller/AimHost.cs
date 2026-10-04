@@ -256,7 +256,7 @@ public sealed class AimHost : IDisposable
     // Cancelled when the Module is stopped.
     public CancellationToken Stopping => _stopped.Token;
 
-    // Called by AifAmqSession for interactive AIMs (e.g. CAE-AOA).
+    // Called by AifAmqSession for interactive AIMs.
     // The caller starts the AIM, lets it run, then calls StopAim when ready.
     public Task<Message> ProcessWithContextAsync(
         string     instanceId,

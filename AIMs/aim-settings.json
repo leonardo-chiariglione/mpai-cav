@@ -1,16 +1,4 @@
 {
-    "1MMC-SOA-V2.5-I01":  {
-                              "DurationSeconds":  "5",
-                              "QuestionAudio":  "D:\\AI\\MPAIApps\\AudioIn\\question-spoken.wav"
-                          },
-    "1CVE-VOA-V1.0-I01":  {
-                              "SourceHint":  "D:\\AI\\MPAIApps\\VisualIn",
-                              "ImageFile":  "D:\\AI\\MPAIApps\\VisualIn\\zebra.jpg"
-                          },
-    "1CAE-AOA-V1.0-I01":  {
-                              "DurationSeconds":  "5",
-                              "QuestionAudio":  "D:\\AI\\MPAIApps\\AudioIn\\question-spoken.wav"
-                          },
     "1MMC-TTT-V2.5-I01":  {
                               "TttEncoderModel":  "Models\\Whisper\\M2M100\\encoder_model.onnx",
                               "TttDecoderModel":  "Models\\Whisper\\M2M100\\decoder_model_merged_quantized.onnx",

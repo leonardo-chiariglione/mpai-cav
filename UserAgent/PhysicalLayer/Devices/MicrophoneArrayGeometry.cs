@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using Mpai.Core;   // PointOfView, SpaceTime, SimpleTime, DataExchangeMetadata
 
-namespace Mpai.Aims.Audio;
+namespace Mpai.PhysicalLayer;
 
 // =============================================================================
 //  Microphone Array Geometry  (CAE-MAG-V2.5)

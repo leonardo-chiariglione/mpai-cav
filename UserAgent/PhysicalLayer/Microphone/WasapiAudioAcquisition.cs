@@ -10,7 +10,7 @@ using Mpai.Core;
 
 namespace Mpai.PhysicalLayer;
 
-// Audio Object Acquisition (CAE-AOA) on Windows. Device dependency lives ONLY
+// Audio acquisition on Windows - the device of the Microphone Unit. Device dependency lives ONLY
 // in this edge AIM. It acquires a Basic Audio Object from the microphone and
 // DETERMINES its qualifier: Source = Real, the Device block, and the PCM format.
 //
@@ -20,7 +20,7 @@ namespace Mpai.PhysicalLayer;
 // of the low-recording-level issue this class works around below (that
 // traced to the system's own microphone input gain, which any capture API
 // would be equally subject to).
-public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcquisition, ILevelMeter
+public sealed class WasapiAudioAcquisition : IAudioAcquisition, IStartStopAcquisition, ILevelMeter
 {
     private readonly int _sampleRate;
     private readonly int _bits;
@@ -34,7 +34,7 @@ public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcq
     }
 
     // ---- live level meter (ILevelMeter): RMS of the latest buffer, 0..1 ----
-    // Updated on every DataAvailable so a consumer (SOA's voice-activity detection)
+    // Updated on every DataAvailable so a consumer (the Microphone Unit's voice-activity detection)
     // can watch the microphone during capture. Reads the raw captured level, before
     // NormalizeIfQuiet runs at the end.
     public double CurrentLevel { get; private set; }
@@ -54,7 +54,7 @@ public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcq
     public async Task<BasicAudioObject> AcquireAsync(AcquisitionRequest request)
     {
         // The source is a microphone, so the user must be told when to speak.
-        AimLog.Write("CAE-AOA-V1.0", "get ready...");
+        AimLog.Write("MicrophoneUnit", "get ready...");
         System.Threading.Thread.Sleep(1200);
 
         try
@@ -68,7 +68,7 @@ public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcq
         }
 
         AimLog.Write(
-            "CAE-AOA-V1.0",
+            "MicrophoneUnit",
             $"SPEAK NOW - recording {request.Duration.TotalSeconds:0} seconds...");
 
         var wavPath = Path.Combine(Path.GetTempPath(), $"aoa_{Guid.NewGuid():N}.wav");
@@ -248,7 +248,7 @@ public sealed class WasapiAudioAcquisition : IAudioAcquisitionAim, IStartStopAcq
         writer.WriteSamples(samples.ToArray(), 0, samples.Count);
     }
 
-    // CAE-AOA acquires AUDIO, so it describes what it acquired with an
+    // The Microphone Unit acquires AUDIO here, so it describes what it acquired with an
     // AudioQualifier. It built a SpeechQualifier because the audio one held
     // speech's types and had nothing that fitted a WAV.
     private AudioQualifier BuildQualifier() => new AudioQualifier

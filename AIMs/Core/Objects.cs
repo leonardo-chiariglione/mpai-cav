@@ -360,8 +360,8 @@ public sealed class BasicSpeechObject
     // Types.
     //
     // The receiving AIM should DETERMINE an Audio Qualifier for what it now
-    // holds, as MMC-SOA does in the other direction - it asserts a Speech
-    // Qualifier and says in its own comments why an assertion is the honest
+    // holds, as the Microphone Unit does in the other direction - it asserts a
+    // Speech Qualifier and says in its own comments why an assertion is the honest
     // thing and a conversion is not.
     // AsAudio() and AsSpeech() are gone. Reclassifying a medium is the business of
     // ONE AIM - CAE-ASI - and nature forces it there: a scene is captured as sound
@@ -456,10 +456,10 @@ public sealed class BasicAudioObject
     // Reinterpret the BYTES as a Basic Speech Object; the Qualifier does not
     // cross, for the reason given on AsAudio.
     //
-    // MMC-SOA is the model for what a caller should do instead: it takes the
+    // The Microphone Unit's speech capture is the model for what a caller should do instead: it takes the
     // captured bytes and ASSERTS a Speech Qualifier - Source Real, SpeakerType
     // Human, the language inherited from the request - because asserting that
-    // sound is speech is what that AIM is FOR. A conversion records nothing
+    // sound is speech is what that capture is FOR. A conversion records nothing
     // about where the sound came from or why anyone should believe it contains
     // speech.
     // AsSpeech() is gone - see the note on BasicAudioObject above.

@@ -79,7 +79,7 @@ internal sealed class ImagePickerForm : Form
         if (_list.Items.Count > 0)
             _list.SelectedIndex = 0;
 
-        Text = $"CVE-VOA  \u2014  {_folder}  ({_list.Items.Count} images)";
+        Text = $"Camera Unit  \u2014  {_folder}  ({_list.Items.Count} images)";
     }
 
     private void ShowPreview()

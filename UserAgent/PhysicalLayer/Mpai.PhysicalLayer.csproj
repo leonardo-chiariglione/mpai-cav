@@ -16,6 +16,11 @@
     <AssemblyName>Mpai.PhysicalLayer</AssemblyName>
   </PropertyGroup>
 
+  <!-- The portable devices are a project of their own. -->
+  <ItemGroup>
+    <Compile Remove="Devices\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
@@ -23,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\SpatialAudio\Mpai.SpatialAudio.csproj" />
+    <ProjectReference Include="Devices\Mpai.PhysicalLayer.Devices.csproj" />
   </ItemGroup>
 
 </Project>
