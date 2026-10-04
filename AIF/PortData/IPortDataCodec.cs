@@ -57,6 +57,8 @@ public sealed class PortDataCodecs
             .Register(new SelectorCodec())
             .Register(new SummaryCodec())
             .Register(new EntityPersonalStatusCodec())
+            .Register(new AvatarCodec())
+            .Register(new SpeakingAvatarCodec())
             .Register(new BooleanCodec());
 
     public PortDataCodecs Register(
