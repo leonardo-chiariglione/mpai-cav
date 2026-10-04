@@ -1,0 +1,7 @@
+{
+  "1 two Audio Scenes": "no Basic Multimodal Scene; Done: AddedObjects music Done, AddedObjects rain Done",
+  "2 rain out, a Speech Scene in": "music + voice, valid; Done: AddedObjects voice Done",
+  "3 a new version of the Speech Scene, followed": "music + voice-2",
+  "4 music out, and a Scene not there": "no Basic Multimodal Scene; Partly: RemovedObjects music Done, RemovedObjects nowhere Failed",
+  "5 the reports": "valid"
+}

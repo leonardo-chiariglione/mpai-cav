@@ -4,8 +4,11 @@
   "a sound the User Agent captured, the open Object": "OSD-BAO-V1.5, valid",
   "an Object of Shared Storage, opened": "OSD-BAO-V1.5 BAO000001, valid",
   "the Module starts": "OK",
+  "the Multimodal Scene leaving the Module": "OSD-BAS-V1.5 + OSD-BSS-V1.5, valid",
   "the Scene heard by the User": "2 channels at 48000 Hz, valid",
   "the Scene leaving the Module": "2 members, valid",
+  "the Speech Scene edited again, followed": "the Multimodal Scene holds the new version",
   "the Speech Scene leaving the Module": "1 member(s), valid",
+  "the report of Basic Multimodal Scene Editing": "Done; AddedObjects Done; AddedObjects Done; UserPoV Done",
   "the report of Speech Scene Editing": "Done; AddedObjects Done; UserPoV Done, valid"
 }

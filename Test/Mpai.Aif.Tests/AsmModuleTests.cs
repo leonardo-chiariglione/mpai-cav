@@ -20,8 +20,9 @@ namespace Mpai.Aif.Tests;
 // Command places it, with a second sound, in a Basic Audio Scene heard from the User's
 // Point of View - the Scene leaves the Module, and the User Agent's spatial audio
 // renders it in stereo; a Speech Object is placed by a Speech Scene Command in a Basic
-// Speech Scene, and Speech Scene Editing reports the command; every output valid
-// against its schema.
+// Speech Scene, and Speech Scene Editing reports the command; Basic Multimodal Scene
+// Editing composes the two Scenes into a Basic Multimodal Scene, and follows the Speech
+// Scene when it is edited again; every output valid against its schema.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
 public class AsmModuleTests
@@ -129,6 +130,36 @@ public class AsmModuleTests
             r["the report of Speech Scene Editing"] = sseReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(sseReport.Json!).UserCommandReport is { } done
                 ? $"{done.Outcome}; " + string.Join("; ", done.Actions.Select(a => $"{a.Action} {a.Outcome}")) + $", {Valid("CAE3/V1.0/data/UserCommand.json", sseReport.Json!)}"
                 : $"nothing ({sseReport.Error})";
+
+            // 4. The two Scenes composed by Basic Multimodal Scene Editing into a Basic
+            // Multimodal Scene; then the Speech Scene edited again, and followed.
+            string? IdIn(AifError error, string? json, string field) => error == AifError.OK ? (string?)JsonNode.Parse(json!)![field] : null;
+            var basId = IdIn(scene.Error, scene.Json, "BasicAudioSceneDescriptorsID");
+            var bssId = IdIn(speechScene.Error, speechScene.Json, "BasicSpeechSceneDescriptorsID");
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 5, Command(new UserCommandData
+            {
+                UserPoV = user,
+                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
+                                                                 new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = bssId }, SpatialAttitude = At(0, 0) }] }
+            }));
+            string Members(string json) => string.Join(" + ", JsonNode.Parse(json)!["BasicAVSceneDescriptorsData"]!.AsArray().Select(m => (string?)m!["BXSOrBXSID"]!["Header"] ?? "?"));
+            var bms = api.OutputRead(Asm, "OSD-BMS-V1.5", 1, 60_000);
+            r["the Multimodal Scene leaving the Module"] = bms.Error == AifError.OK ? $"{Members(bms.Json!)}, {Valid("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", bms.Json!)}" : $"nothing ({bms.Error})";
+            var bmeReport = api.OutputRead(Asm, "CAE-UCM-V1.0", 5, 60_000);
+            r["the report of Basic Multimodal Scene Editing"] = bmeReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(bmeReport.Json!).UserCommandReport is { } bmeDone
+                ? $"{bmeDone.Outcome}; " + string.Join("; ", bmeDone.Actions.Select(a => $"{a.Action} {a.Outcome}"))
+                : $"nothing ({bmeReport.Error})";
+
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandData
+            {
+                MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = new ManagedObject { ObjectID = "hello" }, NewSpatialAttitude = At(1, 3) }] }
+            }));
+            var movedSpeech = api.OutputRead(Asm, "OSD-BSS-V1.5", 1, 60_000);
+            var followed = api.OutputRead(Asm, "OSD-BMS-V1.5", 1, 60_000);
+            var newBss = IdIn(movedSpeech.Error, movedSpeech.Json, "BasicSpeechSceneDescriptorsID");
+            r["the Speech Scene edited again, followed"] = followed.Error != AifError.OK ? $"nothing ({followed.Error})"
+                : JsonNode.Parse(followed.Json!)!["BasicAVSceneDescriptorsData"]!.AsArray().Any(m => (string?)m!["BXSOrBXSID"]!["BasicSpeechSceneDescriptorsID"] == newBss && newBss != bssId)
+                    ? "the Multimodal Scene holds the new version" : "the Multimodal Scene holds the old version";
         }
         finally
         {
