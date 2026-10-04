@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CAE-ASM-V1.0, Audio Scene Management: the provider of its four AIMs - Audio
-       Object Acquisition, Audio Object Editing, Audio Scene Editing, Audio Object
-       Delivery - which the Controller composes from the L3 of the Module. -->
+  <!-- CAE-SSE-V1.0, Speech Scene Editing: composes Basic Speech Scenes of Basic Speech
+       Objects in Shared Storage (the author's Reference Model of Audio Scene
+       Management, 2026/10/04). -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,12 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
-    <ProjectReference Include="..\AOE\Mpai.Cae.Aoe.csproj" />
-    <ProjectReference Include="..\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\SOE\Mpai.Cae.Soe.csproj" />
-    <ProjectReference Include="..\SSE\Mpai.Cae.Sse.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,28 +2,29 @@ using AIF.Controller;
 using AIF.SharedStorage;
 using Mpai.Cae.Aoe;
 using Mpai.Cae.Ase;
+using Mpai.Cae.Soe;
+using Mpai.Cae.Sse;
 using Mpai.Core;
 
 namespace Mpai.Cae.Asm;
 
-// THE AIM OF AUDIO SCENE MANAGEMENT (CAE-ASM), as the Controller asks for it by its
-// AIM Instance. The Module is a graph the Controller builds from its Metadata
-// (1CAE-ASM-V1.0-I01): Audio Scene Editing, which executes every User Command (the
-// author, 2026/10/04: "ASE is ASM"), and Text and Speech Translation (MMC-TST, from
-// its own provider). Audio Scene Editing keeps the Objects and Scenes in the Module's
-// Shared Storage. Capture and playback are the User Agent's (the author: "AOD, SOD are
-// for UA"): the Physical Layer's Microphone and Loudspeaker Units, the latter
-// rendering spatially (Mpai.SpatialAudio).
+// THE AIMs OF AUDIO SCENE MANAGEMENT (CAE-ASM), as the Controller asks for them by
+// their AIM Instance. The Module is a graph the Controller builds from its Metadata
+// (1CAE-ASM-V1.0-I01), as the author's Reference Model draws it (2026/10/04): Audio
+// Object Editing -> Audio Scene Editing, Speech Object Editing -> Speech Scene
+// Editing, and Text and Speech Translation (MMC-TST, from its own provider). All keep
+// their Objects and Scenes in the Module's Shared Storage. Capture and playback are
+// the User Agent's (the author: "AOD, SOD are for UA").
 public sealed class AsmProvider : IAimProvider
 {
-    public const string Ase = "1CAE-ASE-V1.0-I01";
+    public const string Aoe = "1CAE-AOE-V1.0-I01", Ase = "1CAE-ASE-V1.0-I01", Soe = "1CAE-SOE-V1.0-I01", Sse = "1CAE-SSE-V1.0-I01";
     public const string Module = "1CAE-ASM-V1.0-I01";
 
     private readonly AmdStoreHolder _amds;
 
     public AsmProvider(string amds) => _amds = new AmdStoreHolder(amds);
 
-    public bool CanCreate(string aimName) => aimName is Ase;
+    public bool CanCreate(string aimName) => aimName is Aoe or Ase or Soe or Sse;
 
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(AsmProvider).Assembly.Location : null;
 
@@ -38,7 +39,10 @@ public sealed class AsmProvider : IAimProvider
         ISharedStorage Assets() => storage ?? throw new InvalidOperationException($"{aimName} keeps its Assets in Shared Storage, and the Module has none.");
         return aimName switch
         {
-            Ase => new AseAimProcessor(aimName, new AoeAim(Assets(), Setting("MInstanceID", "ASM")), new AseAim(Assets(), Setting("MInstanceID", "ASM")), ports),
+            Aoe => new AoeAimProcessor(aimName, new AoeAim(Assets(), Setting("MInstanceID", "ASM")), ports),
+            Ase => new AseAimProcessor(aimName, new AseAim(Assets(), Setting("MInstanceID", "ASM")), ports),
+            Soe => new SoeAimProcessor(aimName, Assets(), ports),
+            Sse => new SseAimProcessor(aimName, Assets(), ports, Setting("MInstanceID", "ASM")),
             _ => throw new ArgumentException($"{aimName} is not an AIM of Audio Scene Management.")
         };
     }

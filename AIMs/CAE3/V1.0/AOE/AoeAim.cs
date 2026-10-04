@@ -781,24 +781,6 @@ public sealed class AoeAim
     public bool Has(string assetId) =>
         !string.IsNullOrWhiteSpace(assetId) && storage.Exists(assetId);
 
-    // A Basic Speech Object, kept as it is under its own identifier (BSO000001 ...
-    // when it has none), so that a User Command can name it: see SpeechStore.
-    public string KeepSpeech(BasicSpeechObject speech)
-    {
-        if (string.IsNullOrWhiteSpace(speech.BasicSpeechObjectID))
-            speech = new BasicSpeechObject
-            {
-                MInstanceID = speech.MInstanceID, UEnvironmentID = speech.UEnvironmentID, BasicSpeechObjectID = NextId("BSO"),
-                BasicSpeechObjectTime = speech.BasicSpeechObjectTime, BasicSpeechObjectSpaceTime = speech.BasicSpeechObjectSpaceTime,
-                Data = speech.Data, SpeechQualifier = speech.SpeechQualifier, UserPoV = speech.UserPoV, DescrMetadata = speech.DescrMetadata
-            };
-        SpeechStore.Put(storage, speech);
-        return speech.BasicSpeechObjectID;
-    }
-
-    // A stored Basic Speech Object, or null.
-    public BasicSpeechObject? GetSpeech(string id) => SpeechStore.Get(storage, id);
-
     // A stored Basic Audio Object, as it is.
     public BasicAudioObject Get(string basicAudioObjectAssetId) =>
         IsType(basicAudioObjectAssetId, "BAO") && storage.Exists(basicAudioObjectAssetId)

@@ -1,0 +1,26 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "CAE-SSE-V1.0-I01", "AIMName": "1CAE-SSE-V1.0-I01"},
+  "Header":               "CAE-SSE-V1.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "Speech Scene Editing. One Basic Speech Scene is open at a time: a Basic Speech Scene arriving is opened, and the first Object added to no open Scene creates one. The User Command places Basic Speech Objects - named by their identifiers in Shared Storage - (AddedObjects), moves them, changes where they are, takes them out and sets where the Scene is heard from (UserPoV, also on its own Port). Every edit is a new version in Shared Storage; a member is held by its identifier and read from Shared Storage when the Scene is output. Outputs: the open Basic Speech Scene, and the User Command, with its report half (UserCommandReport) saying how each action was executed.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechScene", "Direction": "Input", "DataType": "OSD-BSS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechSceneDescriptors", "Direction": "Output", "DataType": "OSD-BSS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandReport", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE3/V1.0/SSE", "MASPort": 443, "BinaryName": "Mpai.Cae.Sse", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.0", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

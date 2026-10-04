@@ -1,9 +1,13 @@
 {
-  "1 a BAO arriving: what ASE gives back": "OSD-BAO-V1.5 BAO000001, valid",
-  "2 its Acoustic Profile modified": "BAO000002, loudness -18, valid",
-  "3 two BAOs composed": "OSD-AUO-V1.5 AUO000001 of 2 Basic and 0 sub-Objects, Acoustic Profile of its own: none, valid",
+  "1 a BAO arriving: what AOE gives back": "OSD-BAO-V1.5 BAO000001, valid",
+  "2 its Acoustic Profile modified, heard from behind": "BAO000003, loudness -18, UserPoV behind, valid",
+  "2 the report": "Done: UserPoV BAO000001 Done -> BAO000002, ModifiedObjects BAO000002 Done -> BAO000003",
+  "3 composing in Object Editing: the report": "Failed: AddedObjects BAO000004 NotSupported",
+  "4 the report": "Done: AddedObjects BAO000003 Done -> BAS000001, AddedObjects BAO000004 Done -> BAS000002, UserPoV BAS000002 Done -> BAS000003",
   "4 two BAOs placed in a scene": "OSD-BAS-V1.5 of 2 members, UserPoV set, valid",
-  "5 an Audio Object placed in a scene": "OSD-ASD-V1.5, valid",
+  "5 moved and removed": "1 member(s), valid",
+  "5 the report": "Partly: MovedObjects BAO000004 Done -> BAS000004, RemovedObjects BAO000003 Done -> BAS000005, RemovedObjects BAO999999 Failed",
   "6 the User Commands": "valid",
-  "7 versions kept in Shared Storage": "BAO 3, AUO 1, BAS 3, ASD 1"
+  "6 the reports": "valid",
+  "7 versions kept in Shared Storage": "BAO 4, BAS 5"
 }

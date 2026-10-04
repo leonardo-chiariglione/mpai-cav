@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -37,7 +38,67 @@ public sealed class UserCommand
 
     public UserCommandData? UserCommandData { get; init; }
 
+    // THE OUTPUT HALF (the author, 2026/10/04: "User Command schema should have one
+    // half for input and one for Output (report)"): how the AIM that executed the
+    // command did, under the command's own UserCommandID.
+    public UserCommandReport? UserCommandReport { get; init; }
+
     public string? DescrMetadata { get; init; }
+}
+
+public sealed class UserCommandReport
+{
+    public SimpleTime?        ReportTime { get; init; }
+    public string             Outcome    { get; init; } = "Done";   // Done | Partly | Failed | Ignored
+    public List<ReportAction> Actions    { get; init; } = new();
+}
+
+public sealed class ReportAction
+{
+    public string  Action   { get; init; } = "";       // the UserCommandData field it comes from
+    public string? ObjectID { get; init; }
+    public string  Outcome  { get; init; } = "Done";   // Done | Failed | NotSupported
+    public string? ResultID { get; set; }
+    public string? Reason   { get; init; }
+}
+
+// WHAT AN AIM SAYS IT DID with one User Command: each action as it is executed, then
+// the report - the command's identifier and data, and its report half.
+public sealed class CommandReport(UserCommand command)
+{
+    private readonly List<ReportAction> actions = new();
+
+    public void Done(string action, string? objectId, string? resultId = null) =>
+        actions.Add(new ReportAction { Action = action, ObjectID = objectId, ResultID = resultId });
+
+    public void Failed(string action, string? objectId, string reason) =>
+        actions.Add(new ReportAction { Action = action, ObjectID = objectId, Outcome = "Failed", Reason = reason });
+
+    public void NotSupported(string action, string? objectId, string reason) =>
+        actions.Add(new ReportAction { Action = action, ObjectID = objectId, Outcome = "NotSupported", Reason = reason });
+
+    // The version the actions done so far produced, for those that do not name one yet.
+    public void Produced(string resultId)
+    {
+        foreach (var a in actions) if (a.Outcome == "Done" && a.ResultID is null) a.ResultID = resultId;
+    }
+
+    public bool Any => actions.Count > 0;
+
+    public UserCommand Report() => new()
+    {
+        MInstanceID = command.MInstanceID, UEnvironmentID = command.UEnvironmentID,
+        UserCommandID = command.UserCommandID, UserCommandTime = command.UserCommandTime ?? SimpleTime.At(DateTimeOffset.UtcNow),
+        UserCommandData = command.UserCommandData,
+        UserCommandReport = new UserCommandReport
+        {
+            ReportTime = SimpleTime.At(DateTimeOffset.UtcNow),
+            Outcome = actions.Count == 0 ? "Ignored"
+                    : actions.All(a => a.Outcome == "Done") ? "Done"
+                    : actions.Any(a => a.Outcome == "Done") ? "Partly" : "Failed",
+            Actions = actions.ToList()
+        }
+    };
 }
 
 public sealed class UserCommandData

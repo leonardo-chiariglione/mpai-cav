@@ -48,7 +48,7 @@ public class AsmTranslationTests
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
             api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(english));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandData = new UserCommandData
@@ -65,7 +65,20 @@ public class AsmTranslationTests
                 }
             }));
 
-            var read = api.OutputRead(Asm, "OSD-BSO-V1.5", 1, 300_000);
+            // Speech Object Editing reports the command when the translation is done.
+            var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000);
+            r["the report of Speech Object Editing"] = report.Error != AifError.OK ? $"nothing ({report.Error})"
+                : string.Join("; ", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport is { } done
+                    ? new[] { done.Outcome }.Concat(done.Actions.Select(a => $"{a.Action} {a.Outcome}")) : ["no report half"]);
+
+            // The open Speech Object as it leaves the Module, the last one given.
+            (AifError Error, string? Json) read = (AifError.NotProduced, null);
+            for (var i = 0; i < 6; i++)
+            {
+                var next = api.OutputRead(Asm, "OSD-BSO-V1.5", 1, 5_000);
+                if (next.Error != AifError.OK) break;
+                read = (next.Error, next.Json);
+            }
             if (read.Error != AifError.OK) r["the translated speech"] = $"nothing ({read.Error})";
             else
             {
@@ -78,7 +91,6 @@ public class AsmTranslationTests
             }
 
             // The Speech Object kept under the original's identifier is now the translation.
-            Thread.Sleep(2000);   // ASE stores it when the translation reaches it
             var storage = api.SharedStorage(Asm);
             var stored = storage is not null && storage.MPAI_AIFM_RuledStorage_Get(english.BasicSpeechObjectID, out var bytes).ToString() == "OK"
                 ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(bytes)) : null;

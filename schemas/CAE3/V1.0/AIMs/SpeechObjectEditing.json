@@ -1,0 +1,39 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/SpeechObjectEditing.json",
+  "title":                "Speech Object Editing V1.0",
+  "Header":               "CAE-SOE-V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SOE-V1.0"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Speech Object Editing. One Basic Speech Object is open at a time: a Basic Speech Object arriving is opened - from Shared Storage, by its identifier - or kept. The User Command changes where it is heard from (UserPoV, also on its own Port) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Basic Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its report half (UserCommandReport) saying how each action was executed (for a translation, when it is done).",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Translation", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EditedSpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Speech", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Language", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandReport", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

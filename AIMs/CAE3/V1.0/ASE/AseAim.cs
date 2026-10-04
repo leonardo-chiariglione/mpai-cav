@@ -310,6 +310,53 @@ public sealed class AseAim
     // The per-member Point of View this once also wrote, a copy of the placement,
     // is now the member's UserPoV (the author, 2026/10/02): where the member is
     // heard from, absent unless set.
+    // A placed member moved, or taken out: a NEW version, as every edit. The member is
+    // found by its Basic Audio Object's identifier; false when the Scene has none.
+    public RepositoryAsset? ReplaceInBasicScene(string sceneAssetId, string basicAudioObjectAssetId, SpaceTime? placement) =>
+        RebuildBasicScene(sceneAssetId, basicAudioObjectAssetId, e => new BasicAudioSceneEntry
+        {
+            AudioObjectIDOrAudioObject = e.AudioObjectIDOrAudioObject, UserPoV = e.UserPoV, AudioObjectSpaceTime = placement ?? e.AudioObjectSpaceTime
+        });
+
+    public RepositoryAsset? RemoveFromBasicScene(string sceneAssetId, string basicAudioObjectAssetId) =>
+        RebuildBasicScene(sceneAssetId, basicAudioObjectAssetId, _ => null);
+
+    private RepositoryAsset? RebuildBasicScene(string sceneAssetId, string memberId, Func<BasicAudioSceneEntry, BasicAudioSceneEntry?> change)
+    {
+        if (!storage.Exists(sceneAssetId) || !IsType(sceneAssetId, "BAS"))
+            throw new InvalidOperationException($"{sceneAssetId} is not a stored Basic Scene.");
+        var existing = Deserialize<BasicAudioSceneDescriptors>(storage.Get(sceneAssetId));
+        var found = false;
+        var entries = new List<BasicAudioSceneEntry>();
+        foreach (var e in existing.BasicAudioSceneDescriptorsEntries)
+        {
+            if (!found && e.AudioObjectIDOrAudioObject?.BasicAudioObjectID == memberId)
+            {
+                found = true;
+                if (change(e) is { } kept) entries.Add(kept);
+            }
+            else entries.Add(e);
+        }
+        if (!found) return null;
+
+        var newId = NextId("BAS");
+        foreach (var e in entries)
+            if (e.AudioObjectIDOrAudioObject?.BasicAudioObjectID is { } member) PutReference(newId, member);
+        storage.Put(newId, Serialize(new BasicAudioSceneDescriptors
+        {
+            MInstanceID = mInstanceId,
+            BasicAudioSceneDescriptorsID = newId,
+            BasicAudioSceneDescriptorsTime = existing.BasicAudioSceneDescriptorsTime,
+            BASSpaceTime = existing.BASSpaceTime ?? Origin(),
+            UserPoV = existing.UserPoV,
+            ClosedSpace = existing.ClosedSpace,
+            AcousticProfile = existing.AcousticProfile,
+            AudioObjectCount = entries.Count,
+            BasicAudioSceneDescriptorsEntries = entries
+        }));
+        return new RepositoryAsset { AssetId = newId, AssetType = AssetType.BAS };
+    }
+
     private static BasicAudioSceneEntry MakeBasicEntry(string basicAudioObjectAssetId, SpaceTime? placement) => new()
     {
         AudioObjectIDOrAudioObject = new BasicAudioObject { BasicAudioObjectID = basicAudioObjectAssetId },
@@ -394,18 +441,6 @@ public sealed class AseAim
     // (ref:{id}:*) and every id that references it (refby:{id}:*). Used by
     // the UI to decide whether a Delete is safe and, if not, to show and
     // optionally cascade over exactly the assets involved - one level only.
-    // A TRANSLATION REPLACES ITS ORIGINAL (the author, 2026/10/03): under the
-    // original's identifier, so every Scene holding it holds the translation, at its
-    // place. False when there is no such Speech Object to replace.
-    public bool ReplaceSpeech(string id, BasicSpeechObject translation, SpeechQualifier? target)
-    {
-        if (SpeechStore.Get(storage, id) is not { } original) return false;
-        SpeechStore.Put(storage, SpeechStore.Replacing(original, translation, target));
-        return true;
-    }
-
-    public BasicSpeechObject? GetSpeech(string id) => SpeechStore.Get(storage, id);
-
     public IReadOnlyList<string> ReferencedBy(string assetId) =>
         storage.List($"refby:{assetId}:").Select(k => k[$"refby:{assetId}:".Length..]).ToList();
 

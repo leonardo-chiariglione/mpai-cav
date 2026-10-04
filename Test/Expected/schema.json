@@ -16,6 +16,8 @@
   "CAE3/V1.0/AIMs/AudioSceneEditing.json": "valid",
   "CAE3/V1.0/AIMs/AudioSceneManager.json": "valid",
   "CAE3/V1.0/AIMs/AudioSceneObjectIdentification.json": "valid",
+  "CAE3/V1.0/AIMs/SpeechObjectEditing.json": "valid",
+  "CAE3/V1.0/AIMs/SpeechSceneEditing.json": "valid",
   "CAV2/V1.1/AIMs/AMSMemory.json": "valid",
   "CAV2/V1.1/AIMs/AutonomousMotionSubsystem.json": "valid",
   "CAV2/V1.1/AIMs/BasicEnvironmentDescription.json": "valid",

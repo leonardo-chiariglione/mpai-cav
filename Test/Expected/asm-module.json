@@ -1,8 +1,11 @@
 {
+  "a Speech Object, the open Object": "hello, valid",
   "a second sound, the open Object": "OSD-BAO-V1.5, valid",
   "a sound the User Agent captured, the open Object": "OSD-BAO-V1.5, valid",
   "an Object of Shared Storage, opened": "OSD-BAO-V1.5 BAO000001, valid",
   "the Module starts": "OK",
   "the Scene heard by the User": "2 channels at 48000 Hz, valid",
-  "the Scene leaving the Module": "2 members, valid"
+  "the Scene leaving the Module": "2 members, valid",
+  "the Speech Scene leaving the Module": "1 member(s), valid",
+  "the report of Speech Scene Editing": "Done; AddedObjects Done; UserPoV Done, valid"
 }

@@ -7,16 +7,15 @@ using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
-// AUDIO SCENE EDITING, OBJECTS AND SCENES (the author's goal, 2026/10/02: edit BAOs;
-// compose BAOs and AUOs into AUOs; compose Basic Audio Scenes of BAOs and Audio
-// Scenes; 2026/10/04: "ASE is ASM" - one AIM, every User Command). CAE-ASE runs
-// through its L3, one User Command per action - on its Object Command Port or its
-// Scene Command Port - the Assets versioned in Shared Storage. Judged: a BAO
-// arriving is created and goes out as a BAO, not as an Audio Object of one; its
-// Acoustic Profile (the Object part) is modified in a new version; two BAOs compose
-// an Audio Object, which has no Acoustic Profile of its own; BAOs make a Basic Audio
-// Scene with its UserPoV, an AUO an Audio Scene; every output, and every Command,
-// valid against its schema.
+// AUDIO OBJECT EDITING AND AUDIO SCENE EDITING, as the author's Reference Model of
+// Audio Scene Management draws them (2026/10/04): each AIM through its L3, one User
+// Command per action, the Assets versioned in Shared Storage, and every command given
+// back with its report half. Judged: a Basic Audio Object arriving is created; its
+// Acoustic Profile is modified in a new version, and heard from a User PoV; composing
+// in Object Editing is reported as not supported (an Object is composed in a Scene);
+// Basic Audio Objects make a Basic Audio Scene with its User PoV; a member is moved
+// and another removed; a command naming a member the Scene does not have is reported
+// as failed; every output, command and report valid against its schema.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class AsmEditingTests
@@ -63,66 +62,82 @@ public class AsmEditingTests
             var storage = new FileSharedStorage(root, "CAE-ASM", "ASM-Test");
             var store = new AIF.Store.AmdStore(Repository.Amds);
             store.Scan();
+            var aoePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-AOE-V1.0-I01");
             var asePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-            var ase = new AseAimProcessor("1CAE-ASE-V1.0-I01", new AoeAim(storage), new AseAim(storage), asePorts);
+            var AOE = new Aim(new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(storage), aoePorts));
+            var ASE = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(storage), asePorts));
             var commands = new List<string>();
-            string objectIn = asePorts.Input("OSD-BAO-V1.5"), objectCommand = asePorts.Input("CAE-UCM-V1.0", 1), sceneCommand = asePorts.Input("CAE-UCM-V1.0", 2),
-                   objectOut = asePorts.Output("OSD-BAO-V1.5"), sceneOut = asePorts.Output("OSD-BAS-V1.5");
+            var reports = new List<string>();
+            string objectIn = aoePorts.Input("OSD-BAO-V1.5"), objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-BAO-V1.5"),
+                   objectReport = aoePorts.Output("CAE-UCM-V1.0"),
+                   sceneCommand = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-BAS-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
 
-            async Task<string> Run(IAimLike aim, string output, params (string Port, string Json)[] inputs)
+            async Task<(string Out, string Report)> Run(IAimLike aim, string output, string report, params (string Port, string Json)[] inputs)
             {
                 foreach (var (port, json) in inputs) if (Header(json) == "CAE-UCM-V1.0") commands.Add(json);
                 var m = new AIF.Controller.Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) };
                 var o = await aim.ProcessAsync(m);
-                return o.Ports.TryGetValue(output, out var json2) ? json2 : "";
+                var rep = o.Ports.TryGetValue(report, out var rj) ? rj : "";
+                if (rep.Length > 0) reports.Add(rep);
+                return (o.Ports.TryGetValue(output, out var json2) ? json2 : "", rep);
             }
-            var ASE = new Aim(ase);
+            string Said(string report)
+            {
+                if (report.Length == 0) return "no report";
+                var done = MpaiJson.FromJson<UserCommand>(report).UserCommandReport!;
+                return $"{done.Outcome}: " + string.Join(", ", done.Actions.Select(a => $"{a.Action} {a.ObjectID} {a.Outcome}{(a.ResultID is null ? "" : " -> " + a.ResultID)}"));
+            }
 
             var r = new Dictionary<string, string>();
 
             // 1. A BAO arrives (a capture): created, and out as a BAO.
-            var music = await Run(ASE, objectOut, (objectIn, MpaiJson.ToJson(Sound("music"))));
-            r["1 a BAO arriving: what ASE gives back"] = $"{Header(music)} {Id(music, "BasicAudioObjectID")}, {Valid("OSD/V1.5/data/BasicAudioObject.json", music)}";
+            var (music, _) = await Run(AOE, objectOut, objectReport, (objectIn, MpaiJson.ToJson(Sound("music"))));
+            r["1 a BAO arriving: what AOE gives back"] = $"{Header(music)} {Id(music, "BasicAudioObjectID")}, {Valid("OSD/V1.5/data/BasicAudioObject.json", music)}";
 
-            // 2. Its acoustics, the Object part: a new version.
+            // 2. Its acoustics, the Object part, and where it is heard from: new versions.
             var profile = new AcousticProfile { AcousticProfileID = "music-acp", FrequencyRange = new FrequencyRange { MinFrequencyHz = 40, MaxFrequencyHz = 16000 }, Loudness = -18 };
-            var modified = await Run(ASE, objectOut, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (modified, said2) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
             {
+                UserPoV = new PointOfView { PointOfViewID = "behind", CartPosition = [0, -2, 1.6], Orientation = [0, 0, 0] },
                 ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = Ref(Id(music, "BasicAudioObjectID")!), AcousticProfile = profile }] }
             }))));
-            var acp = System.Text.Json.Nodes.JsonNode.Parse(modified)?["BasicAudioObjectProperties"]?["AcousticProfile"];
-            r["2 its Acoustic Profile modified"] = $"{Id(modified, "BasicAudioObjectID")}, loudness {acp?["Loudness"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", modified)}";
+            var modifiedNode = System.Text.Json.Nodes.JsonNode.Parse(modified);
+            var acp = modifiedNode?["BasicAudioObjectProperties"]?["AcousticProfile"];
+            r["2 its Acoustic Profile modified, heard from behind"] = $"{Id(modified, "BasicAudioObjectID")}, loudness {acp?["Loudness"]}, UserPoV {modifiedNode?["UserPoV"]?["PointOfViewID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", modified)}";
+            r["2 the report"] = Said(said2);
 
-            // 3. A second BAO, and the first composed into it: an Audio Object.
-            var voice = await Run(ASE, objectOut, (objectIn, MpaiJson.ToJson(Sound("voice"))));
-            var composed = await Run(ASE, objectOut, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
+            // 3. Composing in Object Editing: an Object is composed in a Scene.
+            var (voice, _) = await Run(AOE, objectOut, objectReport, (objectIn, MpaiJson.ToJson(Sound("voice"))));
+            var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
             {
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
-            var auo = System.Text.Json.Nodes.JsonNode.Parse(composed);
-            r["3 two BAOs composed"] = $"{Header(composed)} {Id(composed, "AudioObjectID")} of {auo?["BasicAudioObjects"]?.AsArray().Count ?? 0} Basic and {auo?["SubAudioObjects"]?.AsArray().Count ?? 0} sub-Objects, Acoustic Profile of its own: {(auo?["AudioObjectProperties"] is null ? "none" : "yes")}, {Valid("OSD/V1.5/data/AudioObject.json", composed)}";
+            r["3 composing in Object Editing: the report"] = Said(said3);
 
             // 4. BAOs into a Basic Audio Scene, heard from a UserPoV.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            var bas = await Run(ASE, sceneOut, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (bas, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(-1) }, new ObjectPlacement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
             var basNode = System.Text.Json.Nodes.JsonNode.Parse(bas);
             r["4 two BAOs placed in a scene"] = $"{Header(bas)} of {basNode?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0} members, UserPoV {(basNode?["UserPoV"] is null ? "absent" : "set")}, {Valid("OSD/V1.5/data/BasicAudioSceneDescriptors.json", bas)}";
+            r["4 the report"] = Said(said4);
 
-            // 5. An Audio Object into an Audio Scene, in a fresh session.
-            var ase2 = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AoeAim(storage), new AseAim(storage), asePorts));
-            await Run(ase2, objectOut, (objectIn, composed));
-            var asd = await Run(ase2, sceneOut, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
+            // 5. One member moved, the other removed, and a member the Scene does not have.
+            var (moved, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
             {
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(composed, "AudioObjectID")!), SpatialAttitude = At(0) }] }
+                MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), NewSpatialAttitude = At(3) }] },
+                RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!) }, new ObjectPlacement { ObjectID = Ref("BAO999999") }] }
             }))));
-            r["5 an Audio Object placed in a scene"] = $"{Header(asd)}, {Valid("OSD/V1.5/data/AudioSceneDescriptors.json", asd)}";
+            var movedNode = System.Text.Json.Nodes.JsonNode.Parse(moved);
+            r["5 moved and removed"] = $"{movedNode?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0} member(s), {Valid("OSD/V1.5/data/BasicAudioSceneDescriptors.json", moved)}";
+            r["5 the report"] = Said(said5);
 
             r["6 the User Commands"] = string.Join("; ", commands.Select(c => Valid("CAE3/V1.0/data/UserCommand.json", c)).Distinct());
-            r["7 versions kept in Shared Storage"] = string.Join(", ", new[] { "BAO", "AUO", "BAS", "ASD" }.Select(t => $"{t} {storage.MPAI_AIFM_SharedStorage_List(t).Count}"));
+            r["6 the reports"] = string.Join("; ", reports.Select(c => Valid("CAE3/V1.0/data/UserCommand.json", c)).Distinct());
+            r["7 versions kept in Shared Storage"] = string.Join(", ", new[] { "BAO", "BAS" }.Select(t => $"{t} {storage.MPAI_AIFM_SharedStorage_List(t).Count}"));
             Expected.Match("asm-editing.json", r);
         }
         finally { try { Directory.Delete(root, true); } catch { } }

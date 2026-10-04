@@ -1,10 +1,5 @@
-{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
-  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/AudioObjectEditing.json",
-  "title":                "Audio Object Editing V1.0",
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "CAE-AOE-V1.0-I01", "AIMName": "1CAE-AOE-V1.0-I01"},
   "Header":               "CAE-AOE-V1.0",
-
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOE-V1.0"},
 
   "APIProfile":           "Basic",
   "Description":          "Audio Object Editing. One Basic Audio Object is open at a time, so a User Command need not name it: a Basic Audio Object arriving is opened - from Shared Storage, by its identifier - or, new (a sound the User Agent captured), created. The User Command modifies what it is like (ModifiedObjects: the Object part of the Acoustic Profile; LUFS) and where it is heard from (UserPoV, also on its own Port). Every edit is a new version in Shared Storage. Outputs: the open Basic Audio Object, to the Module and to Audio Scene Editing, and the User Command, with its report half (UserCommandReport) saying how each action was executed.",
@@ -20,16 +15,10 @@
   "SubAIMs":              [],
   "Topology":             [],
 
-  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
-                            "BinaryName":       "/* BinaryName */",
-                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
-                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
-                            "Version":          "/* Version */",
-                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
-                            "Destination":      "/* Destination URI */"}],
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE3/V1.0/AOE", "MASPort": 443, "BinaryName": "Mpai.Cae.Aoe", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.0", "Source": "AIMStorage"}],
 
-  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
-                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "1 GB", "Request": "2 GB", "Maximum": "4 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
 
   "DataXMData":           { },
 

@@ -10,16 +10,18 @@ using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
-// AUDIO SCENE MANAGEMENT AS ONE MODULE (the author's goal, 2026/10/02; "ASE is ASM",
-// 2026/10/04). The Controller composes CAE-ASM from its L3 - Audio Scene Editing and
-// Text and Speech Translation - and a session is a sequence of runs, one per User
-// action, the Objects and Scenes in the Module's Shared Storage. Capture and hearing
-// are the User Agent's. Judged: a sound the User Agent captured enters as a Basic
-// Audio Object and comes back as the open Object; given again by its identifier, it
-// is opened from Shared Storage; a Scene Command places it, with a second sound, in a
-// Basic Audio Scene heard from the User's Point of View - the Scene leaves the Module,
-// and the User Agent's spatial audio renders it in stereo; every output valid against
-// its schema.
+// AUDIO SCENE MANAGEMENT AS ONE MODULE, as the author's Reference Model draws it
+// (2026/10/04): the audio chain - Audio Object Editing, Audio Scene Editing - and the
+// speech chain - Speech Object Editing, Speech Scene Editing - with Text and Speech
+// Translation, a session a sequence of runs, the Objects and Scenes in the Module's
+// Shared Storage. Capture and hearing are the User Agent's. Judged: a sound the User
+// Agent captured enters as a Basic Audio Object and comes back as the open Object;
+// given again by its identifier, it is opened from Shared Storage; an Audio Scene
+// Command places it, with a second sound, in a Basic Audio Scene heard from the User's
+// Point of View - the Scene leaves the Module, and the User Agent's spatial audio
+// renders it in stereo; a Speech Object is placed by a Speech Scene Command in a Basic
+// Speech Scene, and Speech Scene Editing reports the command; every output valid
+// against its schema.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
 public class AsmModuleTests
@@ -107,6 +109,26 @@ public class AsmModuleTests
                 var wav = MpaiJson.FromJson<BasicAudioObject>(heard)!.Data;
                 r["the Scene heard by the User"] = $"{BitConverter.ToInt16(wav, 22)} channels at {BitConverter.ToInt32(wav, 24)} Hz, {Valid("OSD/V1.5/data/BasicAudioObject.json", heard)}";
             }
+
+            // 3. The speech chain: a Speech Object the User Agent captured, placed by a
+            // Speech Scene Command in a Basic Speech Scene; Speech Scene Editing reports it.
+            var hello = new BasicSpeechObject { BasicSpeechObjectID = "hello", Data = SceneAudio.Wav(Tone(300), 1, 48000) };
+            api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(hello));
+            var kept = api.OutputRead(Asm, "OSD-BSO-V1.5", 1, 60_000);
+            r["a Speech Object, the open Object"] = kept.Error == AifError.OK ? $"{JsonNode.Parse(kept.Json!)!["BasicSpeechObjectID"]}, {Valid("OSD/V1.5/data/BasicSpeechObject.json", kept.Json!)}" : $"nothing ({kept.Error})";
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandData
+            {
+                UserPoV = user,
+                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "hello" }, SpatialAttitude = At(0, 2) }] }
+            }));
+            var speechScene = api.OutputRead(Asm, "OSD-BSS-V1.5", 1, 60_000);
+            r["the Speech Scene leaving the Module"] = speechScene.Error == AifError.OK
+                ? $"{JsonNode.Parse(speechScene.Json!)!["BasicSpeechSceneDescriptors"]!.AsArray().Count} member(s), {Valid("OSD/V1.5/data/BasicSpeechSceneDescriptors.json", speechScene.Json!)}"
+                : $"nothing ({speechScene.Error})";
+            var sseReport = api.OutputRead(Asm, "CAE-UCM-V1.0", 4, 60_000);
+            r["the report of Speech Scene Editing"] = sseReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(sseReport.Json!).UserCommandReport is { } done
+                ? $"{done.Outcome}; " + string.Join("; ", done.Actions.Select(a => $"{a.Action} {a.Outcome}")) + $", {Valid("CAE3/V1.0/data/UserCommand.json", sseReport.Json!)}"
+                : $"nothing ({sseReport.Error})";
         }
         finally
         {
