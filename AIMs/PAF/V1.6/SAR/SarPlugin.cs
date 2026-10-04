@@ -10,5 +10,5 @@ public sealed class SarPlugin : IAimPlugin
     public string AimName => "PAF-SAR-V1.6";
 
     public IAimProcessor Create(AimPortReader ports, IReadOnlyDictionary<string, string> settings)
-        => new SarAimProcessor(AimName, ports);
+        => new SarAimProcessor(AimName, ports, settings);
 }

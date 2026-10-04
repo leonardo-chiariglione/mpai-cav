@@ -82,7 +82,10 @@ It takes the reply's Text and an Avatar - the model the client holds - and outpu
 Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Given a
 scene - Audio, a 3D Model Scene, a Point of View - `PAF-SAR` (Scene and Avatar Rendering) also
 places the avatar in it: the 3D Model Scene with the avatar (`OSD-B3S`), which the client's 3D
-page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and the 3D scene. Live capture
+page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and the 3D scene; or, with
+its setting `SceneOutputs` at `2D` (or `Both`), the Audio Scene (`OSD-BAS`) with the avatar's speech and the
+Visual Scene (`OSD-BVS`) of an MP4 of the whole view, drawn off screen with that page in Edge or Chromium
+and encoded by ffmpeg. Live capture
 uses native **Windows Media Capture**; audio capture/delivery use `MMC-SOA` /
 `MMC-SOD`.
 

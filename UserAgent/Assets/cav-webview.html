@@ -416,6 +416,7 @@ loader.load(AVATAR_URL, (gltf) => {
   document.getElementById('loading').style.display = 'none';
   setEmotion('CALMNESS', 0);
   resize();
+  avatarLoaded(true);
 }, (e) => {
   const pct = e.total ? Math.round(e.loaded/e.total*100) : 0;
   document.getElementById('loading').textContent = `Loading the CAV's face… ${pct}%`;
@@ -503,7 +504,13 @@ function receiveResponse(fdoJson, speechWavBase64, bdoJson) {
   const audio = document.getElementById('responseAudio');
   if (speechWavBase64) audio.src = 'data:audio/wav;base64,' + speechWavBase64;
 
-  responseFrames = [];
+  responseFrames = faceFrames(fdoJson);
+  playResponse();
+}
+
+// The Face Descriptors as a timeline of ARKit blendshape targets.
+function faceFrames(fdoJson) {
+  let responseFrames = [];
   try {
     const fdo = fdoJson ? JSON.parse(fdoJson) : null;
     const items = (fdo && fdo.FaceDescriptorsData) || [];
@@ -530,8 +537,7 @@ function receiveResponse(fdoJson, speechWavBase64, bdoJson) {
     (document.getElementById('status')||{}).textContent = 'face descriptors unreadable; speaking without them';
     console.error(e);
   }
-
-  playResponse();
+  return responseFrames;
 }
 
 window.cavReceive = receiveResponse;   // what a 'render' message does, for a host that calls it directly
@@ -579,9 +585,38 @@ async function playResponse() {
 }
 
 
+// ---- frame by frame, for a renderer that makes a video of the scene ----
+// Scene and Avatar Rendering (PAF-SAR) draws what the viewer sees with this page,
+// off screen: it gives the scene, the Point of View and the utterance's Face and
+// Body Descriptors, then asks for the frame at each time - the clock is its own,
+// not the screen's, and no sound is played.
+let offline = false;
+let avatarLoaded; const avatarReady = new Promise(r => avatarLoaded = r);
+window.cavFrames = {
+  ready: avatarReady,
+  async load(sceneJson, povJson, fdoJson, bdoJson, width = 640, height = 480) {
+    offline = true;
+    renderer.setSize(width, height, false);              // the video's size, not the window's
+    camera.aspect = width / height; camera.fov = 60;     // a room, not a portrait
+    camera.updateProjectionMatrix();
+    if (sceneJson) await setModelScene(sceneJson);
+    if (povJson) setPointOfView(povJson);
+    responseFrames = faceFrames(fdoJson);
+    setBodyMotion(bdoJson);
+    return true;
+  },
+  at(t) {
+    applyResponseFrame(t);
+    if (Object.keys(body.bones).length) applyBody(body.motion ? bodyFrame(body.motion, t) : breathe(t));
+    renderer.render(scene, camera);
+    return canvas.toDataURL('image/jpeg', 0.9);
+  }
+};
+
 // ---- render loop ----
 function loop() {
   requestAnimationFrame(loop);
+  if (offline) return;
   if (playing) { const audio = document.getElementById('responseAudio'); applyResponseFrame(audio.currentTime); }
   // The body: the utterance's motion while she speaks, breathing otherwise.
   if (Object.keys(body.bones).length) {
