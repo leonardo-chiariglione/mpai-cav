@@ -6,12 +6,11 @@ using Mpai.Core;
 
 namespace Mpai.PhysicalLayer;
 
-// Speech Object Delivery (MMC-SOD) device on Windows. Renders a Speech Object to
-// the sound device, keeping it typed as speech throughout - the object is a Speech
-// Object right up to the device, where its bytes become sound. Independent of
-// Audio Object Delivery (CAE-AOD): SOD has its own delivery device. The
-// Windows/NAudio dependency lives ONLY in this project, never in the portable SOD
-// core - mirroring how WinmmAudioDelivery is isolated in Mpai.Cae.Aod.Windows.
+// The Loudspeaker Unit's device on Windows. Plays a Speech Object on the sound
+// device, keeping it typed as speech throughout - the object is a Speech Object
+// right up to the device, where its bytes become sound. The Windows/NAudio
+// dependency lives ONLY in the Physical Layer; a Scene's audio is rendered first
+// by the User Agent's spatial renderer (UserAgent/SpatialAudio).
 //
 // The temporary file it plays from is removed afterwards - delivering to a
 // loudspeaker should not leave files behind.

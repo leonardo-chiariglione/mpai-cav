@@ -88,34 +88,11 @@ public interface ITtsAim : IAim
     Task<BasicSpeechObject> ProcessAsync(BasicTextObject text);
 }
 
-// ---- Audio Object Delivery (CAE-AOD) Ã¢â‚¬â€ device edge, environment-dependent.
-//      Delivers a Basic Audio Object to a device (loudspeaker, network, disk).
-public interface IAudioDeliveryAim : IAim
-{
-    string IAim.AimName        => "Audio Object Delivery";
-    string IAim.AimNameCompact => "AudioObjectDelivery";
-    string IAim.AimIdentifier  => "CAE-AOD-V1.0";
-
-    Task DeliverAsync(BasicAudioObject audio);
-}
-
 // ---- Visual acquisition: a device of the User Agent's Physical Layer (the Camera
 //      Unit), not an AIM. Acquires a Basic Visual Object from a camera or a file.
 public interface IVisualAcquisition
 {
     Task<BasicVisualObject> AcquireAsync(VisualAcquisitionRequest request);
-}
-
-// ---- Visual Object Delivery (CVE-VOD) Ã¢â‚¬â€ device edge, environment-dependent.
-//      Delivers a Basic Visual Object to a destination (a window, a display,
-//      a file). The mirror of visual acquisition, and the visual counterpart of CAE-AOD.
-public interface IVisualDeliveryAim : IAim
-{
-    string IAim.AimName        => "Visual Object Delivery";
-    string IAim.AimNameCompact => "VisualObjectDelivery";
-    string IAim.AimIdentifier  => "CVE-VOD-V1.0";
-
-    Task DeliverAsync(BasicVisualObject visual);
 }
 
 // ---- Answer to Multimodal Question (MMC-AMQ) Ã¢â‚¬â€ the composite AIM.
