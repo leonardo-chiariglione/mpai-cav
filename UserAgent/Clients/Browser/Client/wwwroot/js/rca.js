@@ -63,7 +63,8 @@ window.rca = (() => {
   // Speech Object Acquisition produces.
   function captureSpeech() {
     return new Promise(async resolve => {
-      try { await unlock(); } catch (e) { resolve(null); return; }
+      // A microphone the browser refuses: said so, so that the person is told what to do.
+      try { await unlock(); } catch (e) { resolve(e && e.name === 'NotAllowedError' ? '!blocked' : null); return; }
       const rate = ctx.sampleRate;
       const before = ring.slice(), kept = [];
       let speaking = before.some(b => level(b) > START), quietMs = 0, spokenMs = 0, done = false;
@@ -121,10 +122,27 @@ window.rca = (() => {
     return btoa(bin);
   }
 
-  // A FACE, FROM THE CAMERA: one frame, as JPEG, base64.
-  async function captureFrame() {
+  // A FACE, FROM THE CAMERA: one frame, as JPEG, base64; null when there is none.
+  // The browser asks the person for the camera the first time; a request nobody
+  // answers must not hold the conversation: after waitMs, or on Stop
+  // (abandonFrame), the turn goes on without the face, and a camera granted
+  // afterwards is closed again at once.
+  let frameWait = null;
+  async function captureFrame(waitMs) {
+    let timer = null;
+    const ask = navigator.mediaDevices.getUserMedia({ video: true });
+    const gaveUp = new Promise(r => {
+      timer = setTimeout(() => r(null), waitMs || 8000);
+      frameWait = () => r(null);
+    });
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true });
+      const s = await Promise.race([ask, gaveUp]);
+      clearTimeout(timer); frameWait = null;
+      if (!s) {
+        stamp('camera: no answer, the turn goes on without the face');
+        ask.then(late => late.getTracks().forEach(t => t.stop())).catch(() => {});
+        return null;
+      }
       const v = document.createElement('video');
       v.srcObject = s; v.muted = true; v.playsInline = true;
       await v.play();
@@ -135,8 +153,13 @@ window.rca = (() => {
       s.getTracks().forEach(t => t.stop());
       const url = c.toDataURL('image/jpeg', 0.9);
       return url.substring(url.indexOf(',') + 1);
-    } catch (e) { console.error(e); return null; }
+    } catch (e) {
+      clearTimeout(timer); frameWait = null; console.error(e);
+      return e && e.name === 'NotAllowedError' ? '!blocked' : null;   // refused: said so
+    }
   }
+
+  function abandonFrame() { if (frameWait) frameWait(); }
 
   // THE AVATAR: the same message the desktop sends it through WebView2.
   function present(faceDescriptorsJson, speechWavBase64, bodyDescriptorsJson) {
@@ -163,5 +186,5 @@ window.rca = (() => {
     });
   }
 
-  return { unlock, captureSpeech, abandonCapture, captureFrame, present, focus, presence, stamp };
+  return { unlock, captureSpeech, abandonCapture, captureFrame, abandonFrame, present, focus, presence, stamp };
 })();

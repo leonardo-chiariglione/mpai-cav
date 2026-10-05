@@ -50,6 +50,15 @@ public partial class RcaShell : ComponentBase
 
     private bool started, stopEnabled;
     private CancellationTokenSource? _stopping, _appStopping;
+    private bool _cameraAsked, _cameraBlockedSaid;
+
+    // WHAT TO DO WHEN THE BROWSER REFUSES A DEVICE, in words anyone can follow.
+    private const string MicrophoneBlocked =
+        "Thalia cannot hear you: your browser has blocked the microphone. Click the padlock to the left of the web address, " +
+        "switch Microphone to Allow, then reload the page. Meanwhile, you can type your questions and press Enter.";
+    private const string CameraBlocked =
+        "The avatar cannot see your face: your browser has blocked the camera. To allow it, click the padlock to the left " +
+        "of the web address and switch Camera to Allow. The conversation goes on without it.";
 
     // TYPING CLAIMS THE TURN. While the person may speak or type, the microphone
     // listens - and hears the keys. The first character typed ends the listening,
@@ -88,7 +97,7 @@ public partial class RcaShell : ComponentBase
     {
         started = true;
         try { await Js.InvokeVoidAsync("rca.unlock"); }
-        catch (Exception ex) { Status("microphone: " + ex.Message); }
+        catch (Exception ex) { Status("microphone: " + ex.Message); if (ex.Message.Contains("NotAllowed", StringComparison.Ordinal)) Instruct(MicrophoneBlocked); }
 
         // PRESENT WHILE OPEN, GONE WHEN CLOSED: see rca.presence.
         if (Http.DefaultRequestHeaders.TryGetValues("MPAI-Client", out var ids))
@@ -181,6 +190,7 @@ public partial class RcaShell : ComponentBase
             using var either = CancellationTokenSource.CreateLinkedTokenSource(stop, abandon, claims.Token);
             using var onEnd  = either.Token.Register(() => _ = Js.InvokeVoidAsync("rca.abandonCapture"));
             var b64 = await Js.InvokeAsync<string?>("rca.captureSpeech");
+            if (b64 == "!blocked") { Instruct(MicrophoneBlocked); return null; }
             if (either.IsCancellationRequested || string.IsNullOrEmpty(b64)) return null;
             var pcm = Convert.FromBase64String(b64);
             return pcm.Length == 0 ? null : MpaiJson.ToJson(SpeechPackaging.FromPcm16k(pcm, _sourceLanguage));
@@ -247,7 +257,17 @@ public partial class RcaShell : ComponentBase
         {
             if ((wanted ?? "").Contains("\"Face\"", StringComparison.Ordinal))
             {
-                var frame = await Js.InvokeAsync<string?>("rca.captureFrame");
+                // The first time, the browser asks for the camera: say why. An
+                // unanswered request, or Stop, lets the turn go on without the face.
+                if (!_cameraAsked) { _cameraAsked = true; Instruct("If your browser asks for the camera, allow it: the avatar then reads your face too."); }
+                var stopFace = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+                using var faceStopped = stopFace.Register(() => Js.InvokeVoidAsync("rca.abandonFrame"));
+                var frame = await Js.InvokeAsync<string?>("rca.captureFrame", 8000);
+                if (frame == "!blocked")
+                {
+                    if (!_cameraBlockedSaid) { _cameraBlockedSaid = true; Instruct(CameraBlocked); }
+                    return null;
+                }
                 return string.IsNullOrEmpty(frame) ? null
                      : MpaiJson.ToJson(BasicVisualObject.FromFile("webcam.jpg", Convert.FromBase64String(frame), "Face"));
             }
