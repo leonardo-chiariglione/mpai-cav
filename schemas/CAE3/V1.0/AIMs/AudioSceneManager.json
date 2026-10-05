@@ -70,6 +70,8 @@
                            {"Output": {"AIMName": "", "PortName": "SpeechScene"}, "Input": {"AIMName": "CAE-SSE-V1.0", "PortName": "SpeechScene"}},
                            {"Output": {"AIMName": "CAE-SSE-V1.0", "PortName": "SpeechSceneDescriptors"}, "Input": {"AIMName": "", "PortName": "SpeechSceneDescriptors"}},
                            {"Output": {"AIMName": "CAE-SSE-V1.0", "PortName": "SpeechSceneReport"}, "Input": {"AIMName": "", "PortName": "SpeechSceneReport"}},
+                           {"Output": {"AIMName": "CAE-AOE-V1.0", "PortName": "EditedAudioObject"}, "Input": {"AIMName": "OSD-BME-V1.5", "PortName": "EditedAudioObject", "PortNumber": 1}},
+                           {"Output": {"AIMName": "CAE-SOE-V1.0", "PortName": "EditedSpeechObject", "PortNumber": 1}, "Input": {"AIMName": "OSD-BME-V1.5", "PortName": "EditedSpeechObject", "PortNumber": 2}},
                            {"Output": {"AIMName": "CAE-ASE-V1.0", "PortName": "AudioSceneDescriptors"}, "Input": {"AIMName": "OSD-BME-V1.5", "PortName": "AudioSceneDescriptors", "PortNumber": 1}},
                            {"Output": {"AIMName": "CAE-SSE-V1.0", "PortName": "SpeechSceneDescriptors"}, "Input": {"AIMName": "OSD-BME-V1.5", "PortName": "SpeechSceneDescriptors", "PortNumber": 2}},
                            {"Output": {"AIMName": "", "PortName": "MultiSceneCommand", "PortNumber": 5}, "Input": {"AIMName": "OSD-BME-V1.5", "PortName": "MultiSceneCommand"}},

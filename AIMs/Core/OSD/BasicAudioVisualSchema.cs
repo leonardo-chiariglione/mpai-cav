@@ -58,8 +58,13 @@ public sealed class BasicAudioVisualSceneDescriptors
 
     public int AVObjectCount { get; init; }
 
-    // Named "...Data" to match the schema property BasicAVSceneDescriptorsData.
-    public List<BasicAVSceneEntry> BasicAVSceneDescriptorsData { get; init; } = new();
+    // Named "...Data" to match the schema property BasicAVSceneDescriptorsData. Null
+    // when the Scene holds only Objects: the schema wants it absent rather than empty.
+    public List<BasicAVSceneEntry>? BasicAVSceneDescriptorsData { get; init; } = new();
+
+    // The Basic Objects placed in the Scene directly, of any medium (the author,
+    // 2026/10/05: BME integrates objects and scenes). Null when there are none.
+    public List<BasicAVObjectEntry>? BasicObjectsData { get; init; }
 
     // OPTIONAL alignment layer (populated by the OSD-AVA AIM, absent in the
     // degenerate composition-only BMS). Each element combines the constituent
@@ -87,6 +92,16 @@ public sealed class BasicAVSceneEntry
     // common base type (all Basic, no hierarchy); the concrete type is checked
     // at use (e.g. `entry.BXSOrBXSID is BasicAudioSceneDescriptors`).
     public object? BXSOrBXSID { get; init; }
+}
+
+// A Basic Object placed in a Basic Multimodal Scene directly: its placement in the
+// common frame, where it is heard and seen from, and the Object (BAO / BVO / BSO /
+// B3O / BLO / BRO / BUO / BOO) or its ID string.
+public sealed class BasicAVObjectEntry
+{
+    public SpaceTime BXOSpaceTime { get; init; } = new();
+    public PointOfView? UserPoV { get; init; }
+    public object? BXOOrBXOID { get; init; }
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,6 @@
+{
+  "1 an Audio Object and a Speech Object": "object music + object voice, valid",
+  "2 a Speech Scene added": "scene dialogue + object music + object voice, valid",
+  "3 a new version of the Audio Object, followed": "scene dialogue + object music-2 + object voice, valid",
+  "4 the Speech Object and the Speech Scene out": "no Basic Multimodal Scene"
+}

@@ -2,7 +2,7 @@
   "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "title":                        "Basic Audio-Visual Scene Descriptors V1.5",
   "type":                         "object",
-  "required":                     [ "Header", "MInstanceID", "BasicAVSceneDescriptorsID", "BAVSDescriptorsSpaceTime", "AVObjectCount", "BasicAVSceneDescriptorsData" ],
+  "required":                     [ "Header", "MInstanceID", "BasicAVSceneDescriptorsID", "BAVSDescriptorsSpaceTime", "AVObjectCount" ],
   "additionalProperties":         false,
   "properties":                   {
 
@@ -25,7 +25,7 @@
 
     "AVObjectCount":              { "type": "integer", "minimum": 0 },
 
-    "BasicAVSceneDescriptorsData":{ "type": "array", "minItems": 1, "description": "The Basic Scenes, none of any medium required, at least one.", "items": { "type": "object", "additionalProperties": false, "required": [ "BXSSpaceTime", "BXSOrBXSID" ], "properties": {
+    "BasicAVSceneDescriptorsData":{ "type": "array", "minItems": 1, "description": "The Basic Scenes, of any medium. A Scene holds Basic Scenes, Basic Objects or both, at least one member.", "items": { "type": "object", "additionalProperties": false, "required": [ "BXSSpaceTime", "BXSOrBXSID" ], "properties": {
       "BXSSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
       "UserPoV":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where this member is heard and seen from in this Scene; absent, the Scene's UserPoV applies." },
       "BXSOrBXSID":               { "description": "A Basic Scene Descriptors of any medium - audio, speech, visual, 3D Model, LiDAR, RADAR, ultrasound, offline map, or its ID. A Basic Audio-Visual Scene Descriptors is not nested in another: that is an Audio-Visual Scene Descriptors.", "anyOf": [
@@ -38,6 +38,19 @@
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundSceneDescriptors.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapSceneDescriptors.json" },
                                   { "type": "string" } ] } } } },
+    "BasicObjectsData":           { "type": "array", "minItems": 1, "description": "The Basic Objects placed in the Scene directly, of any medium - an Object not in a Basic Scene of its own medium.", "items": { "type": "object", "additionalProperties": false, "required": [ "BXOSpaceTime", "BXOOrBXOID" ], "properties": {
+      "BXOSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "UserPoV":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where this member is heard and seen from in this Scene; absent, the Scene's UserPoV applies." },
+      "BXOOrBXOID":               { "description": "A Basic Object of any medium - audio, visual, speech, 3D Model, LiDAR, RADAR, ultrasound, offline map, or its ID.", "anyOf": [
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicLiDARObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapObject.json" },
+                                  { "type": "string" } ] } } } },
     "AlignedMMObjects":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "AlignmentCode", "AlignedObjects" ], "properties": {
       "AlignmentCode":            { "type": "string" },
       "AlignmentPointOfView":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
@@ -49,4 +62,5 @@
                                   { "type": "string" } ] } } } } },
 
     "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } },
+  "anyOf":                        [ { "required": [ "BasicAVSceneDescriptorsData" ] }, { "required": [ "BasicObjectsData" ] } ] }
