@@ -3,6 +3,12 @@
 # machine (Git Bash on Windows, or Linux), with the .NET 10 SDK and the Models folder:
 #
 #   MAS/Service/linux/package.sh <folder> [install-root]
+#   MPAI_GPU=1 MAS/Service/linux/package.sh <folder> [install-root]
+#
+# With MPAI_GPU=1 the Service carries ONNX Runtime for CUDA, so that the ONNX models run
+# on an NVIDIA GPU where the server has one (with CUDA 13 and cuDNN 9), and on the CPU
+# otherwise; without it they always run on the CPU. The language model (Ollama) and
+# speech recognition (whisper.cpp, built by setup.sh) use the GPU either way.
 #
 # <folder> receives everything the server needs, laid out as it will be installed
 # under install-root (default /opt/mpai): the MAS Service and the browser client's
@@ -17,8 +23,10 @@ here="MAS/Service/linux"
 [ -f "$here/package.sh" ] || { echo "Run from the repository root."; exit 1; }
 mkdir -p "$out"
 
-echo "== the MAS Service and the browser client's host, for linux-x64"
-dotnet publish MAS/Service/src/MasService.csproj -c Release -r linux-x64 --self-contained false -o "$out/service" -v quiet -nologo
+gpu=false; [ "${MPAI_GPU:-0}" = 1 ] && gpu=true
+echo "== the MAS Service and the browser client's host, for linux-x64 (ONNX Runtime: $([ $gpu = true ] && echo 'CUDA, CPU fallback' || echo CPU))"
+rm -rf "$out/service"
+dotnet publish MAS/Service/src/MasService.csproj -c Release -r linux-x64 --self-contained false -o "$out/service" -v quiet -nologo -p:MpaiOnnxGpu=$gpu
 dotnet publish UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj -c Release -r linux-x64 --self-contained false -o "$out/client" -v quiet -nologo
 
 echo "== the Apps, their L3s, the schemas; the avatar and the client's workflow"
@@ -28,6 +36,10 @@ rm -rf "$out/AMDs" "$out/schemas"
 cp -r AIMs/AMDs "$out/AMDs"
 cp -r schemas "$out/schemas"
 cp -r UserAgent/Assets UserAgent/Orchestration "$out/UserAgent/"
+# What the Service answers before anyone connects (WarmUp.cs): a spoken question and a picture.
+mkdir -p "$out/warmup"
+cp Test/Data/question.wav "$out/warmup/question.wav"
+cp Test/Data/red.jpg "$out/warmup/picture.jpg"
 
 echo "== the models the Apps use"
 grep -o '"/opt/mpai/Models/[^"]*"' "$here/aim-settings.json" | tr -d '"' | sed 's#^/opt/mpai/##' | sort -u | while read -r model; do

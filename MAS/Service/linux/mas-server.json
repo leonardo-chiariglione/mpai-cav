@@ -6,5 +6,7 @@
   "SettingsPath": "/opt/mpai/aim-settings.json",
   "SchemaDirectory": "/opt/mpai/schemas",
   "Gallery": "/opt/mpai/gallery",
-  "ForgetOnClose": true
+  "ForgetOnClose": true,
+  "WarmUp": true,
+  "WarmUpDirectory": "/opt/mpai/warmup"
 }

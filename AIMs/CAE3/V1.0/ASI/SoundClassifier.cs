@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 
 using Microsoft.ML.OnnxRuntime;
+using Mpai.Onnx;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace Mpai.Cae.Asi;
@@ -24,7 +25,7 @@ public sealed class SoundClassifier : IDisposable
 
     public SoundClassifier(string modelPath, string classMapPath)
     {
-        _session = new InferenceSession(modelPath);
+        _session = OnnxSessions.Create(modelPath);
         _inputName = _session.InputMetadata.Keys.First();
         _labels = LoadLabels(classMapPath);
     }

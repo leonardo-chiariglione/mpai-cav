@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.ML.OnnxRuntime;
+using Mpai.Onnx;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
 using SixLabors.ImageSharp;
@@ -39,7 +40,7 @@ public sealed class HSEmotionEstimator : IDisposable
 
     public HSEmotionEstimator(string modelPath)
     {
-        _session = new InferenceSession(modelPath);
+        _session = OnnxSessions.Create(modelPath);
     }
 
     // Estimate facial affect from an image already cropped to one face.

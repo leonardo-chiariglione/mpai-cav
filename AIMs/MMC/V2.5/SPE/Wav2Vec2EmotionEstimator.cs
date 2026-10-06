@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.ML.OnnxRuntime;
+using Mpai.Onnx;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace Mpai.Mmc.Spe;
@@ -25,7 +26,7 @@ public sealed class Wav2Vec2EmotionEstimator : IDisposable
 
     public Wav2Vec2EmotionEstimator(string modelPath)
     {
-        _session = new InferenceSession(modelPath);
+        _session = OnnxSessions.Create(modelPath);
     }
 
     // Predict dimensional affect from mono 16 kHz samples (roughly [-1,1] float).

@@ -139,6 +139,15 @@ public sealed class MasServerConfig
     // gallery is kept, as a local Service's.
     public bool ForgetOnClose { get; init; }
 
+    // THE FIRST ANSWER WARM (WarmUp.cs). Before accepting anyone, each Module
+    // answers a few canned turns, so that loading the language model, starting the
+    // voices and the first run of each model happen here and not at a person's
+    // first question. On unless false. WarmUpDirectory holds question.wav and
+    // picture.jpg for the spoken and the picture turns; without them those turns
+    // are skipped.
+    public bool WarmUp { get; init; } = true;
+    public string? WarmUpDirectory { get; init; }
+
     // The key the AIM hosts were started with (AIF.AimHost --key).
     public string? AimHostKey { get; init; }
 
