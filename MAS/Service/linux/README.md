@@ -56,6 +56,23 @@ NVIDIA GPU:
   can, the CPU otherwise - the default), `cuda` (the GPU or fail), `cpu`. The Service's
   log says, for each model, where it runs (`[ONNX] ...: CUDA`).
 
+**Build whisper.cpp with CUDA once, not on every server.** The CUDA build of whisper.cpp
+is the one heavy compile of the installation (nvcc, one large process per core): a server of
+modest cores and memory cannot finish it. Piper (a ready-made binary) and Ollama (which brings
+its own CUDA code) need no compile. So build whisper.cpp on a build machine that has the
+CUDA 13 toolkit, for the GPU the servers have, and package the result:
+
+```
+MAS/Service/linux/build-whisper.sh ~/whisper-cuda 86            # 86 = A10G / RTX A-series; 89 = L4 / RTX 4000 Ada / 4080-4090
+MPAI_GPU=1 MPAI_WHISPER_DIR=~/whisper-cuda MAS/Service/linux/package.sh ~/mpai-package /opt/mpai
+```
+
+`setup.sh` then does not build: it uses the packaged `whisper-cli` and `whisper-server`
+(`bin/whisper.build` says `cuda-prebuilt`), needs no `g++`, `cmake` or `nvcc`, and reports
+any CUDA library the server lacks (`apt-get install -y cuda-libraries-13-0`, the same
+libraries ONNX Runtime needs). The build is for the architectures given: a server whose GPU
+is of another architecture needs its own build.
+
 **The first answer.** Before it listens, the Service answers a few turns of each App
 (the files in `warmup/`), so that loading the language model, starting each voice and
 the first run of each model happen then and not at the first person's first question.

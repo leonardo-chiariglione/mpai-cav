@@ -14,8 +14,12 @@ root="$(cd "$(dirname "$0")" && pwd)"
 cd "$root"
 
 echo "== the system's packages"
+# A whisper.cpp built beforehand with CUDA (build-whisper.sh, brought by package.sh) is not
+# built again here, and needs no compiler on this server.
+prebuilt=""; [ "$(cat bin/whisper.build 2> /dev/null)" = cuda-prebuilt ] && prebuilt=1
 missing=""
-for c in espeak-ng zstd g++ cmake curl openssl; do command -v "$c" > /dev/null || missing="$missing $c"; done
+for c in espeak-ng zstd curl openssl; do command -v "$c" > /dev/null || missing="$missing $c"; done
+[ -n "$prebuilt" ] || for c in g++ cmake; do command -v "$c" > /dev/null || missing="$missing $c"; done
 dotnet --list-runtimes 2> /dev/null | grep -q "Microsoft.AspNetCore.App 10\." || missing="$missing aspnetcore-runtime-10.0"
 if [ -n "$missing" ]; then
     echo "Missing:$missing. As root (Ubuntu):"
@@ -41,8 +45,10 @@ else
 fi
 nvcc=$(command -v nvcc || ls /usr/local/cuda/bin/nvcc 2> /dev/null || true)
 if [ -n "$gpu" ]; then
-    [ -n "$nvcc" ] && echo "CUDA toolkit: $nvcc" \
-                   || echo "No CUDA toolkit (nvcc): whisper.cpp will be built for the CPU. As root (Ubuntu): apt-get install -y nvidia-cuda-toolkit"
+    if [ -n "$prebuilt" ]; then echo "whisper.cpp: built beforehand for CUDA ($(cat bin/whisper.arch 2> /dev/null || echo '?')): no toolkit needed here"
+    elif [ -n "$nvcc" ]; then echo "CUDA toolkit: $nvcc"
+    else echo "No CUDA toolkit (nvcc): whisper.cpp will be built for the CPU. Better: build it once with build-whisper.sh on a build machine and package it (README). Or, as root (Ubuntu): apt-get install -y nvidia-cuda-toolkit"
+    fi
     if [ -f service/libonnxruntime_providers_cuda.so ]; then
         ldconfig -p | grep -q 'libcudnn.so.9' && ldconfig -p | grep -q 'libcublasLt.so.13' \
             && echo "CUDA 13 and cuDNN 9: present - the ONNX models will run on the GPU" \
@@ -66,7 +72,12 @@ echo "== whisper.cpp 1.9.3 (ASR), built here, one file"
 # otherwise; bin/whisper.build says which, and a build of the other kind is redone.
 want=cpu; [ -n "$gpu" ] && [ -n "$nvcc" ] && want=cuda
 have=$(cat bin/whisper.build 2> /dev/null || echo cpu)
-if [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ] || [ "$have" != "$want" ]; then
+if [ -n "$prebuilt" ]; then
+    # Never rebuilt here, whatever this server has: a missing CUDA library is said, not hidden.
+    [ -x bin/whisper-cli ] && [ -x bin/whisper-server ] || { echo "bin/whisper.build says cuda-prebuilt but whisper-cli / whisper-server are missing."; exit 1; }
+    missinglib=$(ldd bin/whisper-server 2> /dev/null | grep 'not found' || true)
+    [ -z "$missinglib" ] || { echo "WARNING: whisper-server cannot find: $missinglib"; echo "  As root (Ubuntu), from NVIDIA's apt repository: apt-get install -y cuda-libraries-13-0"; }
+elif [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ] || [ "$have" != "$want" ]; then
     [ -f src/whisper.cpp-v1.9.3.tar.gz ] || curl -sSL -o src/whisper.cpp-v1.9.3.tar.gz https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/refs/tags/v1.9.3
     tar xzf src/whisper.cpp-v1.9.3.tar.gz -C src
     flags=""

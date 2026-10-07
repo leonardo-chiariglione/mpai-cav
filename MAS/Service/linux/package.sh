@@ -7,8 +7,10 @@
 #
 # With MPAI_GPU=1 the Service carries ONNX Runtime for CUDA, so that the ONNX models run
 # on an NVIDIA GPU where the server has one (with CUDA 13 and cuDNN 9), and on the CPU
-# otherwise; without it they always run on the CPU. The language model (Ollama) and
-# speech recognition (whisper.cpp, built by setup.sh) use the GPU either way.
+# otherwise; without it they always run on the CPU. The language model (Ollama) uses the
+# GPU either way; speech recognition (whisper.cpp) does if built with CUDA - once, on a
+# build machine, by build-whisper.sh, whose folder MPAI_WHISPER_DIR names here; otherwise
+# setup.sh builds it on the server (the CPU, or CUDA where the toolkit is there).
 #
 # <folder> receives everything the server needs, laid out as it will be installed
 # under install-root (default /opt/mpai): the MAS Service and the browser client's
@@ -48,10 +50,20 @@ grep -o '"/opt/mpai/Models/[^"]*"' "$here/aim-settings.json" | tr -d '"' | sed '
 done
 du -sh "$out/Models"
 
+if [ -n "${MPAI_WHISPER_DIR:-}" ]; then
+    echo "== whisper.cpp, built beforehand for CUDA (build-whisper.sh)"
+    for f in whisper-cli whisper-server whisper.build whisper.arch; do
+        [ -f "$MPAI_WHISPER_DIR/bin/$f" ] || { echo "No $MPAI_WHISPER_DIR/bin/$f: run build-whisper.sh first."; exit 1; }
+    done
+    mkdir -p "$out/bin"
+    cp "$MPAI_WHISPER_DIR"/bin/whisper-cli "$MPAI_WHISPER_DIR"/bin/whisper-server "$MPAI_WHISPER_DIR"/bin/whisper.build "$MPAI_WHISPER_DIR"/bin/whisper.arch "$out/bin/"
+    chmod +x "$out/bin/whisper-cli" "$out/bin/whisper-server"
+fi
+
 echo "== the configuration, for $root"
 for f in mas-server.json aim-settings.json; do sed "s#/opt/mpai#$root#g" "$here/$f" > "$out/$f"; done
 mkdir -p "$out/systemd"
 for f in "$here"/systemd/*.service; do sed "s#/opt/mpai#$root#g" "$f" > "$out/systemd/$(basename "$f")"; done
-cp "$here/setup.sh" "$here/README.md" "$out/"
+cp "$here/setup.sh" "$here/build-whisper.sh" "$here/README.md" "$out/"
 chmod +x "$out/setup.sh" "$out/service/MasService" "$out/client/RcaWeb.Host" 2> /dev/null || true
 echo "Packaged in $out, for $root. Copy it there on the server, and run setup.sh."
