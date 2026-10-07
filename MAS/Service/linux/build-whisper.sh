@@ -14,8 +14,9 @@
 #
 # The build machine needs the CUDA toolkit (nvcc), of the same CUDA as the servers' ONNX
 # Runtime (package.sh: CUDA 13 by default, CUDA 12 with MPAI_CUDA=12), so that one set of
-# CUDA libraries serves both - g++, cmake, curl. For servers with an NVIDIA driver 550
-# (CUDA 12.4): the 12.x toolkit, apt cuda-toolkit-12-4 (or 12-8), not 13.
+# CUDA libraries serves both - g++, cmake, curl. For servers with an NVIDIA driver older
+# than 580 (550, say): apt cuda-toolkit-12-8, the same 12.8 as the libraries (cuda-libraries-12-8:
+# two CUDA 12 versions side by side leave the loader's choice to chance), not 13.
 # A server then needs only the CUDA *libraries* (apt: cuda-libraries-13-0) and the NVIDIA
 # driver: no nvcc, no g++, no cmake. <out-folder>/bin receives whisper-cli, whisper-server
 # and whisper.build ("cuda-prebuilt"), which tells setup.sh not to build again.

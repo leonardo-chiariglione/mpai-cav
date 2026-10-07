@@ -125,7 +125,8 @@ driver 550 host: the first run decides.
 
 ```
 apt-get install -y cuda-libraries-12-8 libcudnn9-cuda-12     # from NVIDIA's repository (above); the driver is the host's
-build-whisper.sh ~/whisper-cuda 89                            # 89: RTX 4090, L4; CUDA toolkit 12.x (cuda-toolkit-12-4 for driver 550)
+apt-get install -y cuda-toolkit-12-8                          # only where whisper.cpp is built: the SAME 12.8 as the libraries - two CUDA 12 versions side by side leave the loader's choice to chance
+build-whisper.sh ~/whisper-cuda 89                            # 89: RTX 4090, L4
 cp ~/whisper-cuda/bin/* /opt/mpai/bin/                        # before setup.sh: it then builds nothing
 ```
 
