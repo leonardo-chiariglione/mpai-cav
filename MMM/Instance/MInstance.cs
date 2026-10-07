@@ -81,6 +81,7 @@ public sealed class MInstance
     // What the viewer says about a demonstration in progress: the step just performed, and
     // whether the next one waits for the presenter (Manual). Not part of the M-Instance.
     public volatile string? Caption;
+    public volatile string? Note;     // one line under the caption: what the step means
     public volatile bool Manual;
     public Schemas Schemas => schemas;
 
@@ -209,7 +210,7 @@ public sealed class MInstance
                     ["Source"] = a.Source, ["Action"] = a.Action, ["Destination"] = a.Destination, ["Http"] = a.Http, ["Status"] = a.Status
                 }).ToArray()),
                 ["Performed"] = activity.Count,
-                ["Caption"] = Caption, ["Manual"] = Manual,
+                ["Caption"] = Caption, ["Note"] = Note, ["Manual"] = Manual,
                 ["Things"] = new JsonArray(located.Select(i =>
                 {
                     var w = Where(i);

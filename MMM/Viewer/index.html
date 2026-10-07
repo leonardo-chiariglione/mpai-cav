@@ -22,6 +22,8 @@
   #caption { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); max-width: calc(100vw - 48px); background: var(--panel); border-radius: 10px; padding: 12px 22px; text-align: center; font-size: 22px; font-weight: 600; cursor: pointer; user-select: none; }
   #caption small { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); }
   #caption[hidden] { display: none; }
+  #captionNote { margin-top: 6px; font-size: 15px; font-weight: 400; color: #f2c94c; max-width: 760px; }
+  #captionNote:empty { display: none; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 </style>
 <script type="importmap">
@@ -33,7 +35,7 @@
 </head>
 <body>
 <div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
-<div id="caption" hidden><span id="captionText"></span><small id="captionHint"></small></div>
+<div id="caption" hidden><span id="captionText"></span><div id="captionNote"></div><small id="captionHint"></small></div>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -154,6 +156,7 @@ async function refresh() {
   manual = !!state.Manual;
   document.getElementById('caption').hidden = !state.Caption;
   document.getElementById('captionText').textContent = state.Caption ?? '';
+  document.getElementById('captionNote').textContent = state.Note ?? '';
   document.getElementById('captionHint').textContent = manual ? 'Space, right arrow or click: next step' : '';
 
   const seen = new Set();
