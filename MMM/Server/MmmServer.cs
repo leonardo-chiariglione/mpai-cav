@@ -20,8 +20,11 @@ public static class MmmServer
 {
     // viewer: the folder of the viewer (MMM/Viewer), served at /viewer/ with the
     // M-Instance as it can be seen at /viewer/state; null, no viewer.
-    // onNext: what the viewer's "next step" (Space, a click) does in a manual demonstration.
-    public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null)
+    // onNext, onBack: what the viewer's "next step" (Space, up arrow, a click) and "previous
+    // step" (down arrow) do in a manual demonstration; state: what the viewer is shown instead
+    // of the M-Instance as it is now (a step already performed, shown again).
+    public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null,
+                                       Action? onBack = null, Func<System.Text.Json.Nodes.JsonObject>? state = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
@@ -79,8 +82,9 @@ public static class MmmServer
         if (viewer is not null)
         {
             var root = Path.GetFullPath(viewer);
-            app.MapGet("/viewer/state", () => Results.Json(m.Snapshot()));
+            app.MapGet("/viewer/state", () => Results.Json(state?.Invoke() ?? m.Snapshot()));
             app.MapPost("/viewer/next", () => { onNext?.Invoke(); return Results.Ok(); });
+            app.MapPost("/viewer/back", () => { onBack?.Invoke(); return Results.Ok(); });
             app.MapGet("/viewer/{**path}", (HttpContext ctx, string? path) =>
             {
                 ctx.Response.Headers.CacheControl = "no-store";   // a presenter must never see a stale page

@@ -141,7 +141,11 @@ async function persona(t) {
 // In a manual demonstration the server waits for this before the next step.
 let manual = false;
 const nextStep = () => { if (manual) fetch('next', { method: 'POST' }).catch(() => {}); };
-addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); nextStep(); } });
+const backStep = () => { if (manual) fetch('back', { method: 'POST' }).catch(() => {}); };
+addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); nextStep(); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); backStep(); }
+});
 document.getElementById('caption').addEventListener('click', nextStep);
 
 // ---------------------------------------------------------------- the M-Instance
@@ -157,8 +161,9 @@ async function refresh() {
   document.getElementById('caption').hidden = !state.Caption;
   document.getElementById('captionText').textContent = state.Caption ?? '';
   document.getElementById('captionNote').textContent = state.Note ?? '';
-  document.getElementById('captionHint').textContent = manual ? 'Space, right arrow or click: next step' : '';
+  document.getElementById('captionHint').textContent = manual ? 'Space, up arrow or click: next step  ·  down arrow: previous step' : '';
 
+  const hidden = new Set(state.Hidden ?? []);   // not drawn yet: a demonstration brings them in
   const seen = new Set();
   for (const t of state.Things) {
     seen.add(t.ID);
@@ -179,7 +184,7 @@ async function refresh() {
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).
-    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At);
+    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID);
     const l = d.object.userData.label;
     if (l) l.visible = d.object.visible;
     if (l) l.element.textContent = t.Kind === 'Persona' ? `${t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
