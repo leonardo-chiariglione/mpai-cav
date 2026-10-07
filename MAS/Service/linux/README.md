@@ -35,9 +35,32 @@ Everything under one folder, `/opt/mpai` here (any other works: give it to
 | `mas-server.json`, `aim-settings.json` | the Service's configuration and the AIMs' settings | - |
 | `systemd/` | the units that run it | - |
 
-About 11 GB of disk. Memory: 16 GB is comfortable. A GPU is optional: Ollama uses an
-NVIDIA one if its driver is installed (a GTX 1050 Ti was used through Ollama's CUDA 12
-libraries); everything else runs on the CPU.
+About 11 GB of disk. Memory: 16 GB is comfortable.
+
+**A GPU is optional, but a server that has one must be set up to use it** - a cloud
+image usually comes without the NVIDIA driver, and then everything runs on the CPU with
+no error anywhere, only slowly. `setup.sh` says what it finds under "the GPU". With an
+NVIDIA GPU:
+
+- the **driver** (as root on Ubuntu: `apt-get install -y ubuntu-drivers-common && ubuntu-drivers install`,
+  then reboot): Ollama then runs the language model on the GPU (check with
+  `ollama ps`: `100% GPU`);
+- the **CUDA toolkit** (`apt-get install -y nvidia-cuda-toolkit`): `setup.sh` then builds
+  whisper.cpp with CUDA, and rebuilds it if it was built for the CPU (`bin/whisper.build`);
+- **CUDA 13 and cuDNN 9** (ONNX Runtime 1.27 needs `libcudart.so.13`, `libcublas(Lt).so.13`,
+  `libnvrtc.so.13` and `libcudnn.so.9`, and so a driver of version 580 or later; from NVIDIA's
+  apt repository: `apt-get install -y cuda-libraries-13-0 libcudnn9-cuda-13`), and the package
+  made with `MPAI_GPU=1 package.sh ...`: the
+  ONNX models (pictures, translation, voice and face emotion, faces, speakers) then run
+  on the GPU. `MPAI_ONNX_DEVICE` in `mpai-service.service` chooses: `auto` (the GPU where it
+  can, the CPU otherwise - the default), `cuda` (the GPU or fail), `cpu`. The Service's
+  log says, for each model, where it runs (`[ONNX] ...: CUDA`).
+
+**The first answer.** Before it listens, the Service answers a few turns of each App
+(the files in `warmup/`), so that loading the language model, starting each voice and
+the first run of each model happen then and not at the first person's first question.
+The log shows each turn and its time ("warm-up ..."). `"WarmUp": false` in
+`mas-server.json` turns it off.
 
 The Service listens on the server's loopback only (`127.0.0.1:5005`): the network
 reaches the client's host, over HTTPS, and the host passes the client's requests on.

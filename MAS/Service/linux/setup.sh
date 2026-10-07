@@ -23,6 +23,35 @@ if [ -n "$missing" ]; then
     exit 1
 fi
 
+echo "== the GPU"
+# An NVIDIA GPU is used only if its driver is installed: Ollama then runs the language
+# model on it; whisper.cpp does if built with CUDA (below); the ONNX models do if the
+# Service was packaged with MPAI_GPU=1 and CUDA 13 and cuDNN 9 are installed. A cloud
+# image usually comes without the driver - and then everything runs on the CPU, slowly,
+# with no error anywhere.
+gpu=""
+if command -v nvidia-smi > /dev/null && nvidia-smi > /dev/null 2>&1; then
+    gpu=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)
+    echo "NVIDIA GPU: $gpu"
+elif lspci 2> /dev/null | grep -qi nvidia || [ -d /proc/driver/nvidia ]; then
+    echo "WARNING: an NVIDIA GPU is present but its driver is not working - everything will run on the CPU."
+    echo "  As root (Ubuntu): apt-get install -y ubuntu-drivers-common && ubuntu-drivers install && reboot"
+else
+    echo "No NVIDIA GPU: everything runs on the CPU."
+fi
+nvcc=$(command -v nvcc || ls /usr/local/cuda/bin/nvcc 2> /dev/null || true)
+if [ -n "$gpu" ]; then
+    [ -n "$nvcc" ] && echo "CUDA toolkit: $nvcc" \
+                   || echo "No CUDA toolkit (nvcc): whisper.cpp will be built for the CPU. As root (Ubuntu): apt-get install -y nvidia-cuda-toolkit"
+    if [ -f service/libonnxruntime_providers_cuda.so ]; then
+        ldconfig -p | grep -q 'libcudnn.so.9' && ldconfig -p | grep -q 'libcublasLt.so.13' \
+            && echo "CUDA 13 and cuDNN 9: present - the ONNX models will run on the GPU" \
+            || echo "WARNING: the Service has ONNX Runtime for CUDA but CUDA 13 / cuDNN 9 are missing - the ONNX models will run on the CPU"
+    else
+        echo "The Service was packaged for the CPU (package.sh without MPAI_GPU=1): the ONNX models run on the CPU"
+    fi
+fi
+
 mkdir -p bin src
 echo "== Piper 1.2.0 (TTS)"
 if [ ! -x bin/piper/piper ]; then
@@ -33,14 +62,24 @@ bin/piper/piper --version
 
 echo "== whisper.cpp 1.9.3 (ASR), built here, one file"
 # whisper-server keeps the model loaded between turns; whisper-cli is the fallback.
-if [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ]; then
+# Built with CUDA where there is a working GPU and the CUDA toolkit, for the CPU
+# otherwise; bin/whisper.build says which, and a build of the other kind is redone.
+want=cpu; [ -n "$gpu" ] && [ -n "$nvcc" ] && want=cuda
+have=$(cat bin/whisper.build 2> /dev/null || echo cpu)
+if [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ] || [ "$have" != "$want" ]; then
     [ -f src/whisper.cpp-v1.9.3.tar.gz ] || curl -sSL -o src/whisper.cpp-v1.9.3.tar.gz https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/refs/tags/v1.9.3
     tar xzf src/whisper.cpp-v1.9.3.tar.gz -C src
-    (cd src/whisper.cpp-1.9.3 && cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DWHISPER_BUILD_TESTS=OFF > /dev/null \
-        && cmake --build build -j"$(nproc)" --target whisper-cli whisper-server > /dev/null)
-    cp src/whisper.cpp-1.9.3/build/bin/whisper-cli bin/whisper-cli
-    cp src/whisper.cpp-1.9.3/build/bin/whisper-server bin/whisper-server
+    flags=""
+    [ "$want" = cuda ] && flags="-DGGML_CUDA=1 -DCMAKE_CUDA_COMPILER=$nvcc -DCMAKE_CUDA_ARCHITECTURES=native"
+    echo "building for the $want (this takes a few minutes with CUDA)"
+    (cd src/whisper.cpp-1.9.3 && rm -rf "build-$want" \
+        && cmake -B "build-$want" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DWHISPER_BUILD_TESTS=OFF $flags > /dev/null \
+        && cmake --build "build-$want" -j"$(nproc)" --target whisper-cli whisper-server > /dev/null)
+    cp "src/whisper.cpp-1.9.3/build-$want/bin/whisper-cli" bin/whisper-cli
+    cp "src/whisper.cpp-1.9.3/build-$want/bin/whisper-server" bin/whisper-server
+    echo "$want" > bin/whisper.build
 fi
+echo "whisper.cpp built for the $(cat bin/whisper.build 2> /dev/null || echo cpu)"
 hash=$(sha256sum bin/whisper-cli | cut -d' ' -f1 | tr a-f A-F)
 sed -i "s#\"SHA256:ExecutablePath\": \"[^\"]*\"#\"SHA256:ExecutablePath\": \"$hash\"#" aim-settings.json
 echo "whisper-cli $hash, written into aim-settings.json"

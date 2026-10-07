@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ONNX RUNTIME, ONCE FOR EVERY AIM THAT USES IT (OnnxSessions.cs). The package is chosen
+    here and nowhere else, so that a build has one onnxruntime and not two that collide:
+
+      default                       Microsoft.ML.OnnxRuntime      CPU only
+      -p:MpaiOnnxGpu=true           Microsoft.ML.OnnxRuntime.Gpu  CUDA, with the CPU as fallback
+
+    The GPU package needs, on the machine that runs it, an NVIDIA driver (580 or later), the CUDA 13 runtime libraries and cuDNN 9;
+    without them every session falls back to the CPU and says so.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MpaiOnnxGpu)' != 'true'">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.27.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MpaiOnnxGpu)' == 'true'">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.27.0" />
+  </ItemGroup>
+</Project>

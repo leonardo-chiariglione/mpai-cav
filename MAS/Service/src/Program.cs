@@ -33,12 +33,12 @@ namespace Mpai.Mas.Service;
 internal static class Program
 {
     private const string AcrModule = "1MMC-ACR-V2.5-I01";
-    private const string AmqModule = "1MMC-AMQ-V2.5-I01";
+    internal const string AmqModule = "1MMC-AMQ-V2.5-I01";
     private const string MacModule = "1MMC-MAC-V2.5-I01";
-    private const string MadModule = "1MMC-MAD-V2.5-I01";
-    private const string MasModule = "1MAS-APP-V1.0-I01";
-    private const string MatModule = "1MMC-MAT-V2.5-I01";
-    private const string MpdModule = "1MMC-MPD-V2.5-I01";
+    internal const string MadModule = "1MMC-MAD-V2.5-I01";
+    internal const string MasModule = "1MAS-APP-V1.0-I01";
+    internal const string MatModule = "1MMC-MAT-V2.5-I01";
+    internal const string MpdModule = "1MMC-MPD-V2.5-I01";
 
     private static async Task<int> Main(string[] args)
     {
@@ -322,6 +322,12 @@ internal static class Program
         if (config.ForgetOnClose)
             north.SharedStorageKeep(gallery, AIF.SharedStorage.RuledStore.Default, new AIF.SharedStorage.StorageTime(AIF.SharedStorage.StorageLifetime.Session));
         Console.WriteLine($"  Gallery:       {gallery}{(config.ForgetOnClose ? ", what a session registers deleted when it closes" : "")}");
+
+        // THE FIRST ANSWER WARM (WarmUp.cs): every engine's first-request work done
+        // here, before anyone connects, not at the first person's first question.
+        Console.WriteLine();
+        if (config.WarmUp) WarmUp.Run(runner, settingsPath, config.WarmUpDirectory, Console.WriteLine);
+        else Console.WriteLine("Warm-up: off (WarmUp is false) - the first answer of each App will be slow.");
 
         Console.WriteLine();
 

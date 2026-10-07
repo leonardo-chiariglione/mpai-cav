@@ -46,7 +46,10 @@ public sealed class ServiceFixture : IDisposable
             ["AppDirectory"] = Path.Combine(root, "Apps"),
             ["Apps"]         = new JsonArray("MAD", "AMQ", "MAT", "MPD"),
             ["AmdDirectory"] = Repository.Amds,
-            ["SettingsPath"] = Path.Combine(root, "AIMs", "aim-settings.json")
+            ["SettingsPath"] = Path.Combine(root, "AIMs", "aim-settings.json"),
+            // The tests time their own first turn apart (Median): no warm-up, so that
+            // the Service starts listening as soon as its Modules are built.
+            ["WarmUp"]       = false
         }.ToJsonString());
 
         var ready = new ManualResetEventSlim();

@@ -5,9 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.27.0" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\..\..\Onnx\Mpai.Onnx.csproj" />
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\SIR\Mpai.Mmc.Sir.csproj" />
