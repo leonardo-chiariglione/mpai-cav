@@ -106,7 +106,8 @@ Checked on paper against the repository listings only: not yet run on a 24.04 se
 Windows, so after unpacking it, as the service user, in the folder it unpacked to:
 
 ```
-chmod +x setup.sh build-whisper.sh service/MasService client/RcaWeb.Host
+tar xzf mpai-linux-ubuntu2404-cuda12-*.tar.gz --no-same-owner    # the archive carries a Windows user id a container cannot give
+chmod +x setup.sh build-whisper.sh run.sh service/MasService client/RcaWeb.Host
 ```
 
 and copy the repository's `Models` folder (6.8 GB, the files `aim-settings.json` names) to
@@ -129,6 +130,16 @@ apt-get install -y cuda-toolkit-12-8                          # only where whisp
 build-whisper.sh ~/whisper-cuda 89                            # 89: RTX 4090, L4
 cp ~/whisper-cuda/bin/* /opt/mpai/bin/                        # before setup.sh: it then builds nothing
 ```
+
+**What a real pod showed** (RunPod, Ubuntu 24.04.3, NVIDIA RTX PRO 4500 Blackwell, driver 580,
+tried 2026-10-07): the image already had the CUDA 12.8 compiler, libraries and cuDNN 9 for CUDA 12
+(`dpkg -l | grep cuda`; some of them held), and NVIDIA's apt repository. So on such an image
+install no CUDA at all - and do **not** add `cuda-keyring`: a second copy of the repository
+makes apt fail ("Conflicting values set for option Signed-By"). Use the **cuda12** package there
+(CUDA 13 libraries cannot be installed beside the held 12.8 ones). `nproc` says 128 on that pod
+but the container may use 13.6 CPUs and 87 GB (cgroup limits): `build-whisper.sh` reads them.
+A Blackwell GPU (RTX PRO, RTX 50xx) is architecture **120**: `build-whisper.sh ~/whisper-cuda 120`,
+which took about 3 minutes with 14 jobs.
 
 **No systemd.** A container has none, so `setup.sh`'s last step is not the units but
 

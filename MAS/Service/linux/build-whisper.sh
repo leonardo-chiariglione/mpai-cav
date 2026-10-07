@@ -9,7 +9,8 @@
 #
 # cuda-architectures: the compute capability of the GPU the servers have - one is much
 # lighter to build than all: 75 T4, 80 A100, 86 A10G / RTX A4000-A6000 / RTX 3090,
-# 89 L4 / L40S / RTX 4000 Ada / RTX 4080-4090, 90 H100; several as "80;86". Default
+# 89 L4 / L40S / RTX 4000 Ada / RTX 4080-4090, 90 H100, 120 Blackwell (RTX PRO, RTX 50xx;
+# CUDA 12.8 or later); several as "80;86". Default
 # "native": the GPU of this machine (nvidia-smi must find one).
 #
 # The build machine needs the CUDA toolkit (nvcc), of the same CUDA as the servers' ONNX
@@ -34,9 +35,19 @@ fi
 
 # One nvcc per ~4 GB of memory, at most one per core: what a build machine of 8 cores and
 # 32 GB can finish.
+# In a container the machine's memory and cores are not the container's: its cgroup limits
+# (memory.max, cpu.max) are what it can use. MPAI_BUILD_JOBS sets the number outright.
 mem_gb=$(awk '/MemTotal/ {printf "%d", $2/1048576}' /proc/meminfo)
+lim=$(cat /sys/fs/cgroup/memory.max 2> /dev/null || echo max)
+[ "$lim" != max ] && [ "$lim" -gt 0 ] 2> /dev/null && [ $(( lim / 1073741824 )) -lt "$mem_gb" ] && mem_gb=$(( lim / 1073741824 ))
+cores=$(nproc)
+read -r quota period < /sys/fs/cgroup/cpu.max 2> /dev/null || quota=max
+if [ "${quota:-max}" != max ] && [ "${period:-0}" -gt 0 ] 2> /dev/null; then
+    q=$(( (quota + period - 1) / period )); [ "$q" -ge 1 ] && [ "$q" -lt "$cores" ] && cores=$q
+fi
 jobs=$(( mem_gb / 4 )); [ "$jobs" -ge 1 ] || jobs=1
-cores=$(nproc); [ "$jobs" -le "$cores" ] || jobs=$cores
+[ "$jobs" -le "$cores" ] || jobs=$cores
+jobs="${MPAI_BUILD_JOBS:-$jobs}"
 
 work="$out/src"; mkdir -p "$out/bin" "$work"
 [ -f "$work/whisper.cpp-v1.9.3.tar.gz" ] || curl -sSL -o "$work/whisper.cpp-v1.9.3.tar.gz" https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/refs/tags/v1.9.3

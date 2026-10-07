@@ -20,6 +20,12 @@ mkdir -p logs run
 port="${MPAI_CLIENT_PORT:-8080}"
 [ "${MPAI_CLIENT_TLS:-0}" = 1 ] && port="${MPAI_CLIENT_PORT:-443}"
 
+# The GPU's compiled kernels are kept here, with the install, not in ~/.nv of the container: on a new
+# GPU generation the first run compiles them (about a minute, once) and a container's own disk may be
+# lost with the pod. 4 GB is the most it keeps (the default, 256 MB, would drop some).
+mkdir -p "$root/cuda-cache"
+export CUDA_CACHE_PATH="$root/cuda-cache" CUDA_CACHE_MAXSIZE=4294967296
+
 alive() { [ -f "run/$1.pid" ] && kill -0 "$(cat "run/$1.pid")" 2> /dev/null; }
 waitfor() { # url seconds
     for _ in $(seq 1 "$2"); do curl -sk --max-time 2 "$1" > /dev/null && return 0; sleep 1; done; return 1
@@ -46,7 +52,9 @@ start() {
         if [ "${MPAI_CLIENT_TLS:-0}" = 1 ]; then
             args+=(--Urls "https://0.0.0.0:$port" --Kestrel:Certificates:Default:Path="$root/tls/cert.pem" --Kestrel:Certificates:Default:KeyPath="$root/tls/key.pem")
         else args+=(--Urls "http://0.0.0.0:$port"); fi
-        (cd client && ASPNETCORE_ENVIRONMENT=Production nohup ./RcaWeb.Host "${args[@]}" > "$root/logs/client.log" 2>&1 & echo $! > "$root/run/client.pid")
+        # exec: the process id kept is the client's own, not that of a wrapper shell (stop would miss it).
+        (cd client && ASPNETCORE_ENVIRONMENT=Production exec nohup ./RcaWeb.Host "${args[@]}" > "$root/logs/client.log" 2>&1) &
+        echo $! > run/client.pid
         scheme=http; [ "${MPAI_CLIENT_TLS:-0}" = 1 ] && scheme=https
         waitfor "$scheme://127.0.0.1:$port/MPAI/AIFU/Apps" 60 || { echo "The client's host did not answer: see logs/client.log"; exit 1; }
     fi
