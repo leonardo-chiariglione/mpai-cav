@@ -148,7 +148,7 @@ which took about 3 minutes with 14 jobs.
 ```
 
 as the user that owns the folder (root, in a pod). The client's host listens on plain HTTP,
-port **8080**: add 8080 as an HTTP port of the pod and open `https://<pod-id>-8080.proxy.runpod.net/`
+port **8880**: add 8880 as an HTTP port of the pod and open `https://<pod-id>-8880.proxy.runpod.net/`
 - RunPod's proxy does the https, which browsers need for the microphone. `./run.sh status`
 shows where each model runs (`[ONNX] ...: CUDA`, `ollama ps`) and the warm-up times.
 A pod's disk outside `/workspace` (or a network volume) is lost when the pod is stopped and started again

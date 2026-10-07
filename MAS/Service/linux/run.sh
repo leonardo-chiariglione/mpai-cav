@@ -8,16 +8,16 @@
 #   ./run.sh logs [ollama|service|client]
 #   ./run.sh stop
 #
-# The client's host listens on plain HTTP, port 8080 (MPAI_CLIENT_PORT): RunPod's proxy gives it
-# https://<pod-id>-8080.proxy.runpod.net, which browsers accept - and microphones need https.
-# Expose port 8080 as an HTTP port of the pod. To have the host do the https itself, as the
+# The client's host listens on plain HTTP, port 8880 (MPAI_CLIENT_PORT): RunPod's proxy gives it
+# https://<pod-id>-8880.proxy.runpod.net, which browsers accept - and microphones need https.
+# Expose port 8880 as an HTTP port of the pod. To have the host do the https itself, as the
 # systemd unit does (certificate in tls/), MPAI_CLIENT_TLS=1 ./run.sh start: port 443 (MPAI_CLIENT_PORT).
 # MPAI_ONNX_DEVICE (auto, cuda, cpu) is passed on to the Service; auto is the default.
 set -u
 root="$(cd "$(dirname "$0")" && pwd)"
 cd "$root"
 mkdir -p logs run
-port="${MPAI_CLIENT_PORT:-8080}"
+port="${MPAI_CLIENT_PORT:-8880}"
 [ "${MPAI_CLIENT_TLS:-0}" = 1 ] && port="${MPAI_CLIENT_PORT:-443}"
 
 # The GPU's compiled kernels are kept here, with the install, not in ~/.nv of the container: on a new
