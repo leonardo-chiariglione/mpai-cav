@@ -178,9 +178,15 @@ public sealed class MInstance
     {
         lock (gate)
         {
+            // Where an Item stands within its Location when its Spatial Attitude says so
+            // (x and z of its Position, in metres); an Item without, stands at the Location's centre.
+            double[]? Spot(Item it) =>
+                it.SpatialAttitude?["Position"]?["CartPosition"] is JsonArray a && a.Count >= 3
+                && a[0] is not null && a[2] is not null && (a[0]!.GetValue<double>() != 0 || a[2]!.GetValue<double>() != 0)
+                    ? [a[0]!.GetValue<double>(), a[2]!.GetValue<double>()] : null;
             double[] Where(Item it, int depth = 0)
             {
-                var own = it.Place ?? [0, 0];
+                var own = it.Place ?? Spot(it) ?? [0, 0];
                 if (depth < 8 && it.Location is { } l && items.TryGetValue(l, out var parent))
                 {
                     var p = Where(parent, depth + 1);
@@ -210,7 +216,7 @@ public sealed class MInstance
                     var o = new JsonObject
                     {
                         ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
-                        ["At"] = i.Location, ["X"] = w[0] + side.GetValueOrDefault(i.ID), ["Z"] = w[1],
+                        ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Z"] = w[1],
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
                     };
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;

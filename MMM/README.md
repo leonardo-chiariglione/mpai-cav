@@ -10,9 +10,10 @@ stripped-down Use Case 2.
 
 ## Demonstration: Use Case 2, "Friends meet in the metaverse"
 
-`MMM\Run-Demo.ps1` starts an M-Instance and its 3-D viewer and opens the viewer in the
-browser; the presenter shows the 19 steps of the Use Case with Space, the right arrow or a
-click (`MMM\Run-Demo.ps1 4` plays them by itself, 4 s a step). Everything is local: the
+`MMM\Run-Demo.cmd` (it runs `Run-Demo.ps1` without needing PowerShell's script policy
+changed) starts an M-Instance and its 3-D viewer and opens the viewer in the browser; the
+presenter shows the 19 steps of the Use Case with Space, the right arrow or a click
+(`MMM\Run-Demo.cmd 4` plays them by itself, 4 s a step). Everything is local: the
 viewer needs no internet (its three.js is in `Viewer/lib`, MIT licence).
 
 | Step | What the viewer shows | Process Action |

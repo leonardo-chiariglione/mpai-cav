@@ -42,10 +42,11 @@ public static class Uc2
         ["CartPosition"] = new JsonArray(0.0, 0.0, 0.0), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
     };
 
-    private static JsonObject SpatialAttitude(string id) => new()
+    // x, z: where the Item stands within the Location it is placed at, in metres (0, 0: the centre).
+    private static JsonObject SpatialAttitude(string id, double x = 0, double z = 0) => new()
     {
         ["Header"] = "OSD-OSA-V1.5", ["ObjectSpatialAttitudeID"] = id,
-        ["Position"] = new JsonObject { ["Header"] = "OSD-OPS-V1.5", ["PositionID"] = $"{id}-P", ["CartPosition"] = new JsonArray(0.0, 0.0, 0.0) },
+        ["Position"] = new JsonObject { ["Header"] = "OSD-OPS-V1.5", ["PositionID"] = $"{id}-P", ["CartPosition"] = new JsonArray(x, 0.0, z) },
         ["Orientation"] = new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-O", ["Orientation"] = new JsonArray(0.0, 0.0, 0.0) }
     };
 
@@ -165,7 +166,7 @@ public static class Uc2
         var usePR = PA("MMM-MSP-V2.2", "MMSend", "PA-MessagePR", ("RQ1", "Nil", "Message", Message("MessagePRID", "")));
         await Do("Friend1 signals its presence", friend1, "MM-Send", C("MessagePRID", to: "PRSrvc",
             with: [Message("MessagePRID", "Friend1 is present"), usePR, Rights("MessagePR_Rights", "May", "Acquired", "PA-MessagePR")]));
-        await Do("Friend1 moves to the parcel", friend1, "MM-Move", C("Persona1ID", from: "MVS", to: "ParcelID", with: SpatialAttitude("SA2")));
+        await Do("Friend1 moves to the parcel", friend1, "MM-Move", C("Persona1ID", from: "MVS", to: "ParcelID", with: SpatialAttitude("SA2", x: -3, z: 3)));   // at the Parcel's edge, outside the Room-to-be
         var addRoom = PA("MMM-2DP-V2.2", "MMAdd", "PA-AddRoom", ("RQ1", "Nil", "Item", "RoomID"), ("RQ2", "At", "MLocationID", "ParcelID"));
         await Do("Friend1 places the room", friend1, "MM-Add", C("RoomID", at: "ParcelID",
             with: [SpatialAttitude("SA3"), addRoom, Rights("AddRoom_Rights", "May", "Acquired", "PA-AddRoom")]));
