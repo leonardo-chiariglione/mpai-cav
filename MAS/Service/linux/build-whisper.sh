@@ -12,8 +12,10 @@
 # 89 L4 / L40S / RTX 4000 Ada / RTX 4080-4090, 90 H100; several as "80;86". Default
 # "native": the GPU of this machine (nvidia-smi must find one).
 #
-# The build machine needs the CUDA toolkit (nvcc) - CUDA 13, the version the servers'
-# ONNX Runtime needs, so that one set of CUDA libraries serves both - g++, cmake, curl.
+# The build machine needs the CUDA toolkit (nvcc), of the same CUDA as the servers' ONNX
+# Runtime (package.sh: CUDA 13 by default, CUDA 12 with MPAI_CUDA=12), so that one set of
+# CUDA libraries serves both - g++, cmake, curl. For servers with an NVIDIA driver 550
+# (CUDA 12.4): the 12.x toolkit, apt cuda-toolkit-12-4 (or 12-8), not 13.
 # A server then needs only the CUDA *libraries* (apt: cuda-libraries-13-0) and the NVIDIA
 # driver: no nvcc, no g++, no cmake. <out-folder>/bin receives whisper-cli, whisper-server
 # and whisper.build ("cuda-prebuilt"), which tells setup.sh not to build again.

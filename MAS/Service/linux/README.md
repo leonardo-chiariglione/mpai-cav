@@ -112,6 +112,36 @@ chmod +x setup.sh build-whisper.sh service/MasService client/RcaWeb.Host
 and copy the repository's `Models` folder (6.8 GB, the files `aim-settings.json` names) to
 `/opt/mpai/Models`. Then continue with step 2 (the files are already in place).
 
+## In a container without systemd (a RunPod pod), and a driver older than 580
+
+**CUDA 12 build.** ONNX Runtime 1.27 needs CUDA 13 and so driver 580 or later. For a host
+with an older driver (550, CUDA 12.4), the package is made with `MPAI_CUDA=12`: ONNX
+Runtime 1.26.0, the CUDA 12.8 build, which runs on a 12.x driver by CUDA's minor-version
+compatibility (a GeForce card such as the RTX 4090 has no other way: the forward-compatibility
+packages exist for data-centre GPUs only). `mpai-linux-ubuntu2404-cuda12-*.tar.gz` is that package;
+`cuda.version` in it says 12 and `setup.sh` then checks for the CUDA 12 libraries. In RunPod's
+pod filter, also choose hosts with CUDA 12.8 or later if there is a choice. Not yet run on a
+driver 550 host: the first run decides.
+
+```
+apt-get install -y cuda-libraries-12-8 libcudnn9-cuda-12     # from NVIDIA's repository (above); the driver is the host's
+build-whisper.sh ~/whisper-cuda 89                            # 89: RTX 4090, L4; CUDA toolkit 12.x (cuda-toolkit-12-4 for driver 550)
+cp ~/whisper-cuda/bin/* /opt/mpai/bin/                        # before setup.sh: it then builds nothing
+```
+
+**No systemd.** A container has none, so `setup.sh`'s last step is not the units but
+
+```
+./run.sh start      # Ollama, the MAS Service (warm-up first), the client's host; ./run.sh status | logs | stop
+```
+
+as the user that owns the folder (root, in a pod). The client's host listens on plain HTTP,
+port **8080**: add 8080 as an HTTP port of the pod and open `https://<pod-id>-8080.proxy.runpod.net/`
+- RunPod's proxy does the https, which browsers need for the microphone. `./run.sh status`
+shows where each model runs (`[ONNX] ...: CUDA`, `ollama ps`) and the warm-up times.
+A pod's disk outside `/workspace` (or a network volume) is lost when the pod is removed:
+install under the volume (`install-root` of `package.sh`) to keep it.
+
 ## 1. On the build machine: the package
 
 With the repository, its `Models` folder and the .NET 10 SDK (Git Bash on Windows, or

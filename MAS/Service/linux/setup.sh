@@ -50,9 +50,14 @@ if [ -n "$gpu" ]; then
     else echo "No CUDA toolkit (nvcc): whisper.cpp will be built for the CPU. Better: build it once with build-whisper.sh on a build machine and package it (README). Or, as root (Ubuntu): apt-get install -y nvidia-cuda-toolkit"
     fi
     if [ -f service/libonnxruntime_providers_cuda.so ]; then
-        ldconfig -p | grep -q 'libcudnn.so.9' && ldconfig -p | grep -q 'libcublasLt.so.13' \
-            && echo "CUDA 13 and cuDNN 9: present - the ONNX models will run on the GPU" \
-            || echo "WARNING: the Service has ONNX Runtime for CUDA but CUDA 13 / cuDNN 9 are missing - the ONNX models will run on the CPU"
+        # The CUDA the Service was built for (package.sh: MPAI_CUDA, 13 by default).
+        cuv=$(cat cuda.version 2> /dev/null || echo 13)
+        if [ "$cuv" = 12 ]; then pk="cuda-libraries-12-8 libcudnn9-cuda-12"; need="driver 525 or later (CUDA 12.8 libraries by minor-version compatibility)"
+        else pk="cuda-libraries-13-0 libcudnn9-cuda-13"; need="driver 580 or later"; fi
+        ldconfig -p | grep -q 'libcudnn.so.9' && ldconfig -p | grep -q "libcublasLt.so.$cuv" \
+            && echo "CUDA $cuv and cuDNN 9: present - the ONNX models will run on the GPU" \
+            || { echo "WARNING: the Service has ONNX Runtime for CUDA $cuv but CUDA $cuv / cuDNN 9 libraries are missing - the ONNX models will run on the CPU."
+                 echo "  As root (Ubuntu), from NVIDIA's apt repository: apt-get install -y $pk   (and $need)"; }
     else
         echo "The Service was packaged for the CPU (package.sh without MPAI_GPU=1): the ONNX models run on the CPU"
     fi
@@ -76,7 +81,7 @@ if [ -n "$prebuilt" ]; then
     # Never rebuilt here, whatever this server has: a missing CUDA library is said, not hidden.
     [ -x bin/whisper-cli ] && [ -x bin/whisper-server ] || { echo "bin/whisper.build says cuda-prebuilt but whisper-cli / whisper-server are missing."; exit 1; }
     missinglib=$(ldd bin/whisper-server 2> /dev/null | grep 'not found' || true)
-    [ -z "$missinglib" ] || { echo "WARNING: whisper-server cannot find: $missinglib"; echo "  As root (Ubuntu), from NVIDIA's apt repository: apt-get install -y cuda-libraries-13-0"; }
+    [ -z "$missinglib" ] || { echo "WARNING: whisper-server cannot find: $missinglib"; echo "  As root (Ubuntu), from NVIDIA's apt repository: apt-get install -y cuda-libraries-$(cat cuda.version 2> /dev/null | sed 's/^12$/12-8/;s/^13$/13-0/' | grep . || echo 13-0)"; }
 elif [ ! -x bin/whisper-cli ] || [ ! -x bin/whisper-server ] || [ "$have" != "$want" ]; then
     [ -f src/whisper.cpp-v1.9.3.tar.gz ] || curl -sSL -o src/whisper.cpp-v1.9.3.tar.gz https://codeload.github.com/ggml-org/whisper.cpp/tar.gz/refs/tags/v1.9.3
     tar xzf src/whisper.cpp-v1.9.3.tar.gz -C src
@@ -121,4 +126,4 @@ if [ ! -f tls/cert.pem ]; then
         -subj "/CN=$(hostname -f)" -addext "subjectAltName=DNS:$(hostname -f),DNS:localhost" 2> /dev/null
     echo "A self-signed certificate for $(hostname -f): replace tls/cert.pem and tls/key.pem with one browsers trust."
 fi
-echo "Set up in $root. Next: the systemd units (README.md)."
+echo "Set up in $root. Next: the systemd units (README.md) - or, in a container without systemd, ./run.sh start."

@@ -26,9 +26,14 @@ here="MAS/Service/linux"
 mkdir -p "$out"
 
 gpu=false; [ "${MPAI_GPU:-0}" = 1 ] && gpu=true
-echo "== the MAS Service and the browser client's host, for linux-x64 (ONNX Runtime: $([ $gpu = true ] && echo 'CUDA, CPU fallback' || echo CPU))"
+# MPAI_CUDA=12 (with MPAI_GPU=1): ONNX Runtime 1.26.0, the CUDA 12.8 build, for a server whose
+# driver is older than 580 (550, say); without it, 1.27.0 and CUDA 13 (driver 580 or later).
+cuda="${MPAI_CUDA:-13}"; ort=1.27.0; [ "$cuda" = 12 ] && ort=1.26.0
+echo "== the MAS Service and the browser client's host, for linux-x64 (ONNX Runtime $ort: $([ $gpu = true ] && echo "CUDA $cuda, CPU fallback" || echo CPU))"
 rm -rf "$out/service"
-dotnet publish MAS/Service/src/MasService.csproj -c Release -r linux-x64 --self-contained false -o "$out/service" -v quiet -nologo -p:MpaiOnnxGpu=$gpu
+dotnet publish MAS/Service/src/MasService.csproj -c Release -r linux-x64 --self-contained false -o "$out/service" -v quiet -nologo -p:MpaiOnnxGpu=$gpu -p:MpaiOrtVersion=$ort
+# setup.sh reads which CUDA this Service was built for.
+if [ $gpu = true ]; then echo "$cuda" > "$out/cuda.version"; else rm -f "$out/cuda.version"; fi
 dotnet publish UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj -c Release -r linux-x64 --self-contained false -o "$out/client" -v quiet -nologo
 
 echo "== the Apps, their L3s, the schemas; the avatar and the client's workflow"
@@ -70,6 +75,6 @@ echo "== the configuration, for $root"
 for f in mas-server.json aim-settings.json; do sed "s#/opt/mpai#$root#g" "$here/$f" > "$out/$f"; done
 mkdir -p "$out/systemd"
 for f in "$here"/systemd/*.service; do sed "s#/opt/mpai#$root#g" "$f" > "$out/systemd/$(basename "$f")"; done
-cp "$here/setup.sh" "$here/build-whisper.sh" "$here/README.md" "$out/"
-chmod +x "$out/setup.sh" "$out/service/MasService" "$out/client/RcaWeb.Host" 2> /dev/null || true
+cp "$here/setup.sh" "$here/build-whisper.sh" "$here/run.sh" "$here/README.md" "$out/"
+chmod +x "$out/setup.sh" "$out/build-whisper.sh" "$out/run.sh" "$out/service/MasService" "$out/client/RcaWeb.Host" 2> /dev/null || true
 echo "Packaged in $out, for $root. Copy it there on the server, and run setup.sh."
