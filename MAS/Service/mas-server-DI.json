@@ -1,0 +1,16 @@
+{
+  "ListenUrl": "https://localhost:5105/",
+  "AppDirectory": "D:\\DI\\Apps",
+  "Apps": [
+    "MAD",
+    "AMQ",
+    "MAT",
+    "MPD",
+    "MAC",
+    "ACR"
+  ],
+  "AmdDirectory": "D:\\DI\\AIMs\\AMDs",
+  "SettingsPath": "D:\\DI\\AIMs\\aim-settings.json",
+  "WarmUpDirectory": "D:\\DI\\Test\\Data",
+  "ForgetOnClose": true
+}
