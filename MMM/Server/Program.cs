@@ -29,16 +29,16 @@ Uc2.Setup(m);
 var notes = new Dictionary<int, string>
 {
     [4] = "Persona1 is added at Metaverse Square, but nothing can be seen yet: it has no identified data.",
-    [5] = "The human is captured from the Universe (ULocFriend1). Until it is identified, nothing is seen in the M-Instance.",
+    [5] = "Friend1 operates from the Universe (ULocFriend1): its human is captured there. Until identified, nothing of Friend1 is seen in the M-Instance.",
     [6] = "Identified: now Persona1 exists in the M-Instance, and is seen.",
     [7] = "Persona1 is animated from the identified stream.",
     [11] = "Only now is the Room perceptible: Friend1 can see it.",
-    [15] = "Friend2 acts for the first time: its Persona is seen.",
     [16] = "Friend1 grants Friend2 the right to enter the Room.",
     [19] = "Access revoked: Friend2's next attempt to enter is refused (403, insufficient rights)."
 };
-// Nothing is seen of a Persona before it is identified (Persona1: step 6) or acts (Persona2: step 15).
-string[] HiddenAt(int n) => [.. (n < 6 ? new[] { "Persona1ID" } : []), .. (n < 15 ? new[] { "Persona2ID" } : [])];
+// Friend1 operates from the Universe: nothing of it is seen until its captured data is identified
+// (step 6). Friend2 is already at its place when the Use Case begins.
+string[] HiddenAt(int n) => n < 6 ? ["Persona1ID"] : [];
 
 // The record of the steps, for the previous-step key: the scene after each one, and the one shown.
 var shots = new List<JsonObject>();

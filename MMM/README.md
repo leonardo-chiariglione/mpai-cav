@@ -14,9 +14,9 @@ stripped-down Use Case 2.
 changed) starts an M-Instance and its 3-D viewer and opens the viewer in the browser; the
 presenter shows the 19 steps of the Use Case: **Space, up arrow or a click** for the next
 step, **down arrow** for the previous one (the scene as it was shown; nothing is undone in the
-M-Instance). `MMM\Run-Demo.cmd 4` plays them by itself, 4 s a step. Nothing is drawn of a
-Persona before it exists for the M-Instance: Persona1 appears at step 6, when the captured data
-has been identified, Persona2 at step 15, when Friend2 first acts. Everything is local: the
+M-Instance). `MMM\Run-Demo.cmd 4` plays them by itself, 4 s a step. Friend1 operates from the
+Universe, so nothing of it is drawn until step 6, when its captured data has been identified;
+Friend2 is already at its place when the Use Case begins. Everything is local: the
 viewer needs no internet (its three.js is in `Viewer/lib`, MIT licence).
 
 | Step | What the viewer shows | Process Action |
