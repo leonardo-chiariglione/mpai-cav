@@ -28,6 +28,13 @@ public sealed class WhisperAsrConfiguration
     //                  Null: sized to each recording (see Window), so nothing is lost.
     public int? Threads { get; init; }
     public int? AudioContext { get; init; }
+
+    // Switches added to whisper-server's and whisper-cli's command lines, as the settings give them
+    // (ExtraArguments). For a GPU build on a card where one of whisper's own defaults fails: on
+    // an RTX PRO 4500 Blackwell, CUDA 12.8, flash attention (on by default) made the same recording
+    // come out whole, cut short, or empty from one request to the next; "-nfa" (no flash attention)
+    // gave the whole sentence every time. Null: nothing added.
+    public string? ExtraArguments { get; init; }
 }
 
 // ---------------------------------------------------------------------------
@@ -56,7 +63,7 @@ public sealed class WhisperAsrAim : IAsrAim
         if (_config.ServerPath is { Length: > 0 } server)
         {
             var language = EnglishOnly ? null : PrimaryLanguage(Language(speech));
-            var said = await WhisperServer.For(server, _config.ModelPath, _config.Threads)
+            var said = await WhisperServer.For(server, _config.ModelPath, _config.Threads, _config.ExtraArguments)
                                           .TranscribeAsync(bytes, language, window);
             return Heard(Clean(said.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None), out var noise), noise, speech);
         }
@@ -194,6 +201,9 @@ public sealed class WhisperAsrAim : IAsrAim
 
         if (_config.Threads is > 0 and var threads)
             arguments += $" -t {threads}";
+
+        if (_config.ExtraArguments is { Length: > 0 } extra)
+            arguments += $" {extra}";
 
         var language = Language(speech);
 

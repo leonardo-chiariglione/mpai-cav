@@ -21,17 +21,18 @@ internal sealed class WhisperServer
 {
     private static readonly ConcurrentDictionary<string, WhisperServer> servers = new(StringComparer.OrdinalIgnoreCase);
 
-    public static WhisperServer For(string program, string model, int? threads) =>
-        servers.GetOrAdd($"{program}|{model}|{threads}", _ => new WhisperServer(program, model, threads));
+    public static WhisperServer For(string program, string model, int? threads, string? extraArguments = null) =>
+        servers.GetOrAdd($"{program}|{model}|{threads}|{extraArguments}", _ => new WhisperServer(program, model, threads, extraArguments));
 
     private readonly string _program, _model;
     private readonly int? _threads;
+    private readonly string? _extra;
     private readonly SemaphoreSlim _starting = new(1, 1);
     private Process? _process;
     private HttpClient? _http;
 
-    private WhisperServer(string program, string model, int? threads) =>
-        (_program, _model, _threads) = (program, model, threads);
+    private WhisperServer(string program, string model, int? threads, string? extraArguments) =>
+        (_program, _model, _threads, _extra) = (program, model, threads, extraArguments);
 
     // What was said, as whisper-server writes it: plain text, captions included.
     public async Task<string> TranscribeAsync(byte[] wav, string? language, int audioContext)
@@ -73,6 +74,7 @@ internal sealed class WhisperServer
             int port = FreePort();
             var arguments = $"-m \"{_model}\" --host 127.0.0.1 --port {port}";
             if (_threads is > 0) arguments += $" -t {_threads}";
+            if (_extra is { Length: > 0 }) arguments += $" {_extra}";
 
             var process = Process.Start(new ProcessStartInfo
             {

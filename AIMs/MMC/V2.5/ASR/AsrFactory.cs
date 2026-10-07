@@ -7,7 +7,7 @@ namespace Mpai.Aims.Asr;
 // model locations live in configuration, not in code.
 //
 // Settings: ExecutablePath, ModelPath, LanguageCode; optional ServerPath, Threads,
-// AudioContext. ServerPath (whisper-server) keeps the model loaded between turns;
+// AudioContext, ExtraArguments (switches added to whisper's command lines). ServerPath (whisper-server) keeps the model loaded between turns;
 // without it whisper-cli loads it at every turn. AudioContext fixes the encoder
 // window; without it the window is sized to each recording.
 public static class AsrFactory
@@ -35,7 +35,12 @@ public static class AsrFactory
                         : null,
 
                 Threads      = Number(settings, "Threads"),
-                AudioContext = Number(settings, "AudioContext")
+                AudioContext = Number(settings, "AudioContext"),
+
+                ExtraArguments =
+                    settings.TryGetValue("ExtraArguments", out var extra) && !string.IsNullOrWhiteSpace(extra)
+                        ? extra.Trim()
+                        : null
             });
     }
 
