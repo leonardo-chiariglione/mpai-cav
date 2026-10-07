@@ -19,17 +19,21 @@
   #panel h1 { font-size: 14px; margin: 0 0 6px; }
   #recent div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ok { color: var(--ok); } .no { color: var(--no); } .muted { color: var(--muted); }
+  #caption { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); max-width: calc(100vw - 48px); background: var(--panel); border-radius: 10px; padding: 12px 22px; text-align: center; font-size: 22px; font-weight: 600; cursor: pointer; user-select: none; }
+  #caption small { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); }
+  #caption[hidden] { display: none; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 </style>
 <script type="importmap">
 { "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three": "./lib/three/three.module.js",
+  "three/addons/": "./lib/three/addons/"
 }}
 </script>
 </head>
 <body>
 <div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
+<div id="caption" hidden><span id="captionText"></span><small id="captionHint"></small></div>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -131,6 +135,13 @@ async function persona(t) {
   return g;
 }
 
+// ---------------------------------------------------------------- the presenter
+// In a manual demonstration the server waits for this before the next step.
+let manual = false;
+const nextStep = () => { if (manual) fetch('next', { method: 'POST' }).catch(() => {}); };
+addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); nextStep(); } });
+document.getElementById('caption').addEventListener('click', nextStep);
+
 // ---------------------------------------------------------------- the M-Instance
 async function refresh() {
   let state;
@@ -138,6 +149,12 @@ async function refresh() {
   document.getElementById('title').textContent = `M-Instance ${state.MInstanceID} - ${state.Performed} Process Actions`;
   document.getElementById('recent').innerHTML = (state.Recent ?? []).slice().reverse().map(a =>
     `<div><span class="${a.Http < 300 ? 'ok' : 'no'}">${a.Http} ${a.Status}</span> ${a.Source} → ${a.Action} (${a.Destination})</div>`).join('') || 'no Process Action yet';
+
+  // A demonstration in progress: the step just shown, and how to go on (Space, right arrow, a click).
+  manual = !!state.Manual;
+  document.getElementById('caption').hidden = !state.Caption;
+  document.getElementById('captionText').textContent = state.Caption ?? '';
+  document.getElementById('captionHint').textContent = manual ? 'Space, right arrow or click: next step' : '';
 
   const seen = new Set();
   for (const t of state.Things) {

@@ -77,6 +77,11 @@ public sealed class MInstance
     }
 
     public IEnumerable<string> Performed => ServiceOf.Keys;
+
+    // What the viewer says about a demonstration in progress: the step just performed, and
+    // whether the next one waits for the presenter (Manual). Not part of the M-Instance.
+    public volatile string? Caption;
+    public volatile bool Manual;
     public Schemas Schemas => schemas;
 
     // ---------------------------------------------------------------- the state an M-Instance starts with
@@ -198,6 +203,7 @@ public sealed class MInstance
                     ["Source"] = a.Source, ["Action"] = a.Action, ["Destination"] = a.Destination, ["Http"] = a.Http, ["Status"] = a.Status
                 }).ToArray()),
                 ["Performed"] = activity.Count,
+                ["Caption"] = Caption, ["Manual"] = Manual,
                 ["Things"] = new JsonArray(located.Select(i =>
                 {
                     var w = Where(i);

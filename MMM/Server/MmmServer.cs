@@ -20,7 +20,8 @@ public static class MmmServer
 {
     // viewer: the folder of the viewer (MMM/Viewer), served at /viewer/ with the
     // M-Instance as it can be seen at /viewer/state; null, no viewer.
-    public static WebApplication Build(MInstance m, string url, string? viewer = null)
+    // onNext: what the viewer's "next step" (Space, a click) does in a manual demonstration.
+    public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
@@ -79,8 +80,10 @@ public static class MmmServer
         {
             var root = Path.GetFullPath(viewer);
             app.MapGet("/viewer/state", () => Results.Json(m.Snapshot()));
-            app.MapGet("/viewer/{**path}", (string? path) =>
+            app.MapPost("/viewer/next", () => { onNext?.Invoke(); return Results.Ok(); });
+            app.MapGet("/viewer/{**path}", (HttpContext ctx, string? path) =>
             {
+                ctx.Response.Headers.CacheControl = "no-store";   // a presenter must never see a stale page
                 var file = Path.GetFullPath(Path.Combine(root, string.IsNullOrEmpty(path) ? "index.html" : path));
                 if (!file.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(file)) return Results.NotFound();
                 var type = Path.GetExtension(file).ToLowerInvariant() switch
