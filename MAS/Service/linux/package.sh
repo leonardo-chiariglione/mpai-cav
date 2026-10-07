@@ -43,12 +43,18 @@ mkdir -p "$out/warmup"
 cp Test/Data/question.wav "$out/warmup/question.wav"
 cp Test/Data/red.jpg "$out/warmup/picture.jpg"
 
-echo "== the models the Apps use"
-grep -o '"/opt/mpai/Models/[^"]*"' "$here/aim-settings.json" | tr -d '"' | sed 's#^/opt/mpai/##' | sort -u | while read -r model; do
-    mkdir -p "$out/$(dirname "$model")"
-    [ -f "$out/$model" ] && [ "$(stat -c %s "$out/$model")" = "$(stat -c %s "$model")" ] || cp "$model" "$out/$model"
-done
-du -sh "$out/Models"
+# MPAI_NO_MODELS=1: a package of the software without the model files (6.8 GB) - to be
+# published; the Models folder is then copied to <install-root>/Models separately.
+if [ "${MPAI_NO_MODELS:-0}" = 1 ]; then
+    echo "== the models are left out (MPAI_NO_MODELS=1): copy the repository's Models folder to $root/Models"
+else
+    echo "== the models the Apps use"
+    grep -o '"/opt/mpai/Models/[^"]*"' "$here/aim-settings.json" | tr -d '"' | sed 's#^/opt/mpai/##' | sort -u | while read -r model; do
+        mkdir -p "$out/$(dirname "$model")"
+        [ -f "$out/$model" ] && [ "$(stat -c %s "$out/$model")" = "$(stat -c %s "$model")" ] || cp "$model" "$out/$model"
+    done
+    du -sh "$out/Models"
+fi
 
 if [ -n "${MPAI_WHISPER_DIR:-}" ]; then
     echo "== whisper.cpp, built beforehand for CUDA (build-whisper.sh)"

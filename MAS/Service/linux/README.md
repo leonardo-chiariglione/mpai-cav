@@ -84,6 +84,34 @@ reaches the client's host, over HTTPS, and the host passes the client's requests
 No bearer token is then needed. The Service can also be on a machine of its own,
 reached by the client's host or by desktop clients: see "Other layouts" below.
 
+## Ubuntu 24.04 with an NVIDIA GPU: the repositories
+
+.NET 10 is in Ubuntu 24.04's own feed (`apt-get install -y aspnetcore-runtime-10.0`, as in
+step 2): nothing to add. The CUDA libraries (and the toolkit, on a machine that builds
+whisper.cpp) come from NVIDIA's repository, which must be added first, as root:
+
+```
+apt-get install -y wget
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+dpkg -i cuda-keyring_1.1-1_all.deb && apt-get update
+apt-get install -y cuda-libraries-13-0            # a server: the libraries only
+apt-get install -y cuda-toolkit-13-0              # the build machine of build-whisper.sh: nvcc too
+apt-cache search cudnn9                           # the cuDNN 9 package for CUDA 13 (libcudnn9-cuda-13 or cudnn9-cuda-13)
+```
+
+The NVIDIA driver needs version 580 or later (`ubuntu-drivers install`, then reboot).
+Checked on paper against the repository listings only: not yet run on a 24.04 server.
+
+**The published package** (`mpai-linux-ubuntu2404-*.tar.gz`, no model files) was made on
+Windows, so after unpacking it, as the service user, in the folder it unpacked to:
+
+```
+chmod +x setup.sh build-whisper.sh service/MasService client/RcaWeb.Host
+```
+
+and copy the repository's `Models` folder (6.8 GB, the files `aim-settings.json` names) to
+`/opt/mpai/Models`. Then continue with step 2 (the files are already in place).
+
 ## 1. On the build machine: the package
 
 With the repository, its `Models` folder and the .NET 10 SDK (Git Bash on Windows, or
