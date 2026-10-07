@@ -75,6 +75,6 @@ echo "== the configuration, for $root"
 for f in mas-server.json aim-settings.json; do sed "s#/opt/mpai#$root#g" "$here/$f" > "$out/$f"; done
 mkdir -p "$out/systemd"
 for f in "$here"/systemd/*.service; do sed "s#/opt/mpai#$root#g" "$f" > "$out/systemd/$(basename "$f")"; done
-cp "$here/setup.sh" "$here/build-whisper.sh" "$here/run.sh" "$here/README.md" "$out/"
-chmod +x "$out/setup.sh" "$out/build-whisper.sh" "$out/run.sh" "$out/service/MasService" "$out/client/RcaWeb.Host" 2> /dev/null || true
+cp "$here/setup.sh" "$here/build-whisper.sh" "$here/run.sh" "$here/pod-boot.sh" "$here/README.md" "$out/"
+chmod +x "$out/setup.sh" "$out/build-whisper.sh" "$out/run.sh" "$out/pod-boot.sh" "$out/service/MasService" "$out/client/RcaWeb.Host" 2> /dev/null || true
 echo "Packaged in $out, for $root. Copy it there on the server, and run setup.sh."

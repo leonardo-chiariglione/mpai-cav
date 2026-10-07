@@ -151,8 +151,11 @@ as the user that owns the folder (root, in a pod). The client's host listens on 
 port **8080**: add 8080 as an HTTP port of the pod and open `https://<pod-id>-8080.proxy.runpod.net/`
 - RunPod's proxy does the https, which browsers need for the microphone. `./run.sh status`
 shows where each model runs (`[ONNX] ...: CUDA`, `ollama ps`) and the warm-up times.
-A pod's disk outside `/workspace` (or a network volume) is lost when the pod is removed:
-install under the volume (`install-root` of `package.sh`) to keep it.
+A pod's disk outside `/workspace` (or a network volume) is lost when the pod is stopped and started again
+- the `/opt/mpai` link, the packages installed with apt, and the running programs: after a restart the
+services are **not running** until `/workspace/mpai/pod-boot.sh` has been run (it links, reinstalls
+what apt lost, and runs `run.sh start`; safe to run at any time, and usable as the pod's start command).
+Keep the install on the volume (`/workspace/mpai`, linked as `/opt/mpai`) so that the rest survives.
 
 ## 1. On the build machine: the package
 
