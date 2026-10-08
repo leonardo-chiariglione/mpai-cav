@@ -200,7 +200,7 @@ public class HighwayBaselineTests
 
     // A PROTOTYPE PLANNER, OUTSIDE THE REFERENCE SOFTWARE (M3253 build step 5, tried in the harness): it takes the
     // lane to the left when a slower vehicle is near ahead, the left lane is clear ahead, and the rear watch sees no
-    // vehicle in the left lane close behind or closing so that it would arrive within 10 s. It goes back to the right
+    // vehicle in the left lane close behind or closing so that it would arrive within 16 s. It goes back to the right
     // when the vehicle it passed is 30 m behind and the right lane is free ahead. The vehicle ahead and the clear
     // road ahead are read from the simulation (the front camera already gives the CAV its leader); what is behind is
     // only what the rear watch saw. The CAV's own Stage 1 planner is not changed: the lane is changed in the world.
@@ -229,7 +229,7 @@ public class HighwayBaselineTests
                 if (m.Left < 1.5 || m.Left > 5.5) return false;
                 var closing = m.Closing ?? 12;
                 var behind = m.Behind - closing * (now - m.Time);
-                return m.Closing is null || behind < 30 || (closing > 0 && (behind - 10) / closing < 10);
+                return m.Closing is null || behind < 30 || (closing > 0 && (behind - 10) / closing < 16);
             });
             if (unsafeBehind) return "wants to pass: waiting, a vehicle is coming up in the left lane";
             world.ChangeEgoLane(1);
