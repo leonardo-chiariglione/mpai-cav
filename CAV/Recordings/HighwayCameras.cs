@@ -263,8 +263,9 @@ public static class HighwayCameras
         return dst;
     }
 
-    // The grain and the 3 x 3 blur of a real camera, at the size the picture has been given.
-    private static void Finish(byte[] rgb, int w, int h, Random grain)
+    // The grain and the 3 x 3 blur of a real camera, at the size the picture has been given (public: a window cut out
+    // of a clean full resolution capture is given them as well).
+    public static void Finish(byte[] rgb, int w, int h, Random grain)
     {
         for (var k = 0; k < rgb.Length; k += 3)
         {

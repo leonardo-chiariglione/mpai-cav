@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAV on the highway</title>
+<!--
+  THE HIGHWAY OF TEST PHASE 1 (M3253), AS A RUN OF THE CAV SHOWS IT. The page draws the road around the CAV seen from
+  above - the CAV in red, the other vehicles where they truly are, where the ESS believes the vehicles ahead are, and
+  what the rear camera sees coming up behind - next to the pictures of the two cameras, the speeds, and the numbers.
+  Two ways to use it:
+    live    - served by a running test: it reads ./state, ./frame.png and ./rear.png as they are made. The run goes as fast
+              as the CAV's processing allows, which is slower than real time: what is shown is a slow motion, and says by how much.
+    replay  - opened from a recording's folder (index.html beside data.js, f/ and r/): it plays the recording at the
+              speed of real life, or as asked (play, pause, speed, a slider).
+  The lateral scale is three times the longitudinal one, so that the lanes can be seen.
+-->
+<style>
+  :root { --bg: #14181d; --panel: #1d232b; --text: #e6e8eb; --muted: #9aa3ad; --ok: #6fcf97; --warn: #f2c94c; --bad: #eb5757; --ess: #56ccf2; --cav: #ff3b3b; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, Arial, sans-serif; }
+  .wrap { max-width: 1260px; margin: 0 auto; padding: 12px; }
+  h1 { font-size: 16px; margin: 4px 0 8px; font-weight: 600; }
+  h1 span { color: var(--muted); font-weight: 400; }
+  .panel { background: var(--panel); border-radius: 8px; padding: 8px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 4px; }
+  .row { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 420px) 1fr; gap: 12px; margin-top: 12px; }
+  @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+  img { width: 100%; height: auto; border-radius: 4px; background: #000; display: block; aspect-ratio: 16 / 9; }
+  table { width: 100%; border-collapse: collapse; } td { padding: 2px 4px; border-bottom: 1px solid #2a323c; font-size: 13px; }
+  td:first-child { color: var(--muted); } td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .legend { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .legend b { font-weight: 600; } .c-ess { color: var(--ess); } .c-truth { color: var(--warn); } .c-cav { color: var(--cav); }
+  #status.done { color: var(--ok); }
+  #controls { display: none; align-items: center; gap: 10px; margin: 8px 0 0; }
+  #controls button, #controls select { background: #2a323c; color: var(--text); border: 0; border-radius: 6px; padding: 5px 12px; font-size: 14px; cursor: pointer; }
+  #controls input[type=range] { flex: 1; } #clock { font-variant-numeric: tabular-nums; min-width: 110px; text-align: right; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CAV on the highway <span id="label"></span> - <span id="status">waiting for the run...</span></h1>
+  <div class="panel">
+    <canvas id="road" width="1200" height="270"></canvas>
+    <div class="legend"><b class="c-cav">Red</b>: the CAV. <b class="c-truth">Yellow line</b>: the gap to the vehicle ahead, from the truth.
+      <b class="c-ess">Blue diamonds</b>: where the CAV's sensors place the vehicles ahead (front camera, ESS) and behind (rear camera, with the closing speed). Lateral scale x3.</div>
+    <div id="controls">
+      <button id="play">Pause</button>
+      <select id="speed"><option value="0.5">x0.5</option><option value="1" selected>x1</option><option value="2">x2</option><option value="4">x4</option></select>
+      <input id="slider" type="range" min="0" max="0" value="0"><span id="clock"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="panel"><img id="cam" alt="front camera"><div class="legend">Front camera, as the ESS reads it (reduced to 640 x 360).</div></div>
+    <div class="panel"><img id="rear" alt="rear camera"><div class="legend">Rear camera, a window of its full resolution picture, around the horizon: the road behind, far.</div></div>
+    <div class="panel"><table id="hud"></table><canvas id="chart" width="560" height="200" style="margin-top:8px"></canvas>
+      <div class="legend">Speeds, last 60 s: <b>CAV</b>, <b class="c-truth">vehicle ahead</b>, planned (dashed).</div></div>
+  </div>
+</div>
+<script src="data.js" onerror="void 0"></script>
+<script>
+const SX = 5, SY = 15, BEHIND = 100;                     // pixels a metre along the road and across it; metres shown behind the CAV
+const road = document.getElementById('road'), g = road.getContext('2d');
+const chart = document.getElementById('chart'), c = chart.getContext('2d');
+const $ = id => document.getElementById(id);
+const yPx = y => road.height - 22 - (y + 4.5) * SY;
+const kmh = v => (v * 3.6).toFixed(0);
+const pad = n => String(n).padStart(6, '0');
+const REPLAY = window.REPLAY;
+let history = [];
+
+function draw(s) {
+  const W = road.width, H = road.height, x0 = s.ego.x - BEHIND;
+  const xPx = x => (x - x0) * SX;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#3d5a35'; g.fillRect(0, 0, W, H);                                           // grass
+  g.fillStyle = '#5a5e64'; g.fillRect(0, yPx(5.85), W, yPx(-4.25) - yPx(5.85));              // the paved width, shoulders included
+  g.fillStyle = '#4a4e54'; g.fillRect(0, yPx(5.25), W, yPx(-1.75) - yPx(5.25));              // the two lanes
+  g.fillStyle = '#e8e8e8';
+  g.fillRect(0, yPx(-1.75) - 1, W, 2); g.fillRect(0, yPx(5.25) - 1, W, 2);                    // the edge lines
+  for (let x = Math.floor(x0 / 16) * 16; x < x0 + W / SX; x += 16) g.fillRect(xPx(x), yPx(1.75) - 1, 4 * SX, 2);   // dashes: 4 m every 16
+  g.fillStyle = '#b8bcc2'; g.fillRect(0, yPx(5.85) - 3, W, 4);                                // the guard rail
+  g.fillStyle = '#9aa3ad'; g.font = '11px system-ui';
+  for (let d = -100; d <= 140; d += 20) {                                                      // distances from the CAV's front
+    const px = xPx(s.ego.x + s.ego.length / 2 + d); g.fillRect(px, H - 18, 1, 6);
+    if (d !== 0) g.fillText((d > 0 ? '+' : '') + d + ' m', px + 3, H - 6);
+  }
+
+  const car = (v, ego) => {
+    const px = xPx(v.x - v.len / 2), py = yPx(v.y + v.wid / 2), w = v.len * SX, h = v.wid * SY;
+    g.fillStyle = ego ? '#ff3b3b' : `rgb(${v.paint[0]},${v.paint[1]},${v.paint[2]})`; g.fillRect(px, py, w, h);
+    g.lineWidth = ego ? 3 : 1; g.strokeStyle = ego ? '#ffffff' : '#101418'; g.strokeRect(px, py, w, h);
+    g.fillStyle = ego ? '#ff8080' : '#e6e8eb'; g.font = (ego ? 'bold ' : '') + '11px system-ui';
+    g.fillText(ego ? 'CAV ' + kmh(v.speed) + ' km/h' : v.id + ' ' + kmh(v.speed), px, py - 3);
+  };
+  for (const v of s.vehicles) if (Math.abs(v.x - s.ego.x) < 260) car(v, false);
+  car({ x: s.ego.x, y: s.ego.y, len: s.ego.length, wid: s.ego.width, speed: s.ego.speed }, true);
+
+  if (s.gap != null) {                                                                         // the gap ahead, from the truth
+    const xf = s.ego.x + s.ego.length / 2, y = yPx(s.ego.y);
+    g.strokeStyle = '#f2c94c'; g.lineWidth = 2; g.beginPath(); g.moveTo(xPx(xf), y); g.lineTo(xPx(xf + s.gap), y); g.stroke();
+    g.fillStyle = '#f2c94c'; g.font = '12px system-ui'; g.fillText(s.gap.toFixed(1) + ' m', xPx(xf + s.gap / 2) - 18, y - 6);
+  }
+  const diamond = (px, py, label, label2) => {
+    g.strokeStyle = '#56ccf2'; g.fillStyle = 'rgba(86,204,242,0.30)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(px, py - 9); g.lineTo(px + 7, py); g.lineTo(px, py + 9); g.lineTo(px - 7, py); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#56ccf2'; g.font = '11px system-ui'; g.fillText(label, px - 20, py + 24); if (label2) g.fillText(label2, px - 20, py + 36);
+  };
+  for (const o of s.ess || []) diamond(xPx(s.ego.x + s.ego.length / 2 + o.ahead), yPx(s.ego.y + o.left), o.cls + ' ' + o.ahead.toFixed(0) + ' m');
+  for (const r of s.rear || []) {                                                              // seen behind: the vehicle's front, behind the CAV's rear
+    const closing = r.closing == null ? '' : (r.closing >= 0 ? 'closing ' : 'opening ') + Math.abs(r.closing).toFixed(1) + ' m/s';
+    diamond(xPx(s.ego.x - s.ego.length / 2 - r.behind), yPx(s.ego.y + r.left), r.behind.toFixed(0) + ' m', closing);
+  }
+}
+
+function drawChart() {
+  const W = chart.width, H = chart.height, L = 38, B = 20, T = 8, R = 8;
+  c.clearRect(0, 0, W, H);
+  if (history.length < 2) return;
+  const t1 = history[history.length - 1].t, t0 = Math.max(0, t1 - 60);
+  const rows = history.filter(h => h.t >= t0);
+  const vmax = Math.max(40, ...rows.map(h => Math.max(h.v, h.lead ?? 0, h.planned)));
+  const X = t => L + (t - t0) / 60 * (W - L - R), Y = v => H - B - v / vmax * (H - B - T);
+  c.strokeStyle = '#2a323c'; c.fillStyle = '#9aa3ad'; c.font = '11px system-ui'; c.lineWidth = 1;
+  for (let v = 0; v <= vmax; v += 10) { c.beginPath(); c.moveTo(L, Y(v)); c.lineTo(W - R, Y(v)); c.stroke(); c.fillText((v * 3.6).toFixed(0), 4, Y(v) + 4); }
+  c.fillText('km/h', 4, 10);
+  for (let s = 0; s <= 60; s += 15) c.fillText('-' + (60 - s) + ' s', X(t0 + s) - 12, H - 5);
+  const line = (key, color, dash) => {
+    c.beginPath(); c.strokeStyle = color; c.lineWidth = 2; c.setLineDash(dash || []);
+    let started = false;
+    for (const h of rows) { const v = h[key]; if (v == null) { started = false; continue; } started ? c.lineTo(X(h.t), Y(v)) : c.moveTo(X(h.t), Y(v)); started = true; }
+    c.stroke(); c.setLineDash([]);
+  };
+  line('planned', '#6fcf97', [6, 4]); line('lead', '#f2c94c'); line('v', '#ff5a5a');
+}
+
+function hud(s, rate) {
+  const behind = (s.rear || []).slice().sort((a, b) => a.behind - b.behind).slice(0, 3)
+    .map(r => `${r.behind.toFixed(0)} m` + (r.closing == null ? '' : `, ${r.closing >= 0 ? '+' : ''}${r.closing.toFixed(1)} m/s`)).join('<br>') || 'none seen';
+  const rows = [
+    ['Simulated time', s.t.toFixed(1) + ' s'],
+    ['CAV speed', kmh(s.ego.speed) + ' km/h (planned ' + kmh(s.planned) + ')'],
+    ['Acceleration asked', (s.command ?? 0).toFixed(2) + ' m/s2'],
+    ['Gap ahead (truth)', s.gap == null ? '-' : s.gap.toFixed(1) + ' m'],
+    ['Vehicle ahead (ESS)', s.essGap == null ? 'not seen' : s.essGap.toFixed(1) + ' m'],
+    ['Behind, rear camera', behind],
+    ['Alerts so far', s.alerts],
+    [REPLAY ? 'Replay' : 'Speed of the run', rate],
+  ];
+  $('hud').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+
+function show(s, live) {
+  draw(s);
+  hud(s, live ? ((s.wall > 0 ? s.t / s.wall : 0).toFixed(2) + 'x real time' + (s.wall > s.t ? ' (slow motion)' : '')) : 'x' + $('speed').value);
+  if (live && (!history.length || history[history.length - 1].t !== s.t)) history.push({ t: s.t, v: s.ego.speed, lead: s.leadSpeed, planned: s.planned });
+  drawChart();
+  $('label').textContent = s.label ? '- ' + s.label : '';
+}
+
+// ---- live: the state the run makes ------------------------------------------------------------
+let lastStep = -1;
+async function poll() {
+  try {
+    const s = await (await fetch('state', { cache: 'no-store' })).json();
+    if (s.step !== undefined && s.step !== lastStep) {
+      lastStep = s.step; show(s, true);
+      $('cam').src = 'frame.png?s=' + s.step;
+      if (s.rearPic != null) $('rear').src = 'rear.png?s=' + s.rearPic;
+      $('status').textContent = s.done ? 'run finished' : 'running'; $('status').className = s.done ? 'done' : '';
+    }
+  } catch (e) { /* the run has not started, or has ended: try again */ }
+  setTimeout(poll, 120);
+}
+
+// ---- replay: a recording --------------------------------------------------------------------
+function replay() {
+  const states = REPLAY.states, n = states.length, dt = n > 1 ? states[1].t - states[0].t : 0.1;
+  $('controls').style.display = 'flex';
+  $('slider').max = n - 1;
+  let i = 0, playing = true, last = performance.now(), carry = 0, shown = -1;
+  const render = () => {
+    const s = states[i];
+    history = states.slice(Math.max(0, i - Math.round(60 / dt)), i + 1).map(x => ({ t: x.t, v: x.ego.speed, lead: x.leadSpeed, planned: x.planned }));
+    show(s, false);
+    if (s.front != null) $('cam').src = 'f/' + pad(s.front) + '.jpg';
+    if (s.rearPic != null) $('rear').src = 'r/' + pad(s.rearPic) + '.jpg';
+    $('slider').value = i; $('clock').textContent = s.t.toFixed(1) + ' / ' + states[n - 1].t.toFixed(0) + ' s';
+    $('status').textContent = playing ? 'replay' : 'paused'; $('status').className = '';
+    shown = i;
+  };
+  $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; if (playing && i >= n - 1) i = 0; last = performance.now(); render(); };
+  $('speed').onchange = () => render();
+  $('slider').oninput = e => { i = +e.target.value; render(); };
+  window.addEventListener('keydown', e => {
+    if (e.key === ' ') { e.preventDefault(); $('play').click(); }
+    else if (e.key === 'ArrowRight') { i = Math.min(n - 1, i + 10); render(); }
+    else if (e.key === 'ArrowLeft') { i = Math.max(0, i - 10); render(); }
+  });
+  const tick = now => {
+    if (playing) {
+      carry += (now - last) / 1000 * (+$('speed').value) / dt; last = now;
+      const whole = Math.floor(carry); carry -= whole;
+      if (whole > 0) { i = Math.min(n - 1, i + whole); if (i !== shown) render(); if (i >= n - 1) { playing = false; $('play').textContent = 'Play'; render(); } }
+    } else last = now;
+    requestAnimationFrame(tick);
+  };
+  render(); requestAnimationFrame(tick);
+}
+
+if (REPLAY) replay(); else poll();
+</script>
+</body>
+</html>

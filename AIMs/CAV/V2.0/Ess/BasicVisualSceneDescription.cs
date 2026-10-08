@@ -30,7 +30,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
     private static readonly HashSet<string> RoadUsers = ["car", "truck", "bus", "motorcycle", "bicycle", "person"];
 
     private readonly YoloxObjectDetector detector;
-    private readonly double focal, height, horizon, width, laneHalf, alertDistance, alertTime;
+    private readonly double focal, height, horizon, width, laneHalf, alertDistance, alertTime, cameraAhead, cameraLeft;
     private JsonNode? prior;
     private long frames, alerts;
 
@@ -44,6 +44,11 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
         height = EssJson.Setting(settings, "CameraHeight", 1.5);
         horizon = EssJson.Setting(settings, "HorizonRow", 140);
         width = EssJson.Setting(settings, "ImageWidth", 640);
+        // Where the camera is, from the point the distances are given to - the ego's front - and its centreline:
+        // CameraAhead metres ahead of that point (negative: behind it), CameraLeft metres to the left. Zero, as
+        // the camera of the first simulation was, they change nothing; a rig whose cameras are not there says so.
+        cameraAhead = EssJson.Setting(settings, "CameraAhead", 0);
+        cameraLeft = EssJson.Setting(settings, "CameraLeft", 0);
         laneHalf = EssJson.Setting(settings, "LaneHalfWidth", 1.75);
         alertDistance = EssJson.Setting(settings, "AlertDistance", 15);
         alertTime = EssJson.Setting(settings, "AlertTime", 2);
@@ -95,9 +100,10 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
         {
             var rows = d.Y2 - horizon;
             if (rows < 1) continue;                                   // at or above the horizon: not on the road
-            var ahead = focal * height / rows;
-            var left = -(d.CentreX - width / 2) * ahead / focal;
-            seen.Add(new Seen(seen.Count + 1, d.ClassName, d.Score, ahead, left, ahead * ahead / (focal * height), d));
+            var fromCamera = focal * height / rows;
+            var left = -(d.CentreX - width / 2) * fromCamera / focal + cameraLeft;
+            var ahead = fromCamera + cameraAhead;
+            seen.Add(new Seen(seen.Count + 1, d.ClassName, d.Score, ahead, left, fromCamera * fromCamera / (focal * height), d));
         }
         return seen;
     }

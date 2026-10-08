@@ -20,9 +20,9 @@ public sealed class EssInTheLoop : IDisposable
     public const string Ess = "1CAV-ESS-V2.0-I01";
     private readonly Mpai.Aif.Api.ControllerApi api;
 
-    public EssInTheLoop()
+    public EssInTheLoop(string? settingsPath = null)
     {
-        api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
+        api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, settingsPath ?? Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
         var started = api.StartFlow(Ess);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ess} did not start: {started}");
     }
@@ -71,17 +71,23 @@ public sealed class EssInTheLoop : IDisposable
 public sealed class CavInTheLoop : IDisposable
 {
     public const string Ams = "1CAV-AMS-V2.0-I01";
-    private readonly EssInTheLoop ess = new();
+    private readonly EssInTheLoop ess;
     private readonly Mpai.Aif.Api.ControllerApi api;
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p8s8-" + Guid.NewGuid().ToString("N"));
 
-    public CavInTheLoop(Simulation sim, string destination)
+    public CavInTheLoop(Simulation sim, string destination) : this(sim.Map, destination) { }
+
+    // The loop for any world that gives the ESS its Offline Map and the sensed messages: settingsPath is the
+    // AIM settings the two Modules read (the repository's, unless the camera or the like is not the first one's).
+    public CavInTheLoop(Mpai.Cav.Map.RoadMap map, string destination, string? settingsPath = null)
     {
-        api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new AmsProvider());
+        var settings = settingsPath ?? Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
+        ess = new EssInTheLoop(settingsPath);
+        api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, settings, new AmsProvider());
         var started = api.StartFlow(Ams);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
         api.SharedStorageInit(Ams, location);
-        api.InputWrite(Ams, AmsTypes.Map, 1, sim.Map.ToOfflineMapObject(0), 5000);
+        api.InputWrite(Ams, AmsTypes.Map, 1, map.ToOfflineMapObject(0), 5000);
         api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
     }
 

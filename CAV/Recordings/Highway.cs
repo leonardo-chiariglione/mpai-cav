@@ -79,6 +79,10 @@ public sealed class HighwayWorld
     // The acceleration the ego holds (m/s2), from the next step on.
     public double EgoAcceleration { get; set; }
 
+    // Whether the other drivers change lane. A staged scenario may keep them in their lanes, so that what it is
+    // meant to show happens as it was staged.
+    public bool NpcsChangeLane { get; set; } = true;
+
     // What the run has shown: collisions of the traffic among itself (there should be none) and of
     // the ego with anyone, the nearest the ego has been to a vehicle (bumper to bumper, m), the
     // hardest braking (m/s2) a driver behind the ego has done because of it, and the hardest of all.
@@ -296,7 +300,7 @@ public sealed class HighwayWorld
         var time = Time;
         var acceleration = new double[npcs.Count];
         for (var i = 0; i < npcs.Count; i++) acceleration[i] = AccelerationOf(npcs[i], time);
-        for (var i = 0; i < npcs.Count; i++) if ((stepNumber + i) % 5 == 0) Decide(npcs[i], time);
+        if (NpcsChangeLane) for (var i = 0; i < npcs.Count; i++) if ((stepNumber + i) % 5 == 0) Decide(npcs[i], time);
 
         for (var i = 0; i < npcs.Count; i++)
         {
