@@ -32,7 +32,7 @@
   .legend b { font-weight: 600; } .c-ess { color: var(--ess); } .c-truth { color: var(--warn); } .c-cav { color: var(--cav); }
   #status.done { color: var(--ok); }
   #controls { display: none; align-items: center; gap: 10px; margin: 8px 0 0; }
-  #controls button, #controls select { background: #2a323c; color: var(--text); border: 0; border-radius: 6px; padding: 5px 12px; font-size: 14px; cursor: pointer; }
+  #controls button, #controls select, #controls a.btn { background: #2a323c; color: var(--text); border: 0; border-radius: 6px; padding: 5px 12px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
   #controls input[type=range] { flex: 1; } #clock { font-variant-numeric: tabular-nums; min-width: 110px; text-align: right; color: var(--muted); }
 </style>
 </head>
@@ -45,8 +45,9 @@
       <b class="c-ess">Blue diamonds</b>: where the CAV's sensors place the vehicles ahead (front camera, ESS) and behind (rear camera, with the closing speed). Lateral scale x3.</div>
     <div id="caption" style="display:none;margin:10px 2px 4px;font-size:19px;line-height:1.45;min-height:56px"></div>
     <div id="controls">
+      <a class="btn" id="menubtn" href="../index.html" style="display:none">&larr; Menu</a>
       <button id="play">Pause</button>
-      <button id="voice" data-on="1" style="display:none">Voice: on</button>
+      <button id="voice" data-on="1" style="display:none">Voice: on</button><span id="voiceinfo" style="font-size:13px;opacity:.8"></span>
       <select id="speed"><option value="0.5">x0.5</option><option value="1" selected>x1</option><option value="2">x2</option><option value="4">x4</option></select>
       <input id="slider" type="range" min="0" max="0" value="0"><span id="clock"></span>
     </div>
@@ -184,31 +185,41 @@ function pickVoice() {
   const v = speechSynthesis.getVoices().filter(x => /^en/i.test(x.lang));
   return v.find(x => /natural|online/i.test(x.name)) || v.find(x => /en-GB|en-US/i.test(x.lang)) || v[0] || null;
 }
+function say(text) {
+  if (!('speechSynthesis' in window)) { $('voiceinfo').textContent = ' this browser has no speech'; return; }
+  speechSynthesis.cancel(); speechSynthesis.resume();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = Math.min(1.6, Math.max(0.8, Math.sqrt(+$('speed').value)));
+  const v = pickVoice(); if (v) u.voice = v;
+  u.onstart = () => { $('voiceinfo').textContent = ''; };
+  u.onerror = e => { if (e.error !== 'canceled' && e.error !== 'interrupted') $('voiceinfo').textContent = ' voice error: ' + e.error; };
+  window.__utterance = u;                                   // kept: the browser may drop a speech object nothing refers to
+  setTimeout(() => speechSynthesis.speak(u), 150);          // a speak right after a cancel is lost by some browsers
+}
 function updateCue(t, speak) {
   let k = -1;
   for (let j = 0; j < CUES.length; j++) if (CUES[j].t <= t) k = j;
   if (k === cueShown) return;
   cueShown = k;
   $('caption').textContent = k >= 0 ? CUES[k].text : '';
-  if (speak && k >= 0 && $('voice').dataset.on === '1' && 'speechSynthesis' in window) {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(CUES[k].text);
-    u.lang = 'en-US'; u.rate = Math.min(1.6, Math.max(0.8, Math.sqrt(+$('speed').value)));
-    const v = pickVoice(); if (v) u.voice = v;
-    speechSynthesis.speak(u);
-  }
+  if (speak && k >= 0 && $('voice').dataset.on === '1') say(CUES[k].text);
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.cancel(); speechSynthesis.resume();       // a speech left paused by an earlier page stays paused in the browser
+  window.addEventListener('pagehide', () => speechSynthesis.cancel());
 }
 
 // ---- replay: a recording --------------------------------------------------------------------
 function replay() {
   const states = REPLAY.states, n = states.length, dt = n > 1 ? states[1].t - states[0].t : 0.1;
   $('controls').style.display = 'flex';
+  if (location.protocol === 'file:' || /\/(behind|overtake|traffic|truck)\//.test(location.pathname)) $('menubtn').style.display = '';
   $('slider').max = n - 1;
   let i = 0, playing = CUES.length === 0, last = performance.now(), carry = 0, shown = -1;
   if (CUES.length) {
     $('caption').style.display = 'block'; $('voice').style.display = '';
     $('play').textContent = 'Play';
-    $('voice').onclick = () => { const on = $('voice').dataset.on !== '1'; $('voice').dataset.on = on ? '1' : '0'; $('voice').textContent = 'Voice: ' + (on ? 'on' : 'off'); if (!on && 'speechSynthesis' in window) speechSynthesis.cancel(); };
+    $('voice').onclick = () => { const on = $('voice').dataset.on !== '1'; $('voice').dataset.on = on ? '1' : '0'; $('voice').textContent = 'Voice: ' + (on ? 'on' : 'off'); if (!on && 'speechSynthesis' in window) speechSynthesis.cancel(); if (on) say('The voice is on.'); };
     if ('speechSynthesis' in window) speechSynthesis.getVoices();
   }
   const render = () => {
