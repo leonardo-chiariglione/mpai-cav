@@ -7,16 +7,19 @@
   "Header":               "PAF-VSC-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM composes the Visual Scene.",
+  "Description":          "Visual Scene Creation: from the Avatar ID, the Avatar Model and the Spatial Attitude of an avatar and the Audio-Visual Scene Descriptors, it composes the Visual Scene and gives the Spatial Attitude of the avatar's mouth.",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "AvatarID",                    "Direction": "Input",  "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioVisualSceneDescriptors", "Direction": "Input",  "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AvatarModel",                 "Direction": "Input",  "DataType": "OSD-3DO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioVisualSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AvatarModel",                 "Direction": "Input",  "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",             "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VisualSceneDescriptors",      "Direction": "Output", "DataType": "OSD-VSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MouthSpatialAttitude",        "Direction": "Output", "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "VisualSceneDescriptors",      "Direction": "Output", "DataType": "OSD-BVS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MouthSpatialAttitude",        "Direction": "Output", "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PersonalStatus",             "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputAvatarModel",          "Direction": "Output", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputPersonalStatus",       "Direction": "Output", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

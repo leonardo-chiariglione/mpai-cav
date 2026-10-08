@@ -79,6 +79,7 @@
   "MMC/V2.5/AIMs/SpeakerIdentityRecognition.json": "valid",
   "MMC/V2.5/AIMs/SpeechObjectAcquisition.json": "valid",
   "MMC/V2.5/AIMs/SpeechPersonalStatusExtraction.json": "valid",
+  "MMC/V2.5/AIMs/SummaryCreationModule.json": "valid",
   "MMC/V2.5/AIMs/TextAndImageQuery.json": "valid",
   "MMC/V2.5/AIMs/TextAndSpeechTranslation.json": "valid",
   "MMC/V2.5/AIMs/TextToSpeech.json": "valid",
@@ -115,6 +116,8 @@
   "PAF/V1.6/AIMs/ServiceParticipantAuthentication.json": "valid",
   "PAF/V1.6/AIMs/SpeakingAvatarFormation.json": "valid",
   "PAF/V1.6/AIMs/SpeakingAvatarSynthesis.json": "valid",
+  "PAF/V1.6/AIMs/VideoconferenceClientReceiver.json": "valid",
   "PAF/V1.6/AIMs/VideoconferenceClientTransmitter.json": "valid",
+  "PAF/V1.6/AIMs/VirtualMeetingSecretary.json": "valid",
   "PAF/V1.6/AIMs/VisualSceneCreation.json": "valid"
 }

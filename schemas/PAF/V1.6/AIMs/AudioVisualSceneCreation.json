@@ -7,15 +7,19 @@
   "Header":               "PAF-AVC-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM composes the Audio-Visual Scene in the Avatar Videoconference.",
+  "Description":          "Audio-Visual Scene Creation: merges the avatar of the virtual meeting - its Visual Scene, the Spatial Attitude of its mouth, its ID and its speech - into the Basic Audio-Visual Scene.",
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "VisualSceneDescriptors",      "Direction": "Input",  "DataType": "OSD-VSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "VisualSceneDescriptors",      "Direction": "Input",  "DataType": "OSD-BVS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "MouthSpatialAttitude",        "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AvatarID",                    "Direction": "Input",  "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechObject",                "Direction": "Input",  "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "SpeechObject",                "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AvatarModel",                 "Direction": "Input",  "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PersonalStatus",              "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputAvatarModel",           "Direction": "Output", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OutputPersonalStatus",        "Direction": "Output", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 
