@@ -9,7 +9,7 @@
   "InternalTypes":        [],
   "ExternalPorts":        [{"Name": "TextPersonalStatus", "Direction": "Input", "DataType": "MMC-TPS-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "TextObject", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""},
-                          {"Name": "MachineTextDescriptors", "Direction": "Output", "DataType": "MMC-TXD-V2.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
+                          {"Name": "MachineTextDescriptors", "Direction": "Output", "DataType": "MMC-TDO-V2.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
   "SubAIMs":              [],
   "Topology":             [],
   "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],

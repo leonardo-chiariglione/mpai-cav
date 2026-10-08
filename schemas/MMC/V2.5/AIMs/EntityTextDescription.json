@@ -14,7 +14,7 @@
   "ExternalPorts":  [
     { "Name": "TextObject"     , "Direction": "Input",   "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],  "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "InputTextObject", "Direction": "Input",   "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],  "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "TextDescriptors", "Direction": "Output",  "DataType": "MMC-TXD-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "TextDescriptors", "Direction": "Output",  "DataType": "MMC-TDO-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],
