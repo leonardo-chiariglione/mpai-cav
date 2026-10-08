@@ -60,6 +60,7 @@
   "MMC/V2.5/AIMs/AutomaticSpeechRecognition.json": "valid",
   "MMC/V2.5/AIMs/EntityDialogueProcessing.json": "valid",
   "MMC/V2.5/AIMs/EntitySpeechDescription.json": "valid",
+  "MMC/V2.5/AIMs/EntityTextDescription.json": "valid",
   "MMC/V2.5/AIMs/GenerativeSpeechDescription.json": "valid",
   "MMC/V2.5/AIMs/GenerativeTextDescription.json": "valid",
   "MMC/V2.5/AIMs/HumanCAVInteraction.json": "valid",
@@ -84,6 +85,7 @@
   "MMC/V2.5/AIMs/TextToTextTranslation.json": "valid",
   "OSD/V1.5/AIMs/AudioVisualAlignment.json": "valid",
   "OSD/V1.5/AIMs/BasicAudioSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicAudioVisualSceneDescription.json": "valid",
   "OSD/V1.5/AIMs/BasicLiDARSceneDescription.json": "valid",
   "OSD/V1.5/AIMs/BasicMultimodalSceneEditing.json": "valid",
   "OSD/V1.5/AIMs/BasicOfflineMapSceneDescription.json": "valid",
@@ -112,5 +114,6 @@
   "PAF/V1.6/AIMs/ServiceParticipantAuthentication.json": "valid",
   "PAF/V1.6/AIMs/SpeakingAvatarFormation.json": "valid",
   "PAF/V1.6/AIMs/SpeakingAvatarSynthesis.json": "valid",
+  "PAF/V1.6/AIMs/VideoconferenceClientTransmitter.json": "valid",
   "PAF/V1.6/AIMs/VisualSceneCreation.json": "valid"
 }

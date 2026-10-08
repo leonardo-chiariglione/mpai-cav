@@ -29,5 +29,6 @@
   "OSD-UID-V1.5": "loads",
   "PAF-FPE-V1.6": "loads",
   "PAF-RSR-V1.6": "loads",
-  "PAF-SAF-V1.6": "loads"
+  "PAF-SAF-V1.6": "loads",
+  "PAF-VCT-V1.6": "loads"
 }
