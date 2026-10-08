@@ -88,7 +88,7 @@ public static class CameraRenderer
     // The rear of a car in its box: shadow, tyres, a body shaded from light above,
     // the cabin tapering to the roof, the rear window with a reflection, lights,
     // indicators, the plate, the bumper, the lines of the trunk and the shoulder.
-    private static void Car(int left, int top, int cw, int ch, (byte R, byte G, byte B) paint, Action<int, int, int, int, int> put)
+    internal static void Car(int left, int top, int cw, int ch, (byte R, byte G, byte B) paint, Action<int, int, int, int, int> put)
     {
         void Fill(Func<double, double, bool> inside, Func<double, double, (double R, double G, double B)> colour)
         {
