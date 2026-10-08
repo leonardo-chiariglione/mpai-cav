@@ -11,7 +11,7 @@ namespace Mpai.Mmc.Pmx;
 // MMC-PMX-V2.5 - Personal Status Multiplexing, as an AIF IAimProcessor.
 //
 // Assembles the per-modality Personal Statuses - Text (MMC-TPS), Speech (MMC-SPS),
-// Face (MMC-FPS), and Gesture (MMC-GPS) - into a single Entity Personal Status
+// Face (MMC-FPS), and Body (MMC-BPS) - into a single Entity Personal Status
 // (MMC-EPS). It combines; it does not compute. Each input is optional; at least one
 // shall be present (an AIM with no input at all is skipped by the framework).
 public sealed class PmxAimProcessor : IAimProcessor
@@ -20,7 +20,7 @@ public sealed class PmxAimProcessor : IAimProcessor
     private readonly string _textPort;    // MMC-TPS
     private readonly string _speechPort;  // MMC-SPS
     private readonly string _facePort;    // MMC-FPS
-    private readonly string _gesturePort; // MMC-GPS
+    private readonly string _bodyPort; // MMC-BPS
     private readonly string _outPort;     // MMC-EPS
 
     public PmxAimProcessor(string instanceId, AimPortReader ports)
@@ -29,7 +29,7 @@ public sealed class PmxAimProcessor : IAimProcessor
         _textPort    = ports.Input("MMC-TPS-V2.5");
         _speechPort  = ports.Input("MMC-SPS-V2.5");
         _facePort    = ports.Input("MMC-FPS-V2.5");
-        _gesturePort = ports.Input("MMC-GPS-V2.5");
+        _bodyPort = ports.Input("MMC-BPS-V2.5");
         _outPort     = ports.Output("MMC-EPS-V2.5");
     }
 
@@ -42,11 +42,11 @@ public sealed class PmxAimProcessor : IAimProcessor
             TextPersonalStatus    = Read<TextPersonalStatus>(message, _textPort),
             SpeechPersonalStatus  = Read<SpeechPersonalStatus>(message, _speechPort),
             FacePersonalStatus    = Read<FacePersonalStatus>(message, _facePort),
-            GesturePersonalStatus = Read<GesturePersonalStatus>(message, _gesturePort)
+            BodyPersonalStatus = Read<BodyPersonalStatus>(message, _bodyPort)
         };
 
         if (eps.TextPersonalStatus is null && eps.SpeechPersonalStatus is null &&
-            eps.FacePersonalStatus is null && eps.GesturePersonalStatus is null)
+            eps.FacePersonalStatus is null && eps.BodyPersonalStatus is null)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no modality Personal Status on any input port"));
 

@@ -6,7 +6,7 @@ namespace Mpai.Aif.PortData;
 
 // MMC-EPS-V2.5 - Entity Personal Status: the Cognitive State, Emotion and Social
 // Attitude of the person or the machine, split by modality (Text, Speech, Face,
-// Gesture).
+// Body).
 //
 // It crosses MPAI-MAS because EDP's Personal Status Ports do: MPD sends the
 // person's Personal Status in, and reads the machine's Personal Status back, each

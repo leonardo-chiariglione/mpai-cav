@@ -2,11 +2,11 @@
   "Header":            "MMC-PSE-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "This composite AIM extracts the Personal Status of an Entity from Text, Speech, Face, and Gesture.",
+  "Description":      "This composite AIM extracts the Personal Status of an Entity from Text, Speech, Face, and Body.",
 
   "InternalTypes":   [{"Name": "SpeechPersonalStatus",  "DataType": "MMC-SPS-V2.5"},
                       {"Name": "FacePersonalStatus",    "DataType": "MMC-FPS-V2.5"},
-                      {"Name": "GesturePersonalStatus", "DataType": "MMC-GPS-V2.5"}],
+                      {"Name": "BodyPersonalStatus", "DataType": "MMC-BPS-V2.5"}],
 
   "ExternalPorts":   [{"Name": "TextObject",          "Direction": "Input",  "DataType": "OSD-TXO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextDescriptors",     "Direction": "Input",  "DataType": "MMC-TXD-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
@@ -44,7 +44,7 @@
                      { "Output": { "AIMName": "",             "PortName": "BodyObject",           "PortNumber": 2 }, "Input": { "AIMName": "PAF-EBD-V1.6", "PortName": "BodyObject" } },
                      { "Output": { "AIMName": "",             "PortName": "BodyDescriptors" },                    "Input": { "AIMName": "MMC-PBI-V2.5", "PortName": "BodyDescriptors",   "PortNumber": 1 } },
                      { "Output": { "AIMName": "PAF-EBD-V1.6", "PortName": "BodyDescriptors" },                    "Input": { "AIMName": "MMC-PBI-V2.5", "PortName": "BodyDescriptors",   "PortNumber": 2 } },
-                     { "Output": { "AIMName": "MMC-PBI-V2.5", "PortName": "GesturePersonalStatus" },                 "Input": { "AIMName": "MMC-PMX-V2.5", "PortName": "GesturePersonalStatus" } },
+                     { "Output": { "AIMName": "MMC-PBI-V2.5", "PortName": "BodyPersonalStatus" },                 "Input": { "AIMName": "MMC-PMX-V2.5", "PortName": "BodyPersonalStatus" } },
                      { "Output": { "AIMName": "MMC-PMX-V2.5", "PortName": "PersonalStatus" },                        "Input": { "AIMName": "",             "PortName": "PersonalStatus" } }],
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",

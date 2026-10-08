@@ -519,7 +519,7 @@ public sealed class EdpAimProcessor : IAimProcessor
     }
     // Build the machine's Personal Status from the LLM's stated emotion + attitude.
     // Carried as a Text modality PS inside the Entity Personal Status; PAF-PDR will
-    // de-multiplex it to speech/face/gesture for avatar rendering.
+    // de-multiplex it to speech/face/body for avatar rendering.
     private static EntityPersonalStatus MachinePersonalStatus(string emotion, string attitude)
     {
         FactorLabel emo = emotion.ToUpperInvariant() switch

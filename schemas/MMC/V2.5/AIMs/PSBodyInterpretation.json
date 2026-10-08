@@ -7,13 +7,13 @@
   "Header":               "MMC-PBI-V2.5",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM extracts the Gesture Personal Status from the Body Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Body Description (Port 2).",
+  "Description":          "This AIM extracts the Body Personal Status from the Body Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Body Description (Port 2).",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "BodyDescriptorsObject",          "Direction": "Input",  "DataType": "PAF-BDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EntityBodyDescriptorsObject",    "Direction": "Input",  "DataType": "PAF-BDO-V1.6", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "GesturePersonalStatus", "Direction": "Output", "DataType": "MMC-GPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "BodyPersonalStatus", "Direction": "Output", "DataType": "MMC-BPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

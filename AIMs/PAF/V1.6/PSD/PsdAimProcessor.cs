@@ -12,15 +12,15 @@ namespace Mpai.Paf.Psd;
 //
 // The inverse of Personal Status Multiplexing (MMC-PMX). Takes one Entity Personal
 // Status (the machine's, from Entity Dialogue Processing) and splits it into the
-// per-modality Personal Statuses - Text, Speech, Face, and Gesture - of which the Response
+// per-modality Personal Statuses - Text, Speech, Face, and Body - of which the Response
 // and Scene Rendering composite then uses to render the speaking avatar (affective
-// Text-To-Speech, facial expression, gesture). It de-multiplexes; it does not
+// Text-To-Speech, facial expression, body). It de-multiplexes; it does not
 // compute. A modality absent from the Entity Personal Status is emitted as null.
 //
 // This first implementation reads the machine's Personal Status factors from
 // whichever modality slot carries them (Text/Speech/Face) and projects them onto
 // the four output modalities, so an Entity Personal Status that only carried a
-// Text modality (as EDP produces) still drives speech, face, and gesture.
+// Text modality (as EDP produces) still drives speech, face, and body.
 public sealed class PsdAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
@@ -28,7 +28,7 @@ public sealed class PsdAimProcessor : IAimProcessor
     private readonly string _textPsPort;   // MMC-TPS
     private readonly string _speechPsPort; // MMC-SPS
     private readonly string _facePsPort;   // MMC-FPS
-    private readonly string _gesturePsPort;// MMC-GPS
+    private readonly string _bodyPsPort;// MMC-BPS
 
     public PsdAimProcessor(string instanceId, AimPortReader ports)
     {
@@ -37,7 +37,7 @@ public sealed class PsdAimProcessor : IAimProcessor
         _textPsPort    = ports.Output("MMC-TPS-V2.5");
         _speechPsPort  = ports.Output("MMC-SPS-V2.5");
         _facePsPort    = ports.Output("MMC-FPS-V2.5");
-        _gesturePsPort = ports.Output("MMC-GPS-V2.5");
+        _bodyPsPort = ports.Output("MMC-BPS-V2.5");
     }
 
     public string InstanceId => _instanceId;
@@ -69,9 +69,9 @@ public sealed class PsdAimProcessor : IAimProcessor
         {
             FaceCognitiveState = cog, FaceEmotion = emo, FaceSocialAttitude = att
         };
-        var gps = new GesturePersonalStatus
+        var gps = new BodyPersonalStatus
         {
-            GestureCognitiveState = cog, GestureEmotion = emo, GestureSocialAttitude = att
+            BodyCognitiveState = cog, BodyEmotion = emo, BodySocialAttitude = att
         };
 
         return System.Threading.Tasks.Task.FromResult(new Message
@@ -83,7 +83,7 @@ public sealed class PsdAimProcessor : IAimProcessor
                 [_textPsPort]    = MpaiJson.ToJson(tps),
                 [_speechPsPort]  = MpaiJson.ToJson(sps),
                 [_facePsPort]    = MpaiJson.ToJson(fps),
-                [_gesturePsPort] = MpaiJson.ToJson(gps)
+                [_bodyPsPort] = MpaiJson.ToJson(gps)
             }
         });
     }
@@ -98,8 +98,8 @@ public sealed class PsdAimProcessor : IAimProcessor
             return (s.SpeechCognitiveState, s.SpeechEmotion, s.SpeechSocialAttitude);
         if (eps.FacePersonalStatus is { } f)
             return (f.FaceCognitiveState, f.FaceEmotion, f.FaceSocialAttitude);
-        if (eps.GesturePersonalStatus is { } g)
-            return (g.GestureCognitiveState, g.GestureEmotion, g.GestureSocialAttitude);
+        if (eps.BodyPersonalStatus is { } g)
+            return (g.BodyCognitiveState, g.BodyEmotion, g.BodySocialAttitude);
         return (null, null, null);
     }
 }

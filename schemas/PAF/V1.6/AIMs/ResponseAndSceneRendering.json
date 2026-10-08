@@ -7,11 +7,11 @@
   "Header":               "PAF-RSR-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "Response and Scene Rendering: renders the machine's response - a Text - as a Speaking Avatar of the input Avatar Model, ready to play; whoever requested it places it in a scene and renders it (e.g. with Scene and Avatar Rendering). Personal Status De-multiplexing splits a Personal Status into the Speech, Face and Gesture Personal Statuses that make the avatar expressive; Text-To-Speech makes the Machine Speech, with a Speech Model when one is supplied; Speaking Avatar Formation forms the Speaking Avatar from it - or from an Input Speech, when one is supplied.",
+  "Description":          "Response and Scene Rendering: renders the machine's response - a Text - as a Speaking Avatar of the input Avatar Model, ready to play; whoever requested it places it in a scene and renders it (e.g. with Scene and Avatar Rendering). Personal Status De-multiplexing splits a Personal Status into the Speech, Face and Body Personal Statuses that make the avatar expressive; Text-To-Speech makes the Machine Speech, with a Speech Model when one is supplied; Speaking Avatar Formation forms the Speaking Avatar from it - or from an Input Speech, when one is supplied.",
 
   "InternalTypes":        [{"Name": "SpeechPersonalStatus", "DataType": "MMC-SPS-V2.5"},
                           {"Name": "FacePersonalStatus", "DataType": "MMC-FPS-V2.5"},
-                          {"Name": "GesturePersonalStatus", "DataType": "MMC-GPS-V2.5"},
+                          {"Name": "BodyPersonalStatus", "DataType": "MMC-BPS-V2.5"},
                           {"Name": "MachineSpeech", "DataType": "OSD-BSO-V1.5", "Output": 2}],
 
   "ExternalPorts":        [{"Name": "InputSpeech", "Direction": "Input", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Output": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -33,7 +33,7 @@
                           { "Output": { "AIMName": "MMC-TTS-V2.5", "PortName": "MachineSpeech" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "MachineSpeech" } },
                           { "Output": { "AIMName": "", "PortName": "InputSpeech" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "MachineSpeech" } },
                           { "Output": { "AIMName": "MMC-PDX-V2.5", "PortName": "FacePersonalStatus" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "FacePersonalStatus" } },
-                          { "Output": { "AIMName": "MMC-PDX-V2.5", "PortName": "GesturePersonalStatus" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "GesturePersonalStatus" } },
+                          { "Output": { "AIMName": "MMC-PDX-V2.5", "PortName": "BodyPersonalStatus" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "BodyPersonalStatus" } },
                           { "Output": { "AIMName": "", "PortName": "TextSAF" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "TextSAF" } },
                           { "Output": { "AIMName": "", "PortName": "AvatarModel" }, "Input": { "AIMName": "PAF-SAF-V1.6", "PortName": "AvatarModel" } },
                           { "Output": { "AIMName": "PAF-SAF-V1.6", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } }],

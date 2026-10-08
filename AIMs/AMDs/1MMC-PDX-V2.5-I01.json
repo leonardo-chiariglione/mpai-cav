@@ -2,13 +2,13 @@
   "Header":           "MMC-PDX-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "Personal Status De-multiplexing: the inverse of Personal Status Multiplexing. Splits one Entity Personal Status (the machine's) into the per-modality Personal Statuses - Text, Speech, Face, and Gesture - for the Response and Scene Rendering composite. It de-multiplexes; it does not compute.",
+  "Description":      "Personal Status De-multiplexing: the inverse of Personal Status Multiplexing. Splits one Entity Personal Status (the machine's) into the per-modality Personal Statuses - Text, Speech, Face, and Body - for the Response and Scene Rendering composite. It de-multiplexes; it does not compute.",
 
   "ExternalPorts":    [{"Name": "PersonalStatus",        "Direction": "Input",  "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatusText",    "Direction": "Output", "DataType": "MMC-TPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatusSpeech",  "Direction": "Output", "DataType": "MMC-SPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatusFace",    "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "PersonalStatusGesture", "Direction": "Output", "DataType": "MMC-GPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "PersonalStatusBody", "Direction": "Output", "DataType": "MMC-BPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
   "Topology":         [],

@@ -19,7 +19,7 @@ public sealed class GbdAimProcessor : IAimProcessor
 {
     private const double EnvelopeSeconds = 0.045;   // the loudness measured as GFD measures it
 
-    private readonly string _statusPort;   // MMC-GPS, "" when the L3 has none
+    private readonly string _statusPort;   // MMC-BPS, "" when the L3 has none
     private readonly string _textPort;     // OSD-BTO
     private readonly string _speechPort;   // OSD-BSO
     private readonly string _outPort;      // PAF-BDO
@@ -29,7 +29,7 @@ public sealed class GbdAimProcessor : IAimProcessor
     public GbdAimProcessor(string instanceId, AimPortReader ports)
     {
         InstanceId  = instanceId;
-        _statusPort = ports.InputOrDefault("MMC-GPS-V2.5", "");
+        _statusPort = ports.InputOrDefault("MMC-BPS-V2.5", "");
         _textPort   = ports.Input("OSD-BTO-V1.5");
         _speechPort = ports.Input("OSD-BSO-V1.5");
         _outPort    = ports.Output("PAF-BDO-V1.6");
@@ -40,9 +40,9 @@ public sealed class GbdAimProcessor : IAimProcessor
         string? emotion = null; double degree = 0.6;
         if (_statusPort.Length > 0 && message.Ports.TryGetValue(_statusPort, out var gps) && !string.IsNullOrWhiteSpace(gps))
         {
-            var status = MpaiJson.FromJson<GesturePersonalStatus>(gps);
-            emotion = status?.GestureEmotion?.Category;
-            degree = status?.GestureEmotion?.Degree ?? 0.6;
+            var status = MpaiJson.FromJson<BodyPersonalStatus>(gps);
+            emotion = status?.BodyEmotion?.Category;
+            degree = status?.BodyEmotion?.Degree ?? 0.6;
         }
         var text = message.Ports.TryGetValue(_textPort, out var tj) && !string.IsNullOrWhiteSpace(tj)
             ? MpaiJson.FromJson<BasicTextObject>(tj)?.GetText() ?? "" : "";

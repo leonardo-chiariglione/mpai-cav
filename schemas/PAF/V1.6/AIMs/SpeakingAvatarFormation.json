@@ -7,7 +7,7 @@
   "Header":               "PAF-SAF-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "Speaking Avatar Formation: forms the Speaking Avatar of the input Avatar - its Model animated as it utters the Speech. Generative Face Description and Generative Body Description make the Face and Body Descriptors from the Speech and the Text, expressive when a Face or Gesture Personal Status is supplied; Speaking Avatar Synthesis packages the Avatar, the Speech and the Descriptors, time-aligned and ready to play.",
+  "Description":          "Speaking Avatar Formation: forms the Speaking Avatar of the input Avatar - its Model animated as it utters the Speech. Generative Face Description and Generative Body Description make the Face and Body Descriptors from the Speech and the Text, expressive when a Face or Body Personal Status is supplied; Speaking Avatar Synthesis packages the Avatar, the Speech and the Descriptors, time-aligned and ready to play.",
 
   "InternalTypes":        [{"Name": "FaceDescriptors", "DataType": "PAF-FDO-V1.6"},
                           {"Name": "BodyDescriptors", "DataType": "PAF-BDO-V1.6"}],
@@ -18,7 +18,7 @@
                           {"Name": "TextGFD", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TextGBD", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 2, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "FacePersonalStatus", "Direction": "Input", "DataType": "MMC-FPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "GesturePersonalStatus", "Direction": "Input", "DataType": "MMC-GPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "BodyPersonalStatus", "Direction": "Input", "DataType": "MMC-BPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarModel", "Direction": "Input", "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
@@ -32,7 +32,7 @@
                           { "Output": { "AIMName": "", "PortName": "TextGFD" }, "Input": { "AIMName": "PAF-GFD-V1.6", "PortName": "TextGFD" } },
                           { "Output": { "AIMName": "", "PortName": "TextGBD" }, "Input": { "AIMName": "PAF-GBD-V1.6", "PortName": "TextGBD" } },
                           { "Output": { "AIMName": "", "PortName": "FacePersonalStatus" }, "Input": { "AIMName": "PAF-GFD-V1.6", "PortName": "FacePersonalStatus" } },
-                          { "Output": { "AIMName": "", "PortName": "GesturePersonalStatus" }, "Input": { "AIMName": "PAF-GBD-V1.6", "PortName": "GesturePersonalStatus" } },
+                          { "Output": { "AIMName": "", "PortName": "BodyPersonalStatus" }, "Input": { "AIMName": "PAF-GBD-V1.6", "PortName": "BodyPersonalStatus" } },
                           { "Output": { "AIMName": "", "PortName": "AvatarModel" }, "Input": { "AIMName": "PAF-SAS-V1.6", "PortName": "AvatarModel" } },
                           { "Output": { "AIMName": "PAF-GFD-V1.6", "PortName": "FaceDescriptors" }, "Input": { "AIMName": "PAF-SAS-V1.6", "PortName": "FaceDescriptors" } },
                           { "Output": { "AIMName": "PAF-GBD-V1.6", "PortName": "BodyDescriptors" }, "Input": { "AIMName": "PAF-SAS-V1.6", "PortName": "BodyDescriptors" } },

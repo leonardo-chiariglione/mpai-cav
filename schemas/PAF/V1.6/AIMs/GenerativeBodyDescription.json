@@ -7,7 +7,7 @@
   "APIProfile":           "Basic",
   "Description":          "Generative Body Description: produces the Machine Body Descriptors from the Text and the Machine Speech, and optionally a Body Personal Status for expression; when the Body Personal Status is absent the body carries a neutral posture.",
   "InternalTypes":        [],
-  "ExternalPorts":        [{"Name": "BodyPersonalStatus", "Direction": "Input", "DataType": "MMC-GPS-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":        [{"Name": "BodyPersonalStatus", "Direction": "Input", "DataType": "MMC-BPS-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "TextObject", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "MachineSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "MachineBodyDescriptors", "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "", "Protocol": "", "IsRemote": ""}],
