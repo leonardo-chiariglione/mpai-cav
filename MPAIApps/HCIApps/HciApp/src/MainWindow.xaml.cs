@@ -237,7 +237,10 @@ public partial class MainWindow : Window
         if (_north is null) return;
         var inputs = new List<ControllerApi.Datum>
         {
-            new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            // PAF-RSR takes the Text twice, one Port per consumer (M3194 Input group 1):
+            // #1 for Text-To-Speech, #2 for Speaking Avatar Formation.
+            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new ControllerApi.Datum(AVT, AvatarDatum)
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));

@@ -24,7 +24,7 @@ public class StandInTests
         ("1MMC-AMQ-V2.5-I01", [("OSD-BTO-V1.5", 1, "welcome"), ("PAF-AVT-V1.6", 1, "avatar")]),
         ("1MMC-MAT-V2.5-I01", [("OSD-BSO-V1.5", 1, "speech"), ("OSD-SEL-V1.5", 1, "en-it"), ("PAF-AVT-V1.6", 1, "avatar")]),
         ("1MMC-MPD-V2.5-I01", [("OSD-BSO-V1.5", 1, "speech"), ("PAF-AVT-V1.6", 1, "avatar")]),
-        ("1PAF-RSR-V1.6-I01", [("OSD-BTO-V1.5", 1, "words"), ("PAF-AVT-V1.6", 1, "avatar")]),
+        ("1PAF-RSR-V1.6-I01", [("OSD-BTO-V1.5", 1, "words"), ("OSD-BTO-V1.5", 2, "words"), ("PAF-AVT-V1.6", 1, "avatar")]),
         ("1MAS-APP-V1.0-I01", [("OSD-BTO-V1.5", 1, "hello"), ("PAF-AVT-V1.6", 1, "avatar")])
     };
 

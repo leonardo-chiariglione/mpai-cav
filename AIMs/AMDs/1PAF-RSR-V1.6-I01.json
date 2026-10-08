@@ -8,9 +8,10 @@
   "InternalTypes":    [{"Name": "SpeechPersonalStatus",   "DataType": "MMC-SPS-V2.5"},
                        {"Name": "FacePersonalStatus",     "DataType": "MMC-FPS-V2.5"},
                        {"Name": "GesturePersonalStatus",  "DataType": "MMC-GPS-V2.5"},
-                       {"Name": "MachineSpeech",          "DataType": "OSD-BSO-V1.5"}],
+                       {"Name": "MachineSpeech",          "DataType": "OSD-BSO-V1.5", "Output": 2}],
 
-  "ExternalPorts":    [{"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "TextTTS", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextSAF", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "Input": 1, "Output": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AvatarModel", "Direction": "Input", "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeakingAvatar", "Direction": "Output", "DataType": "XRV-SAV-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
@@ -20,12 +21,12 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-SAF-V1.6-I01", "AIMName": "1PAF-SAF-V1.6-I01", "Relation": "Internal" } }],
 
   "Topology":         [{ "Output": { "AIMName": "", "PortName": "PersonalStatus" }, "Input": { "AIMName": "1MMC-PDX-V2.5-I01", "PortName": "PersonalStatus" } },
-                       { "Output": { "AIMName": "", "PortName": "TextObject" }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "TextObject" } },
+                       { "Output": { "AIMName": "", "PortName": "TextTTS" }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "TextTTS" } },
                        { "Output": { "AIMName": "1MMC-PDX-V2.5-I01", "PortName": "SpeechPersonalStatus" }, "Input": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "SpeechPersonalStatus" } },
                        { "Output": { "AIMName": "1MMC-TTS-V2.5-I01", "PortName": "MachineSpeech" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "MachineSpeech" } },
                        { "Output": { "AIMName": "1MMC-PDX-V2.5-I01", "PortName": "FacePersonalStatus" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "FacePersonalStatus" } },
                        { "Output": { "AIMName": "1MMC-PDX-V2.5-I01", "PortName": "GesturePersonalStatus" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "GesturePersonalStatus" } },
-                       { "Output": { "AIMName": "", "PortName": "TextObject" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "TextObject" } },
+                       { "Output": { "AIMName": "", "PortName": "TextSAF" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "TextSAF" } },
                        { "Output": { "AIMName": "", "PortName": "AvatarModel" }, "Input": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "AvatarModel" } },
                        { "Output": { "AIMName": "1PAF-SAF-V1.6-I01", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } }],
 
