@@ -82,6 +82,7 @@ public sealed class MInstance
     // whether the next one waits for the presenter (Manual). Not part of the M-Instance.
     public volatile string? Caption;
     public volatile string? Note;     // one line under the caption: what the step means
+    public volatile string? Say;      // what the viewer's voice reads for the step (the caption and note when absent)
     public volatile string[]? Hidden; // Items the viewer does not draw yet (a demonstration brings them in)
     public volatile bool Manual;
     public Schemas Schemas => schemas;
@@ -211,7 +212,7 @@ public sealed class MInstance
                     ["Source"] = a.Source, ["Action"] = a.Action, ["Destination"] = a.Destination, ["Http"] = a.Http, ["Status"] = a.Status
                 }).ToArray()),
                 ["Performed"] = activity.Count,
-                ["Caption"] = Caption, ["Note"] = Note, ["Manual"] = Manual,
+                ["Caption"] = Caption, ["Note"] = Note, ["Say"] = Say, ["Manual"] = Manual,
                 ["Hidden"] = new JsonArray((Hidden ?? []).Select(h => (JsonNode)h).ToArray()),
                 ["Things"] = new JsonArray(located.Select(i =>
                 {

@@ -36,6 +36,29 @@ var notes = new Dictionary<int, string>
     [16] = "Friend1 grants Friend2 the right to enter the Room.",
     [19] = "Access revoked: Friend2's next attempt to enter is refused (403, insufficient rights)."
 };
+// What the viewer's voice says for each step: what happens, and why.
+var speech = new Dictionary<int, string>
+{
+    [1] = "Human1 registers with the M-Instance, and receives Friend1, the identity its Persona will act under.",
+    [2] = "Friend1 buys a parcel of land from the Seller, from the Universe. The transaction also gives Friend1 the rights to add things on the parcel and to move to it.",
+    [3] = "Friend1 buys a room, and with it the right to enter it.",
+    [4] = "Friend1 adds its Persona at Metaverse Square. Nothing can be seen yet: the Persona has no identified data, and what is not identified does not exist in the M-Instance.",
+    [5] = "Friend1 operates from the Universe. There, the data of its human is captured. Until it is identified, nothing of Friend1 is seen in the M-Instance.",
+    [6] = "The captured stream is identified. Now Persona1 exists in the M-Instance, and it is seen.",
+    [7] = "Friend1 animates its Persona from the identified stream, so the Persona moves as its human does.",
+    [8] = "Friend1 signals its presence to the presence service, with a message.",
+    [9] = "Friend1 moves its Persona to the parcel, and stops at its edge. It cannot enter the room: the room is not there yet.",
+    [10] = "Friend1 places the room on the parcel. The room exists, but nobody can see it yet.",
+    [11] = "Friend1 makes the room perceptible. Only now can the room be seen, and so only now can Friend1 enter it.",
+    [12] = "Friend1 enters the room.",
+    [13] = "Friend1 renders the room to its human, in the Universe, so that the human sees it too.",
+    [14] = "Friend1 invites Friend2 with a message: come to my room. Friend2 reads it.",
+    [15] = "Friend2 accepts, with a message back to Friend1.",
+    [16] = "Friend2 has no right to enter the room yet. Friend1 grants it that right.",
+    [17] = "With the right granted, Friend2 enters the room, and the two friends are together.",
+    [18] = "Friend2 leaves the room.",
+    [19] = "Friend1 revokes the right. Friend2's next attempt to enter is refused: insufficient rights."
+};
 // Friend1 operates from the Universe: nothing of it is seen until its captured data is identified
 // (step 6). Friend2 is already at its place when the Use Case begins.
 string[] HiddenAt(int n) => n < 6 ? ["Persona1ID"] : [];
@@ -68,6 +91,7 @@ if (demo >= 0)
     {
         m.Manual = true;
         m.Caption = "Use Case 2: Friends meet in the metaverse";
+        m.Say = "Use Case 2: two friends meet in the metaverse. Friend2 is already at its place. Friend1 will register, buy a parcel and a room, bring its Persona in, and invite Friend2.";
         Record();
         Console.WriteLine("Manual: Space / up arrow / right arrow / click in the viewer, or Enter here, shows the next step; down arrow the previous one.");
         _ = Task.Run(() => { while (Console.ReadLine() is not null) Next(); });
@@ -80,12 +104,14 @@ if (demo >= 0)
         var n = int.TryParse(step.AsSpan(0, 2), out var k) ? k : 0;
         m.Caption = $"Step {n} of {Steps}: {step[3..]}";
         m.Note = notes.GetValueOrDefault(n);
+        m.Say = speech.GetValueOrDefault(n);
         m.Hidden = HiddenAt(n);
         if (manual) { Record(); if (n < Steps) await next.WaitAsync(); }
         else await Task.Delay(TimeSpan.FromSeconds(pause));
     });
     m.Caption = "Use Case 2 done: all " + Steps + " steps";
     m.Note = null;
+    m.Say = "The use case is complete: all " + Steps + " steps.";
     m.Manual = manual;
     if (manual) Record();
     Console.WriteLine("Use Case 2 done.");
