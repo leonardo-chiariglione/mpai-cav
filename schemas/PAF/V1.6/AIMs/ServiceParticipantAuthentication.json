@@ -7,13 +7,13 @@
   "Header":               "PAF-SPA-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM finds a correspondence between a Participant ID and a Subscriber ID using Face and Speech Objects.",
+  "Description":          "This AIM authenticates a participant: from its Participant ID, its Speech Object and its Face Object it gives the Avatar ID (the Subscriber ID) the participant is known by.",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "ParticipantID", "Direction": "Input",  "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechObject",  "Direction": "Output", "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "FaceObject",    "Direction": "Output", "DataType": "OSD-VIO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechObject",  "Direction": "Input" , "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "FaceObject",    "Direction": "Input" , "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SubscriberID",  "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
