@@ -1,0 +1,128 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMC/V2.5/data/Knowledge.json",
+  "title":                    "Knowledge V2.5",
+  "description":              "Epistemic state representation for ToM with optional extended context, governance, and explanation hooks.",
+  "type":                     "object",
+  "required":                 [ "Header","Entity","Proposition","EpistemicStatus" ],
+  "additionalProperties":     false,
+                              "properties": {
+
+    "Header":                 { "type": "string", "const": "MMC-EKN-V2.5" },
+
+    "MInstanceID":            { "type": "string" },
+
+    "Entity":                 { "type": "object", "required": [ "ID" ] }, "additionalProperties": false, "properties": {
+      "ID":    { "type": "string" },
+      "Label": { "type": "string" },
+      "Type":  { "type": "string", "enum": [ "a-user","h-user","process","group","unknown" ] } },
+
+    "Proposition":            { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Proposition.json" },
+
+    "TruthValue":             { "type": "string", "enum": [ "true","false","unknown" ] },
+    "Belief":                 { "type": "boolean" },
+    "Awareness":              { "type": "boolean" },
+    "EpistemicStatus":        { "type": "string", "enum": [ "known","believed","false-belief","uncertain","unknown" ] },
+    "Confidence":             { "type": "number", "minimum": 0, "maximum": 1 },
+
+    "Justifications":         { "type": "array", "items": { "type": "object", "required": [ "type","strength" ],
+                                "additionalProperties": false, "properties": { "type":      {
+                                "type": "string", "enum": [ "perception","testimony","memory","inference","document","sensor","other" ] },
+      "strength":             { "type": "number", "minimum": 0, "maximum": 1 },
+      "source":               { "type": "string", "format": "uri" },
+      "timestamp":            { "type": "string", "format": "date-time" },
+      "note":                 { "type": "string" } } } },
+
+    "Perspective":            { "type": "object", "additionalProperties": false, "properties": {
+      "AttributorID":         { "type": "string" },
+      "TargetID":             { "type": "string" },
+      "EstimationConfidence": { "type": "number", "minimum": 0, "maximum": 1 } } },
+
+    "Temporal":               { "type": "object", "additionalProperties": false, "properties": {
+      "ObservedAt":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "ValidityInterval":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } },
+
+    "Versioning":             { "type": "object", "additionalProperties": false, "properties": {
+      "supersedes":           { "type": "string" },
+      "validityInterval":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "subversion":           { "type": "string", "pattern": "^[0-9]+$" },
+      "dotSeparator":         { "type": "string", "enum": [ "." ] },
+      "lineage":              { "type": "array", "items": { "type": "string" } } } },
+
+    "KnowledgeGraphRef":      { "type": "object", "additionalProperties": false, "properties": {
+      "graphURI":             { "type": "string", "format": "uri" },
+      "nodeID":               { "type": "string" },
+      "subgraph":             { "type": "string" } } },
+
+    "SocialContext":          { "type": "object", "additionalProperties": false, "properties": {
+      "groups":               { "type": "array", "items": { "type": "string" } },
+      "roles":                { "type": "array", "items": { "type": "string" } },
+      "authority":            { "type": "string" },
+      "relations":            { "type": "array", "items": { "type": "string" } } } },
+
+    "TemporalContext":        { "type": "object", "additionalProperties": false, "properties": {
+      "epoch":                { "type": "string" },
+      "scenario":             { "type": "string" } } },
+
+    "Uncertainty":            { "type": "object", "required": [ "source" ], "additionalProperties": false, "properties": {
+      "model":                { "type": "string", "enum": [ "point","interval","distribution","other" ] },
+      "params":               { "type": "object" },
+      "bySource":             { "type": "array", "items": {
+                                "type": "object", "properties": {
+        "source":             { "type": "string" },
+        "Confidence":         { "type": "number", "minimum": 0, "maximum": 1 } } } } } },
+
+    "Attribution":            { "type": "object", "additionalProperties": false, "properties": {
+      "agentID":              { "type": "string" },
+      "role":                 { "type": "string" },
+      "license":              { "type": "string" },
+      "credit":               { "type": "string" } } },
+
+    "Explanations":           { "type": "array", "required": [ "text" ], "items": {
+                                "type": "object", "additionalProperties": false, "properties": {
+      "text":                 { "type": "string" },
+      "method":               { "type": "string", "enum": [ "abductive","deductive","causal","counterfactual","other" ] },
+      "evidenceRef":          { "type": "array", "items": { "type": "string" } } } } },
+
+    "Predictions":            { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "proposition":          { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Proposition.json" },
+      "Confidence":           { "type": "number", "minimum": 0, "maximum": 1 },
+      "horizon":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } } },
+
+    "Conflicts":              { "type": "array", "required": [ "with","type","status" ], "items": {
+                                "type": "object", "additionalProperties": false, "properties": {
+      "with":                 { "type": "string" },
+      "type":                 { "type": "string", "enum": [ "logical","empirical","policy","other" ] },
+      "status":               { "type": "string", "enum": [ "detected","under-review","resolved" ] },
+      "note":                 { "type": "string" } } } },
+
+    "AlignmentWithDirective": { "type": "object", "additionalProperties": false, "properties": {
+      "directiveID":          { "type": "string" },
+      "alignment":            { "type": "number", "minimum": 0, "maximum": 1 },
+      "note":                 { "type": "string" } } },
+
+    "Governance":             { "type": "object", "additionalProperties": false, "properties": {
+      "access":               { "type": "string", "enum": [ "public","restricted","private" ] },
+      "retention":            { "type": "string" },
+      "consent":              { "type": "string" } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "allOf": [
+    { "if":                   { "properties": { "EpistemicStatus": { "const": "known" } } },
+      "then":                 { "properties": {
+                                "TruthValue": { "const": "true" },
+                                "Belief":     { "const": true },
+                                "Awareness":  { "const": true },
+                                "Justifications": { "minItems": 1 } },
+                                "required": [ "TruthValue","Belief","Awareness","Justifications" ] } },
+
+    { "if":                   { "properties": { "EpistemicStatus": { "const": "false-belief" } } },
+      "then":                 { "properties": {
+                                "TruthValue": { "const": "false" },
+                                "Belief":     { "const": true } },
+                                "required": [ "TruthValue","Belief" ] } },
+
+    { "if":                   { "properties": { "EpistemicStatus": { "const": "believed" } } },
+      "then":                 { "properties": { "Belief": { "const": true } },
+                                "required": [ "Belief" ] } } ] }

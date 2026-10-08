@@ -8,10 +8,11 @@
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6"},
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM extracts the Face Personal Status from the Face Descriptors.",
+  "Description":          "This AIM extracts the Face Personal Status from the Face Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Face Description (Port 2).",
 
-  "ExternalPorts":        [{"Name": "FaceDescriptorsObject", "Direction": "Input",  "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "FacePersonalStatus",    "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "ExternalPorts":        [{"Name": "FaceDescriptorsObject",       "Direction": "Input",  "DataType": "PAF-FDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EntityFaceDescriptorsObject", "Direction": "Input",  "DataType": "PAF-FDO-V1.6", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "FacePersonalStatus",          "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

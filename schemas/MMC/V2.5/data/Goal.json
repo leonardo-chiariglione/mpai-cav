@@ -1,0 +1,41 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMC/V2.5/data/Goal.json",
+  "title":                  "Goal V2.5",
+  "description":            "A set of objectives held by an Entity. Each objective carries a machine-actionable structured core and a reasoner-facing description, supporting both orchestration and deliberation.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               [ "Header", "MInstance", "UEnvironment", "GoalID", "GoalTime", "SessionID", "Provenance", "Objectives" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "MMC-GOA-V2.5" },
+    "MInstance":            { "type": "string" },
+    "UEnvironment":         { "type": "string" },
+    "GoalID":               { "type": "string" },
+    "GoalTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "SessionID":            { "type": "string" },
+
+    "Provenance":           { "type": "object", "additionalProperties": false, "required": [ "Source" ], "properties": {
+      "Source":             { "type": "string", "enum": [ "human_command", "specification" ] },
+      "CommandID":          { "type": "string" } } },
+
+    "Objectives":           { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Objective" } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                  {
+
+    "Objective":            { "type": "object", "additionalProperties": false, "required": [ "ObjectiveID", "ActionType" ], "properties": {
+      "ObjectiveID":        { "type": "string" },
+      "ActionType":         { "type": "string", "enum": [ "inform", "watch", "fetch", "greet", "act", "query" ] },
+      "Description":        { "type": "string", "maxLength": 2048 },
+      "Priority":           { "type": "integer", "minimum": 1, "maximum": 10 },
+      "Targets":            { "type": "array", "minItems": 1, "items": { "oneOf": [ { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json" }, { "type": "string" } ] } },
+      "Predicate":          { "type": "object", "additionalProperties": false, "properties": {
+        "Relation":         { "type": "string", "enum": [ "enters", "leaves", "reaches", "contacts", "approaches", "proximity_threshold" ] },
+        "Reference":        { "oneOf": [ { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json" }, { "type": "string" } ] },
+        "Threshold":        { "type": "number", "minimum": 0 } } },
+      "Constraints":        { "type": "object", "additionalProperties": false, "properties": {
+        "PriorityLevel":    { "type": "string", "enum": [ "low", "normal", "high" ] },
+        "Deadline":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+      "IntentPayload":      { "type": "string" } } } } }

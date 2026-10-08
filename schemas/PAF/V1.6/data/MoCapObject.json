@@ -1,0 +1,27 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/PAF/V1.6/data/MoCapObject.json",
+  "title":                "MoCap Object V1.6",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "MoCapObjectID", "MoCapData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "PAF-MCO-V1.6" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "MoCapObjectID":      { "type": "string" },
+    "MoCapObjectTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "MoCapData":          { "type": "array", "items": { "anyOf": [
+                          { "type": "object", "properties": {
+      "DataLength":       { "type": "integer" },
+      "DataURI":          { "type": "string", "format": "uri" } } },
+                          { "type": "object", "properties": {
+      "Data":             { "type": "string" } } },
+                          { "type": "object", "properties": {
+      "DataID":           { "type": "string" } } } ] } },
+
+    "MoCapQualifier":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/MoCapQualifier.json" },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

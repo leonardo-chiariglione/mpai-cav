@@ -1,0 +1,24 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/MMC/V2.5/data/Belief.json",
+  "title":                        "Belief V2.5",
+  "required":                     [ "Header", "BeliefID", "BeliefData" ],
+  "description":                  "Represents a belief held by an Entity: proposition, confidence, cognitive state influence, & provenance metadata.", "type": "object", "properties": {
+
+    "Header":                     { "type": "string", "const": "MMC-EBL-V2.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "BeliefID":                   { "type": "string" },
+    "BeliefTime":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "BeliefData":                 { "description": "Belief object representing a proposition the Entity holds as true",
+                                    "type": "object", "required": [ "Proposition" ], "properties": {
+      "Proposition":              { "description": "Structured representation of the belief as a logical statement",
+                                    "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Proposition.json" },
+      "Confidence":               { "description": "Numeric confidence (0.0Ã¢â‚¬â€œ1.0) in the truth of the belief",
+                                    "type": "number", "minimum": 0.0, "maximum": 1.0 },
+      "CognitiveStateConditions": { "description": "Cognitive state categories influencing this belief",
+                                    "type": "array", "items": { "type": "object", "properties": {
+        "CognitiveState":         { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/CognitiveState.json" } } } } } },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

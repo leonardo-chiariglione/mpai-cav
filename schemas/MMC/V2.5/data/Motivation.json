@@ -1,0 +1,44 @@
+{ "$schema":          "https://json-schema.org/draft/2020-12/schema",
+  "$id":              "https://schemas.mpai.community/MMC/V2.5/data/Motivation.json",
+  "title":            "Motivation V2.5",
+  "description":      "Encodes inferred goal orientation or drive behind user behavior.",
+  "type":             "object",
+  "required":         [ "Header", "MotivationID", "Type", "Subtype", "Strength" ],
+  "properties":       {
+
+    "Header":         { "type": "string", "const": "MMC-MOT-V2.5" },
+    "MInstanceID":    { "type": "string" },
+    "UEnvironmentID": { "type": "string" },
+    "MotivationID":   { "type": "string" },
+    "MotivationTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "ID":             { "type": "string" },
+
+    "Type":           { "description": "Motivation category", "type": "string",
+                        "enum": [ "goal-seeking", "avoidance", "affiliation", "curiosity", "control", "validation" ] },
+
+    "Subtype":        { "description": "Specific motivational subclass", "type": "string", "allOf": [
+                      { "if": { "properties": { "Type": { "const": "goal-seeking" } } },
+                        "then": { "enum": [ "achieve_target", "maximize_gain", "reach_milestone", "complete_task" ] } },
+
+                      { "if": { "properties": { "Type": { "const": "avoidance" } } },
+                        "then": { "enum": [ "risk_reduction", "error_prevention", "conflict_avoidance", "stress_minimization" ] } },
+
+                      { "if": { "properties": { "Type": { "const": "affiliation" } } },
+                        "then": { "enum": [ "social_connection", "team_alignment", "group_acceptance", "relationship_building" ] } },
+
+                      { "if": { "properties": { "Type": { "const": "curiosity" } } },
+                        "then": { "enum": [ "explore_information", "learn_new_skill", "discover_unknown", "test_hypothesis" ] } },
+
+                      { "if": { "properties": { "Type": { "const": "control" } } },
+                        "then": { "enum": [ "assert_authority", "maintain_order", "optimize_process", "reduce_uncertainty" ] } },
+
+                      { "if": { "properties": { "Type": { "const": "validation" } } },
+                        "then": { "enum": [ "seek_feedback", "gain_recognition", "confirm_belief", "prove_capability" ] } } ] },
+
+    "Strength":       { "type": "string", "enum": [ "low", "medium", "high" ] },
+
+    "Confidence":     { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

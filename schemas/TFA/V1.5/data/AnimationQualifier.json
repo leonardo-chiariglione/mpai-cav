@@ -1,0 +1,26 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/TFA/V1.5/data/AnimationQualifier.json",
+  "title":                    "Animation Qualifier V1.5",
+  "description":              "Specifies Sub-Type, Content and Transport Formats for Animations.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "AnimationQualifierID", "SubTypes", "Formats" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "TFA-AMQ-V1.5" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "AnimationQualifierID":   { "type": "string" },
+    "AnimationQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                { "type": "string", "enum": [ "Animation", "Geometry", "Parameter", "Hybrid" ] },
+
+    "Formats":                 { "type": "object", "additionalProperties": false, "properties": {
+      "ContentFormat":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/AnimationContentFormats.json" },
+      "TransportFormat":      { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/AnimationStreamingFormats.json" } } },
+
+    "Attributes":             { "type": "object" },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }
+

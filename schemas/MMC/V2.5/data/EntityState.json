@@ -1,0 +1,41 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
+  "title":                "Entity State V2.5",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "EntityStateID", "CognitiveState", "Emotion", "SocialAttitude", "SpatialAttitude",
+                            "Intentions", "Motivation", "Beliefs", "Goals", "Knowledge", "Engagement", "Focus", "TemporalCue" ], "properties": {
+
+    "Header":             { "type": "string", "const": "MMC-EST-V2.5" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "EntityStateID":      { "type": "string" },
+    "EntityStateTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+
+    "CognitiveState":     { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/CognitiveState.json" },
+    "Emotion":            { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Emotion.json" },
+    "SocialAttitude":     { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/SocialAttitude.json" },
+
+    "Intentions":         { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Intent.json" } },
+    "Motivation":         { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Motivation.json" },
+    "Beliefs":            { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Belief.json" } },
+    "Goals":              { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Goal.json" } },
+    "Knowledge":          { "type": "array", "items": { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Knowledge.json" } },
+
+    "Engagement":         { "type": "object", "required": ["Level", "Mode"], "properties": {
+      "Level":            { "type": "string", "enum": ["low","medium","high"] },
+      "Mode":             { "type": "string", "enum": ["passive","interactive","directive"] } } },
+
+    "Focus":              { "type": "object", "required": ["TargetType", "TargetID"], "properties": {
+      "TargetType":       { "type": "string", "enum": ["object","zone","concept","actor"] },
+      "TargetID":         { "type": "string" } } },
+
+    "TemporalCue":        { "type": "object", "required": ["CueType", "CueValue"], "properties": {
+      "CueType":          { "type": "string", "enum": ["explicit","implicit","relative"] },
+      "CueValue":         { "type": "string" } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

@@ -1,0 +1,41 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/data/Proposition.json",
+  "title":                "Proposition V2.5", "description":   "Structured representation of the belief content",
+  "type":                 "object", "required": [ "Subject","PredicateCategory","PredicateClass","Object","Domain" ], "properties": {
+
+    "Header":             { "type": "string", "const": "MMC-BLF-V2.5" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "PropositionID":      { "type": "string" },
+    "PropositionTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "Proposition":        { "description": "Structured representation of the belief content", "type": "object", "properties": {
+      "Subject":          { "type": "string", "description": "Entity or concept the belief refers to" },
+
+      "SubjectType":      { "type": "string", "enum": [ "PhysicalObject","Entity","Concept" ] },
+
+      "PredicateCategory":{ "description": "High-level category of relation", "type": "string",
+                            "enum": [ "State","Action","Property","Ownership","Capability" ],
+                            "$comment": "Link to ontology: https://schemas.mpai.community/ontology/PredicateCategories" },
+
+      "PredicateClass":   { "description": "Specific relation type within the category", "type": "string",
+                            "enum": [ "is","has","can","located_in","performs" ],
+                            "$comment": "Link to ontology: https://schemas.mpai.community/ontology/PredicateClasses" },
+
+      "Object":           { "type": "string", "description": "Value or entity linked to the subject via the predicate" },
+
+      "ObjectType":       { "type": "string", "enum": [ "Value","Entity","Concept" ] },
+
+      "Domain":           { "type": "string", "enum": [ "PhysicalWorld","SocialContext","Self","OtherEntity","Task" ],
+                            "$comment": "Link to ontology: https://schemas.mpai.community/ontology/Domains" },
+
+      "TemporalContext":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                            "description": "Time reference (e.g., now, past, future)" },
+
+      "SpatialContext":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+
+      "Modality":         { "type": "string", "enum": [ "must","may","possible","necessary" ],
+                            "$comment": "Link to ontology: https://schemas.mpai.community/ontology/Modality" } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

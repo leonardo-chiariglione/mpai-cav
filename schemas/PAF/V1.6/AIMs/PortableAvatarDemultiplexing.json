@@ -1,0 +1,38 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PortableAvatarDemultiplexing.json",
+  "title":                "Portable Avatar Demultiplexing V1.6",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PDX-V1.6"},
+  "Header":               "PAF-PDX-V1.6",
+
+  "APIProfile":           "Basic",
+  "Description":          "This AIM provides the components present in the Portable Avatar that are required by an application.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "PortableAvatar",     "Direction": "Input",  "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AvatarID",           "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AVSceneDescriptors", "Direction": "Output", "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpaceTime",          "Direction": "Output", "DataType": "OSD-SPT-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AvatarModel",        "Direction": "Output", "DataType": "OSD-3DO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "LanguageSelector",   "Direction": "Output", "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechObject",       "Direction": "Output", "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TextObject",         "Direction": "Output", "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PersonalStatus",     "Direction": "Output", "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [ ],
+
+  "Topology":             [ ],
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "CPU:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "GPU:CUDA:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}

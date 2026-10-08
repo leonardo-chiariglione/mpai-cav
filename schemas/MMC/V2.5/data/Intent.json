@@ -1,0 +1,54 @@
+{ "$schema":            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                "https://schemas.mpai.community/MMC/V2.5/data/Intent.json",
+  "title":              "Intent V2.5",
+  "description":        "An EntityÃ¢â‚¬â„¢s goal-directed purpose, e.g., an attempt to do something, or an utterance representing a request or an assessment. It can be accompanied by modifiers like urgency and can be either inferred from observation of an Entity or assigned to a virtual Entity.",
+  "type":               "object",
+  "required":           [ "Header", "IntentID", "Intent", "Parameters", "Trace" ], "properties": {
+
+    "Header":           { "type": "string", "const": "MMC-EIT-V2.5" },
+    "MInstanceID":      { "type": "string" },
+    "UEnvironmentID":   { "type": "string" },
+    "IntentID":         { "type": "string" },
+    "IntentTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "ID":               { "description": "Unique identifier for this intent instance", "type": "string" },
+
+    "Intent":           { "description": "Structured representation of Entity Intent", "type": "object",
+                          "required": [ "Category", "Action" ], "properties": {
+
+      "Category":       { "description": "High-level category of intent", "type": "string", "enum": [ "Informational", "Procedural", "Confirmational",
+                          "Expressive", "Spatial", "Meta-Interaction" ],
+                          "$comment": "Link to ontology: https://schemas.mpai.community/ontology/IntentCategories" },
+
+      "Action":         { "description": "Specific intent type within the domain", "type": "string" },
+
+      "Type":           { "description": "Specific type of intended action", "type": "string" } },
+
+  "allOf": [            { "if": { "properties": { "Category": { "const": "Informational" } } },
+                          "then": { "properties": { "Type": { "enum": [ "ask_fact", "request_summary", "compare_items", "define_term" ] } } } },
+
+                        { "if": { "properties": { "Category": { "const": "Procedural" } } },
+                          "then": { "properties": { "Type": { "enum": [ "schedule_action", "trigger_behavior", "modify_state", "execute_command" ] } } } },
+
+                        { "if": { "properties": { "Category": { "const": "Confirmational" } } },
+                           "then": { "properties": { "Type": { "enum": [ "confirm_action", "reject_suggestion", "clarify_input" ] } } } },
+
+                        { "if": { "properties": { "Category": { "const": "Expressive" } } },
+                          "then": { "properties": { "Type": { "enum": [ "share_opinion", "express_emotion", "social_greeting", "gratitude" ] } } } },
+
+                        { "if": { "properties": { "Category": { "const": "Spatial" } } },
+                          "then": { "properties": { "Type": { "enum": [ "move_object", "focus_zone", "highlight_area", "gesture_command" ] } } } },
+
+                        { "if": { "properties": { "Category": { "const": "Meta-Interaction" } } },
+                          "then": { "properties": { "Type": { "enum": [ "request_help", "give_feedback", "query_capabilities", "report_issue" ] } } } } ] },
+
+    "Parameters":       { "description": "Optional modifiers refining execution", "type": "object", "properties": {
+      "Urgency":        { "description": "Execution urgency", "type": "string", "enum": [ "low", "medium", "high" ] },
+      "Confidence":{ "description": "User certainty", "type": "string", "enum": [ "tentative", "neutral", "assertive" ] },
+      "TemporalCue":    { "description": "Time-related signal", "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TemporalCue.json" },
+      "SpatialAnchor":  { "description": "Physical reference", "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
+
+    "Confidence":  { "description": "Confidence in intent type inference", "type": "number", "minimum": 0.0, "maximum": 1.0 },
+
+    "DataXMData":       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":    { "type": "string", "maxLength": 2048 } } }

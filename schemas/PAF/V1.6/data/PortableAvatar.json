@@ -1,0 +1,47 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json",
+  "title":                  "Portable Avatar V1.6",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               [ "Header", "PortableAvatarID" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "PAF-PAV-V1.6", "description": "Portable Avatar Header – Standard PAF-PAV-Vx.y" },
+    "MInstanceID":          { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Portable Avatar is placed." },
+    "UEnvironmentID":       { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Portable Avatar." },
+    "PortableAvatarID":     { "type": "string", "description": "Unique identifier of this Portable Avatar instance." },
+    "PortableAvatarTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Portable Avatar was produced." },
+
+    "PortableAvatarSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Portable Avatar applies." },
+
+    "AVSceneSpaceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when the Audio-Visual Scene is located in the M-Instance." },
+    "AVSceneDescriptors":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json", "description": "Descriptors of the Audio-Visual Scene where the Avatar is embedded." },
+    "AvatarSpaceTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when the Avatar is located in the Audio-Visual Scene." },
+
+    "AvatarOrAvatarID":     { "type": "array", "description": "Either a 3D Model Object representing the Avatar or the Avatar's ID.", "items": { "oneOf": [
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
+                              { "type": "string" } ] } },
+
+    "LanguageSelector":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Selector.json", "description": "Avatar's Language Preference." },
+
+    "TextObject":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextObject.json", "description": "Text Object associated with the Avatar, or to be converted into a Speech Object." },
+
+    "MLModelOrMLModelID":   { "type": "array", "description": "Either an ML Model for Speech Synthesis or its ID.", "items": { "oneOf": [
+                              { "$ref": "https://schemas.mpai.community/AIP/V1.0/data/MLModelObject.json" },
+                              { "type": "string" } ] } },
+
+    "SPOOrSPOID":           { "type": "array", "description": "Either a Speech Object that the Avatar utters or its ID.", "items": { "oneOf": [
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
+                              { "type": "string" } ] } },
+
+    "EntityState":          { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
+                              "description": "Entity State of the Avatar." },
+
+    "Accessories":          { "type": "array", "minItems": 1, "description": "Set of Accessories attached to the Avatar.", "items": { 
+                              "type": "object", "additionalProperties": false, "required": [ "Accessory" ], "properties": {
+      "Accessory":          { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/Accessory.json", "description": "An Accessory attached to the Avatar." },
+      "AccessorySpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Accessory is located on the Avatar." } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                              "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Portable Avatar in a trusted data exchange context." },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Portable Avatar (plain text, max 2048 characters)." } } }
