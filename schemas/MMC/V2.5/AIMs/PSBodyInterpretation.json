@@ -1,18 +1,18 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PSGestureInterpretation.json",
-  "title":                "PS-Gesture Interpretation V1.6",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/PSBodyInterpretation.json",
+  "title":                "PS-Body Interpretation V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PGI-V1.6"},
-  "Header":               "PAF-PGI-V1.6",
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PBI-V2.5"},
+  "Header":               "MMC-PBI-V2.5",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM extracts the Gesture Personal Status from the Gesture Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Gesture Description (Port 2).",
+  "Description":          "This AIM extracts the Gesture Personal Status from the Body Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Body Description (Port 2).",
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "GestureDescriptorsObject",       "Direction": "Input",  "DataType": "PAF-GDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "EntityGestureDescriptorsObject", "Direction": "Input",  "DataType": "PAF-GDO-V1.6", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BodyDescriptorsObject",          "Direction": "Input",  "DataType": "PAF-BDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EntityBodyDescriptorsObject",    "Direction": "Input",  "DataType": "PAF-BDO-V1.6", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "GesturePersonalStatus", "Direction": "Output", "DataType": "MMC-GPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
@@ -29,4 +29,4 @@
                           {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
   "DataXMData":           { },
 
-  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
+  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

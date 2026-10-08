@@ -7,12 +7,12 @@
   "Header":               "PAF-EBD-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM receives a Body Visual Object and produces its Body Descriptors Object: a 3D body pose/mocap representation (joints and posture of a human or humanoid body).",
+  "Description":          "This AIM receives a Body Object and produces its Body Descriptors Object: a 3D body pose/mocap representation (joints and posture of a human or humanoid body) expressing the body's semantics for Personal Status use.",
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "BodyVisualObject", "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BodyDescriptors",  "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "ExternalPorts":        [{"Name": "BodyObject",        "Direction": "Input",  "DataType": "OSD-VIO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "BodyDescriptorsObject",    "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
   "Topology":             [ ],

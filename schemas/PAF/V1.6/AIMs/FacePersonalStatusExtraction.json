@@ -15,12 +15,12 @@
                            {"Name": "FacePersonalStatus",    "Direction": "Output", "DataType": "MMC-FPS-V2.5",                                       "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [{ "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-EFD-V1.6" } },
-                           { "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6" } }],
+                           { "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PFI-V2.5" } }],
 
   "Topology":             [{ "Output": { "AIMName": "",             "PortName": "FaceObject" },             "Input": { "AIMName": "PAF-EFD-V1.6", "PortName": "FaceObject" } },
-                           { "Output": { "AIMName": "PAF-EFD-V1.6", "PortName": "FaceDescriptors1", "DataType": "PAF-FDO-V1.6" },       "Input": { "AIMName": "PAF-PFI-V1.6", "PortName": "FaceDescriptors1", "DataType": "PAF-FDO-V1.6" } },
-                           { "Output": { "AIMName": "",             "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" }, "Input": { "AIMName": "PAF-PFI-V1.6", "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" } },
-                           { "Output": { "AIMName": "PAF-PFI-V1.6", "PortName": "FacePersonalStatus" },     "Input": { "AIMName": "",             "PortName": "FacePersonalStatus" } }],
+                           { "Output": { "AIMName": "PAF-EFD-V1.6", "PortName": "FaceDescriptors1", "DataType": "PAF-FDO-V1.6" },       "Input": { "AIMName": "MMC-PFI-V2.5", "PortName": "FaceDescriptors1", "DataType": "PAF-FDO-V1.6" } },
+                           { "Output": { "AIMName": "",             "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" }, "Input": { "AIMName": "MMC-PFI-V2.5", "PortName": "FaceDescriptorsObject2", "DataType": "PAF-FDO-V1.6" } },
+                           { "Output": { "AIMName": "MMC-PFI-V2.5", "PortName": "FacePersonalStatus" },     "Input": { "AIMName": "",             "PortName": "FacePersonalStatus" } }],
 
   "Implementations":      [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 
