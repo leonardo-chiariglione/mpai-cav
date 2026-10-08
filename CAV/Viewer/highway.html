@@ -144,6 +144,7 @@ function hud(s, rate) {
     ['Vehicle ahead (ESS)', s.essGap == null ? 'not seen' : s.essGap.toFixed(1) + ' m'],
     ['Behind, rear camera', behind],
     ['Alerts so far', s.alerts],
+    ...(s.plan ? [['Planner (prototype)', s.plan]] : []),
     [REPLAY ? 'Replay' : 'Speed of the run', rate],
   ];
   $('hud').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
