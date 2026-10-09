@@ -45,7 +45,7 @@ public class SystemTests
         var subsystems = new (string Subsystem, string Standard, string Instance)[]
         {
             ("CAV (Connected Autonomous Operation)", "CAV-CAO-V2.0", "1CAV-CAO-V2.0-I01"),
-            ("Human-CAV Interaction (HCI)",          "MMC-HCI-V2.5", "1MMC-HCI-V2.5-I01"),
+            ("Human-CAV Interaction (HCI)",          "CAV-HCI-V2.0", "1CAV-HCI-V2.0-I01"),
             ("Environment Sensing (ESS)",            "CAV-ESS-V2.0", "1CAV-ESS-V2.0-I01"),
             ("Autonomous Motion (AMS)",              "CAV-AMS-V2.0", "1CAV-AMS-V2.0-I01"),
             ("Motion Actuation (MAS)",               "CAV-MAS-V2.0", "1CAV-MAS-V2.0-I01")

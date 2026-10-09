@@ -16,7 +16,7 @@ using Mpai.Aif.Api;
 namespace HciApp;
 
 // Human-CAV Interaction User Agent. The UA captures the AUDIO scene (BAO) and a
-// face (BVO) and hands them to the MMC-HCI Module through the Controller API. The
+// face (BVO) and hands them to the CAV-HCI Module through the Controller API. The
 // Module's front end (BAS/AVA/ASI) discriminates audio from speech: ASI scans the
 // audio objects, converts a speech object (BAO -> BSO) and feeds ASR/SIR/PSE.
 // There is NO boundary speech input; the recogniser is always fed by ASI. The UA
@@ -27,7 +27,7 @@ namespace HciApp;
 // Identify ok -> converse (MPD). "stop" -> pause. Start -> resume.
 public partial class MainWindow : Window
 {
-    private const string HciModule = "MMC-HCI-V2.5";
+    private const string HciModule = "CAV-HCI-V2.0";
     private const string RsrModule = "1PAF-RSR-V1.6-I01";
 
     private const string BAO = "OSD-BAO-V1.5";

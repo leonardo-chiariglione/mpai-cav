@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Human-CAV Interaction in the CAV (M3243): the provider that builds the Sub-AIMs
-       of 1MMC-HCI-V2.5-I01 - those of MMC, CAE, CVE, OSD and PAF the HCI L3 names. -->
+       of 1CAV-HCI-V2.0-I01 - those of MMC, CAE, CVE, OSD and PAF the HCI L3 names. -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

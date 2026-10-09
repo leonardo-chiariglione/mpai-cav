@@ -12,13 +12,13 @@ using Mpai.Aif.Api;   // ControllerApi
 
 namespace HciSceneTest;
 
-// Stand-alone bring-up test for the MMC-HCI reference Module. Feeds ONE turn of
+// Stand-alone bring-up test for the CAV-HCI reference Module. Feeds ONE turn of
 // Audio (OSD-BAO from a WAV), Visual (OSD-BVO from a JPG) and a synthetic LiDAR
-// object (OSD-BLO) through Advance(MMC-HCI, ...) and reports how far the 18-AIM
+// object (OSD-BLO) through Advance(CAV-HCI, ...) and reports how far the 18-AIM
 // scene chain gets: which outputs were produced, or which AIM failed.
 internal static class Program
 {
-    private const string HciModule = "MMC-HCI-V2.5";
+    private const string HciModule = "CAV-HCI-V2.0";
 
     private const string BAO = "OSD-BAO-V1.5";   // audio input
     private const string BVO = "OSD-BVO-V1.5";   // visual (face) input
@@ -76,12 +76,12 @@ internal static class Program
             Console.WriteLine("built PAF-AVT.");
             Console.WriteLine();
 
-            Console.WriteLine("StartFlow(MMC-HCI)...");
+            Console.WriteLine("StartFlow(CAV-HCI)...");
             var started = north.StartFlow(HciModule);
             Console.WriteLine($"  StartFlow -> {started}");
             if (started != AifError.OK) { Console.WriteLine("cannot start; aborting."); return; }
 
-            Console.WriteLine("Advance(MMC-HCI, [BAO, BVO, BLO, AVT])...");
+            Console.WriteLine("Advance(CAV-HCI, [BAO, BVO, BLO, AVT])...");
             var r = north.Advance(HciModule, inputs);
             Console.WriteLine($"  Advance -> Error={r.Error}  Ok={r.Ok}");
             Console.WriteLine();

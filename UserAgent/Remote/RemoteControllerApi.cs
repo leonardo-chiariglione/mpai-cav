@@ -178,7 +178,7 @@ public sealed class RemoteControllerApi : IControllerApi, IDisposable
         foreach (var dataType in Codecs.KnownDataTypes)
         {
             // AND AT WHICH PORT NUMBER. A Module may declare two outputs of one
-            // Data Type - MMC-HCI emits OSD-BTO at #1 and #2, the machine's
+            // Data Type - CAV-HCI emits OSD-BTO at #1 and #2, the machine's
             // response and the user's recognised text - and asking only at #1
             // would deliver the first and lose the second, silently. That is the
             // defect this client was written to avoid on the input side, and had

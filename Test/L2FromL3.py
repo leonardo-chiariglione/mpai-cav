@@ -3,8 +3,8 @@
 # it; what only an implementation decides is left out; what an L3 cannot say (the
 # Implementer's template, the options it chooses from) is kept from the L2 there is.
 #
-#   python Test\L2FromL3.py AIMs\AMDs\1MMC-HCI-V2.5-I01.json            (shows the L2)
-#   python Test\L2FromL3.py AIMs\AMDs\1MMC-HCI-V2.5-I01.json --write    (writes it)
+#   python Test\L2FromL3.py AIMs\AMDs\1CAV-HCI-V2.0-I01.json            (shows the L2)
+#   python Test\L2FromL3.py AIMs\AMDs\1CAV-HCI-V2.0-I01.json --write    (writes it)
 #
 # An L2 is the TYPE - generic; an L3 is one implementation - specific. From the L3,
 # only what specifies the type: Header and the AIM it names, ExternalPorts (Name,

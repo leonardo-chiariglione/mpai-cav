@@ -40,7 +40,7 @@ using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace HciApp;
 
-// Leaf provider for the MMC-HCI-V2.5 Module (Human-CAV Interaction, full
+// Leaf provider for the CAV-HCI-V2.0 Module (Human-CAV Interaction, full
 // reference). The Controller builds the HCI composite from its L3; this provider
 // supplies ONLY the 18 leaf AIMs the topology names, across three groups:
 //   scene front-end : BAS, BVS, BLS, AVA, QCV, ASI, VSI, AII, VII

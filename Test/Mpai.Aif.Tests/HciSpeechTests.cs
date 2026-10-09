@@ -10,7 +10,7 @@ using Mpai.Core.OSD;
 
 namespace Mpai.Aif.Tests;
 
-// STEP 3 (M3243 3.3): HCI HEARING AND SPEAKING. The Module 1MMC-HCI-V2.5-I01 under
+// STEP 3 (M3243 3.3): HCI HEARING AND SPEAKING. The Module 1CAV-HCI-V2.0-I01 under
 // its Controller, every Sub-AIM built; given the Offline Map of Step 2 and, turn by
 // turn, what the passenger says - recorded speech, synthesised with a voice that is
 // not the CAV's, as the cabin's microphone gives it - and what the AMS answers. The

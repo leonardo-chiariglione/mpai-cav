@@ -32,7 +32,7 @@ using Mpai.Paf.Psd;
 namespace Mpai.Cav.Hci;
 
 // THE SUB-AIMs OF HUMAN-CAV INTERACTION IN THE CAV (M3243 3.3): every leaf of
-// 1MMC-HCI-V2.5-I01, its composites (Personal Status Extraction, Response and Scene
+// 1CAV-HCI-V2.0-I01, its composites (Personal Status Extraction, Response and Scene
 // Rendering) included, by the names the L3 gives them. The Controller builds each
 // one when the Module starts, those the scenario gives no input as well: the engines
 // they use are the ones the HCI App uses, each built once and shared.
@@ -44,7 +44,7 @@ namespace Mpai.Cav.Hci;
 // dialogue in its Private Storage (CavDialogue).
 public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDisposable
 {
-    public const string Hci = "1MMC-HCI-V2.5-I01";
+    public const string Hci = "1CAV-HCI-V2.0-I01";
 
     private ScrfdFaceDetector? scrfd;
     private ArcFaceRecogniser? arcFace;

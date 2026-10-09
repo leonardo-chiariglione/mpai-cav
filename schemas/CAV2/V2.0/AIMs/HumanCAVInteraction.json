@@ -1,7 +1,7 @@
 {
-  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-HCI-V2.5"},
+  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-HCI-V2.0"},
 
-  "Header":           "MMC-HCI-V2.5",
+  "Header":           "CAV-HCI-V2.0",
 
   "APIProfile":       "Basic",
 
@@ -125,5 +125,5 @@
 
   "DataXMData":       {},
 
-  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]
+  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-cav/tec/v2-0/"}]
 }

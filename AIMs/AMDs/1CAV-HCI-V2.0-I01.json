@@ -1,5 +1,5 @@
-{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "MMC-HCI-V2.5-I01", "AIMName": "1MMC-HCI-V2.5-I01"},
-  "Header":               "MMC-HCI-V2.5",
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "CAV-HCI-V2.0-I01", "AIMName": "1CAV-HCI-V2.0-I01"},
+  "Header":               "CAV-HCI-V2.0",
 
   "APIProfile":           "Basic",
   "OnDegraded":           "Continue",
@@ -111,7 +111,7 @@
                            {"Output": {"AIMName": "1MMC-EDP-V2.5-I01", "PortName": "EgoRemoteHCIMessageOut"}, "Input": {"AIMName": "", "PortName": "EgoRemoteHCIMessageOut"}},
                            { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Avatar" } }],
 
-  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-HCI-V2.5-I01.json",
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1CAV-HCI-V2.0-I01.json",
                             "MASPort":           443,
                             "BinaryName":        "Mpai.Mmc.Hci",
                             "Architecture":      "x86-64",
