@@ -27,7 +27,7 @@ GITHUB = 'https://github.com/leonardo-chiariglione/mpai-cav/blob/main/'
 MKG = Namespace('https://mpai.community/kg/vocab#')
 KIND_NS = {k: Namespace('https://mpai.community/kg/%s/' % k.lower())
            for k in ('Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore',
-                     'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software')}
+                     'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software', 'Library')}
 STD, PRT, AIM, DT, ACT, L3 = (KIND_NS[k] for k in ('Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3'))
 HDR = re.compile(r'([A-Z0-9]+)-([A-Z0-9]+)-V(\d+\.\d+)')
 
@@ -467,7 +467,21 @@ def units_and_software(g, stats, node):
             g.add((n, MKG.code, URIRef(GITHUB + code[0])))
             for c in code[1:]:
                 g.add((n, MKG.alsoCode, Literal(c)))
+        for lib in u.get('libraries', []):
+            g.add((n, MKG.usesLibrary, node('Library', lib)))
         stats['units'] = stats.get('units', 0) + 1
+    for lib in spec.get('libraries', []):
+        ln = node('Library', lib['name'])
+        g.add((ln, MKG.description, Literal(lib['description'])))
+        g.add((ln, MKG.webSpec, URIRef(lib['url'])))
+        for path in lib['paths']:
+            g.add((ln, MKG.alsoCode, Literal(path)))
+        g.add((ln, MKG.codePath, Literal(lib['paths'][0])))
+        g.add((ln, MKG.code, URIRef(GITHUB + lib['paths'][0])))
+        for sw in lib.get('software', []):
+            relp = sw[:-len('.csproj')].replace('/', '~')
+            g.add((KIND_NS['Software'][relp], MKG.usesLibrary, ln))
+        stats['libraries'] = stats.get('libraries', 0) + 1
 
     # the software: a project is a .csproj; D:\DI first, D:\AI for what D:\DI does not have
     skip = {'bin', 'obj', 'deploy', 'legacy', '.git', 'node_modules', '.backups', 'Models', 'Output', 'SharedStorage', 'TestData', 'Datasets', 'Lib'}
@@ -508,15 +522,14 @@ def units_and_software(g, stats, node):
     # a project implements the AIMs, L3s, Data Types and Units whose code is in its folder
     for kind in ('AIM', 'L3', 'DataType', 'Unit'):
         for x in g.subjects(RDF.type, MKG[kind]):
-            cp = g.value(x, MKG.codePath)
-            if cp is None:
-                continue
-            best = None
-            for d, tag, n in proj_dirs:
-                if tag == 'DI' and (str(cp) == d or str(cp).startswith(d + '/')) and (best is None or len(d) > best[0]):
-                    best = (len(d), n)
-            if best:
-                g.add((best[1], MKG.implements, x))
+            paths = [g.value(x, MKG.codePath)] + (list(g.objects(x, MKG.alsoCode)) if kind == 'Unit' else [])
+            for cp in [c for c in paths if c is not None]:
+                best = None
+                for d, tag, n in proj_dirs:
+                    if tag == 'DI' and (str(cp) == d or str(cp).startswith(d + '/')) and (best is None or len(d) > best[0]):
+                        best = (len(d), n)
+                if best:
+                    g.add((best[1], MKG.implements, x))
 
 
 if __name__ == '__main__':

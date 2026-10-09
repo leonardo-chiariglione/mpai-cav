@@ -73,11 +73,11 @@ button { border:1px solid var(--line); background:var(--bg); color:var(--ink); p
 const DATA = /*DATA*/null;
 const N = {}; DATA.nodes.forEach(n => N[n.id] = n);
 const COLOR = {AIM:'#3b82f6', DataType:'#16a34a', L3:'#a855f7', Standard:'#f59e0b', Part:'#fbbf24', Action:'#14b8a6', Implementer:'#ec4899',
-               MPAIStore:'#ef4444', PerformanceAssessor:'#f97316', Framework:'#0ea5e9', UserAgent:'#6366f1', Unit:'#8b5cf6', Software:'#64748b'};
+               MPAIStore:'#ef4444', PerformanceAssessor:'#f97316', Framework:'#0ea5e9', UserAgent:'#6366f1', Unit:'#8b5cf6', Software:'#64748b', Library:'#b45309'};
 const NAME = {AIM:'AIMs', DataType:'Data types', L3:'L3 instances', Standard:'Standards', Part:'Parts', Action:'Actions (MMM)', Implementer:'Implementers',
-              MPAIStore:'MPAI Store', PerformanceAssessor:'Performance Assessors', Framework:'AI Framework', UserAgent:'User Agent', Unit:'Units (UAU)', Software:'Software (projects)'};
+              MPAIStore:'MPAI Store', PerformanceAssessor:'Performance Assessors', Framework:'AI Framework', UserAgent:'User Agent', Unit:'Units (UAU)', Software:'Software (projects)', Library:'Libraries'};
 const SHAPE = {AIM:'round-rectangle', DataType:'ellipse', L3:'diamond', Standard:'hexagon', Part:'hexagon', Action:'round-tag', Implementer:'triangle',
-               MPAIStore:'star', PerformanceAssessor:'star', Framework:'round-rectangle', UserAgent:'round-rectangle', Unit:'barrel', Software:'rectangle'};
+               MPAIStore:'star', PerformanceAssessor:'star', Framework:'round-rectangle', UserAgent:'round-rectangle', Unit:'barrel', Software:'rectangle', Library:'pentagon'};
 Object.keys(NAME).forEach(k => document.getElementById('kinds').append(el0('label', {class:'f'},
   Object.assign(el0('input', {type:'checkbox', class:'kind', value:k}), {checked:!['Part','Implementer','Software'].includes(k)}),
   Object.assign(el0('span', {class:'dot'}), {style:'background:' + COLOR[k]}), NAME[k])));
@@ -291,7 +291,7 @@ function detail(n) {
   if (n.kind === 'Action' && n.uses.length) d.append(el('h2', {}, 'Uses data types'), el('div', {}, n.uses.map(s => [link(s), ' '])));
   if (n.kind !== 'AIM' && n.kind !== 'DataType') {
     const PHR = {partOf:['part of', 'has parts'], specifies:['specifies', 'specified by'], produces:['produces', 'produced by'], receives:['receives', 'received by'],
-      holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies'], dependsOn:['depends on', 'used by'], implements:['implements', 'implemented by']};
+      holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies'], dependsOn:['depends on', 'used by'], usesLibrary:['uses the library', 'library of'], implements:['implements', 'implemented by']};
     const groups = {}; (REL[n.id] || []).forEach(([r, o, dir]) => { if (!N[o]) return; const k = (PHR[r] || [r, r])[dir === 'out' ? 0 : 1]; (groups[k] = groups[k] || []).push(o); });
     Object.entries(groups).forEach(([r, xs]) => d.append(el('h2', {}, r + ' (' + xs.length + ')'), el('div', {}, xs.sort().map(s => [link(s), ' ']))));
   }

@@ -1,0 +1,353 @@
+<!-- aim-profiles : from https://mpai.community/standards/mpai-prf/v1-0/aim-profiles/ -->
+<h1>MPAI-PRF V1.0 AIM Profiles</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"> <a href="https://mpai.community/standards/mpai-prf/v1-0/json-syntax-and-semantics/">&lt;- JSON Syntax and Semantics</a>   <a href="https://mpai.community/standards/mpai-prf/v1-0/">Go t o ToC</a>    <a href="https://mpai.community/about/notices-and-disclaimers/">Notices and Disclaimers-&gt;</a></p>
+<table style="border-collapse: collapse; width: 100%;">
+<tbody>
+<tr>
+<td style="width: 50%;"><a href="#_Toc169358392">1       Entity Context Understanding (HMC-ECU)</a></p>
+<p><a href="#_Toc169358396">2       Entity Dialogue Processing (MMC-EDP)</a></p>
+<p><a href="#_Toc169358400">3       Natural Language Understanding (MMC-NLU)</a></p>
+<p><a href="#_Toc169358404">4       Personal Status Extraction (MMC-PSE)</a></td>
+<td style="width: 50%;"><a href="#_Toc169358408">5       Text and Speech Translation (MMC-TST)</a></p>
+<p><a href="#_Toc169358412">6       Audio-Visual Scene Rendering (PAF-AVR)</a></p>
+<p><a href="#_Toc169358416">7       Personal Status Display (PAF-PSD)</a></p>
+<p><a href="#_Toc169358420">8       Text-to-Speech (MMC-TTS)</a></td>
+</tr>
+</tbody>
+</table>
+<p>This Chapter specifies the eight AI Modules for which Profiles can be signaled.</p>
+<h2><a name="_Toc169358392"></a>1        Entity Context Understanding (HMC-ECU)</h2>
+<h3><a name="_Toc169358394"></a>1.1        Specification</h3>
+<p>The Entity Context Understanding Composite AIM is <a href="https://mpai.community/standards/mpai-hmc/v1-1/ai-modules/entity-context-understanding/">specified</a></p>
+<h3><a name="_Toc169358395"></a>1.2        Attributes</h3>
+<p>HMC-ECU Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>Attribute</strong></td>
+<td style="text-align: center;"><strong>Code</strong></td>
+<td style="text-align: center;"><strong>Function of HMC-ECU</strong></td>
+</tr>
+<tr>
+<td>Body Descriptors</td>
+<td>BDD</td>
+<td>Receives Body Descriptors</td>
+</tr>
+<tr>
+<td>Face Descriptors</td>
+<td>FCD</td>
+<td>Receives Face Descriptors</td>
+</tr>
+<tr>
+<td>Speech Object</td>
+<td>SPO</td>
+<td>Receives Speech Object</td>
+</tr>
+<tr>
+<td>Text Object</td>
+<td>TXO</td>
+<td>Receives Text Object</td>
+</tr>
+<tr>
+<td>Visual Object</td>
+<td>VIO</td>
+<td>Receives Visual Object</td>
+</tr>
+<tr>
+<td>Audio Object</td>
+<td>AUO</td>
+<td>Receives Audio Object</td>
+</tr>
+<tr>
+<td>Audio-Visual Scene Descriptors</td>
+<td>AVS</td>
+<td>Receives Audio-Visual Scene Descriptors</td>
+</tr>
+<tr>
+<td>Translation</td>
+<td>TRN</td>
+<td>Translates Text Object</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc169358396"></a>2        Entity Dialogue Processing (MMC-EDP)</h2>
+<h3><a name="_Toc169358398"></a>2.1        Specification</h3>
+<p><a href="https://mpai.community/standards/mpai-mmc/v2-2/ai-modules/entity-dialogue-processing/">Entity Dialogue Processing</a> is specified.</p>
+<h3><a name="_Toc169358399"></a>2.2        Attributes</h3>
+<p>MMC-EDP Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 100.53%;">
+<tbody>
+<tr>
+<td style="width: 26.9051%; text-align: center;" width="169"><strong>Attribute</strong></td>
+<td style="width: 9.6423%; text-align: center;" width="58"><strong>Code</strong></td>
+<td style="width: 112.442%; text-align: center;" width="397"><strong>Function of MMC-EDP</strong></td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Text Object</td>
+<td style="width: 9.6423%;" width="58">TXO</td>
+<td style="width: 112.442%;" width="397">Receives Text (directly from human or through NLU).</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Object Instance ID</td>
+<td style="width: 9.6423%;" width="58">OII</td>
+<td style="width: 112.442%;" width="397">Receives the ID of an A/V/AV Instance referenced in the dialogue.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Input Personal Status</td>
+<td style="width: 9.6423%;" width="58">EPS</td>
+<td style="width: 112.442%;" width="397">Receives Personal Status.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Text Descriptors</td>
+<td style="width: 9.6423%;" width="58">TXD</td>
+<td style="width: 112.442%;" width="397">Receives Meaning.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">AV Scene Descriptors</td>
+<td style="width: 9.6423%;" width="58">AVS</td>
+<td style="width: 112.442%;" width="397">Receives AV Scene Descriptors to enable it to locate the Object.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Speaker ID</td>
+<td style="width: 9.6423%;" width="58">SPI</td>
+<td style="width: 112.442%;" width="397">Receives Speaker ID.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Face ID</td>
+<td style="width: 9.6423%;" width="58">FCI</td>
+<td style="width: 112.442%;" width="397">Receives Face ID.</td>
+</tr>
+<tr>
+<td style="width: 26.9051%;" width="169">Memory</td>
+<td style="width: 9.6423%;" width="58">MEM</td>
+<td style="width: 112.442%;" width="397">Takes into account prior Input Data of the dialogue session.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc169358400"></a>3        Natural Language Understanding (MMC-NLU)</h2>
+<h3><a name="_Toc169358402"></a>3.2        Specification</h3>
+<p>The <a href="https://mpai.community/standards/mpai-mmc/v2-2/ai-modules/natural-language-understanding/">Natural Language Understanding</a> AIM is specified.</p>
+<h3><a name="_Toc169358403"></a>3.3        Attributes</h3>
+<p>MMC-NLU Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 99.3188%;">
+<tbody>
+<tr>
+<td style="width: 40.6867%; text-align: center;"><strong>Attribute</strong></td>
+<td style="width: 13.1585%; text-align: center;"><strong>Code</strong></td>
+<td style="width: 119.098%; text-align: center;"><strong>Function of MMC-NLU</strong></td>
+</tr>
+<tr>
+<td style="width: 40.6867%;">Text Object</td>
+<td style="width: 13.1585%;">TXO</td>
+<td style="width: 119.098%;">Receives Text directly from human.</td>
+</tr>
+<tr>
+<td style="width: 40.6867%;">Recognised Text</td>
+<td style="width: 13.1585%;">TXR</td>
+<td style="width: 119.098%;">Receives text from ASR.</td>
+</tr>
+<tr>
+<td style="width: 40.6867%;">Object Instance ID</td>
+<td style="width: 13.1585%;">OII</td>
+<td style="width: 119.098%;">Receives Object Instance ID</td>
+</tr>
+<tr>
+<td style="width: 40.6867%;">Audio-Visual Scene Descriptors</td>
+<td style="width: 13.1585%;">AVS</td>
+<td style="width: 119.098%;">Receives Audio-Visual Descriptors.</td>
+</tr>
+<tr>
+<td style="width: 40.6867%;">Text Descriptors</td>
+<td style="width: 13.1585%;">TXD</td>
+<td style="width: 119.098%;">Produces Text Descriptors (Meaning)</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc169358404"></a>4        Personal Status Extraction (MMC-PSE)</h2>
+<h3><a name="_Toc169358406"></a>4.1        Specification</h3>
+<p><a href="https://mpai.community/standards/mpai-mmc/v2-2/ai-modules/personal-status-extraction/">Personal Status Extraction</a> is specified.</p>
+<h3><a name="_Toc169358407"></a>4.2        Attributes</h3>
+<p>MMC-PSE Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 97.6492%;">
+<tbody>
+<tr>
+<td style="width: 40%; text-align: center;"><strong>Attribute</strong></td>
+<td style="width: 20%; text-align: center;"><strong>Code</strong></td>
+<td style="width: 40%; text-align: center;"><strong>Function of MMC-PSE</strong></td>
+</tr>
+<tr>
+<td style="width: 40%;">Text Object</td>
+<td style="width: 20%;">TXO</td>
+<td style="width: 40%;">Receives Text</td>
+</tr>
+<tr>
+<td style="width: 40%;">Speech Object</td>
+<td style="width: 20%;">SPO</td>
+<td style="width: 40%;">Receives Speech</td>
+</tr>
+<tr>
+<td style="width: 40%;">Face Object</td>
+<td style="width: 20%;">FCO</td>
+<td style="width: 40%;">Receives Face</td>
+</tr>
+<tr>
+<td style="width: 40%;">Body Object</td>
+<td style="width: 20%;">BDO</td>
+<td style="width: 40%;">Receives Body</td>
+</tr>
+</tbody>
+</table>
+<p>When an MMC-PSE is used as a component AIM in a Composite AIM as in the case of HMC-ECU, the MMC-PSE Attributes become Sub-Attributes of the Composite AIM.</p>
+<h2><a name="_Toc169358408"></a>5        Text and Speech Translation (MMC-TST)</h2>
+<h3><a name="_Toc169358410"></a>5.1        Specification</h3>
+<p><a href="https://mpai.community/standards/mpai-mmc/v2-2/ai-modules/text-and-speech-translation/">Text and Speech Translation</a> is specified.</p>
+<h3><a name="_Toc169358411"></a>5.2        Attributes</h3>
+<p>MMC-TST Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 99.6723%;">
+<tbody>
+<tr>
+<td style="width: 23.8671%; text-align: center;"><strong>Attributes</strong></td>
+<td style="width: 6.79758%; text-align: center;"><strong>Code</strong></td>
+<td style="width: 112.689%; text-align: center;"><strong>Functions</strong></td>
+</tr>
+<tr>
+<td style="width: 23.8671%;">Language Preferences</td>
+<td style="width: 6.79758%;">LGP</td>
+<td style="width: 112.689%;">MMC-TST receives information on input and output languages.</td>
+</tr>
+<tr>
+<td style="width: 23.8671%;">Text Object</td>
+<td style="width: 6.79758%;">TXO</td>
+<td style="width: 112.689%;">MMC-TST receives Text.</td>
+</tr>
+<tr>
+<td style="width: 23.8671%;">Speech Object</td>
+<td style="width: 6.79758%;">SPO</td>
+<td style="width: 112.689%;">MMC-TST receives Speech.</td>
+</tr>
+<tr>
+<td style="width: 23.8671%;">Speech Descriptors</td>
+<td style="width: 6.79758%;">SPD</td>
+<td style="width: 112.689%;">MMC-TST uses Speech Descriptors.</td>
+</tr>
+<tr>
+<td style="width: 23.8671%;">Personal Status</td>
+<td style="width: 6.79758%;">EPS</td>
+<td style="width: 112.689%;">MMC-TST receives Personal Status.</td>
+</tr>
+</tbody>
+</table>
+<p>When an MMC-TST is used as a component AIM in a Composite AIM as in the case of HMC-ECU, the LGP (Language Preferences) Attribute of MMC-TST become Sub-Attributes of the Composite AIM represented as 3-letter codes of [6], Part 3.</p>
+<h2><a name="_Toc169358412"></a>6        Audio-Visual Scene Rendering (PAF-AVR)</h2>
+<h3><a name="_Toc169358414"></a>6.1        Specification</h3>
+<p><a href="https://mpai.community/standards/aiws-and-aims/audio-visual-scene-rendering-paf-avr/">Audio-Visual Scene Rendering</a> is specified.</p>
+<h3><a name="_Toc169358415"></a>6.2        Attributes</h3>
+<p>PAF-AVR Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 100.791%;">
+<tbody>
+<tr>
+<td style="width: 21.1509%; text-align: center;" width="132"><strong>Attribute</strong></td>
+<td style="width: 9.48678%; text-align: center;" width="57"><strong>Code</strong></td>
+<td style="width: 118.351%; text-align: center;" width="434"><strong>Function</strong></td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Point of View</td>
+<td style="width: 9.48678%;" width="57">POV</td>
+<td style="width: 118.351%;" width="434">PAF-AVR is informed to provide Output Audio and/or Output Visual as perceived from a Point of View.</td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Portable Avatar</td>
+<td style="width: 9.48678%;" width="57">PAV</td>
+<td style="width: 118.351%;" width="434">PAF-AVR receives a Portable Avatar and produces an Audio-Visual Scene from the Point of View.</td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Audio-Visual Scene Descriptors</td>
+<td style="width: 9.48678%;" width="57">AVS</td>
+<td style="width: 118.351%;" width="434">PAF-AVR receives Audio-Visual Scene Descriptors and produces an Audio-Visual Scene from the Point of View.</td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Output Text</td>
+<td style="width: 9.48678%;" width="57">TXO</td>
+<td style="width: 118.351%;" width="434">PAF-AVR produces Text Object.</td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Output Audio</td>
+<td style="width: 9.48678%;" width="57">AUO</td>
+<td style="width: 118.351%;" width="434">PAF-AVR produces Audio Object.</td>
+</tr>
+<tr>
+<td style="width: 21.1509%;" width="132">Output Visual</td>
+<td style="width: 9.48678%;" width="57">VIO</td>
+<td style="width: 118.351%;" width="434">PAF-AVR produces Visual Object.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc169358416"></a>7        Personal Status Display (PAF-PSD)</h2>
+<h3><a name="_Toc169358418"></a>7.1        Specification</h3>
+<p><a href="https://mpai.community/standards/mpai-paf/v1-2/ai-modules/personal-status-display/">Personal Status Display</a> is specified.</p>
+<h3><a name="_Toc169358419"></a>7.2        Attributes</h3>
+<p>PAF-PSD Profiles are determined by the use of one or more of the following attributes by the AIM:</p>
+<table style="width: 98.8894%;">
+<tbody>
+<tr>
+<td style="width: 23.1084%; text-align: center;"><strong>Attribute</strong></td>
+<td style="width: 9.20245%; text-align: center;"><strong>Code</strong></td>
+<td style="width: 160.123%; text-align: center;"><strong>Function</strong></td>
+</tr>
+<tr>
+<td style="width: 23.1084%;">Text Object</td>
+<td style="width: 9.20245%;">TXO</td>
+<td style="width: 160.123%;">PAF-PSD receives Text and produces Speech.</td>
+</tr>
+<tr>
+<td style="width: 23.1084%;">Personal Status</td>
+<td style="width: 9.20245%;">EPS</td>
+<td style="width: 160.123%;">PAF-PSD receives Personal Status.</td>
+</tr>
+<tr>
+<td style="width: 23.1084%;">Speech Model</td>
+<td style="width: 9.20245%;">SPM</td>
+<td style="width: 160.123%;">PAF-PSD receives Speech Model</td>
+</tr>
+<tr>
+<td style="width: 23.1084%;">Avatar Model</td>
+<td style="width: 9.20245%;">AVM</td>
+<td style="width: 160.123%;">PAF-PSD receives Avatar Model.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc169358420"></a>8        Text-to-Speech (MMC-TTS)</h2>
+<h3><a name="_Toc169358422"></a>8.1        Specification</h3>
+<p><a href="https://mpai.community/standards/mpai-mmc/v2-2/ai-modules/text-to-speech/">Text-to-Speech</a> is specified.</p>
+<h3><a name="_Toc169358423"></a>8.2        Attributes</h3>
+<p>An MMC-TTS AIM Profile is determined by whether the AIM uses one or more of the following Attributes:</p>
+<table style="width: 98.104%;">
+<tbody>
+<tr>
+<td style="width: 26.1574%; text-align: center;"><strong>Attribute</strong></td>
+<td style="width: 10.4167%; text-align: center;"><strong>Code</strong></td>
+<td style="width: 181.944%; text-align: center;"><strong>Function</strong></td>
+</tr>
+<tr>
+<td style="width: 26.1574%;">Text Object</td>
+<td style="width: 10.4167%;">TXO</td>
+<td style="width: 181.944%;">MMC-TTS receives Text Object</td>
+</tr>
+<tr>
+<td style="width: 26.1574%;">Personal Status</td>
+<td style="width: 10.4167%;">EPS</td>
+<td style="width: 181.944%;">MMC-TTS receives Personal Status</td>
+</tr>
+<tr>
+<td style="width: 26.1574%;">Speech Model</td>
+<td style="width: 10.4167%;">SPM</td>
+<td style="width: 181.944%;">MMC-TTS receives NN Speech Model</td>
+</tr>
+</tbody>
+</table>
+<p style="text-align: center;">
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-prf/v1-0/json-syntax-and-semantics/">&lt;- JSON Syntax and Semantics</a>   <a href="https://mpai.community/standards/mpai-prf/v1-0/">Go t o ToC</a>    <a href="https://mpai.community/about/notices-and-disclaimers/">Notices and Disclaimers-&gt;</a></p>
+						</div>				
+					</article>

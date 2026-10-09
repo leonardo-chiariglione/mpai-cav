@@ -1,0 +1,5 @@
+MPAI-PRF V1.0, corrected pages (make by fix_prf_pages.py)
+
+profile-signalling: 2 x the second Speech Model (SPM), a duplicate, is Audio-Visual Scene Descriptors (AVS); 1 x Gesture (PSG) is Body (PSB); 1 x #PSG is #PSB in the example; 1 x Face and Gesture is Face and Body
+json-syntax-and-semantics: 1 x the Profile pattern: PST for SPT, PSB for PSG; 1 x the Profile pattern: AVS added
+aim-profiles: 1 x Body Object receives Body, not Gesture

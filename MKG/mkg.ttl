@@ -4,6 +4,7 @@
 @prefix framework: <https://mpai.community/kg/framework/> .
 @prefix implementer: <https://mpai.community/kg/implementer/> .
 @prefix l3: <https://mpai.community/kg/l3/> .
+@prefix library: <https://mpai.community/kg/library/> .
 @prefix mkg: <https://mpai.community/kg/vocab#> .
 @prefix mpaistore: <https://mpai.community/kg/mpaistore/> .
 @prefix part: <https://mpai.community/kg/part/> .
@@ -6163,6 +6164,14 @@ aim:CAE-AOI-V2.4 a mkg:AIM ;
     mkg:toAIM aim:OSD-BLS-V1.5 ;
     mkg:toType datatype:OSD-BLO-V1.5 .
 
+<https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/20> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-EDP-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
+
 <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/21> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:MMC-EDP-V2.5 ;
@@ -6176,6 +6185,14 @@ aim:CAE-AOI-V2.4 a mkg:AIM ;
     mkg:fromType datatype:XRV-SAV-V1.0 ;
     mkg:toAIM aim:CAV-HCI-V2.0 ;
     mkg:toType datatype:XRV-SAV-V1.0 .
+
+<https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/23> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-EDP-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:CAV-HCI-V2.0 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/24> a mkg:Flow ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
@@ -7813,28 +7830,20 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/2> a mkg:Flow ;
-    mkg:dataType datatype:OSD-BTO-V1.5 ;
-    mkg:fromAIM aim:MAS-APP-V1.0 ;
-    mkg:fromType datatype:OSD-BTO-V1.5 ;
-    mkg:toAIM aim:PAF-RSR-V1.6 ;
-    mkg:toPortNumber 2 ;
-    mkg:toType datatype:OSD-BTO-V1.5 .
-
-<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/3> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:MAS-APP-V1.0 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/4> a mkg:Flow ;
+<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/3> a mkg:Flow ;
     mkg:dataType datatype:XRV-SAV-V1.0 ;
     mkg:fromAIM aim:PAF-RSR-V1.6 ;
     mkg:fromType datatype:XRV-SAV-V1.0 ;
     mkg:toAIM aim:MAS-APP-V1.0 ;
     mkg:toType datatype:XRV-SAV-V1.0 .
 
-<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/5> a mkg:Flow ;
+<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/4> a mkg:Flow ;
     mkg:dataType datatype:OSD-BSO-V1.5 ;
     mkg:fromAIM aim:MAS-APP-V1.0 ;
     mkg:fromType datatype:OSD-BSO-V1.5 ;
@@ -7842,7 +7851,7 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:toPortNumber 2 ;
     mkg:toType datatype:OSD-BSO-V1.5 .
 
-<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/6> a mkg:Flow ;
+<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/5> a mkg:Flow ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
     mkg:fromAIM aim:MMC-ASR-V2.5 ;
     mkg:fromPortNumber 2 ;
@@ -7850,7 +7859,7 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:toAIM aim:MAS-APP-V1.0 ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
-<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/7> a mkg:Flow ;
+<https://mpai.community/kg/aim/MAS-APP-V1.0/flow/6> a mkg:Flow ;
     mkg:dataType datatype:PAF-AVT-V1.6 ;
     mkg:fromAIM aim:MAS-APP-V1.0 ;
     mkg:fromType datatype:PAF-AVT-V1.6 ;
@@ -7933,29 +7942,20 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/6> a mkg:Flow ;
-    mkg:dataType datatype:OSD-BTO-V1.5 ;
-    mkg:fromAIM aim:MMC-ACR-V2.5 ;
-    mkg:fromPortNumber 1 ;
-    mkg:fromType datatype:OSD-BTO-V1.5 ;
-    mkg:toAIM aim:PAF-RSR-V1.6 ;
-    mkg:toPortNumber 2 ;
-    mkg:toType datatype:OSD-BTO-V1.5 .
-
-<https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/7> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:MMC-ACR-V2.5 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/8> a mkg:Flow ;
+<https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/7> a mkg:Flow ;
     mkg:dataType datatype:XRV-SAV-V1.0 ;
     mkg:fromAIM aim:PAF-RSR-V1.6 ;
     mkg:fromType datatype:XRV-SAV-V1.0 ;
     mkg:toAIM aim:MMC-ACR-V2.5 ;
     mkg:toType datatype:XRV-SAV-V1.0 .
 
-<https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/9> a mkg:Flow ;
+<https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/8> a mkg:Flow ;
     mkg:dataType datatype:PAF-AVT-V1.6 ;
     mkg:fromAIM aim:MMC-ACR-V2.5 ;
     mkg:fromType datatype:PAF-AVT-V1.6 ;
@@ -8016,15 +8016,6 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:toType datatype:OSD-BSO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/10> a mkg:Flow ;
-    mkg:dataType datatype:OSD-BTO-V1.5 ;
-    mkg:fromAIM aim:MMC-AMQ-V2.5 ;
-    mkg:fromPortNumber 2 ;
-    mkg:fromType datatype:OSD-BTO-V1.5 ;
-    mkg:toAIM aim:PAF-RSR-V1.6 ;
-    mkg:toPortNumber 2 ;
-    mkg:toType datatype:OSD-BTO-V1.5 .
-
-<https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/11> a mkg:Flow ;
     mkg:dataType datatype:PAF-AVT-V1.6 ;
     mkg:fromAIM aim:MMC-AMQ-V2.5 ;
     mkg:fromType datatype:PAF-AVT-V1.6 ;
@@ -8053,6 +8044,14 @@ aim:HMC-CEC-V2.2 a mkg:AIM ;
     mkg:fromType datatype:OSD-BVO-V1.5 ;
     mkg:toAIM aim:MMC-TIQ-V2.5 ;
     mkg:toType datatype:OSD-BVO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-TIQ-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/6> a mkg:Flow ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
@@ -9032,13 +9031,6 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:toType datatype:OSD-BVO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/10> a mkg:Flow ;
-    mkg:dataType datatype:XRV-SAV-V1.0 ;
-    mkg:fromAIM aim:PAF-RSR-V1.6 ;
-    mkg:fromType datatype:XRV-SAV-V1.0 ;
-    mkg:toAIM aim:MMC-MAC-V2.5 ;
-    mkg:toType datatype:XRV-SAV-V1.0 .
-
-<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/11> a mkg:Flow ;
     mkg:dataType datatype:PAF-AVT-V1.6 ;
     mkg:fromAIM aim:MMC-MAC-V2.5 ;
     mkg:fromType datatype:PAF-AVT-V1.6 ;
@@ -9061,14 +9053,6 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/4> a mkg:Flow ;
-    mkg:dataType datatype:OSD-BTO-V1.5 ;
-    mkg:fromAIM aim:MMC-MAC-V2.5 ;
-    mkg:fromType datatype:OSD-BTO-V1.5 ;
-    mkg:toAIM aim:PAF-RSR-V1.6 ;
-    mkg:toPortNumber 2 ;
-    mkg:toType datatype:OSD-BTO-V1.5 .
-
-<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/5> a mkg:Flow ;
     mkg:dataType datatype:OSD-IID-V1.5 ;
     mkg:fromAIM aim:PAF-FIR-V1.6 ;
     mkg:fromType datatype:OSD-IID-V1.5 ;
@@ -9076,7 +9060,7 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:toPortNumber 1 ;
     mkg:toType datatype:OSD-IID-V1.5 .
 
-<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/6> a mkg:Flow ;
+<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/5> a mkg:Flow ;
     mkg:dataType datatype:OSD-IID-V1.5 ;
     mkg:fromAIM aim:MMC-SIR-V2.5 ;
     mkg:fromType datatype:OSD-IID-V1.5 ;
@@ -9084,19 +9068,34 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:toPortNumber 2 ;
     mkg:toType datatype:OSD-IID-V1.5 .
 
-<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/7> a mkg:Flow ;
+<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/6> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:OSD-IDR-V1.5 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/9> a mkg:Flow ;
+<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/7> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:OSD-IDR-V1.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/8> a mkg:Flow ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
     mkg:fromAIM aim:OSD-IDR-V1.5 ;
     mkg:fromType datatype:OSD-BTO-V1.5 ;
     mkg:toAIM aim:MMC-MAC-V2.5 ;
     mkg:toType datatype:OSD-BTO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/9> a mkg:Flow ;
+    mkg:dataType datatype:XRV-SAV-V1.0 ;
+    mkg:fromAIM aim:PAF-RSR-V1.6 ;
+    mkg:fromType datatype:XRV-SAV-V1.0 ;
+    mkg:toAIM aim:MMC-MAC-V2.5 ;
+    mkg:toType datatype:XRV-SAV-V1.0 .
 
 <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BSO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BSO-V1.5 ;
@@ -9163,6 +9162,14 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:fromPortNumber 1 ;
     mkg:fromType datatype:OSD-BTO-V1.5 ;
     mkg:toAIM aim:MMC-EDP-V2.5 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/4> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-EDP-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toPortNumber 1 ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
@@ -9276,6 +9283,21 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:fromType datatype:OSD-BTO-V1.5 ;
     mkg:toAIM aim:MMC-TTT-V2.5 ;
     mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-TTT-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
+
+<https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/6> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-TTT-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:MMC-MAT-V2.5 ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/7> a mkg:Flow ;
@@ -9452,6 +9474,14 @@ aim:MMC-ISD-V2.5 a mkg:AIM ;
     mkg:fromType datatype:MMC-SUM-V2.5 ;
     mkg:toAIM aim:MMC-EDP-V2.5 ;
     mkg:toType datatype:MMC-SUM-V2.5 .
+
+<https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/9> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:fromAIM aim:MMC-EDP-V2.5 ;
+    mkg:fromType datatype:OSD-BTO-V1.5 ;
+    mkg:toAIM aim:PAF-RSR-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BTO-V1.5 .
 
 <https://mpai.community/kg/aim/MMC-MPD-V2.5/port/Input/MMC-SUM-V2.5/0> a mkg:Port ;
     mkg:dataType datatype:MMC-SUM-V2.5 ;
@@ -13503,6 +13533,14 @@ aim:PAF-GPS-V1.6 a mkg:AIM ;
     mkg:toAIM aim:MMC-TTS-V2.5 ;
     mkg:toType datatype:MMC-SPS-V2.5 .
 
+<https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:OSD-BSO-V1.5 ;
+    mkg:fromAIM aim:MMC-TTS-V2.5 ;
+    mkg:fromType datatype:OSD-BSO-V1.5 ;
+    mkg:toAIM aim:PAF-SAF-V1.6 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:OSD-BSO-V1.5 .
+
 <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/6> a mkg:Flow ;
     mkg:dataType datatype:OSD-BSO-V1.5 ;
     mkg:fromAIM aim:PAF-RSR-V1.6 ;
@@ -16192,6 +16230,15 @@ datatype:XRV-SCR-V1.0 a mkg:DataType ;
     mkg:sourceAI true ;
     mkg:title "Gesture Attributes V1.0" .
 
+library:three.js a mkg:Library ;
+    mkg:acronym "three.js" ;
+    mkg:alsoCode "MMM/Viewer/lib/three",
+        "UserAgent/Assets/cav-webview.html" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/Assets/cav-webview.html> ;
+    mkg:codePath "UserAgent/Assets/cav-webview.html" ;
+    mkg:description "three.js 0.160.0, the library that renders the 3D models in the browser: the User Agent's page (UserAgent/Assets/cav-webview.html) imports it, with its GLTF loader and controls; a local copy is in MMM/Viewer/lib/three." ;
+    mkg:webSpec <https://threejs.org/> .
+
 mpaistore:MPAI_Store a mkg:MPAIStore ;
     mkg:acronym "MPAI Store" ;
     mkg:description "Receives the AIM Instances (L3s), tests them for conformance, publishes the AIM Descriptions of the accepted AIMs and verifies that an AIM Instance belongs to the MPAI Ecosystem." ;
@@ -16514,6 +16561,18 @@ standard:SPG a mkg:Standard ;
     mkg:inM3260 true ;
     mkg:webSpec <https://mpai.community/standards/mpai-spg/> .
 
+<https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-3DO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-3DO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-3SD-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-3SD-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-B3O-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-B3O-V1.5 ;
     mkg:direction "Input" ;
@@ -16544,9 +16603,63 @@ standard:SPG a mkg:Standard ;
     mkg:label "" ;
     mkg:optional false .
 
+<https://mpai.community/kg/unit/UAU-3OD/port/Output/OSD-3DO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-3DO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-3OD/port/Output/OSD-B3O-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-B3O-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOA/port/Input/CAE-UCM-V1.0/0> a mkg:Port ;
+    mkg:dataType datatype:CAE-UCM-V1.0 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOA/port/Input/OSD-AUO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-AUO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOA/port/Input/OSD-BAO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BAO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOA/port/Output/OSD-AUO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-AUO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-AOA/port/Output/OSD-BAO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BAO-V1.5 ;
     mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOD/port/Input/CAE-UCM-V1.0/0> a mkg:Port ;
+    mkg:dataType datatype:CAE-UCM-V1.0 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-ASD-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-ASD-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-AUO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-AUO-V1.5 ;
+    mkg:direction "Input" ;
     mkg:label "" ;
     mkg:optional false .
 
@@ -16562,21 +16675,63 @@ standard:SPG a mkg:Standard ;
     mkg:label "" ;
     mkg:optional false .
 
+<https://mpai.community/kg/unit/UAU-AOD/port/Output/OSD-AUO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-AUO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-AOD/port/Output/OSD-BAO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BAO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-LOA/port/Input/OSD-BLO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BLO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-LOA/port/Output/OSD-BLO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BLO-V1.5 ;
     mkg:direction "Output" ;
     mkg:label "" ;
     mkg:optional false .
 
-<https://mpai.community/kg/unit/UAU-OOA/port/Output/OSD-BOO-V1.5/0> a mkg:Port ;
+<https://mpai.community/kg/unit/UAU-OMA/port/Output/OSD-BOO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BOO-V1.5 ;
     mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-OMD/port/Input/OSD-BOO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BOO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-ROA/port/Input/OSD-BRO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BRO-V1.5 ;
+    mkg:direction "Input" ;
     mkg:label "" ;
     mkg:optional false .
 
 <https://mpai.community/kg/unit/UAU-ROA/port/Output/OSD-BRO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BRO-V1.5 ;
     mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-SOA/port/Input/CAE-UCM-V1.0/0> a mkg:Port ;
+    mkg:dataType datatype:CAE-UCM-V1.0 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-SOA/port/Input/OSD-BSO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BSO-V1.5 ;
+    mkg:direction "Input" ;
     mkg:label "" ;
     mkg:optional false .
 
@@ -16592,9 +16747,39 @@ standard:SPG a mkg:Standard ;
     mkg:label "" ;
     mkg:optional false .
 
+<https://mpai.community/kg/unit/UAU-SOD/port/Input/OSD-SPO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-SPO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-SOD/port/Output/OSD-BSO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BSO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-SOD/port/Output/OSD-SPO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-SPO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-TOA/port/Output/OSD-BTO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
     mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-TOD/port/Input/OSD-BTO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BTO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-UOA/port/Input/OSD-BUO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BUO-V1.5 ;
+    mkg:direction "Input" ;
     mkg:label "" ;
     mkg:optional false .
 
@@ -16604,15 +16789,57 @@ standard:SPG a mkg:Standard ;
     mkg:label "" ;
     mkg:optional false .
 
+<https://mpai.community/kg/unit/UAU-VOA/port/Input/CAE-UCM-V1.0/0> a mkg:Port ;
+    mkg:dataType datatype:CAE-UCM-V1.0 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-VOA/port/Input/OSD-BVO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BVO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-VOA/port/Output/OSD-BVO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BVO-V1.5 ;
     mkg:direction "Output" ;
     mkg:label "" ;
     mkg:optional false .
 
+<https://mpai.community/kg/unit/UAU-VOD/port/Input/CAE-UCM-V1.0/0> a mkg:Port ;
+    mkg:dataType datatype:CAE-UCM-V1.0 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
 <https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-BVO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BVO-V1.5 ;
     mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-BVS-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BVS-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-VIO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-VIO-V1.5 ;
+    mkg:direction "Input" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-VOD/port/Output/OSD-BVO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-BVO-V1.5 ;
+    mkg:direction "Output" ;
+    mkg:label "" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/unit/UAU-VOD/port/Output/OSD-VIO-V1.5/0> a mkg:Port ;
+    mkg:dataType datatype:OSD-VIO-V1.5 ;
+    mkg:direction "Output" ;
     mkg:label "" ;
     mkg:optional false .
 
@@ -16625,11 +16852,13 @@ useragent:User_Agent a mkg:UserAgent ;
         unit:UAU-AOA,
         unit:UAU-AOD,
         unit:UAU-LOA,
-        unit:UAU-OOA,
+        unit:UAU-OMA,
+        unit:UAU-OMD,
         unit:UAU-ROA,
         unit:UAU-SOA,
         unit:UAU-SOD,
         unit:UAU-TOA,
+        unit:UAU-TOD,
         unit:UAU-UOA,
         unit:UAU-VOA,
         unit:UAU-VOD .
@@ -18447,6 +18676,15 @@ l3:1PAF-SAF-V1.6-I01 a mkg:L3 ;
     mkg:acronym "1PAF-SAF-V1.6-I01" ;
     mkg:instanceOf aim:PAF-SAF-V1.6 .
 
+library:Steam_Audio a mkg:Library ;
+    mkg:acronym "Steam Audio" ;
+    mkg:alsoCode "Models/SteamAudio",
+        "UserAgent/SpatialAudio/SteamAudio.cs" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Models/SteamAudio> ;
+    mkg:codePath "Models/SteamAudio" ;
+    mkg:description "Steam Audio (Valve), the library that renders spatial audio: binaural, with HRTF. The native library (phonon.dll on Windows, libphonon.so on Linux) is in Models/SteamAudio; UserAgent/SpatialAudio/SteamAudio.cs declares its functions, SpatialRenderer.cs and AudioRendering.cs use them." ;
+    mkg:webSpec <https://valvesoftware.github.io/steam-audio/> .
+
 <https://mpai.community/kg/software/AIF~RootOfTrust~AIF.RootOfTrust> a mkg:Software ;
     mkg:acronym "AIF.RootOfTrust" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIF/RootOfTrust/AIF.RootOfTrust.csproj> ;
@@ -18610,7 +18848,9 @@ l3:1PAF-SAF-V1.6-I01 a mkg:L3 ;
     mkg:codePath "UserAgent/PhysicalLayer/Devices/Mpai.PhysicalLayer.Devices.csproj" ;
     mkg:dependsOn <https://mpai.community/kg/software/AIMs~Core~Mpai.Core> ;
     mkg:implements datatype:CAE-MAG-V2.5,
-        unit:UAU-AOA ;
+        unit:UAU-AOA,
+        unit:UAU-SOA,
+        unit:UAU-VOA ;
     mkg:path "UserAgent/PhysicalLayer/Devices/Mpai.PhysicalLayer.Devices.csproj" ;
     mkg:repository "D:\\DI" ;
     mkg:softwareKind "library" ;
@@ -18621,10 +18861,12 @@ l3:1PAF-SAF-V1.6-I01 a mkg:L3 ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/SpatialAudio/Mpai.SpatialAudio.csproj> ;
     mkg:codePath "UserAgent/SpatialAudio/Mpai.SpatialAudio.csproj" ;
     mkg:dependsOn <https://mpai.community/kg/software/AIMs~Core~Mpai.Core> ;
+    mkg:implements unit:UAU-AOD ;
     mkg:path "UserAgent/SpatialAudio/Mpai.SpatialAudio.csproj" ;
     mkg:repository "D:\\DI" ;
     mkg:softwareKind "library" ;
-    mkg:title "UserAgent/SpatialAudio" .
+    mkg:title "UserAgent/SpatialAudio" ;
+    mkg:usesLibrary library:Steam_Audio .
 
 <https://mpai.community/kg/software/UserAgent~UaKit~Mpai.UaKit> a mkg:Software ;
     mkg:acronym "Mpai.UaKit" ;
@@ -18657,44 +18899,66 @@ standard:MAS a mkg:Standard ;
 unit:UAU-LOA a mkg:Unit ;
     mkg:acronym "UAU-LOA" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-LOA/port/Output/OSD-BLO-V1.5/0> ;
+    mkg:port <https://mpai.community/kg/unit/UAU-LOA/port/Input/OSD-BLO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-LOA/port/Output/OSD-BLO-V1.5/0> ;
     mkg:title "LiDAR Object Acquisition" ;
-    mkg:unitStatus "proposed" .
+    mkg:unitStatus "proposed (structure of UAU-VOA, no User Command)" .
 
-unit:UAU-OOA a mkg:Unit ;
-    mkg:acronym "UAU-OOA" ;
+unit:UAU-OMA a mkg:Unit ;
+    mkg:acronym "UAU-OMA" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-OOA/port/Output/OSD-BOO-V1.5/0> ;
+    mkg:port <https://mpai.community/kg/unit/UAU-OMA/port/Output/OSD-BOO-V1.5/0> ;
     mkg:title "Offline Map Object Acquisition" ;
-    mkg:unitStatus "proposed" .
+    mkg:unitStatus "proposed (read from storage, no User Command)" .
+
+unit:UAU-OMD a mkg:Unit ;
+    mkg:acronym "UAU-OMD" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-OMD/port/Input/OSD-BOO-V1.5/0> ;
+    mkg:title "Offline Map Object Delivery" ;
+    mkg:unitStatus "proposed (written to storage, no User Command)" .
 
 unit:UAU-ROA a mkg:Unit ;
     mkg:acronym "UAU-ROA" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-ROA/port/Output/OSD-BRO-V1.5/0> ;
+    mkg:port <https://mpai.community/kg/unit/UAU-ROA/port/Input/OSD-BRO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-ROA/port/Output/OSD-BRO-V1.5/0> ;
     mkg:title "RADAR Object Acquisition" ;
-    mkg:unitStatus "proposed" .
+    mkg:unitStatus "proposed (structure of UAU-VOA, no User Command)" .
 
 unit:UAU-TOA a mkg:Unit ;
     mkg:acronym "UAU-TOA" ;
     mkg:ofStandard standard:UAU ;
     mkg:port <https://mpai.community/kg/unit/UAU-TOA/port/Output/OSD-BTO-V1.5/0> ;
     mkg:title "Text Object Acquisition" ;
-    mkg:unitStatus "to be decided (is it needed?)" .
+    mkg:unitStatus "proposed (as the offline map: read from storage)" .
+
+unit:UAU-TOD a mkg:Unit ;
+    mkg:acronym "UAU-TOD" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-TOD/port/Input/OSD-BTO-V1.5/0> ;
+    mkg:title "Text Object Delivery" ;
+    mkg:unitStatus "proposed (as the offline map: written to storage)" .
 
 unit:UAU-UOA a mkg:Unit ;
     mkg:acronym "UAU-UOA" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-UOA/port/Output/OSD-BUO-V1.5/0> ;
+    mkg:port <https://mpai.community/kg/unit/UAU-UOA/port/Input/OSD-BUO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-UOA/port/Output/OSD-BUO-V1.5/0> ;
     mkg:title "Ultrasound Object Acquisition" ;
-    mkg:unitStatus "proposed" .
+    mkg:unitStatus "proposed (structure of UAU-VOA, no User Command)" .
 
 unit:UAU-VOD a mkg:Unit ;
     mkg:acronym "UAU-VOD" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-BVO-V1.5/0> ;
-    mkg:title "Visual Object Delivery" ;
-    mkg:unitStatus "proposed" .
+    mkg:port <https://mpai.community/kg/unit/UAU-VOD/port/Input/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-BVS-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-VOD/port/Input/OSD-VIO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-VOD/port/Output/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-VOD/port/Output/OSD-VIO-V1.5/0> ;
+    mkg:title "Visual Object and Scene Delivery" ;
+    mkg:unitStatus "no code yet (structure of UAU-AOD)" .
 
 aim:MMC-OCR-V2.5 a mkg:AIM ;
     mkg:acronym "MMC-OCR-V2.5" ;
@@ -19400,6 +19664,7 @@ l3:1PAF-SAS-V1.6-I01 a mkg:L3 ;
         <https://mpai.community/kg/software/UserAgent~PhysicalLayer~Devices~Mpai.PhysicalLayer.Devices>,
         <https://mpai.community/kg/software/UserAgent~SpatialAudio~Mpai.SpatialAudio> ;
     mkg:implements unit:UAU-3OD,
+        unit:UAU-AOA,
         unit:UAU-AOD,
         unit:UAU-SOA,
         unit:UAU-SOD,
@@ -19433,52 +19698,23 @@ l3:1PAF-SAS-V1.6-I01 a mkg:L3 ;
 
 unit:UAU-3OD a mkg:Unit ;
     mkg:acronym "UAU-3OD" ;
-    mkg:alsoCode "UserAgent/PhysicalLayer/Units.cs" ;
+    mkg:alsoCode "UserAgent/Assets/cav-webview.html",
+        "UserAgent/PhysicalLayer/Units.cs" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Avatar/WebView3DModelDelivery.cs> ;
     mkg:codePath "UserAgent/PhysicalLayer/Avatar/WebView3DModelDelivery.cs" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-B3O-V1.5/0>,
+    mkg:port <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-3DO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-3SD-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-B3O-V1.5/0>,
         <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-B3S-V1.5/0>,
         <https://mpai.community/kg/unit/UAU-3OD/port/Input/OSD-OPV-V1.5/0>,
         <https://mpai.community/kg/unit/UAU-3OD/port/Input/PAF-BDO-V1.6/0>,
-        <https://mpai.community/kg/unit/UAU-3OD/port/Input/PAF-FDO-V1.6/0> ;
+        <https://mpai.community/kg/unit/UAU-3OD/port/Input/PAF-FDO-V1.6/0>,
+        <https://mpai.community/kg/unit/UAU-3OD/port/Output/OSD-3DO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-3OD/port/Output/OSD-B3O-V1.5/0> ;
     mkg:title "3D Model Object Delivery" ;
-    mkg:unitStatus "code" .
-
-unit:UAU-AOA a mkg:Unit ;
-    mkg:acronym "UAU-AOA" ;
-    mkg:alsoCode "UserAgent/PhysicalLayer/Devices/AlsaAudioAcquisition.cs",
-        "UserAgent/PhysicalLayer/Devices/FileAudioAcquisition.cs",
-        "UserAgent/PhysicalLayer/Units.cs" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs> ;
-    mkg:codePath "UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs" ;
-    mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-AOA/port/Output/OSD-BAO-V1.5/0> ;
-    mkg:title "Audio Object Acquisition" ;
-    mkg:unitStatus "code" .
-
-unit:UAU-AOD a mkg:Unit ;
-    mkg:acronym "UAU-AOD" ;
-    mkg:alsoCode "UserAgent/PhysicalLayer/Units.cs",
-        "UserAgent/SpatialAudio/AudioRendering.cs",
-        "UserAgent/SpatialAudio/SpatialRenderer.cs" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs> ;
-    mkg:codePath "UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs" ;
-    mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-BAO-V1.5/0>,
-        <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-BAS-V1.5/0> ;
-    mkg:title "Audio Object and Scene Delivery" ;
-    mkg:unitStatus "code" .
-
-unit:UAU-SOA a mkg:Unit ;
-    mkg:acronym "UAU-SOA" ;
-    mkg:alsoCode "UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Units.cs> ;
-    mkg:codePath "UserAgent/PhysicalLayer/Units.cs" ;
-    mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-SOA/port/Output/OSD-BSO-V1.5/0> ;
-    mkg:title "Speech Object Acquisition" ;
-    mkg:unitStatus "code" .
+    mkg:unitStatus "code" ;
+    mkg:usesLibrary library:three.js .
 
 unit:UAU-SOD a mkg:Unit ;
     mkg:acronym "UAU-SOD" ;
@@ -19486,20 +19722,11 @@ unit:UAU-SOD a mkg:Unit ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs> ;
     mkg:codePath "UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs" ;
     mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-SOD/port/Input/OSD-BSO-V1.5/0> ;
+    mkg:port <https://mpai.community/kg/unit/UAU-SOD/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-SOD/port/Input/OSD-SPO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-SOD/port/Output/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-SOD/port/Output/OSD-SPO-V1.5/0> ;
     mkg:title "Speech Object Delivery" ;
-    mkg:unitStatus "code" .
-
-unit:UAU-VOA a mkg:Unit ;
-    mkg:acronym "UAU-VOA" ;
-    mkg:alsoCode "UserAgent/PhysicalLayer/Camera/WinFormsVisualAcquisition.cs",
-        "UserAgent/PhysicalLayer/Devices/FileVisualAcquisition.cs",
-        "UserAgent/PhysicalLayer/Units.cs" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Camera/WebcamVisualAcquisition.cs> ;
-    mkg:codePath "UserAgent/PhysicalLayer/Camera/WebcamVisualAcquisition.cs" ;
-    mkg:ofStandard standard:UAU ;
-    mkg:port <https://mpai.community/kg/unit/UAU-VOA/port/Output/OSD-BVO-V1.5/0> ;
-    mkg:title "Visual Object Acquisition" ;
     mkg:unitStatus "code" .
 
 aim:CAE-AOA-V1.0 a mkg:AIM ;
@@ -20161,6 +20388,68 @@ standard:HMC a mkg:Standard ;
         datatype:HMC-PRF-V2.2 ;
     mkg:version "V2.2" ;
     mkg:webSpec <https://mpai.community/standards/mpai-hmc/> .
+
+unit:UAU-AOA a mkg:Unit ;
+    mkg:acronym "UAU-AOA" ;
+    mkg:alsoCode "UserAgent/PhysicalLayer/Devices/AlsaAudioAcquisition.cs",
+        "UserAgent/PhysicalLayer/Devices/FileAudioAcquisition.cs",
+        "UserAgent/PhysicalLayer/Units.cs" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs> ;
+    mkg:codePath "UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-AOA/port/Input/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/unit/UAU-AOA/port/Input/OSD-AUO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOA/port/Input/OSD-BAO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOA/port/Output/OSD-AUO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOA/port/Output/OSD-BAO-V1.5/0> ;
+    mkg:title "Audio Object Acquisition" ;
+    mkg:unitStatus "code" .
+
+unit:UAU-AOD a mkg:Unit ;
+    mkg:acronym "UAU-AOD" ;
+    mkg:alsoCode "UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs",
+        "UserAgent/SpatialAudio/AudioRendering.cs",
+        "UserAgent/SpatialAudio/SpatialRenderer.cs",
+        "UserAgent/SpatialAudio/SteamAudio.cs" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Units.cs> ;
+    mkg:codePath "UserAgent/PhysicalLayer/Units.cs" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-AOD/port/Input/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-ASD-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-AUO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-BAO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Input/OSD-BAS-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Output/OSD-AUO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-AOD/port/Output/OSD-BAO-V1.5/0> ;
+    mkg:title "Audio Object and Scene Delivery" ;
+    mkg:unitStatus "code" ;
+    mkg:usesLibrary library:Steam_Audio .
+
+unit:UAU-SOA a mkg:Unit ;
+    mkg:acronym "UAU-SOA" ;
+    mkg:alsoCode "UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Units.cs> ;
+    mkg:codePath "UserAgent/PhysicalLayer/Units.cs" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-SOA/port/Input/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/unit/UAU-SOA/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-SOA/port/Output/OSD-BSO-V1.5/0> ;
+    mkg:title "Speech Object Acquisition" ;
+    mkg:unitStatus "code" .
+
+unit:UAU-VOA a mkg:Unit ;
+    mkg:acronym "UAU-VOA" ;
+    mkg:alsoCode "UserAgent/PhysicalLayer/Camera/WinFormsVisualAcquisition.cs",
+        "UserAgent/PhysicalLayer/Devices/FileVisualAcquisition.cs",
+        "UserAgent/PhysicalLayer/Units.cs" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/UserAgent/PhysicalLayer/Camera/WebcamVisualAcquisition.cs> ;
+    mkg:codePath "UserAgent/PhysicalLayer/Camera/WebcamVisualAcquisition.cs" ;
+    mkg:ofStandard standard:UAU ;
+    mkg:port <https://mpai.community/kg/unit/UAU-VOA/port/Input/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/unit/UAU-VOA/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/unit/UAU-VOA/port/Output/OSD-BVO-V1.5/0> ;
+    mkg:title "Visual Object Acquisition" ;
+    mkg:unitStatus "code" .
 
 aim:AIH-HFL-V1.1 a mkg:AIM ;
     mkg:acronym "AIH-HFL-V1.1" ;
@@ -20984,10 +21273,10 @@ aim:MMC-MAD-V2.5 a mkg:AIM ;
     mkg:flow <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/1>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/2>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/3>,
+        <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/4>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/5>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/6>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/flow/7> ;
-    mkg:notAligned true ;
     mkg:ofStandard standard:MMC ;
     mkg:port <https://mpai.community/kg/aim/MMC-MAD-V2.5/port/Input/MMC-EPS-V2.5/0>,
         <https://mpai.community/kg/aim/MMC-MAD-V2.5/port/Input/MMC-SUM-V2.5/0>,
@@ -21449,32 +21738,6 @@ aim:CVE-VII-V1.0 a mkg:AIM ;
     mkg:title "" ;
     mkg:webSpec <https://mpai.community/standards/mpai-osd/v1-5/> .
 
-aim:MMC-MAT-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-MAT-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "Multimodal Anonymous Translation: the HCI Module for spoken translation with a Speaking Avatar. Automatic Speech Recognition recognises the human's speech into text; Text-to-Text Translation translates it into the language named by the Language Selector; Response and Scene Rendering speaks the translation and produces the lip-synced Machine Face Descriptors in the target language. The translated text is also exposed. Non-affective; no Personal Status is supplied. Acquisition and delivery are the User Agent, not sub-AIMs." ;
-    mkg:flow <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/1>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/2>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/3>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/4>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/7>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/8> ;
-    mkg:notAligned true ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BSO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-SEL-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Output/XRV-SAV-V1.0/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/MultimodalAnonymousTranslation.json> ;
-    mkg:subAIM aim:MMC-ASR-V2.5,
-        aim:MMC-TTT-V2.5,
-        aim:PAF-RSR-V1.6 ;
-    mkg:title "" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
 datatype:AIH-HLD-V1.1 a mkg:DataType ;
     mkg:acronym "AIH-HLD-V1.1" ;
     mkg:description "Schema for raw health data." ;
@@ -21612,6 +21875,86 @@ datatype:XRV-VBH-V1.0 a mkg:DataType ;
     mkg:softwareKind "library" ;
     mkg:title "AIMs/MMC/V2.5/EDP" .
 
+aim:MAS-APP-V1.0 a mkg:AIM ;
+    mkg:acronym "MAS-APP-V1.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "MPAI as a Service App: the Module over which the MPAI-MAS workflow runs, letting a User Agent that has not yet chosen an App speak to the person through a Speaking Avatar. Response and Scene Rendering renders the Text the User Agent supplies into Machine Speech and Machine Face Descriptors; Automatic Speech Recognition gives as Text the person's spoken reply to a question the Module asked." ;
+    mkg:flow <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/1>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/2>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/3>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/4>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/5>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/6> ;
+    mkg:ofStandard standard:MAS ;
+    mkg:port <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/MMC-EPS-V2.5/0>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:schema <https://schemas.mpai.community/MAS/V1.0/AIMs/MASApp.json> ;
+    mkg:subAIM aim:MMC-ASR-V2.5,
+        aim:PAF-RSR-V1.6 ;
+    mkg:title "" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mas/v1-0/> .
+
+aim:MMC-MAC-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-MAC-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent's clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs." ;
+    mkg:flow <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/1>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/10>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/2>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/3>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/4>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/5>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/6>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/7>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/8>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/9> ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/XRV-SAV-V1.0/0>,
+        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/boolean/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/MultimodalAccessControl.json> ;
+    mkg:subAIM aim:MMC-SIR-V2.5,
+        aim:OSD-IDR-V1.5,
+        aim:PAF-FIR-V1.6,
+        aim:PAF-RSR-V1.6 ;
+    mkg:title "" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:MMC-MAT-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-MAT-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Multimodal Anonymous Translation: the HCI Module for spoken translation with a Speaking Avatar. Automatic Speech Recognition recognises the human's speech into text; Text-to-Text Translation translates it into the language named by the Language Selector; Response and Scene Rendering speaks the translation and produces the lip-synced Machine Face Descriptors in the target language. The translated text is also exposed. Non-affective; no Personal Status is supplied. Acquisition and delivery are the User Agent, not sub-AIMs." ;
+    mkg:flow <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/1>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/2>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/3>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/4>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/5>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/6>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/7>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/flow/8> ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/OSD-SEL-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-MAT-V2.5/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/MultimodalAnonymousTranslation.json> ;
+    mkg:subAIM aim:MMC-ASR-V2.5,
+        aim:MMC-TTT-V2.5,
+        aim:PAF-RSR-V1.6 ;
+    mkg:title "" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
 aim:MMC-SCM-V2.5 a mkg:AIM ;
     mkg:acronym "MMC-SCM-V2.5" ;
     mkg:apiProfile "Basic" ;
@@ -21695,18 +22038,6 @@ datatype:AIH-MDL-V1.1 a mkg:DataType ;
         datatype:OSD-TIM-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/model-licence/> .
-
-datatype:OSD-3SD-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-3SD-V1.5" ;
-    mkg:description "" ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/3DModelSceneDescriptors.json> ;
-    mkg:title "3D Model Scene Descriptors V1.5" ;
-    mkg:uses datatype:OSD-3DO-V1.5,
-        datatype:OSD-B3S-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-scene-descriptors/> .
 
 datatype:OSD-BAG-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BAG-V1.5" ;
@@ -21898,61 +22229,6 @@ aim:CVE-VSI-V1.0 a mkg:AIM ;
     mkg:title "" ;
     mkg:webSpec <https://mpai.community/standards/mpai-cve/v1-0/> .
 
-aim:MAS-APP-V1.0 a mkg:AIM ;
-    mkg:acronym "MAS-APP-V1.0" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "MPAI as a Service App: the Module over which the MPAI-MAS workflow runs, letting a User Agent that has not yet chosen an App speak to the person through a Speaking Avatar. Response and Scene Rendering renders the Text the User Agent supplies into Machine Speech and Machine Face Descriptors; Automatic Speech Recognition gives as Text the person's spoken reply to a question the Module asked." ;
-    mkg:flow <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/1>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/2>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/3>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/4>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/5>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/6>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/flow/7> ;
-    mkg:ofStandard standard:MAS ;
-    mkg:port <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/MMC-EPS-V2.5/0>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/OSD-BSO-V1.5/0>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MAS-APP-V1.0/port/Output/XRV-SAV-V1.0/0> ;
-    mkg:schema <https://schemas.mpai.community/MAS/V1.0/AIMs/MASApp.json> ;
-    mkg:subAIM aim:MMC-ASR-V2.5,
-        aim:PAF-RSR-V1.6 ;
-    mkg:title "" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mas/v1-0/> .
-
-aim:MMC-MAC-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-MAC-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "Multimodal Access Control: recognises a User from face and speech and issues a spoken/rendered verdict. Face Recognition and Speaker Recognition read the enrolled gallery (the User IDs) and the Scene Descriptors from Shared Storage - these are NOT ports. Time (OSD-STM) accompanies each captured object and is supplied by the User Agent's clock. ID Reconciliation reconciles the two candidate Instance Identifiers and issues the Response (the verdict words) and its Personal Status; Response and Scene Rendering speaks the Response and produces the lip-synced Machine Face Descriptors. The reconciled UserID stays internal; the User consumes the Response and the avatar. Acquisition and delivery are the User Agent, not sub-AIMs." ;
-    mkg:flow <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/1>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/10>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/11>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/2>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/3>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/4>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/5>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/6>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/7>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/flow/9> ;
-    mkg:notAligned true ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BSO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/XRV-SAV-V1.0/0>,
-        <https://mpai.community/kg/aim/MMC-MAC-V2.5/port/Output/boolean/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/MultimodalAccessControl.json> ;
-    mkg:subAIM aim:MMC-SIR-V2.5,
-        aim:OSD-IDR-V1.5,
-        aim:PAF-FIR-V1.6,
-        aim:PAF-RSR-V1.6 ;
-    mkg:title "" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
 aim:MMC-MPD-V2.5 a mkg:AIM ;
     mkg:acronym "MMC-MPD-V2.5" ;
     mkg:apiProfile "Basic" ;
@@ -21968,8 +22244,8 @@ aim:MMC-MPD-V2.5 a mkg:AIM ;
         <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/5>,
         <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/6>,
         <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/7>,
-        <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/8> ;
-    mkg:notAligned true ;
+        <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/8>,
+        <https://mpai.community/kg/aim/MMC-MPD-V2.5/flow/9> ;
     mkg:ofStandard standard:MMC ;
     mkg:port <https://mpai.community/kg/aim/MMC-MPD-V2.5/port/Input/MMC-SUM-V2.5/0>,
         <https://mpai.community/kg/aim/MMC-MPD-V2.5/port/Input/OSD-BSO-V1.5/0>,
@@ -22003,27 +22279,6 @@ aim:MMC-PMX-V2.5 a mkg:AIM ;
     mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/PersonalStatusMultiplexing.json> ;
     mkg:title "" ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/personal-status-multiplexing/> ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
-aim:MMC-TIQ-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-TIQ-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TIQ/TiqAimProcessor.cs> ;
-    mkg:codePath "AIMs/MMC/V2.5/TIQ/TiqAimProcessor.cs" ;
-    mkg:description "Text and Image Query: answers with text to a text-based question about an image." ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-TXO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-VIO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-SPO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-TXO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-VIO-V1.5/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextAndImageQuery.json> ;
-    mkg:title "Text and Image Query V2.5" ;
-    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-image-query/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
 aim:PAF-SAS-V1.6 a mkg:AIM ;
@@ -22060,23 +22315,17 @@ datatype:MMC-ESA-V2.5 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/data-types/social-attitude/> .
 
-datatype:OSD-ASD-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-ASD-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
-    mkg:codePath "AIMs/Core/OSD/AudioSchema.cs" ;
+datatype:OSD-3SD-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-3SD-V1.5" ;
     mkg:description "" ;
     mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/AudioSceneDescriptors.json> ;
-    mkg:title "Audio Scene Descriptors V1.5" ;
-    mkg:uses datatype:OSD-AUO-V1.5,
-        datatype:OSD-BAO-V1.5,
-        datatype:OSD-BAS-V1.5,
-        datatype:OSD-CSP-V1.5,
-        datatype:OSD-OPV-V1.5,
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/3DModelSceneDescriptors.json> ;
+    mkg:title "3D Model Scene Descriptors V1.5" ;
+    mkg:uses datatype:OSD-3DO-V1.5,
+        datatype:OSD-B3S-V1.5,
         datatype:OSD-SPT-V1.5,
-        datatype:OSD-STM-V1.5,
         datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-scene-descriptors/> .
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-scene-descriptors/> .
 
 datatype:OSD-B3S-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-B3S-V1.5" ;
@@ -22191,6 +22440,66 @@ aim:CAV-PSP-V2.0 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/path-selection-planning/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/> .
 
+aim:MMC-ACR-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-ACR-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "MMC Access Control Registration (ACR) Module. Enrols a User: from the captured Face Object and Speech Object it produces the Face Descriptors (Entity Face Description) and Speech Descriptors (Entity Speech Description), which the descriptor AIMs write to the Shared Storage gallery under the User Name - the same gallery MMC-MAC reads to recognise. Response and Scene Rendering speaks the confirmation. The User Name is the User Agent's own datum (typed). Acquisition and delivery are the User Agent, not sub-AIMs. Where a data type occurs more than once at the boundary it carries a Port Number (OSD-STM: FaceTime 1 / SpeechTime 2; OSD-BTO: Response 1 / UserName 2)." ;
+    mkg:flow <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/1>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/2>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/3>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/4>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/5>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/6>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/7>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/8> ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/MMC-EPS-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/AccessControlRegistration.json> ;
+    mkg:subAIM aim:MMC-ESD-V2.5,
+        aim:PAF-EFD-V1.6,
+        aim:PAF-RSR-V1.6 ;
+    mkg:title "" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:MMC-AMQ-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-AMQ-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Answer to Multimodal Question. Receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as Text, as a Speaking Avatar - its speech, face and body, rendered by Response and Scene Rendering with the Avatar the User Agent supplies - and as a Visual Object. Acquisition, presentation and delivery are NOT SubAIMs: they interact with the user directly and therefore belong to the User Agent, travelling with it when it becomes a Remote Client Application. The User Agent shows the image and invites the question before this Module is run, so the image and the question arrive together and the run completes without suspending. Every boundary Port is exchanged with the User Agent." ;
+    mkg:flow <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/1>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/10>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/2>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/3>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/4>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/5>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/6>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/7>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/8>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/9> ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BSO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BSO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/AnswerToMultimodalQuestion.json> ;
+    mkg:subAIM aim:MMC-ASR-V2.5,
+        aim:MMC-TIQ-V2.5,
+        aim:PAF-RSR-V1.6 ;
+    mkg:title "" ;
+    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/answer-to-multimodal-question/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/use-cases/answer-to-multimodal-question/> .
+
 aim:MMC-PSI-V2.5 a mkg:AIM ;
     mkg:acronym "MMC-PSI-V2.5" ;
     mkg:apiProfile "Basic" ;
@@ -22200,6 +22509,27 @@ aim:MMC-PSI-V2.5 a mkg:AIM ;
         <https://mpai.community/kg/aim/MMC-PSI-V2.5/port/Output/MMC-SPS-V2.5/0> ;
     mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/PSSpeechInterpretation.json> ;
     mkg:title "PSSpeechInterpretation V2.5" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:MMC-TIQ-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-TIQ-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TIQ/TiqAimProcessor.cs> ;
+    mkg:codePath "AIMs/MMC/V2.5/TIQ/TiqAimProcessor.cs" ;
+    mkg:description "Text and Image Query: answers with text to a text-based question about an image." ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-TXO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Input/OSD-VIO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-BVO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-SPO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-TXO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TIQ-V2.5/port/Output/OSD-VIO-V1.5/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextAndImageQuery.json> ;
+    mkg:title "Text and Image Query V2.5" ;
+    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-image-query/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
 aim:PAF-AVS-V1.6 a mkg:AIM ;
@@ -22325,6 +22655,24 @@ datatype:MMC-ECS-V2.5 a mkg:DataType ;
     mkg:uses datatype:OSD-SPT-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/data-types/cognitive-state/> .
+
+datatype:OSD-ASD-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-ASD-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
+    mkg:codePath "AIMs/Core/OSD/AudioSchema.cs" ;
+    mkg:description "" ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/AudioSceneDescriptors.json> ;
+    mkg:title "Audio Scene Descriptors V1.5" ;
+    mkg:uses datatype:OSD-AUO-V1.5,
+        datatype:OSD-BAO-V1.5,
+        datatype:OSD-BAS-V1.5,
+        datatype:OSD-CSP-V1.5,
+        datatype:OSD-OPV-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-scene-descriptors/> .
 
 datatype:OSD-BOS-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BOS-V1.5" ;
@@ -22456,68 +22804,6 @@ aim:CAV-RSP-V2.0 a mkg:AIM ;
     mkg:title "Route Selection Planning V2.0" ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/route-selection-planning/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/> .
-
-aim:MMC-ACR-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-ACR-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "MMC Access Control Registration (ACR) Module. Enrols a User: from the captured Face Object and Speech Object it produces the Face Descriptors (Entity Face Description) and Speech Descriptors (Entity Speech Description), which the descriptor AIMs write to the Shared Storage gallery under the User Name - the same gallery MMC-MAC reads to recognise. Response and Scene Rendering speaks the confirmation. The User Name is the User Agent's own datum (typed). Acquisition and delivery are the User Agent, not sub-AIMs. Where a data type occurs more than once at the boundary it carries a Port Number (OSD-STM: FaceTime 1 / SpeechTime 2; OSD-BTO: Response 1 / UserName 2)." ;
-    mkg:flow <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/1>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/2>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/3>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/4>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/5>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/6>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/7>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/8>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/flow/9> ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/MMC-EPS-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BSO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/MMC-ACR-V2.5/port/Output/XRV-SAV-V1.0/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/AccessControlRegistration.json> ;
-    mkg:subAIM aim:MMC-ESD-V2.5,
-        aim:PAF-EFD-V1.6,
-        aim:PAF-RSR-V1.6 ;
-    mkg:title "" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
-aim:MMC-AMQ-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-AMQ-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "Answer to Multimodal Question. Receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as Text, as a Speaking Avatar - its speech, face and body, rendered by Response and Scene Rendering with the Avatar the User Agent supplies - and as a Visual Object. Acquisition, presentation and delivery are NOT SubAIMs: they interact with the user directly and therefore belong to the User Agent, travelling with it when it becomes a Remote Client Application. The User Agent shows the image and invites the question before this Module is run, so the image and the question arrive together and the run completes without suspending. Every boundary Port is exchanged with the User Agent." ;
-    mkg:flow <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/1>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/10>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/11>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/2>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/3>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/4>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/6>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/7>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/8>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/flow/9> ;
-    mkg:notAligned true ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BSO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BSO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/OSD-BVO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-AMQ-V2.5/port/Output/XRV-SAV-V1.0/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/AnswerToMultimodalQuestion.json> ;
-    mkg:subAIM aim:MMC-ASR-V2.5,
-        aim:MMC-TIQ-V2.5,
-        aim:PAF-RSR-V1.6 ;
-    mkg:title "" ;
-    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/answer-to-multimodal-question/> ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/use-cases/answer-to-multimodal-question/> .
 
 aim:PAF-AVC-V1.6 a mkg:AIM ;
     mkg:acronym "PAF-AVC-V1.6" ;
@@ -22730,23 +23016,6 @@ aim:OSD-BME-V1.5 a mkg:AIM ;
 datatype:XRV-ACT-V1.0 a mkg:DataType ;
     mkg:acronym "XRV-ACT-V1.0" ;
     mkg:ofStandard standard:XRV .
-
-standard:UAU a mkg:Standard ;
-    mkg:acronym "UAU" ;
-    mkg:notInM3260 true ;
-    mkg:specifies unit:UAU-3OD,
-        unit:UAU-AOA,
-        unit:UAU-AOD,
-        unit:UAU-LOA,
-        unit:UAU-OOA,
-        unit:UAU-ROA,
-        unit:UAU-SOA,
-        unit:UAU-SOD,
-        unit:UAU-TOA,
-        unit:UAU-UOA,
-        unit:UAU-VOA,
-        unit:UAU-VOD ;
-    mkg:title "Units of the User Agent" .
 
 aim:AIH-STR-V1.1 a mkg:AIM ;
     mkg:acronym "AIH-STR-V1.1" ;
@@ -23169,6 +23438,25 @@ datatype:OSD-SCD-V1.5 a mkg:DataType ;
     mkg:softwareKind "library" ;
     mkg:title "AIMs/CAE3/V1.0/AOA" .
 
+standard:UAU a mkg:Standard ;
+    mkg:acronym "UAU" ;
+    mkg:notInM3260 true ;
+    mkg:specifies unit:UAU-3OD,
+        unit:UAU-AOA,
+        unit:UAU-AOD,
+        unit:UAU-LOA,
+        unit:UAU-OMA,
+        unit:UAU-OMD,
+        unit:UAU-ROA,
+        unit:UAU-SOA,
+        unit:UAU-SOD,
+        unit:UAU-TOA,
+        unit:UAU-TOD,
+        unit:UAU-UOA,
+        unit:UAU-VOA,
+        unit:UAU-VOD ;
+    mkg:title "Units of the User Agent" .
+
 aim:CAV-FED-V2.0 a mkg:AIM ;
     mkg:acronym "CAV-FED-V2.0" ;
     mkg:apiProfile "Basic" ;
@@ -23282,26 +23570,6 @@ aim:PAF-FIR-V1.6 a mkg:AIM ;
     mkg:softwareKind "library" ;
     mkg:title "AIMs/MMC/V2.5/TTS" .
 
-aim:MMC-TTT-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-TTT-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TTT/TttAimProcessor.cs> ;
-    mkg:codePath "AIMs/MMC/V2.5/TTT/TttAimProcessor.cs" ;
-    mkg:description "This AIM receives an input Text and produces a Text in a different language." ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/MMC-MEA-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-SEL-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-SEL-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-TXO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Output/OSD-TXO-V1.5/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextToTextTranslation.json> ;
-    mkg:title "" ;
-    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-text-translation/> ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
 aim:PAF-PSD-V1.6 a mkg:AIM ;
     mkg:acronym "PAF-PSD-V1.6" ;
     mkg:apiProfile "Basic" ;
@@ -23405,44 +23673,6 @@ aim:CAV-BED-V2.0 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/basic-environment-description/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/> .
 
-aim:PAF-SAF-V1.6 a mkg:AIM ;
-    mkg:acronym "PAF-SAF-V1.6" ;
-    mkg:apiProfile "Basic" ;
-    mkg:description "Speaking Avatar Formation: forms the Speaking Avatar of the input Avatar - its Model animated as it utters the Speech. Generative Face Description and Generative Body Description make the Face and Body Descriptors from the Speech and the Text, expressive when a Face or Body Personal Status is supplied; Speaking Avatar Synthesis packages the Avatar, the Speech and the Descriptors, time-aligned and ready to play." ;
-    mkg:flow <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/1>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/10>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/11>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/2>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/3>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/4>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/5>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/6>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/7>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/8>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/9> ;
-    mkg:ofStandard standard:PAF ;
-    mkg:port <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/MMC-BPS-V2.5/0>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/MMC-FPS-V2.5/0>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/1>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/2>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/3>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/1>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/2>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/3>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-TXO-V1.5/1>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-TXO-V1.5/2>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/PAF-AVT-V1.6/0>,
-        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Output/XRV-SAV-V1.0/0> ;
-    mkg:schema <https://schemas.mpai.community/PAF/V1.6/AIMs/SpeakingAvatarFormation.json> ;
-    mkg:subAIM aim:PAF-GBD-V1.6,
-        aim:PAF-GFD-V1.6,
-        aim:PAF-SAS-V1.6 ;
-    mkg:title "Speaking Avatar Formation V1.6" ;
-    mkg:webPage <https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-formation/> ;
-    mkg:webSpec <https://mpai.community/standards/mpai-paf/v1-6/> .
-
 <https://mpai.community/kg/software/AIF~V3.0~src~AIF.Store~AIF.Store> a mkg:Software ;
     mkg:acronym "AIF.Store" ;
     mkg:path "AIF/V3.0/src/AIF.Store/AIF.Store.csproj" ;
@@ -23506,40 +23736,63 @@ aim:MMC-TST-V2.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-speech-translation/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-speech-translation/> .
 
-aim:MMC-TTS-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-TTS-V2.5" ;
+aim:MMC-TTT-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-TTT-V2.5" ;
     mkg:apiProfile "Basic" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TTS/TtsAimProcessor.cs> ;
-    mkg:codePath "AIMs/MMC/V2.5/TTS/TtsAimProcessor.cs" ;
-    mkg:description "Text to Speech: converts a Text Object (Basic Text Object or Text Object) into a Speech Object (Basic Speech Object or Speech Object). The input port accepts both OSD-BTO and OSD-TXO; the output port carries both OSD-BSO and OSD-SPO." ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TTT/TttAimProcessor.cs> ;
+    mkg:codePath "AIMs/MMC/V2.5/TTT/TttAimProcessor.cs" ;
+    mkg:description "This AIM receives an input Text and produces a Text in a different language." ;
     mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/AIP-MLO-V1.0/0>,
-        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/MMC-SPS-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/OSD-TXO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Output/OSD-BSO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Output/OSD-SPO-V1.5/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextToSpeech.json> ;
+    mkg:port <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/MMC-MEA-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-SEL-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-SEL-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Input/OSD-TXO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTT-V2.5/port/Output/OSD-TXO-V1.5/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextToTextTranslation.json> ;
     mkg:title "" ;
-    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-speech/> ;
+    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-text-translation/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
-aim:OSD-IDR-V1.5 a mkg:AIM ;
-    mkg:acronym "OSD-IDR-V1.5" ;
+aim:PAF-SAF-V1.6 a mkg:AIM ;
+    mkg:acronym "PAF-SAF-V1.6" ;
     mkg:apiProfile "Basic" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/OSD/V1.5/IDR/IdrAimProcessor.cs> ;
-    mkg:codePath "AIMs/OSD/V1.5/IDR/IdrAimProcessor.cs" ;
-    mkg:description "Identity Reconciliation: reconciles the Face ID and the Speaker ID into a single User ID, and issues the machine's Response (the words to say) together with the Personal Status the machine should display - serious while testing, welcoming when the user is recognised, reproaching when not." ;
-    mkg:ofStandard standard:OSD ;
-    mkg:port <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Input/OSD-IID-V1.5/1>,
-        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Input/OSD-IID-V1.5/2>,
-        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/MMC-EPS-V2.5/0>,
-        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/OSD-IID-V1.5/0>,
-        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/boolean/0> ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/AIMs/IDReconciliation.json> ;
-    mkg:title "" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-osd/v1-5/> .
+    mkg:description "Speaking Avatar Formation: forms the Speaking Avatar of the input Avatar - its Model animated as it utters the Speech. Generative Face Description and Generative Body Description make the Face and Body Descriptors from the Speech and the Text, expressive when a Face or Body Personal Status is supplied; Speaking Avatar Synthesis packages the Avatar, the Speech and the Descriptors, time-aligned and ready to play." ;
+    mkg:flow <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/1>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/10>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/11>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/2>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/3>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/4>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/5>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/6>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/7>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/8>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/flow/9> ;
+    mkg:ofStandard standard:PAF ;
+    mkg:port <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/MMC-BPS-V2.5/0>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/MMC-FPS-V2.5/0>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/1>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/2>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BSO-V1.5/3>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/1>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/2>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-SPO-V1.5/3>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-TXO-V1.5/1>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/OSD-TXO-V1.5/2>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Input/PAF-AVT-V1.6/0>,
+        <https://mpai.community/kg/aim/PAF-SAF-V1.6/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:schema <https://schemas.mpai.community/PAF/V1.6/AIMs/SpeakingAvatarFormation.json> ;
+    mkg:subAIM aim:PAF-GBD-V1.6,
+        aim:PAF-GFD-V1.6,
+        aim:PAF-SAS-V1.6 ;
+    mkg:title "Speaking Avatar Formation V1.6" ;
+    mkg:webPage <https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-formation/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-paf/v1-6/> .
 
 datatype:CAV-ERA-V2.0 a mkg:DataType ;
     mkg:acronym "CAV-ERA-V2.0" ;
@@ -23631,6 +23884,41 @@ aim:AIH-HBE-V1.1 a mkg:AIM ;
     mkg:title "Health Back End V1.1" ;
     mkg:webPage <https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/health-back-end/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-aih/hsp/v1-0/> .
+
+aim:MMC-TTS-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-TTS-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/TTS/TtsAimProcessor.cs> ;
+    mkg:codePath "AIMs/MMC/V2.5/TTS/TtsAimProcessor.cs" ;
+    mkg:description "Text to Speech: converts a Text Object (Basic Text Object or Text Object) into a Speech Object (Basic Speech Object or Speech Object). The input port accepts both OSD-BTO and OSD-TXO; the output port carries both OSD-BSO and OSD-SPO." ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/AIP-MLO-V1.0/0>,
+        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/MMC-SPS-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Input/OSD-TXO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Output/OSD-BSO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-TTS-V2.5/port/Output/OSD-SPO-V1.5/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/TextToSpeech.json> ;
+    mkg:title "" ;
+    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-speech/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:OSD-IDR-V1.5 a mkg:AIM ;
+    mkg:acronym "OSD-IDR-V1.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/OSD/V1.5/IDR/IdrAimProcessor.cs> ;
+    mkg:codePath "AIMs/OSD/V1.5/IDR/IdrAimProcessor.cs" ;
+    mkg:description "Identity Reconciliation: reconciles the Face ID and the Speaker ID into a single User ID, and issues the machine's Response (the words to say) together with the Personal Status the machine should display - serious while testing, welcoming when the user is recognised, reproaching when not." ;
+    mkg:ofStandard standard:OSD ;
+    mkg:port <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Input/OSD-IID-V1.5/1>,
+        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Input/OSD-IID-V1.5/2>,
+        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/MMC-EPS-V2.5/0>,
+        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/OSD-IID-V1.5/0>,
+        <https://mpai.community/kg/aim/OSD-IDR-V1.5/port/Output/boolean/0> ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/AIMs/IDReconciliation.json> ;
+    mkg:title "" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-osd/v1-5/> .
 
 datatype:MMC-BPS-V2.5 a mkg:DataType ;
     mkg:acronym "MMC-BPS-V2.5" ;
@@ -23725,22 +24013,6 @@ datatype:CAV-RDS-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road-state/> .
 
-datatype:OSD-3DO-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-3DO-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
-    mkg:codePath "AIMs/Core/OSD/AudioSchema.cs" ;
-    mkg:description "" ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json> ;
-    mkg:title "3D Model Object V1.5" ;
-    mkg:uses datatype:OSD-B3O-V1.5,
-        datatype:OSD-OPV-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:OSD-STM-V1.5,
-        datatype:OSD-TEM-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-object/> .
-
 datatype:MMC-SPS-V2.5 a mkg:DataType ;
     mkg:acronym "MMC-SPS-V2.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/PersonalStatus.cs> ;
@@ -23773,20 +24045,21 @@ datatype:OSD-BSS-V1.5 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-speech-scene-descriptors/> .
 
-datatype:OSD-AUO-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-AUO-V1.5" ;
+datatype:OSD-3DO-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-3DO-V1.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
     mkg:codePath "AIMs/Core/OSD/AudioSchema.cs" ;
     mkg:description "" ;
     mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json> ;
-    mkg:title "Audio Object V1.5" ;
-    mkg:uses datatype:OSD-BAO-V1.5,
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json> ;
+    mkg:title "3D Model Object V1.5" ;
+    mkg:uses datatype:OSD-B3O-V1.5,
         datatype:OSD-OPV-V1.5,
         datatype:OSD-SPT-V1.5,
         datatype:OSD-STM-V1.5,
+        datatype:OSD-TEM-V1.5,
         datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-object/> .
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-object/> .
 
 datatype:AIH-REG-V1.1 a mkg:DataType ;
     mkg:acronym "AIH-REG-V1.1" ;
@@ -24062,6 +24335,34 @@ aim:AIH-HDP-V1.1 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/aih-data-processing/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-aih/hsp/v1-0/> .
 
+datatype:OSD-AUO-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-AUO-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
+    mkg:codePath "AIMs/Core/OSD/AudioSchema.cs" ;
+    mkg:description "" ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json> ;
+    mkg:title "Audio Object V1.5" ;
+    mkg:uses datatype:OSD-BAO-V1.5,
+        datatype:OSD-OPV-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-object/> .
+
+datatype:CAV-AHM-V2.0 a mkg:DataType ;
+    mkg:acronym "CAV-AHM-V2.0" ;
+    mkg:description "" ;
+    mkg:ofStandard standard:CAV ;
+    mkg:schema <https://schemas.mpai.community/CAV2/V2.0/data/AMSHCIMessage.json> ;
+    mkg:title "AMS-HCI Message V2.0" ;
+    mkg:uses datatype:CAV-CST-V2.0,
+        datatype:CAV-RDS-V2.0,
+        datatype:CAV-RTE-V2.0,
+        datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-hci-message/> .
+
 aim:CAV-HCI-V2.0 a mkg:AIM ;
     mkg:acronym "CAV-HCI-V2.0" ;
     mkg:apiProfile "Basic" ;
@@ -24080,8 +24381,10 @@ aim:CAV-HCI-V2.0 a mkg:AIM ;
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/18>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/19>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/2>,
+        <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/20>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/21>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/22>,
+        <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/23>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/24>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/25>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/26>,
@@ -24106,7 +24409,6 @@ aim:CAV-HCI-V2.0 a mkg:AIM ;
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/7>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/8>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/flow/9> ;
-    mkg:notAligned true ;
     mkg:ofStandard standard:CAV ;
     mkg:port <https://mpai.community/kg/aim/CAV-HCI-V2.0/port/Input/CAV-AHM-V2.0/0>,
         <https://mpai.community/kg/aim/CAV-HCI-V2.0/port/Input/CAV-ERH-V2.0/0>,
@@ -24143,19 +24445,6 @@ aim:CAV-HCI-V2.0 a mkg:AIM ;
         aim:PAF-RSR-V1.6 ;
     mkg:title "" ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/tec/v2-0/> .
-
-datatype:CAV-AHM-V2.0 a mkg:DataType ;
-    mkg:acronym "CAV-AHM-V2.0" ;
-    mkg:description "" ;
-    mkg:ofStandard standard:CAV ;
-    mkg:schema <https://schemas.mpai.community/CAV2/V2.0/data/AMSHCIMessage.json> ;
-    mkg:title "AMS-HCI Message V2.0" ;
-    mkg:uses datatype:CAV-CST-V2.0,
-        datatype:CAV-RDS-V2.0,
-        datatype:CAV-RTE-V2.0,
-        datatype:OSD-STM-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-hci-message/> .
 
 datatype:OSD-BRO-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BRO-V1.5" ;
@@ -24465,21 +24754,6 @@ aim:CAV-CAO-V2.0 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/connected-autonomous-operation/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/> .
 
-datatype:OSD-BVS-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-BVS-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/VisualSchema.cs> ;
-    mkg:codePath "AIMs/Core/OSD/VisualSchema.cs" ;
-    mkg:description "" ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json> ;
-    mkg:title "Basic Visual Scene Descriptors V1.5" ;
-    mkg:uses datatype:OSD-BVO-V1.5,
-        datatype:OSD-OPV-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:OSD-STM-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-visual-scene-descriptors/> .
-
 datatype:CAV-BED-V2.0 a mkg:DataType ;
     mkg:acronym "CAV-BED-V2.0" ;
     mkg:description "" ;
@@ -24540,22 +24814,20 @@ datatype:OSD-BMS-V1.5 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-visual-scene-descriptors/> .
 
-datatype:OSD-B3O-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-B3O-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/Basic3DModelObject.cs> ;
-    mkg:codePath "AIMs/Core/OSD/Basic3DModelObject.cs" ;
+datatype:OSD-BVS-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-BVS-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/VisualSchema.cs> ;
+    mkg:codePath "AIMs/Core/OSD/VisualSchema.cs" ;
     mkg:description "" ;
     mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json> ;
-    mkg:title "Basic 3D Model Object V1.5" ;
-    mkg:uses <https://mpai.community/kg/datatype/CAE3/AcousticProfile>,
-        datatype:OSD-IID-V1.5,
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json> ;
+    mkg:title "Basic Visual Scene Descriptors V1.5" ;
+    mkg:uses datatype:OSD-BVO-V1.5,
+        datatype:OSD-OPV-V1.5,
         datatype:OSD-SPT-V1.5,
         datatype:OSD-STM-V1.5,
-        datatype:OSD-TEM-V1.5,
-        datatype:PTF-DEM-V1.0,
-        datatype:TFA-3MQ-V1.5 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-3d-model-object/> .
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-visual-scene-descriptors/> .
 
 <https://mpai.community/kg/software/AIF~V3.0~src~AIF.Controller~AIF.Controller> a mkg:Software ;
     mkg:acronym "AIF.Controller" ;
@@ -24626,6 +24898,23 @@ datatype:CAV-ALT-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/alert/> .
 
+datatype:OSD-B3O-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-B3O-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/Basic3DModelObject.cs> ;
+    mkg:codePath "AIMs/Core/OSD/Basic3DModelObject.cs" ;
+    mkg:description "" ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json> ;
+    mkg:title "Basic 3D Model Object V1.5" ;
+    mkg:uses <https://mpai.community/kg/datatype/CAE3/AcousticProfile>,
+        datatype:OSD-IID-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:OSD-STM-V1.5,
+        datatype:OSD-TEM-V1.5,
+        datatype:PTF-DEM-V1.0,
+        datatype:TFA-3MQ-V1.5 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-3d-model-object/> .
+
 datatype:PAF-PAV-V1.6 a mkg:DataType ;
     mkg:acronym "PAF-PAV-V1.6" ;
     mkg:description "" ;
@@ -24686,6 +24975,18 @@ aim:MMC-ASR-V2.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/automatic-speech-recognition/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
+datatype:OSD-SEL-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-SEL-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/SelectorObject.cs> ;
+    mkg:codePath "AIMs/Core/SelectorObject.cs" ;
+    mkg:description "Selector for languages, media type, and  switches." ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/Selector.json> ;
+    mkg:title "Selector V1.5" ;
+    mkg:uses datatype:OSD-SPT-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/selector/> .
+
 datatype:OSD-BLO-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BLO-V1.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/LidarObjects.cs> ;
@@ -24699,18 +25000,6 @@ datatype:OSD-BLO-V1.5 a mkg:DataType ;
         datatype:PTF-DEM-V1.0,
         datatype:TFA-LIQ-V1.5 ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-lidar-object/> .
-
-datatype:OSD-SEL-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-SEL-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/SelectorObject.cs> ;
-    mkg:codePath "AIMs/Core/SelectorObject.cs" ;
-    mkg:description "Selector for languages, media type, and  switches." ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/Selector.json> ;
-    mkg:title "Selector V1.5" ;
-    mkg:uses datatype:OSD-SPT-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/selector/> .
 
 datatype:PAF-BDO-V1.6 a mkg:DataType ;
     mkg:acronym "PAF-BDO-V1.6" ;
@@ -24793,46 +25082,6 @@ datatype:MMM-RGT-V2.2 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/rights/> .
 
-aim:MMC-EDP-V2.5 a mkg:AIM ;
-    mkg:acronym "MMC-EDP-V2.5" ;
-    mkg:apiProfile "Basic" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/EDP/EdpAimProcessor.cs> ;
-    mkg:codePath "AIMs/MMC/V2.5/EDP/EdpAimProcessor.cs" ;
-    mkg:description "This AIM implements the Entity Dialogue Processing function: it produces the Machine Text and Machine Personal Status from the human Text, its Text Descriptors, the human Personal Status and identity, the identifiers of the scene objects and the Basic Audio and Visual Scene Geometries, using the running Summary as dialogue memory. In Audio Scene Management (CAE-ASM), given the Audio Scene the User edits, it turns what the User says into User Commands for CAE-ASM, says what was done or asks when the request is unclear, and tells the User Agent, as Text For UA, what only the User Agent does: undo, save, stop." ;
-    mkg:ofStandard standard:MMC ;
-    mkg:port <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/CAV-AHM-V2.0/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/CAV-ERH-V2.0/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-EPS-V2.5/1>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-EPS-V2.5/2>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-SUM-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-TDO-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-ASD-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BAG-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BAS-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BMS-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BOO-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/3>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BVG-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/1>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/2>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/3>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAE-UCM-V1.0/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAV-AHM-V2.0/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAV-ERH-V2.0/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-EPS-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-HMD-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-SUM-V2.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-SUM-V2.5/2>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-TFU-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/OSD-B3O-V1.5/0>,
-        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/OSD-BTO-V1.5/0> ;
-    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/EntityDialogueProcessing.json> ;
-    mkg:title "" ;
-    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-dialogue-processing/> ;
-    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
-
 datatype:OSD-BAS-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BAS-V1.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/AudioSchema.cs> ;
@@ -24877,26 +25126,52 @@ datatype:CAV-AMM-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-mas-message/> .
 
-datatype:OSD-SPO-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-SPO-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/Objects.cs> ;
-    mkg:codePath "AIMs/Core/Objects.cs" ;
-    mkg:description "A Data Type including a collection of Basic Speech Objects, with optional hierarchical structure where Speech Objects contain Basic Speech Objects and Speech Objects." ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json> ;
-    mkg:title "Speech Object V1.5" ;
-    mkg:uses datatype:OSD-BSO-V1.5,
-        datatype:OSD-OPV-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-object/> .
-
 standard:CAE a mkg:Standard ;
     mkg:acronym "CAE" ;
     mkg:inM3260 true ;
     mkg:version "V1.0",
         "V2.5" ;
     mkg:webSpec <https://mpai.community/standards/mpai-cae/> .
+
+aim:MMC-EDP-V2.5 a mkg:AIM ;
+    mkg:acronym "MMC-EDP-V2.5" ;
+    mkg:apiProfile "Basic" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/MMC/V2.5/EDP/EdpAimProcessor.cs> ;
+    mkg:codePath "AIMs/MMC/V2.5/EDP/EdpAimProcessor.cs" ;
+    mkg:description "This AIM implements the Entity Dialogue Processing function: it produces the Machine Text and Machine Personal Status from the human Text, its Text Descriptors, the human Personal Status and identity, the identifiers of the scene objects and the Basic Audio and Visual Scene Geometries, using the running Summary as dialogue memory. In Audio Scene Management (CAE-ASM), given the Audio Scene the User edits, it turns what the User says into User Commands for CAE-ASM, says what was done or asks when the request is unclear, and tells the User Agent, as Text For UA, what only the User Agent does: undo, save, stop." ;
+    mkg:ofStandard standard:MMC ;
+    mkg:port <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/CAV-AHM-V2.0/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/CAV-ERH-V2.0/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-EPS-V2.5/1>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-EPS-V2.5/2>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-SUM-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/MMC-TDO-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-ASD-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BAG-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BAS-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BMS-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BOO-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BTO-V1.5/3>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-BVG-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/1>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/2>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Input/OSD-IID-V1.5/3>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAE-UCM-V1.0/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAV-AHM-V2.0/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/CAV-ERH-V2.0/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-EPS-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-HMD-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-SUM-V2.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-SUM-V2.5/2>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/MMC-TFU-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/OSD-B3O-V1.5/0>,
+        <https://mpai.community/kg/aim/MMC-EDP-V2.5/port/Output/OSD-BTO-V1.5/0> ;
+    mkg:schema <https://schemas.mpai.community/MMC/V2.5/AIMs/EntityDialogueProcessing.json> ;
+    mkg:title "" ;
+    mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-dialogue-processing/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
 datatype:AIH-AHP-V1.1 a mkg:DataType ;
     mkg:acronym "AIH-AHP-V1.1" ;
@@ -24910,19 +25185,6 @@ datatype:AIH-AHP-V1.1 a mkg:DataType ;
         datatype:OSD-TIM-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/aih-data-process/> .
-
-datatype:OSD-VIO-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-VIO-V1.5" ;
-    mkg:description "A Data Type including a collection of Basic Visual Objects, with optional hierarchical structure where Visual Objects contain Basic Visual Objects and Visual Objects." ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json> ;
-    mkg:title "Visual Object V1.5" ;
-    mkg:uses datatype:OSD-BVO-V1.5,
-        datatype:OSD-OPV-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:OSD-TEM-V1.5,
-        datatype:PTF-DEM-V1.0 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-object/> .
 
 datatype:CAV-AMD-V2.0 a mkg:DataType ;
     mkg:acronym "CAV-AMD-V2.0" ;
@@ -24954,6 +25216,20 @@ datatype:CAV-FED-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/full-environment-descriptors/> .
 
+datatype:OSD-SPO-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-SPO-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/Objects.cs> ;
+    mkg:codePath "AIMs/Core/Objects.cs" ;
+    mkg:description "A Data Type including a collection of Basic Speech Objects, with optional hierarchical structure where Speech Objects contain Basic Speech Objects and Speech Objects." ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json> ;
+    mkg:title "Speech Object V1.5" ;
+    mkg:uses datatype:OSD-BSO-V1.5,
+        datatype:OSD-OPV-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-object/> .
+
 datatype:OSD-BOO-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BOO-V1.5" ;
     mkg:description "" ;
@@ -24965,6 +25241,19 @@ datatype:OSD-BOO-V1.5 a mkg:DataType ;
         datatype:PTF-DEM-V1.0,
         datatype:TFA-OMQ-V1.5 ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-offline-map-object/> .
+
+datatype:OSD-VIO-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-VIO-V1.5" ;
+    mkg:description "A Data Type including a collection of Basic Visual Objects, with optional hierarchical structure where Visual Objects contain Basic Visual Objects and Visual Objects." ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json> ;
+    mkg:title "Visual Object V1.5" ;
+    mkg:uses datatype:OSD-BVO-V1.5,
+        datatype:OSD-OPV-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:OSD-TEM-V1.5,
+        datatype:PTF-DEM-V1.0 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-object/> .
 
 <https://mpai.community/kg/software/AIF~Controller~AIF.Controller> a mkg:Software ;
     mkg:acronym "AIF.Controller" ;
@@ -25031,6 +25320,12 @@ standard:PGM a mkg:Standard ;
     mkg:inM3260 true ;
     mkg:webSpec <https://mpai.community/standards/mpai-pgm/> .
 
+standard:XRV a mkg:Standard ;
+    mkg:acronym "XRV" ;
+    mkg:inM3260 true ;
+    mkg:version "V1.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-xrv/> .
+
 aim:PAF-RSR-V1.6 a mkg:AIM ;
     mkg:acronym "PAF-RSR-V1.6" ;
     mkg:apiProfile "Basic" ;
@@ -25041,11 +25336,11 @@ aim:PAF-RSR-V1.6 a mkg:AIM ;
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/2>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/3>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/4>,
+        <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/5>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/6>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/7>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/8>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/flow/9> ;
-    mkg:notAligned true ;
     mkg:ofStandard standard:PAF ;
     mkg:port <https://mpai.community/kg/aim/PAF-RSR-V1.6/port/Input/AIP-MLO-V1.0/0>,
         <https://mpai.community/kg/aim/PAF-RSR-V1.6/port/Input/MMC-EPS-V2.5/0>,
@@ -25087,34 +25382,11 @@ datatype:CAE-UCM-V1.0 a mkg:DataType ;
         datatype:TFA-SPQ-V1.5 ;
     mkg:webPage <https://mpai.community/standards/mpai-cae/asm/v1-0/data-types/user-command/> .
 
-standard:XRV a mkg:Standard ;
-    mkg:acronym "XRV" ;
-    mkg:inM3260 true ;
-    mkg:version "V1.0" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-xrv/> .
-
 standard:CAV a mkg:Standard ;
     mkg:acronym "CAV" ;
     mkg:inM3260 true ;
     mkg:version "V2.0" ;
     mkg:webSpec <https://mpai.community/standards/mpai-cav/> .
-
-datatype:OSD-BAO-V1.5 a mkg:DataType ;
-    mkg:acronym "OSD-BAO-V1.5" ;
-    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/Objects.cs> ;
-    mkg:codePath "AIMs/Core/Objects.cs" ;
-    mkg:description "" ;
-    mkg:ofStandard standard:OSD ;
-    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json> ;
-    mkg:title "Basic Audio Object V1.5" ;
-    mkg:uses <https://mpai.community/kg/datatype/CAE3/AcousticProfile>,
-        datatype:OSD-IID-V1.5,
-        datatype:OSD-OPV-V1.5,
-        datatype:OSD-SPT-V1.5,
-        datatype:OSD-STM-V1.5,
-        datatype:PTF-DEM-V1.0,
-        datatype:TFA-AUQ-V1.5 ;
-    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-object/> .
 
 standard:TFA a mkg:Standard ;
     mkg:acronym "TFA" ;
@@ -25163,6 +25435,23 @@ standard:TFA a mkg:Standard ;
         datatype:TFA-VIQ-V1.5 ;
     mkg:version "V1.5" ;
     mkg:webSpec <https://mpai.community/standards/mpai-tfa/> .
+
+datatype:OSD-BAO-V1.5 a mkg:DataType ;
+    mkg:acronym "OSD-BAO-V1.5" ;
+    mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/Objects.cs> ;
+    mkg:codePath "AIMs/Core/Objects.cs" ;
+    mkg:description "" ;
+    mkg:ofStandard standard:OSD ;
+    mkg:schema <https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json> ;
+    mkg:title "Basic Audio Object V1.5" ;
+    mkg:uses <https://mpai.community/kg/datatype/CAE3/AcousticProfile>,
+        datatype:OSD-IID-V1.5,
+        datatype:OSD-OPV-V1.5,
+        datatype:OSD-SPT-V1.5,
+        datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0,
+        datatype:TFA-AUQ-V1.5 ;
+    mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-object/> .
 
 datatype:MMC-EPS-V2.5 a mkg:DataType ;
     mkg:acronym "MMC-EPS-V2.5" ;

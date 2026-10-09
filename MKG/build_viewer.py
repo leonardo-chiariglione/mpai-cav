@@ -15,8 +15,8 @@ def p(n): return URIRef(V + n)
 
 PREFIX = {'standard': 'STD:', 'part': 'PART:', 'aim': 'AIM:', 'datatype': 'DT:', 'action': 'ACT:', 'l3': 'L3:',
           'implementer': 'IMP:', 'mpaistore': 'STORE:', 'performanceassessor': 'ASSESS:', 'framework': 'AIF:',
-          'useragent': 'UA:', 'unit': 'UNIT:', 'software': 'SW:'}
-KINDS = ['Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore', 'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software']
+          'useragent': 'UA:', 'unit': 'UNIT:', 'software': 'SW:', 'library': 'LIB:'}
+KINDS = ['Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore', 'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software', 'Library']
 
 def nid(u):
     s = str(u)
@@ -64,7 +64,7 @@ for s in g.subjects(RDF.type, p('L3')):
 
 # the simple relations between nodes (the Standard, Part, L3, participants), with a label
 edges = []
-for rel in ('partOf', 'specifies', 'produces', 'receives', 'holdsIDFrom', 'communicatesWith', 'usesUnit', 'specifiedBy', 'dependsOn', 'implements'):
+for rel in ('partOf', 'specifies', 'produces', 'receives', 'holdsIDFrom', 'communicatesWith', 'usesUnit', 'specifiedBy', 'dependsOn', 'implements', 'usesLibrary'):
     for a, b in g.subject_objects(p(rel)):
         if isinstance(b, URIRef) and '/kg/' in str(b) and '/kg/' in str(a):
             edges.append([nid(a), rel, nid(b)])

@@ -1,0 +1,25 @@
+<!-- json-syntax-and-semantics : from https://mpai.community/standards/mpai-prf/v1-0/json-syntax-and-semantics/ -->
+<h1>MPAI-PRF V1.0 JSON Syntax and Semantics</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"> <a href="https://mpai.community/standards/mpai-prf/v1-0/profile-signalling/">&lt;- Profile signalling</a>       <a href="https://mpai.community/standards/mpai-prf/v1-0/">Go to ToC</a>   <a href="https://mpai.community/standards/mpai-prf/v1-0/aim-profiles/">AIM Profiles -&gt;</a></p>
+<p>The following JSON syntax specifies the AI Module Profiles.</p>
+<p><span style="font-family: 'courier new', courier, monospace;">{</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  &#8220;$schema&#8221;: &#8220;http://json-schema.org/draft/2020-12/schema&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  &#8220;$id&#8221;: &#8220;https://schemas.mpai.community/PRF/V1.0/data/AIMProfiles.json&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  &#8220;title&#8221;: &#8220;AIMProfiles&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  &#8220;type&#8221;: &#8220;object&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  &#8220;properties&#8221;: {</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">    &#8220;Header&#8221;: {</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">      &#8220;type&#8221;: &#8220;string&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">      &#8220;pattern&#8221;: &#8220;^PRF-V[0-9]{1,2}[.][0-9]{1,2}$&#8221;</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">    },</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">    &#8220;Profile&#8221;: {</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">      &#8220;type&#8221;: &#8220;string&#8221;,</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">      &#8220;pattern&#8221;: &#8220;^(ALL|NUL)([+-](AUO|AVG|AVS|AVM|BDO|BDD|FCI|FCO|FCD|EPS|ISD| LGP|MEM|SPM|OII|POV|PAV|SPD|SPI|SPO|TXD|TXO|TXR|TRN|VIO)|@EPS(#(PST|PSS|PSF|PSB))+|@TRN(#([a-z]{3})(&lt;-&gt;|-&gt;)([a-z]{3}))+)+$&#8221;</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">    }</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">  }</span></p>
+<p><span style="font-family: 'courier new', courier, monospace;">}</span></p>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-prf/v1-0/profile-signalling/">&lt;- Profile signalling</a>       <a href="https://mpai.community/standards/mpai-prf/v1-0/">Go to ToC</a>   <a href="https://mpai.community/standards/mpai-prf/v1-0/aim-profiles/">AIM Profiles -&gt;</a></p>
+						</div>				
+					</article>
