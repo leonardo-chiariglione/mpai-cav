@@ -1,0 +1,8 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/PRF/V2.0/data/AIMProfiles.json",
+  "title":                  "AIMProfiles",
+  "description":            "AI Module Profile (MPAI-PRF V2.0): the Attributes, and Sub-Attributes, that an AIM instance signals, as ALL (the listed Attributes are not supported) or NUL (the listed Attributes are supported) followed by +/- Attributes, @EPS#<Sub-Attributes: PST text, PSS speech, PSF face, PSB body> and @TRN#<language><->|-><language>. Corrections to V1.0: PST (the text Sub-Attribute, SPT in V1.0), PSB (body, PSG for gesture in V1.0), AVS (Audio-Visual Scene Descriptors) is an Attribute, ISD is not.",
+  "type":                   "object",
+  "properties":             {
+    "Header":               { "type": "string", "pattern": "^PRF-V[0-9]{1,2}[.][0-9]{1,2}$" },
+    "Profile":              { "type": "string", "pattern": "^(ALL|NUL)([+-](AUO|AVG|AVS|AVM|BDO|BDD|FCI|FCO|FCD|EPS|LGP|MEM|SPM|OII|POV|PAV|SPD|SPI|SPO|TXD|TXO|TXR|TRN|VIO)|@EPS(#(PST|PSS|PSF|PSB))+|@TRN(#([a-z]{3})(<->|->)([a-z]{3}))+)+$" } } }
