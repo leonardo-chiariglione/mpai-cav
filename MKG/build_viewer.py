@@ -2,7 +2,7 @@
 
 Usage: python build_viewer.py [mkg.ttl]
 """
-import json, os, sys
+import json, os, re, sys
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDF
 
@@ -31,7 +31,7 @@ for kind in KINDS:
     for s in g.subjects(RDF.type, p(kind)):
         i = nid(s)
         std = g.value(s, p('ofStandard'))
-        nodes[i] = {'id': i, 'label': (lit(s, 'acronym') + ' (' + lit(s, 'partAcronym') + ')') if kind == 'Part' else (lit(s, 'acronym') or i.split(':', 1)[1]), 'kind': kind,
+        nodes[i] = {'id': i, 'label': (re.sub(r'\d+$', '', lit(s, 'acronym')) + '-' + lit(s, 'partAcronym')) if kind == 'Part' else (lit(s, 'acronym') or i.split(':', 1)[1]), 'kind': kind,
                     'std': nid(std).split(':', 1)[1] if std is not None else (lit(s, 'acronym') if kind == 'Standard' else ''),
                     'title': lit(s, 'title'), 'desc': lit(s, 'description'), 'api': lit(s, 'apiProfile'),
                     'schema': lit(s, 'schema'), 'web': lit(s, 'webSpec'), 'page': lit(s, 'webPage'), 'code': lit(s, 'code'), 'codePath': lit(s, 'codePath'),
@@ -69,7 +69,12 @@ for rel in ('partOf', 'specifies', 'produces', 'receives', 'holdsIDFrom', 'commu
         if isinstance(b, URIRef) and '/kg/' in str(b) and '/kg/' in str(a):
             edges.append([nid(a), rel, nid(b)])
 # a Standard specifies what its Parts specify: keep the Part as the owner (no duplicate)
-data = {'nodes': list(nodes.values()), 'edges': edges}
+import datetime, subprocess
+try:
+    commit = subprocess.run(['git', '-C', os.path.dirname(here), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+except Exception:
+    commit = ''
+data = {'nodes': list(nodes.values()), 'edges': edges, 'meta': {'generated': datetime.date.today().isoformat(), 'commit': commit}}
 html = open(os.path.join(here, 'viewer-template.html'), encoding='utf-8').read().replace('/*DATA*/null', json.dumps(data, ensure_ascii=False))
 out = os.path.join(here, 'mkg-viewer.html')
 open(out, 'w', encoding='utf-8').write(html)

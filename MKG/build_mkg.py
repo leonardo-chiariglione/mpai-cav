@@ -296,6 +296,15 @@ def web_pages(g, stats):
     links = json.load(open(path, encoding='utf-8'))
     missing = {'AIM': [], 'DataType': []}
     matched = {}
+    # the page of a Part: the home page of its version, where the AI Modules and Data Types pages are
+    for pn in list(g.subjects(RDF.type, MKG.Part)):
+        std = g.value(pn, MKG.partOf)
+        pa = g.value(pn, MKG.partAcronym)
+        if std is None or pa is None:
+            continue
+        entry = links.get(str(g.value(std, MKG.acronym)), {}).get(str(pa).lower())
+        if entry and entry.get('base'):
+            g.add((pn, MKG.webSpec, URIRef(entry['base'])))
     for kind, page in (('AIM', 'ai-modules'), ('DataType', 'data-types')):
         for n in g.subjects(RDF.type, MKG[kind]):
             std = g.value(n, MKG.ofStandard)

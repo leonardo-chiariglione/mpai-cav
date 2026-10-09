@@ -5,62 +5,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MPAI Knowledge Graph</title>
 <style>
-:root { --bg:#f6f7f9; --panel:#fff; --ink:#1d2430; --muted:#667085; --line:#d9dde3; --accent:#2858c8;
+:root { --bg:#f6f7f9; --panel:#fff; --ink:#000000; --muted:#000000; --line:#9aa3b2; --accent:#0a2fa0;
         --aim:#3b82f6; --dt:#16a34a; --l3:#a855f7; --std:#f59e0b; }
-@media (prefers-color-scheme: dark) { :root { --bg:#12151b; --panel:#1b2029; --ink:#e6e9ef; --muted:#9aa4b5; --line:#2e3644; --accent:#7aa2ff; } }
+@media (prefers-color-scheme: dark) { :root { --bg:#12151b; --panel:#1b2029; --ink:#ffffff; --muted:#ffffff; --line:#2e3644; --accent:#7aa2ff; } }
 * { box-sizing:border-box; }
-body { margin:0; font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); height:100vh; display:grid;
-       grid-template-columns:300px 1fr 380px; grid-template-rows:auto 1fr; }
+body { margin:0; font:17px/1.5 system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); height:100vh; display:grid;
+       grid-template-columns:340px 1fr 640px; grid-template-rows:auto 1fr; }
 header { grid-column:1/4; display:flex; gap:12px; align-items:center; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
-header h1 { font-size:16px; margin:0; white-space:nowrap; }
-#q { flex:1; max-width:520px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; }
-.sub { color:var(--muted); font-size:12px; }
+header h1 { font-size:22px; margin:0; white-space:nowrap; }
+#q { flex:1; max-width:520px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:17px; }
+.sub { color:var(--muted); font-size:15px; }
 aside, main, section { overflow:auto; min-height:0; }
 aside { background:var(--panel); border-right:1px solid var(--line); padding:12px; }
 section { background:var(--panel); border-left:1px solid var(--line); padding:14px 16px; }
 main { position:relative; }
 #cy { position:absolute; inset:0; }
-h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:14px 0 6px; }
+h2 { font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:16px 0 8px; }
 label.f { display:flex; align-items:center; gap:6px; margin:2px 0; cursor:pointer; }
-.dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.dot { width:13px; height:13px; border-radius:50%; display:inline-block; }
 #results { list-style:none; margin:0; padding:0; }
-#results li { padding:4px 6px; border-radius:4px; cursor:pointer; display:flex; gap:6px; align-items:center; }
+#results li { padding:5px 8px; border-radius:4px; cursor:pointer; display:flex; gap:6px; align-items:center; }
 #results li:hover, #results li.on { background:color-mix(in srgb, var(--accent) 14%, transparent); }
-.k { font-size:11px; color:var(--muted); margin-left:auto; }
+.k { font-size:14px; color:var(--muted); margin-left:auto; }
 a { color:var(--accent); } a.n { cursor:pointer; text-decoration:none; } a.n:hover { text-decoration:underline; }
-table { border-collapse:collapse; width:100%; margin:4px 0 10px; font-size:13px; }
-td, th { text-align:left; padding:3px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
-th { color:var(--muted); font-weight:600; font-size:12px; }
-.tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:10px; border:1px solid var(--line); color:var(--muted); margin-right:4px; }
-.warn { color:#b45309; }
-code { font-size:12px; background:var(--bg); padding:1px 5px; border-radius:4px; word-break:break-all; }
+table { border-collapse:collapse; width:100%; margin:4px 0 12px; font-size:16px; }
+td, th { text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:700; font-size:15px; }
+.tag { display:inline-block; font-size:14px; padding:2px 9px; border-radius:10px; border:1px solid var(--line); color:var(--muted); margin-right:4px; }
+.warn { color:#7c1d00; font-weight:700; }
+code { font-size:15px; background:var(--bg); padding:1px 5px; border-radius:4px; word-break:break-all; }
 .desc { white-space:pre-wrap; color:var(--ink); }
-.hint { color:var(--muted); font-size:13px; }
+.hint { color:var(--muted); font-size:16px; }
 button { border:1px solid var(--line); background:var(--bg); color:var(--ink); padding:5px 10px; border-radius:6px; cursor:pointer; }
-@media (max-width: 1000px) { body { grid-template-columns:1fr; grid-template-rows:auto 220px 360px auto; } header { grid-column:1; } aside { border-right:0; } section { border-left:0; } }
+#home { display:none; grid-column:1 / 4; grid-row:2; overflow:auto; background:var(--bg); padding:32px 48px 70px; }
+body.home #home { display:block; } body.home main, body.home section, body.home aside { display:none; }
+#home h1 { font-size:40px; margin:0 0 6px; } #home h2 { font-size:18px; margin:34px 0 12px; }
+#home .lead { font-size:23px; line-height:1.55; margin:12px 0 10px; }
+#home .cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:18px 28px; }
+#home .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 22px; font-size:19px; line-height:1.5; }
+#home .card b { display:block; margin-bottom:6px; font-size:22px; }
+#home table { width:auto; font-size:19px; background:var(--panel); border:1px solid var(--line); border-radius:8px; }
+#home .big { display:flex; flex-wrap:wrap; gap:14px; margin:18px 0; } #home .big div { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 24px; min-width:150px; }
+#home .big div span { display:block; font-size:38px; font-weight:700; } #home .big div small { color:var(--muted); font-size:17px; }
+#home td, #home th { padding:6px 22px 6px 12px; } #home .gap { border-bottom:0; border-left:3px solid var(--line); padding:0; width:8px; }
+#home .start a { display:inline-block; margin:6px 22px 6px 0; font-size:21px; }
+header h1 { cursor:pointer; }
+.lk { display:inline-block; margin-right:14px; } .nm { color:var(--ink); }
+.spec .l1 { margin-top:10px; font-weight:700; } .spec .l1b { margin-top:4px; } .spec .l2 { margin-left:30px; }
+.spec .lk { margin-right:0; }
+@media (max-width: 1000px) { body { grid-template-columns:1fr; grid-template-rows:auto 220px 360px auto; } #home { grid-column:1; grid-row:2 / 5; } header { grid-column:1; } aside { border-right:0; } section { border-left:0; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>MPAI Knowledge Graph</h1>
+  <h1 id="title" title="Home">MPAI Knowledge Graph</h1>
   <input id="q" placeholder="Search an AIM, data type, standard or L3 &mdash; e.g. PDX, OSD-BMS, Personal Status" autocomplete="off">
   <span class="sub" id="count"></span>
 </header>
 <aside>
-  <h2>Show</h2>
+  <h2>Kinds of item</h2>
+  <p class="sub" style="margin:0 0 6px">Tick the kinds that the list below, the search and the picture include. Unticked kinds are left out.</p>
 <div id="kinds"></div>
-  <h2>Standard</h2>
+  <h2>Of these standards</h2>
   <div id="stds"></div>
-  <h2>Only</h2>
+  <h2>Narrow the list to</h2>
   <label class="f"><input type="checkbox" id="showWeb">include items only on web pages (no schema)</label>
   <label class="f"><input type="checkbox" id="onlyComposite">composite AIMs</label>
   <label class="f"><input type="checkbox" id="onlyCode">with code</label>
   <label class="f"><input type="checkbox" id="onlyGap">not aligned to M3194</label>
-  <h2>Results</h2>
+  <h2>List of items</h2>
   <ul id="results"></ul>
 </aside>
+<div id="home"></div>
 <main><div id="cy"></div>
-  <div style="position:absolute;left:10px;bottom:8px;font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;opacity:.95">
+  <div style="position:absolute;left:10px;bottom:8px;font-size:15px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;opacity:.95">
     <span class="dot" style="background:var(--aim);border-radius:3px"></span> AIM &nbsp;
     <span class="dot" style="background:var(--dt)"></span> data type &nbsp;
     <span class="dot" style="background:var(--l3);border-radius:2px;transform:rotate(45deg)"></span> L3 &nbsp;
@@ -104,17 +122,38 @@ function extUrl(n) {
   if (n.kind === 'Standard') return n.web;
   if (n.kind === 'AIM') return n.page || n.web || (std && std.web) || '';
   if (n.kind === 'DataType') return n.page || (std && std.web) || n.schema || '';
-  if (n.kind === 'Part') return (std && std.web) || '';
+  if (n.kind === 'Part') return n.web || '';
   if (n.kind === 'Action') return n.schema || (std && std.web) || '';
   return n.code || '';
 }
+function nameOf(n) {
+  if (!n || !n.title || !['AIM', 'DataType', 'Action', 'Unit'].includes(n.kind)) return '';
+  const t = n.title.replace(/\s+V\d+(\.\d+)*$/, '').trim();
+  return t && t !== n.label ? t : '';
+}
 const link = id => {
   const n = N[id]; const a = el('a', {class:'n'}, n ? n.label : id); a.onclick = () => select(id);
+  const nm = nameOf(n);
   const u = extUrl(n);
-  if (!u) return a;
-  const x = el('a', {href:u, target:'_blank', title:'Open the web page of ' + n.label + ' (' + u.replace('https://', '') + ')', style:'margin-left:3px;text-decoration:none;font-size:11px'}, '\u2197');
-  return el('span', {}, a, x);
+  const x = u ? el('a', {href:u, target:'_blank', title:'Open the web page of ' + n.label + ' (' + u.replace('https://', '') + ')', style:'margin-left:3px;text-decoration:none;font-size:15px'}, '\u2197') : '';
+  return el('span', {class:'lk'}, a, nm ? el('span', {class:'nm'}, ' ' + nm) : '', x);
 };
+// what a standard or a part specifies: each AIM on a line, the Data Types of its ports indented below it
+function specifiesList(ids) {
+  const box = el('div', {class:'spec'});
+  const aims = ids.filter(i => ['AIM', 'Unit'].includes(N[i].kind)).sort((a, b) => N[a].label.localeCompare(N[b].label));
+  const listed = new Set();
+  aims.forEach(a => {
+    box.append(el('div', {class:'l1'}, link(a)));
+    [...new Set(N[a].ports.map(p => p.dt))].filter(x => N[x]).sort().forEach(d => { listed.add(d); box.append(el('div', {class:'l2'}, link(d))); });
+  });
+  const rest = ids.filter(i => !aims.includes(i) && !listed.has(i)).sort();
+  if (rest.length) {
+    box.append(el('div', {class:'l1'}, aims.length ? 'Not used by the AIMs above' : ''));
+    rest.forEach(r => box.append(el('div', {class:aims.length ? 'l2' : 'l1b'}, link(r))));
+  }
+  return box;
+}
 
 // ---- filters and search
 const stds = [...new Set(DATA.nodes.map(n => n.std).filter(Boolean))].sort();
@@ -138,15 +177,18 @@ function results() {
   const ul = $('results'); ul.replaceChildren();
   list.slice(0, 200).forEach(n => { const li = el('li', {}, el('span', {class:'dot', style:'background:' + COLOR[n.kind]}), n.label, el('span', {class:'k'}, n.kind === 'DataType' ? 'data type' : n.kind)); li.onclick = () => select(n.id); ul.append(li); });
 }
-document.querySelectorAll('input').forEach(i => i.addEventListener('input', results));
+document.querySelectorAll('input').forEach(i => i.addEventListener('input', ev => {
+  results();
+  if (current && ev.target.classList.contains('kind') && !document.body.classList.contains('home')) select(current);     // the picture follows the kinds ticked
+}));
 
 // ---- graph
-const cy = cytoscape({ container: $('cy'), wheelSensitivity:.3,
+const cy = cytoscape({ container: $('cy'), wheelSensitivity:.3, maxZoom:0.8, minZoom:0.05,
   style: [
-    {selector:'node', style:{'background-color':'data(color)', shape:'data(shape)', label:'data(label)', 'font-size':11, color:getComputedStyle(document.body).color,
+    {selector:'node', style:{'background-color':'data(color)', shape:'data(shape)', label:'data(label)', 'font-size':22, 'font-weight':600, color:getComputedStyle(document.body).color,
       'text-halign':'left', 'text-valign':'top', 'text-margin-x':-2, 'text-margin-y':-2, width:'data(w)', height:26,
       'text-background-color':getComputedStyle(document.body).backgroundColor, 'text-background-opacity':.85, 'text-background-padding':2}},
-    {selector:'node.sel', style:{height:32, 'border-width':3, 'border-color':'#111', 'font-size':13, 'font-weight':'bold'}},
+    {selector:'node.sel', style:{height:32, 'border-width':3, 'border-color':'#111', 'font-size':28, 'font-weight':'bold'}},
     {selector:'node.gap', style:{'border-width':2, 'border-color':'#d97706', 'border-style':'dashed'}},
     {selector:'edge', style:{width:1.4, 'line-color':'#98a2b3', 'target-arrow-color':'#98a2b3', 'target-arrow-shape':'triangle', 'curve-style':'bezier', 'arrow-scale':.8}},
     {selector:'edge[t="sub"]', style:{'line-color':'#2563eb', 'target-arrow-color':'#2563eb', width:2.2}},
@@ -162,9 +204,11 @@ cy.on('tap', 'node', e => {
 });
 
 const shown = new Set();
-function addNode(id) { if (shown.has(id) || !N[id]) return; shown.add(id); const k = N[id].kind;
+let current = null;
+function kindOn(n) { const c = document.querySelector('.kind[value="' + n.kind + '"]'); return !c || c.checked; }
+function addNode(id) { if (shown.has(id) || !N[id]) return; if (id !== current && !kindOn(N[id])) return; shown.add(id); const k = N[id].kind;
   cy.add({data:{id, label:N[id].label, color:COLOR[k], shape:SHAPE[k], w:['AIM', 'Framework', 'UserAgent'].includes(k) ? 54 : 30}, classes:N[id].notAligned ? 'gap' : ''}); }
-function addEdge(a, b, t, label) { if (!N[a] || !N[b]) return; addNode(a); addNode(b); const id = a + '>' + b + ':' + t; if (cy.getElementById(id).empty()) cy.add({data:{id, source:a, target:b, t, label}}); }
+function addEdge(a, b, t, label) { if (!N[a] || !N[b]) return; addNode(a); addNode(b); if (!shown.has(a) || !shown.has(b)) return; const id = a + '>' + b + ':' + t; if (cy.getElementById(id).empty()) cy.add({data:{id, source:a, target:b, t, label}}); }
 function neighbours(id) {
   const n = N[id];
   if (n.kind === 'AIM' || n.kind === 'Unit') {
@@ -184,7 +228,7 @@ function neighbours(id) {
 }
 function layout() { cy.layout({name:'cose', animate:false, nodeRepulsion:9000, idealEdgeLength:90, padding:30, randomize:true}).run(); }
 function colPos(ids, x, y0, dy) { const pos = {}; ids.forEach((id, i) => pos[id] = {x, y:y0 + (i - (ids.length - 1) / 2) * dy}); return pos; }
-function rowPos(ids, y, x0, dx) { const pos = {}; ids.forEach((id, i) => pos[id] = {x:x0 + (i - (ids.length - 1) / 2) * dx, y}); return pos; }
+function rowPos(ids, y, x0, dx) { const pos = {}; ids.forEach((id, i) => pos[id] = {x:x0 + (i - (ids.length - 1) / 2) * dx, y:y + (ids.length > 3 && i % 2 ? 90 : 0)}); return pos; }
 function place(id) {
   const n = N[id]; let pos = {[id]:{x:0, y:0}}; const W = 330, DY = 70;
   const uniq = a => [...new Set(a)].filter(x => N[x] && x !== id);
@@ -194,27 +238,41 @@ function place(id) {
     const both = ins.filter(d => n.ports.some(p => p.dir === 'Output' && p.dt === d));
     const top = uniq([...(parents[id] || []), ...(l3s[id] || [])]);
     const below = uniq(n.subs);
-    const h = Math.max(ins.length, outs.length, 1) * DY / 2 + 90;
-    Object.assign(pos, colPos(ins, -W, 0, DY), colPos(outs, W, 0, DY), rowPos(top, -h, 0, 190), rowPos(below, h + 40, 0, 175));
+    const h = Math.max(ins.length, outs.length, 1) * DY / 2 + 150;
+    Object.assign(pos, colPos(ins, -W, 0, DY), colPos(outs, W, 0, DY), rowPos(top, -h, 0, 220), rowPos(below, h + 40, 0, 200));
   } else if (n.kind === 'DataType') {
     const prod = uniq((used[id] || []).filter(u => u.dir === 'Output').map(u => u.aim));
     const cons = uniq((used[id] || []).filter(u => u.dir === 'Input').map(u => u.aim)).filter(a => !prod.includes(a));
     const top = uniq(n.uses), below = uniq(usedBy[id] || []);
-    const h = Math.max(prod.length, cons.length, 1) * DY / 2 + 90;
-    Object.assign(pos, colPos(prod, -W, 0, DY), colPos(cons, W, 0, DY), rowPos(top, -h, 0, 130), rowPos(below, h + 40, 0, 175));
+    const h = Math.max(prod.length, cons.length, 1) * DY / 2 + 150;
+    Object.assign(pos, colPos(prod, -W, 0, DY), colPos(cons, W, 0, DY), rowPos(top, -h, 0, 200), rowPos(below, h + 40, 0, 200));
   } else { return null; }
   return pos;
 }
 function arrange(id) {
   const pos = place(id);
-  if (!pos) return layout();
+  if (!pos) {
+    const others = cy.nodes().filter(n => n.id() !== id).map(n => n.id());
+    const posr = {[id]: {x:0, y:0}};
+    let ring = 0, placed = 0;
+    while (placed < others.length) {
+      const radius = 330 + ring * 300, cap = Math.max(6, Math.floor(2 * Math.PI * radius / 230));
+      const group = others.slice(placed, placed + cap);
+      group.forEach((o, i) => { const a = 2 * Math.PI * (i + (ring % 2 ? .5 : 0)) / group.length - Math.PI / 2; posr[o] = {x:radius * Math.cos(a), y:radius * Math.sin(a)}; });
+      placed += group.length; ring++;
+    }
+    return cy.layout({name:'preset', positions:node => posr[node.id()] || {x:0, y:0}, fit:true, padding:60}).run();
+  }
   cy.layout({name:'preset', positions:node => pos[node.id()] || {x:0, y:0}, fit:true, padding:50}).run();
 }
 function expand(id) { neighbours(id); layout(); }
 function select(id) {
   if (!N[id]) return;
+  current = id;
+  document.body.classList.remove('home'); cy.resize();
   cy.elements().remove(); shown.clear();
   addNode(id); neighbours(id); arrange(id);
+  requestAnimationFrame(() => { cy.resize(); cy.fit(cy.elements(), 60); });   // once the page has its size
   cy.nodes().removeClass('sel'); cy.getElementById(id).addClass('sel');
   detail(N[id]);
   document.querySelectorAll('#results li').forEach(li => li.classList.toggle('on', li.textContent.startsWith(N[id].label)));
@@ -241,7 +299,7 @@ function detail(n) {
   if (n.desc) d.append(el('p', {class:'desc'}, n.desc));
   const t = el('table'); // (details are appended below)
   if (n.page) t.append(row('Web page', el('a', {href:n.page, target:'_blank'}, n.page.replace('https://', ''))));
-  if (n.web) t.append(row('Standard', el('a', {href:n.web, target:'_blank'}, n.web.replace('https://', ''))));
+  if (n.web) t.append(row(n.kind === 'Part' ? 'Web page' : 'Standard', el('a', {href:n.web, target:'_blank'}, n.web.replace('https://', ''))));
   if (false && n.web) t.append(row('Web spec', el('a', {href:n.web, target:'_blank'}, n.web.replace('https://', ''))));
   if (n.schema) t.append(row('Schema', el('a', {href:n.schema, target:'_blank'}, n.schema.replace('https://schemas.mpai.community/', ''))));
   if (n.codePath) t.append(row('Code', el('a', {href:n.code, target:'_blank'}, n.codePath)));
@@ -293,7 +351,8 @@ function detail(n) {
     const PHR = {partOf:['part of', 'has parts'], specifies:['specifies', 'specified by'], produces:['produces', 'produced by'], receives:['receives', 'received by'],
       holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies'], dependsOn:['depends on', 'used by'], usesLibrary:['uses the library', 'library of'], implements:['implements', 'implemented by']};
     const groups = {}; (REL[n.id] || []).forEach(([r, o, dir]) => { if (!N[o]) return; const k = (PHR[r] || [r, r])[dir === 'out' ? 0 : 1]; (groups[k] = groups[k] || []).push(o); });
-    Object.entries(groups).forEach(([r, xs]) => d.append(el('h2', {}, r + ' (' + xs.length + ')'), el('div', {}, xs.sort().map(s => [link(s), ' ']))));
+    Object.entries(groups).forEach(([r, xs]) => d.append(el('h2', {}, r + ' (' + xs.length + ')'),
+      (r === 'specifies' && (n.kind === 'Standard' || n.kind === 'Part')) ? specifiesList(xs) : el('div', {}, xs.sort().map(s => [link(s), ' ']))));
   }
   if (n.kind === 'Standard') { if (n.version) t.append(row('Latest version', n.version)); if (!n.inM3260) t.append(row('Note', el('span', {class:'warn'}, 'not in the table of M3260'))); }
   if (n.kind === 'Part') t.append(row('Part', n.partAcronym));
@@ -301,11 +360,63 @@ function detail(n) {
   if (n.kind === 'Unit') t.append(row('Status', n.unitStatus));
 }
 results();
+function nodesOf(kind) { return DATA.nodes.filter(n => n.kind === kind && !n.webOnly); }
+function showHome() {
+  document.body.classList.add('home'); history.replaceState(null, '', location.pathname + location.search);
+  const h = $('home'); h.replaceChildren();
+  const meta = DATA.meta || {};
+  const count = k => DATA.nodes.filter(n => n.kind === k && !n.webOnly).length;
+  const toTypes = el('a', {class:'n', style:'text-decoration:underline; cursor:pointer'}, 'Read the types of information accessible.');
+  toTypes.onclick = () => $('types').scrollIntoView({behavior:'smooth', block:'start'});
+
+  // the standards
+  const rows = DATA.nodes.filter(n => n.kind === 'Standard').sort((a, b) => a.label.localeCompare(b.label));
+  // the table is cut in two: the second half is on the right of the first, as the tables of AIMs and Data Types of the web pages
+  const heads = ['Standard', 'Latest version', 'AIMs', 'Data Types', 'Parts', 'Web'];
+  const cellsOf = n => {
+    const mine = k => DATA.nodes.filter(x => x.kind === k && !x.webOnly && x.std === n.label).length;
+    const partIds = (REL[n.id] || []).filter(r => r[0] === 'partOf' && r[2] === 'in').map(r => r[1]).filter(x => N[x]).sort();
+    const parts = el('td', {}, ...partIds.flatMap((x, i) => { const pa = el('a', {class:'n'}, N[x].partAcronym); pa.onclick = () => select(x); return i ? [', ', pa] : [pa]; }));
+    const a = partIds.length ? el('span', {}, n.label) : el('a', {class:'n'}, n.label);
+    if (!partIds.length) a.onclick = () => select(n.id);
+    return [el('td', {}, a), el('td', {}, n.version || ''), el('td', {}, String(mine('AIM') || '')), el('td', {}, String(mine('DataType') + mine('Action') || '')), parts,
+      el('td', {}, n.web ? el('a', {href:n.web, target:'_blank'}, '\u2197') : '')];
+  };
+  const half = Math.ceil(rows.length / 2);
+  const tb = el('table', {}, el('tr', {}, ...heads.map(x => el('th', {}, x)), el('th', {class:'gap'}), ...heads.map(x => el('th', {}, x))));
+  for (let i = 0; i < half; i++) {
+    const right = rows[i + half];
+    tb.append(el('tr', {}, ...cellsOf(rows[i]), el('td', {class:'gap'}), ...(right ? cellsOf(right) : heads.map(() => el('td', {})))));
+  }
+
+  h.append(el('h1', {}, 'MPAI Knowledge Graph'),
+    el('p', {class:'lead'}, 'Welcome to the MPAI Knowledge Graph (MKG). Here you can have easy access to all standards, documents, and software published by MPAI. ', toTypes),
+    el('h2', {}, 'HOW TO READ THE PICTURE'),
+    el('p', {style:'font-size:20px'}, 'Blue rounded boxes are AIMs; green circles Data Types; purple diamonds L3 instances; amber hexagons standards and parts; teal tags MMM Actions; purple barrels Units; grey boxes software projects. On an AIM page what it takes in is on the left, what it gives on the right, its Sub-AIMs below and the composites that contain it above. A dashed border: the Topology of a composite is not yet by Data Type.'),
+    el('h2', {}, 'THE STANDARDS'),
+    tb,
+    // the rest, until the author says where it goes
+    el('p', {class:'lead', id:'types', style:'margin-top:40px'}, 'The MKG is a map of what MPAI standards specify and how the pieces connect: the AI Modules (AIMs) and the Data Types of every standard, the ports by which an AIM takes and gives each Data Type, the composite AIMs and the flows inside them, the implementations (L3s), the code, the Units of the User Agent and the software that runs it - each with its web page and its JSON schema.'),
+    el('div', {class:'big'}, ...[['Standard', 'standards'], ['AIM', 'AI Modules'], ['DataType', 'Data Types'], ['Action', 'MMM Actions'], ['L3', 'L3 instances'], ['Unit', 'Units (UAU)'], ['Software', 'software projects']].map(([k, label]) =>
+      el('div', {}, el('span', {}, String(count(k))), el('small', {}, label)))),
+    el('h2', {}, 'WHAT YOU CAN DO'),
+    el('div', {class:'cols'},
+      el('div', {class:'card'}, el('b', {}, 'Find'), 'Type a name in the search box (PDX, OSD-BMS, "Personal Status", UAU, NNW) and pick it in the list. Filter by kind of item or by standard; show only composites, only what has code, or the composites whose Topology is not yet by Data Type.'),
+      el('div', {class:'card'}, el('b', {}, 'Follow the connections'), 'An AIM page lists its ports by Data Type, the AIMs it is connected to inside composites, and those that could connect. A Data Type page tells who produces it, who consumes it and what it is built from. Click any name to move there.'),
+      el('div', {class:'card'}, el('b', {}, 'Go to the specification'), 'A click on a node of the picture opens its web page (the AI Modules or Data Types page of its standard); the arrow next to a name does the same. Shift-click shows the node here, Alt-click expands its neighbours.'),
+      el('div', {class:'card'}, el('b', {}, 'See the implementation'), 'AIMs, L3s, Data Types and Units with code have a link to it; a Unit shows the library it uses (Steam Audio, three.js); a software project shows what it implements and what it depends on (tick "Software" on the left).'),
+      el('div', {class:'card'}, el('b', {}, 'Read a composite'), 'A composite AIM lists its Sub-AIMs and its flows, each from an AIM and a Data Type to another, so a workflow can be read like a table.'),
+      el('div', {class:'card'}, el('b', {}, 'Share a place'), 'The address of the page ends with the item (#PAF-VMS-V1.6; #OSD-BMS-V1.5~dt for a Data Type): send it and the page opens there.')),
+    el('p', {class:'sub', style:'font-size:18px; margin-top:30px'}, 'MKG, the first version' + (meta.generated ? ' - built ' + meta.generated : '') + (meta.commit ? ' from the repository at ' + meta.commit : '') + ' - the latest version of every standard'));
+  window.scrollTo(0, 0);
+}
+$('title').onclick = showHome;
 function fromHash() { const h = decodeURIComponent(location.hash.slice(1)); if (!h) return null;
   const dt = h.endsWith('~dt'); const a = h.replace('~dt', '');
-  return [dt ? 'DT:' + a : 'AIM:' + a, 'DT:' + a, 'L3:' + a, 'STD:' + a].find(x => N[x]) || null; }
+  return [dt ? 'DT:' + a : 'AIM:' + a, 'DT:' + a, 'L3:' + a, 'STD:' + a].find(x => N[x]) || (Object.values(N).find(n => n.label === a) || {}).id || null; }
 const start = fromHash();
-if (start) select(start); else if (N['AIM:PAF-VMS-V1.6']) select('AIM:PAF-VMS-V1.6');
+if (start) select(start); else showHome();
+window.addEventListener('resize', () => { if (!document.body.classList.contains('home')) { cy.resize(); cy.fit(cy.elements(), 60); } });
 window.addEventListener('hashchange', () => { const x = fromHash(); if (x && x !== cy.nodes('.sel').id()) select(x); });
 </script>
 </body>

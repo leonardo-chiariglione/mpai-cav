@@ -1572,7 +1572,8 @@ part:AIH1 a mkg:Part ;
         <https://mpai.community/kg/datatype/AIH1/AIHDataProcessingType>,
         <https://mpai.community/kg/datatype/AIH1/AIHTaxonomies>,
         <https://mpai.community/kg/datatype/AIH1/ProcessTypes> ;
-    mkg:title "AIH part 1 - HSP" .
+    mkg:title "AIH part 1 - HSP" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-aih/hsp/v1-1/> .
 
 part:CAE1 a mkg:Part ;
     mkg:acronym "CAE1" ;
@@ -1583,13 +1584,15 @@ part:CAE1 a mkg:Part ;
         datatype:CAE-IRF-V2.5,
         datatype:CAE-MAG-V2.5,
         <https://mpai.community/kg/datatype/MMM-ASM-V1,5> ;
-    mkg:title "CAE part 1 - USC" .
+    mkg:title "CAE part 1 - USC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-cae/usc/v2-4/> .
 
 part:CAE2 a mkg:Part ;
     mkg:acronym "CAE2" ;
     mkg:partAcronym "6DF" ;
     mkg:partOf standard:CAE ;
-    mkg:title "CAE part 2 - 6DF" .
+    mkg:title "CAE part 2 - 6DF" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-cae/6df/v1-0/> .
 
 part:CAE3 a mkg:Part ;
     mkg:acronym "CAE3" ;
@@ -1607,7 +1610,8 @@ part:CAE3 a mkg:Part ;
         aim:CAE-SSE-V1.0,
         datatype:CAE-UCM-V1.0,
         <https://mpai.community/kg/datatype/CAE3/AcousticProfile> ;
-    mkg:title "CAE part 3 - ASM" .
+    mkg:title "CAE part 3 - ASM" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-cae/asm/v1-0/> .
 
 part:CAV1 a mkg:Part ;
     mkg:acronym "CAV1" ;
@@ -1680,7 +1684,8 @@ part:CAV2 a mkg:Part ;
         <https://mpai.community/kg/datatype/CAV2/RouteEnvironmentIDs>,
         <https://mpai.community/kg/datatype/CAV2/VehicleTypes>,
         <https://mpai.community/kg/datatype/CAV2/WheelStates> ;
-    mkg:title "CAV part 2 - TEC" .
+    mkg:title "CAV part 2 - TEC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-cav/tec/v2-0/> .
 
 part:CUI1 a mkg:Part ;
     mkg:acronym "CUI1" ;
@@ -1705,25 +1710,29 @@ part:CUI1 a mkg:Part ;
         datatype:CUI-RTX-V2.0,
         datatype:CUI-SRM-V2.0,
         datatype:CUI-SRS-V2.0 ;
-    mkg:title "CUI part 1 - CPP" .
+    mkg:title "CUI part 1 - CPP" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-cui/cpp/v2-0/> .
 
 part:MMM1 a mkg:Part ;
     mkg:acronym "MMM1" ;
     mkg:partAcronym "FNC" ;
     mkg:partOf standard:MMM ;
-    mkg:title "MMM part 1 - FNC" .
+    mkg:title "MMM part 1 - FNC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmm/fnc/v1-0/> .
 
 part:MMM2 a mkg:Part ;
     mkg:acronym "MMM2" ;
     mkg:partAcronym "FPR" ;
     mkg:partOf standard:MMM ;
-    mkg:title "MMM part 2 - FPR" .
+    mkg:title "MMM part 2 - FPR" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmm/fpr/v1-0/> .
 
 part:MMM3 a mkg:Part ;
     mkg:acronym "MMM3" ;
     mkg:partAcronym "ARC" ;
     mkg:partOf standard:MMM ;
-    mkg:title "MMM part 3 - ARC" .
+    mkg:title "MMM part 3 - ARC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmm/arc/v1-2/> .
 
 part:MMM4 a mkg:Part ;
     mkg:acronym "MMM4" ;
@@ -1820,7 +1829,8 @@ part:MMM4 a mkg:Part ;
         <https://mpai.community/kg/datatype/MMM4/ProcessKinds>,
         <https://mpai.community/kg/datatype/MMM4/Profiles>,
         <https://mpai.community/kg/datatype/MMM4/ValueMetadataIDs> ;
-    mkg:title "MMM part 4 - TEC" .
+    mkg:title "MMM part 4 - TEC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-mmm/tec/v2-2/> .
 
 part:NNW1 a mkg:Part ;
     mkg:acronym "NNW1" ;
@@ -1845,25 +1855,29 @@ part:NNW1 a mkg:Part ;
         datatype:NNW-INF-V2.0,
         datatype:NNW-PLD-V2.0,
         datatype:NNW-PRM-V2.0 ;
-    mkg:title "NNW part 1 - NNT" .
+    mkg:title "NNW part 1 - NNT" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v1-1/> .
 
 part:NNW2 a mkg:Part ;
     mkg:acronym "NNW2" ;
     mkg:partAcronym "TEC" ;
     mkg:partOf standard:NNW ;
-    mkg:title "NNW part 2 - TEC" .
+    mkg:title "NNW part 2 - TEC" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/tec/v1-0/> .
 
 part:PGM1 a mkg:Part ;
     mkg:acronym "PGM1" ;
     mkg:partAcronym "AUA" ;
     mkg:partOf standard:PGM ;
-    mkg:title "PGM part 1 - AUA" .
+    mkg:title "PGM part 1 - AUA" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-pgm/aua/v1-0/> .
 
 part:SPG1 a mkg:Part ;
     mkg:acronym "SPG1" ;
     mkg:partAcronym "MDL" ;
     mkg:partOf standard:SPG ;
-    mkg:title "SPG part 1 - MDL" .
+    mkg:title "SPG part 1 - MDL" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-spg/mdl/v1-0/> .
 
 part:XRV1 a mkg:Part ;
     mkg:acronym "XRV1" ;
@@ -1914,7 +1928,8 @@ part:XRV1 a mkg:Part ;
         datatype:XRV-VTS-V1.0,
         datatype:XRV-VVS-V1.0,
         <https://mpai.community/kg/datatype/XRV1/GestureAttributes> ;
-    mkg:title "XRV part 1 - LTP" .
+    mkg:title "XRV part 1 - LTP" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-xrv/ltp/v1-0/> .
 
 performanceassessor:Performance_Assessors a mkg:PerformanceAssessor ;
     mkg:acronym "Performance Assessors" ;
