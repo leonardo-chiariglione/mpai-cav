@@ -163,7 +163,7 @@ public static class Uc2
         var animate = PA("MMM-2AP-V2.2", "MMAnimate", "PA-AnimatePersona1", ("RQ1", "Nil", "ItemID", "Persona1ID"));
         await Do("Friend1 animates its Persona", friend1, "MM-Animate", C("Persona1ID",
             with: [JsonValue.Create(stream)!, animate, Rights("Animate_Rights", "May", "Internal", "PA-AnimatePersona1")]));
-        var usePR = PA("MMM-MSP-V2.2", "MMSend", "PA-MessagePR", ("RQ1", "Nil", "Message", Message("MessagePRID", "")));
+        var usePR = PA("MMM-2SP-V2.2", "MMSend", "PA-MessagePR", ("RQ1", "Nil", "Message", Message("MessagePRID", "")));
         await Do("Friend1 signals its presence", friend1, "MM-Send", C("MessagePRID", to: "PRSrvc",
             with: [Message("MessagePRID", "Friend1 is present"), usePR, Rights("MessagePR_Rights", "May", "Acquired", "PA-MessagePR")]));
         await Do("Friend1 moves to the parcel", friend1, "MM-Move", C("Persona1ID", from: "MVS", to: "ParcelID", with: SpatialAttitude("SA2", x: -3, z: 3)));   // at the Parcel's edge, outside the Room-to-be
@@ -177,12 +177,12 @@ public static class Uc2
         var actuate = PA("MMM-3CP-V2.2", "MUActuate", "PA-ActuateRoom", ("RQ1", "Nil", "ItemID", "RoomID"), ("RQ3", "At", "ULocation", "ULocFriend1"));
         await Do("Friend1 renders the room to human1", friend1, "MU-Actuate", C("RoomID", at: "ULocFriend1",
             with: [JsonValue.Create("RItemType")!, SpatialAttitude("SA5"), actuate, Rights("Actuate_Rights", "May", "Internal", "PA-ActuateRoom")]));
-        var use12 = PA("MMM-MSP-V2.2", "MMSend", "PA-Message12", ("RQ1", "Nil", "Message", Message("Message12ID", "")));
+        var use12 = PA("MMM-2SP-V2.2", "MMSend", "PA-Message12", ("RQ1", "Nil", "Message", Message("Message12ID", "")));
         await Do("Friend1 invites Friend2", friend1, "MM-Send", C("Message12ID", to: "Friend2",
             with: [Message("Message12ID", "Come to my room"), use12, Rights("Message12_Rights", "May", "Acquired", "PA-Message12")]));
         result["Friend2 reads the invitation"] = (await friend2.ReadAsync("Message12ID")).Http.ToString();
         result["Seller reads the invitation"] = (await new MmmClient(http, "Seller", m.TokenOf("Seller")).ReadAsync("Message12ID")).Http.ToString();
-        var use21 = PA("MMM-MSP-V2.2", "MMSend", "PA-Message21", ("RQ1", "Nil", "Message", Message("Message21ID", "")));
+        var use21 = PA("MMM-2SP-V2.2", "MMSend", "PA-Message21", ("RQ1", "Nil", "Message", Message("Message21ID", "")));
         await Do("Friend2 accepts", friend2, "MM-Send", C("Message21ID", to: "Friend1",
             with: [Message("Message21ID", "Coming"), use21, Rights("Message21_Rights", "May", "Acquired", "PA-Message21")]));
 

@@ -5,7 +5,7 @@
   "required":               [ "Header", "Time" ],
   "properties":             {
 
-    "Header":               { "type": "string", "const": "MMM-IDF-V2.2" },
+    "Header":               { "type": "string", "const": "MMM-IDP-V2.2" },
     "MInstanceID":          { "type": "string" },
     "UEnvironmentID":       { "type": "string" },
     "IdentifyPAID":         { "type": "string" },

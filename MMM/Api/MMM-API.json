@@ -8685,7 +8685,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-IDF-V2.2"
+      "const": "MMM-IDP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -10339,7 +10339,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-MSP-V2.2"
+      "const": "MMM-2SP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -11677,7 +11677,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-MOP-V2.2"
+      "const": "MMM-MDP-V2.2"
      },
      "MInstanceID": {
       "type": "string"
@@ -14490,7 +14490,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "MMM-RSP-V2.2"
+      "const": "MMM-RVP-V2.2"
      },
      "MInstanceID": {
       "type": "string"

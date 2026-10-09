@@ -5,7 +5,7 @@
   "required":               [ "Header", "MInstanceID", "Time", "ModifyPARQ", "ModifyPARS" ],
   "properties":             {
 
-    "Header":             { "type": "string", "const": "MMM-MOP-V2.2" },
+    "Header":             { "type": "string", "const": "MMM-MDP-V2.2" },
     "MInstanceID":        { "type": "string" },
     "UEnvironmentID":     { "type": "string" },
     "ModifyPAID":         { "type": "string" },
