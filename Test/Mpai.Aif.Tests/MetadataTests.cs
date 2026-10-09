@@ -209,10 +209,11 @@ public class MetadataTests
     private static string Show(Endpoint e) =>
         (e.IsBoundary ? "(boundary)" : e.AimName) + " " + e.DataType + "#" + e.PortNumber;
 
-    // Names never address (M3211 3.4). A Topology label the composite does not
-    // declare stops the L3 from loading; and when every Sub-AIM of MAD names its
-    // Ports differently, MAD loads into the same connections, since the Controller
-    // reads no Sub-AIM's Port names.
+    // Names never address (M3211 3.4). The Topology of an L3 has no name: each end is an
+    // AIM, a Data Type and a Port Number. A name put on an end is not read; an end whose
+    // Data Type the Sub-AIM has no Port of stops the L3 from loading; and when every
+    // Sub-AIM of MAD names its Ports differently, MAD loads into the same connections,
+    // since the Controller reads no Sub-AIM's Port names.
     [Fact]
     public void Addressing()
     {
@@ -223,8 +224,12 @@ public class MetadataTests
         var undeclared = mad.DeepClone();
         var end = undeclared["Topology"]!.AsArray().Select(l => l!["Input"]!).First(e => e["AIMName"]!.GetValue<string>() != "");
         end["PortName"] = "NoSuchLabel";
-        var failure = Assert.ThrowsAny<Exception>(() => MadConnections(undeclared));
-        Assert.Contains("does not declare", failure.Message);
+        Assert.Equal(baseline, MadConnections(undeclared));          // the end states its Data Type: the name is not read
+
+        var notAPort = mad.DeepClone();
+        var wrongEnd = notAPort["Topology"]!.AsArray().Select(l => l!["Input"]!).First(e => e["AIMName"]!.GetValue<string>() != "");
+        wrongEnd["DataType"] = "OSD-NO-V1.5";
+        Assert.ThrowsAny<Exception>(() => MadConnections(notAPort));
 
         var renamed = new Dictionary<string, JsonNode>();
         foreach (var sub in mad["SubAIMs"]!.AsArray())
@@ -377,7 +382,7 @@ public class MetadataTests
             ("DataType uint8[]",              basic,     a => Output(a)["DataType"] = "uint8[]",        true),
             ("DataType Boolean",              basic,     a => Output(a)["DataType"] = "Boolean",        false),
             ("Topology end by DataType",      composite, a => { var e = End(a).AsObject(); e.Remove("PortName"); e["DataType"] = "OSD-BSO-V1.5"; }, true),
-            ("Topology end with neither",     composite, a => { var e = End(a).AsObject(); e.Remove("PortName"); e.Remove("PortNumber"); }, false),
+            ("Topology end with neither",     composite, a => { var e = End(a).AsObject(); e.Remove("PortName"); e.Remove("PortNumber"); e.Remove("DataType"); }, false),
         };
 
         var wrong = new List<string>();

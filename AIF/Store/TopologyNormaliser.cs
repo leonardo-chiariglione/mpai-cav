@@ -30,9 +30,13 @@ public static class TopologyNormaliser
                                IntOf(p["PortNumber"]), IntOf(p["Output"])));
 
         var internals = new Dictionary<string, (List<string> Types, int? Output)>(StringComparer.Ordinal);
+        // An InternalType is found by its label when the line uses one, and by its Data Type; the label is optional.
+        var unnamed = 0;
         foreach (var it in root["InternalTypes"]?.AsArray() ?? [])
-            if ((string?)it!["Name"] is { Length: > 0 } name)
-                internals[name] = (TypesOf(it["DataType"]), IntOf(it["Output"]));
+        {
+            var name = (string?)it!["Name"];
+            internals[name is { Length: > 0 } ? name : "\u0000" + unnamed++] = (TypesOf(it["DataType"]), IntOf(it["Output"]));
+        }
 
         if (root["Topology"] is JsonArray topology)
         {
@@ -139,7 +143,15 @@ public static class TopologyNormaliser
         // A Sub-AIM end: the Data Type the end states, else the one the COMPOSITE
         // declares for its name. The name the Sub-AIM gives its own Port is never
         // read - nothing guarantees a sender and a receiver share it.
-        if (end.DataType is { } stated) return new Declared([stated], null, null);
+        // The composite declares the Output group of a Data Type in its InternalTypes (L1: "the Input group, of the
+        // SubAIM this flow enters, that the flow feeds"), by Data Type: an end that states its Data Type finds it there,
+        // when one group is declared for that Data Type.
+        if (end.DataType is { } stated)
+        {
+            var groups = internals.Values.Where(v => v.Output is not null && v.Types.Contains(stated))
+                                         .Select(v => v.Output).Distinct().ToList();
+            return new Declared([stated], null, groups.Count == 1 ? groups[0] : null);
+        }
         if (internals.TryGetValue(end.Name, out var it)) return new Declared(it.Types, null, it.Output);
         if (ports.FirstOrDefault(p => p.Name == end.Name) is { } external)
             return new Declared(external.Types, null, external.Output);
