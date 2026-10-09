@@ -1,0 +1,99 @@
+<!-- ai-modules/av-scene-integration-and-description : from https://mpai.community/standards/mpai-hmc/v2-1/ai-modules/av-scene-integration-and-description/ -->
+<h1>MPAI-HMC V2.1 AIMs AV Scene Integration and Description</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/">Go To AI Modules</a></p>
+<table style="border-collapse: collapse; width: 100%; height: 58px;">
+<tbody>
+<tr style="height: 24px;">
+<td style="width: 33.3333%; height: 24px;"><a href="#one">1 Function</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#two">2 Reference Model</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#three">3 Input/Output Data</a></td>
+</tr>
+<tr style="height: 10px;">
+<td style="width: 33.3333%; height: 10px;"><a href="#four">4 SubAIMs</a></td>
+<td style="width: 33.3333%; height: 10px;"><a href="#five">5 JSON Metadata</a></td>
+<td style="width: 33.3333%; height: 10px;"><a href="#six">6 Profiles</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.3333%; height: 24px;"><a href="#seven">7 Reference Software</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#eight">8 Conformance Texting</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#nine">9 Performance Assessment</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="one"></a>1 Functions</h3>
+<p>AV Scene Integration and Description (HMC-SID) performs the following functions:</p>
+<table style="border-collapse: collapse; width: 100%; height: 72px;">
+<tbody>
+<tr style="height: 24px;">
+<td style="width: 11.3605%; height: 24px;">Receives</td>
+<td style="width: 88.6395%; height: 24px;">Portable Avatar</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 11.3605%; height: 24px;">Adds</td>
+<td style="width: 88.6395%; height: 24px;">The Avatar in the Input Portable Avatar to the Audio-Visual Scene Descriptors conveyed by the Input Portable Avatar with an appropriate Spatial Attitude. If the Input Portable Avatar does not include a Scene, the AV Scene Integration and Description AIM uses a generic Scene.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 11.3605%; height: 24px;">Produces</td>
+<td style="width: 88.6395%; height: 24px;">The Audio-Visual Scene Descriptors of the resulting Audio-Visual Scene.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="two"></a>2 Reference Model</h3>
+<p>Figure 1 depicts the HMC-SID Reference Architecture.</p>
+<p><img decoding="async" class="wp-image-17144 aligncenter" src="https://mpai.community/wp-content/uploads/2024/07/AV-Scene-Integration-and-Description-HMC-SID-V1.1.png" alt="" width="292" height="147" srcset="https://mpai.community/wp-content/uploads/2024/07/AV-Scene-Integration-and-Description-HMC-SID-V1.1.png 473w, https://mpai.community/wp-content/uploads/2024/07/AV-Scene-Integration-and-Description-HMC-SID-V1.1-300x151.png 300w" sizes="(max-width: 292px) 100vw, 292px" /></p>
+<p style="text-align: center;">Figure 1 – The AV Scene Integration and Description AIM</p>
+<h3><a id="three"></a>3 I/O Data</h3>
+<p>The Input and Output Data of are specified in Table 1.</p>
+<p style="text-align: center;">Table 1 – I/O Data of the AV Scene Integration and Description AIM</p>
+<table style="width: 100.409%;">
+<tbody>
+<tr>
+<td style="width: 22.5196%; text-align: center;" width="160"><strong>Input</strong></td>
+<td style="width: 91.4084%; text-align: center;" width="463"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="width: 22.5196%;" width="160"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 91.4084%;" width="463">A Communication Item received from a Machine Entity.</td>
+</tr>
+<tr>
+<td style="width: 22.5196%; text-align: center;" width="160"><strong>Output</strong></td>
+<td style="width: 91.4084%; text-align: center;" width="463"><strong>Description</strong></td>
+</tr>
+<tr>
+<td style="width: 22.5196%;" width="160"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-descriptors/">Audio-Visual Scene Descriptors</a></td>
+<td style="width: 91.4084%;" width="463">The Descriptors of the AV Scene where the Avatar conveyed by the Input Portable Avatar has been added to the Scene with the appropriate Spatial Attitude.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="four"></a>4 SubAIMs</h3>
+<p>No SubAIM.</p>
+<h3><a id="five"></a>5 JSON Metadata</h3>
+<p><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/AVSceneIntegrationAndDescription.json">https://schemas.mpai.community/HMC/V2.2/AIMs/AVSceneIntegrationAndDescription.json</a></p>
+<h3><a id="six"></a>6 Profiles</h3>
+<p>No Profiles.</p>
+<h3><a id="seven"></a>7. Reference Software</h3>
+<h3><a id="eight"></a>8. Conformance Testing</h3>
+<p>Table 2 provides the Conformance Testing Method for HMC-SID AIM.</p>
+<p>If a schema contains references to other schemas, conformance of data for the primary schema implies that any data referencing a secondary schema shall also validate against the relevant schema, if present and conform with the Qualifier, if present.</p>
+<p style="text-align: center;">Table 2 – Conformance Testing Method for HMC-SID AIM</p>
+<table style="width: 100%; height: 90px;">
+<tbody>
+<tr style="height: 42px;">
+<td style="height: 42px;">Receives</td>
+<td style="height: 42px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="height: 42px;">Shall validate against Portable Avatar Schema.<br />
+Portable Avatar Data shall conform with respective Qualifiers.</td>
+</tr>
+<tr style="height: 48px;">
+<td style="height: 48px;">Produces</td>
+<td style="height: 48px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-descriptors/">Audio-Visual Scene Descriptors</a></td>
+<td style="height: 48px;">Shall validate against AV Scene Descriptors Schema.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="nine"></a>9. Performance Assessment</h3>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/">Go To AI Modules</a></p>
+						</div>				
+					</article>

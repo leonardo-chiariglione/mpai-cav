@@ -1,0 +1,15 @@
+Pages of HMC 2.2, made from those of 2.1 by make_web_version.py
+
+(home)/                                                      8 x https://mpai\.community/standards/mpai\-, 2 x (MPAI-HMC\)? ?(?:Version )?)V?2\.1\b, 1 x https://mpai\.community/standards/mpai\-, 1 x AI Workflow
+ai-modules/                                                  10 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/HMC/(?:/)?)V2\, 3 x (MPAI-HMC\)? ?(?:Version )?)V?2\.1\b, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows
+ai-modules/av-scene-integration-and-description/             2 x https://mpai\.community/standards/mpai\-, 1 x (schemas\.mpai\.community/HMC/(?:/)?)V2\
+ai-modules/entity-and-context-understanding/                 3 x https://mpai\.community/standards/mpai\-, 3 x (schemas\.mpai\.community/HMC/(?:/)?)V2\
+ai-workflows: not written - the AI Workflows are AI Modules; their page is ai-modules/
+ai-modules/communicating-entities-in-context/                11 x https://mpai\.community/standards/mpai\-, 3 x (schemas\.mpai\.community/HMC/(?:/)?)V2\, 5 x \bHMC-([A-Z0-9]{3})-V2\.1\b, 1 x https://mpai\.community/standards/mpai\-, 1 x AI Workflows, 2 x AI Workflow, 1 x \bAIWs\b, 9 x \bAIW\b
+data-types/                                                  6 x https://mpai\.community/standards/mpai\-, 1 x (MPAI-HMC\)? ?(?:Version )?)V?2\.1\b
+definitions/                                                 6 x https://mpai\.community/standards/mpai\-
+definitions/                                                 6 x https://mpai\.community/standards/mpai\-
+introduction/                                                4 x https://mpai\.community/standards/mpai\-, 1 x (MPAI-HMC\)? ?(?:Version )?)V?2\.1\b
+profiles/                                                    4 x https://mpai\.community/standards/mpai\-
+references/                                                  6 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows
+scope/                                                       6 x https://mpai\.community/standards/mpai\-, 1 x (MPAI-HMC\)? ?(?:Version )?)V?2\.1\b

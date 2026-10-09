@@ -1,0 +1,408 @@
+<!-- ai-modules/entity-and-context-understanding : from https://mpai.community/standards/mpai-hmc/v2-1/ai-modules/entity-and-context-understanding/ -->
+<h1>MPAI-HMC V2.1 AIMs Entity and Context Understanding</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/">Go To AI Modules</a></p>
+<table style="border-collapse: collapse; width: 100%; height: 58px;">
+<tbody>
+<tr style="height: 24px;">
+<td style="width: 33.3333%; height: 24px;"><a href="#one">1 Function</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#two">2 Reference Model</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#three">3 Input/Output Data</a></td>
+</tr>
+<tr style="height: 10px;">
+<td style="width: 33.3333%; height: 10px;"><a href="#four">4 SubAIMs</a></td>
+<td style="width: 33.3333%; height: 10px;"><a href="#five">5 JSON Metadata</a></td>
+<td style="width: 33.3333%; height: 10px;"><a href="#six">6 Profiles</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.3333%; height: 24px;"><a href="#seven">7 Reference Software</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#eight">8 Conformance Texting</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#nine">9 Performance Assessment</a></td>
+</tr>
+</tbody>
+</table>
+<h3>1 <a id="one"></a>Function</h3>
+<p>Entity and Context Understanding (HMC-ECU) enables a Machine</p>
+<ol>
+<li>To understand the information conveyed by an Entity and its Context, in the form of either:
+<ol>
+<li>An Audio-Visual Scene (if Entity is a human).</li>
+<li>A Portable Avatar (if Entity is a machine).</li>
+</ol>
+</li>
+<li>To produce a pertinent response composed of Machine Text and Machine Personal Status.</li>
+</ol>
+<p>Therefore, Entity and Context Understanding (HMC-ECC):</p>
+<table style="width: 100%;">
+<tbody>
+<tr>
+<td style="width: 12.1786%;">Receives</td>
+<td style="width: 25.5751%;">Audio-Visual Scene Descriptors</td>
+<td style="width: 61.4343%;">And separates into components.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;">Recognises</td>
+<td style="width: 25.5751%;">Speech</td>
+<td style="width: 61.4343%;">Of Entity.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Audio Object and Visual Object.</td>
+<td style="width: 61.4343%;">Providing their Identities.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;">Understands</td>
+<td style="width: 25.5751%;">Natural Language</td>
+<td style="width: 61.4343%;">(Of Entity) expressed as Text being cognizant of the Audio and Visual Instances</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;">Extracts</td>
+<td style="width: 25.5751%;">Personal Status.</td>
+<td style="width: 61.4343%;">Of Entity.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;">Translates</td>
+<td style="width: 25.5751%;">Text</td>
+<td style="width: 61.4343%;">Of Entity.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;">Produces:</td>
+<td style="width: 25.5751%;">Audio-Visual Scene Geometry</td>
+<td style="width: 61.4343%;">Geometry of the Scene.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Entity ID</td>
+<td style="width: 61.4343%;">Entity producing Input Data.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Audio Instance ID</td>
+<td style="width: 61.4343%;">Identified Instance.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Visual Instance ID</td>
+<td style="width: 61.4343%;">Identified Instance.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Personal Status</td>
+<td style="width: 61.4343%;">On Entity.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Translated Text</td>
+<td style="width: 61.4343%;">Of Refined Text.</td>
+</tr>
+<tr>
+<td style="width: 12.1786%;"></td>
+<td style="width: 25.5751%;">Meaning</td>
+<td style="width: 61.4343%;">Of Refined Text.</td>
+</tr>
+</tbody>
+</table>
+<h3>2 <a id="two"></a>Reference Model</h3>
+<p>Entity and Context Understanding (HMC-ECU) is an AIM whose Reference Model is depicted in Figure 2.</p>
+<p style="text-align: center;"><img fetchpriority="high" decoding="async" class="wp-image-23600 aligncenter" src="https://mpai.community/wp-content/uploads/2024/11/Entity-and-Context-Understanding-HMC-ECU-V2.0.png" alt="" width="358" height="321" srcset="https://mpai.community/wp-content/uploads/2024/11/Entity-and-Context-Understanding-HMC-ECU-V2.0.png 648w, https://mpai.community/wp-content/uploads/2024/11/Entity-and-Context-Understanding-HMC-ECU-V2.0-300x269.png 300w" sizes="(max-width: 358px) 100vw, 358px" /></p>
+<p style="text-align: center;">Figure 1 – The Entity and Context Understanding (HMC-ECU) AIM</p>
+<h3>3 <a id="three"></a>Input and Output Data</h3>
+<p>Table 1 specifies the Input and Output Data of the of the Entity Context Understanding (HMC-ECU) AIM.</p>
+<p style="text-align: center;">Table 1 – I/O Data of the Entity Context Understanding (HMC-ECU) AIM</p>
+<table style="width: 98.6575%; height: 416px;">
+<tbody>
+<tr style="height: 23px;">
+<td style="text-align: center; width: 21.8817%; height: 23px;" width="151"><strong>Input</strong></td>
+<td style="text-align: center; width: 89.8371%; height: 23px;" width="472"><strong>Description</strong></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/body-descriptors-object/">Body DescriptorsObject</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Descriptors of the Body Objects of Entities in the Visual Scene.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/face-descriptors-object/">Face DescriptorsObject</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Descriptors of the Face Objects of Entities in the Visual Scene.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/speech-object/">Speech Object</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The digital representation of the speech emitted by the Entity.</td>
+</tr>
+<tr style="height: 47px;">
+<td style="width: 21.8817%; height: 47px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a></td>
+<td style="width: 89.8371%; height: 47px;" width="472">The digital representation of the spatial arrangement of the Audio, Visual, and Audio-Visual Objects of the Scene.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual Object</a>s</td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Visual Objects of the Scene.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio Object</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Audio Objects of the Scene.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">Text of Entity with Entity ID.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; text-align: center; height: 23px;" width="151"><strong>Output</strong></td>
+<td style="width: 89.8371%; text-align: center; height: 23px;" width="472"><strong>Description</strong></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">Personal Status of Entity having the Entity ID.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151">Translated <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">Translated Text of Text Object or of Text conveyed by Speech Object.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151">Refined <a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/text-object/">Text Object</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">Refined Text of Speech Object.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/meaning/">Meaning</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">Other name for Refined Text Descriptors.</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;">Visual <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance Ientifier</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Identifier of the specific Visual Object belonging to a level in the taxonomy.</td>
+</tr>
+<tr style="height: 47px;">
+<td style="width: 21.8817%; height: 47px;" width="151"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a></td>
+<td style="width: 89.8371%; height: 47px;" width="472">As in Input</td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 21.8817%; height: 23px;" width="151">Audio <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance Identifier</a></td>
+<td style="width: 89.8371%; height: 23px;" width="472">The Identifier of the specific Audio Object belonging to a level in the taxonomy.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="four"></a>4 SubAIMs</h3>
+<p>Entity and Context Understanding (HMC-ECU) is a Composite AIM whose Reference Model is depicted in Figure 2.</p>
+<p style="text-align: center;"><img decoding="async" class="alignnone size-full wp-image-24881" src="https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0.png" alt="" width="1697" height="1018" srcset="https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0.png 1697w, https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0-300x180.png 300w, https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0-1024x614.png 1024w, https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0-768x461.png 768w, https://mpai.community/wp-content/uploads/2024/12/Communicating-Entities-in-Context2-HMC-ECU-V2.0-1536x921.png 1536w" sizes="(max-width: 1697px) 100vw, 1697px" />Figure 2 – The Entity and Context Understanding Composite (HMC-ECU) AIM</p>
+<p style="text-align: center;">Table 2 &#8211; AIMs and JSON Metadata</p>
+<table style="width: 91.1842%;">
+<tbody>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"><strong>AIM/1</strong></td>
+<td style="width: 15.6584%;"><strong>AIM/2</strong></td>
+<td style="text-align: center; width: 46.2633%;"><strong>AIM Name</strong></td>
+<td style="text-align: center; width: 27.797%;"><strong>JSON</strong></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;">HMC-ECU</td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/entity-and-context-understanding/">Entity and Context Understanding</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/EntityAndContextUnderstanding.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">OSD-SDX</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-scene-demultiplexing/">Audio-Visual Scene Demultiplexing</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioVisualSceneDemultiplexing.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">MMC-ASR</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/automatic-speech-recognition/">Automatic Speech Recognition</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/AutomaticSpeechRecognition.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">OSD-VOI</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-object-identification/">Visual Object Identification</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualObjectIdentification.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">CAE-AOI</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-cae/usc/v2.3/ai-modules/audio-object-identification/">Audio Object Identification</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioObjectIdentification.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">MMC-NLU</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/natural-language-understanding/">Natural Language Understanding</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/NaturalLanguageUnderstanding.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">MMC-PSE</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/personal-status-extraction/">Personal Status Extraction</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PersonalStatusExtraction.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">MMC-ETD</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-text-description/">Entity Text Description</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntityTextDescription.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">MMC-ESD</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-speech-description/">Entity Speech Description</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntitySpeechDescription.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">PAF-EFD</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-face-description/">Entity Face Description</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityFaceDescription.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">PAF-EBD</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-body-description/">Entity Body Description</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityBodyDescription.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">MMC-PTI</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/ps-text-interpretation/">PS-Text Interpretation</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PSTextInterpretation.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">MMC-PSI</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/ps-speech-interpretation/">PS-Speech Interpretation</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PSSpeechInterpretation.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">PAF-PFI</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ps-face-interpretation/">PS-Face Interpretation</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PSFaceInterpretation.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">PAF-PGI</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/ps-gesture-interpretation/">PS-Gesture Interpretation</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PSGestureInterpretation.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;"></td>
+<td style="width: 15.6584%;">MMC-PMX</td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/personal-status-multiplexing/">Personal Status Multiplexing</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PersonalStatusMultiplexing.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 13.1673%;"></td>
+<td style="width: 14.2349%;">MMC-TTT</td>
+<td style="width: 15.6584%;"></td>
+<td style="width: 46.2633%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="text-align: center; width: 27.797%;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextAndSpeechTranslation.json">X</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="five"></a>5 JSON Metadata</h3>
+<p><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/EntityAndContextUnderstanding.json">https://schemas.mpai.community/HMC/V2.2/AIMs/EntityAndContextUnderstanding.json</a></p>
+<h3>6 <a id="six"></a>Profiles</h3>
+<p>Entity Context Understanding Profiles are <a href="https://mpai.community/standards/mpai-prf/v1-0/aim-profiles/#_Toc169358392">defined</a>.</p>
+<h3><a id="seven"></a>7. Reference Software</h3>
+<h3><a id="eight"></a>8. Conformance Testing</h3>
+<p>Table 2 provides the Conformance Testing Method for the HMC-ECU AIM.</p>
+<p>If a schema contains references to other schemas, conformance of data for the primary schema implies that any data referencing a secondary schema shall also validate against the relevant schema, if present and conform with the Qualifier, if present.</p>
+<p style="text-align: center;">Table 2 – Conformance Testing Method for CAE-ECU AIM</p>
+<table style="width: 97.4885%;">
+<tbody>
+<tr>
+<td style="width: 8.2728%;">Receives</td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/body-descriptors/">Body Descriptors</a></td>
+<td style="width: 61.5219%;">Shall validate against Body Descriptors XML Schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/face-descriptors/">Face Descriptors</a></td>
+<td style="width: 61.5219%;">Shall validate against Face Descriptors Schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/speech-object/">Speech Object</a></td>
+<td style="width: 61.5219%;">Shall validate against Speech Object Schema.<br />
+Speech Data shall conform with Speech Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a></td>
+<td style="width: 61.5219%;">Shall validate against Audio-Visual Scene Geometry Schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual Object</a>s</td>
+<td style="width: 61.5219%;">Shall validate against Visual Object Schema.<br />
+Visual Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio Object</a></td>
+<td style="width: 61.5219%;">Shall validate against Audio Object Schema.<br />
+Audio Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/text-object/">Text Object</a></td>
+<td style="width: 61.5219%;">Shall validate against Text Object Schema.<br />
+Text Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;">Produces</td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a></td>
+<td style="width: 61.5219%;">Shall validate against Personal Status Schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;">Translated <a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/text-object/">Text</a></td>
+<td style="width: 61.5219%;">Shall validate against Text Object Schema.<br />
+Text Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;">Refined <a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/text-object/">Text</a></td>
+<td style="width: 61.5219%;">Shall validate against Text Object Schema.<br />
+Text Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/meaning/">Meaning</a></td>
+<td style="width: 61.5219%;">Shall validate against Meaning schema</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;">Visual <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance ID</a></td>
+<td style="width: 61.5219%;">Shall validate against Instance ID schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a></td>
+<td style="width: 61.5219%;">Shall validate against Audio-Visual Scene Geometry Schema.</td>
+</tr>
+<tr>
+<td style="width: 8.2728%;"></td>
+<td style="width: 29.3778%;">Audio <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance ID</a></td>
+<td style="width: 61.5219%;">Shall validate against Instance ID schema.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="nine"></a>9. Performance Assessment</h3>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/">Go To AI Modules</a></p>
+<p>&nbsp;</p>
+						</div>				
+					</article>

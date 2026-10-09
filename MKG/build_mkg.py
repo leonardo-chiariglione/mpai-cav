@@ -114,6 +114,14 @@ def build(folders):
             for folder in os.listdir(root):
                 if folder in folders and os.path.isdir(os.path.join(root, folder)) and folder not in roots:
                     roots[folder] = root
+    def merged(folder, version, sub):
+        """The schemas of folder/version/sub: those of D:\\DI, and those of D:\\AI that D:\\DI does not have."""
+        seen, out = set(), []
+        for root in (SCH, AI_SCH):
+            for f in sorted(glob.glob(os.path.join(root, folder, version, sub, '*.json'))):
+                if os.path.basename(f) not in seen:
+                    seen.add(os.path.basename(f)); out.append(f)
+        return out
     for folder in folders:
         if folder not in roots:
             continue
@@ -123,7 +131,7 @@ def build(folders):
     id_by_url = {}
     for folder, v in latest.items():
         for sub in ('data', 'actions'):
-            for f in glob.glob(os.path.join(roots[folder], folder, v, sub, '*.json')):
+            for f in merged(folder, v, sub):
                 d = load(f)
                 id_by_url[schema_url(d, f)] = header_of(d) or folder + '/' + os.path.splitext(os.path.basename(f))[0]
 
@@ -142,7 +150,6 @@ def build(folders):
         return n
 
     for folder, version in latest.items():
-        from_ai = roots[folder] == AI_SCH
         sm = re.fullmatch(r'([A-Z]+?)(\d+)?', folder)
         acr, part = sm.group(1), sm.group(2)
         std = node('Standard', acr)
@@ -152,13 +159,14 @@ def build(folders):
         if part:
             g.add((owner, MKG.partOf, std))
         g.add((std, MKG.version, Literal(version)))
-        if from_ai:
+        if roots[folder] == AI_SCH:
             g.add((owner, MKG.sourceAI, Literal(True)))
         vdir = os.path.join(roots[folder], folder, version)
 
         # ---- data types and actions
         for sub, kind in (('data', 'DataType'), ('actions', 'Action')):
-            for f in sorted(glob.glob(os.path.join(vdir, sub, '*.json'))):
+            for f in merged(folder, version, sub):
+                from_ai = f.startswith(AI_SCH)
                 d = load(f)
                 ident = id_by_url[schema_url(d, f)]
                 n = datatype(ident) if kind == 'DataType' else node('Action', ident)
@@ -179,7 +187,8 @@ def build(folders):
                         g.add((n, MKG.uses, datatype(t)))
 
         # ---- AIMs (L2)
-        for f in sorted(glob.glob(os.path.join(vdir, 'AIMs', '*.json'))):
+        for f in merged(folder, version, 'AIMs'):
+            from_ai = f.startswith(AI_SCH)
             d = load(f)
             name = (d.get('Identifier', {}) or {}).get('AIMName') or (d.get('Header') if isinstance(d.get('Header'), str) else None)
             nameless = not name

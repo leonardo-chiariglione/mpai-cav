@@ -1,0 +1,136 @@
+<!-- profiles : from https://mpai.community/standards/mpai-hmc/v2-1/profiles/ -->
+<h1>MPAI-HMC V2.1 Profiles</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/data-types/"> &lt;-Data Types</a>       <a href="https://mpai.community/standards/mpai-hmc/v2-2/">Go to ToC</a></p>
+<p>HMC-CEC Profiles are defined based on the availability of six groups of processing capabilities:</p>
+<table style="width: 99.9991%; height: 154px;">
+<tbody>
+<tr style="height: 38px;">
+<td style="width: 14%; text-align: center; height: 38px;" width="14%"><strong>Processing</strong></td>
+<td style="width: 99%; text-align: center; height: 38px;" width="99%"><strong>Processed Data</strong></td>
+</tr>
+<tr style="height: 48px;">
+<td style="width: 14%; height: 10px;" width="88">Receive</td>
+<td style="width: 99%; height: 10px;" width="535">Communication Items from a Machine or Audio-Visual Scenes from a real space.</td>
+</tr>
+<tr style="height: 48px;">
+<td style="width: 14%; height: 10px;" width="88">Extract</td>
+<td style="width: 99%; height: 10px;" width="535">Personal Status from Modalities (Text, Speech, Face, or Gesture).</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 14%; height: 24px;" width="88">Understands</td>
+<td style="width: 99%; height: 24px;" width="535">Personal Status using or not spatial information.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 14%; height: 24px;" width="88">Translates</td>
+<td style="width: 99%; height: 24px;" width="535">Text using Meaning of Entity&#8217;s Text.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 14%; height: 24px;" width="88">Generates</td>
+<td style="width: 99%; height: 24px;" width="535">Response including Text and Personal Status.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 14%; height: 24px;" width="88">Renders</td>
+<td style="width: 99%; height: 24px;" width="535">Response.</td>
+</tr>
+</tbody>
+</table>
+<p>Table 1 defines the Attributes and Sub-Attributes of the HMC-CEC Profiles. The Sub-Attributes are expressed with three characters where the first two represent the medium followed by O representing Object:</p>
+<ol>
+<li>The Audio-Visual Scene represent Text Object (TXO), Speech Object (SPO), Audio Object (AUO), Visual Object (VIO), 3D Model Object, and Portable Avatar (PAF) Sub-Attributes, respectively.</li>
+<li>The Personal Status, Understanding, Translation, and Display Response represent Text (TXO), Speech (SPO), Face (FCO), and Gesture (GSO), respectively.</li>
+</ol>
+<p>The PAF 1st-levelSub-Attribute (S-Attribute) includes the following 2nd-level SS-Attributes:</p>
+<ol>
+<li>AVA: The Avatar.</li>
+<li>LNG: the Avatar Language Preferences.</li>
+<li>TXO: Text Object associated with the Entity.</li>
+<li>NNM: Speech Model used to synthesise Speech.</li>
+<li>SPO: Speech Object associated with the Avatar.</li>
+<li>EPS: The Personal Status of the Avatar.</li>
+<li>SPC: The Space (SPaCe) where the Avatar is embedded.</li>
+</ol>
+<p>The SPC Sub-Attribute of Understanding represents Spatial Information, i.e., the capability of an HMC-CEC implementation to use Spatial Information.</p>
+<p>The LNG Sub-Attribute represent the <a href="https://mpai.community/standards/normative-references/#IS4">ISO 639</a> Set 3 three-letter code.</p>
+<p style="text-align: center;">Table 1 &#8211; Attribute and Sub-Attribute Codes of HMC-CEC.</p>
+<table style="width: 99.5675%;">
+<tbody>
+<tr>
+<td style="width: 22.1714%;"><strong>Attributes</strong></td>
+<td style="width: 9.33717%;"><strong>Codes</strong></td>
+<td style="width: 29.2457%;" colspan="5"><strong>S-Attribute Codes</strong></td>
+<td style="width: 46.9258%;" colspan="7"><strong>SS-Attribute Code</strong></td>
+</tr>
+<tr>
+<td style="width: 22.1714%;">AV Scene</td>
+<td style="width: 9.33717%;">AVS</td>
+<td style="width: 3.18857%;">TXO</td>
+<td style="width: 6.44%;">SPO</td>
+<td style="width: 5.50857%;">AUO</td>
+<td style="width: 6.04572%;">VIO</td>
+<td style="width: 8.06287%;">PAF</td>
+<td style="width: 7.12285%; text-align: center;">AVA</td>
+<td style="width: 5.3972%; text-align: center;">LNG</td>
+<td style="width: 5.90283%; text-align: center;">TXO</td>
+<td style="width: 6.30856%; text-align: center;">NNM</td>
+<td style="width: 4.43999%; text-align: center;">SPO</td>
+<td style="width: 4.69143%; text-align: center;">EPS</td>
+<td style="width: 13.0629%; text-align: center;">SPG</td>
+</tr>
+<tr>
+<td style="width: 22.1714%;">Personal Status</td>
+<td style="width: 9.33717%;">EPS</td>
+<td style="width: 3.18857%;">TXO</td>
+<td style="width: 6.44%;">SPO</td>
+<td style="width: 5.50857%;">FCO</td>
+<td style="width: 6.04572%;">GSO</td>
+<td style="width: 8.06287%;"></td>
+<td style="width: 46.9258%;" colspan="7"></td>
+</tr>
+<tr>
+<td style="width: 22.1714%;">Understanding</td>
+<td style="width: 9.33717%;">UND</td>
+<td style="width: 3.18857%;">TXO</td>
+<td style="width: 6.44%;">SPO</td>
+<td style="width: 5.50857%;">FCO</td>
+<td style="width: 6.04572%;">GSO</td>
+<td style="width: 8.06287%;">SPC</td>
+<td style="width: 46.9258%;" colspan="7"></td>
+</tr>
+<tr>
+<td style="width: 22.1714%;">Translation</td>
+<td style="width: 9.33717%;">TRN</td>
+<td style="width: 3.18857%;">TXO</td>
+<td style="width: 6.44%;">SPO</td>
+<td style="width: 5.50857%;">FCO</td>
+<td style="width: 6.04572%;">GSO</td>
+<td style="width: 8.06287%;">LNG</td>
+<td style="width: 46.9258%;" colspan="7"></td>
+</tr>
+<tr>
+<td style="width: 22.1714%;">Display</td>
+<td style="width: 9.33717%;">DIS</td>
+<td style="width: 3.18857%;">TXO</td>
+<td style="width: 6.44%;">SPO</td>
+<td style="width: 5.50857%;">FCO</td>
+<td style="width: 6.04572%;">GSO</td>
+<td style="width: 8.06287%;"></td>
+<td style="width: 46.9258%;" colspan="7"></td>
+</tr>
+</tbody>
+</table>
+<p>The JSON <a href="https://schemas.mpai.community/HMC/V1.1/data/CECProfiles.json">file </a>provides the formal specification of MPAI-HMC Profiles.</p>
+<p>The Regular Expression can be interpreted by factoring it into its component rules:</p>
+<div>
+<div><span style="font-family: terminal, monaco, monospace;">^(ALL|NUL)([+-](AVS|UND|TRN|EPS|DIS)|</span></div>
+<div><span style="font-family: terminal, monaco, monospace;">           @AVS#(TXO|SPO|AUO|VIO|</span><span style="font-family: terminal, monaco, monospace;">PAF(#(AVA|LNG|NNM|EPS|SPC|</span><span style="font-family: terminal, monaco, monospace;">(TXO|SPO)#([a-z]{3})(&lt;-&gt;|-&gt;)([a-z]{3})))?)|</span></div>
+<div><span style="font-family: terminal, monaco, monospace;">           @UND#(TXO|SPO|FCO|GSO|SPC)|</span></div>
+<div><span style="font-family: terminal, monaco, monospace;">           @TRN#(TXO|SPO|FCO|GSO)#([a-z]{3})(&lt;-&gt;|-&gt;)([a-z]{3})|</span></div>
+<div><span style="font-family: terminal, monaco, monospace;">           @EPS#(TXO|PSO|FCO|GSO)|</span></div>
+<div><span style="font-family: terminal, monaco, monospace;">           @DIS#(TXO|PSO|FCO|GSO))+$</span></div>
+</div>
+<p>An additional rule not specified by the Regular Expression is that ALL be always followed by &#8220;-&#8221; and NUL be always followed by &#8220;+&#8221;.</p>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/data-types/"> &lt;-Data Types</a>       <a href="https://mpai.community/standards/mpai-hmc/v2-2/">Go to ToC</a></p>
+						</div>				
+					</article>

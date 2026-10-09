@@ -1,0 +1,703 @@
+<!-- ai-modules/communicating-entities-in-context : from https://mpai.community/standards/mpai-hmc/v2-1/ai-workflows/communicating-entities-in-context/ -->
+<h1>MPAI-HMC V2.1 AIWs Communicating Entities in Context</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/"> Go to AI Modules</a></p>
+<p>&nbsp;</p>
+<table style="border-collapse: collapse; width: 100%; height: 93px;">
+<tbody>
+<tr style="height: 23px;">
+<td style="width: 33.3333%; height: 23px;"><span style="font-size: 12pt;"><a href="#Functions">1 Functions</a></span></td>
+<td style="width: 33.3333%; height: 23px;"><span style="font-size: 12pt;"><a href="#ReferenceModel">2 Reference Model</a></span></td>
+<td style="width: 33.3333%; height: 23px;"><span style="font-size: 12pt;"><a href="#InputOutputData">3 Input/Output Data</a></span></td>
+</tr>
+<tr style="height: 47px;">
+<td style="width: 33.3333%; height: 47px;"><span style="font-size: 12pt;"><a href="#FunctionsofAIMs">4 Functions of AI Modules</a></span></td>
+<td style="width: 33.3333%; height: 47px;"><span style="font-size: 12pt;"><a href="#InputOutputDataofAIMs">5 Input/Output Data of AI Modules </a></span></td>
+<td style="width: 33.3333%; height: 47px;"><span style="font-size: 12pt;"><a href="#AIW_AIMs_JSON">6 </a><a href="#AIW_AIMs_JSON">AIM, AIMs, and JSON Metadata</a></span></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 33.3333%; height: 23px;"><a href="#seven"><span style="font-size: 12pt;">7 Reference Software</span></a></td>
+<td style="width: 33.3333%; height: 23px;"><a href="#eight"><span style="font-size: 12pt;">8 Conformance Testing</span></a></td>
+<td style="width: 33.3333%; height: 23px;"><a href="#nine"><span style="font-size: 12pt;">9 Performance Assessment</span></a></td>
+</tr>
+</tbody>
+</table>
+<h3>1. <a id="Functions"></a>Functions</h3>
+<p>The <em>Communicating Entities in Context</em> (HMC-CEC) AI Module enables Entities to communicate with other Entities, possibly in different Contexts, where:</p>
+<ol>
+<li><strong>Entity </strong>refers to one of:
+<ol>
+<li><u>human</u>
+<ol>
+<li>In an <em>audio-visual scene</em>, or</li>
+<li>Represented as a <u>Digitised Human</u> in an <em>Audio-Visual Scene</em>.</li>
+</ol>
+</li>
+<li><u>Digital Human</u> representing
+<ol>
+<li>A <u>human</u> as a Digitised Human in an Audio-Visual Scene, or</li>
+<li>A <u>Machine</u> as a Virtual Human in an Audio-Visual Scene.</li>
+</ol>
+</li>
+<li>A <span style="text-decoration: underline;">Machine</span> not represented.</li>
+</ol>
+</li>
+<li><strong>Context </strong>is information describing the attributes of an Entity, such as language, culture etc.</li>
+</ol>
+<p>Note that the same non-capitalised and capitalised word represents an object in the <strong>real world</strong> and its digital representation in the <strong>Virtual World</strong>, respectively.</p>
+<p>Depending on its real or virtual nature, an Entity communicates with another Entity by:</p>
+<ol>
+<li>Using the human’s body, speech, context, and the audio-visual scene the human is immersed in</li>
+<li>Rendering the Virtual Entity as a speaking humanoid in an audio-visual scene, or</li>
+<li>Communicating by emitting Communication Items.</li>
+</ol>
+<p>Communication Item is an implementations of <a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a>, a Data Type including Data related to an Avatar and its Context, that enables a receiver to render an Avatar as intended by the sender.</p>
+<p>HMC-CEC assumes that:</p>
+<ol>
+<li><em>Input/Output Audio</em> and <em>Input/Output Visual</em> are Audio Object or Speech Objects and Visual Object, respectively.</li>
+<li>The<em> real space</em>
+<ol>
+<li>Is digitally represented as an Audio-Visual Scene that includes the communicating human.</li>
+<li>May include other humans and generic objects.</li>
+</ol>
+</li>
+<li>The <em>Virtual Space</em>
+<ol>
+<li>Contains a Digital Human and/or its Speech components in an Audio-Visual Scene.</li>
+<li>May include other Digital Humans and generic Objects.</li>
+</ol>
+</li>
+<li>The <em>Machine</em> can:
+<ul>
+<li><span style="text-decoration: underline;">Understand</span> the semantics of the Communication Item at different layers of depth depending on the technologies used by an Implementation.</li>
+<li><span style="text-decoration: underline;">Produce</span> a multimodal response expected to be congruent with the received information.</li>
+<li><span style="text-decoration: underline;">Render</span> the response as a speaking Virtual Human in an Audio-Visual Scene.</li>
+<li><span style="text-decoration: underline;">Convert</span> the Data produced by an Entity to Data whose semantics is compatible with the Context of another Entity.</li>
+</ul>
+</li>
+</ol>
+<p>Note 1: An AI Module is specified only by its Functions and Interfaces. Implementers are free to use their preferred technologies to achieve the expected AIM Functions while respecting the Function and  Interface constraints.</p>
+<p>Note 2: An Implementation may subdivide a given AIM into more than one AIM, provided that their combined Functions and Interface conform with the Interfaces of the corresponding HMC-CEC AIM.</p>
+<p>Note 3: An implementation may combine AIMs into one, provided that the resulting AIM performs the combine Functions and exposes the Interface of the combined HMC-CEC AIMs.</p>
+<h3>2 <a id="ReferenceModel"></a>Reference Model</h3>
+<p>Figure 1 depicts the Reference Model of the <em>Communicating </em><em>Entities in Context (HMC-CEC)</em> AIM that includes <em>AI Modules (AIM) </em>per <em>Technical Specification: AI Framework (MPAI-AIF) V2.1</em>. Three out of the seven AIMs in Figure 1 (<em>Audio-Visual Scene Description</em>, <em>Entity Context Understanding</em>, and <em>Personal Status Display</em>) are Composite AIMs, i.e., they include interconnected AIMs.</p>
+<p style="text-align: center;"><img fetchpriority="high" decoding="async" class="alignnone size-full wp-image-30421" src="https://mpai.community/wp-content/uploads/2025/06/Communicating-Entities-in-Context1-HMC-CEC-V2.2.png" alt="" width="1173" height="587" srcset="https://mpai.community/wp-content/uploads/2025/06/Communicating-Entities-in-Context1-HMC-CEC-V2.2.png 1173w, https://mpai.community/wp-content/uploads/2025/06/Communicating-Entities-in-Context1-HMC-CEC-V2.2-300x150.png 300w, https://mpai.community/wp-content/uploads/2025/06/Communicating-Entities-in-Context1-HMC-CEC-V2.2-1024x512.png 1024w, https://mpai.community/wp-content/uploads/2025/06/Communicating-Entities-in-Context1-HMC-CEC-V2.2-768x384.png 768w" sizes="(max-width: 1173px) 100vw, 1173px" /></p>
+<p style="text-align: center;">Figure 1 – Communicating Entities in Context (HMC-CEC) AIM</p>
+<p>Note that:</p>
+<ol>
+<li>The <em>Input Selector</em> enables an Entity to inform the Machine about use of media types (Text. Speech, and Visual), Portable Avatar, and Language Preferences.</li>
+<li>The Machine captures the information emitted by an Entity and its Context through <em>Input Text</em>, <em>Input Audio</em> and <em>Input Visual</em>. In Figure 1 Audio includes Speech.</li>
+<li>The <em>Input Portable Avatar</em> is the Communication Item emitted by a Machine Entity.</li>
+<li>The <em>Audio-Visual Scene Descriptors</em> are digital representations of a real audio-visual scene or a Virtual Audio-Visual Scene produced either by the <em>Audio-Visual Scene Description</em> AIM or the <em>Audio-Visual Scene Integration and Description</em> AIM.</li>
+<li>To facilitate identification, AIMs are labelled with three letters indicating the Technical Specification that specifies it, followed by a hyphen “-”, followed by three letters uniquely identifying the AIM defined by that Technical Specification. For instance, Portable Avatar Demultiplexing is indicated as PAF-PDX where PAF refers to <em>Technical Specification: Portable Avatar Format (MPAI-PAF)</em> and PDX refers to the <a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/portable-avatar-demultiplexing/"><em>Portable Avatar Demultiplexing</em></a> AIM also specified by MPAI-PAF.</li>
+</ol>
+<h3>3 <a id="InputOutputData"></a>Input/Output Data</h3>
+<p>Table 1 gives the Input/Output Data of the MPAI-HMC AIM.</p>
+<p style="text-align: center;">Table 1 – Input/Output Data of the HMC-CEC AIM</p>
+<table style="width: 100.571%; height: 298px;">
+<tbody>
+<tr style="height: 24px;">
+<td style="text-align: center; width: 19.8986%; height: 24px;" width="132"><strong>Input</strong></td>
+<td style="text-align: center; width: 94.0076%; height: 24px;" width="491"><strong>Description</strong></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">A Communication Item emitted by the Entity communicating with the ego Entity.</td>
+</tr>
+<tr>
+<td style="width: 19.8986%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/selector/">Selector</a></td>
+<td style="width: 94.0076%;">Selector containing data specifying the media and the language used in the communication.</td>
+</tr>
+<tr>
+<td style="width: 19.8986%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a></td>
+<td style="width: 94.0076%;">Text Object generated by the communicating Entity as information additional to or in lieu of Speech Object.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">The audio scene captured by the Machine.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">The visual scene captured by the Machine.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; text-align: center; height: 24px;" width="132"><strong>Output</strong></td>
+<td style="width: 94.0076%; text-align: center; height: 24px;" width="491"><strong>Description</strong></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">The Communication Item produced by the Machine.</td>
+</tr>
+<tr>
+<td style="width: 19.8986%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/speech-object/">Speech</a></td>
+<td style="width: 94.0076%;">The speech corresponding to the Speech Object  in the output Communication Item.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">The audio corresponding to the Audio Object in the output Communication Item.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 19.8986%; height: 24px;" width="132">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+<td style="width: 94.0076%; height: 24px;" width="491">The visual corresponding to the Visual Object  in the output Communication Item.</td>
+</tr>
+<tr>
+<td style="width: 19.8986%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a>1</td>
+<td style="width: 94.0076%;">The Text contained in a Communication Item or associated with Output Audio and Output Visual.</td>
+</tr>
+<tr>
+<td style="width: 19.8986%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a>2</td>
+<td style="width: 94.0076%;">Translation of Output Text2.</td>
+</tr>
+</tbody>
+</table>
+<h3>4 <a id="FunctionsofAIMs"></a>Functions of AI Modules</h3>
+<p><em>Table 2</em> gives the functions of HMC-CEC AIMs.</p>
+<p style="text-align: center;"><em>Table 2</em><em> – Functions of AI </em><em>Modules</em></p>
+<table style="width: 99.7888%; height: 240px;" width="623">
+<tbody>
+<tr style="height: 24px;">
+<td style="text-align: center; width: 36.2761%; height: 24px;" width="226"><strong>AIM</strong></td>
+<td style="text-align: center; width: 92.5792%; height: 24px;" width="397"><strong>Functions</strong></td>
+</tr>
+<tr style="height: 48px;">
+<td style="width: 36.2761%; height: 48px;" width="226"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/av-scene-integration-and-description/">Audio-Visual</a><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/scene-integration-and-description/"> Scene Integration and Description</a></td>
+<td style="width: 92.5792%; height: 48px;" width="397">Produces Audio-Visual Scene Descriptors where the Avatar in Portable Avatar has been added to Audio-Visual Scene.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-scene-description/">Audio-Visual Scene Description</a></td>
+<td style="width: 92.5792%; height: 24px;" width="397">Provides Audio-Visual Scene Descriptors.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/entity-and-context-understanding/">Entity and Context Understanding</a></td>
+<td style="width: 92.5792%; height: 24px;" width="397">Provides information on Entity and its Context.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-and-speech-translation/">Text-and-Speech Translation</a></td>
+<td style="width: 92.5792%; height: 24px;">Produces translation of Entity Speech or Text.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-dialogue-processing/">Entity Dialogue Processing</a></td>
+<td style="width: 92.5792%; height: 24px;" width="397">Produces Text and Personal Status of Machine in response to input from Entity and Context Understanding.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="width: 92.5792%; height: 24px;">Produces translation of Machine Text using Text and Meaning.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/personal-status-display/">Personal Status Display</a></td>
+<td style="width: 92.5792%; height: 24px;">Produces Portable Avatar.</td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 36.2761%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/audio-visual-scene-rendering/">Audio-Visual Scene Rendering</a></td>
+<td style="width: 92.5792%; height: 24px;">Renders the content of the internally generated Portable Avatar.</td>
+</tr>
+</tbody>
+</table>
+<h3>5 <a id="InputOutputDataofAIMs"></a>Input/Output Data of AI Modules</h3>
+<p>Table 3 gives the I/O Data of the AIMs of HMC-CEC. Note that an ID can either be specified as an <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance Identifier</a> or refer to a generic identifier.</p>
+<p style="text-align: center;"><em>Table 3 &#8211; Input/Output Data of AI Modules</em></p>
+<table style="width: 106.657%;">
+<tbody>
+<tr>
+<td style="width: 33.8199%; text-align: center;"><strong>AIM</strong></td>
+<td style="width: 31.9834%; text-align: center;"><strong>Receives</strong></td>
+<td style="width: 33.4587%; text-align: center;"><strong>Produces</strong></td>
+</tr>
+<tr style="height: 48px;">
+<td style="width: 33.8199%; height: 48px;" width="226"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/av-scene-integration-and-description/">Audio-Visual</a><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/scene-integration-and-description/"> Scene Integration and Description</a></td>
+<td style="width: 31.9834%;">Input <a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 33.4587%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-descriptors/">Audio-Visual Scene Descriptors</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-scene-description/">Audio-Visual Scene Description</a></td>
+<td style="width: 31.9834%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a><br />
+Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+<td style="width: 33.4587%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-descriptors/">Audio-Visual Scene Descriptors</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/entity-and-context-understanding/">Entity and Context Understanding</a></td>
+<td style="width: 31.9834%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-descriptors/">Audio-Visual Scene Descriptors</a><br />
+Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a><br />
+Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/selector/">Selector</a></td>
+<td style="width: 33.4587%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a><br />
+<a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a><br />
+Entity <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">ID</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a><br />
+<a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/meaning/">Meaning</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance Identifier</a></td>
+</tr>
+<tr>
+<td style="width: 33.8199%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-and-speech-translation/">Text-and-Speech Translation</a></td>
+<td style="width: 31.9834%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/meaning/">Meaning</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/speech-object/">Speech Object</a></td>
+<td style="width: 33.4587%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;" width="226"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-dialogue-processing/">Entity Dialogue Processing</a></td>
+<td style="width: 31.9834%;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-visual-scene-geometry/">Audio-Visual Scene Geometry</a><br />
+<a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a><br />
+Entity <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">ID</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a><br />
+<a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/meaning/">Meaning</a><br />
+<a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/instance-identifier/">Instance Identifier</a></td>
+<td style="width: 33.4587%;">Machine <a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a><br />
+Machine Avatar ID<br />
+Machine <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a><br />
+Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="width: 31.9834%;">Machine <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a><br />
+Machine <a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a></td>
+<td style="width: 33.4587%;">Machine Translated <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/personal-status-display/">Personal Status Display</a></td>
+<td style="width: 31.9834%;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Machine </a><a href="https://mpai.community/standards/mpai-mmc/v2-4/data-types/personal-status/">Personal Status</a><br />
+Machine Avatar ID<br />
+Machine <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text Object</a></td>
+<td style="width: 33.4587%;">Output <a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 33.8199%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/audio-visual-scene-rendering/">Audio-Visual Scene Rendering</a></td>
+<td style="width: 31.9834%;">Output <a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 33.4587%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a><br />
+Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="AIW_AIMs_JSON"></a>6 <a id="Specification"></a>AIM, AIMs, and JSON Metadata</h3>
+<p>Table 4 provides the list of AIMs composing the HMC-CEC AIM. The AIMs of a Composite AIM are also provided down to the level of Basic AIMs.</p>
+<p style="text-align: center;"><em>Table 4 &#8211; AIM, AIMs, and JSON Metadata</em></p>
+<table style="width: 100.404%; height: 1075px;">
+<tbody>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; text-align: center; height: 24px;"><strong>AIM</strong></td>
+<td style="width: 12.8326%; text-align: center; height: 24px;"><strong>AIMs/1</strong></td>
+<td style="width: 12.989%; text-align: center; height: 24px;"><strong>AIMs/2</strong></td>
+<td style="width: 13.302%; text-align: center; height: 24px;"><strong>AIMs/3 </strong></td>
+<td style="width: 42.41%; text-align: center; height: 24px;"><strong>Name</strong></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><strong>JSON</strong></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;">HMC-CEC</td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-workflow/communicating-entities-in-context/">Communicating Entities in Context</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/HumanAndMachineCommunication.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">HMC-SID</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/scene-integration-and-description/">AV Scene Integration and Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/AVSceneIntegrationAndDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">OSD-AVS</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-scene-description/">Audio-Visual Scene Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioVisualEventDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">CAE-ASD</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-scene-description/">Audio Scene Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioSceneDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">CAE-AAT</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-analysis-transform/">Audio Analysis Transform</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioAnalysisTransform.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">CAE-ASL</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-source-localisation/">Audio Source Localisation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioSourceLocalisation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">CAE-ASE</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-separation-and-enhancement/">Audio Separation and Enhancement</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioSeparationAndEnhancement.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">CAE-AST</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-synthesis-transform/">Audio Synthesis Transform</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioSynthesisTransform.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">CAE-AMX</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-descriptors-multiplexing/">Audio Descriptors Multiplexing</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioDescriptorsMultiplexing.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">OSD-VSD</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-scene-description/">Visual Scene Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualSceneDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">OSD-AVA</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-alignment/">Audio-Visual Alignment</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioVisualAlignment.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">HMC-ECU</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/entity-and-context-understanding/">Entity And Context Understanding</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/HMC/V2.2/AIMs/EntityAndContextUnderstanding.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">OSD-SDX</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/audio-visual-scene-demultiplexing/">Audio-Visual Scene Demultiplexing</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/AudioVisualSceneDemultiplexing.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">MMC-ASR</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/automatic-speech-recognition/">Automatic Speech Recognition</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/AutomaticSpeechRecognition.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">OSD-VOI</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-object-identification/">Visual Object Identification</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualObjectIdentification.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">OSD-VDI</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-direction-identification/">Visual Direction Identification</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualDirectionIdentification.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">OSD-VOE</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-object-extraction/">Visual Object Extraction</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualObjectExtraction.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">OSD-VII</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/ai-modules/visual-instance-identification/">Visual Instance Identification</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/OSD/V1.4/AIMs/VisualInstanceIdentification.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">CAE-AOI</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object-identification/">Audio Object Identification</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/CAE1/V2.3/AIMs/AudioObjectIdentification.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">MMC-NLU</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/natural-language-understanding/">Natural Language Understanding</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/NaturalLanguageUnderstanding.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">MMC-PSE</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/personal-status-extraction/">Personal Status Extraction</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PersonalStatusExtraction.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">MMC-ETD</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-text-description/">Entity Text Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntityTextDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">MMC-ESD</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-speech-description/">Entity Speech Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntitySpeechDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">PAF-EFD</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-face-description/">Entity Face Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityFaceDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">PAF-EBD</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-body-description/">Entity Body Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityBodyDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">MMC-PTI</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/ps-text-interpretation/">PS-Text Interpretation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PSTextInterpretation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">MMC-PSI</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/ps-speech-interpretation/">PS-Speech Interpretation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PSSpeechInterpretation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">PAF-PFI</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/ps-face-interpretation/">PS-Face Interpretation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PSFaceInterpretation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">PAF-PGI</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/ps-gesture-interpretation/">PS-Gesture Interpretation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PSGestureInterpretation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;">MMC-PMX</td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/personal-status-multiplexing/">Personal Status Multiplexing</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/PersonalStatusMultiplexing.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">MMC-TTT</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextAndSpeechTranslation.json">X</a></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 12.3631%; height: 23px;"></td>
+<td style="width: 12.8326%; height: 23px;">MMC-TST</td>
+<td style="width: 12.989%; height: 23px;"></td>
+<td style="width: 13.302%; height: 23px;"></td>
+<td style="width: 42.41%; height: 23px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-and-speech-translation/">Text-and-Speech Translation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 23px;"></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 12.3631%; height: 23px;"></td>
+<td style="width: 12.8326%; height: 23px;"></td>
+<td style="width: 12.989%; height: 23px;">MMCASR</td>
+<td style="width: 13.302%; height: 23px;"></td>
+<td style="width: 42.41%; height: 23px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/automatic-speech-recognition/">Automatic Speech Recognition</a></td>
+<td style="width: 18.7793%; text-align: center; height: 23px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/AutomaticSpeechRecognition.json">X</a></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 12.3631%; height: 23px;"></td>
+<td style="width: 12.8326%; height: 23px;"></td>
+<td style="width: 12.989%; height: 23px;">MMC-TTT</td>
+<td style="width: 13.302%; height: 23px;"></td>
+<td style="width: 42.41%; height: 23px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 23px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextAndSpeechTranslation.json">X</a></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 12.3631%; height: 23px;"></td>
+<td style="width: 12.8326%; height: 23px;"></td>
+<td style="width: 12.989%; height: 23px;">MMC-ESP</td>
+<td style="width: 13.302%; height: 23px;"></td>
+<td style="width: 42.41%; height: 23px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-speech-description/">Entity Speech Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 23px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntitySpeechDescription.json">X</a></td>
+</tr>
+<tr style="height: 23px;">
+<td style="width: 12.3631%; height: 23px;"></td>
+<td style="width: 12.8326%; height: 23px;"></td>
+<td style="width: 12.989%; height: 23px;">MMC-TSD</td>
+<td style="width: 13.302%; height: 23px;"></td>
+<td style="width: 42.41%; height: 23px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-speech-with-descriptors/">Text-to-Speech with Descriptors</a></td>
+<td style="width: 18.7793%; text-align: center; height: 23px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextToSpeechWithDescriptors.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">MMC-EDP</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/entity-dialogue-processing/">Entity Dialogue Processing</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/EntityDialogueProcessing.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">MMC-TTT</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-text-translation/">Text-to-Text Translation</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextAndSpeechTranslation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">PAF-RSR</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/response-and-scene-rendering/">Response and Scene Rendering</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/ResponseAndSceneRendering.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;">PAF-PSD</td>
+<td style="width: 12.989%; height: 24px;"></td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/personal-status-display/">Personal Status Display</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PersonalStatusDisplay.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">MMC-TTS</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-mmc/v2-4/ai-modules/text-to-speech-translation/">Text-to-Speech</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/MMC/V2.4/AIMs/TextToSpeechTranslation.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">PAF-IFD</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-face-description/">Entity Face Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityFaceDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">PAF-IBD</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/entity-body-description/">Entity Body Description</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/EntityBodyDescription.json">X</a></td>
+</tr>
+<tr style="height: 24px;">
+<td style="width: 12.3631%; height: 24px;"></td>
+<td style="width: 12.8326%; height: 24px;"></td>
+<td style="width: 12.989%; height: 24px;">PAF-PMX</td>
+<td style="width: 13.302%; height: 24px;"></td>
+<td style="width: 42.41%; height: 24px;"><a href="https://mpai.community/standards/mpai-paf/v1-5/ai-modules/portable-avatar-multiplexing/">Portable Avatar Multiplexing</a></td>
+<td style="width: 18.7793%; text-align: center; height: 24px;"><a href="https://schemas.mpai.community/PAF/V1.5/AIMs/PortableAvatarMultiplexing.json">X</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="seven"></a>7 Reference Software</h3>
+<h3><a id="eight"></a>8 Conformance Testing</h3>
+<p>Table 5 provides the Conformance Testing Method for HMC-CEC AIM.</p>
+<p>If a schema contains references to other schemas, conformance of data for the primary schema implies that any data referencing a secondary schema shall also validate against the relevant schema, if present and conform with the Qualifier, if present.</p>
+<p style="text-align: center;">Table 5 – Conformance Testing Method for HMC-CEC AIM</p>
+<table style="width: 95.9723%;">
+<tbody>
+<tr>
+<td style="width: 10.1911%;">Receives</td>
+<td style="width: 18.1528%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 83.758%;">Shall validate against Portable Avatar Schema.<br />
+Portable Avatar Data shall conform with respective Qualifiers.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/selector/">Selector</a></td>
+<td style="width: 83.758%;">Shall validate against Selector schema.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a></td>
+<td style="width: 83.758%;">Shall validate against Text Object schema.<br />
+Audio Data shall conform with Text Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a></td>
+<td style="width: 83.758%;">Shall validate against Audio Object schema.<br />
+Audio Data shall conform with Audio Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Input <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+<td style="width: 83.758%;">Shall validate against Visual Object schema.<br />
+Audio Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;">Produces</td>
+<td style="width: 18.1528%;"><a href="https://mpai.community/standards/mpai-paf/v1-5/data-types/portable-avatar/">Portable Avatar</a></td>
+<td style="width: 83.758%;">Shall validate against Portable Avatar Schema.<br />
+Portable Avatar Data shall conform with respective Qualifiers.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/audio-object/">Audio</a></td>
+<td style="width: 83.758%;">Shall validate against Audio Object schema.<br />
+Audio Data shall conform with Audio Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/visual-object/">Visual</a></td>
+<td style="width: 83.758%;">Shall validate against Visual Object schema.<br />
+Audio Data shall conform with Visual Qualifier.</td>
+</tr>
+<tr>
+<td style="width: 10.1911%;"></td>
+<td style="width: 18.1528%;">Output <a href="https://mpai.community/standards/mpai-osd/v1-4/data-types/text-object/">Text</a></td>
+<td style="width: 83.758%;">Shall validate against Text Object schema.<br />
+Audio Data shall conform with Text Qualifier.</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="nine"></a>9 Performance Assessment</h3>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-hmc/v2-2/ai-workflow/">Go to AI Module</a></p>
+						</div>				
+					</article>
