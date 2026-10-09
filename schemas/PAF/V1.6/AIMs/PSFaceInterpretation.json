@@ -1,11 +1,11 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/PSFaceInterpretation.json",
-  "title":                "PS-Face Interpretation V2.5",
+  "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PSFaceInterpretation.json",
+  "title":                "PS-Face Interpretation V1.6",
 
-  "Header":               "MMC-PFI-V2.5",
+  "Header":               "PAF-PFI-V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PFI-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PFI-V1.6"},
 
   "APIProfile":           "Basic",
   "Description":          "This AIM extracts the Face Personal Status from the Face Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Face Description (Port 2).",
@@ -24,4 +24,4 @@
 
   "DataXMData":           { },
 
-  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}
+  "Documentation":        [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
