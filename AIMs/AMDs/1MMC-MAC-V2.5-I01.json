@@ -104,91 +104,17 @@
                                        }
                     }
                 ],
-    "Topology":  [{"Output": {"AIMName": "", "PortName": "Prompt"}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Prompt", "DataType": "OSD-BTO-V1.5"}},
-                     {
-                         "Output":  {
-                                        "AIMName":  "",
-                                        "PortName":  "FaceObject"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1PAF-FIR-V1.6-I01",
-                                       "PortName":  "FaceObject"
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName":  "",
-                                        "PortName":  "BasicSpeechObject"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1MMC-SIR-V2.5-I01",
-                                       "PortName":  "BasicSpeechObject"
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1PAF-FIR-V1.6-I01",
-                                        "PortName":  "FaceID"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1OSD-IDR-V1.5-I01",
-                                       "PortName":  "FaceID",
-                                       "PortNumber":  1
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1MMC-SIR-V2.5-I01",
-                                        "PortName":  "SpeakerID"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1OSD-IDR-V1.5-I01",
-                                       "PortName":  "SpeakerID",
-                                       "PortNumber":  2
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "PersonalStatus"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "PersonalStatus"
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "ResponseText"
-                                    },
-                         "Input":  {
-                                       "AIMName": "1PAF-RSR-V1.6-I01",
-                                       "PortName":  "ResponseText"
-                                   }
-                     },
-                     {
-                         "Output":  {
-                                        "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "Response"
-                                    },
-                         "Input":  {
-                                       "AIMName":  "",
-                                       "PortName":  "Response"
-                                   }
-                     },
-                     { "Output": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
-                     {
-                         "Output":  {
-                                        "AIMName": "1OSD-IDR-V1.5-I01",
-                                        "PortName":  "Identification"
-                                    },
-                         "Input":  {
-                                       "AIMName":  "",
-                                       "PortName":  "Identification"
-                                   }
-                     },
-                     { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "1PAF-RSR-V1.6-I01", "PortName": "Avatar" } }],
+    "Topology":  [{"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5","PortNumber":1},"Input":{"AIMName":"1PAF-RSR-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
+                          {"Output":{"AIMName":"","DataType":"OSD-BVO-V1.5","PortNumber":1},"Input":{"AIMName":"1PAF-FIR-V1.6-I01","DataType":"OSD-BVO-V1.5"}},
+                          {"Output":{"AIMName":"","DataType":"OSD-BSO-V1.5","PortNumber":1},"Input":{"AIMName":"1MMC-SIR-V2.5-I01","DataType":"OSD-BSO-V1.5"}},
+                          {"Output":{"AIMName":"1PAF-FIR-V1.6-I01","DataType":"OSD-IID-V1.5"},"Input":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"OSD-IID-V1.5","PortNumber":1}},
+                          {"Output":{"AIMName":"1MMC-SIR-V2.5-I01","DataType":"OSD-IID-V1.5"},"Input":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"OSD-IID-V1.5","PortNumber":2}},
+                          {"Output":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1PAF-RSR-V1.6-I01","DataType":"MMC-EPS-V2.5"}},
+                          {"Output":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-RSR-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
+                          {"Output":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"","DataType":"OSD-BTO-V1.5","PortNumber":1}},
+                          {"Output":{"AIMName":"1PAF-RSR-V1.6-I01","DataType":"XRV-SAV-V1.0"},"Input":{"AIMName":"","DataType":"XRV-SAV-V1.0","PortNumber":1}},
+                          {"Output":{"AIMName":"1OSD-IDR-V1.5-I01","DataType":"boolean"},"Input":{"AIMName":"","DataType":"boolean","PortNumber":1}},
+                          {"Output":{"AIMName":"","DataType":"PAF-AVT-V1.6","PortNumber":1},"Input":{"AIMName":"1PAF-RSR-V1.6-I01","DataType":"PAF-AVT-V1.6"}}],
     "Implementations":  [
                             {
                                 "ImplementationURI":  "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-MAC-V2.5-I01.json",

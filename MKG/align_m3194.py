@@ -26,7 +26,8 @@ def vkey(v):
     return tuple(int(x) for x in re.findall(r'\d+', v))
 
 
-# ---- every L2 by AIM name, D:\DI first
+# ---- every L2 and L3 by AIM name, D:\DI first
+AMDS = os.path.join(DI, 'AIMs', 'AMDs')
 L2 = {}
 for root in ROOTS:
     for folder in sorted(os.listdir(root)):
@@ -42,6 +43,14 @@ for root in ROOTS:
             name = (d.get('Identifier') or {}).get('AIMName')
             if name and name not in L2:
                 L2[name] = (f, d)
+for f in sorted(glob.glob(os.path.join(AMDS, '*.json'))):
+    try:
+        d = load(f)
+    except Exception:
+        continue
+    name = (d.get('Identifier') or {}).get('AIMName')
+    if name and name not in L2:
+        L2[name] = (f, d)
 
 
 def types_of(p):
@@ -92,19 +101,13 @@ def align(name, f, d):
     own = d.get('ExternalPorts') or []
     used = set()
     out = []
+    internal_needed = []
     for i, t in enumerate(topo, 1):
         o, ie = t.get('Output') or {}, t.get('Input') or {}
         if 'PortName' not in o and 'PortName' not in ie and 'DataType' in o and 'DataType' in ie:
             out.append(t)
             continue
         A, B = o.get('AIMName') or '', ie.get('AIMName') or ''
-        label = next((x for x in (d.get('InternalTypes') or []) if A and x.get('Name') == o.get('PortName') and x.get('Output') is not None), None)
-        if label is not None:
-            # L1: the Output group of a supply from a Sub-AIM into a Sub-AIM that groups its Input Ports is declared on the
-            # InternalType; the flow keeps the label that finds it
-            out.append(t)
-            assumed.append('flow %d: kept with its InternalType label %s (Output %s): it feeds an Input group of %s' % (i, label['Name'], label['Output'], B))
-            continue
         ca, cb = candidates(A, own, 'out'), candidates(B, own, 'in')
         if (A and A not in L2) or (B and B not in L2):
             problems.append('flow %d: the L2 of %s is not in the repository' % (i, A if A not in L2 and A else B))
@@ -136,11 +139,6 @@ def align(name, f, d):
         else:
             choice = top[0]
         _, pa, pb, ty = choice
-        if A and pb.get('Input') is not None:
-            # a supply from a Sub-AIM into an Input group of a Sub-AIM (L1: its Output group is declared by the label): kept
-            out.append(t)
-            assumed.append('flow %d: kept as it was (labels): it feeds the Input group %s of %s' % (i, pb.get('Input'), B))
-            continue
         used.add((A, 'o', ty, pa.get('PortNumber') or 0)); used.add((B, 'i', ty, pb.get('PortNumber') or 0))
         def end(aim, port):
             r = {'AIMName': aim, 'DataType': ty}
@@ -149,12 +147,12 @@ def align(name, f, d):
             return r
         endA = end(A, pa)
         out.append({'Output': endA, 'Input': end(B, pb)})
-        # PAF-RSR takes its text twice (TextTTS #1 for the speech, TextSAF #2 for the avatar): the same text goes to both
-        if B == 'PAF-RSR-V1.6' and ty == 'OSD-BTO-V1.5' and (pb.get('PortNumber') or 0) == 1:
-            second = next((p for p in cb if ty in types_of(p) and p.get('PortNumber') == 2), None)
-            if second is not None:
-                out.append({'Output': endA, 'Input': end(B, second)})
-                assumed.append('flow %d: the text also goes to PAF-RSR-V1.6 OSD-BTO-V1.5 #2 (TextSAF)' % i)
+        if A and pb.get('Input') is not None:
+            has = [x for x in (d.get('InternalTypes') or []) if x.get('Output') is not None and ty in types_of(x)]
+            if not has and (ty, pb['Input']) not in internal_needed:
+                internal_needed.append((ty, pb['Input']))
+                assumed.append('flow %d: %s -> %s: InternalTypes gets DataType %s, Output %s (the Input group of %s)' % (i, A, B, ty, pb['Input'], B))
+    d['_internal_needed'] = internal_needed
     return out, problems, assumed
 
 
@@ -172,7 +170,7 @@ def main():
     total = ok = 0
     for name in sorted(L2):
         f, d = L2[name]
-        if not f.startswith(ROOTS[0]):
+        if not (f.startswith(ROOTS[0]) or f.startswith(AMDS)):
             continue                                 # only what is in D:\DI is changed
         if only and name not in only:
             continue
@@ -214,6 +212,26 @@ def main():
                 end = k + 1
             nl = '\r\n' if '\r\n' in s else '\n'
             s2 = s[:a] + text_of(new).replace('\n', nl).rstrip(',') + (',' if comma else '') + s[end:]
+            for ty_, grp_ in d.get('_internal_needed', []):
+                it = s2.index('"InternalTypes"')
+                ib = s2.index('[', it)
+                depth_, kk = 0, ib
+                while True:
+                    ch = s2[kk]
+                    if ch == '"':
+                        kk += 1
+                        while s2[kk] != '"':
+                            kk += 2 if s2[kk] == chr(92) else 1
+                    elif ch == '[':
+                        depth_ += 1
+                    elif ch == ']':
+                        depth_ -= 1
+                        if depth_ == 0:
+                            break
+                    kk += 1
+                inner = s2[ib + 1:kk]
+                entry_ = '{"DataType": "%s", "Output": %d}' % (ty_, grp_)
+                s2 = s2[:ib + 1] + ((inner.rstrip() + ',' + nl + ' ' * 26 + entry_ + ' ') if inner.strip() else entry_) + s2[kk:]
             json.loads(strip_comments(s2))
             bom = open(f, 'rb').read(3) == b'\xef\xbb\xbf'
             open(f, 'w', encoding='utf-8-sig' if bom else 'utf-8', newline='').write(s2)
