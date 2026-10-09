@@ -15,8 +15,8 @@ def p(n): return URIRef(V + n)
 
 PREFIX = {'standard': 'STD:', 'part': 'PART:', 'aim': 'AIM:', 'datatype': 'DT:', 'action': 'ACT:', 'l3': 'L3:',
           'implementer': 'IMP:', 'mpaistore': 'STORE:', 'performanceassessor': 'ASSESS:', 'framework': 'AIF:',
-          'useragent': 'UA:', 'unit': 'UNIT:'}
-KINDS = ['Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore', 'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit']
+          'useragent': 'UA:', 'unit': 'UNIT:', 'software': 'SW:'}
+KINDS = ['Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore', 'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software']
 
 def nid(u):
     s = str(u)
@@ -40,9 +40,10 @@ for kind in KINDS:
                     'noAcronym': bool(lit(s, 'noAcronym')), 'notAligned': (s, p('notAligned'), None) in g,
                     'webOnly': bool(lit(s, 'webOnly')), 'sourceAI': bool(lit(s, 'sourceAI')), 'notInM3260': bool(lit(s, 'notInM3260')),
                     'webCode': lit(s, 'webCode'), 'codeDiffers': bool(lit(s, 'codeDiffersFromWeb')),
+                    'repository': lit(s, 'repository'), 'path': lit(s, 'path'), 'softwareKind': lit(s, 'softwareKind'), 'unitStatus': lit(s, 'unitStatus'),
                     'version': lit(s, 'version'), 'partAcronym': lit(s, 'partAcronym'), 'inM3260': bool(lit(s, 'inM3260'))}
 
-for s in g.subjects(RDF.type, p('AIM')):
+for s in list(g.subjects(RDF.type, p('AIM'))) + list(g.subjects(RDF.type, p('Unit'))):
     a = nodes[nid(s)]
     for port in g.objects(s, p('port')):
         a['ports'].append({'dt': nid(g.value(port, p('dataType'))), 'dir': lit(port, 'direction'), 'n': int(lit(port, 'portNumber') or 0),
@@ -63,7 +64,7 @@ for s in g.subjects(RDF.type, p('L3')):
 
 # the simple relations between nodes (the Standard, Part, L3, participants), with a label
 edges = []
-for rel in ('partOf', 'specifies', 'produces', 'receives', 'holdsIDFrom', 'communicatesWith', 'usesUnit', 'specifiedBy'):
+for rel in ('partOf', 'specifies', 'produces', 'receives', 'holdsIDFrom', 'communicatesWith', 'usesUnit', 'specifiedBy', 'dependsOn', 'implements'):
     for a, b in g.subject_objects(p(rel)):
         if isinstance(b, URIRef) and '/kg/' in str(b) and '/kg/' in str(a):
             edges.append([nid(a), rel, nid(b)])

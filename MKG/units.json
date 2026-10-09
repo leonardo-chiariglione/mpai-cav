@@ -1,0 +1,24 @@
+{
+  "_comment": "The Units of the User Agent (UAU): what acquires data from the physical layer and what delivers data to it. Acquisition and delivery are done by Units, not by AIMs. A first list, to be confirmed: the Units of audio, speech and visual acquisition and delivery and of the delivery of a 3D model (from the author, 2026/10/09), and the Units for the other media (LiDAR, RADAR, ultrasound, offline maps, text) that are candidates. 'status' says whether the Unit has code in D:\\DI. 'ports' are the Data Types a Unit takes from and gives to AIMs.",
+  "standard": "UAU",
+  "units": [
+    {"acronym": "UAU-AOA", "name": "Audio Object Acquisition", "status": "code", "ports": [{"direction": "Output", "dataType": "OSD-BAO-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs", "UserAgent/PhysicalLayer/Devices/AlsaAudioAcquisition.cs", "UserAgent/PhysicalLayer/Devices/FileAudioAcquisition.cs", "UserAgent/PhysicalLayer/Units.cs"]},
+    {"acronym": "UAU-AOD", "name": "Audio Object and Scene Delivery", "status": "code", "ports": [{"direction": "Input", "dataType": "OSD-BAO-V1.5"}, {"direction": "Input", "dataType": "OSD-BAS-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs", "UserAgent/SpatialAudio/SpatialRenderer.cs", "UserAgent/SpatialAudio/AudioRendering.cs", "UserAgent/PhysicalLayer/Units.cs"]},
+    {"acronym": "UAU-SOA", "name": "Speech Object Acquisition", "status": "code", "ports": [{"direction": "Output", "dataType": "OSD-BSO-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Units.cs", "UserAgent/PhysicalLayer/Devices/MicArrayAudioAcquisition.cs"]},
+    {"acronym": "UAU-SOD", "name": "Speech Object Delivery", "status": "code", "ports": [{"direction": "Input", "dataType": "OSD-BSO-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Loudspeaker/WinmmSpeechDelivery.cs", "UserAgent/PhysicalLayer/Units.cs"]},
+    {"acronym": "UAU-VOA", "name": "Visual Object Acquisition", "status": "code", "ports": [{"direction": "Output", "dataType": "OSD-BVO-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Camera/WebcamVisualAcquisition.cs", "UserAgent/PhysicalLayer/Camera/WinFormsVisualAcquisition.cs", "UserAgent/PhysicalLayer/Devices/FileVisualAcquisition.cs", "UserAgent/PhysicalLayer/Units.cs"]},
+    {"acronym": "UAU-VOD", "name": "Visual Object Delivery", "status": "proposed", "ports": [{"direction": "Input", "dataType": "OSD-BVO-V1.5"}], "code": []},
+    {"acronym": "UAU-3OD", "name": "3D Model Object Delivery", "status": "code", "ports": [{"direction": "Input", "dataType": "OSD-B3O-V1.5"}, {"direction": "Input", "dataType": "OSD-B3S-V1.5"}, {"direction": "Input", "dataType": "PAF-FDO-V1.6"}, {"direction": "Input", "dataType": "PAF-BDO-V1.6"}, {"direction": "Input", "dataType": "OSD-OPV-V1.5"}],
+     "code": ["UserAgent/PhysicalLayer/Avatar/WebView3DModelDelivery.cs", "UserAgent/PhysicalLayer/Units.cs"]},
+    {"acronym": "UAU-LOA", "name": "LiDAR Object Acquisition", "status": "proposed", "ports": [{"direction": "Output", "dataType": "OSD-BLO-V1.5"}], "code": []},
+    {"acronym": "UAU-ROA", "name": "RADAR Object Acquisition", "status": "proposed", "ports": [{"direction": "Output", "dataType": "OSD-BRO-V1.5"}], "code": []},
+    {"acronym": "UAU-UOA", "name": "Ultrasound Object Acquisition", "status": "proposed", "ports": [{"direction": "Output", "dataType": "OSD-BUO-V1.5"}], "code": []},
+    {"acronym": "UAU-OOA", "name": "Offline Map Object Acquisition", "status": "proposed", "ports": [{"direction": "Output", "dataType": "OSD-BOO-V1.5"}], "code": []},
+    {"acronym": "UAU-TOA", "name": "Text Object Acquisition", "status": "to be decided (is it needed?)", "ports": [{"direction": "Output", "dataType": "OSD-BTO-V1.5"}], "code": []}
+  ]
+}

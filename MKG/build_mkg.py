@@ -27,7 +27,7 @@ GITHUB = 'https://github.com/leonardo-chiariglione/mpai-cav/blob/main/'
 MKG = Namespace('https://mpai.community/kg/vocab#')
 KIND_NS = {k: Namespace('https://mpai.community/kg/%s/' % k.lower())
            for k in ('Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3', 'Implementer', 'MPAIStore',
-                     'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit')}
+                     'PerformanceAssessor', 'Framework', 'UserAgent', 'Unit', 'Software')}
 STD, PRT, AIM, DT, ACT, L3 = (KIND_NS[k] for k in ('Standard', 'Part', 'AIM', 'DataType', 'Action', 'L3'))
 HDR = re.compile(r'([A-Z0-9]+)-([A-Z0-9]+)-V(\d+\.\d+)')
 
@@ -275,6 +275,7 @@ def build(folders):
             count('l3')
 
     code_pointers(g, stats, node)
+    units_and_software(g, stats, node)
     web_pages(g, stats)
     return g, stats
 
@@ -431,23 +432,95 @@ def code_pointers(g, stats, node):
         if f:
             point(d, f); stats['code_datatypes'] = stats.get('code_datatypes', 0) + 1
 
-    # User Agent and Units
+    # User Agent
     ua = KIND_NS['UserAgent']['User_Agent']
-    ua_dir = os.path.join(DI, 'UserAgent')
-    if os.path.isdir(ua_dir):
+    if os.path.isdir(os.path.join(DI, 'UserAgent')):
         g.add((ua, MKG.codePath, Literal('UserAgent')))
         g.add((ua, MKG.code, URIRef(GITHUB + 'UserAgent')))
-    units = os.path.join(ua_dir, 'PhysicalLayer', 'Units.cs')
-    if os.path.exists(units):
-        for cls in re.findall(r'public\s+sealed\s+class\s+([A-Za-z0-9_]*Unit)\b', open(units, encoding='utf-8-sig').read()):
-            u = node('Unit', cls)
-            g.add((ua, MKG.usesUnit, u))
-            point(u, units)
-            stats['units'] = stats.get('units', 0) + 1
+
+
+def units_and_software(g, stats, node):
+    """The Units of the User Agent (units.json: UAU) and the software of D:\\DI and D:\\AI (every .csproj)."""
+    ua = KIND_NS['UserAgent']['User_Agent']
+    uau = node('Standard', 'UAU')
+    g.add((uau, MKG.notInM3260, Literal(True)))
+    g.add((uau, MKG.title, Literal('Units of the User Agent')))
+    spec = json.load(open(os.path.join(ROOT, 'units.json'), encoding='utf-8'))
+    for u in spec['units']:
+        n = node('Unit', u['acronym'])
+        g.add((n, MKG.title, Literal(u['name'])))
+        g.add((n, MKG.ofStandard, uau))
+        g.add((uau, MKG.specifies, n))
+        g.add((ua, MKG.usesUnit, n))
+        g.add((n, MKG.unitStatus, Literal(u['status'])))
+        for p in u['ports']:
+            port = URIRef('%s/port/%s/%s/0' % (KIND_NS['Unit'][u['acronym']], p['direction'], p['dataType']))
+            g.add((n, MKG.port, port))
+            g.add((port, RDF.type, MKG.Port))
+            g.add((port, MKG.dataType, node('DataType', p['dataType'])))
+            g.add((port, MKG.direction, Literal(p['direction'])))
+            g.add((port, MKG.label, Literal('')))
+            g.add((port, MKG.optional, Literal(False)))
+        code = [c for c in u.get('code', []) if os.path.exists(os.path.join(DI, c))]
+        if code:
+            g.add((n, MKG.codePath, Literal(code[0])))
+            g.add((n, MKG.code, URIRef(GITHUB + code[0])))
+            for c in code[1:]:
+                g.add((n, MKG.alsoCode, Literal(c)))
+        stats['units'] = stats.get('units', 0) + 1
+
+    # the software: a project is a .csproj; D:\DI first, D:\AI for what D:\DI does not have
+    skip = {'bin', 'obj', 'deploy', 'legacy', '.git', 'node_modules', '.backups', 'Models', 'Output', 'SharedStorage', 'TestData', 'Datasets', 'Lib'}
+    projects = {}
+    for tag, root in (('DI', DI), ('AI', r'D:\AI')):
+        if not os.path.isdir(root):
+            continue
+        for dp, dn, fn in os.walk(root):
+            dn[:] = [x for x in dn if x not in skip]
+            for f in fn:
+                if f.endswith('.csproj'):
+                    full = os.path.join(dp, f)
+                    relp = os.path.relpath(full, root).replace(os.sep, '/')
+                    projects.setdefault(relp, (tag, full))
+    ident = lambda relp: relp[:-len('.csproj')].replace('/', '~')
+    proj_dirs = []
+    for relp, (tag, full) in sorted(projects.items()):
+        n = node('Software', ident(relp), os.path.basename(full)[:-len('.csproj')])
+        text = open(full, encoding='utf-8-sig', errors='ignore').read()
+        g.add((n, MKG.title, Literal(relp.rsplit('/', 1)[0] if '/' in relp else relp)))
+        g.add((n, MKG.repository, Literal('D:\\' + tag)))
+        g.add((n, MKG.path, Literal(relp)))
+        m = re.search(r'<OutputType>(\w+)</OutputType>', text)
+        g.add((n, MKG.softwareKind, Literal('program' if m and m.group(1).lower() in ('exe', 'winexe') else ('web service/program' if 'Sdk="Microsoft.NET.Sdk.Web"' in text else 'library'))))
+        if tag == 'DI':
+            g.add((n, MKG.codePath, Literal(relp)))
+            g.add((n, MKG.code, URIRef(GITHUB + relp)))
+        for ref in re.findall(r'<ProjectReference\s+Include="([^"]+)"', text):
+            target = os.path.normpath(os.path.join(os.path.dirname(full), ref.replace('\\', os.sep)))
+            for t2, root in (('DI', DI), ('AI', r'D:\AI')):
+                if target.startswith(root):
+                    tr = os.path.relpath(target, root).replace(os.sep, '/')
+                    if tr in projects:
+                        g.add((n, MKG.dependsOn, KIND_NS['Software'][ident(tr)]))
+                    break
+        proj_dirs.append((os.path.dirname(relp), tag, n))
+        stats['software'] = stats.get('software', 0) + 1
+    # a project implements the AIMs, L3s, Data Types and Units whose code is in its folder
+    for kind in ('AIM', 'L3', 'DataType', 'Unit'):
+        for x in g.subjects(RDF.type, MKG[kind]):
+            cp = g.value(x, MKG.codePath)
+            if cp is None:
+                continue
+            best = None
+            for d, tag, n in proj_dirs:
+                if tag == 'DI' and (str(cp) == d or str(cp).startswith(d + '/')) and (best is None or len(d) > best[0]):
+                    best = (len(d), n)
+            if best:
+                g.add((best[1], MKG.implements, x))
 
 
 if __name__ == '__main__':
-    folders = sys.argv[1:] or sorted({d for r in (SCH, AI_SCH) if os.path.isdir(r) for d in os.listdir(r) if os.path.isdir(os.path.join(r, d)) and re.fullmatch(r'[A-Z]+\d?', d)})
+    folders = sys.argv[1:] or sorted({d for r in (SCH, AI_SCH) if os.path.isdir(r) for d in os.listdir(r) if os.path.isdir(os.path.join(r, d)) and re.fullmatch(r'[A-Z]+\d?', d) and d != 'UAG'})
     g, stats = build(folders)
     out = os.path.join(ROOT, 'mkg' if len(sys.argv) == 1 else 'mkg-' + '-'.join(f.lower() for f in folders))
     g.serialize(out + '.ttl', format='turtle')

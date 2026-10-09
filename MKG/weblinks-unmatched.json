@@ -61,9 +61,9 @@
   "TFA TFA-OCQ-V1.5 (omics-qualifier)",
   "TFA TFA-PSQ-V1.5 (physiological-signal-qualifier)",
   "TFA TFA-MMQ-V1.5 (ml-model-qualifier)",
-  "TFA TFA-SPQ-V1.5 (speech-qualifier)",
-  "OSD OSD-OBI-V1.5 (object-or-id)",
   "TFA TFA-AYQ-V1.5 (any-qualifier)",
+  "OSD OSD-OBI-V1.5 (object-or-id)",
+  "TFA TFA-SPQ-V1.5 (speech-qualifier)",
   "TFA TFA-GNQ-V1.5 (gnss-qualifier)",
   "MMC MMC-EPS-V2.5 (entity-personal-status)",
   "TFA TFA-CLQ-V1.5 (colour-qualifier)",
@@ -103,9 +103,9 @@
   "TFA TFA-AVQ-V1.5 (audiovisual-qualifier)",
   "TFA TFA-LIQ-V1.5 (lidar-qualifier)",
   "TFA TFA-LCQ-V1.5 (locationqualifier)",
-  "TFA TFA-USQ-V1.5 (ultrasound-qualifier)",
   "TFA TFA-OMQ-V1.5 (offline-map-qualifier)",
   "TFA TFA-RAQ-V1.5 (radar-qualifier)",
+  "TFA TFA-USQ-V1.5 (ultrasound-qualifier)",
   "OSD OSD-MTR-V1.5 (material)",
   "OSD OSD-PNT-V1.5 (point)",
   "TFA TFA-TIQ-V1.5 (time-qualifier)",
@@ -132,12 +132,12 @@
   "XRV XRV-BMS-V1.0 (biometric-synchrony)",
   "XRV XRV-CLS-V1.0 (cue-list)",
   "XRV XRV-VFD-V1.0 (veperformancedescriptors)",
-  "XRV XRV-RTS-V1.0 (reparticipantstatus)",
   "XRV XRV-VTD-V1.0 (veparticipantdescriptors)",
   "XRV XRV-VOD-V1.0 (veoperatordescriptors)",
+  "XRV XRV-RTS-V1.0 (reparticipantstatus)",
   "XRV XRV-EVT-V1.0 (event)",
   "XRV XRV-LTC-V1.0 (lighting-console)",
-  "XRV XRV-VIC-V1.0 (videoconsole)",
-  "XRV XRV-SHC-V1.0 (showconsole)"
+  "XRV XRV-SHC-V1.0 (showconsole)",
+  "XRV XRV-VIC-V1.0 (videoconsole)"
  ]
 }

@@ -73,17 +73,17 @@ button { border:1px solid var(--line); background:var(--bg); color:var(--ink); p
 const DATA = /*DATA*/null;
 const N = {}; DATA.nodes.forEach(n => N[n.id] = n);
 const COLOR = {AIM:'#3b82f6', DataType:'#16a34a', L3:'#a855f7', Standard:'#f59e0b', Part:'#fbbf24', Action:'#14b8a6', Implementer:'#ec4899',
-               MPAIStore:'#ef4444', PerformanceAssessor:'#f97316', Framework:'#0ea5e9', UserAgent:'#6366f1', Unit:'#8b5cf6'};
+               MPAIStore:'#ef4444', PerformanceAssessor:'#f97316', Framework:'#0ea5e9', UserAgent:'#6366f1', Unit:'#8b5cf6', Software:'#64748b'};
 const NAME = {AIM:'AIMs', DataType:'Data types', L3:'L3 instances', Standard:'Standards', Part:'Parts', Action:'Actions (MMM)', Implementer:'Implementers',
-              MPAIStore:'MPAI Store', PerformanceAssessor:'Performance Assessors', Framework:'AI Framework', UserAgent:'User Agent', Unit:'Units'};
+              MPAIStore:'MPAI Store', PerformanceAssessor:'Performance Assessors', Framework:'AI Framework', UserAgent:'User Agent', Unit:'Units (UAU)', Software:'Software (projects)'};
 const SHAPE = {AIM:'round-rectangle', DataType:'ellipse', L3:'diamond', Standard:'hexagon', Part:'hexagon', Action:'round-tag', Implementer:'triangle',
-               MPAIStore:'star', PerformanceAssessor:'star', Framework:'round-rectangle', UserAgent:'round-rectangle', Unit:'barrel'};
+               MPAIStore:'star', PerformanceAssessor:'star', Framework:'round-rectangle', UserAgent:'round-rectangle', Unit:'barrel', Software:'rectangle'};
 Object.keys(NAME).forEach(k => document.getElementById('kinds').append(el0('label', {class:'f'},
-  Object.assign(el0('input', {type:'checkbox', class:'kind', value:k}), {checked:!['Part','Implementer'].includes(k)}),
+  Object.assign(el0('input', {type:'checkbox', class:'kind', value:k}), {checked:!['Part','Implementer','Software'].includes(k)}),
   Object.assign(el0('span', {class:'dot'}), {style:'background:' + COLOR[k]}), NAME[k])));
 function el0(tag, attrs, ...kids) { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); kids.forEach(k => e.append(k)); return e; }
 const used = {};  // data type -> AIMs with a port on it
-DATA.nodes.filter(n => n.kind === 'AIM').forEach(a => a.ports.forEach(p => { (used[p.dt] = used[p.dt] || []).push({aim:a.id, dir:p.dir}); }));
+DATA.nodes.filter(n => n.kind === 'AIM' || n.kind === 'Unit').forEach(a => a.ports.forEach(p => { (used[p.dt] = used[p.dt] || []).push({aim:a.id, dir:p.dir}); }));
 const parents = {}; // AIM -> composites containing it
 DATA.nodes.filter(n => n.kind === 'AIM').forEach(a => a.subs.forEach(s => (parents[s] = parents[s] || []).push(a.id)));
 const REL = {}; // simple relations, both ways
@@ -167,7 +167,7 @@ function addNode(id) { if (shown.has(id) || !N[id]) return; shown.add(id); const
 function addEdge(a, b, t, label) { if (!N[a] || !N[b]) return; addNode(a); addNode(b); const id = a + '>' + b + ':' + t; if (cy.getElementById(id).empty()) cy.add({data:{id, source:a, target:b, t, label}}); }
 function neighbours(id) {
   const n = N[id];
-  if (n.kind === 'AIM') {
+  if (n.kind === 'AIM' || n.kind === 'Unit') {
     n.ports.forEach(p => p.dir === 'Input' ? addEdge(p.dt, id, 'in') : addEdge(id, p.dt, 'out'));
     n.subs.forEach(s => addEdge(id, s, 'sub'));
     (parents[id] || []).forEach(c => addEdge(c, id, 'sub'));
@@ -188,7 +188,7 @@ function rowPos(ids, y, x0, dx) { const pos = {}; ids.forEach((id, i) => pos[id]
 function place(id) {
   const n = N[id]; let pos = {[id]:{x:0, y:0}}; const W = 330, DY = 70;
   const uniq = a => [...new Set(a)].filter(x => N[x] && x !== id);
-  if (n.kind === 'AIM') {
+  if (n.kind === 'AIM' || n.kind === 'Unit') {
     const ins = uniq(n.ports.filter(p => p.dir === 'Input').map(p => p.dt));
     const outs = uniq(n.ports.filter(p => p.dir === 'Output').map(p => p.dt).filter(d => !ins.includes(d)));
     const both = ins.filter(d => n.ports.some(p => p.dir === 'Output' && p.dt === d));
@@ -249,7 +249,7 @@ function detail(n) {
   if (n.of) t.append(row('Instance of', link(n.of)));
   d.append(t);
   if (n.noAcronym) d.append(el('p', {class:'sub'}, 'This schema has no Header with an acronym.'));
-  if (n.kind === 'AIM') {
+  if (n.kind === 'AIM' || n.kind === 'Unit') {
     if (n.ports.length) { d.append(el('h2', {}, 'Ports (by Data Type)')); const pt = el('table', {}, el('tr', {}, el('th', {}, ''), el('th', {}, 'Data type'), el('th', {}, '#'), el('th', {}, 'name'))); n.ports.forEach(p => pt.append(el('tr', {}, el('td', {}, p.dir === 'Input' ? 'in' + (p.opt ? ' (opt)' : '') : 'out'), el('td', {}, link(p.dt)), el('td', {}, p.n || ''), el('td', {class:'sub'}, p.label)))); d.append(pt); }
     const feeds = {}, takes = {};
     n.ports.forEach(p => {
@@ -269,7 +269,7 @@ function detail(n) {
         ct.append(el('tr', {}, el('td', {}, c.dir === 'in' ? 'from' : 'to'), el('td', {}, c.other ? link(c.other) : el('span', {class:'sub'}, '(boundary)')), el('td', {}, link(c.dt)), el('td', {}, link(c.comp))));
       });
       d.append(ct);
-    } else d.append(el('p', {class:'sub'}, 'Not used as a Sub-AIM in a composite aligned to M3194 yet.'));
+    } else if (n.kind === 'AIM') d.append(el('p', {class:'sub'}, 'Not used as a Sub-AIM in a composite aligned to M3194 yet.'));
     const compat = el('details', {style:'margin:8px 0'}, el('summary', {class:'sub', style:'cursor:pointer'}, 'AIMs that could connect (same data type)'));
     [['Could receive from', feeds], ['Could give to', takes]].forEach(([title, m]) => {
       const keys = Object.keys(m).sort(); if (!keys.length) return;
@@ -291,12 +291,14 @@ function detail(n) {
   if (n.kind === 'Action' && n.uses.length) d.append(el('h2', {}, 'Uses data types'), el('div', {}, n.uses.map(s => [link(s), ' '])));
   if (n.kind !== 'AIM' && n.kind !== 'DataType') {
     const PHR = {partOf:['part of', 'has parts'], specifies:['specifies', 'specified by'], produces:['produces', 'produced by'], receives:['receives', 'received by'],
-      holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies']};
+      holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies'], dependsOn:['depends on', 'used by'], implements:['implements', 'implemented by']};
     const groups = {}; (REL[n.id] || []).forEach(([r, o, dir]) => { if (!N[o]) return; const k = (PHR[r] || [r, r])[dir === 'out' ? 0 : 1]; (groups[k] = groups[k] || []).push(o); });
     Object.entries(groups).forEach(([r, xs]) => d.append(el('h2', {}, r + ' (' + xs.length + ')'), el('div', {}, xs.sort().map(s => [link(s), ' ']))));
   }
   if (n.kind === 'Standard') { if (n.version) t.append(row('Latest version', n.version)); if (!n.inM3260) t.append(row('Note', el('span', {class:'warn'}, 'not in the table of M3260'))); }
   if (n.kind === 'Part') t.append(row('Part', n.partAcronym));
+  if (n.kind === 'Software') { t.append(row('Project', n.path + '  (' + n.repository + ')')); t.append(row('Kind', n.softwareKind)); }
+  if (n.kind === 'Unit') t.append(row('Status', n.unitStatus));
 }
 results();
 function fromHash() { const h = decodeURIComponent(location.hash.slice(1)); if (!h) return null;
