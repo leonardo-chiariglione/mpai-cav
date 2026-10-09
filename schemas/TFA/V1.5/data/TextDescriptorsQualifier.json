@@ -16,7 +16,6 @@
     "SubTypes":                       { "type": "object", "additionalProperties": false },
 
     "Formats":                        { "type": "object", "additionalProperties": false, "properties": {
-      "MPAITextDescriptorsFormat":    { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/BasicTextDescriptors.json" },
       "OtherTextDescriptorsFormats":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/TextDescriptorsFormats.json" } } },
 
     "Attributes":                     { "type": "object", "additionalProperties": false },
