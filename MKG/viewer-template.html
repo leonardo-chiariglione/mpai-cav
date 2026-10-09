@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MPAI Knowledge Graph</title>
+<style>
+:root { --bg:#f6f7f9; --panel:#fff; --ink:#1d2430; --muted:#667085; --line:#d9dde3; --accent:#2858c8;
+        --aim:#3b82f6; --dt:#16a34a; --l3:#a855f7; --std:#f59e0b; }
+@media (prefers-color-scheme: dark) { :root { --bg:#12151b; --panel:#1b2029; --ink:#e6e9ef; --muted:#9aa4b5; --line:#2e3644; --accent:#7aa2ff; } }
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); height:100vh; display:grid;
+       grid-template-columns:300px 1fr 380px; grid-template-rows:auto 1fr; }
+header { grid-column:1/4; display:flex; gap:12px; align-items:center; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
+header h1 { font-size:16px; margin:0; white-space:nowrap; }
+#q { flex:1; max-width:520px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-size:14px; }
+.sub { color:var(--muted); font-size:12px; }
+aside, main, section { overflow:auto; min-height:0; }
+aside { background:var(--panel); border-right:1px solid var(--line); padding:12px; }
+section { background:var(--panel); border-left:1px solid var(--line); padding:14px 16px; }
+main { position:relative; }
+#cy { position:absolute; inset:0; }
+h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:14px 0 6px; }
+label.f { display:flex; align-items:center; gap:6px; margin:2px 0; cursor:pointer; }
+.dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+#results { list-style:none; margin:0; padding:0; }
+#results li { padding:4px 6px; border-radius:4px; cursor:pointer; display:flex; gap:6px; align-items:center; }
+#results li:hover, #results li.on { background:color-mix(in srgb, var(--accent) 14%, transparent); }
+.k { font-size:11px; color:var(--muted); margin-left:auto; }
+a { color:var(--accent); } a.n { cursor:pointer; text-decoration:none; } a.n:hover { text-decoration:underline; }
+table { border-collapse:collapse; width:100%; margin:4px 0 10px; font-size:13px; }
+td, th { text-align:left; padding:3px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:600; font-size:12px; }
+.tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:10px; border:1px solid var(--line); color:var(--muted); margin-right:4px; }
+.warn { color:#b45309; }
+code { font-size:12px; background:var(--bg); padding:1px 5px; border-radius:4px; word-break:break-all; }
+.desc { white-space:pre-wrap; color:var(--ink); }
+.hint { color:var(--muted); font-size:13px; }
+button { border:1px solid var(--line); background:var(--bg); color:var(--ink); padding:5px 10px; border-radius:6px; cursor:pointer; }
+@media (max-width: 1000px) { body { grid-template-columns:1fr; grid-template-rows:auto 220px 360px auto; } header { grid-column:1; } aside { border-right:0; } section { border-left:0; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>MPAI Knowledge Graph</h1>
+  <input id="q" placeholder="Search an AIM, data type, standard or L3 &mdash; e.g. PDX, OSD-BMS, Personal Status" autocomplete="off">
+  <span class="sub" id="count"></span>
+</header>
+<aside>
+  <h2>Show</h2>
+<div id="kinds"></div>
+  <h2>Standard</h2>
+  <div id="stds"></div>
+  <h2>Only</h2>
+  <label class="f"><input type="checkbox" id="showWeb">include items only on web pages (no schema)</label>
+  <label class="f"><input type="checkbox" id="onlyComposite">composite AIMs</label>
+  <label class="f"><input type="checkbox" id="onlyCode">with code</label>
+  <label class="f"><input type="checkbox" id="onlyGap">not aligned to M3194</label>
+  <h2>Results</h2>
+  <ul id="results"></ul>
+</aside>
+<main><div id="cy"></div>
+  <div style="position:absolute;left:10px;bottom:8px;font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;opacity:.95">
+    <span class="dot" style="background:var(--aim);border-radius:3px"></span> AIM &nbsp;
+    <span class="dot" style="background:var(--dt)"></span> data type &nbsp;
+    <span class="dot" style="background:var(--l3);border-radius:2px;transform:rotate(45deg)"></span> L3 &nbsp;
+    <span class="dot" style="background:var(--std)"></span> standard<br>
+    <span class="sub">in &rarr; left &nbsp; out &rarr; right &nbsp; Sub-AIMs below &nbsp; composites and L3s above<br>click a node: its web page &nbsp; shift-click: show it here &nbsp; alt-click: expand</span>
+  </div></main>
+<section id="detail"><p class="hint">Search or pick a node on the left. The graph shows the node with its neighbours; click a neighbour to move on, double-click to expand it. A blue node is an AIM, green a data type, purple an L3, amber a standard.</p></section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
+<script>
+const DATA = /*DATA*/null;
+const N = {}; DATA.nodes.forEach(n => N[n.id] = n);
+const COLOR = {AIM:'#3b82f6', DataType:'#16a34a', L3:'#a855f7', Standard:'#f59e0b', Part:'#fbbf24', Action:'#14b8a6', Implementer:'#ec4899',
+               MPAIStore:'#ef4444', PerformanceAssessor:'#f97316', Framework:'#0ea5e9', UserAgent:'#6366f1', Unit:'#8b5cf6'};
+const NAME = {AIM:'AIMs', DataType:'Data types', L3:'L3 instances', Standard:'Standards', Part:'Parts', Action:'Actions (MMM)', Implementer:'Implementers',
+              MPAIStore:'MPAI Store', PerformanceAssessor:'Performance Assessors', Framework:'AI Framework', UserAgent:'User Agent', Unit:'Units'};
+const SHAPE = {AIM:'round-rectangle', DataType:'ellipse', L3:'diamond', Standard:'hexagon', Part:'hexagon', Action:'round-tag', Implementer:'triangle',
+               MPAIStore:'star', PerformanceAssessor:'star', Framework:'round-rectangle', UserAgent:'round-rectangle', Unit:'barrel'};
+Object.keys(NAME).forEach(k => document.getElementById('kinds').append(el0('label', {class:'f'},
+  Object.assign(el0('input', {type:'checkbox', class:'kind', value:k}), {checked:!['Part','Implementer'].includes(k)}),
+  Object.assign(el0('span', {class:'dot'}), {style:'background:' + COLOR[k]}), NAME[k])));
+function el0(tag, attrs, ...kids) { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); kids.forEach(k => e.append(k)); return e; }
+const used = {};  // data type -> AIMs with a port on it
+DATA.nodes.filter(n => n.kind === 'AIM').forEach(a => a.ports.forEach(p => { (used[p.dt] = used[p.dt] || []).push({aim:a.id, dir:p.dir}); }));
+const parents = {}; // AIM -> composites containing it
+DATA.nodes.filter(n => n.kind === 'AIM').forEach(a => a.subs.forEach(s => (parents[s] = parents[s] || []).push(a.id)));
+const REL = {}; // simple relations, both ways
+(DATA.edges || []).forEach(([a, r, b]) => { (REL[a] = REL[a] || []).push([r, b, 'out']); (REL[b] = REL[b] || []).push([r, a, 'in']); });
+const CONN = {}; // AIM -> connections made by the flows of the composites that contain it
+DATA.nodes.filter(n => n.kind === 'AIM').forEach(c => c.flows.forEach(f => {
+  if (f.from && f.from !== c.id) (CONN[f.from] = CONN[f.from] || []).push({dir:'out', other:(f.to && f.to !== c.id) ? f.to : '', dt:f.dt, comp:c.id});
+  if (f.to && f.to !== c.id) (CONN[f.to] = CONN[f.to] || []).push({dir:'in', other:(f.from && f.from !== c.id) ? f.from : '', dt:f.dt, comp:c.id});
+}));
+const l3s = {}; DATA.nodes.filter(n => n.kind === 'L3').forEach(l => (l3s[l.of] = l3s[l.of] || []).push(l.id));
+const usedBy = {}; DATA.nodes.filter(n => n.kind === 'DataType').forEach(d => d.uses.forEach(u => (usedBy[u] = usedBy[u] || []).push(d.id)));
+
+const $ = id => document.getElementById(id);
+const el = (tag, attrs, ...kids) => { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => k === 'class' ? e.className = v : e.setAttribute(k, v)); kids.flat(Infinity).forEach(k => e.append(k)); return e; };
+function extUrl(n) {
+  if (!n) return '';
+  const std = n.std && N['STD:' + n.std];
+  if (n.kind === 'Standard') return n.web;
+  if (n.kind === 'AIM') return n.page || n.web || (std && std.web) || '';
+  if (n.kind === 'DataType') return n.page || (std && std.web) || n.schema || '';
+  if (n.kind === 'Part') return (std && std.web) || '';
+  if (n.kind === 'Action') return n.schema || (std && std.web) || '';
+  return n.code || '';
+}
+const link = id => {
+  const n = N[id]; const a = el('a', {class:'n'}, n ? n.label : id); a.onclick = () => select(id);
+  const u = extUrl(n);
+  if (!u) return a;
+  const x = el('a', {href:u, target:'_blank', title:'Open the web page of ' + n.label + ' (' + u.replace('https://', '') + ')', style:'margin-left:3px;text-decoration:none;font-size:11px'}, '\u2197');
+  return el('span', {}, a, x);
+};
+
+// ---- filters and search
+const stds = [...new Set(DATA.nodes.map(n => n.std).filter(Boolean))].sort();
+stds.forEach(s => $('stds').append(el('label', {class:'f'}, Object.assign(el('input', {type:'checkbox', class:'std', value:s}), {checked:true}), s)));
+function visible(n) {
+  const kinds = [...document.querySelectorAll('.kind:checked')].map(c => c.value);
+  if (!kinds.includes(n.kind)) return false;
+  const ss = [...document.querySelectorAll('.std:checked')].map(c => c.value);
+  if (n.std && !ss.includes(n.std)) return false;
+  if (n.webOnly && !$('showWeb').checked) return false;
+  if ($('onlyComposite').checked && !(n.kind === 'AIM' && n.subs.length)) return false;
+  if ($('onlyCode').checked && !n.codePath) return false;
+  if ($('onlyGap').checked && !n.notAligned) return false;
+  return true;
+}
+function results() {
+  const q = $('q').value.trim().toLowerCase();
+  const list = DATA.nodes.filter(visible).filter(n => !q || (n.label + ' ' + n.title + ' ' + n.desc).toLowerCase().includes(q))
+    .sort((a, b) => (a.label.toLowerCase().startsWith(q) ? 0 : 1) - (b.label.toLowerCase().startsWith(q) ? 0 : 1) || a.label.localeCompare(b.label) || a.kind.localeCompare(b.kind));
+  $('count').textContent = list.length + ' of ' + DATA.nodes.length;
+  const ul = $('results'); ul.replaceChildren();
+  list.slice(0, 200).forEach(n => { const li = el('li', {}, el('span', {class:'dot', style:'background:' + COLOR[n.kind]}), n.label, el('span', {class:'k'}, n.kind === 'DataType' ? 'data type' : n.kind)); li.onclick = () => select(n.id); ul.append(li); });
+}
+document.querySelectorAll('input').forEach(i => i.addEventListener('input', results));
+
+// ---- graph
+const cy = cytoscape({ container: $('cy'), wheelSensitivity:.3,
+  style: [
+    {selector:'node', style:{'background-color':'data(color)', shape:'data(shape)', label:'data(label)', 'font-size':11, color:getComputedStyle(document.body).color,
+      'text-halign':'left', 'text-valign':'top', 'text-margin-x':-2, 'text-margin-y':-2, width:'data(w)', height:26,
+      'text-background-color':getComputedStyle(document.body).backgroundColor, 'text-background-opacity':.85, 'text-background-padding':2}},
+    {selector:'node.sel', style:{height:32, 'border-width':3, 'border-color':'#111', 'font-size':13, 'font-weight':'bold'}},
+    {selector:'node.gap', style:{'border-width':2, 'border-color':'#d97706', 'border-style':'dashed'}},
+    {selector:'edge', style:{width:1.4, 'line-color':'#98a2b3', 'target-arrow-color':'#98a2b3', 'target-arrow-shape':'triangle', 'curve-style':'bezier', 'arrow-scale':.8}},
+    {selector:'edge[t="sub"]', style:{'line-color':'#2563eb', 'target-arrow-color':'#2563eb', width:2.2}},
+    {selector:'edge[t="l3"]', style:{'line-style':'dashed', 'line-color':'#a855f7', 'target-arrow-color':'#a855f7'}},
+    {selector:'edge[t="uses"]', style:{'line-color':'#16a34a', 'target-arrow-color':'#16a34a', 'line-style':'dotted'}},
+    {selector:'edge[t="in"]', style:{'target-arrow-shape':'triangle'}},
+  ]});
+cy.on('tap', 'node', e => {
+  const id = e.target.id(), u = extUrl(N[id]), ev = e.originalEvent;
+  if (ev.altKey || ev.ctrlKey) expand(id);
+  else if (u && !ev.shiftKey) window.open(u, '_blank');
+  else select(id);
+});
+
+const shown = new Set();
+function addNode(id) { if (shown.has(id) || !N[id]) return; shown.add(id); const k = N[id].kind;
+  cy.add({data:{id, label:N[id].label, color:COLOR[k], shape:SHAPE[k], w:['AIM', 'Framework', 'UserAgent'].includes(k) ? 54 : 30}, classes:N[id].notAligned ? 'gap' : ''}); }
+function addEdge(a, b, t, label) { if (!N[a] || !N[b]) return; addNode(a); addNode(b); const id = a + '>' + b + ':' + t; if (cy.getElementById(id).empty()) cy.add({data:{id, source:a, target:b, t, label}}); }
+function neighbours(id) {
+  const n = N[id];
+  if (n.kind === 'AIM') {
+    n.ports.forEach(p => p.dir === 'Input' ? addEdge(p.dt, id, 'in') : addEdge(id, p.dt, 'out'));
+    n.subs.forEach(s => addEdge(id, s, 'sub'));
+    (parents[id] || []).forEach(c => addEdge(c, id, 'sub'));
+    (l3s[id] || []).forEach(l => addEdge(l, id, 'l3'));
+  } else if (n.kind === 'DataType') {
+    (used[id] || []).forEach(u => u.dir === 'Input' ? addEdge(id, u.aim, 'in') : addEdge(u.aim, id, 'out'));
+    n.uses.forEach(u => addEdge(id, u, 'uses'));
+    (usedBy[id] || []).forEach(u => addEdge(u, id, 'uses'));
+  } else if (n.kind === 'L3') { addEdge(id, n.of, 'l3'); }
+  else if (n.kind === 'Action') { n.uses.forEach(u => addEdge(id, u, 'uses')); }
+  if (n.kind !== 'AIM' && n.kind !== 'DataType') {
+    let k = 0; (REL[id] || []).forEach(([r, o, dir]) => { if (k++ < 45 && N[o]) dir === 'out' ? addEdge(id, o, 'uses', r) : addEdge(o, id, 'uses', r); });
+  }
+}
+function layout() { cy.layout({name:'cose', animate:false, nodeRepulsion:9000, idealEdgeLength:90, padding:30, randomize:true}).run(); }
+function colPos(ids, x, y0, dy) { const pos = {}; ids.forEach((id, i) => pos[id] = {x, y:y0 + (i - (ids.length - 1) / 2) * dy}); return pos; }
+function rowPos(ids, y, x0, dx) { const pos = {}; ids.forEach((id, i) => pos[id] = {x:x0 + (i - (ids.length - 1) / 2) * dx, y}); return pos; }
+function place(id) {
+  const n = N[id]; let pos = {[id]:{x:0, y:0}}; const W = 330, DY = 70;
+  const uniq = a => [...new Set(a)].filter(x => N[x] && x !== id);
+  if (n.kind === 'AIM') {
+    const ins = uniq(n.ports.filter(p => p.dir === 'Input').map(p => p.dt));
+    const outs = uniq(n.ports.filter(p => p.dir === 'Output').map(p => p.dt).filter(d => !ins.includes(d)));
+    const both = ins.filter(d => n.ports.some(p => p.dir === 'Output' && p.dt === d));
+    const top = uniq([...(parents[id] || []), ...(l3s[id] || [])]);
+    const below = uniq(n.subs);
+    const h = Math.max(ins.length, outs.length, 1) * DY / 2 + 90;
+    Object.assign(pos, colPos(ins, -W, 0, DY), colPos(outs, W, 0, DY), rowPos(top, -h, 0, 190), rowPos(below, h + 40, 0, 175));
+  } else if (n.kind === 'DataType') {
+    const prod = uniq((used[id] || []).filter(u => u.dir === 'Output').map(u => u.aim));
+    const cons = uniq((used[id] || []).filter(u => u.dir === 'Input').map(u => u.aim)).filter(a => !prod.includes(a));
+    const top = uniq(n.uses), below = uniq(usedBy[id] || []);
+    const h = Math.max(prod.length, cons.length, 1) * DY / 2 + 90;
+    Object.assign(pos, colPos(prod, -W, 0, DY), colPos(cons, W, 0, DY), rowPos(top, -h, 0, 130), rowPos(below, h + 40, 0, 175));
+  } else { return null; }
+  return pos;
+}
+function arrange(id) {
+  const pos = place(id);
+  if (!pos) return layout();
+  cy.layout({name:'preset', positions:node => pos[node.id()] || {x:0, y:0}, fit:true, padding:50}).run();
+}
+function expand(id) { neighbours(id); layout(); }
+function select(id) {
+  if (!N[id]) return;
+  cy.elements().remove(); shown.clear();
+  addNode(id); neighbours(id); arrange(id);
+  cy.nodes().removeClass('sel'); cy.getElementById(id).addClass('sel');
+  detail(N[id]);
+  document.querySelectorAll('#results li').forEach(li => li.classList.toggle('on', li.textContent.startsWith(N[id].label)));
+  location.hash = N[id].label + (N[id].kind === 'AIM' ? '' : N[id].kind === 'DataType' ? '~dt' : '');
+}
+
+// ---- details
+function row(k, v) { return el('tr', {}, el('th', {}, k), el('td', {}, v)); }
+function detail(n) {
+  const d = $('detail'); d.replaceChildren();
+  d.append(el('h2', {style:'margin-top:0'}, n.kind === 'DataType' ? 'Data type' : n.kind), el('div', {style:'font-size:18px;font-weight:600;margin-bottom:2px'}, n.label));
+  if (n.title) d.append(el('div', {class:'sub'}, n.title));
+  const tags = el('div', {style:'margin:8px 0'});
+  if (n.std) tags.append(el('span', {class:'tag'}, 'standard ' + n.std));
+  if (n.api) tags.append(el('span', {class:'tag'}, n.api));
+  if (n.kind === 'AIM') tags.append(el('span', {class:'tag'}, n.subs.length ? 'composite' : 'leaf'));
+  if (n.notAligned) tags.append(el('span', {class:'tag warn'}, 'topology not yet by Data Type (M3194)'));
+  if (n.webOnly) tags.append(el('span', {class:'tag warn'}, 'only listed on a web page: no schema in the repository'));
+  if (n.sourceAI) tags.append(el('span', {class:'tag'}, 'schema in D:\\AI only'));
+  if (n.notInM3260) tags.append(el('span', {class:'tag warn'}, 'not in the table of M3260'));
+  if (n.codeDiffers) tags.append(el('span', {class:'tag warn'}, 'code differs from the web page: ' + n.webCode));
+  if (n.declaredOnly) tags.append(el('span', {class:'tag warn'}, 'no schema in these standards'));
+  d.append(tags);
+  if (n.desc) d.append(el('p', {class:'desc'}, n.desc));
+  const t = el('table'); // (details are appended below)
+  if (n.page) t.append(row('Web page', el('a', {href:n.page, target:'_blank'}, n.page.replace('https://', ''))));
+  if (n.web) t.append(row('Standard', el('a', {href:n.web, target:'_blank'}, n.web.replace('https://', ''))));
+  if (false && n.web) t.append(row('Web spec', el('a', {href:n.web, target:'_blank'}, n.web.replace('https://', ''))));
+  if (n.schema) t.append(row('Schema', el('a', {href:n.schema, target:'_blank'}, n.schema.replace('https://schemas.mpai.community/', ''))));
+  if (n.codePath) t.append(row('Code', el('a', {href:n.code, target:'_blank'}, n.codePath)));
+  else if (['AIM', 'L3', 'DataType', 'Unit'].includes(n.kind)) t.append(row('Code', el('span', {class:'sub'}, 'none found')));
+  if (n.of) t.append(row('Instance of', link(n.of)));
+  d.append(t);
+  if (n.noAcronym) d.append(el('p', {class:'sub'}, 'This schema has no Header with an acronym.'));
+  if (n.kind === 'AIM') {
+    if (n.ports.length) { d.append(el('h2', {}, 'Ports (by Data Type)')); const pt = el('table', {}, el('tr', {}, el('th', {}, ''), el('th', {}, 'Data type'), el('th', {}, '#'), el('th', {}, 'name'))); n.ports.forEach(p => pt.append(el('tr', {}, el('td', {}, p.dir === 'Input' ? 'in' + (p.opt ? ' (opt)' : '') : 'out'), el('td', {}, link(p.dt)), el('td', {}, p.n || ''), el('td', {class:'sub'}, p.label)))); d.append(pt); }
+    const feeds = {}, takes = {};
+    n.ports.forEach(p => {
+      (used[p.dt] || []).forEach(u => {
+        if (u.aim === n.id) return;
+        if (p.dir === 'Input' && u.dir === 'Output') (feeds[p.dt] = feeds[p.dt] || new Set()).add(u.aim);
+        if (p.dir === 'Output' && u.dir === 'Input') (takes[p.dt] = takes[p.dt] || new Set()).add(u.aim);
+      });
+    });
+    const cn = CONN[n.id] || [];
+    if (cn.length) {
+      d.append(el('h2', {}, 'Connected to, in composites'));
+      const ct = el('table', {}, el('tr', {}, el('th', {}, ''), el('th', {}, 'AIM'), el('th', {}, 'by data type'), el('th', {}, 'in composite')));
+      const seen = new Set();
+      cn.sort((a, b) => a.dir.localeCompare(b.dir) || a.other.localeCompare(b.other)).forEach(c => {
+        const key = c.dir + c.other + c.dt + c.comp; if (seen.has(key)) return; seen.add(key);
+        ct.append(el('tr', {}, el('td', {}, c.dir === 'in' ? 'from' : 'to'), el('td', {}, c.other ? link(c.other) : el('span', {class:'sub'}, '(boundary)')), el('td', {}, link(c.dt)), el('td', {}, link(c.comp))));
+      });
+      d.append(ct);
+    } else d.append(el('p', {class:'sub'}, 'Not used as a Sub-AIM in a composite aligned to M3194 yet.'));
+    const compat = el('details', {style:'margin:8px 0'}, el('summary', {class:'sub', style:'cursor:pointer'}, 'AIMs that could connect (same data type)'));
+    [['Could receive from', feeds], ['Could give to', takes]].forEach(([title, m]) => {
+      const keys = Object.keys(m).sort(); if (!keys.length) return;
+      compat.append(el('h2', {}, title));
+      const ct = el('table'); keys.forEach(k => ct.append(el('tr', {}, el('td', {}, link(k)), el('td', {}, [...m[k]].sort().map(a => [link(a), ' '])))));
+      compat.append(ct);
+    });
+    d.append(compat);
+    if (n.subs.length) d.append(el('h2', {}, 'Sub-AIMs'), el('div', {}, n.subs.map(s => [link(s), ' '])));
+    if (n.flows.length) { d.append(el('h2', {}, n.flows.length + ' flows')); const ft = el('table'); n.flows.forEach(f => ft.append(el('tr', {}, el('td', {}, f.from ? link(f.from) : el('span', {class:'sub'}, '(boundary)')), el('td', {}, (N[f.dt] ? N[f.dt].label : f.dt) + (f.fn ? ' #' + f.fn : '')), el('td', {}, '→'), el('td', {}, f.to ? link(f.to) : el('span', {class:'sub'}, '(boundary)')), el('td', {class:'sub'}, f.tn ? '#' + f.tn : '')))); d.append(ft); }
+    if ((parents[n.id] || []).length) d.append(el('h2', {}, 'Part of composites'), el('div', {}, parents[n.id].map(s => [link(s), ' '])));
+    if ((l3s[n.id] || []).length) d.append(el('h2', {}, 'L3 instances'), el('div', {}, l3s[n.id].map(s => [link(s), ' '])));
+  } else if (n.kind === 'DataType') {
+    const u = used[n.id] || [];
+    ['Output', 'Input'].forEach(dir => { const xs = [...new Set(u.filter(x => x.dir === dir).map(x => x.aim))].sort(); if (xs.length) d.append(el('h2', {}, dir === 'Output' ? 'Produced by' : 'Consumed by'), el('div', {}, xs.map(s => [link(s), ' ']))); });
+    if (n.uses.length) d.append(el('h2', {}, 'Built from'), el('div', {}, n.uses.map(s => [link(s), ' '])));
+    if ((usedBy[n.id] || []).length) d.append(el('h2', {}, 'Part of'), el('div', {}, usedBy[n.id].map(s => [link(s), ' '])));
+  }
+  if (n.kind === 'Action' && n.uses.length) d.append(el('h2', {}, 'Uses data types'), el('div', {}, n.uses.map(s => [link(s), ' '])));
+  if (n.kind !== 'AIM' && n.kind !== 'DataType') {
+    const PHR = {partOf:['part of', 'has parts'], specifies:['specifies', 'specified by'], produces:['produces', 'produced by'], receives:['receives', 'received by'],
+      holdsIDFrom:['holds an ID from', 'gave an ID to'], communicatesWith:['communicates with', 'communicates with'], usesUnit:['uses the Units', 'is a Unit of'], specifiedBy:['specified by', 'specifies']};
+    const groups = {}; (REL[n.id] || []).forEach(([r, o, dir]) => { if (!N[o]) return; const k = (PHR[r] || [r, r])[dir === 'out' ? 0 : 1]; (groups[k] = groups[k] || []).push(o); });
+    Object.entries(groups).forEach(([r, xs]) => d.append(el('h2', {}, r + ' (' + xs.length + ')'), el('div', {}, xs.sort().map(s => [link(s), ' ']))));
+  }
+  if (n.kind === 'Standard') { if (n.version) t.append(row('Latest version', n.version)); if (!n.inM3260) t.append(row('Note', el('span', {class:'warn'}, 'not in the table of M3260'))); }
+  if (n.kind === 'Part') t.append(row('Part', n.partAcronym));
+}
+results();
+function fromHash() { const h = decodeURIComponent(location.hash.slice(1)); if (!h) return null;
+  const dt = h.endsWith('~dt'); const a = h.replace('~dt', '');
+  return [dt ? 'DT:' + a : 'AIM:' + a, 'DT:' + a, 'L3:' + a, 'STD:' + a].find(x => N[x]) || null; }
+const start = fromHash();
+if (start) select(start); else if (N['AIM:PAF-VMS-V1.6']) select('AIM:PAF-VMS-V1.6');
+window.addEventListener('hashchange', () => { const x = fromHash(); if (x && x !== cy.nodes('.sel').id()) select(x); });
+</script>
+</body>
+</html>

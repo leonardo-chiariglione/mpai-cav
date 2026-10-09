@@ -15,8 +15,8 @@ def q(title, text, limit=25):
     if len(rows) > limit:
         print('   ...')
 
-q('AIMs and data types per standard',
-  'SELECT ?s (COUNT(DISTINCT ?a) AS ?aims) (COUNT(DISTINCT ?d) AS ?types) WHERE { ?s a mkg:Standard . OPTIONAL { ?s mkg:specifies ?a . ?a a mkg:AIM } OPTIONAL { ?s mkg:specifies ?d . ?d a mkg:DataType } } GROUP BY ?s ORDER BY ?s')
+q('AIMs, data types and actions per standard (standards without any are not yet in the repository)',
+  'SELECT ?s (COUNT(DISTINCT ?a) AS ?aims) (COUNT(DISTINCT ?d) AS ?types) (COUNT(DISTINCT ?x) AS ?actions) WHERE { ?s a mkg:Standard . OPTIONAL { ?a a mkg:AIM ; mkg:ofStandard ?s } OPTIONAL { ?d a mkg:DataType ; mkg:ofStandard ?s } OPTIONAL { ?x a mkg:Action ; mkg:ofStandard ?s } } GROUP BY ?s ORDER BY ?s', 30)
 
 q('Composite AIMs and how many Sub-AIMs',
   'SELECT ?a (COUNT(?s) AS ?n) WHERE { ?a mkg:subAIM ?s } GROUP BY ?a ORDER BY DESC(?n)')

@@ -1,0 +1,140 @@
+[
+ {
+  "acronym": "AIF",
+  "url": "https://mpai.community/standards/mpai-aif/"
+ },
+ {
+  "acronym": "AIH",
+  "url": "https://mpai.community/standards/mpai-aih/",
+  "parts": [
+   "HSP"
+  ]
+ },
+ {
+  "acronym": "AIP",
+  "url": "https://mpai.community/standards/mpai-aip/"
+ },
+ {
+  "acronym": "AIT",
+  "url": "https://mpai.community/standards/mpai-ait/"
+ },
+ {
+  "acronym": "CAE",
+  "url": "https://mpai.community/standards/mpai-cae/",
+  "parts": [
+   "USC",
+   "6DF",
+   "ASM"
+  ]
+ },
+ {
+  "acronym": "CAV",
+  "url": "https://mpai.community/standards/mpai-cav/",
+  "parts": [
+   "ARC",
+   "TEC"
+  ]
+ },
+ {
+  "acronym": "CUI",
+  "url": "https://mpai.community/standards/mpai-cui/",
+  "parts": [
+   "CPP"
+  ]
+ },
+ {
+  "acronym": "CVE",
+  "url": "https://mpai.community/standards/mpai-cve/"
+ },
+ {
+  "acronym": "EEV",
+  "url": "https://mpai.community/standards/mpai-eev/"
+ },
+ {
+  "acronym": "EVC",
+  "url": "https://mpai.community/standards/mpai-evc/"
+ },
+ {
+  "acronym": "GME",
+  "url": "https://mpai.community/standards/mpai-gme/"
+ },
+ {
+  "acronym": "GSA",
+  "url": "https://mpai.community/standards/mpai-gsa/"
+ },
+ {
+  "acronym": "HMC",
+  "url": "https://mpai.community/standards/mpai-hmc/"
+ },
+ {
+  "acronym": "MAS",
+  "url": "https://mpai.community/standards/mpai-mas/"
+ },
+ {
+  "acronym": "MMC",
+  "url": "https://mpai.community/standards/mpai-mmc/"
+ },
+ {
+  "acronym": "MMM",
+  "url": "https://mpai.community/standards/mpai-mmm/",
+  "parts": [
+   "FNC",
+   "FPR",
+   "ARC",
+   "TEC"
+  ]
+ },
+ {
+  "acronym": "NNW",
+  "url": "https://mpai.community/standards/mpai-nnw/",
+  "parts": [
+   "NNT",
+   "TEC"
+  ]
+ },
+ {
+  "acronym": "OSD",
+  "url": "https://mpai.community/standards/mpai-osd/"
+ },
+ {
+  "acronym": "PAF",
+  "url": "https://mpai.community/standards/mpai-paf/"
+ },
+ {
+  "acronym": "PGM",
+  "url": "https://mpai.community/standards/mpai-pgm/",
+  "parts": [
+   "AUA"
+  ]
+ },
+ {
+  "acronym": "PRF",
+  "url": "https://mpai.community/standards/mpai-prf/"
+ },
+ {
+  "acronym": "PTF",
+  "url": "https://mpai.community/standards/mpai-ptf/"
+ },
+ {
+  "acronym": "SPG",
+  "url": "https://mpai.community/standards/mpai-spg/",
+  "parts": [
+   "MDL"
+  ]
+ },
+ {
+  "acronym": "TFA",
+  "url": "https://mpai.community/standards/mpai-tfa/"
+ },
+ {
+  "acronym": "WMG",
+  "url": "https://mpai.community/standards/mpai-wmg/"
+ },
+ {
+  "acronym": "XRV",
+  "url": "https://mpai.community/standards/mpai-xrv/",
+  "parts": [
+   "LTP"
+  ]
+ }
+]

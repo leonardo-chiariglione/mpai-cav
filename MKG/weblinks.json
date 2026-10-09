@@ -1,0 +1,2695 @@
+{
+ "AIF": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-aif/v3-0/",
+   "data-types": {
+    "aif-metadata": {
+     "name": "AIF Metadata",
+     "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aif-metadata/"
+    },
+    "aim-instance": {
+     "name": "AIM Instance",
+     "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aim-instance/"
+    },
+    "aim-metadata": {
+     "name": "AIM Metadata",
+     "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aim-metadata/"
+    },
+    "trace": {
+     "name": "Trace",
+     "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/trace/"
+    }
+   },
+   "version": "V3.0"
+  }
+ },
+ "AIH": {
+  "hsp": {
+   "ai-modules": {
+    "aih-data-processing": {
+     "name": "AIH Data Processing",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/aih-data-processing/"
+    },
+    "anomaly-and-risk-alerting": {
+     "name": "Anomaly and Risk Alerting",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/anomaly-and-risk-alerting/"
+    },
+    "auditing": {
+     "name": "Auditing",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/auditing/"
+    },
+    "de-identification-and-anonymisation": {
+     "name": "De-Identification and Anonymisation",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/de-identification-and-anonymisation/"
+    },
+    "health-back-end": {
+     "name": "Health Back End",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/health-back-end/"
+    },
+    "health-federated-learning": {
+     "name": "Health Federated Learning",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/health-federated-learning/"
+    },
+    "health-front-end": {
+     "name": "Health Front End",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/health-front-end/"
+    },
+    "model-licensing": {
+     "name": "Model Licensing",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/model-licensing/"
+    },
+    "storage": {
+     "name": "Storage",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/ai-modules/storage/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-aih/hsp/v1-1/",
+   "data-types": {
+    "aih-data": {
+     "name": "AIH Data",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/aih-data/"
+    },
+    "aih-data-process": {
+     "name": "AIH Data Process",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/aih-data-process/"
+    },
+    "aih-data-processing-type": {
+     "name": "AIH Data Processing Type",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/aih-data-processing-type/"
+    },
+    "aih-taxonomies": {
+     "name": "AIH Taxonomies",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/aih-taxonomies/"
+    },
+    "ara-data": {
+     "name": "ARA Data",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/ara-data/"
+    },
+    "audit": {
+     "name": "Audit",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/audit/"
+    },
+    "behavioural-signal-object": {
+     "name": "Behavioural Signal Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/behavioural-signal-object/"
+    },
+    "biometric-data": {
+     "name": "Biometric Data",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/biometric-data/"
+    },
+    "blockchain-licence": {
+     "name": "Blockchain Licence",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/blockchain-licence/"
+    },
+    "clinical-record-object": {
+     "name": "Clinical Record Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/clinical-record-object/"
+    },
+    "de-id-and-anonym": {
+     "name": "De-ID and Anonym",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/de-id-and-anonym/"
+    },
+    "ecg-object": {
+     "name": "ECG Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/ecg-object/"
+    },
+    "eeg-object": {
+     "name": "EEG Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/eeg-object/"
+    },
+    "ehr-object": {
+     "name": "EHR Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/ehr-object/"
+    },
+    "federated-learn": {
+     "name": "Federated Learn",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/federated-learn/"
+    },
+    "health-data": {
+     "name": "Health Data",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/health-data/"
+    },
+    "licence-confirm": {
+     "name": "Licence Confirm",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/licence-confirm/"
+    },
+    "medical-imaging-object": {
+     "name": "Medical Imaging Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/medical-imaging-object/"
+    },
+    "model-licence": {
+     "name": "Model Licence",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/model-licence/"
+    },
+    "neurophysiological-signal-object": {
+     "name": "Neurophysiological Signal Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/neurophysiological-signal-object/"
+    },
+    "omics-object": {
+     "name": "Omics Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/omics-object/"
+    },
+    "physiological-signal-object": {
+     "name": "Physiological Signal Object",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/physiological-signal-object/"
+    },
+    "process-types": {
+     "name": "Process Types",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/process-types/"
+    },
+    "register": {
+     "name": "Register",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/register/"
+    },
+    "tokens": {
+     "name": "Tokens",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/tokens/"
+    },
+    "user-profile": {
+     "name": "User Profile",
+     "url": "https://mpai.community/standards/mpai-aih/hsp/v1-1/data-types/user-profile/"
+    }
+   },
+   "version": "V1.1"
+  }
+ },
+ "AIP": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-aip/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "CAE": {
+  "6df": {
+   "ai-modules": {
+    "6df-decompression": {
+     "name": "6DF Decompression",
+     "url": "https://mpai.community/standards/mpai-cae/6df/v1-0/ai-modules/6df-decompression/"
+    },
+    "6df-drmultiplexing": {
+     "name": "6DF Demultiplexing",
+     "url": "https://mpai.community/standards/mpai-cae/6df/v1-0/ai-modules/6df-drmultiplexing/"
+    },
+    "6df-interpolation": {
+     "name": "6DF Interpolation",
+     "url": "https://mpai.community/standards/mpai-cae/6df/v1-0/ai-modules/6df-interpolation/"
+    },
+    "6df-multiplexing": {
+     "name": "6DF Multiplexing",
+     "url": "https://mpai.community/standards/mpai-cae/6df/v1-0/ai-modules/6df-multiplexing/"
+    },
+    "audio-rendering-module": {
+     "name": "Audio Rendering Module",
+     "url": "https://mpai.community/standards/mpai-cae/6df/v1-0/ai-modules/audio-rendering-module/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cae/6df/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  },
+  "asm": {
+   "ai-modules": {
+    "audio-object-acquisition": {
+     "name": "Audio Object Acquisition",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/ai-modules/audio-object-acquisition/"
+    },
+    "audio-object-delivery": {
+     "name": "Audio Object Delivery",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/ai-modules/audio-object-delivery/"
+    },
+    "audio-object-editing": {
+     "name": "Audio Object Editing",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/ai-modules/audio-object-editing/"
+    },
+    "audio-scene-editing": {
+     "name": "Audio Scene Editing",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/ai-modules/audio-scene-editing/"
+    },
+    "audio-scene-management": {
+     "name": "Audio Scene Management",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/ai-modules/audio-scene-management/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cae/asm/v1-0/",
+   "data-types": {
+    "user-command": {
+     "name": "User Command",
+     "url": "https://mpai.community/standards/mpai-cae/asm/v1-0/data-types/user-command/"
+    }
+   },
+   "version": "V1.0"
+  },
+  "usc": {
+   "ai-modules": {
+    "audio-analysis-for-preservation": {
+     "name": "Audio Analysis for Preservation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-analysis-for-preservation/"
+    },
+    "audio-analysis-transform": {
+     "name": "Audio Analysis Transform",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-analysis-transform/"
+    },
+    "audio-descriptors-multiplexing": {
+     "name": "Audio Descriptors Multiplexing",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-descriptors-multiplexing/"
+    },
+    "audio-object-identification": {
+     "name": "Audio Object Identification",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-object-identification/"
+    },
+    "audio-scene-description": {
+     "name": "Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-scene-description/"
+    },
+    "audio-separation-and-enhancement": {
+     "name": "Audio Separation and Enhancement",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-separation-and-enhancement/"
+    },
+    "audio-source-localisation": {
+     "name": "Audio Source Localisation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-source-localisation/"
+    },
+    "audio-synthesis-transform": {
+     "name": "Audio Synthesis Transform",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-synthesis-transform/"
+    },
+    "emotion-feature-production": {
+     "name": "Emotion Feature Production",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/emotion-feature-production/"
+    },
+    "neural-emotion-insertion": {
+     "name": "Neural Emotion Insertion",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/neural-emotion-insertion/"
+    },
+    "noise-cancellation-module": {
+     "name": "Noise Cancellation Module",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/noise-cancellation-module/"
+    },
+    "packaging-for-audio-preservation": {
+     "name": "Packaging for Audio Preservation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/packaging-for-audio-preservation/"
+    },
+    "prosodic-emotion-insertion": {
+     "name": "Prosodic Emotion Insertion",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/prosodic-emotion-insertion/"
+    },
+    "speech-detection-and-separation": {
+     "name": "Speech Detection and Separation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-detection-and-separation/"
+    },
+    "speech-feature-analysis-1": {
+     "name": "Speech Feature Analysis 1",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-feature-analysis-1/"
+    },
+    "speech-feature-analysis-2": {
+     "name": "Speech Feature Analysis 2",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-feature-analysis-2/"
+    },
+    "speech-model-creation": {
+     "name": "Speech Model Creation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-model-creation/"
+    },
+    "speech-restoration-assembly": {
+     "name": "Speech Restoration Assembly",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-restoration-assembly/"
+    },
+    "tape-audio-restoration": {
+     "name": "Tape Audio Restoration",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/tape-audio-restoration/"
+    },
+    "tape-irregularity-classification": {
+     "name": "Tape Irregularity Classification",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/tape-irregularity-classification/"
+    },
+    "video-analysis-for-preservation": {
+     "name": "Video Analysis for Preservation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/video-analysis-for-preservation/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cae/usc/v2-4/",
+   "data-types": {
+    "audio-source-model": {
+     "name": "Audio Source Model",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/audio-source-model/"
+    },
+    "damaged-list": {
+     "name": "Damaged List",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/damaged-list/"
+    },
+    "editing-list": {
+     "name": "Editing List",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/editing-list/"
+    },
+    "irregularity-file": {
+     "name": "Irregularity File",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/irregularity-file/"
+    },
+    "microphone-array-geometry": {
+     "name": "Microphone Array Geometry",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/microphone-array-geometry/"
+    }
+   },
+   "version": "V2.4"
+  }
+ },
+ "CAV": {
+  "tec": {
+   "ai-modules": {
+    "ams-mas-message-interpretation": {
+     "name": "AMS-MAS Message Interpretation",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/ams-mas-message-interpretation/"
+    },
+    "ams-memory": {
+     "name": "AMS Memory",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/ams-memory/"
+    },
+    "audio-sensors": {
+     "name": "Audio Sensors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/audio-sensors/"
+    },
+    "autonomous-motion-subsystem": {
+     "name": "Autonomous Motion Subsystem",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/autonomous-motion-subsystem/"
+    },
+    "basic-environment-description": {
+     "name": "Basic Environment Description",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/basic-environment-description/"
+    },
+    "connected-autonomous-operation": {
+     "name": "Connected Autonomous Operation",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/connected-autonomous-operation/"
+    },
+    "environment-sensing-subsystem": {
+     "name": "Environment Sensing Subsystem",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/environment-sensing-subsystem/"
+    },
+    "full-environment-description": {
+     "name": "Full Environment Description",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/full-environment-description/"
+    },
+    "human-cav-interaction": {
+     "name": "Human-CAV Interaction",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/human-cav-interaction/"
+    },
+    "ice-condition-analysis": {
+     "name": "Ice Condition Analysis",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/ice-condition-analysis/"
+    },
+    "lidar-sensors": {
+     "name": "LiDAR Sensors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/lidar-sensors/"
+    },
+    "mas-response-analysis": {
+     "name": "MAS Response Analysis",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/mas-response-analysis/"
+    },
+    "mas-spatial-attitude-generation": {
+     "name": "MAS Spatial Attitude Generation",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/mas-spatial-attitude-generation/"
+    },
+    "motion-actuation-subsystem": {
+     "name": "Motion Actuation Subsystem",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/motion-actuation-subsystem/"
+    },
+    "motion-selection-planning": {
+     "name": "Motion Selection Planning",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/motion-selection-planning/"
+    },
+    "path-selection-planning": {
+     "name": "Path Selection Planning",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/path-selection-planning/"
+    },
+    "radar-sensors": {
+     "name": "RADAR Sensors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/radar-sensors/"
+    },
+    "route-selection-planning": {
+     "name": "Route Selection Planning",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/route-selection-planning/"
+    },
+    "spatial-attitude-generation": {
+     "name": "Spatial Attitude Generation",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/spatial-attitude-generation/"
+    },
+    "traffic-obstacle-avoidance": {
+     "name": "Traffic Obstacle Avoidance",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/traffic-obstacle-avoidance/"
+    },
+    "trajectory-planning-and-decision": {
+     "name": "Trajectory Planning and Decision",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/trajectory-planning-and-decision/"
+    },
+    "ultrasound-sensors": {
+     "name": "Ultrasound Sensors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/ultrasound-sensors/"
+    },
+    "visual-sensors": {
+     "name": "Visual Sensors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/ai-modules/visual-sensors/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cav/tec/v2-0/",
+   "data-types": {
+    "alert": {
+     "name": "Alert",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/alert/"
+    },
+    "ams-data": {
+     "name": "AMS Data",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-data/"
+    },
+    "ams-hci-message": {
+     "name": "AMS\u2011HCI Message",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-hci-message/"
+    },
+    "ams-mas-message": {
+     "name": "AMS\u2011MAS Message",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ams-mas-message/"
+    },
+    "basic-environment-descriptors": {
+     "name": "Basic Environment Descriptors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/basic-environment-descriptors/"
+    },
+    "brake-command": {
+     "name": "Brake Command",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/brake-command/"
+    },
+    "brake-response": {
+     "name": "Brake Response",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/brake-response/"
+    },
+    "brake-states": {
+     "name": "Brake States",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/brake-states/"
+    },
+    "cav-identifier": {
+     "name": "CAV Identifier",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/cav-identifier/"
+    },
+    "cav-state": {
+     "name": "CAV State",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/cav-state/"
+    },
+    "ego-remote-ams-message": {
+     "name": "Ego-Remote AMS Message",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ego-remote-ams-message/"
+    },
+    "ego-remote-hci-message": {
+     "name": "Ego-Remote HCI Message",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ego-remote-hci-message/"
+    },
+    "ess-scene-descriptors": {
+     "name": "ESS Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/ess-scene-descriptors/"
+    },
+    "full-environment-descriptors": {
+     "name": "Full Environment Descriptors",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/full-environment-descriptors/"
+    },
+    "gnss-object": {
+     "name": "GNSS Object",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/gnss-object/"
+    },
+    "interaction": {
+     "name": "Interaction",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/interaction/"
+    },
+    "motor-command": {
+     "name": "Motor Command",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/motor-command/"
+    },
+    "motor-response": {
+     "name": "Motor Response",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/motor-response/"
+    },
+    "motor-states": {
+     "name": "Motor States",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/motor-states/"
+    },
+    "personal-preferences": {
+     "name": "Personal Preferences",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/personal-preferences/"
+    },
+    "personal-profile": {
+     "name": "Personal Profile",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/personal-profile/"
+    },
+    "road": {
+     "name": "Road",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road/"
+    },
+    "road-attributes": {
+     "name": "Road Attributes",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road-attributes/"
+    },
+    "road-signs-and-signals": {
+     "name": "Road Signs and Signals",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road-signs-and-signals/"
+    },
+    "road-state": {
+     "name": "Road State",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road-state/"
+    },
+    "route": {
+     "name": "Route",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/route/"
+    },
+    "spatial-data": {
+     "name": "Spatial Data",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/spatial-data/"
+    },
+    "traffic-rules": {
+     "name": "Traffic Rules",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/traffic-rules/"
+    },
+    "traffic-sign-objects": {
+     "name": "Traffic Sign Objects",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/traffic-sign-objects/"
+    },
+    "weather-data": {
+     "name": "Weather Data",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/weather-data/"
+    },
+    "wheel-command": {
+     "name": "Wheel Command",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/wheel-command/"
+    },
+    "wheel-response": {
+     "name": "Wheel Response",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/wheel-response/"
+    },
+    "wheel-states": {
+     "name": "Wheel States",
+     "url": "https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/wheel-states/"
+    }
+   },
+   "version": "V2.0"
+  }
+ },
+ "CUI": {
+  "cpp": {
+   "ai-modules": {
+    "company-assessment-and-prediction": {
+     "name": "Company Assessment and Prediction",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/company-assessment-and-prediction/"
+    },
+    "organisation-model-assessment": {
+     "name": "Organisation Model Assessment",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/organisation-model-assessment/"
+    },
+    "prediction-result-perturbation": {
+     "name": "Prediction Result Perturbation",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/prediction-result-perturbation/"
+    },
+    "primary-default-prediction": {
+     "name": "Primary Default Prediction",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/primary-default-prediction/"
+    },
+    "primary-discontinuity-prediction": {
+     "name": "Primary Discontinuity Prediction",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/primary-discontinuity-prediction/"
+    },
+    "risk-matric-generation": {
+     "name": "Risk Matrix Generation",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/ai-modules/risk-matric-generation/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cui/cpp/v2-0/",
+   "data-types": {
+    "climate-risk-descriptors": {
+     "name": "Climate Risk Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/climate-risk-descriptors/"
+    },
+    "cyber-risk-descriptors": {
+     "name": "Cyber Risk Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/cyber-risk-descriptors/"
+    },
+    "financial-descriptors": {
+     "name": "Financial Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/financial-descriptors/"
+    },
+    "governance-descriptors": {
+     "name": "Governance Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/governance-descriptors/"
+    },
+    "organisation-descriptors": {
+     "name": "Organisation Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/organisation-descriptors/"
+    },
+    "primary-default-descriptors": {
+     "name": "Primary Default Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/primary-default-descriptors/"
+    },
+    "primary-discontinuity-descriptors": {
+     "name": "Primary Discontinuity Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/primary-discontinuity-descriptors/"
+    },
+    "primary-risk-descriptors": {
+     "name": "Primary Risk Descriptors",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/primary-risk-descriptors/"
+    },
+    "risk-taxonomy": {
+     "name": "Risk Taxonomy",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/risk-taxonomy/"
+    },
+    "secondary-risk-matrix": {
+     "name": "Secondary Risk Matrix",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/secondary-risk-matrix/"
+    },
+    "secondary-risk-statements": {
+     "name": "Secondary Risk Statements",
+     "url": "https://mpai.community/standards/mpai-cui/cpp/v2-0/data-types/secondary-risk-statements/"
+    }
+   },
+   "version": "V2.0"
+  }
+ },
+ "CVE": {
+  "": {
+   "ai-modules": {
+    "visual-object-delivery": {
+     "name": "Visual Object Delivery",
+     "url": "https://mpai.community/standards/mpai-cve/v1-0/ai-modules/visual-object-delivery/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-cve/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "GME": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-gme/v2-0/",
+   "data-types": {},
+   "version": "V2.0"
+  }
+ },
+ "HMC": {
+  "": {
+   "ai-modules": {
+    "av-scene-integration-and-description": {
+     "name": "AV Scene Integration and Description",
+     "url": "https://mpai.community/standards/mpai-hmc/v2-1/ai-modules/av-scene-integration-and-description/"
+    },
+    "entity-and-context-understanding": {
+     "name": "Entity and Context Understanding",
+     "url": "https://mpai.community/standards/mpai-hmc/v2-1/ai-modules/entity-and-context-understanding/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-hmc/v2-1/",
+   "data-types": {},
+   "version": "V2.1"
+  }
+ },
+ "MAS": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-mas/v1-0/",
+   "data-types": {
+    "aim-description": {
+     "name": "AIM Description",
+     "url": "https://mpai.community/standards/mpai-mas/v1-0/data-types/aim-description/"
+    }
+   },
+   "version": "V1.0"
+  }
+ },
+ "MMC": {
+  "": {
+   "ai-modules": {
+    "answer-to-multimodal-question": {
+     "name": "Answer to Multimodal Question",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/answer-to-multimodal-question/"
+    },
+    "answer-to-question-module": {
+     "name": "Answer to Question Module",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/answer-to-question-module/"
+    },
+    "audio-segmentation": {
+     "name": "Audio Segmentation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/audio-segmentation/"
+    },
+    "automatic-speech-recognition": {
+     "name": "Automatic Speech Recognition",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/automatic-speech-recognition/"
+    },
+    "conversation-about-a-scene": {
+     "name": "Conversation About a Scene",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/conversation-about-a-scene/"
+    },
+    "conversation-with-emotion": {
+     "name": "Conversation with Emotion",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/conversation-with-emotion/"
+    },
+    "conversation-with-personal-status": {
+     "name": "Conversation with Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/conversation-with-personal-status/"
+    },
+    "entity-dialogue-processing": {
+     "name": "Entity Dialogue Processing",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-dialogue-processing/"
+    },
+    "entity-speech-description": {
+     "name": "Entity Speech Description",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-speech-description/"
+    },
+    "entity-text-description": {
+     "name": "Entity Text Description",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-text-description/"
+    },
+    "human-cav-interaction": {
+     "name": "teraction",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/human-cav-interaction/"
+    },
+    "multimodal-emotion-fusion": {
+     "name": "Multimodal Emotion Fusion",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/multimodal-emotion-fusion/"
+    },
+    "multimodal-question-answering": {
+     "name": "Multimodal Question Answering",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/multimodal-question-answering/"
+    },
+    "natural-language-understanding": {
+     "name": "Natural Language Understanding",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/natural-language-understanding/"
+    },
+    "personal-status-demultiplexing": {
+     "name": "Personal Status Demultiplexing",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/personal-status-demultiplexing/"
+    },
+    "personal-status-extraction": {
+     "name": "Personal Status Extraction",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/personal-status-extraction/"
+    },
+    "personal-status-multiplexing": {
+     "name": "Personal Status Multiplexing",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/personal-status-multiplexing/"
+    },
+    "ps-speech-interpretation": {
+     "name": "PS-Speech Interpretation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/ps-speech-interpretation/"
+    },
+    "ps-text-interpretation": {
+     "name": "PS-Text Interpretation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/ps-text-interpretation/"
+    },
+    "question-analysis-module": {
+     "name": "Question Analysis Module",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/question-analysis-module/"
+    },
+    "speaker-identity-recognition": {
+     "name": "Speaker Identity Recognition",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speaker-identity-recognition/"
+    },
+    "speech-object-acquisition": {
+     "name": "Speech Object Acquisition",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-object-acquisition/"
+    },
+    "speech-object-delivery": {
+     "name": "Speech Object Delivery",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-object-delivery/"
+    },
+    "speech-personal-status-extraction": {
+     "name": "Speech Personal Status Extraction",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-personal-status-extraction/"
+    },
+    "speech-translation-with-descriptors": {
+     "name": "Descriptors",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-translation-with-descriptors/"
+    },
+    "summary-creation-module": {
+     "name": "Summary Creation Module",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/summary-creation-module/"
+    },
+    "text-and-image-query": {
+     "name": "Text and Image Query",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-image-query/"
+    },
+    "text-and-speech-translation": {
+     "name": "Text and Speech Translation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-and-speech-translation/"
+    },
+    "text-to-speech": {
+     "name": "Text-To-Speech",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-speech/"
+    },
+    "text-to-speech-with-descriptors": {
+     "name": "Descriptors",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-speech-with-descriptors/"
+    },
+    "text-to-text-translation": {
+     "name": "Text-to-Text Translation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/text-to-text-translation/"
+    },
+    "video-lip-animation": {
+     "name": "Video Lip Animation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/video-lip-animation/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-mmc/v2-5/",
+   "data-types": {
+    "belief": {
+     "name": "Belief",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/belief/"
+    },
+    "cognitive-state": {
+     "name": "Cognitive State",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/cognitive-state/"
+    },
+    "discourse-structure-representation": {
+     "name": "Discourse Structure Representation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/discourse-structure-representation/"
+    },
+    "emotion": {
+     "name": "Emotion",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/emotion/"
+    },
+    "entity-state": {
+     "name": "Entity State",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/entity-state/"
+    },
+    "face-personal-status": {
+     "name": "Face Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/face-personal-status/"
+    },
+    "gesture-personal-status": {
+     "name": "Gesture Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/gesture-personal-status/"
+    },
+    "goal": {
+     "name": "Goal",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/goal/"
+    },
+    "intent": {
+     "name": "Intent",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/intent/"
+    },
+    "intention": {
+     "name": "Intention",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/intention/"
+    },
+    "knowledge": {
+     "name": "Knowledge",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/knowledge/"
+    },
+    "meaning": {
+     "name": "Meaning (Basic Text Descriptors)",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/meaning/"
+    },
+    "motivation": {
+     "name": "Motivation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/motivation/"
+    },
+    "personal-status": {
+     "name": "Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/personal-status/"
+    },
+    "predicate-role-mapping": {
+     "name": "Predicate Role Mapping",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/predicate-role-mapping/"
+    },
+    "proposition": {
+     "name": "Proposition",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/proposition/"
+    },
+    "semantic-relations-in-discourse": {
+     "name": "Semantic Relations in Discourse",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/semantic-relations-in-discourse/"
+    },
+    "social-attitude": {
+     "name": "Social Attitude",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/social-attitude/"
+    },
+    "speech-descriptors-object": {
+     "name": "Speech Descriptors Object",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/speech-descriptors-object/"
+    },
+    "speech-overlap": {
+     "name": "Speech Overlap",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/speech-overlap/"
+    },
+    "speech-personal-status": {
+     "name": "Speech Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/speech-personal-status/"
+    },
+    "summary": {
+     "name": "Summary",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/summary/"
+    },
+    "text-descriptors": {
+     "name": "Text Descriptors Object",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/text-descriptors/"
+    },
+    "text-personal-status": {
+     "name": "Text Personal Status",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/text-personal-status/"
+    },
+    "text-segment": {
+     "name": "Text Segment",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/text-segment/"
+    },
+    "text-word": {
+     "name": "Text Word",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/text-word/"
+    },
+    "time-event-expression": {
+     "name": "Time Event Expression",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/time-event-expression/"
+    },
+    "time-event-relation": {
+     "name": "Time Event Relation",
+     "url": "https://mpai.community/standards/mpai-mmc/v2-5/data-types/time-event-relation/"
+    }
+   },
+   "version": "V2.5"
+  }
+ },
+ "MMM": {
+  "arc": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-mmm/arc/v1-2/",
+   "data-types": {},
+   "version": "V1.2"
+  },
+  "fnc": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-mmm/fnc/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  },
+  "fpr": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-mmm/fpr/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  },
+  "tec": {
+   "actions": {
+    "MMM-1CP": "UM-Actuate",
+    "MMM-1PP": "UM-Capture",
+    "MMM-1SP": "UM-Send",
+    "MMM-2AP": "MM-Animate",
+    "MMM-2CP": "MM-Capture",
+    "MMM-2DP": "MM-Add",
+    "MMM-2MP": "MM-Move",
+    "MMM-2SP": "MM-Send",
+    "MMM-3AP": "MU-Animate",
+    "MMM-3CP": "MU-Actuate",
+    "MMM-3DP": "MU-Add",
+    "MMM-3MP": "MU-Move",
+    "MMM-3SP": "MU-Send",
+    "MMM-ATP": "Author",
+    "MMM-AUP": "Authenticate",
+    "MMM-CVP": "Convert",
+    "MMM-DVP": "Discover",
+    "MMM-EXP": "Execute",
+    "MMM-HDP": "Hide",
+    "MMM-IDP": "Identify",
+    "MMM-ITP": "Interpret",
+    "MMM-LCS": "License",
+    "MMM-MDP": "Modify",
+    "MMM-PCP": "Property",
+    "MMM-PTP": "Post",
+    "MMM-RCP": "Rights",
+    "MMM-RGP": "Register",
+    "MMM-RVP": "Resolve",
+    "MMM-TRP": "Transact",
+    "MMM-VLP": "Validate"
+   },
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-mmm/tec/v2-2/",
+   "data-types": {
+    "account": {
+     "name": "Account",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/account/"
+    },
+    "activity-data": {
+     "name": "Activity Data",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/activity-data/"
+    },
+    "any-action": {
+     "name": "Any Action",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/any-action/"
+    },
+    "asset": {
+     "name": "Asset",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/asset/"
+    },
+    "authentication": {
+     "name": "Authentication",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/authentication/"
+    },
+    "basic-discovery": {
+     "name": "Basic Discovery",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/basic-discovery/"
+    },
+    "basic-interpretation": {
+     "name": "Basic Interpretation",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/basic-interpretation/"
+    },
+    "capabilities": {
+     "name": "Capabilities",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/capabilities/"
+    },
+    "contract-object": {
+     "name": "Contract Object",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/contract-object/"
+    },
+    "currency-object": {
+     "name": "Currency Object",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/currency-object/"
+    },
+    "discovery-object": {
+     "name": "Discovery Object",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/discovery-object/"
+    },
+    "event": {
+     "name": "Event",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/event/"
+    },
+    "fault-behaviour-report": {
+     "name": "Fault Behaviour Report",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/fault-behaviour-report/"
+    },
+    "fault-detection-report": {
+     "name": "Fault Detection Report",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/fault-detection-report/"
+    },
+    "financial-error-report": {
+     "name": "Financial Error Report",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/financial-error-report/"
+    },
+    "identifier": {
+     "name": "Identifier",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/identifier/"
+    },
+    "interpretation-object": {
+     "name": "Interpretation Object",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/interpretation-object/"
+    },
+    "ipp-message": {
+     "name": "IPP Message",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/ipp-message/"
+    },
+    "item": {
+     "name": "Item",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/item/"
+    },
+    "licence": {
+     "name": "Licence",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/licence/"
+    },
+    "m-environment": {
+     "name": "M-Environment",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/m-environment/"
+    },
+    "m-instance": {
+     "name": "M-Instance",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/m-instance/"
+    },
+    "market-classes": {
+     "name": "Market Classes",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/market-classes/"
+    },
+    "marketplace-policy-ids": {
+     "name": "Marketplace Policy IDs",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/marketplace-policy-ids/"
+    },
+    "message": {
+     "name": "Message",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/message/"
+    },
+    "penalties": {
+     "name": "Penalties",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/penalties/"
+    },
+    "personal-data": {
+     "name": "Personal Data",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/personal-data/"
+    },
+    "personal-profile": {
+     "name": "Personal Profile",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/personal-profile/"
+    },
+    "process": {
+     "name": "Process",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/process/"
+    },
+    "process-action": {
+     "name": "Process Action",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/process-action/"
+    },
+    "program-object": {
+     "name": "Program Object",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/program-object/"
+    },
+    "provenance": {
+     "name": "Provenance",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/provenance/"
+    },
+    "r-item": {
+     "name": "R-Item",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/r-item/"
+    },
+    "resolution": {
+     "name": "Resolution",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/resolution/"
+    },
+    "right": {
+     "name": "Right",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/right/"
+    },
+    "rights": {
+     "name": "Rights",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/rights/"
+    },
+    "rules": {
+     "name": "Rules",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/rules/"
+    },
+    "service-pricing-model": {
+     "name": "Service Pricing Model",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/service-pricing-model/"
+    },
+    "simple-certificate": {
+     "name": "Simple Certificate",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/simple-certificate/"
+    },
+    "simple-contract": {
+     "name": "Simple Contract",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/simple-contract/"
+    },
+    "transaction": {
+     "name": "Transaction",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/transaction/"
+    },
+    "u-environment": {
+     "name": "U-Environment",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/u-environment/"
+    },
+    "universe-metaverse-map": {
+     "name": "Universe-Metaverse Map",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/universe-metaverse-map/"
+    },
+    "validation": {
+     "name": "Validation",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/validation/"
+    },
+    "value": {
+     "name": "Value",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/value/"
+    },
+    "value-metadata-ids": {
+     "name": "Value Metadata IDs",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/value-metadata-ids/"
+    },
+    "wallet": {
+     "name": "Wallet",
+     "url": "https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/wallet/"
+    }
+   },
+   "version": "V2.2"
+  }
+ },
+ "NNW": {
+  "nnt": {
+   "ai-modules": {
+    "comparator": {
+     "name": "Comparator",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/comparator/"
+    },
+    "modification-module": {
+     "name": "Modification Module",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modification-module/"
+    },
+    "modified-module": {
+     "name": "Modified Module",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modified-module/"
+    },
+    "module-trainer": {
+     "name": "Module Trainer",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/module-trainer/"
+    },
+    "nir-watermark-decoder": {
+     "name": "NIR Watermark Decoder",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nir-watermark-decoder/"
+    },
+    "nti-watermark-embedder": {
+     "name": "NTI Watermark Embedder",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nti-watermark-embedder/"
+    },
+    "unwatermarked-module": {
+     "name": "Unwatermarked Module",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/unwatermarked-module/"
+    },
+    "watermarked-module": {
+     "name": "Watermarked Module",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/watermarked-module/"
+    },
+    "wir-watermark-decoder": {
+     "name": "WIR Watermark Decoder",
+     "url": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/wir-watermark-decoder/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-nnw/nnt/v1-1/",
+   "data-types": {},
+   "version": "V1.1"
+  },
+  "tec": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-nnw/tec/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "OSD": {
+  "": {
+   "ai-modules": {
+    "3d-model-event-description": {
+     "name": "3D Model Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/3d-model-event-description/"
+    },
+    "3d-model-scene-description": {
+     "name": "3D Model Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/3d-model-scene-description/"
+    },
+    "acoustic-environment-analysis": {
+     "name": "Acoustic Environment Analysis",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/acoustic-environment-analysis/"
+    },
+    "audio-event-description": {
+     "name": "Audio Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-event-description/"
+    },
+    "audio-motion-and-proximity": {
+     "name": "Audio Motion and Proximity",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-motion-and-proximity/"
+    },
+    "audio-salience-mapping": {
+     "name": "Audio Salience Mapping",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-salience-mapping/"
+    },
+    "audio-scene-description": {
+     "name": "Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-scene-description/"
+    },
+    "audio-visual-alignment": {
+     "name": "Audio-Visual Alignment",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-visual-alignment/"
+    },
+    "audio-visual-event-description": {
+     "name": "Audio-Visual Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-visual-event-description/"
+    },
+    "audio-visual-scene-demultiplexing": {
+     "name": "Audio-Visual Scene Demultiplexing",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-visual-scene-demultiplexing/"
+    },
+    "audio-visual-scene-description": {
+     "name": "Audio-Visual Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-visual-scene-description/"
+    },
+    "audio-visual-scene-multiplexing": {
+     "name": "Audio-Visual Scene Multiplexing",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-visual-scene-multiplexing/"
+    },
+    "basic-3d-model-scene-description": {
+     "name": "Basic 3D Model Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-3d-model-scene-description/"
+    },
+    "basic-audio-scene-description": {
+     "name": "Basic Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-audio-scene-description/"
+    },
+    "basic-audio-visual-scene-description": {
+     "name": "Basic Audio-Visual Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-audio-visual-scene-description/"
+    },
+    "basic-lidar-scene-description": {
+     "name": "Basic LiDAR Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-lidar-scene-description/"
+    },
+    "basic-offline-map-scene-description": {
+     "name": "Basic Offline Map Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-offline-map-scene-description/"
+    },
+    "basic-radar-scene-description": {
+     "name": "Basic RADAR Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-radar-scene-description/"
+    },
+    "basic-scene-description": {
+     "name": "Basic Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-scene-description/"
+    },
+    "basic-speech-scene-description": {
+     "name": "Basic Speech Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-speech-scene-description/"
+    },
+    "basic-ultrasound-scene-description": {
+     "name": "Basic Ultrasound Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-ultrasound-scene-description/"
+    },
+    "basic-visual-scene-description": {
+     "name": "Basic Visual Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/basic-visual-scene-description/"
+    },
+    "direct-visual-identification": {
+     "name": "Direct Visual Identification",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/direct-visual-identification/"
+    },
+    "event-description": {
+     "name": "Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/event-description/"
+    },
+    "lidar-event-description": {
+     "name": "LiDAR Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/lidar-event-description/"
+    },
+    "lidar-scene-description": {
+     "name": "LiDAR Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/lidar-scene-description/"
+    },
+    "offline-map-event-description": {
+     "name": "Offline Map Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/offline-map-event-description/"
+    },
+    "offline-map-scene-description": {
+     "name": "Offline Map Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/offline-map-scene-description/"
+    },
+    "radar-event-description": {
+     "name": "RADAR Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/radar-event-description/"
+    },
+    "radar-scene-description": {
+     "name": "RADAR Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/radar-scene-description/"
+    },
+    "scene-description": {
+     "name": "Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/scene-description/"
+    },
+    "speech-event-description": {
+     "name": "Speech Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/speech-event-description/"
+    },
+    "speech-scene-description": {
+     "name": "Speech Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/speech-scene-description/"
+    },
+    "television-splitting": {
+     "name": "Television Splitting",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/television-splitting/"
+    },
+    "ultrasound-event-description": {
+     "name": "Ultrasound Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/ultrasound-event-description"
+    },
+    "ultrasound-scene-description": {
+     "name": "Ultrasound Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/ultrasound-scene-description/"
+    },
+    "visual-change-detection": {
+     "name": "Visual Change Detection",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-change-detection/"
+    },
+    "visual-direction-identification": {
+     "name": "Visual Direction Identification",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-direction-identification/"
+    },
+    "visual-event-description": {
+     "name": "Visual Event Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-event-description/"
+    },
+    "visual-instance-identification": {
+     "name": "nce Identification",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-instance-identification/"
+    },
+    "visual-object-extraction": {
+     "name": "Visual Object Extraction",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-extraction/"
+    },
+    "visual-object-identification": {
+     "name": "Visual Object Identification",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-identification/"
+    },
+    "visual-object-identification-by-body": {
+     "name": "Visual Object Identification by Body",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-identification-by-body/"
+    },
+    "visual-scene-description": {
+     "name": "Visual Scene Description",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-scene-description/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-osd/v1-5/",
+   "data-types": {
+    "3d-model-event-descriptors": {
+     "name": "3D Model Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-event-descriptors/"
+    },
+    "3d-model-object": {
+     "name": "3D Model Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-object/"
+    },
+    "3d-model-scene-descriptors": {
+     "name": "3D Model Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-scene-descriptors/"
+    },
+    "3d-model-scene-geometry": {
+     "name": "3D Model Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-scene-geometry/"
+    },
+    "acoustic-profile": {
+     "name": "Acoustic Profile",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/acoustic-profile/"
+    },
+    "affordance-tags": {
+     "name": "Affordance Tags",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/affordance-tags/"
+    },
+    "annotation": {
+     "name": "Annotation",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/annotation/"
+    },
+    "audio-event-descriptors": {
+     "name": "Audio Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-event-descriptors/"
+    },
+    "audio-motion-flags": {
+     "name": "Audio Motion Flags",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-motion-flags/"
+    },
+    "audio-object": {
+     "name": "Audio Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-object/"
+    },
+    "audio-proximity-class": {
+     "name": "Audio Proximity Class",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-proximity-class/"
+    },
+    "audio-scene-descriptors": {
+     "name": "Audio Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-scene-descriptors/"
+    },
+    "audio-scene-geometry": {
+     "name": "Audio Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-scene-geometry/"
+    },
+    "audio-source": {
+     "name": "Audio Source",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-source/"
+    },
+    "audio-visual-event-descriptors": {
+     "name": "Audio-Visual Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-visual-event-descriptors/"
+    },
+    "audio-visual-object": {
+     "name": "Audio-Visual Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-visual-object/"
+    },
+    "audio-visual-scene-descriptors": {
+     "name": "Audio-Visual Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-visual-scene-descriptors/"
+    },
+    "audio-visual-scene-geometry": {
+     "name": "Audio-Visual Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/audio-visual-scene-geometry/"
+    },
+    "basic-3d-model-object": {
+     "name": "Basic 3D Model Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-3d-model-object/"
+    },
+    "basic-3d-model-scene-descriptors": {
+     "name": "Basic 3D Model Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-3d-model-scene-descriptors/"
+    },
+    "basic-3d-model-scene-geometry": {
+     "name": "Basic 3D Model Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-3d-model-scene-geometry/"
+    },
+    "basic-audio-object": {
+     "name": "Basic Audio Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-object/"
+    },
+    "basic-audio-scene-descriptors": {
+     "name": "Basic Audio Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-scene-descriptors/"
+    },
+    "basic-audio-scene-geometry": {
+     "name": "Basic Audio Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-scene-geometry/"
+    },
+    "basic-audio-visual-object": {
+     "name": "Basic Audio-Visual Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-visual-object/"
+    },
+    "basic-audio-visual-scene-descriptors": {
+     "name": "Basic Audio-Visual Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-visual-scene-descriptors/"
+    },
+    "basic-audio-visual-scene-geometry": {
+     "name": "Basic Audio-Visual Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-audio-visual-scene-geometry/"
+    },
+    "basic-event-descriptors": {
+     "name": "Basic Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-event-descriptors"
+    },
+    "basic-lidar-object": {
+     "name": "Basic LiDAR Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-lidar-object/"
+    },
+    "basic-lidar-scene-descriptors": {
+     "name": "Basic LiDAR Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-lidar-scene-descriptors/"
+    },
+    "basic-lidar-scene-geometry": {
+     "name": "Basic LiDAR Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-lidar-scene-geometry/"
+    },
+    "basic-location-object": {
+     "name": "Basic Location Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-location-object/"
+    },
+    "basic-object": {
+     "name": "Basic Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-object/"
+    },
+    "basic-offline-map-object": {
+     "name": "Basic Offline Map Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-offline-map-object/"
+    },
+    "basic-offline-map-scene-descriptors": {
+     "name": "Basic Offline Map Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-offline-map-scene-descriptors/"
+    },
+    "basic-offline-map-scene-geometry": {
+     "name": "Basic Offline Map Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-offline-map-scene-geometry/"
+    },
+    "basic-perceptible-entity": {
+     "name": "Basic Perceptible Entity",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-perceptible-entity/"
+    },
+    "basic-radar-object": {
+     "name": "Basic RADAR Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-radar-object/"
+    },
+    "basic-radar-scene-descriptors": {
+     "name": "Basic RADAR Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-radar-scene-descriptors/"
+    },
+    "basic-radar-scene-geometry": {
+     "name": "Basic RADAR Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-radar-scene-geometry/"
+    },
+    "basic-scene-descriptors": {
+     "name": "Basic Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-scene-descriptors/"
+    },
+    "basic-scene-geometry": {
+     "name": "Basic Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-scene-geometry/"
+    },
+    "basic-speech-object": {
+     "name": "Basic Speech Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-speech-object/"
+    },
+    "basic-speech-scene-descriptors": {
+     "name": "Basic Speech Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-speech-scene-descriptors/"
+    },
+    "basic-speech-scene-geometry": {
+     "name": "Basic Speech Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-speech-scene-geometry/"
+    },
+    "basic-text-object": {
+     "name": "Basic Text Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-text-object/"
+    },
+    "basic-ultrasound-object": {
+     "name": "Basic Ultrasound Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-ultrasound-object/"
+    },
+    "basic-ultrasound-scene-descriptors": {
+     "name": "Basic Ultrasound Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-ultrasound-scene-descriptors/"
+    },
+    "basic-ultrasound-scene-geometry": {
+     "name": "Basic Ultrasound Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-ultrasound-scene-geometry/"
+    },
+    "basic-visual-object": {
+     "name": "Basic Visual Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-visual-object/"
+    },
+    "basic-visual-scene-descriptors": {
+     "name": "Basic Visual Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-visual-scene-descriptors/"
+    },
+    "basic-visual-scene-geometry": {
+     "name": "Basic Visual Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/basic-visual-scene-geometry/"
+    },
+    "bounding-box": {
+     "name": "Bounding Box",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/bounding-box/"
+    },
+    "colour-object": {
+     "name": "Colour Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/colour-object/"
+    },
+    "coordinates": {
+     "name": "Coordinates",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/coordinates/"
+    },
+    "device-scene-geometry": {
+     "name": "Device Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/device-scene-geometry/"
+    },
+    "enhanced-audio-scene-descriptors": {
+     "name": "Enhanced Audio Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/enhanced-audio-scene-descriptors/"
+    },
+    "enhanced-visual-scene-descriptors": {
+     "name": "Enhanced Visual Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/enhanced-visual-scene-descriptors/"
+    },
+    "event-descriptors": {
+     "name": "Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/event-descriptors"
+    },
+    "geometric-solid": {
+     "name": "Geometric Solid",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/geometric-solid/"
+    },
+    "instance-identifier": {
+     "name": "Instance Identifier",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/instance-identifier/"
+    },
+    "interaction-potential": {
+     "name": "Interaction Potential",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/interaction-potential/"
+    },
+    "lidar-event-descriptors": {
+     "name": "LiDAR Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/lidar-event-descriptors/"
+    },
+    "lidar-object": {
+     "name": "LiDAR Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/lidar-object/"
+    },
+    "lidar-scene-descriptors": {
+     "name": "LiDAR Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/lidar-scene-descriptors/"
+    },
+    "lidar-scene-geometry": {
+     "name": "LiDAR Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/lidar-scene-geometry/"
+    },
+    "light-source": {
+     "name": "Light Source",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/light-source/"
+    },
+    "location-object": {
+     "name": "Location Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/location-object/"
+    },
+    "object": {
+     "name": "Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/object/"
+    },
+    "object-affordance": {
+     "name": "Object Affordance",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/object-affordance/"
+    },
+    "occlusion-flag": {
+     "name": "Occlusion Flag",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/occlusion-flag"
+    },
+    "offline-map-object": {
+     "name": "Offline Map Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/offline-map-object/"
+    },
+    "offline-map-scene-descriptors": {
+     "name": "Offline Map Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/offline-map-scene-descriptors/"
+    },
+    "offline-map-scene-geometry": {
+     "name": "Offline Map Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/offline-map-scene-geometry/"
+    },
+    "orientation": {
+     "name": "Orientation",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/orientation/"
+    },
+    "path": {
+     "name": "Path",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/path/"
+    },
+    "perceptible-entity": {
+     "name": "Perceptible Entity",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/perceptible-entity/"
+    },
+    "plot": {
+     "name": "Plot",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/plot/"
+    },
+    "point-of-view": {
+     "name": "Point of View",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/point-of-view/"
+    },
+    "pose-matrix": {
+     "name": "Pose Matrix",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/pose-matrix/"
+    },
+    "position": {
+     "name": "Position",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/position/"
+    },
+    "radar-event-descriptors": {
+     "name": "RADAR Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/radar-event-descriptors/"
+    },
+    "radar-object": {
+     "name": "RADAR Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/radar-object/"
+    },
+    "radar-scene-descriptors": {
+     "name": "RADAR Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/radar-scene-descriptors/"
+    },
+    "radar-scene-geometry": {
+     "name": "RADAR Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/radar-scene-geometry/"
+    },
+    "range-constraints": {
+     "name": "Range Constraints",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/range-constraints/"
+    },
+    "right-parallelepiped": {
+     "name": "Right Parallelepiped",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/right-parallelepiped/"
+    },
+    "scene-descriptors": {
+     "name": "Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/scene-descriptors/"
+    },
+    "scene-geometry": {
+     "name": "Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/scene-geometry/"
+    },
+    "selector": {
+     "name": "Selector",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/selector/"
+    },
+    "simple-location": {
+     "name": "Simple Location",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/simple-location/"
+    },
+    "simple-time": {
+     "name": "Simple Time",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/simple-time/"
+    },
+    "space-time": {
+     "name": "Space-Time",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/space-time/"
+    },
+    "spatial-anchor": {
+     "name": "Spatial Anchor",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/spatial-anchor/"
+    },
+    "spatial-attitude": {
+     "name": "Spatial Attitude",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/spatial-attitude/"
+    },
+    "spatial-cue": {
+     "name": "Spatial Cue",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/spatial-cue/"
+    },
+    "speech-event-descriptors": {
+     "name": "Speech Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-event-descriptors/"
+    },
+    "speech-object": {
+     "name": "Speech Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-object/"
+    },
+    "speech-scene-descriptors": {
+     "name": "Speech Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-scene-descriptors/"
+    },
+    "speech-scene-geometry": {
+     "name": "Speech Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/speech-scene-geometry/"
+    },
+    "temporal-cue": {
+     "name": "Temporal Cue",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/temporal-cue/"
+    },
+    "text-object": {
+     "name": "Text Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/text-object/"
+    },
+    "texture-map": {
+     "name": "Texture Map",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/texture-map/"
+    },
+    "time": {
+     "name": "Time",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/time/"
+    },
+    "time-expression": {
+     "name": "Time Expression",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/time-expression/"
+    },
+    "trajectory": {
+     "name": "Trajectory",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/trajectory/"
+    },
+    "ultrasound-event-descriptors": {
+     "name": "Ultrasound Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/ultrasound-event-descriptors/"
+    },
+    "ultrasound-object": {
+     "name": "Ultrasound Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/ultrasound-object/"
+    },
+    "ultrasound-scene-descriptors": {
+     "name": "Ultrasound Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/ultrasound-scene-descriptors/"
+    },
+    "ultrasound-scene-geometry": {
+     "name": "Ultrasound Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/ultrasound-scene-geometry/"
+    },
+    "visual-event-descriptors": {
+     "name": "Visual Event Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-event-descriptors/"
+    },
+    "visual-geometry": {
+     "name": "Visual Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-geometry/"
+    },
+    "visual-object": {
+     "name": "Visual Object",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-object/"
+    },
+    "visual-scene-descriptors": {
+     "name": "Visual Scene Descriptors",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-scene-descriptors/"
+    },
+    "visual-scene-geometry": {
+     "name": "Visual Scene Geometry",
+     "url": "https://mpai.community/standards/mpai-osd/v1-5/data-types/visual-scene-geometry/"
+    }
+   },
+   "version": "V1.5"
+  }
+ },
+ "PAF": {
+  "": {
+   "ai-modules": {
+    "audio-visual-scene-creation": {
+     "name": "Audio-Visual Scene Creation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/audio-visual-scene-creation/"
+    },
+    "audio-visual-scene-rendering": {
+     "name": "Audio-Visual Scene Rendering",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/audio-visual-scene-rendering/"
+    },
+    "avatar-and-speech-rendering": {
+     "name": "Avatar and Speech Rendering",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/avatar-and-speech-rendering/"
+    },
+    "avatar-videoconference-server": {
+     "name": "Avatar Videoconference Server",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/avatar-videoconference-server/"
+    },
+    "face-identity-recognition": {
+     "name": "Face Identity Recognition",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/face-identity-recognition/"
+    },
+    "face-personal-status-extraction": {
+     "name": "Face Personal Status Extraction",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/face-personal-status-extraction/"
+    },
+    "generative-body-description": {
+     "name": "Generative Body Description",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/generative-body-description/"
+    },
+    "generative-face-description": {
+     "name": "Generative Face Description",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/generative-face-description/"
+    },
+    "gesture-personal-status-extraction": {
+     "name": "Gesture Personal Status Extraction",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/gesture-personal-status-extraction/"
+    },
+    "personal-status-display": {
+     "name": "Personal Status Display",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/personal-status-display/"
+    },
+    "portable-avatar-demultiplexing": {
+     "name": "Portable Avatar Demultiplexing",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/portable-avatar-demultiplexing/"
+    },
+    "portable-avatar-multiplexing": {
+     "name": "Portable Avatar Multiplexing",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/portable-avatar-multiplexing/"
+    },
+    "ps-face-interpretation": {
+     "name": "PS-Face Interpretation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/ps-face-interpretation/"
+    },
+    "ps-gesture-interpretation": {
+     "name": "PS-Gesture Interpretation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/ps-gesture-interpretation/"
+    },
+    "response-and-scene-rendering": {
+     "name": "Response and Scene Rendering",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/response-and-scene-rendering/"
+    },
+    "scene-and-avatar-rendering": {
+     "name": "Scene and Avatar Rendering",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/scene-and-avatar-rendering/"
+    },
+    "service-participant-authentication": {
+     "name": "Service Participant Authentication",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/service-participant-authentication/"
+    },
+    "speaking-avatar-formation": {
+     "name": "Speaking Avatar Formation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-formation/"
+    },
+    "speaking-avatar-synthesis": {
+     "name": "Speaking Avatar Synthesis",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-synthesis/"
+    },
+    "videoconference-client-receiver": {
+     "name": "Videoconference Client Receiver",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/videoconference-client-receiver/"
+    },
+    "videoconference-client-transmitter": {
+     "name": "Videoconference Client Transmitter",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/videoconference-client-transmitter/"
+    },
+    "virtual-meeting-secretary": {
+     "name": "Virtual Meeting Secretary",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/virtual-meeting-secretary/"
+    },
+    "visual-scene-creation": {
+     "name": "Visual Scene Creation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/visual-scene-creation/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-paf/v1-6/",
+   "data-types": {
+    "accessory": {
+     "name": "Accessory",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/accessory/"
+    },
+    "animation-object": {
+     "name": "Animation Object",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/animation-object/"
+    },
+    "avatar": {
+     "name": "Avatar",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/avatar/"
+    },
+    "body-descriptors-object": {
+     "name": "Body Descriptors Object",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/body-descriptors-object/"
+    },
+    "face-descriptors-object": {
+     "name": "Face Descriptors Object",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/face-descriptors-object/"
+    },
+    "mocap-object": {
+     "name": "MoCap Object",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/mocap-object/"
+    },
+    "portable-avatar": {
+     "name": "Portable Avatar",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/portable-avatar/"
+    }
+   },
+   "version": "V1.6"
+  }
+ },
+ "PGM": {
+  "aua": {
+   "ai-modules": {
+    "a-user-control": {
+     "name": "A-User Control",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/a-user-control"
+    },
+    "a-user-formation": {
+     "name": "A-User Formation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/a-user-formation/"
+    },
+    "a-user-storage": {
+     "name": "A-User Storage",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/a-user-storage/"
+    },
+    "audio-environment-analysis": {
+     "name": "Audio Environment Analysis",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-environment-analysis/"
+    },
+    "audio-scene-description": {
+     "name": "Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-scene-description/"
+    },
+    "audio-scene-enhancement": {
+     "name": "Audio Scene Enhancement",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-scene-enhancement/"
+    },
+    "audio-visual-alignment": {
+     "name": "Audio-Visual Alignment",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-visual-alignment/"
+    },
+    "autonomous-user": {
+     "name": "Autonomous User",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/autonomous-user/"
+    },
+    "basic-knowledge": {
+     "name": "Basic Knowledge",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/basic-knowledge"
+    },
+    "behavioural-and-expressive-analysis": {
+     "name": "Behavioural and Expressive Analysis",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/behavioural-and-expressive-analysis/"
+    },
+    "context-capture": {
+     "name": "Context Capture",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/context-capture"
+    },
+    "context-description": {
+     "name": "Context Description",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/context-description"
+    },
+    "context-enhancement": {
+     "name": "Context Enhancement",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/context-enhancement/"
+    },
+    "cross-modal-interpretation": {
+     "name": "Cross\u2011Modal Interpretation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/cross-modal-interpretation/"
+    },
+    "cxc-aus-interface": {
+     "name": "CXC-AUS Interface",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/cxc-aus-interface/"
+    },
+    "directed-audio-scene-description": {
+     "name": "Directed Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/directed-audio-scene-description/"
+    },
+    "directed-visual-scene-description": {
+     "name": "Visual Scene Enhancement",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/directed-visual-scene-description/"
+    },
+    "domain-access": {
+     "name": "Domain Access",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/domain-access"
+    },
+    "intent-and-referent-analysis": {
+     "name": "Intent and Referent Analysis",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/intent-and-referent-analysis/"
+    },
+    "linguistic-paralinguistic-analysis": {
+     "name": "Linguistic-Paralinguistic Analysis",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/linguistic-paralinguistic-analysis/"
+    },
+    "multimodal-input-harmonisation": {
+     "name": "Multimodal Input Harmonisation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/multimodal-input-harmonisation/"
+    },
+    "personality-alignment": {
+     "name": "Personality Alignment",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/personality-alignment"
+    },
+    "prompt-contextualisation": {
+     "name": "Prompt Contextualisation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/prompt-contextualisation/"
+    },
+    "prompt-creation": {
+     "name": "Prompt Creation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/prompt-creation"
+    },
+    "prompt-planning-and-formatting": {
+     "name": "Prompt Planning and Formatting",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/prompt-planning-and-formatting/"
+    },
+    "prompt-token-analysis": {
+     "name": "Prompt Token Analysis",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/prompt-token-analysis/"
+    },
+    "user-state-creation": {
+     "name": "User State Creation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/user-state-creation/"
+    },
+    "user-state-description": {
+     "name": "User State Description",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/user-state-description/"
+    },
+    "user-state-refinement": {
+     "name": "User State Refinement",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/user-state-refinement"
+    },
+    "visual-scene-enhancement": {
+     "name": "Visual Scene Enhancement",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/visual-scene-enhancement/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-pgm/aua/v1-0/",
+   "data-types": {
+    "auf-directive": {
+     "name": "AUF Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/auf-directive/"
+    },
+    "auf-status": {
+     "name": "AUF Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/auf-status/"
+    },
+    "bkn-directive": {
+     "name": "BKN Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/bkn-directive/"
+    },
+    "bkn-trace": {
+     "name": "BKN Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/bkn-trace/"
+    },
+    "cxc-directive": {
+     "name": "CXC Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/cxc-directive/"
+    },
+    "cxc-status": {
+     "name": "CXC Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/cxc-status/"
+    },
+    "cxe-directive": {
+     "name": "CXE Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/cxe-directive/"
+    },
+    "cxe-status": {
+     "name": "CXE Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/cxe-status/"
+    },
+    "dac-directive": {
+     "name": "DAC Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/dac-directive"
+    },
+    "dac-status": {
+     "name": "DAC Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/dac-status/"
+    },
+    "domain": {
+     "name": "Domain",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/domain/"
+    },
+    "human-command": {
+     "name": "Human Command",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/human-command/"
+    },
+    "human-command-status": {
+     "name": "Human Command Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/human-command-status/"
+    },
+    "interaction-history": {
+     "name": "Interaction History",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/interaction-history/"
+    },
+    "item-type-taxonomy": {
+     "name": "Item Type Taxonomy",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/item-type-taxonomy/"
+    },
+    "multimodal-input-harmonisation": {
+     "name": "Multimodal Input Harmonisation",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/multimodal-input-harmonisation/"
+    },
+    "personality": {
+     "name": "Personality",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/personality/"
+    },
+    "personality-alignment-directive": {
+     "name": "PAL Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/personality-alignment-directive/"
+    },
+    "personality-alignment-status": {
+     "name": "PAL Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/personality-alignment-status/"
+    },
+    "personality-context-guide": {
+     "name": "Personality Context Guide",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/personality-context-guide"
+    },
+    "prc-directive": {
+     "name": "PRC Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/prc-directive/"
+    },
+    "prc-status": {
+     "name": "PRC Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/prc-status/"
+    },
+    "usr-directive": {
+     "name": "USR Directive",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/usr-directive/"
+    },
+    "usr-status": {
+     "name": "USR Status",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/data-types/usr-status/"
+    }
+   },
+   "version": "V1.0"
+  }
+ },
+ "PRF": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-prf/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "PTF": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-ptf/v1-0/",
+   "data-types": {
+    "attestation-evidence": {
+     "name": "Attestation Evidence",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/attestation-evidence/"
+    },
+    "cryptographic-instance-identity": {
+     "name": "Cryptographic Instance Identity",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/cryptographic-instance-identity/"
+    },
+    "cryptographic-instance-role-taxonomy": {
+     "name": "Cryptographic Instance Role Taxonomy",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/cryptographic-instance-role-taxonomy/"
+    },
+    "data-exchange-metadata": {
+     "name": "Data Exchange Metadata",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/data-exchange-metadata/"
+    },
+    "error-code": {
+     "name": "Error Code",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/error-code/"
+    },
+    "instance-credential": {
+     "name": "Instance Credential",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/instance-credential/"
+    },
+    "policy-binding": {
+     "name": "Policy Binding",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/policy-binding/"
+    },
+    "process-instance": {
+     "name": "Process Instance",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/process-instance/"
+    },
+    "process-lifecycle-credential": {
+     "name": "Process Lifecycle Credential",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/process-lifecycle-credential/"
+    },
+    "profile": {
+     "name": "Profile",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/profile/"
+    },
+    "security": {
+     "name": "Security",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/security/"
+    },
+    "security-algorithm-taxonomy": {
+     "name": "Security Algorithm Taxonomy",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/security-algorithm-taxonomy/"
+    },
+    "security-evidence-taxonomy": {
+     "name": "Security Evidence Taxonomy",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/security-evidence-taxonomy/"
+    },
+    "security-technology-taxonomy": {
+     "name": "Security Technology Taxonomy",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/security-technology-taxonomy/"
+    },
+    "trust-anchor": {
+     "name": "Trust Anchor",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/trust-anchor/"
+    },
+    "trust-message": {
+     "name": "Trust Message",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/trust-message/"
+    },
+    "trust-operation": {
+     "name": "Trust Operation",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/trust-operation/"
+    },
+    "trust-operation-taxonomy": {
+     "name": "Trust Operation Taxonomy",
+     "url": "https://mpai.community/standards/mpai-ptf/v1-0/data-types/trust-operation-taxonomy/"
+    }
+   },
+   "version": "V1.0"
+  }
+ },
+ "SPG": {
+  "mdl": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-spg/mdl/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "TFA": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-tfa/v1-5/",
+   "data-types": {
+    "3d-model": {
+     "name": "3D Model Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/3d-model/"
+    },
+    "animation": {
+     "name": "Animation Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/animation/"
+    },
+    "audio": {
+     "name": "Audio Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/audio/"
+    },
+    "audio-visual": {
+     "name": "Audio-Visual Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/audio-visual/"
+    },
+    "behavioural-signal": {
+     "name": "Behavioural Signal Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/behavioural-signal/"
+    },
+    "body-descriptors": {
+     "name": "Body Descriptors Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/body-descriptors/"
+    },
+    "certificate": {
+     "name": "Certificate Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/certificate/"
+    },
+    "clinical-record": {
+     "name": "Clinical Record Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/clinical-record/"
+    },
+    "colour": {
+     "name": "Colour Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/colour/"
+    },
+    "contract": {
+     "name": "Contract Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/contract/"
+    },
+    "control": {
+     "name": "Control Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/control/"
+    },
+    "currency": {
+     "name": "Currency Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/currency/"
+    },
+    "dance": {
+     "name": "Dance Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/dance/"
+    },
+    "discovery": {
+     "name": "Discovery Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/discovery/"
+    },
+    "ecg": {
+     "name": "ECG Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/ecg/"
+    },
+    "eeg": {
+     "name": "EEG Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/eeg/"
+    },
+    "ehr": {
+     "name": "EHR Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/ehr/"
+    },
+    "face-descriptors": {
+     "name": "Face Descriptors Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/face-descriptors/"
+    },
+    "gesture-descriptors": {
+     "name": "Gesture Descriptors Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/gesture-descriptors/"
+    },
+    "gnss": {
+     "name": "GNSS Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/gnss/"
+    },
+    "interpretation": {
+     "name": "Interpretation Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/interpretation/"
+    },
+    "lidar": {
+     "name": "LiDAR Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/lidar/"
+    },
+    "medical-imaging": {
+     "name": "Medical Imaging Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/medical-imaging/"
+    },
+    "metaverse": {
+     "name": "Metaverse Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/metaverse/"
+    },
+    "ml-model": {
+     "name": "ML Model Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/ml-model/"
+    },
+    "mocap": {
+     "name": "MoCap Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/mocap/"
+    },
+    "neurophysiological-signal": {
+     "name": "Neurophysiological Signal Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/neurophysiological-signal/"
+    },
+    "offline-map": {
+     "name": "Offline Map Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/offline-map/"
+    },
+    "omics": {
+     "name": "Omics Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/omics/"
+    },
+    "physiological-signal": {
+     "name": "Physiological Signal Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/physiological-signal/"
+    },
+    "program": {
+     "name": "Program Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/program/"
+    },
+    "radar": {
+     "name": "RADAR Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/radar/"
+    },
+    "speech": {
+     "name": "Speech Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/speech/"
+    },
+    "text": {
+     "name": "Text Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/text/"
+    },
+    "time": {
+     "name": "Time Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/time/"
+    },
+    "ultrasound": {
+     "name": "Ultrasound Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/ultrasound/"
+    },
+    "visual": {
+     "name": "Visual Qualifier",
+     "url": "https://mpai.community/standards/mpai-tfa/v1-5/data-types/visual/"
+    }
+   },
+   "version": "V1.5"
+  }
+ },
+ "WMG": {
+  "": {
+   "ai-modules": {},
+   "base": "https://mpai.community/standards/mpai-wmg/v1-0/",
+   "data-types": {},
+   "version": "V1.0"
+  }
+ },
+ "XRV": {
+  "ltp": {
+   "ai-modules": {
+    "action-generation": {
+     "name": "Action Generation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/action-generation/"
+    },
+    "environment-description": {
+     "name": "Environment Description",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/environment-description/"
+    },
+    "live-theatrical-performance": {
+     "name": "Live Theatrical Performance",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/live-theatrical-performance/"
+    },
+    "operator-status-interpretation": {
+     "name": "Operator Status Interpretation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/operator-status-interpretation/"
+    },
+    "participant-status-interpretation": {
+     "name": "Participant Status Interpretation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/participant-status-interpretation/"
+    },
+    "performance-status-interpretation": {
+     "name": "Performance Status Interpretation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/performance-status-interpretation/"
+    },
+    "re-experience-generation": {
+     "name": "RE Experience Generation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/re-experience-generation/"
+    },
+    "ve-experience-generation": {
+     "name": "VE Experience Generation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/ve-experience-generation/"
+    }
+   },
+   "base": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/",
+   "data-types": {
+    "action-table": {
+     "name": "Action Table",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/action-table/"
+    },
+    "audio-behaviour": {
+     "name": "Audio Behaviour",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/audio-behaviour/"
+    },
+    "control-object": {
+     "name": "Control Object",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/control-object/"
+    },
+    "dance-object": {
+     "name": "Dance Object",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/dance-object/"
+    },
+    "metaverse-object": {
+     "name": "Metaverse Object",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/metaverse-object/"
+    },
+    "participant-data": {
+     "name": "Participant Data",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/participant-data/"
+    },
+    "re-data-in": {
+     "name": "RE Data In",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-data-in/"
+    },
+    "re-data-out": {
+     "name": "RE Data Out",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-data-out/"
+    },
+    "re-operator-descriptors": {
+     "name": "RE Operator Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-operator-descriptors/"
+    },
+    "re-operator-status": {
+     "name": "RE Operator Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-operator-status/"
+    },
+    "re-participant-descriptors": {
+     "name": "RE Participant Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-participant-descriptors/"
+    },
+    "re-participant-status": {
+     "name": "RE Participant Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-participant-status/"
+    },
+    "re-performance-descriptors": {
+     "name": "RE Performance Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-performance-descriptors/"
+    },
+    "re-performance-status": {
+     "name": "RE Performance Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-performance-status/"
+    },
+    "re-venue-specification": {
+     "name": "RE Venue Specification",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/re-venue-specification/"
+    },
+    "script": {
+     "name": "Script",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/script/"
+    },
+    "script-venue-associations": {
+     "name": "Script-Venue Associations",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/script-venue-associations/"
+    },
+    "seat-occupation": {
+     "name": "Seat Occupation",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/seat-occupation/"
+    },
+    "show-descriptors": {
+     "name": "Show Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/show-descriptors/"
+    },
+    "speaking-avatar": {
+     "name": "Speaking Avatar",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/speaking-avatar/"
+    },
+    "ve-data-in": {
+     "name": "VE Data In",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-data-in/"
+    },
+    "ve-data-out": {
+     "name": "VE Data Out",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-data-out/"
+    },
+    "ve-operator-descriptors": {
+     "name": "VE Operator Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-operator-descriptors/"
+    },
+    "ve-operator-status": {
+     "name": "VE Operator Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-operator-status/"
+    },
+    "ve-participant-descriptors": {
+     "name": "VE Participant Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-participant-descriptors/"
+    },
+    "ve-participant-status": {
+     "name": "VE Participant Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-participant-status/"
+    },
+    "ve-performance-descriptors": {
+     "name": "VE Performance Descriptors",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-performance-descriptors/"
+    },
+    "ve-performance-status": {
+     "name": "VE Performance Status",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-performance-status/"
+    },
+    "ve-venue-specification": {
+     "name": "VE Venue Specification",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-venue-specification/"
+    },
+    "visual-behaviour": {
+     "name": "Visual Behaviour",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/visual-behaviour/"
+    }
+   },
+   "version": "V1.0"
+  }
+ }
+}
