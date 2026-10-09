@@ -1,0 +1,65 @@
+Pages of NNW-NNT 2.0, made from those of 1.1 by make_web_version.py
+
+(home)/                                                      11 x https://mpai\.community/standards/mpai\-, 1 x https://mpai\.community/standards/mpai\-, 1 x AI Workflows
+ai-modules/                                                  12 x https://mpai\.community/standards/mpai\-, 4 x https://mpai\.community/standards/mpai\-, 10 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows, 1 x \bAIW\b
+ai-modules/Wti-watermark-embedder/                           2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/comparator/                                       2 x https://mpai\.community/standards/mpai\-, 1 x (schemas\.mpai\.community/NNW\d/(?:/)?)V
+ai-modules/modification-module/                              2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/modified-module/                                  2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/module-trainer/                                   2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/nir-watermark-decoder/                            2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/nti-watermark-embedder/                           2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/unwatermarked-module/                             2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/watermarked-module/                               2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/wir-watermark-decoder/                            2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-modules/wti-watermark-embedder/                           2 x https://mpai\.community/standards/mpai\-, 2 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 3 x \bNNW-([A-Z0-9]{3})-V1\.1\b
+ai-workflows: not written - the AI Workflows are AI Modules; their page is ai-modules/
+ai-modules/no-inference-robustness/                          4 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 1 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 1 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows, 1 x AI Workflow, 1 x \bAIWs\b, 6 x \bAIW\b
+ai-modules/no-training-imperceptibility/                     5 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 5 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 1 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows, 1 x AI Workflow, 1 x \bAIWs\b, 6 x \bAIW\b
+ai-modules/with-inference-robustness/                        4 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 1 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 1 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows, 1 x AI Workflow, 1 x \bAIWs\b, 6 x \bAIW\b
+ai-modules/with-training-imperceptibility/                   5 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 4 x (schemas\.mpai\.community/NNW\d/(?:/)?)V, 1 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows, 1 x AI Workflow, 1 x \bAIWs\b, 6 x \bAIW\b
+computational-cost-evaluation/                               2 x https://mpai\.community/standards/mpai\-, 4 x https://mpai\.community/standards/mpai\-
+computational-cost-evaluation/                               2 x https://mpai\.community/standards/mpai\-, 4 x https://mpai\.community/standards/mpai\-
+definitions/                                                 6 x https://mpai\.community/standards/mpai\-
+definitions/                                                 6 x https://mpai\.community/standards/mpai\-
+imperceptibility-evaluation/                                 6 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-
+imperceptibility-evaluation/                                 6 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-
+introduction/                                                4 x https://mpai\.community/standards/mpai\-
+reference-software/                                          4 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x https://mpai\.community/standards/mpai\-, 2 x AI Workflows
+references/                                                  6 x https://mpai\.community/standards/mpai\-
+robustness-evaluation/                                       6 x https://mpai\.community/standards/mpai\-
+scope/                                                       6 x https://mpai\.community/standards/mpai\-
+use-cases/                                                   6 x https://mpai\.community/standards/mpai\-
+
+Corrections and additions (fix_nnt_pages.py):
+ai-modules/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/comparator/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/modification-module/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/modified-module/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/module-trainer/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/nir-watermark-decoder/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/no-inference-robustness/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/no-training-imperceptibility/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/nti-watermark-embedder/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/unwatermarked-module/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/watermarked-module/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/wir-watermark-decoder/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/with-inference-robustness/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/with-training-imperceptibility/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules/Wti-watermark-embedder/index.html: JSON links of V2.0, NNW-NNT V2.0
+computational-cost-evaluation/index.html: JSON links of V2.0, NNW-NNT V2.0
+definitions/index.html: JSON links of V2.0, NNW-NNT V2.0
+imperceptibility-evaluation/index.html: JSON links of V2.0, NNW-NNT V2.0
+introduction/index.html: JSON links of V2.0, NNW-NNT V2.0
+reference-software/index.html: JSON links of V2.0, NNW-NNT V2.0
+references/index.html: JSON links of V2.0, NNW-NNT V2.0
+robustness-evaluation/index.html: JSON links of V2.0, NNW-NNT V2.0
+scope/index.html: JSON links of V2.0, NNW-NNT V2.0
+use-cases/index.html: JSON links of V2.0, NNW-NNT V2.0
+ai-modules: 1 x Technical Specification: Object and Scene Description (MPAI-
+ai-modules: 1 x All previously specified MPAI-OSD AI-Modules are superseded 
+ai-modules: 1 x AIMs used by MPAI-OSD V1.3
+ai-modules: 3 x MPAI-OSD V1.4
+ai-modules: 1 x MPAI-OSD Standard
+ai-modules: 4 Modules (NNW-NIR, NNW-NTI, NNW-WIR, NNW-WTI) as rows of Table 1, in bold
+data-types: a new page, the five Data Types

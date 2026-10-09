@@ -286,30 +286,6 @@
     mkg:webOnly true ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-object-delivery/> .
 
-<https://mpai.community/kg/aim/NNW-NNT/nir-watermark-decoder> a mkg:AIM ;
-    mkg:acronym "NNW-NNT/nir-watermark-decoder" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:title "NIR Watermark Decoder" ;
-    mkg:webOnly true ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nir-watermark-decoder/> .
-
-<https://mpai.community/kg/aim/NNW-NNT/nti-watermark-embedder> a mkg:AIM ;
-    mkg:acronym "NNW-NNT/nti-watermark-embedder" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:title "NTI Watermark Embedder" ;
-    mkg:webOnly true ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nti-watermark-embedder/> .
-
-<https://mpai.community/kg/aim/NNW-NNT/wir-watermark-decoder> a mkg:AIM ;
-    mkg:acronym "NNW-NNT/wir-watermark-decoder" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:title "WIR Watermark Decoder" ;
-    mkg:webOnly true ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/wir-watermark-decoder/> .
-
 <https://mpai.community/kg/aim/OSD/acoustic-environment-analysis> a mkg:AIM ;
     mkg:acronym "OSD/acoustic-environment-analysis" ;
     mkg:noAcronym true ;
@@ -1850,17 +1826,25 @@ part:NNW1 a mkg:Part ;
     mkg:acronym "NNW1" ;
     mkg:partAcronym "NNT" ;
     mkg:partOf standard:NNW ;
-    mkg:sourceAI true ;
-    mkg:specifies <https://mpai.community/kg/aim/NNW/Comparator>,
-        <https://mpai.community/kg/aim/NNW/ModificationModule>,
-        <https://mpai.community/kg/aim/NNW/ModifiedModule>,
-        <https://mpai.community/kg/aim/NNW/ModuleTrainer>,
-        <https://mpai.community/kg/aim/NNW/NIRWatermarkDecoder>,
-        <https://mpai.community/kg/aim/NNW/NTIWatermarkEmbedder>,
-        <https://mpai.community/kg/aim/NNW/UnwatermarkedModule>,
-        <https://mpai.community/kg/aim/NNW/WIRWatermarkDecoder>,
-        <https://mpai.community/kg/aim/NNW/WTIWatermarkEmbedder>,
-        <https://mpai.community/kg/aim/NNW/WatermarkedModule> ;
+    mkg:specifies aim:NNW-CMP-V2.0,
+        aim:NNW-MDM-V2.0,
+        aim:NNW-MFM-V2.0,
+        aim:NNW-MTR-V2.0,
+        aim:NNW-NIR-V2.0,
+        aim:NNW-NTI-V2.0,
+        aim:NNW-NWD-V2.0,
+        aim:NNW-NWE-V2.0,
+        aim:NNW-UWM-V2.0,
+        aim:NNW-WIR-V2.0,
+        aim:NNW-WMM-V2.0,
+        aim:NNW-WTI-V2.0,
+        aim:NNW-WWD-V2.0,
+        aim:NNW-WWE-V2.0,
+        datatype:NNW-CER-V2.0,
+        datatype:NNW-DST-V2.0,
+        datatype:NNW-INF-V2.0,
+        datatype:NNW-PLD-V2.0,
+        datatype:NNW-PRM-V2.0 ;
     mkg:title "NNW part 1 - NNT" .
 
 part:NNW2 a mkg:Part ;
@@ -2897,7 +2881,7 @@ standard:PRF a mkg:Standard ;
     mkg:acronym "PRF" ;
     mkg:inM3260 true ;
     mkg:specifies <https://mpai.community/kg/datatype/PRF/AIMProfiles> ;
-    mkg:version "V1.0" ;
+    mkg:version "V2.0" ;
     mkg:webSpec <https://mpai.community/standards/mpai-prf/> .
 
 standard:WMG a mkg:Standard ;
@@ -10545,111 +10529,572 @@ aim:MMC-STD-V2.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/human-cav-interaction/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/> .
 
-<https://mpai.community/kg/aim/NNW/Comparator> a mkg:AIM ;
-    mkg:acronym "NNW/Comparator" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/Comparator.json> ;
-    mkg:sourceAI true ;
-    mkg:title "Comparator" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/comparator/> .
+<https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Input/NNW-PLD-V2.0/1> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "OriginalPayload" ;
+    mkg:optional false ;
+    mkg:portNumber 1 .
 
-<https://mpai.community/kg/aim/NNW/ModificationModule> a mkg:AIM ;
-    mkg:acronym "NNW/ModificationModule" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/ModificationModule.json> ;
-    mkg:sourceAI true ;
-    mkg:title "ModificationModule" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modification-module/> .
+<https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Input/NNW-PLD-V2.0/2> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "RetrievedPayload" ;
+    mkg:optional false ;
+    mkg:portNumber 2 .
 
-<https://mpai.community/kg/aim/NNW/ModifiedModule> a mkg:AIM ;
-    mkg:acronym "NNW/ModifiedModule" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/ModifiedModule.json> ;
-    mkg:sourceAI true ;
-    mkg:title "ModifiedModule" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modified-module/> .
+<https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Output/NNW-CER-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-CER-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "CountError" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/ModuleTrainer> a mkg:AIM ;
-    mkg:acronym "NNW/ModuleTrainer" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/ModuleTrainer.json> ;
-    mkg:sourceAI true ;
-    mkg:title "ModuleTrainer" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/module-trainer/> .
+<https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/NIRWatermarkDecoder> a mkg:AIM ;
-    mkg:acronym "NNW/NIRWatermarkDecoder" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/NIRWatermarkDecoder.json> ;
-    mkg:sourceAI true ;
-    mkg:title "NIRWatermarkDecoder" .
+<https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "ModifiedParameters" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/NTIWatermarkEmbedder> a mkg:AIM ;
-    mkg:acronym "NNW/NTIWatermarkEmbedder" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/NTIWatermarkEmbedder.json> ;
-    mkg:sourceAI true ;
-    mkg:title "NTIWatermarkEmbedder" .
+<https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Output/NNW-INF-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "ModifiedInference" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/UnwatermarkedModule> a mkg:AIM ;
-    mkg:acronym "NNW/UnwatermarkedModule" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/UnwatermarkedModule.json> ;
-    mkg:sourceAI true ;
-    mkg:title "UnwatermarkedModule" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/unwatermarked-module/> .
+<https://mpai.community/kg/aim/NNW-MFM-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/WIRWatermarkDecoder> a mkg:AIM ;
-    mkg:acronym "NNW/WIRWatermarkDecoder" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/WIRWatermarkDecoder.json> ;
-    mkg:sourceAI true ;
-    mkg:title "WIRWatermarkDecoder" .
+<https://mpai.community/kg/aim/NNW-MFM-V2.0/port/Output/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "ModifiedParameters" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/WTIWatermarkEmbedder> a mkg:AIM ;
-    mkg:acronym "NNW/WTIWatermarkEmbedder" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/WTIWatermarkEmbedder.json> ;
-    mkg:sourceAI true ;
-    mkg:title "WTIWatermarkEmbedder" .
+<https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset" ;
+    mkg:optional false .
 
-<https://mpai.community/kg/aim/NNW/WatermarkedModule> a mkg:AIM ;
-    mkg:acronym "NNW/WatermarkedModule" ;
-    mkg:apiProfile "" ;
-    mkg:description "" ;
-    mkg:noAcronym true ;
-    mkg:ofStandard standard:NNW ;
-    mkg:schema <https://schemas.mpai.community/NNW1/V1.1/AIMs/WatermarkedModule.json> ;
-    mkg:sourceAI true ;
-    mkg:title "WatermarkedModule" ;
-    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/watermarked-module/> .
+<https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "UntrainedParameters" ;
+    mkg:optional true .
+
+<https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Output/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "UnwatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/1> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-NIR-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-CMP-V2.0 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/2> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-NIR-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-MFM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/3> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-MFM-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-NWD-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/4> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-NWD-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-CMP-V2.0 ;
+    mkg:toPortNumber 2 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-NWD-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-NIR-V2.0 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/6> a mkg:Flow ;
+    mkg:dataType datatype:NNW-CER-V2.0 ;
+    mkg:fromAIM aim:NNW-CMP-V2.0 ;
+    mkg:fromType datatype:NNW-CER-V2.0 ;
+    mkg:toAIM aim:NNW-NIR-V2.0 ;
+    mkg:toType datatype:NNW-CER-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "OriginalPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Output/NNW-CER-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-CER-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "CountError" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Output/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "RetrievedPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/1> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-NTI-V2.0 ;
+    mkg:fromPortNumber 1 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-MTR-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/10> a mkg:Flow ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:fromAIM aim:NNW-WMM-V2.0 ;
+    mkg:fromType datatype:NNW-INF-V2.0 ;
+    mkg:toAIM aim:NNW-NTI-V2.0 ;
+    mkg:toPortNumber 2 ;
+    mkg:toType datatype:NNW-INF-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/2> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-MTR-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-UWM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/3> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-NTI-V2.0 ;
+    mkg:fromPortNumber 2 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-UWM-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/4> a mkg:Flow ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:fromAIM aim:NNW-UWM-V2.0 ;
+    mkg:fromType datatype:NNW-INF-V2.0 ;
+    mkg:toAIM aim:NNW-NTI-V2.0 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:NNW-INF-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-NTI-V2.0 ;
+    mkg:fromPortNumber 3 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-MTR-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/6> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-MTR-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-NWE-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/7> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-NTI-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-NWE-V2.0 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/8> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-NWE-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-WMM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/9> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-NTI-V2.0 ;
+    mkg:fromPortNumber 4 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-WMM-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/1> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset1" ;
+    mkg:optional false ;
+    mkg:portNumber 1 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/2> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset1" ;
+    mkg:optional false ;
+    mkg:portNumber 2 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/3> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset2" ;
+    mkg:optional false ;
+    mkg:portNumber 3 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/4> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset2" ;
+    mkg:optional false ;
+    mkg:portNumber 4 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "Payload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Output/NNW-INF-V2.0/1> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "UnwatermarkedInference" ;
+    mkg:optional false ;
+    mkg:portNumber 1 .
+
+<https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Output/NNW-INF-V2.0/2> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "WatermarkedInference" ;
+    mkg:optional false ;
+    mkg:portNumber 2 .
+
+<https://mpai.community/kg/aim/NNW-NWD-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "ModifiedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NWD-V2.0/port/Output/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "RetrievedPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "Payload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "UnwatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Output/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "UnwatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Output/NNW-INF-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "UnwatermarkedInference" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/1> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-WIR-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-CMP-V2.0 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/2> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-WIR-V2.0 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-MDM-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/3> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-WIR-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-MFM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/4> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-MFM-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-MDM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:fromAIM aim:NNW-MDM-V2.0 ;
+    mkg:fromType datatype:NNW-INF-V2.0 ;
+    mkg:toAIM aim:NNW-WWD-V2.0 ;
+    mkg:toType datatype:NNW-INF-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/6> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-WWD-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-CMP-V2.0 ;
+    mkg:toPortNumber 2 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/7> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-WWD-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-WIR-V2.0 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/8> a mkg:Flow ;
+    mkg:dataType datatype:NNW-CER-V2.0 ;
+    mkg:fromAIM aim:NNW-CMP-V2.0 ;
+    mkg:fromType datatype:NNW-CER-V2.0 ;
+    mkg:toAIM aim:NNW-WIR-V2.0 ;
+    mkg:toType datatype:NNW-CER-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "OriginalPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Output/NNW-CER-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-CER-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "CountError" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Output/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "RetrievedPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Output/NNW-INF-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "WatermarkedInference" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/1> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-WTI-V2.0 ;
+    mkg:fromPortNumber 1 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-MTR-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/2> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-MTR-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-UWM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/3> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-WTI-V2.0 ;
+    mkg:fromPortNumber 2 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-UWM-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/4> a mkg:Flow ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:fromAIM aim:NNW-UWM-V2.0 ;
+    mkg:fromType datatype:NNW-INF-V2.0 ;
+    mkg:toAIM aim:NNW-WTI-V2.0 ;
+    mkg:toPortNumber 1 ;
+    mkg:toType datatype:NNW-INF-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/5> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-WTI-V2.0 ;
+    mkg:fromPortNumber 3 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-WWE-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/6> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:fromAIM aim:NNW-WTI-V2.0 ;
+    mkg:fromType datatype:NNW-PLD-V2.0 ;
+    mkg:toAIM aim:NNW-WWE-V2.0 ;
+    mkg:toType datatype:NNW-PLD-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/7> a mkg:Flow ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:fromAIM aim:NNW-WWE-V2.0 ;
+    mkg:fromType datatype:NNW-PRM-V2.0 ;
+    mkg:toAIM aim:NNW-WMM-V2.0 ;
+    mkg:toType datatype:NNW-PRM-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/8> a mkg:Flow ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:fromAIM aim:NNW-WTI-V2.0 ;
+    mkg:fromPortNumber 4 ;
+    mkg:fromType datatype:NNW-DST-V2.0 ;
+    mkg:toAIM aim:NNW-WMM-V2.0 ;
+    mkg:toType datatype:NNW-DST-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/9> a mkg:Flow ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:fromAIM aim:NNW-WMM-V2.0 ;
+    mkg:fromType datatype:NNW-INF-V2.0 ;
+    mkg:toAIM aim:NNW-WTI-V2.0 ;
+    mkg:toPortNumber 2 ;
+    mkg:toType datatype:NNW-INF-V2.0 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/1> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset1" ;
+    mkg:optional false ;
+    mkg:portNumber 1 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/2> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset1" ;
+    mkg:optional false ;
+    mkg:portNumber 2 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/3> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset2" ;
+    mkg:optional false ;
+    mkg:portNumber 3 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/4> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TestingDataset2" ;
+    mkg:optional false ;
+    mkg:portNumber 4 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "Payload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Output/NNW-INF-V2.0/1> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "UnwatermarkedInference" ;
+    mkg:optional false ;
+    mkg:portNumber 1 .
+
+<https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Output/NNW-INF-V2.0/2> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "WatermarkedInference" ;
+    mkg:optional false ;
+    mkg:portNumber 2 .
+
+<https://mpai.community/kg/aim/NNW-WWD-V2.0/port/Input/NNW-INF-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-INF-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "ModifiedInference" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WWD-V2.0/port/Output/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "RetrievedPayload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-DST-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-DST-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "TrainingDataset" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-PLD-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PLD-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "Payload" ;
+    mkg:optional false .
+
+<https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Input" ;
+    mkg:label "UntrainedParameters" ;
+    mkg:optional true .
+
+<https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Output/NNW-PRM-V2.0/0> a mkg:Port ;
+    mkg:dataType datatype:NNW-PRM-V2.0 ;
+    mkg:direction "Output" ;
+    mkg:label "WatermarkedParameters" ;
+    mkg:optional false .
 
 aim:OSD-3ED-V1.5 a mkg:AIM ;
     mkg:acronym "OSD-3ED-V1.5" ;
@@ -16086,9 +16531,9 @@ datatype:PAF-AMO-V1.6 a mkg:DataType ;
 
 <https://mpai.community/kg/datatype/PRF/AIMProfiles> a mkg:DataType ;
     mkg:acronym "PRF/AIMProfiles" ;
-    mkg:description "AI Module Profile (MPAI-PRF V1.0, JSON Syntax and Semantics): the Attributes, and Sub-Attributes, that an AIM instance signals, as ALL (the listed Attributes are not supported) or NUL (the listed Attributes are supported) followed by +/- Attributes, @EPS#<Sub-Attributes> and @TRN#<language><->|-><language>." ;
+    mkg:description "AI Module Profile (MPAI-PRF V2.0): the Attributes, and Sub-Attributes, that an AIM instance signals, as ALL (the listed Attributes are not supported) or NUL (the listed Attributes are supported) followed by +/- Attributes, @EPS#<Sub-Attributes: PST text, PSS speech, PSF face, PSB body> and @TRN#<language><->|-><language>. Corrections to V1.0: PST (the text Sub-Attribute, SPT in V1.0), PSB (body, PSG for gesture in V1.0), AVS (Audio-Visual Scene Descriptors) is an Attribute, ISD is not." ;
     mkg:noAcronym true ;
-    mkg:schema <https://schemas.mpai.community/PRF/V1.0/data/AIMProfiles.json> ;
+    mkg:schema <https://schemas.mpai.community/PRF/V2.0/data/AIMProfiles.json> ;
     mkg:title "AIMProfiles" .
 
 datatype:PTF-ERR-V1.0 a mkg:DataType ;
@@ -20492,6 +20937,91 @@ aim:MMC-ETD-V2.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-text-description/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
+aim:NNW-MDM-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-MDM-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Modified Module: the Module that has the modified parameters; it can be any AIM that produces an inference. It gives the inference of the modified network from the testing dataset." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-MDM-V2.0/port/Output/NNW-INF-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/ModifiedModule.json> ;
+    mkg:title "Modified Module V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modified-module/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-NIR-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-NIR-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "No Inference Robustness: the Module that evaluates the robustness of a watermark when the payload is retrieved from the parameters: it modifies the watermarked parameters, decodes the payload from the modified parameters and compares it with the original payload." ;
+    mkg:flow <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/1>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/2>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/3>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/4>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/5>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/flow/6> ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Output/NNW-CER-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NIR-V2.0/port/Output/NNW-PLD-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/NoInferenceRobustness.json> ;
+    mkg:subAIM aim:NNW-CMP-V2.0,
+        aim:NNW-MFM-V2.0,
+        aim:NNW-NWD-V2.0 ;
+    mkg:title "No Inference Robustness V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-NWD-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-NWD-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "NIR Watermark Decoder: retrieves the payload inserted in the parameters of a Module (No Inference Robustness) and gives the retrieved payload." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-NWD-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NWD-V2.0/port/Output/NNW-PLD-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/NIRWatermarkDecoder.json> ;
+    mkg:title "NIR Watermark Decoder V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nir-watermark-decoder/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-NWE-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-NWE-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "NTI Watermark Embedder: embeds the payload in the parameters of a Module without training it (No Training Imperceptibility) and gives the watermarked parameters." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NWE-V2.0/port/Output/NNW-PRM-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/NTIWatermarkEmbedder.json> ;
+    mkg:title "NTI Watermark Embedder V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/nti-watermark-embedder/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-WWD-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-WWD-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "WIR Watermark Decoder: retrieves the payload from the inference of a Module (With Inference Robustness) and gives the retrieved payload." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-WWD-V2.0/port/Input/NNW-INF-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WWD-V2.0/port/Output/NNW-PLD-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/WIRWatermarkDecoder.json> ;
+    mkg:title "WIR Watermark Decoder V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/wir-watermark-decoder/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-WWE-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-WWE-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "WTI Watermark Embedder: embeds the payload in the parameters of a Module while it trains it (With Training Imperceptibility) and gives the watermarked parameters." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WWE-V2.0/port/Output/NNW-PRM-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/WTIWatermarkEmbedder.json> ;
+    mkg:title "WTI Watermark Embedder V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
 aim:OSD-VOI-V1.5 a mkg:AIM ;
     mkg:acronym "OSD-VOI-V1.5" ;
     mkg:apiProfile "Basic" ;
@@ -21329,6 +21859,32 @@ aim:MMC-SPE-V2.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-personal-status-extraction/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
 
+aim:NNW-WIR-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-WIR-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "With Inference Robustness: the Module that evaluates the robustness of a watermark when the payload is retrieved from the inference: it modifies the watermarked parameters, has the modified Module infer from the testing dataset, decodes the payload from the inference and compares it with the original payload." ;
+    mkg:flow <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/1>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/2>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/3>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/4>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/5>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/6>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/7>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/flow/8> ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Output/NNW-CER-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WIR-V2.0/port/Output/NNW-PLD-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/WithInferenceRobustness.json> ;
+    mkg:subAIM aim:NNW-CMP-V2.0,
+        aim:NNW-MDM-V2.0,
+        aim:NNW-MFM-V2.0,
+        aim:NNW-WWD-V2.0 ;
+    mkg:title "With Inference Robustness V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
 aim:OSD-BOS-V1.5 a mkg:AIM ;
     mkg:acronym "OSD-BOS-V1.5" ;
     mkg:apiProfile "Basic" ;
@@ -21738,6 +22294,18 @@ aim:CVE-VII-V1.0 a mkg:AIM ;
     mkg:title "" ;
     mkg:webSpec <https://mpai.community/standards/mpai-osd/v1-5/> .
 
+aim:NNW-MFM-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-MFM-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Modification Module: alters the parameters of a watermarked neural network (a modification: pruning, noise, quantisation) and gives the modified parameters." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-MFM-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-MFM-V2.0/port/Output/NNW-PRM-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/ModificationModule.json> ;
+    mkg:title "Modification Module V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/modification-module/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
 datatype:AIH-HLD-V1.1 a mkg:DataType ;
     mkg:acronym "AIH-HLD-V1.1" ;
     mkg:description "Schema for raw health data." ;
@@ -21971,6 +22539,65 @@ aim:MMC-SCM-V2.5 a mkg:AIM ;
     mkg:title "Summary Creation Module V2.5" ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/summary-creation-module/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:NNW-NTI-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-NTI-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "No Training Imperceptibility: the Module that evaluates the imperceptibility of a watermark inserted without training: a Module Trainer trains the Module (1) and the Unwatermarked Module infers; a second training (2) gives the parameters into which the NTI Watermark Embedder embeds the payload, and the Watermarked Module infers. The two inferences are the outputs." ;
+    mkg:flow <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/1>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/10>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/2>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/3>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/4>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/5>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/6>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/7>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/8>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/flow/9> ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/1>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/2>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/3>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-DST-V2.0/4>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Output/NNW-INF-V2.0/1>,
+        <https://mpai.community/kg/aim/NNW-NTI-V2.0/port/Output/NNW-INF-V2.0/2> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/NoTrainingImperceptibility.json> ;
+    mkg:subAIM aim:NNW-MTR-V2.0,
+        aim:NNW-NWE-V2.0,
+        aim:NNW-UWM-V2.0,
+        aim:NNW-WMM-V2.0 ;
+    mkg:title "No Training Imperceptibility V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-WTI-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-WTI-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "With Training Imperceptibility: the Module that evaluates the imperceptibility of a watermark inserted during training: a Module Trainer trains the Module (1) and the Unwatermarked Module infers; the WTI Watermark Embedder trains (2) and embeds the payload, and the Watermarked Module infers. The two inferences are the outputs." ;
+    mkg:flow <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/1>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/2>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/3>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/4>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/5>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/6>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/7>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/8>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/flow/9> ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/1>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/2>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/3>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-DST-V2.0/4>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Input/NNW-PLD-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Output/NNW-INF-V2.0/1>,
+        <https://mpai.community/kg/aim/NNW-WTI-V2.0/port/Output/NNW-INF-V2.0/2> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/WithTrainingImperceptibility.json> ;
+    mkg:subAIM aim:NNW-MTR-V2.0,
+        aim:NNW-UWM-V2.0,
+        aim:NNW-WMM-V2.0,
+        aim:NNW-WWE-V2.0 ;
+    mkg:title "With Training Imperceptibility V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
 
 aim:OSD-BRS-V1.5 a mkg:AIM ;
     mkg:acronym "OSD-BRS-V1.5" ;
@@ -22280,6 +22907,58 @@ aim:MMC-PMX-V2.5 a mkg:AIM ;
     mkg:title "" ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/personal-status-multiplexing/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-mmc/v2-5/> .
+
+aim:NNW-CMP-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-CMP-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Comparator: compares the original payload with the retrieved one and gives the count of the errors, from which the Bit Error Rate follows." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Input/NNW-PLD-V2.0/1>,
+        <https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Input/NNW-PLD-V2.0/2>,
+        <https://mpai.community/kg/aim/NNW-CMP-V2.0/port/Output/NNW-CER-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/Comparator.json> ;
+    mkg:title "Comparator V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/comparator/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-MTR-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-MTR-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Module Trainer: trains a Module with the training dataset and gives the (unwatermarked) parameters. The untrained parameters are those of the architecture of the Module, if none is given." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-MTR-V2.0/port/Output/NNW-PRM-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/ModuleTrainer.json> ;
+    mkg:title "Module Trainer V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/module-trainer/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-UWM-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-UWM-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Unwatermarked Module: the Module without watermark; it can be any AIM that produces an inference. It gives the inference from the testing dataset." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-UWM-V2.0/port/Output/NNW-INF-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/UnwatermarkedModule.json> ;
+    mkg:title "Unwatermarked Module V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/unwatermarked-module/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
+
+aim:NNW-WMM-V2.0 a mkg:AIM ;
+    mkg:acronym "NNW-WMM-V2.0" ;
+    mkg:apiProfile "Basic" ;
+    mkg:description "Watermarked Module: the Module that has the watermarked parameters; it can be any AIM that produces an inference. It gives the inference from the testing dataset." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:port <https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Input/NNW-DST-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Input/NNW-PRM-V2.0/0>,
+        <https://mpai.community/kg/aim/NNW-WMM-V2.0/port/Output/NNW-INF-V2.0/0> ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/AIMs/WatermarkedModule.json> ;
+    mkg:title "Watermarked Module V2.0" ;
+    mkg:webPage <https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/watermarked-module/> ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/nnt/v2-0/> .
 
 aim:PAF-SAS-V1.6 a mkg:AIM ;
     mkg:acronym "PAF-SAS-V1.6" ;
@@ -22655,6 +23334,15 @@ datatype:MMC-ECS-V2.5 a mkg:DataType ;
     mkg:uses datatype:OSD-SPT-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-mmc/v2-5/data-types/cognitive-state/> .
+
+datatype:NNW-CER-V2.0 a mkg:DataType ;
+    mkg:acronym "NNW-CER-V2.0" ;
+    mkg:description "The count of the errors between the original and the retrieved payload, from which the Bit Error Rate follows." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/data/CountError.json> ;
+    mkg:title "Count Error V2.0" ;
+    mkg:uses datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 .
 
 datatype:OSD-ASD-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-ASD-V1.5" ;
@@ -23532,12 +24220,6 @@ datatype:OSD-BLS-V1.5 a mkg:DataType ;
     mkg:softwareKind "library" ;
     mkg:title "AIMs/MMC/V2.5/SIR" .
 
-standard:NNW a mkg:Standard ;
-    mkg:acronym "NNW" ;
-    mkg:inM3260 true ;
-    mkg:version "V1.1" ;
-    mkg:webSpec <https://mpai.community/standards/mpai-nnw/> .
-
 aim:PAF-FIR-V1.6 a mkg:AIM ;
     mkg:acronym "PAF-FIR-V1.6" ;
     mkg:apiProfile "Basic" ;
@@ -24013,6 +24695,12 @@ datatype:CAV-RDS-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/road-state/> .
 
+standard:NNW a mkg:Standard ;
+    mkg:acronym "NNW" ;
+    mkg:inM3260 true ;
+    mkg:version "V2.0" ;
+    mkg:webSpec <https://mpai.community/standards/mpai-nnw/> .
+
 datatype:MMC-SPS-V2.5 a mkg:DataType ;
     mkg:acronym "MMC-SPS-V2.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/PersonalStatus.cs> ;
@@ -24060,6 +24748,15 @@ datatype:OSD-3DO-V1.5 a mkg:DataType ;
         datatype:OSD-TEM-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/data-types/3d-model-object/> .
+
+datatype:NNW-INF-V2.0 a mkg:DataType ;
+    mkg:acronym "NNW-INF-V2.0" ;
+    mkg:description "What a Module produces from the testing dataset: the inference of an unwatermarked, a watermarked or a modified Module." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/data/Inference.json> ;
+    mkg:title "Inference V2.0" ;
+    mkg:uses datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 .
 
 datatype:AIH-REG-V1.1 a mkg:DataType ;
     mkg:acronym "AIH-REG-V1.1" ;
@@ -24898,6 +25595,15 @@ datatype:CAV-ALT-V2.0 a mkg:DataType ;
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-cav/tec/v2-0/data-types/alert/> .
 
+datatype:NNW-PLD-V2.0 a mkg:DataType ;
+    mkg:acronym "NNW-PLD-V2.0" ;
+    mkg:description "The payload that a watermark carries: a bitstring. The original payload (the one embedded) and the retrieved one (the one a decoder returns) are two ports of this Data Type." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/data/Payload.json> ;
+    mkg:title "Payload V2.0" ;
+    mkg:uses datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 .
+
 datatype:OSD-B3O-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-B3O-V1.5" ;
     mkg:code <https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/Core/OSD/Basic3DModelObject.cs> ;
@@ -25081,6 +25787,24 @@ datatype:MMM-RGT-V2.2 a mkg:DataType ;
         datatype:OSD-STM-V1.5,
         datatype:PTF-DEM-V1.0 ;
     mkg:webPage <https://mpai.community/standards/mpai-mmm/tec/v2-2/data-types/rights/> .
+
+datatype:NNW-DST-V2.0 a mkg:DataType ;
+    mkg:acronym "NNW-DST-V2.0" ;
+    mkg:description "A dataset, for training or for testing a Module: the role is the port." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/data/Dataset.json> ;
+    mkg:title "Dataset V2.0" ;
+    mkg:uses datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 .
+
+datatype:NNW-PRM-V2.0 a mkg:DataType ;
+    mkg:acronym "NNW-PRM-V2.0" ;
+    mkg:description "The parameters of a neural network, of a Module: untrained, unwatermarked, watermarked or modified are roles of this Data Type, told apart by the port." ;
+    mkg:ofStandard standard:NNW ;
+    mkg:schema <https://schemas.mpai.community/NNW1/V2.0/data/Parameters.json> ;
+    mkg:title "Parameters V2.0" ;
+    mkg:uses datatype:OSD-STM-V1.5,
+        datatype:PTF-DEM-V1.0 .
 
 datatype:OSD-BAS-V1.5 a mkg:DataType ;
     mkg:acronym "OSD-BAS-V1.5" ;

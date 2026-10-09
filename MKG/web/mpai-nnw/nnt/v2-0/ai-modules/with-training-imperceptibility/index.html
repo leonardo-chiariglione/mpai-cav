@@ -1,0 +1,211 @@
+<!-- ai-modules/with-training-imperceptibility : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-workflows/with-training-imperceptibility/ -->
+<h1>NNW-NNT V2.0  AIWs With Training Imperceptibility</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">Go to AI Modules</a></p>
+<table style="border-collapse: collapse; width: 100%;">
+<tbody>
+<tr>
+<td style="width: 33.3333%;"><a href="#_Toc156567382">1 Functions</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567383">2 Reference Architecture</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567384">3 I/O Data</a></td>
+</tr>
+<tr>
+<td style="width: 33.3333%;"><a href="#_Toc156567385">4 Functions of AI Modules</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567386">5 I/O Data of AI Modules</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567387">6 AIM, AIMs, and JSON Metadata</a></td>
+</tr>
+<tr>
+<td style="width: 33.3333%;"><a href="#seven">7 Reference Software</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#eight">8 Conformance Texting</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#nine">9 Performance Assessment</a></td>
+</tr>
+</tbody>
+</table>
+<h1>1        Functions</h1>
+<p>The With Training Imperceptibility (NNW-WTI) receives a dataset separated in training and testing, the payload and provides both inference for unwatermarked and watermarked AIM allowing the imperceptibility evaluation.</p>
+<h1><a name="_Toc156567383"></a>2        Reference Model</h1>
+<p>Figure 1 specifies the With Training Imperceptibility (NNW-WTI) Reference Model including the input/output data, the AIMs, and the data exchanged between and among the AIMs.</p>
+<p><img fetchpriority="high" decoding="async" class="size-full wp-image-33423 aligncenter" src="https://mpai.community/wp-content/uploads/2025/07/With-Training-Imperceptibility-NNW-WTI-V1.0.png" alt="" width="999" height="500" srcset="https://mpai.community/wp-content/uploads/2025/07/With-Training-Imperceptibility-NNW-WTI-V1.0.png 999w, https://mpai.community/wp-content/uploads/2025/07/With-Training-Imperceptibility-NNW-WTI-V1.0-300x150.png 300w, https://mpai.community/wp-content/uploads/2025/07/With-Training-Imperceptibility-NNW-WTI-V1.0-768x384.png 768w" sizes="(max-width: 999px) 100vw, 999px" /></p>
+<p style="text-align: center;"><em>Figure 1</em> –<em> Reference Model of With Training Imperceptibility (NNW-WTI) </em></p>
+<p>The operation of With Training Imperceptibility (NNW-WTI) develops in the following way:</p>
+<ol>
+<li>A user provides
+<ol>
+<li>The training and testing datasets</li>
+<li>The Payload</li>
+</ol>
+</li>
+<li>The machine provides
+<ol>
+<li>The unwatermarked inference</li>
+<li>The watermarking inference</li>
+</ol>
+</li>
+</ol>
+<h1><a name="_Toc156567384"></a>3         I/O Data</h1>
+<p>The input and output data of the With Training Imperceptibility (NNW-WTI) Use Case are:</p>
+<p><em>Table 1 – I/O Data of With Training Imperceptibility (NNW-WTI)</em></p>
+<table width="1081">
+<tbody>
+<tr>
+<td width="174"><strong>Input</strong></td>
+<td width="906"><strong>Descriptions</strong></td>
+</tr>
+<tr>
+<td width="174">Training dataset</td>
+<td width="906">The dataset used to train the AIM.</td>
+</tr>
+<tr>
+<td width="174">Testing dataset</td>
+<td width="906">The part of the dataset unseen during training.</td>
+</tr>
+<tr>
+<td width="174">Payload</td>
+<td width="906">The information to be inserted in the AIM.</td>
+</tr>
+<tr>
+<td width="174"><strong>Output</strong></td>
+<td width="906"><strong>Descriptions</strong></td>
+</tr>
+<tr>
+<td width="174">Unwatermarked inference</td>
+<td width="906">The output of the unwatermarked AIM on the testing dataset.</td>
+</tr>
+<tr>
+<td width="174">Watermarked inference</td>
+<td width="906">The output of the watermarked AIM on the testing dataset.</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc156567385"></a>4        Functions of AI Modules</h1>
+<p>Table 2 provides the functions of the With Training Imperceptibility (NNW-WTI) Use Case.</p>
+<p><em>Table 2 – Functions of AI Modules of With Training Imperceptibility (NNW-WTI)</em></p>
+<table width="1099">
+<tbody>
+<tr>
+<td width="413"><strong>AIM</strong></td>
+<td width="686"><strong>Function</strong></td>
+</tr>
+<tr>
+<td width="413">AIM Trainer</td>
+<td width="686">Trains the AIM using training dataset.</td>
+</tr>
+<tr>
+<td width="413">WTI Watermark Embedder</td>
+<td width="686">Produces watermarked parameters.</td>
+</tr>
+<tr>
+<td width="413">Unwatermarked AIM</td>
+<td width="686">Produces an inference using unwatermarked parameters and testing dataset.</td>
+</tr>
+<tr>
+<td width="413">Watermarked AIM</td>
+<td width="686">Produces an inference using watermarked parameters and testing dataset.</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc156567386"></a>5         I/O Data of AI Modules</h1>
+<p>The AI Modules of With Training Imperceptibility (NNW-WTI) are given in <em>Table 3.</em></p>
+<p><em>Table 3 – AI Modules of With Training Imperceptibility (NNW-WTI)</em></p>
+<table width="1083">
+<tbody>
+<tr>
+<td width="285"><strong>AIM</strong></td>
+<td width="385"><strong>Receives</strong></td>
+<td width="413"><strong>Produces</strong></td>
+</tr>
+<tr>
+<td width="285">AIM Trainer</td>
+<td width="385">Training dataset</td>
+<td width="413">Unwatermarked parameters</td>
+</tr>
+<tr>
+<td width="285">WTI Watermark Embedder</td>
+<td width="385">1.     Training dataset</p>
+<p>2.     Payload</td>
+<td width="413">Watermarked parameter</td>
+</tr>
+<tr>
+<td width="285">Unwatermarked AIM</td>
+<td width="385">1.     Unwatermarked parameters</p>
+<p>2.     Testing dataset</td>
+<td width="413">Unwatermarked inference</td>
+</tr>
+<tr>
+<td width="285">Watermarked AIM</td>
+<td width="385">1.     Watermarked parameters</p>
+<p>2.     Testing dataset</td>
+<td width="413">Watermarked inference</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc78319420"></a><a name="_Toc156567387"></a>6        AIM, AIMs, and JSON Metadata</h1>
+<p>Table 4 provides the links to the AIM and AIM specifications and to the JSON syntaxes. AIMs/1 indicates that the column contains Composite AIMs and AIMs indicates that the column contains their Basic AIMs.</p>
+<p style="text-align: center;"><em>Table 4 – AIM, AIMs, and JSON Metadata</em></p>
+<table>
+<tbody>
+<tr>
+<td><strong>AIM</strong></td>
+<td><strong>AIM</strong></td>
+<td><strong>Name</strong></td>
+<td style="text-align: center;"><strong>JSON</strong></td>
+</tr>
+<tr>
+<td>NNW-WTI</td>
+<td></td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/with-training-imperceptibility/">With Training Imperceptibility</a></td>
+<td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/WithTrainingImperceptibility.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-MTR</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/module-trainer/">Module Trainer</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/ModuleTrainer.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-UWM</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/unwatermarked-module/">Unwatermarked Module</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/UnwatermarkedModule.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-WMM</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/watermarked-module/">Watermarked Module</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/WatermarkedModule.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-WWE</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/Wti-watermark-embedder/">WTI Watermark Embedder</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/AIMs/WTIWatermarkEmbedder.json">X</a></td>
+</tr>
+</tbody>
+</table>
+<h1>7        Reference Software</h1>
+<h2>7.1       Disclaimers</h2>
+<ol>
+<li>This NNW-WTI Reference Software Implementation is released with the BSD-3-Clause licence.</li>
+<li>The purpose of this Reference Software is to demonstrate a working Implementation of NNW-WTI, not to provide a ready-to-use product.</li>
+<li>MPAI disclaims the suitability of the Software for any other purposes and does not guarantee that it is secure.</li>
+<li>Use of this Reference Software may require acceptance of licences from the respective repositories. Users shall verify that they have the right to use any third-party software required by this Reference Software.</li>
+</ol>
+<h2>7.2        Guide to the NNW-WTI code</h2>
+<p>Use of this AI Module is for developers who are familiar with Python and PyTorch libraries,</p>
+<p>The imperceptibility.py code allow a User to evaluate the imperceptibility of a watermarking method on the image classification task:</p>
+<ol>
+<li>The watermarking method is implemented as a Python Class</li>
+<li>The AIM Trainer uses CIFAR10 dataset to trains torchvision.models</li>
+<li>The fulltest function allow to provide the inference of both unwatermarked and watermarked AIM</li>
+</ol>
+<p>The NNW-WTI Reference Software is found at the <a href="https://experts.mpai.community/software/mpai-nnw/nnt-referencesoftware">gitlab</a> site. It contains:</p>
+<ol>
+<li>The python code implementing the AIM.</li>
+<li>The required libraries are: pytorch, tqdm</li>
+</ol>
+<h1>8        Conformance Testing</h1>
+<h1>9        Performance Assessment</h1>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">Go to AI Modules</a></p>
+						</div>				
+					</article>

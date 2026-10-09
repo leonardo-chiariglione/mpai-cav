@@ -1,0 +1,66 @@
+<!-- reference-software : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/reference-software/ -->
+<h1>NNW-NNT V2.0 Reference Software</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/imperceptibility-evaluation/"> &lt;-Imperceptibility Evaluation </a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>    <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">AI Modules-&gt;</a></p>
+<table style="border-collapse: collapse; width: 100%;">
+<tbody>
+<tr>
+<td style="width: 27.1564%;"><a href="#_Toc204245674">General</a></td>
+<td style="width: 21.7514%;"></td>
+</tr>
+<tr>
+<td style="width: 27.1564%;"><a href="#_Toc204245675">1      Installation requirements</a></td>
+<td style="width: 21.7514%;"><a href="#_Toc204245676">2      Neural Network Watermarking method requirements</a></td>
+</tr>
+<tr>
+<td style="width: 27.1564%;"><a href="#_Toc204245677">3      Neural Network Fingerprinting method requirements</a></td>
+<td style="width: 21.7514%;"><a href="#_Toc204245678">4      How to use the Reference Software</a></td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc204245674"></a>General</h1>
+<p>The MPAI-NNT specifies methodologies to Evaluate the following aspects of a neural network traceability technology:</p>
+<ul>
+<li>The impact on the performance of a watermarked neural network and its inference.</li>
+<li>The ability of a neural network traceability detector/decoder/matcher to detect/decode/match a payload when the tracked neural network has been modified.</li>
+<li>The computational cost of injecting a watermark, detecting or decoding the payload of the watermarked neural network.</li>
+</ul>
+<p>The Reference Software is a Python implementation of the functions specified by the MPAI-NNT standard. The software is designed to evaluate the Imperceptibility, the Robustness and the Computational Cost of neural network watermarking technology and the Robustness and Computational Cost of neural network fingerprinting technology. The software is implemented for the image classification task. For Users wishing to implement the standard for other tasks can use this Refence Software as a guide for an implementation for a different task.</p>
+<h1><a name="_Toc204245675"></a>1          Installation requirements</h1>
+<p>The required modules and their version are:</p>
+<ul>
+<li>python 3.6</li>
+<li>pytorch 1.10 &amp; torchvision 0.11.3</li>
+<li>numpy 1.19.2</li>
+<li>psutils 5.9.3</li>
+</ul>
+<p>The Reference Software can be <a href="https://experts.mpai.community/software/mpai-nnw/nnt-referencesoftware">downloaded</a>.</p>
+<h1><a name="_Toc204245676"></a>2          Neural Network Watermarking method requirements</h1>
+<p>The neural network watermarking method shall be a Python class that contains:</p>
+<ul>
+<li>An <em>Embedder</em> (or <em>Embedder_one_step</em>) function that takes 2 arguments: the model represented in Pytorch format and the Python dictionary which contains all the elements related to the neural network watermarking technology under test.</li>
+<li>An<em> Embedder_one_step </em>(or <em>Embedder</em>) function that takes 5 arguments: the model, the training dataset, the optimizer, the cost function and the dictionary which contains all the elements related to the neural network watermarking technology under test. The first four elements are Pytorch elements represented in the format of [5] and the fifth is a Python dictionary.</li>
+<li>A <em>Detector </em>and/or<em> Decoder </em>function that takes 2 arguments: the model represented in Pytorch format and the Python dictionary which contains all the elements related to the neural network watermarking technology under test.</li>
+</ul>
+<h1><a name="_Toc204245677"></a>3          Neural Network Fingerprinting method requirements</h1>
+<p>The neural network fingerprinting method shall be a Python class that contains:</p>
+<ul>
+<li>A <em>Detector </em>function that takes 2 arguments: the model represented in Pytorch format and the Python dictionary which contains all the elements related to the neural network watermarking technology under test. The <em>Detector </em>call 2 additional methods:
+<ul>
+<li>An<em> Extractor </em>function that extracts a fingerprint from the model.</li>
+<li>A <em>Matcher</em> function that match the obtained fingerprint to the other stored fingerprints.</li>
+</ul>
+</li>
+</ul>
+<h1><a name="_Toc204245678"></a>4          How to use the Reference Software</h1>
+<p>The Reference Software contains a folder for the training and testing dataset and four python files:</p>
+<ul>
+<li><em>Imperceptibility</em>.py to Evaluate the Imperceptibility of a neural network watermarking method.</li>
+<li><em>Robustness</em>.py to Evaluate the Robustness of a neural network traceability method.</li>
+<li><em>ComputationalCost</em>.py to Evaluate the Computational Cost of a neural network traceability method.</li>
+<li><em>Utils</em>.py which contains functions and import used in different.</li>
+</ul>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/imperceptibility-evaluation/"> &lt;-Imperceptibility Evaluation </a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>    <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">AI Modules-&gt;</a></p>
+						</div>				
+					</article>

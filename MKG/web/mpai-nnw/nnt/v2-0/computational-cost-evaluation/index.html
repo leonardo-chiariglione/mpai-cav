@@ -1,0 +1,95 @@
+<!-- computational-cost-evaluation : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/computational-cost-evaluation/ -->
+<h1>NNW-NNT V2.0 Computational Cost Evaluation</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/robustness-evaluation/">&lt;-Robustness Evaluation</a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>   <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/imperceptibility-evaluation">Imperceptibility Evaluation-&gt;</a></p>
+<p>The Computational Cost evaluation specifies the Means that enable a Tester to measure the Computational Cost of:</p>
+<ul>
+<li>Injecting, in terms of memory footprint, time to process an epoch, and number of epochs necessary to insert the watermark.</li>
+<li>Detecting, Decoding, or Extracting in terms of memory footprint and time for the Detector or the Decoder or the Extractor to produce the expected result.</li>
+<li>Matching in terms of memory footprint and time for the Matcher to produce the expected result.</li>
+</ul>
+<h2><a name="_Toc185453617"></a>1      Computational Cost of injecting a watermark</h2>
+<p>The Computational Cost evaluation specifies the Means that enable a Tester to measure the Computational Cost of the injection using NN Watermarking Method under testing.</p>
+<p>The following four elements shall be used to measure the injection process:</p>
+<ol>
+<li>The memory footprint.</li>
+<li>The time to execute the operation required by one epoch normalised according to the number of batches processed in one epoch.</li>
+<li>If the injection is done concurrently with the training of the network, the number of epochs required to insert the watermark.</li>
+<li>The time for the watermarked NN to compute an inference.</li>
+</ol>
+<p>The Tester shall measure the Computational Cost of the injection according to the following workflow:</p>
+<ol>
+<li>Define a pair of training and testing datasets with a size with at least an order of magnitude more entries than trainable Weights.</li>
+<li>Select:
+<ol>
+<li>The training dataset (if needed).</li>
+<li>A set of <em>M</em> unwatermarked NNs trained on the training dataset.</li>
+<li><em>D</em> data Payloads corresponding to the pre-established Payload size.</li>
+</ol>
+</li>
+<li>Apply the NN Watermarking Method to the <em>M</em> NNs using the <em>D</em> data Payloads.</li>
+<li>Record the corresponding <em>M </em>x<em> D </em>set of Computational Costs.</li>
+<li>Provide the average and 95% confidence limits of the Computational Costs divided by <em>M </em>x<em> D</em> for one of the informative Testing Environments of Table 1.</li>
+</ol>
+<p>Table 1 – Testing Environments (informative)</p>
+<table style="width: 57.8183%;">
+<tbody>
+<tr>
+<td style="width: 16.9811%;"><strong> </strong></td>
+<td style="width: 95.9569%;"><strong>Testing environment</strong></td>
+</tr>
+<tr>
+<td style="width: 16.9811%;">Medium</td>
+<td style="width: 95.9569%;">&#8211; Single GPU (16GB/6144 CUDA cores)<br />
+&#8211; 8 cores CPU (2.6GHz)</td>
+</tr>
+<tr>
+<td style="width: 16.9811%;">Large</td>
+<td style="width: 95.9569%;">&#8211; Double GPU (32GB/12288 CUDA cores)<br />
+&#8211; 16 cores CPU (3.4GHz)</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc185453618"></a>2        Computational Cost of Detection, Decoding or Extraction</h2>
+<p>MPAI-NNT specifies the Means that enable a Tester to measure the Computational Cost of the Detection/Decoding/Extraction of a NN Traceability Method.</p>
+<h3><a name="_Toc185453619"></a>2.1        Detection and/or Decoding</h3>
+<p>The Computational Cost of Detection/Decoding is measured by the time and the memory footprint used by the process.</p>
+<p>The Tester shall measure the Computational Cost according to the following workflow:</p>
+<ol>
+<li>Select a set of <em>M</em> unwatermarked NNs, <em>D</em> data Payloads corresponding to the pre-established Payload size and, if needed, the training dataset.</li>
+<li>Apply the NN Watermarking Method to the <em>M</em> NNs with the <em>D</em> data Payloads</li>
+<li>Evaluate the Robustness of the Detector:</li>
+<li>Apply the Watermark Detector to any of the <em>M x D</em></li>
+<li>Record the corresponding <em>M x D </em>set of values.</li>
+<li>Evaluate the Robustness of the Decoder:</li>
+<li>Apply the Watermark Decoder to any of the <em>M x D</em></li>
+<li>Record the corresponding <em>M x D</em> set of Computational Costs.</li>
+<li>Provide the average and 95% confidence limits of the Computational Costs divided by <em>M x D</em> for one of the informative Testing Environments of Table 4.</li>
+</ol>
+<h3><a name="_Toc185453620"></a>2.2        Extraction</h3>
+<p>The Computational Cost of Extraction is measured by the time and the memory footprint used by the process.</p>
+<p>The Tester shall evaluate the Computational Cost according to the following workflow:</p>
+<ol>
+<li>Select a set of <em>M<sub>u</sub></em> NNs trained on the training dataset.</li>
+<li>Compute the <em>M<sub>u</sub></em> fingerprints from the unmodified NNs.</li>
+<li>Evaluate the Robustness of the NN Traceability Method:</li>
+<li>Apply the fingerprint Extractor to any of the <em>M<sub>m</sub></em></li>
+<li>Record the corresponding <em>M<sub>m </sub></em>set of Computational Costs.</li>
+<li>Provide the average and 95% confidence limits of the Computational Costs divided by <em>M<sub>m</sub></em> for one of the informative Testing Environments of Table 1.</li>
+</ol>
+<h2><a name="_Toc185453621"></a>3        Computational Cost of Matching</h2>
+<p>The Computational Cost of Matching is measured by the time and the memory footprint used by the process.</p>
+<p>The Tester shall evaluate the Computational Cost according to the following workflow:</p>
+<ol>
+<li>Select a set of <em>M<sub>u</sub></em> NNs trained on the training dataset.</li>
+<li>Compute the <em>M<sub>u</sub></em> fingerprints from the unmodified NNs.</li>
+<li>Evaluate the Robustness of the NN Traceability Method:</li>
+<li>Apply the fingerprint Matcher to any of the <em>M<sub>m</sub></em></li>
+<li>Record the corresponding <em>M<sub>m </sub></em>set of Computational Costs.</li>
+<li>Provide the average and 95% confidence limits of the Computational Costs divided by <em>M<sub>m</sub></em> for one of the informative Testing Environments of Table 1.</li>
+</ol>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/robustness-evaluation/">&lt;-Robustness Evaluation</a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>   <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/imperceptibility-evaluation">Imperceptibility Evaluation-&gt;</a></p>
+<p>&nbsp;</p>
+						</div>				
+					</article>

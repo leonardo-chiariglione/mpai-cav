@@ -1,0 +1,114 @@
+<!-- definitions : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/definitions/ -->
+<h1>NNW-NNT V2.0 Definitions</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/scope/">&lt;-Scope </a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>       <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/references/">References-&gt;</a></p>
+<p><a name="_Toc78624378"></a>The Upper-case Terms used in this standard have the meaning defined in <em>Table 1</em>. All MPAI-defined Terms are accessible <a href="https://dbmpai.rf.gd/">online</a>.</p>
+<p style="text-align: center;"><em><a id="Table1"></a>Table </em><em>1</em><em> – </em><em>Table of terms and definitions</em></p>
+<table style="width: 100.165%;" width="623">
+<tbody>
+<tr>
+<td style="width: 24.6006%; text-align: center;" width="151"><strong>Term</strong></td>
+<td style="width: 105.987%; text-align: center;" width="472"><strong>Definition</strong></td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Active Traceability Method</td>
+<td style="width: 105.987%;" width="472">A Traceability Method that alters the Neural Network (NN) Weights.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Algorithmic Integrity</td>
+<td style="width: 105.987%;" width="472">The equivalence of the Traceability Data extracted from a modified NN and those extracted from an unmodified NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Computational Cost</td>
+<td style="width: 105.987%;" width="472">The cost of injecting, Detecting, Decoding or Matching Traceability Data.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Detection</td>
+<td style="width: 105.987%;" width="472">The process of finding the presence of a known watermark in a NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Decoding</td>
+<td style="width: 105.987%;" width="472">The process of extracting the Payload from a watermarked NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Extraction</td>
+<td style="width: 105.987%;" width="472">The process of computing the fingerprint from an NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Imperceptibility</td>
+<td style="width: 105.987%;" width="472">A difference in the performance of an NN before and after the watermark embedding process.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Matching</td>
+<td style="width: 105.987%;" width="472">The process of finding a fingerprint in a database that correspond to the fingerprint computed from an NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Means</td>
+<td style="width: 105.987%;" width="472">Procedure, tools, dataset or dataset characteristics used to evaluate one or more of Computational Cost, Imperceptibility, or Robustness of a NN Traceability method.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Modification</td>
+<td style="width: 105.987%;" width="472">The result of an attack performed during NN Traceability testing.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Neural Network</td>
+<td style="width: 105.987%;" width="472">or Artificial Neural Network, a set of interconnected data processing nodes whose connections are affected by Weights.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">NN Fingerprinting Method</td>
+<td style="width: 105.987%;" width="472">A NN Passive Traceability method that extracts NN identification data from the NN Weights and matches it to a known repository.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">NN Traceability</td>
+<td style="width: 105.987%;" width="472">The possibility to identify the source and/or a potential Modification of a NN.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">NN Watermarking Method</td>
+<td style="width: 105.987%;" width="472">A NN Active Traceability method that injects Traceability Data into the Weights or the activation function of a NN to subsequently enable a Decoder/Detector to decode/detect the injected Traceability Data.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Parameter</td>
+<td style="width: 105.987%;" width="472">A set of values characterizing Type and Intensity of a Modification, as used in <a href="../robustness-evaluation/#Table1">Table 1</a>.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Passive Traceability Method</td>
+<td style="width: 105.987%;" width="472">A Traceability Method that does not alter the NN Weights.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Payload</td>
+<td style="width: 105.987%;" width="472">The Symbols carried by a watermark.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Robustness</td>
+<td style="width: 105.987%;" width="472">The ability of a NN Traceability method to withstand a Modification in terms of Detection, Decoding or Matching capability.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Secret Key</td>
+<td style="width: 105.987%;" width="472">The data that the Traceability method requires to be kept secret.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Symbol</td>
+<td style="width: 105.987%;" width="472">A binary, numerical, or string element in a Payload.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Tester</td>
+<td style="width: 105.987%;" width="472">The user who evaluates a NN Traceability Method according to this Technical Specification.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Traceability</td>
+<td style="width: 105.987%;" width="472">The possibility to trace the origin of data.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Traceability Data</td>
+<td style="width: 105.987%;" width="472">The data to be inserted by the Active Traceability method or the result of the application of a Detection algorithm to an NN for a Passive Traceability Method.</td>
+</tr>
+<tr>
+<td style="width: 24.6006%;" width="151">Weight</td>
+<td style="width: 105.987%;" width="472">The value used to multiply the connection between two nodes of a NN.</td>
+</tr>
+</tbody>
+</table>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/scope/">&lt;-Scope </a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>       <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/references/">References-&gt;</a></p>
+						</div>				
+					</article>

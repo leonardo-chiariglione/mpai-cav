@@ -1,0 +1,128 @@
+<!-- robustness-evaluation : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/robustness-evaluation/ -->
+<h1>NNW-NNT V2.0 Robustness evaluation</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/use-cases/">&lt;-Use Cases</a><a href="https://mpai.community/standards/mpai-nnw/nnt/v1.0/use-cases/">      </a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a><a href="https://mpai.community/standards/mpai-nnw/nnt/v1.0/use-cases/">      </a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation">Computational Cost Evaluation-&gt;</a></p>
+<p style="text-align: left;">The Robustness evaluation specifies the Means to enable a Tester to evaluate the Robustness of the Traceability Data against a set of Modifications requested by one of the Actors.</p>
+<h2><a name="_Toc182815873"></a>1       Watermarking</h2>
+<p>The Tester evaluates the Decoder, and Detector of a NN Watermarking Method as specified in the following workflow:</p>
+<ol>
+<li>Select:
+<ol>
+<li>A set of <em>M</em> unwatermarked NNs trained on the training dataset.</li>
+<li><em>D</em> data Payloads corresponding to the pre-established Payload size.</li>
+</ol>
+</li>
+<li>Apply the NN Watermarking Method to the <em>M</em> NNs with the <em>D </em>data Payloads</li>
+<li>Produce a set of <em>M</em> x (<em>D</em> + 1) modified NNs (<em>M</em> unwatermarked NNs and <em>M</em> x <em>D</em> watermarked NNs), by applying one of the Modifications in Table 3 to a given Parameter value.</li>
+<li>Evaluate the Robustness of the Detector:
+<ol>
+<li>Find the presence of the watermark in all <em>M</em> x (<em>D</em> + 1) NNs using the Watermark Detector.</li>
+<li>Record the corresponding binary detection results (<em>Yes</em> – the mark is detected or <em>No</em> – the mark is not detected).</li>
+<li>Label the Yes/No outputs of the Watermark Detector as <em>true positive</em>, <em>true negative</em>, <em>false positive</em> (<em>false alarm</em>) and <em>false negative</em> (<em>missed detection</em>) according to the actual result.</li>
+<li>Count the total number of <em>false positives</em> and the total number of <em>false negatives</em>.</li>
+</ol>
+</li>
+<li>Evaluate the Robustness of the Decoder:
+<ol>
+<li>Extract the Payload from all <em>M</em> x (<em>D</em> + 1) NNs using the Watermark Decoder.</li>
+<li>Count the number of different Symbols between the outputs of the Decoder and their corresponding original data Payloads.</li>
+<li>Compute the Symbol Error Rate (SER) for any of the <em>M</em> x (<em>D</em> + 1) NNs, as the ratio of the number of different Symbols to the number of the Symbols in the data Payload.</li>
+<li>Compute the average SER, as the average over the <em>M</em> x (<em>D</em> + 1) SER values computed in the previous step.</li>
+</ol>
+</li>
+<li>Provide the average values over the total number of tests:
+<ol>
+<li>The ratio of the number of <em>false positives</em> to <em>M</em> x (<em>D</em> + 1),</li>
+<li>The ratio of the number of <em>false negatives</em> to <em>M</em> x (<em>D</em> + 1).</li>
+<li>The M x D number for tested NNs, and the average SER.</li>
+</ol>
+</li>
+<li>Repeat steps 3, 4, 5, and 6 for the requested set of Intensity Modifications of Table 3.</li>
+<li>Repeat steps 3, 4, 5, 6, and 7 for the requested set of Type Modifications of Table 3.</li>
+</ol>
+<p style="text-align: center;"><a id="Table1"></a>Table 1 – List of modification with their parameters</p>
+<table style="width: 99.639%;" width="643">
+<tbody>
+<tr>
+<td style="width: 51.6923%; text-align: center;" width="232"><strong>Modification name</strong></td>
+<td style="width: 27.2402%; text-align: center;" width="202"><strong>Parameter Type</strong></td>
+<td style="width: 47.8171%; text-align: center;" width="208"><strong>Parameter Intensity</strong></td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Gaussian noise addition</em></strong><strong>: </strong>adding a zero-mean, <em>S</em> standard deviation Gaussian noise to a layer in the NN model. This noise addition can be simultaneously applied to a sub-set of layers.</td>
+<td style="width: 27.2402%;" width="202">&#8211; The layers to be modified by Gaussian noise<br />
+&#8211; The ratio of <em>S</em> to standard deviation of the Weights in the corresponding layer.</td>
+<td style="width: 47.8171%;" width="208">&#8211;  1 to total number of layers.<br />
+&#8211;  0.1 to 0.3.</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>L1 Pruning</em></strong><strong>: </strong>delete the <em>P</em>% of the smallest Weights in a layer for each layer.</td>
+<td style="width: 27.2402%;" width="202">&#8211;  The <em>P </em>percentage of the deleted Weights.</td>
+<td style="width: 47.8171%;" width="208">&#8211;  1% to 90%.</p>
+<p>&#8211;  1% to 99.99% when aiming one layer.</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Random pruning</em></strong><strong>: </strong>delete <em>R</em>% of randomly selected Weights, irrespective of their layers.</td>
+<td style="width: 27.2402%;" width="202">&#8211;          The <em>R</em> percentage of the deleted Weights.</td>
+<td style="width: 47.8171%;" width="208">&#8211; 1% to 10%.</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Quantizing: </em></strong>reduce to B the number of bits used to represent the Weights by<br />
+1.     Reducing the number of bits based on a sequence of three operations: affine mapping from the interval the Weights belong to <strong> </strong>interval.<br />
+2.     Rounding to the closest integer.<br />
+3.     Backward affine mapping towards the initial interval the Weights belong to.</td>
+<td style="width: 27.2402%;" width="202">&#8211; The layers to be modified by quantization.<br />
+&#8211; The value of <em>B</em>.</td>
+<td style="width: 47.8171%;" width="208">&#8211;  1 to total number of layers.<br />
+&#8211;  32 to 2.</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Fine tuning / transfer learning</em></strong><strong>: </strong>resume the training of the <em>M</em> watermarked NNs submitted to test, for <em>E</em> additional epochs.</td>
+<td style="width: 27.2402%;" width="202">&#8211; Ratio of <em>E</em> to the number of epochs in the initial training.</td>
+<td style="width: 47.8171%;" width="208">&#8211; Up to 0.5 time the total number of epochs.</p>
+<p>&nbsp;</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Knowledge distillation: </em></strong>train a surrogate network using the inferences of the NN under test as training dataset</td>
+<td style="width: 27.2402%;" width="202">&#8211; The structure of the architecture.<br />
+&#8211; The size of the dataset <em>D</em>.<br />
+&#8211; The number of epochs <em>E</em>.</td>
+<td style="width: 47.8171%;" width="208">&#8211; Structures N.<br />
+&#8211; 10,000 to 1,000,000.<br />
+&#8211; 1 to 100.</td>
+</tr>
+<tr>
+<td style="width: 51.6923%;" width="232"><strong><em>Watermark overwriting: </em></strong>successively insert <em>W </em>additional watermarks, with random Payloads of the same size as the initial watermark</td>
+<td style="width: 27.2402%;" width="202">&#8211;  <em>W</em> number of watermarks successively inserted.</td>
+<td style="width: 47.8171%;" width="208">&#8211; 2 to 4.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="_Toc182815874"></a>2       Fingerprinting</h2>
+<p>The Tester evaluates the capability of a NN Fingerprinting Method Matcher as specified in the following workflow:</p>
+<ol>
+<li>Select a set of <em>M<sub>u</sub></em> NNs trained on the training dataset.</li>
+<li>Compute the <em>M<sub>u</sub></em> fingerprints from the unmodified NNs.</li>
+<li>Produce a set of <em>M<sub>m</sub></em> modified NNs, by applying one of the Modifications in Table 3 to a given Parameter value.</li>
+<li>Evaluate the Robustness of the Matcher:
+<ol>
+<li>Compute the fingerprint for any of the <em>M<sub>m</sub></em></li>
+<li>Apply the Matcher to the <em>M<sub>m</sub></em> fingerprints obtained in 4.a and record its output (<em>Yes</em> – the matching found is correct or <em>No</em> – the matching found is not correct).</li>
+<li>Label the <em>Yes</em>/<em>No</em> outputs of 4.b as <em>true positive</em>, <em>true negative</em>, <em>false positive</em> (<em>false alarm</em>) and <em>false negative</em> (<em>missed detection</em>).</li>
+<li>Count the total number of <em>false positives</em> and the total number of <em>false negatives</em>.</li>
+</ol>
+</li>
+<li>Provide the average values over the total number of tests:
+<ol>
+<li>The ratio of the number of <em>false positives</em> to <em>M<sub>m</sub></em>,</li>
+<li>The ratio of the number of <em>false negatives</em> to <em>M<sub>m</sub></em>.</li>
+<li>The <em>M<sub>m </sub></em>number for tested NNs, and the average BER.</li>
+</ol>
+</li>
+<li>Repeat steps 3, 4, and 5 for the requested set of Intensity Modifications of Table 3.</li>
+<li>Repeat steps 3, 4, 5, and 6 for the requested set of Type Modifications of Table 3.</li>
+</ol>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/use-cases/">&lt;-Use Cases</a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation">Computational Cost Evaluation-&gt;</a></p>
+						</div>				
+					</article>

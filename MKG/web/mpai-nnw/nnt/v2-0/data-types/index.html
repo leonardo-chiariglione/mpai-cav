@@ -1,0 +1,22 @@
+<!-- data-types : new in V2.0 (V1.1 had no page of Data Types; its ports were of raw types: uint8[], bitstring) -->
+<h1>NNW-NNT V2.0 Data Types</h1>
+<article class="post">
+<div class="post-content">
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">&lt;- AI Modules</a> <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a></p>
+<h3>1. Technical Specification</h3>
+<p>Table 1 provides the Data Types of the AI Modules of Technical Specification: Neural Network Watermarking &#8211; Traceability (NNW-NNT) V2.0 with the link to their JSON syntax. The role of a Data Type in a Module (the original and the retrieved payload; the untrained, unwatermarked, watermarked and modified parameters; the training and testing dataset) is the Port of the Module that receives or produces it.</p>
+<p style="text-align: center;">Table 1 &#8211; Data Types of NNW-NNT V2.0</p>
+<table style="width: 99.9157%;">
+<tbody>
+<tr><td><strong>Acronym</strong></td><td><strong>Name</strong></td><td><strong>Description</strong></td><td style="text-align: center;"><strong>JSON</strong></td></tr>
+<tr><td>NNW-PLD</td><td>Payload</td><td>The payload a watermark carries: a bitstring.</td><td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/data/Payload.json">X</a></td></tr>
+<tr><td>NNW-PRM</td><td>Parameters</td><td>The parameters of a neural network (a Module).</td><td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/data/Parameters.json">X</a></td></tr>
+<tr><td>NNW-DST</td><td>Dataset</td><td>A dataset for the training or the testing of a Module.</td><td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/data/Dataset.json">X</a></td></tr>
+<tr><td>NNW-INF</td><td>Inference</td><td>What a Module produces from the testing dataset.</td><td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/data/Inference.json">X</a></td></tr>
+<tr><td>NNW-CER</td><td>Count Error</td><td>The count of the errors between the original and the retrieved payload.</td><td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/data/CountError.json">X</a></td></tr>
+</tbody>
+</table>
+<h3>2. Conformance Testing</h3>
+<p>A Data instance of a Data Type conforms with NNW-NNT V2.0 if the JSON Data validate against the relevant NNW-NNT V2.0 JSON Schema.</p>
+</div>
+</article>

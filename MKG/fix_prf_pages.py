@@ -1,67 +1,62 @@
-"""The corrected pages of MPAI-PRF V1.0 (same version): what the specification says and its own JSON schema disagree on.
+"""MPAI-PRF V2.0: the corrections to the pages made from those of V1.0 (make_web_version.py PRF "" 1.0 2.0).
 
-  - AVS (Audio-Visual Scene Descriptors) is used by the examples and by the tables of the AIMs but is not an Attribute of
-    Table 1 nor of the schema: it takes the place of the second 'Speech Model' (SPM) of Table 1, which is a duplicate,
-    and is added to the schema.
-  - the Text sub-attribute of the Personal Status is PST in the text, SPT in the schema: PST.
-  - the Gesture sub-attribute (PSG) is Body (PSB): gesture is a subset of the body.
-Writes web/mpai-prf/v1-0/<page>/index.html (HTML fragments, as make_web_version.py) and CHANGES.txt.
+V1.0 stays as it was published. V2.0 corrects what the specification and its own JSON schema disagree on:
+  - AVS (Audio-Visual Scene Descriptors) is used by the examples and by the tables of the AIMs but was not an Attribute: it
+    is a row of Table 1 and in the schema;
+  - the Text sub-attribute of the Personal Status is PST (the text; the schema had SPT);
+  - the Gesture sub-attribute (PSG) is Body (PSB): gesture is a subset of the body;
+  - ISD is not an Attribute (Table 1 has Speech Descriptors, SPD): out of the schema; the example uses SPD.
+Edits the fragments in web/mpai-prf/v2-0/ and appends to its CHANGES.txt.
 """
-import os, re, urllib.request
+import os, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-BASE = 'https://mpai.community/standards/mpai-prf/v1-0/'
+D = os.path.join(ROOT, 'web', 'mpai-prf', 'v2-0')
+log = []
 
-def get(u):
-    return urllib.request.urlopen(urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0'}), timeout=30).read().decode('utf-8', 'ignore')
-
-changes = []
-def page(name, edits):
-    h = get(BASE + name + '/')
-    title = re.search(r'<h1[^>]*>(.*?)</h1>', h, flags=re.S).group(1).strip()
-    j, k = h.find('<article'), h.find('</article>')
-    body = h[j:k + len('</article>')]
+def edit(page, edits):
+    p = os.path.join(D, page, 'index.html')
+    s = open(p, encoding='utf-8').read()
     done = []
     for label, old, new, count in edits:
-        n = body.count(old)
+        n = s.count(old)
         if n != count:
-            done.append('NOT DONE (%d found, %d expected): %s' % (n, count, label))
-            continue
-        if label.startswith('the second'):
-            i = body.rfind(old)
-            body = body[:i] + new + body[i + len(old):]
-        else:
-            body = body.replace(old, new)
-        done.append('%d x %s' % (n, label))
-    d = os.path.join(ROOT, 'web', 'mpai-prf', 'v1-0', name)
-    os.makedirs(d, exist_ok=True)
-    open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write('<!-- %s : from %s -->\n<h1>%s</h1>\n%s\n' % (name, BASE + name + '/', title, body))
-    changes.append(name + ': ' + '; '.join(done))
-    return body
+            done.append('NOT DONE (%d found, %d expected): %s' % (n, count, label)); continue
+        s = s.replace(old, new); done.append('%d x %s' % (n, label))
+    open(p, 'w', encoding='utf-8').write(s)
+    log.append(page + ': ' + '; '.join(done))
+    return s
 
-# Table 1: the second Speech Model cell
-h = get(BASE + 'profile-signalling/')
-j, k = h.find('<article'), h.find('</article>')
-a = h[j:k]
-cells = [m.start() for m in re.finditer(r'Speech Model', a)]
-print('Speech Model at', cells)
-second = cells[1]
-# the cell text and the code cell after it
-m = re.compile(r'(Speech Model)(</[^>]+>\s*(?:</td>\s*<td[^>]*>)?\s*(?:<[^>]+>)*)SPM').search(a, second)
-assert m, 'the second Speech Model cell'
-old_pair = a[m.start():m.end()]
-new_pair = old_pair.replace('Speech Model', 'Audio-Visual Scene Descriptors', 1)[:-3] + 'AVS'
-page('profile-signalling', [
-    ('the second Speech Model (SPM), a duplicate, is Audio-Visual Scene Descriptors (AVS)', old_pair, new_pair, 2),
+# Table 1: a new row for AVS, made from the last row
+p = os.path.join(D, 'profile-signalling', 'index.html')
+s = open(p, encoding='utf-8').read()
+t0 = s.index('<table')
+t1 = s.index('</table>', t0)
+rows = list(re.finditer(r'<tr>.*?</tr>', s[t0:t1], flags=re.S))
+last = rows[-1]
+cells = re.findall(r'(<td[^>]*>)(.*?)(</td>)', last.group(0), flags=re.S)
+assert len(cells) == 6, len(cells)
+texts = ['Audio-Visual Scene Descriptors', 'AVS', '', '', '', '']
+new_row = last.group(0)
+for (open_, inner, close), text in zip(cells, texts):
+    new_row = new_row.replace(open_ + inner + close, open_ + text + close, 1)
+at = t0 + last.end()
+s = s[:at] + '\n' + new_row + s[at:]
+open(p, 'w', encoding='utf-8').write(s)
+log.append('profile-signalling: a row for Audio-Visual Scene Descriptors (AVS) in Table 1')
+
+edit('profile-signalling', [
     ('Gesture (PSG) is Body (PSB)', 'Gesture (PSG)', 'Body (PSB)', 1),
     ('#PSG is #PSB in the example', '#PSG', '#PSB', 1),
     ('Face and Gesture is Face and Body', 'Face and Gesture', 'Face and Body', 1),
+    ('the example with ISD uses SPD', 'ALL-ISD@TRN', 'ALL-SPD@TRN', 1),
 ])
-page('json-syntax-and-semantics', [
+edit('json-syntax-and-semantics', [
     ('the Profile pattern: PST for SPT, PSB for PSG', 'SPT|PSS|PSF|PSG', 'PST|PSS|PSF|PSB', 1),
     ('the Profile pattern: AVS added', 'AVG|AVM', 'AVG|AVS|AVM', 1),
+    ('the Profile pattern: ISD removed', 'FCD|EPS|ISD|', 'FCD|EPS|', 1),
 ])
-page('aim-profiles', [('Body Object receives Body, not Gesture', 'Receives Gesture', 'Receives Body', 1)])
-with open(os.path.join(ROOT, 'web', 'mpai-prf', 'v1-0', 'CHANGES.txt'), 'w', encoding='utf-8') as f:
-    f.write('MPAI-PRF V1.0, corrected pages (make by fix_prf_pages.py)\n\n' + '\n'.join(changes) + '\n')
-print('\n'.join(changes))
+edit('aim-profiles', [('Body Object receives Body, not Gesture', 'Receives Gesture', 'Receives Body', 1)])
+with open(os.path.join(D, 'CHANGES.txt'), 'a', encoding='utf-8') as f:
+    f.write('\nCorrections (fix_prf_pages.py):\n' + '\n'.join(log) + '\n')
+print('\n'.join(log))

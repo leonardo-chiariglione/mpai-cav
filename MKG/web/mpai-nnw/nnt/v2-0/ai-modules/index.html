@@ -1,0 +1,109 @@
+<!-- ai-modules : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-modules/ -->
+<h1>NNW-NNT V2.0 AI Modules</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">&lt;-AI Modules</a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>          <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/data-types/">Data Types-&gt;</a></p>
+<table>
+<tbody>
+<tr>
+<td><a href="#one">1. Technical Specification</a></td>
+<td><a href="#RS">2. Reference Software</a></td>
+<td><a href="#two">3. Conformance Testing</a></td>
+<td><a href="#three">4. Performance Assessment</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="one"></a>1. Technical Specifications</h3>
+<p>Table 1 provides the links to the specifications and the JSON syntax of all AIMs specified by <em><strong>Technical Specification: Neural Network Watermarking &#8211; Traceability (NNW-NNT) V2.0</strong></em>. All previously specified NNW-NNT AI Modules and AI Workflows are superseded by those specified by V2.0 (the AI Workflows of V1.1 are the Modules of V2.0) but may still be used by explicitly signaling their version. AI Modules in bold are Composite.</p>
+<p style="text-align: center;">Table 1 &#8211; Specifications and JSON syntax of AIMs and Modules of NNW-NNT V2.0</p>
+<table style="width: 99.9157%;">
+<tbody>
+<tr>
+<td style="width: 14.511%; text-align: center;"><strong>Acronym</strong></td>
+<td style="width: 24.4488%; text-align: center;"><strong>Name </strong></td>
+<td style="width: 9.78087%; text-align: center;"><strong>JSON</strong></td>
+<td style="width: 14.5782%; text-align: center;"><strong>Acronym</strong></td>
+<td style="width: 27.4656%; text-align: center;"><strong>Name </strong></td>
+<td style="width: 34.9593%; text-align: center;"><strong>JSON</strong></td>
+</tr>
+<tr>
+<td style="width: 14.511%;">NNW-CMP</td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/comparator/">Comparator</a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/Comparator.json">X</a></td>
+<td style="width: 14.5782%;">NNW-NWE</td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/nti-watermark-embedder/">NTI Watermark Embedder</a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/NTIWatermarkEmbedder.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;">NNW-MFM</td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/modification-module/">Modification Module</a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/ModificationModule.json">X</a></td>
+<td style="width: 14.5782%;">NNW-UWM</td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/unwatermarked-module/">Unwatermarked Module</a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/UnwatermarkedModule.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;">NNW-MDM</td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/modified-module/">Modified Module</a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/ModifiedModule.json">X</a></td>
+<td style="width: 14.5782%;">NNW-WMM</td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/watermarked-module/">Watermarked Module</a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/WatermarkedModule.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;">NNW-MTR</td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/module-trainer/">Module Trainer</a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/ModuleTrainer.json">X</a></td>
+<td style="width: 14.5782%;">NNW-WWD</td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/wir-watermark-decoder/">WIR Watermark Decoder</a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/WIRWatermarkDecoder.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;">NNW-NWD</td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/nir-watermark-decoder/">NIR Watermark Decoder</a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/NIRWatermarkDecoder.json">X</a></td>
+<td style="width: 14.5782%;">NNW-WWE</td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/Wti-watermark-embedder/">WTI Watermark Embedder</a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="http://schemas.mpai.community/NNW1/V2.0/AIMs/WTIWatermarkEmbedder.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;"><strong>NNW-NIR</strong></td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/no-inference-robustness/"><strong>No Inference Robustness</strong></a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/NoInferenceRobustness.json">X</a></td>
+<td style="width: 14.5782%;"><strong>NNW-NTI</strong></td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/no-training-imperceptibility/"><strong>No Training Imperceptibility</strong></a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/NoTrainingImperceptibility.json">X</a></td>
+</tr>
+<tr>
+<td style="width: 14.511%;"><strong>NNW-WIR</strong></td>
+<td style="width: 24.4488%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/with-inference-robustness/"><strong>With Inference Robustness</strong></a></td>
+<td style="width: 9.78087%; text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/WithInferenceRobustness.json">X</a></td>
+<td style="width: 14.5782%;"><strong>NNW-WTI</strong></td>
+<td style="width: 27.4656%;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/with-training-imperceptibility/"><strong>With Training Imperceptibility</strong></a></td>
+<td style="width: 34.9593%; text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/WithTrainingImperceptibility.json">X</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a id="two"></a>2 Conformance testing</h3>
+<p>A Data instance of a Data Type Conforms with NNW-NNT V2.0 if the JSON Data validate against the relevant NNW-NNT V2.0 JSON Schema and if the Data Conforms with the relevant Data Qualifier, if present. NNW-NNT V2.0 does not provide method for testing the Conformance of the Semantics of the Data instance to the MPAI-OSD V1.5 specification.</p>
+<p>Conformance testing can be performed by a human using a JSON Validator to verify the Conformance of the syntax of JSON Data to the relevant JSON Schema; and, if the Data has a Qualifier, to verify that the syntax of the Data conforms with the relevant values in the Data Qualifier. Alternatively, Conformance testing can be performed by software implementing the steps above.</p>
+<h3>#3. Reference Software</h3>
+<p>As a rule, MPAI provides Reference Software implementing the AI Modules released with the BSD-3-Clause licence and the following disclaimers:</p>
+<ol>
+<li>The purpose of the Reference Software is to provide a working Implementation of an AIM, not a ready-to-use product.</li>
+<li>MPAI disclaims the suitability of the Software for any other purposes than those of the NNW-NNT Standard, and does not guarantee that it offers the best performance and that it is secure.</li>
+<li>Users shall verify that they have the right to use any third-party software required by this Reference Software, e.g., by accepting the licences from third-party repositories.</li>
+</ol>
+<p>MPAI-OSD V1.3 provides Reference Software Implementation for some AIMs.</p>
+<h3><a id="three"></a>4. Performance Assessment</h3>
+<p>Performance is a multidimensional entity because it can have various connotations. Therefore, the Performance Assessment Specification should provide methods to measure how well an AIM performs its function, using a metric that depends on the nature of the function, such as:</p>
+<ol>
+<li><span style="text-decoration: underline;">Quality</span>: Performance Assessment measures how well an AIM performs its function, using a metric that depends on the nature of the function, e.g., how well a Visual Change Detection (VCD) AIM can detect the change of a visual scene.</li>
+<li><span style="text-decoration: underline;">Bias</span>: Performance Assessment measures the preference given by an AIM to certain elements, using a metric that depends on a bias related to certain attributes of the AIM. For instance, a Visual Instance Identification (VII) AIM tends to have a higher correct identification of visual objects that have a certain shape.</li>
+<li><span style="text-decoration: underline;">Legal</span> compliance: Performance Assessment measures how well an AIM performs its function, using a metric that assesses its accordance with a certain legal standard.</li>
+<li><span style="text-decoration: underline;">Ethical</span> compliance: the Performance Assessment of an AIM can measure the compliance of an AIM to a target ethical standard.</li>
+</ol>
+<p>MPAI-OSD V1.3 provides Performance Assessment methods for some AIMs.</p>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">&lt;-AI Modules</a>      <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>          <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/data-types/">Data Types-&gt;</a></p>
+						</div>				
+					</article>

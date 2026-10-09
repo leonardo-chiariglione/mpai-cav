@@ -1,0 +1,191 @@
+<!-- ai-modules/no-inference-robustness : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/ai-workflows/no-inference-robustness/ -->
+<h1>NNW-NNT V2.0  AIWs No Inference Robustness</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">Go to AI Modules</a></p>
+<table style="border-collapse: collapse; width: 100%;">
+<tbody>
+<tr>
+<td style="width: 33.3333%;"><a href="#_Toc156567382">1 Functions</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567383">2 Reference Architecture</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567384">3 I/O Data</a></td>
+</tr>
+<tr>
+<td style="width: 33.3333%;"><a href="#_Toc156567385">4 Functions of AI Modules</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567386">5 I/O Data of AI Modules</a></td>
+<td style="width: 33.3333%;"><a href="#_Toc156567387">6 AIM, AIMs, and JSON Metadata</a></td>
+</tr>
+<tr>
+<td style="width: 33.3333%;"><a href="#seven">7 Reference Software</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#eight">8 Conformance Texting</a></td>
+<td style="width: 33.3333%; height: 24px;"><a href="#nine">9 Performance Assessment</a></td>
+</tr>
+</tbody>
+</table>
+<h3><a name="_Toc75936990"></a><a name="_Toc78319416"></a><a name="_Toc156567382"></a>1 Functions</h3>
+<h1>1        Functions</h1>
+<p>The No-Inference Robustness (NNW-NIR) receives watermarked parameters, the payload and provides both the retrieved payload and the number of incorrect bits (Count error).<a name="_Toc156567383"></a></p>
+<h1>2        Reference Model</h1>
+<p>Figure 1 specifies the No-Inference Robustness (NNW-NIR) Reference Model including the input/output data, the AIMs, and the data exchanged between and among the AIMs.</p>
+<p><img fetchpriority="high" decoding="async" class="size-full wp-image-33424 aligncenter" src="https://mpai.community/wp-content/uploads/2025/07/No-Inference-Robustness-NNW-NIR-V1.0.png" alt="" width="719" height="262" srcset="https://mpai.community/wp-content/uploads/2025/07/No-Inference-Robustness-NNW-NIR-V1.0.png 719w, https://mpai.community/wp-content/uploads/2025/07/No-Inference-Robustness-NNW-NIR-V1.0-300x109.png 300w" sizes="(max-width: 719px) 100vw, 719px" /></p>
+<p style="text-align: center;"><em>Figure 1</em> –<em> Reference Model of No-Inference Robustness (NNW-NIR)) </em></p>
+<p>The operation of No-Inference Robustness (NNW-NIR) develops in the following way:</p>
+<ol>
+<li>A user provides
+<ol>
+<li>The Original payload</li>
+<li>The Watermarked parameters</li>
+</ol>
+</li>
+<li>The machine provides
+<ol>
+<li>The Count Error</li>
+<li>The Retrieved Payload</li>
+</ol>
+</li>
+</ol>
+<h1><a name="_Toc156567384"></a>3         I/O Data</h1>
+<p>The input and output data of the No-Inference Robustness (NNW-NIR) Use Case are:</p>
+<p><em>Table 1 – I/O Data of No-Inference Robustness (NNW-NIR)</em></p>
+<table width="1081">
+<tbody>
+<tr>
+<td width="174"><strong>Input</strong></td>
+<td width="907"><strong>Descriptions</strong></td>
+</tr>
+<tr>
+<td width="174">Original Payload</td>
+<td width="907">The information inserted.</td>
+</tr>
+<tr>
+<td width="174">Watermarked parameters</td>
+<td width="907">The parameters of a watermarked AIM.</td>
+</tr>
+<tr>
+<td width="174"><strong>Output</strong></td>
+<td width="907"><strong>Descriptions</strong></td>
+</tr>
+<tr>
+<td width="174">Count error</td>
+<td width="907">The number of incorrect bits in the retrieved payload.</td>
+</tr>
+<tr>
+<td width="174">Retrieved payload</td>
+<td width="907">The output of the decoding procedure of the watermarking method.</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc156567385"></a>4        Functions of AI Modules</h1>
+<p>Table 2 provides the functions of the No-Inference Robustness (NNW-NIR) Use Case.</p>
+<p><em>Table 2 – Functions of AI Modules of No-Inference Robustness (NNW-NIR)</em></p>
+<table width="1099">
+<tbody>
+<tr>
+<td width="413"><strong>AIM</strong></td>
+<td width="686"><strong>Function</strong></td>
+</tr>
+<tr>
+<td width="413">Modification module</td>
+<td width="686">Modifies the parameters of the watermarked AIM.</td>
+</tr>
+<tr>
+<td width="413">NIR Watermark Decoder</td>
+<td width="686">Retrieves the payload using the watermarking method.</td>
+</tr>
+<tr>
+<td width="413">Comparator</td>
+<td width="686">Compares the retrieved payload to the original payload.</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc156567386"></a>5         I/O Data of AI Modules</h1>
+<p>The AI Modules of No-Inference Robustness (NNW-NIR) are given in <em>Table 3.</em></p>
+<p><em>Table 3 – AI Modules of No-Inference Robustness (NNW-NIR)</em></p>
+<table width="1083">
+<tbody>
+<tr>
+<td width="285"><strong>AIM</strong></td>
+<td width="385"><strong>Receives</strong></td>
+<td width="413"><strong>Produces</strong></td>
+</tr>
+<tr>
+<td width="285">Modification module</td>
+<td width="385">Watermarked parameters</td>
+<td width="413">Modified parameters</td>
+</tr>
+<tr>
+<td width="285">NIR Watermark Decoder</td>
+<td width="385">Modified parameters</td>
+<td width="413">Retrieved payload</td>
+</tr>
+<tr>
+<td width="285">Comparator</td>
+<td width="385">1.     Original payload</p>
+<p>2.     Retrieved payload</td>
+<td width="413">Unwatermarked inference</td>
+</tr>
+</tbody>
+</table>
+<h1><a name="_Toc78319420"></a><a name="_Toc156567387"></a>6        AIM, AIMs, and JSON Metadata</h1>
+<p>Table 4 provides the links to the AIM and AIM specifications and to the JSON syntaxes. AIMs/1 indicates that the column contains Composite AIMs and AIMs indicates that the column contains their Basic AIMs.</p>
+<p style="text-align: center;">Table 4 – AIM, AIMs, and JSON Metadata</p>
+<table>
+<tbody>
+<tr>
+<td><strong>AIM</strong></td>
+<td><strong>AIM</strong></td>
+<td><strong>Name</strong></td>
+<td style="text-align: center;"><strong>JSON</strong></td>
+</tr>
+<tr>
+<td>NNW-NIR</td>
+<td></td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/no-inference-robustness/">No-Inference Robustness</a></td>
+<td style="text-align: center;"><a href="https://schemas.mpai.community/NNW1/V2.0/AIMs/NoInferenceRobustness.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-CMP</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/comparator/">Comparator</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/AIMs/Comparator.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-MFM</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/modification-module/">Modification Module</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/AIMs/ModificationModule.json">X</a></td>
+</tr>
+<tr>
+<td></td>
+<td>NNW-NWD</td>
+<td><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/nir-watermark-decoder/">NIR Watermark Decoder</a></td>
+<td style="text-align: center;"><a href="http://schemas.mpai.community/NNW1/AIMs/NIRWatermarkDecoder.json">X</a></td>
+</tr>
+</tbody>
+</table>
+<h1>7        Reference Software</h1>
+<h2>7.1       Disclaimers</h2>
+<ol>
+<li>This NNW-NIR Reference Software Implementation is released with the BSD-3-Clause licence.</li>
+<li>The purpose of this Reference Software is to demonstrate a working Implementation of NNW-NIR, not to provide a ready-to-use product.</li>
+<li>MPAI disclaims the suitability of the Software for any other purposes and does not guarantee that it is secure.</li>
+<li>Use of this Reference Software may require acceptance of licences from the respective repositories. Users shall verify that they have the right to use any third-party software required by this Reference Software.</li>
+</ol>
+<h2>7.2        Guide to the NNW-NIR code</h2>
+<p>Use of this AI Module is for developers who are familiar with Python and PyTorch libraries,</p>
+<p>The robustness.py code allow a User to evaluate the robustness of a watermarking method on the image classification task:</p>
+<ol>
+<li>The watermarking method is implemented as a Python Class</li>
+<li>The attack is performed using mainAttack.py</li>
+</ol>
+<p>The NNW-NIR Reference Software is found at the <a href="https://experts.mpai.community/software/mpai-nnw/nnt-referencesoftware">gitlab</a> site. It contains:</p>
+<ol>
+<li>The python code implementing the AIM.</li>
+<li>The required libraries are: pytorch, tqdm</li>
+</ol>
+<h1>8        Conformance Testing</h1>
+<h1>9        Performance Assessment</h1>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/ai-modules/">Go to AI Modules</a></p>
+<p>&nbsp;</p>
+						</div>				
+					</article>

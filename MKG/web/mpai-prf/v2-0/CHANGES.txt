@@ -1,0 +1,18 @@
+Pages of PRF 2.0, made from those of 1.0 by make_web_version.py
+
+(home)/                                                      8 x https://mpai\.community/standards/mpai\-, 1 x (MPAI-PRF\)? ?(?:Version )?)V?1\.0\b
+aim-profiles/                                                4 x https://mpai\.community/standards/mpai\-
+aims-requiring-profiles/                                     6 x https://mpai\.community/standards/mpai\-
+definitions/                                                 6 x https://mpai\.community/standards/mpai\-
+introduction/                                                2 x https://mpai\.community/standards/mpai\-
+json-syntax-and-semantics/                                   6 x https://mpai\.community/standards/mpai\-, 1 x (schemas\.mpai\.community/PRF/(?:/)?)V1\
+profile-signalling/                                          6 x https://mpai\.community/standards/mpai\-
+references/                                                  6 x https://mpai\.community/standards/mpai\-
+scope/                                                       6 x https://mpai\.community/standards/mpai\-
+scope/                                                       6 x https://mpai\.community/standards/mpai\-
+
+Corrections (fix_prf_pages.py):
+profile-signalling: a row for Audio-Visual Scene Descriptors (AVS) in Table 1
+profile-signalling: 1 x Gesture (PSG) is Body (PSB); 1 x #PSG is #PSB in the example; 1 x Face and Gesture is Face and Body; 1 x the example with ISD uses SPD
+json-syntax-and-semantics: 1 x the Profile pattern: PST for SPT, PSB for PSG; 1 x the Profile pattern: AVS added; 1 x the Profile pattern: ISD removed
+aim-profiles: 1 x Body Object receives Body, not Gesture

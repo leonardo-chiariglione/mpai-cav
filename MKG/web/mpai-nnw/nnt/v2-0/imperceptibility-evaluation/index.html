@@ -1,0 +1,47 @@
+<!-- imperceptibility-evaluation : from https://mpai.community/standards/mpai-nnw/nnt/v1-1/imperceptibility-evaluation/ -->
+<h1>NNW-NNT V2.0 Imperceptibility evaluation</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation"> &lt;-Computational Cost Evaluation </a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a>     <a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/reference-software/">Reference Software-&gt;</a></p>
+<p>This chapter will deal with two watermarking-related cases:</p>
+<ul>
+<li>NNs for which the watermark is added after the NNs model was created.</li>
+<li>NNs for which the watermark is added during the training of the NNs model.</li>
+</ul>
+<h2><a name="_Toc182815868"></a>1       Post-training watermark embedding</h2>
+<p>The Imperceptibility evaluation specifies the Means that enable a Tester to evaluate the differences in performance of a NN before and after the watermark embedding process. There are two cases:</p>
+<ol>
+<li>The NN has the input and output data format with specified semantics.</li>
+<li>The input and output data format of the NN do not have specified semantics.</li>
+</ol>
+<h3><a name="_Toc182815869"></a>1.1      NN with I/O data format has specified semantics</h3>
+<p>In this section, two actors are involved: the NN Watermarking provider requesting a Tester to evaluate the Imperceptibility performance of their NN Watermarking Method.</p>
+<p>The Tester shall adopt the following procedure:</p>
+<ol>
+<li>Define a pair of training and testing datasets with a size with at least an order of magnitude more entries than trainable Weights.</li>
+<li>Select:
+<ol>
+<li>A set of <em>M</em> unwatermarked NNs trained on the training dataset.</li>
+<li><em>D</em> data Payloads corresponding to the pre-established Payload size.</li>
+</ol>
+</li>
+<li>Apply the NN Watermarking Method to the <em>M</em></li>
+<li>Process the training dataset and the <em>D</em> data Payload (if needed).</li>
+<li>Feed the M unwatermarked NN with the test dataset</li>
+<li>Measure the task-dependent quality of the produced inference.</li>
+<li>Feed the M x D watermarked NN with the same test dataset</li>
+<li>Measure the task-dependent quality of the produced inference, informative examples of quality evaluation are provided in Annex 5.</li>
+<li>Provide the task-dependent quality of the produced inference measured in 6 and 7.</li>
+</ol>
+<h3><a name="_Toc182815870"></a>1.2      NN with I/O data format has no specified semantics</h3>
+<p>In this section, two actors are involved: the NN Watermarking provider requesting a Tester to evaluate the Imperceptibility performance of their Watermarking Method.</p>
+<p>The workflow of the process shall be the following:</p>
+<ol>
+<li>Tester connects the NN to other NN until the input and output of the resulting configuration have input / output formats with specified semantics.</li>
+<li>Tester applies all the steps in 6.1.1.</li>
+</ol>
+<h2><a name="_Toc182815871"></a>2       In-training watermark embedding</h2>
+<p>The Imperceptibility evaluation specifies the Means for evaluating the performance of a watermarked NN. The workflow of the process shall evaluate the watermarked NN as an NN.</p>
+<p style="text-align: center;"><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation"> &lt;-Computational Cost Evaluation </a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation">     </a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/">Go to ToC</a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/computational-cost-evaluation">     </a><a href="https://mpai.community/standards/mpai-nnw/nnt/v2-0/reference-software/">Reference Software-&gt;</a></p>
+						</div>				
+					</article>

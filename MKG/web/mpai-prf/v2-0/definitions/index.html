@@ -1,0 +1,481 @@
+<!-- definitions : from https://mpai.community/standards/mpai-prf/v1-0/definitions/ -->
+<h1>PRF-AIM V1.1 Definitions</h1>
+<article class="post">								
+						<div class="post-content">	
+							<p style="text-align: center;"> <a href="https://mpai.community/standards/mpai-prf/v2-0/scope/">&lt;- Scope </a>    <a href="https://mpai.community/standards/mpai-prf/v2-0/">Go to ToC </a>  <a href="https://mpai.community/standards/mpai-prf/v2-0/references/">References -&gt;</a></p>
+<p>Table 1 defines the Terms specific to this Technical Specification and Table 2 those used across MPAI Technical Specifications. Chapters, Sections, and Annexes are Normative unless they are explicitly identified as Informative (as in this Introduction).</p>
+<p>A dash “-” preceding a Term in Table 1 indicates the following readings according to the font:</p>
+<ol>
+<li>Normal font: the Term in the table without a dash and preceding the one with a dash should be read <u>before</u> that Term. For example, “Data” and “- Type” means &#8220;Avatar Model.”</li>
+<li><em>Italic </em>font: the Term in the table without a dash and preceding the one with a dash should be read <u>after</u> that Term. For example, “AI Module” and “- <em>Basic</em>” means &#8220;Basic AI Module.”</li>
+</ol>
+<p>General MPAI Terms are given by Table 2.</p>
+<p>The definition of all MPAI Terms is available <a href="https://dbmpai.rf.gd/">online</a>.</p>
+<p style="text-align: center;">Table 1 &#8211; Terms used in this Technical Specification</p>
+<table style="width: 99.9232%;" width="623">
+<tbody>
+<tr>
+<td style="width: 18.6196%; text-align: center;" width="113"><strong>Term</strong></td>
+<td style="width: 134.029%; text-align: center;" width="510"><strong>Definition</strong></td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">AI Module (AIM)</td>
+<td style="width: 134.029%;" width="510">A data processing component performing a Function by processing AIM-specific Input Data and producing AIM-specific Output Data.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211; Attribute</td>
+<td style="width: 134.029%;" width="510">A type of input Data or an output Data or a functionality, such as the ability to translate.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211; <em>Basic </em></td>
+<td style="width: 134.029%;" width="510">An AIM that does not aggregate other AIMs.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211; <em>Composite</em></td>
+<td style="width: 134.029%;" width="510">An AIM aggregating more than one AIM.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211; Profile</td>
+<td style="width: 134.029%;" width="510">The label that uniquely identifies a set of Attributes.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;">&#8211; Sub-Attributes</td>
+<td style="width: 134.029%;">A Characteristic of an Attribute, e.g., media or language.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Avatar</td>
+<td style="width: 134.029%;" width="510">An Object rendered to represent a Human of a Machine in a virtual space.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Model</td>
+<td style="width: 134.029%;" width="510">An inanimate Avatar exposing animation interfaces.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Portable</em></td>
+<td style="width: 134.029%;" width="510">A Data Type including Avatar ID, Time, Visual Environment, Spatial Attitude, Avatar Model, Body Descriptors, Face Descriptors, Language Preference, Speech Coding, Speech Data, Text, and Personal Status.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Body</td>
+<td style="width: 134.029%;" width="510">A digital representation of a human body.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Descriptors</td>
+<td style="width: 134.029%;" width="510">A Data Type representing the features of an Entity’s Body.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Object</td>
+<td style="width: 134.029%;" width="510">A Data Type representing the body of an Entity, head included, face excluded.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Context</td>
+<td style="width: 134.029%;" width="510">Information surrounding an Entity and providing additional insight into the information the Entity communicates.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Data</td>
+<td style="width: 134.029%;" width="510">Information in digital form.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Format</td>
+<td style="width: 134.029%;" width="510">A standard representation of Data.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Type</td>
+<td style="width: 134.029%;" width="510">An instance of Data with a specific Data Format</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Entity</td>
+<td style="width: 134.029%;" width="510">A human digitally represented as a Digitised Human in a Virtual Environment or a Virtual Human in a Virtual Environment.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Face</td>
+<td style="width: 134.029%;" width="510">A digital representation of a human face.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Descriptors</td>
+<td style="width: 134.029%;" width="510">A Data Type representing the motion and conveying information on the Personal Status of the face of a human or an avatar.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Object</td>
+<td style="width: 134.029%;" width="510">A Data Type representing the face of an Entity.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Factor</td>
+<td style="width: 134.029%;" width="510">One of Cognitive State, Emotion, and Social Attitude</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Modality</td>
+<td style="width: 134.029%;" width="510">One of Text, Speech, Face, or Gesture.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Object</td>
+<td style="width: 134.029%;" width="510">Data that can be rendered to cause an Experience.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Audio</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing an object or a computer-generated Object that can be rendered to and perceived by a human ear.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Audio-Visual</em></td>
+<td style="width: 134.029%;" width="510">An Object composed of Audio and Visual Objects sharing the same Spatial Attitude.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Instance</td>
+<td style="width: 134.029%;" width="510">The instance of an Audio Object.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Visual</em></td>
+<td style="width: 134.029%;" width="510">The digital representation of an object captured by an electromagnetic or high-frequency audio signal or computer-generated that can be rendered to and perceived by a human eye.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Personal Status</td>
+<td style="width: 134.029%;" width="510">A Data Type representing the ensemble of information internal to a person expressed by 3 Factors (Cognitive State, Emotion, Social Attitude) conveyed by one or more Modalities (Text, Speech, Face, and Gesture).</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Point of View</td>
+<td style="width: 134.029%;" width="510">The Spatial Attitude of an Entity user looking at an Environment.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Scene Descriptors</td>
+<td style="width: 134.029%;" width="510">The digital representation of the features of a scene.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113"><em>&#8211; Audio</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the Audio Objects and their spatial arrangement in an Audio Scene.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113"><em>&#8211; Audio-Visual</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the Audio-Visual Objects and their spatial arrangement in an Audio-Visual Scene.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113"><em>&#8211; Visual</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the Visual Objects and their spatial arrangement in a Visual Scene.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Scene Descriptors</td>
+<td style="width: 134.029%;" width="510">The digital representation of the arrangement of a Scene’s Objects.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Audio</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the spatial arrangement of a Scene’s Audio Objects.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Audio-Visual</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the spatial arrangement of a Scene’s Audio, Visual, and Audio-Visual Objects.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Visual</em></td>
+<td style="width: 134.029%;" width="510">A Data Type representing the spatial arrangement of a Scene’s Visual Objects.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Speech</td>
+<td style="width: 134.029%;" width="510">Digital representation of analogue speech sampled at a frequency between 8 kHz and 96 kHz with a number of bits/sample of 8, 16 or 24, and non-linear and linear quantisation or compressed. Data with characteristics of Speech may be synthetically produced.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Descriptors</td>
+<td style="width: 134.029%;" width="510">A Data Type representing information elements incorporated in a Speech Segment, e.g., personal identity, Personal Status, additional factors such as vocal tension, creakiness, whispery quality, etc.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Model</td>
+<td style="width: 134.029%;" width="510">A Neural Network trained to generate utterances with specific Speech Descriptors.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Object</td>
+<td style="width: 134.029%;" width="510">An Object described by Speech Descriptors.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">Text</td>
+<td style="width: 134.029%;" width="510">A series of characters drawn from a finite alphabet of a Character Set.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Descriptors</td>
+<td style="width: 134.029%;" width="510">A Data Type including the digital representation of the features of Text.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          Object</td>
+<td style="width: 134.029%;" width="510">A string of Text.</td>
+</tr>
+<tr>
+<td style="width: 18.6196%;" width="113">&#8211;          <em>Recognised</em></td>
+<td style="width: 134.029%;" width="510">The Text produced by the Automatic Speech Recognition AIM.</td>
+</tr>
+</tbody>
+</table>
+<p>The capitalised Terms used in this standard that are not already included in Table 1 are defined in Table 2<em>.</em></p>
+<p>NOTE: A hyphenated entry for e.g., “- Testing” should be read as adding that word to the closest non-hyphenated entry above it – in this case, “Conformance,” giving “Conformance Testing” as the complete entry name.</p>
+<p style="text-align: center;"><em> </em>Table 2 – Terms used across several MPAI Technical Specifications</p>
+<table style="width: 98.8759%;">
+<tbody>
+<tr>
+<td style="width: 16.7606%; text-align: center;" width="37"><strong>Term</strong></td>
+<td style="width: 116.901%; text-align: center;" width="586"><strong>Definition</strong></td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Access</td>
+<td style="width: 116.901%;" width="586">Static or slowly changing data that are required by an application such as domain knowledge data, data models, etc.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">AI Framework (AIF)</td>
+<td style="width: 116.901%;" width="586">The environment where AIWs are executed.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">AI Model (AIM)</td>
+<td style="width: 116.901%;" width="586">A data processing element receiving AIM-specific Inputs and producing AIM-specific Outputs according to according to its Function. An AIM may be an aggregation of AIMs.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">AI Workflow (AIW)</td>
+<td style="width: 116.901%;" width="586">A structured aggregation of AIMs implementing a Use Case receiving AIW-specific inputs and producing AIW-specific outputs according to the AIW Function.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Application Standard</td>
+<td style="width: 116.901%;" width="586">An MPAI Standard designed to enable a particular application domain.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Assessment Laboratory</td>
+<td style="width: 116.901%;" width="586">A laboratory accredited to Assess the Grade of Performance of Implementations.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Channel</td>
+<td style="width: 116.901%;" width="586">A connection between an output port of an AIM and an input port of an AIM. The term “connection” is also used as synonymous.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Communication</td>
+<td style="width: 116.901%;" width="586">The infrastructure that implements message passing between AIMs.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Component</td>
+<td style="width: 116.901%;" width="586">One of the 7 AIF elements: Access, Communication, Controller, Internal Storage, Global Storage, Store, and User Agent</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Composite AIM</td>
+<td style="width: 116.901%;" width="586">An AIM aggregating more than one AIM.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Component</td>
+<td style="width: 116.901%;" width="586">One of the 7 AIF elements: Access, Communication, Controller, Internal Storage, Global Storage, Store, and User Agent</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Conformance</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation of being a correct technical Implem­entation of a Technical Specification.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Testing</td>
+<td style="width: 116.901%;" width="586">The normative document specifying the Means to Test the Conformance of an Implem­entation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Testing Dataset</td>
+<td style="width: 116.901%;" width="586">A dataset used to Test the Conformance of an implementation to a Technical Specification.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Testing Means</td>
+<td style="width: 116.901%;" width="586">Procedures, tools, data sets and/or data set characteristics to Test the Conformance of an Implem­en­tation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Testing Procedure</td>
+<td style="width: 116.901%;" width="586">The sequence of steps to be performed to Test the Conformance of an implem­entation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Testing Tools</td>
+<td style="width: 116.901%;" width="586">Devices and/or software used to Test the Conformance of an implementation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Connection</td>
+<td style="width: 116.901%;" width="586">A channel connecting an output port of an AIM and an input port of an AIM.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Controller</td>
+<td style="width: 116.901%;" width="586">A Component that manages and controls the AIMs in the AIF, so that they execute in the correct order and at the time when they are needed</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Data</td>
+<td style="width: 116.901%;" width="586">Information in digital form.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Format</td>
+<td style="width: 116.901%;" width="586">The standard digital representation of Data.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Type</td>
+<td style="width: 116.901%;" width="586">An instance of Data with a specific Data Format.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Semantics</td>
+<td style="width: 116.901%;" width="586">The meaning of Data.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Descriptor</td>
+<td style="width: 116.901%;" width="586">Coded representation of a text, audio, speech, or visual feature.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Digital Representation</td>
+<td style="width: 116.901%;" width="586">Data corresponding to and representing a physical entity.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Ecosystem</td>
+<td style="width: 116.901%;" width="586">The ensemble of actors making it possible for a User to execute an application composed of an AIF, one or more AIWs, each with one or more AIMs potentially sourced from independent implementers.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Explainability</td>
+<td style="width: 116.901%;" width="586">The ability to trace the output of an Implementation back to the inputs that have produced it.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Fairness</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation whose extent of applicability can be assessed by making the training set and/or network open to testing for bias and unanticipated results.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Function</td>
+<td style="width: 116.901%;" width="586">The operations effected by an AIW or an AIM on input data.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Global Storage</td>
+<td style="width: 116.901%;" width="586">A Component to store data shared by AIMs.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">AIM/AIW Storage</td>
+<td style="width: 116.901%;" width="586">A Component to store data of the individual AIMs.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Identifier</td>
+<td style="width: 116.901%;" width="586">A name that uniquely identifies an Implementation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Implementation</td>
+<td style="width: 116.901%;" width="586">1.      An embodiment of the MPAI-AIF Technical Specification, or</p>
+<p>2.      An AIW or AIM of a particular Level (1-2-3) conforming with a Use Case of an MPAI Application Standard.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Implementer</td>
+<td style="width: 116.901%;" width="586">A legal entity implementing MPAI Technical Specifications.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">ImplementerID (IID)</td>
+<td style="width: 116.901%;" width="586">A unique name assigned by the ImplementerID Registration Authority to an Implementer.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">ImplementerID Registration Authority (IIDRA)</td>
+<td style="width: 116.901%;" width="586">The entity appointed by MPAI to assign ImplementerID’s to Implementers.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Instance ID</td>
+<td style="width: 116.901%;" width="586">Instance of a class of Objects and the Group of Objects the Instance belongs to.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Interoperability</td>
+<td style="width: 116.901%;" width="586">The ability to functionally replace an AIM with another AIW having the same Interoperability Level</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Level</td>
+<td style="width: 116.901%;" width="586">The attribute of an AIW and its AIMs to be executable in an AIF Implementation and to:</p>
+<p>1.      Be proprietary (Level 1)</p>
+<p>2.      Pass the Conformance Testing (Level 2) of an Application Standard</p>
+<p>3.      Pass the Perform­ance Testing (Level 3) of an Application Standard.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Knowledge Base</td>
+<td style="width: 116.901%;" width="586">Structured and/or unstructured information made accessible to AIMs via MPAI-specified interfaces</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Message</td>
+<td style="width: 116.901%;" width="586">A sequence of Records transported by Communication through Channels.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Normativity</td>
+<td style="width: 116.901%;" width="586">The set of attributes of a technology or a set of technologies specified by the applicable parts of an MPAI standard.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Performance</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation of being Reliable, Robust, Fair and Replicable.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Assessment</td>
+<td style="width: 116.901%;" width="586">The normative document specifying the Means to Assess the Grade of Performance of an Implementation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Assessment Means</td>
+<td style="width: 116.901%;" width="586">Procedures, tools, data sets and/or data set characteristics to Assess the Performance of an Implem­en­tation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">&#8211;          Assessor</td>
+<td style="width: 116.901%;" width="586">An entity Assessing the Performance of an Implementation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Profile</td>
+<td style="width: 116.901%;" width="586">A particular subset of the technologies used in MPAI-AIF or an AIW of an Application Standard and, where applicable, the classes, other subsets, options and parameters relevant to that subset.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Record</td>
+<td style="width: 116.901%;" width="586">A data structure with a specified structure</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Reference Model</td>
+<td style="width: 116.901%;" width="586">The AIMs and theirs Connections in an AIW.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Reference Software</td>
+<td style="width: 116.901%;" width="586">A technically correct software implementation of a Technical Specific­ation containing source code, or source and compiled code.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Reliability</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation that performs as specified by the Application Standard, profile, and version the Implementation refers to, e.g., within the application scope, stated limitations, and for the period of time specified by the Implementer.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Replicability</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation whose Performance, as Assessed by a Performance Assessor, can be replicated, within an agreed level, by another Performance Assessor.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Robustness</td>
+<td style="width: 116.901%;" width="586">The attribute of an Implementation that copes with data outside of the stated application scope with an estimated degree of confidence.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Scope</td>
+<td style="width: 116.901%;" width="586">The domain of applicability of an MPAI Application Standard</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Service Provider</td>
+<td style="width: 116.901%;" width="586">An entrepreneur who offers an Implementation as a service (e.g., a recommendation service) to Users.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Standard</td>
+<td style="width: 116.901%;" width="586">A set of Technical Specification, Reference Software, Conformance Testing, Performance Assessment, and Technical Report of an MPAI application Standard.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Technical Specification</td>
+<td style="width: 116.901%;" width="586">(Framework) the normative specification of the AIF.</p>
+<p>(Application) the normative specification of the set of AIWs belonging to an application domain along with the AIMs required to Implement the AIWs that includes:</p>
+<p>1.      The formats of the Input/Output data of the AIWs implementing the AIWs.</p>
+<p>2.      The Connections of the AIMs of the AIW.</p>
+<p>3.      The formats of the Input/Output data of the AIMs belonging to the AIW.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Time Base</td>
+<td style="width: 116.901%;" width="586">The protocol specifying how Components can access timing information</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Topology</td>
+<td style="width: 116.901%;" width="586">The set of AIM Connections of an AIW.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Use Case</td>
+<td style="width: 116.901%;" width="586">A particular instance of the Application domain target of an Application Standard.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">User</td>
+<td style="width: 116.901%;" width="586">A user of an Implementation.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">User Agent</td>
+<td style="width: 116.901%;" width="586">The Component interfacing the user with an AIF through the Controller</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Version</td>
+<td style="width: 116.901%;" width="586">A revision or extension of a Standard or of one of its elements.</td>
+</tr>
+<tr>
+<td style="width: 16.7606%;" width="37">Zero Trust</td>
+<td style="width: 116.901%;" width="586">A cybersecurity model primarily focused on data and service protection that assumes no implicit trust.</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<p style="text-align: center;"> <a href="https://mpai.community/standards/mpai-prf/v2-0/scope/">&lt;- Scope </a>    <a href="https://mpai.community/standards/mpai-prf/v2-0/">Go to ToC </a>  <a href="https://mpai.community/standards/mpai-prf/v2-0/references/">References -&gt;</a></p>
+						</div>				
+					</article>
