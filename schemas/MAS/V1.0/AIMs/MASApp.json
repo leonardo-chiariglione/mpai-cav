@@ -17,12 +17,13 @@
   "SubAIMs":          [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "Internal"}},
                        {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "Internal"}}],
 
-  "Topology":         [{"Output": {"AIMName": "", "PortName": "UAText"}, "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAText"}},
-                       {"Output": {"AIMName": "", "PortName": "UAPersonalStatus"}, "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "UAPersonalStatus"}},
-                       { "Output": { "AIMName": "PAF-RSR-V1.6", "PortName": "SpeakingAvatar" }, "Input": { "AIMName": "", "PortName": "SpeakingAvatar" } },
-                       {"Output": {"AIMName": "", "PortName": "ReplySpeech"}, "Input": {"AIMName": "MMC-ASR-V2.5", "PortName": "ResponseSpeech", "PortNumber": 2, "DataType": "OSD-BSO-V1.5"}},
-                       {"Output": {"AIMName": "MMC-ASR-V2.5", "PortName": "TextQuestion", "PortNumber": 2, "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "PortName": "ReplyText"}},
-                       { "Output": { "AIMName": "", "PortName": "Avatar" }, "Input": { "AIMName": "PAF-RSR-V1.6", "PortName": "Avatar" } }],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "MMC-EPS-V2.5"}},
+                          {"Output": {"AIMName": "PAF-RSR-V1.6", "DataType": "XRV-SAV-V1.0"}, "Input": {"AIMName": "", "DataType": "XRV-SAV-V1.0"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "PAF-AVT-V1.6"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "PAF-AVT-V1.6"}}],
 
   "Implementations":  [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 

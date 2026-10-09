@@ -21,12 +21,10 @@
     { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PSI-V2.5" } }
   ],
 
-  "Topology":  [
-    { "Output": { "AIMName": "",             "PortName": "BasicSpeechObject" },         "Input": { "AIMName": "MMC-ESD-V2.5", "PortName": "BasicSpeechObject" } },
-    { "Output": { "AIMName": "MMC-ESD-V2.5", "PortName": "SpeechDescriptors" },    "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",   "PortNumber": 1 } },
-    { "Output": { "AIMName": "",             "PortName": "SpeechDescriptors" },    "Input": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechDescriptors",   "PortNumber": 2 } },
-    { "Output": { "AIMName": "MMC-PSI-V2.5", "PortName": "SpeechPersonalStatus" }, "Input": { "AIMName": "",             "PortName": "SpeechPersonalStatus" } }
-  ],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ESD-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                          {"Output": {"AIMName": "MMC-ESD-V2.5", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SDO-V2.5"}},
+                          {"Output": {"AIMName": "", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SDO-V2.5"}},
+                          {"Output": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SPS-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-SPS-V2.5"}}],
 
   "Implementations":  [
    {
