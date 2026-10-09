@@ -1,8 +1,8 @@
 { "$schema":                "https://json-schema.org/draft/2020-12/schema",
   "$id":                    "https://schemas.mpai.community/PRF/V1.0/data/AIMProfiles.json",
   "title":                  "AIMProfiles",
-  "description":            "AI Module Profile (MPAI-PRF V1.0, JSON Syntax and Semantics): the Attributes, and Sub-Attributes, that an AIM instance signals, as ALL (the listed Attributes are not supported) or NUL (the listed Attributes are supported) followed by +/- Attributes, @EPS#<Sub-Attributes> and @TRN#<language><->|-><language>.",
+  "description":            "AI Module Profile (MPAI-PRF V1.0, JSON Syntax and Semantics): the Attributes, and Sub-Attributes, that an AIM instance signals, as ALL (the listed Attributes are not supported) or NUL (the listed Attributes are supported) followed by +/- Attributes, @EPS#<Sub-Attributes: PST text, PSS speech, PSF face, PSB body> and @TRN#<language><->|-><language>.",
   "type":                   "object",
   "properties":             {
     "Header":               { "type": "string", "pattern": "^PRF-V[0-9]{1,2}[.][0-9]{1,2}$" },
-    "Profile":              { "type": "string", "pattern": "^(ALL|NUL)([+-](AUO|AVG|AVM|BDO|BDD|FCI|FCO|FCD|EPS|ISD|LGP|MEM|SPM|OII|POV|PAV|SPD|SPI|SPO|TXD|TXO|TXR|TRN|VIO)|@EPS(#(SPT|PSS|PSF|PSG))+|@TRN(#([a-z]{3})(<->|->)([a-z]{3}))+)+$" } } }
+    "Profile":              { "type": "string", "pattern": "^(ALL|NUL)([+-](AUO|AVG|AVS|AVM|BDO|BDD|FCI|FCO|FCD|EPS|ISD|LGP|MEM|SPM|OII|POV|PAV|SPD|SPI|SPO|TXD|TXO|TXR|TRN|VIO)|@EPS(#(PST|PSS|PSF|PSB))+|@TRN(#([a-z]{3})(<->|->)([a-z]{3}))+)+$" } } }
