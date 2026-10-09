@@ -18,7 +18,6 @@
                        {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
-                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
                           {"Output": {"AIMName": "", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "MMC-EPS-V2.5"}},
                           {"Output": {"AIMName": "PAF-RSR-V1.6", "DataType": "XRV-SAV-V1.0"}, "Input": {"AIMName": "", "DataType": "XRV-SAV-V1.0"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}},

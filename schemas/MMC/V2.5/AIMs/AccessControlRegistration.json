@@ -23,7 +23,6 @@
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "PAF-EFD-V1.6", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "MMC-ESD-V2.5", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
-                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
                           {"Output": {"AIMName": "", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "MMC-EPS-V2.5"}},
                           {"Output": {"AIMName": "PAF-RSR-V1.6", "DataType": "XRV-SAV-V1.0"}, "Input": {"AIMName": "", "DataType": "XRV-SAV-V1.0"}},
                           {"Output": {"AIMName": "", "DataType": "PAF-AVT-V1.6"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "PAF-AVT-V1.6"}}],

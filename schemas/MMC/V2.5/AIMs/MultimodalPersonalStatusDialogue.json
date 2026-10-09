@@ -34,7 +34,7 @@
                           {"Output": {"AIMName": "MMC-NLU-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "MMC-PSE-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "", "DataType": "MMC-SUM-V2.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-SUM-V2.5"}},
-                          {"Output": {"AIMName": "MMC-EDP-V2.5", "PortName": "MachineText"}, "Input": {"AIMName": "PAF-RSR-V1.6", "PortName": "TextObject", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "MMC-EPS-V2.5"}},
                           {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-SUM-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-SUM-V2.5"}},
                           {"Output": {"AIMName": "PAF-RSR-V1.6", "DataType": "XRV-SAV-V1.0"}, "Input": {"AIMName": "", "DataType": "XRV-SAV-V1.0"}},
