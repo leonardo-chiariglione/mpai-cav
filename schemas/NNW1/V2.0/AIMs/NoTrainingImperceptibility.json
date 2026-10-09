@@ -1,0 +1,48 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/NNW1/V2.0/AIMs/NoTrainingImperceptibility.json",
+  "title":                "No Training Imperceptibility V2.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-NTI-V2.0"},
+  "Header":               "NNW-NTI-V2.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "No Training Imperceptibility: the Module that evaluates the imperceptibility of a watermark inserted without training: a Module Trainer trains the Module (1) and the Unwatermarked Module infers; a second training (2) gives the parameters into which the NTI Watermark Embedder embeds the payload, and the Watermarked Module infers. The two inferences are the outputs.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "TrainingDataset1", "Direction": "Input", "DataType": "NNW-DST-V2.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "TestingDataset1", "Direction": "Input", "DataType": "NNW-DST-V2.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "TrainingDataset2", "Direction": "Input", "DataType": "NNW-DST-V2.0", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "TestingDataset2", "Direction": "Input", "DataType": "NNW-DST-V2.0", "PortNumber": 4, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "Payload", "Direction": "Input", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "UnwatermarkedInference", "Direction": "Output", "DataType": "NNW-INF-V2.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "WatermarkedInference", "Direction": "Output", "DataType": "NNW-INF-V2.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-MTR-V2.0", "Relation": ""}, "AIMNumber": 1},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-MTR-V2.0", "Relation": ""}, "AIMNumber": 2},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-UWM-V2.0", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-NWE-V2.0", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-WMM-V2.0", "Relation": ""}}],
+
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "NNW-DST-V2.0", "PortNumber": 1}, "Input": {"AIMName": "NNW-MTR-V2.0", "DataType": "NNW-DST-V2.0", "AIMNumber": 1}},
+                          {"Output": {"AIMName": "NNW-MTR-V2.0", "DataType": "NNW-PRM-V2.0", "AIMNumber": 1}, "Input": {"AIMName": "NNW-UWM-V2.0", "DataType": "NNW-PRM-V2.0"}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-DST-V2.0", "PortNumber": 2}, "Input": {"AIMName": "NNW-UWM-V2.0", "DataType": "NNW-DST-V2.0"}},
+                          {"Output": {"AIMName": "NNW-UWM-V2.0", "DataType": "NNW-INF-V2.0"}, "Input": {"AIMName": "", "DataType": "NNW-INF-V2.0", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-DST-V2.0", "PortNumber": 3}, "Input": {"AIMName": "NNW-MTR-V2.0", "DataType": "NNW-DST-V2.0", "AIMNumber": 2}},
+                          {"Output": {"AIMName": "NNW-MTR-V2.0", "DataType": "NNW-PRM-V2.0", "AIMNumber": 2}, "Input": {"AIMName": "NNW-NWE-V2.0", "DataType": "NNW-PRM-V2.0"}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-PLD-V2.0"}, "Input": {"AIMName": "NNW-NWE-V2.0", "DataType": "NNW-PLD-V2.0"}},
+                          {"Output": {"AIMName": "NNW-NWE-V2.0", "DataType": "NNW-PRM-V2.0"}, "Input": {"AIMName": "NNW-WMM-V2.0", "DataType": "NNW-PRM-V2.0"}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-DST-V2.0", "PortNumber": 4}, "Input": {"AIMName": "NNW-WMM-V2.0", "DataType": "NNW-DST-V2.0"}},
+                          {"Output": {"AIMName": "NNW-WMM-V2.0", "DataType": "NNW-INF-V2.0"}, "Input": {"AIMName": "", "DataType": "NNW-INF-V2.0", "PortNumber": 2}}],
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "CPU:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "GPU:CUDA:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
+  "DataXMData":           {},
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-nnw/nnt/v2-0/"}] }

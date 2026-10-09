@@ -1,0 +1,43 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/NNW1/V2.0/AIMs/WithInferenceRobustness.json",
+  "title":                "With Inference Robustness V2.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-WIR-V2.0"},
+  "Header":               "NNW-WIR-V2.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "With Inference Robustness: the Module that evaluates the robustness of a watermark when the payload is retrieved from the inference: it modifies the watermarked parameters, has the modified Module infer from the testing dataset, decodes the payload from the inference and compares it with the original payload.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "OriginalPayload", "Direction": "Input", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "TestingDataset", "Direction": "Input", "DataType": "NNW-DST-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "WatermarkedParameters", "Direction": "Input", "DataType": "NNW-PRM-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "RetrievedPayload", "Direction": "Output", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "CountError", "Direction": "Output", "DataType": "NNW-CER-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-MFM-V2.0", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-MDM-V2.0", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-WWD-V2.0", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-CMP-V2.0", "Relation": ""}}],
+
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "NNW-PLD-V2.0"}, "Input": {"AIMName": "NNW-CMP-V2.0", "DataType": "NNW-PLD-V2.0", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-DST-V2.0"}, "Input": {"AIMName": "NNW-MDM-V2.0", "DataType": "NNW-DST-V2.0"}},
+                          {"Output": {"AIMName": "", "DataType": "NNW-PRM-V2.0"}, "Input": {"AIMName": "NNW-MFM-V2.0", "DataType": "NNW-PRM-V2.0"}},
+                          {"Output": {"AIMName": "NNW-MFM-V2.0", "DataType": "NNW-PRM-V2.0"}, "Input": {"AIMName": "NNW-MDM-V2.0", "DataType": "NNW-PRM-V2.0"}},
+                          {"Output": {"AIMName": "NNW-MDM-V2.0", "DataType": "NNW-INF-V2.0"}, "Input": {"AIMName": "NNW-WWD-V2.0", "DataType": "NNW-INF-V2.0"}},
+                          {"Output": {"AIMName": "NNW-WWD-V2.0", "DataType": "NNW-PLD-V2.0"}, "Input": {"AIMName": "NNW-CMP-V2.0", "DataType": "NNW-PLD-V2.0", "PortNumber": 2}},
+                          {"Output": {"AIMName": "NNW-WWD-V2.0", "DataType": "NNW-PLD-V2.0"}, "Input": {"AIMName": "", "DataType": "NNW-PLD-V2.0"}},
+                          {"Output": {"AIMName": "NNW-CMP-V2.0", "DataType": "NNW-CER-V2.0"}, "Input": {"AIMName": "", "DataType": "NNW-CER-V2.0"}}],
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "CPU:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "GPU:CUDA:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
+  "DataXMData":           {},
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-nnw/nnt/v2-0/"}] }

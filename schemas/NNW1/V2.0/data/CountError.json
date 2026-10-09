@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/NNW1/V2.0/data/CountError.json",
+  "title": "Count Error V2.0",
+  "description": "The count of the errors between the original and the retrieved payload, from which the Bit Error Rate follows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "CountErrorID",
+    "CountErrorData"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "NNW-CER-V2.0"
+    },
+    "MInstanceID": {
+      "type": "string"
+    },
+    "UEnvironmentID": {
+      "type": "string"
+    },
+    "CountErrorID": {
+      "type": "string",
+      "minLength": 1
+    },
+    "CountErrorTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "CountErrorData": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The number of bits of the retrieved payload that differ from the original (V1.1: uint8)."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

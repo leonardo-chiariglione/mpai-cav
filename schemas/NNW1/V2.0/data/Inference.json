@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/NNW1/V2.0/data/Inference.json",
+  "title": "Inference V2.0",
+  "description": "What a Module produces from the testing dataset: the inference of an unwatermarked, a watermarked or a modified Module.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "InferenceID",
+    "InferenceData"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "NNW-INF-V2.0"
+    },
+    "MInstanceID": {
+      "type": "string"
+    },
+    "UEnvironmentID": {
+      "type": "string"
+    },
+    "InferenceID": {
+      "type": "string",
+      "minLength": 1
+    },
+    "InferenceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "InferenceData": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "description": "What a Module infers (V1.1: uint8[]), base64."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

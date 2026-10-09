@@ -1,0 +1,30 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/NNW1/V2.0/AIMs/NIRWatermarkDecoder.json",
+  "title":                "NIR Watermark Decoder V2.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-NWD-V2.0"},
+  "Header":               "NNW-NWD-V2.0",
+
+  "APIProfile":           "Basic",
+  "Description":          "NIR Watermark Decoder: retrieves the payload inserted in the parameters of a Module (No Inference Robustness) and gives the retrieved payload.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "ModifiedParameters", "Direction": "Input", "DataType": "NNW-PRM-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "RetrievedPayload", "Direction": "Output", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "CPU:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                          {"Name": "GPU:CUDA:Class", "Minimum": "/* string */", "Maximum": "/* string */", "Request": "/* string */"},
+                          {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
+                          {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
+  "DataXMData":           {},
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-nnw/nnt/v2-0/"}] }
