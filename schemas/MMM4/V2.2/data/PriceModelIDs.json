@@ -1,5 +1,5 @@
 { "$schema":     "https://json-schema.org/draft/2020-12/schema",
-  "$id":         "https://schemas.mpai.community/MMM4/V2.2/formats/PriceModelIDs.json",
+  "$id":         "https://schemas.mpai.community/MMM4/V2.2/data/PriceModelIDs.json",
   "title":       "Price Model IDs V2.2",
   "description": "Enumerated PM-* identifiers for Service Pricing Models.",
   "$comment":    "Replace placeholders with authoritative PM-* codes; remove fallback when finalized.",
