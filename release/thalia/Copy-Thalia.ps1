@@ -6,6 +6,7 @@
 .DESCRIPTION
   -Source   the full tree (for example D:\DI)
   -Dest     where the Thalia tree goes (for example D:\CI-new); must not exist, or be empty
+  -Separated  where dead weight is put instead (default: the Dest folder's name + "-dead"); same relative paths
   -CheckOnly  report only; copy nothing
 
   It never deletes anything and never writes to -Source. It takes the project folders from the
@@ -13,17 +14,23 @@
   added to the Source since this manifest was written is found; it reports how that list differs
   from projects.txt. Then it copies data.txt (descriptors, apps, workflows, assets, schemas, notices).
   Not copied: bin, obj, .vs, *.user, *.pdb, SharedStorage, Models, TestData.
+  DEAD WEIGHT is separated, not dropped: backups and build leftovers found inside the copied folders
+  (*.bak*, *.allbak, *.orig, *.rej, *.exe, *.zip, *.log, .backups, _build, _macpublish) go to -Separated, with
+  their relative paths, and are listed. Nothing is deleted from the Source.
   Not tested on Windows by its author: run with -CheckOnly first.
 #>
 param(
   [Parameter(Mandatory)][string]$Source,
   [Parameter(Mandatory)][string]$Dest,
+  [string]$Separated,
   [switch]$CheckOnly
 )
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $src  = [IO.Path]::GetFullPath($Source).TrimEnd('\')
 $dst  = [IO.Path]::GetFullPath($Dest).TrimEnd('\')
+$sep  = if ($Separated) { [IO.Path]::GetFullPath($Separated).TrimEnd('\') } else { $dst + '-dead' }
+if ($sep.StartsWith($dst + '\') -or $dst.StartsWith($sep + '\') -or $sep -eq $src -or $sep.StartsWith($src + '\')) { throw '-Separated must be a folder of its own, outside Source and Dest.' }
 if ($dst.StartsWith($src + '\') -or $src.StartsWith($dst + '\') -or $src -eq $dst) { throw 'Source and Dest must not contain one another.' }
 if (-not $CheckOnly -and (Test-Path $dst) -and (Get-ChildItem $dst -Force | Select-Object -First 1)) { throw "Dest '$dst' is not empty: nothing was written. Choose a new folder." }
 
@@ -66,9 +73,21 @@ if ($CheckOnly) { Write-Host 'Check only: nothing copied.'; return }
 # 3. copy
 $xd = 'bin','obj','.vs','SharedStorage','Models','TestData'
 $xf = '*.user','*.pdb'
+$deadFiles = '*.bak*','*.allbak','*.orig','*.rej','*.exe','*.zip','*.log'
+$deadDirs  = '.backups','_build','_macpublish'
+if ((Test-Path $sep) -and (Get-ChildItem $sep -Force | Select-Object -First 1)) { throw "Separated folder '$sep' is not empty: nothing was written." }
 foreach ($rel in $folders + ($data | Where-Object { (Test-Path (Join-Path $src $_) -PathType Container) })) {
-  $null = robocopy (Join-Path $src $rel) (Join-Path $dst $rel) /E /XD $xd /XF $xf /NFL /NDL /NJH /NJS /NP
+  $from = Join-Path $src $rel
+  # what Thalia needs
+  $null = robocopy $from (Join-Path $dst $rel) /E /XD ($xd + $deadDirs) /XF ($xf + $deadFiles) /NFL /NDL /NJH /NJS /NP
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed for $rel ($LASTEXITCODE)" }
+  # what is dead weight, kept apart (only files that exist; no empty folders)
+  $null = robocopy $from (Join-Path $sep $rel) $deadFiles /S /XD $xd /NFL /NDL /NJH /NJS /NP
+  if ($LASTEXITCODE -ge 8) { throw "robocopy (dead weight) failed for $rel ($LASTEXITCODE)" }
+  foreach ($d in $deadDirs) {
+    $dd = Join-Path $from $d
+    if (Test-Path $dd) { $null = robocopy $dd (Join-Path (Join-Path $sep $rel) $d) /E /NFL /NDL /NJH /NJS /NP }
+  }
 }
 foreach ($rel in $data | Where-Object { Test-Path (Join-Path $src $_) -PathType Leaf }) {
   $to = Join-Path $dst $rel
@@ -80,4 +99,7 @@ foreach ($rel in $data | Where-Object { Test-Path (Join-Path $src $_) -PathType 
 $bad = Get-ChildItem $dst -Recurse -File -Include *.cs,*.json,*.orch,*.csproj,*.ps1,*.bat,*.md,*.razor,*.html,*.js |
   Select-String -Pattern 'D:\\(DI|CI)\b','D:/(DI|CI)\b' -List
 if ($bad) { Write-Warning 'These files name D:\DI or D:\CI; fix them:'; $bad | ForEach-Object { "  $($_.Path)" } } else { Write-Host 'No file names D:\DI or D:\CI.' }
+$dead = if (Test-Path $sep) { Get-ChildItem $sep -Recurse -File } else { @() }
+Write-Host "Dead weight separated: $($dead.Count) file(s), $([math]::Round((($dead | Measure-Object Length -Sum).Sum) / 1MB, 1)) MB, in $sep"
+$dead | Select-Object -First 40 | ForEach-Object { "  " + $_.FullName.Substring($sep.Length + 1) }
 Write-Host "Done: $dst"

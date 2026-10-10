@@ -18,7 +18,9 @@ and its **host**, offering the Apps MAD, AMQ, MAT, MPD, ACR and MAC (`Apps/MAS-A
 .\Copy-Thalia.ps1 -Source D:\DI -Dest D:\CI-new               # then copy
 ```
 
-It writes only to `-Dest`, which must be new or empty, and never deletes. Not copied: `bin`, `obj`, `.vs`,
+It writes only to `-Dest` and `-Separated` (default: `-Dest` + `-dead`), which must be new or empty, and never deletes.
+Dead weight found inside the copied folders (`*.bak*`, `*.allbak`, `*.orig`, `*.rej`, `*.exe`, `*.zip`, `*.log`, `.backups`, `_build`,
+`_macpublish`) is put in `-Separated` with the same relative paths and listed, not dropped. Not copied: `bin`, `obj`, `.vs`,
 `*.user`, `*.pdb`, `SharedStorage`, `Models`, `TestData`. The biometric gallery, with Leonardo's descriptors
 removed, is added in a separate step. After the copy it lists any file that names `D:\DI` or `D:\CI`.
 
