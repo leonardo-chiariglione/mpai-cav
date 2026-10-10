@@ -14,7 +14,8 @@ Status: DRAFT for review. Nothing in `D:\DI` has been changed. Written from `ori
 5. She is **not blind at run time**: she knows what is loaded and may keep an expensive model (Whisper) loaded
    because it is likely to be used again.
 6. Thalia and the CAV applications stay separate. The repository holds applications of any nature, each
-   self-contained, over the MW.
+   self-contained, over the MW. The User Agent stands on its own. Apps are organised by standard; MKG, which
+   depends on none, is outside that grouping.
 7. Resetting a model costs less than loading it.
 
 ## 2. What the code does today
@@ -40,21 +41,30 @@ Status: DRAFT for review. Nothing in `D:\DI` has been changed. Written from `ori
 
 ## 3. Target structure
 
+Decided by the author (2026-10-10): all AIMs in one group organised by standard; the User Agent stands on its
+own, as in the AIF architecture; apps are organised by standard; MKG is an app that depends on no standard.
+
 ```
 mpai-sw/
-  AIF/          framework, User Agent
-  MW/           all the AIMs, by standard; each with its plug-in, L3 and data types
+  AIF/            the framework: Controller, Store, Trust, Communication
+  UserAgent/      stands on its own: Wdl, Rca, Remote, PhysicalLayer, UaKit, SpatialAudio, Clients
+  MW/             all the AIMs, by standard; each with its plug-in, L3 and data types
     MMC/ PAF/ OSD/ CAE/ CAV/ CVE/ ...
-  Apps/         one folder per app: composite L3, workflow, icon, README, manifest
-    MAD/ AMQ/ MAT/ MPD/ ACR/ MAC/   (and CAV apps, MKG, ... each on its own)
-  Thalia/       the combination: Service, clients, avatar assets, app list, build
-  schemas/
+  Apps/           by standard
+    MMC/   MAD/ AMQ/ MAT/ MPD/ ACR/ MAC/     composite L3, workflow, icon, README, manifest
+    MAS/   Thalia/                           the combination: Service, Server, app list, build
+    CAV/   ...
+    MKG/                                     no standard
+  schemas/        by standard
 ```
 
 - A composite (an L3) lives in the app that wants it. A composite shared by judgement (RSR) lives in `MW`.
 - **Thalia references no AIM and no provider.** She sees an app as an L3 in the Store and the packages of its leaves.
 - An app's manifest lists the MW AIMs it needs. Thalia's closure is the union of her apps' manifests, plus the
-  Service and clients.
+  Service, the Server and the User Agent.
+- **Models are not in git.** They stay in `D:\CI` and are not published. Each app's Markdown lists, for every model,
+  its file name, size, SHA-256 and where to download it. The models MPAI developed are already in
+  `mpai-community`: link them there; do not copy them.
 
 ## 4. Steps, in order
 
@@ -117,13 +127,17 @@ What I propose after reading the code.
 - `release/thalia/Copy-Thalia.ps1` and `projects.txt` describe today's monolithic closure (46 projects). They
   become the check for Step 4: after it, Thalia's own closure must contain no AIM project.
 
-## 7. Decisions needed
+## 7. Decisions
 
-1. **Order.** Restructure first (Steps 0 to 6), then release. (My recommendation, for the reason you gave.)
-2. **RSR, SAF, PSE.** Shared composites in `MW/PAF` and `MW/MMC`, as I assumed for RSR. Confirm SAF and PSE.
-3. **The UA split.** User Agent, Wdl, PhysicalLayer in `AIF`; Rca and the remote client in `Thalia`?
-4. **Non-standard pieces** (MKG, MMM, `legacy/`, `Test/`): which are apps, and which stay out of `mpai-sw`?
-5. **Models.** None shipped, or the ones MPAI built (BLIP did in the old repo)?
+Settled: order (restructure first, then release); AIMs in one group by standard (MW); the User Agent on its own;
+apps by standard; MKG outside any standard; models not in git, listed with download sources in the Markdown.
+
+Still open (needed before Step 6):
+1. **RSR, SAF, PSE.** RSR is shared. Are SAF and PSE shared composites in MW, or the app's?
+2. **Pieces not yet placed:** MMM (server, client, viewer, instance), `CAV/Recordings`, `legacy/` and
+   `Test/legacy`, the HCI apps (`HciApp`, `HciSceneTest`): apps, published as they are, or left out?
+3. **Thalia's place.** She combines MMC apps but is a MAS app, so `Apps/MAS/Thalia`: confirm.
+4. **Which MPAI-developed models are in `mpai-community`,** and at what address, for the Markdown.
 
 ## 8. Risks
 
