@@ -124,15 +124,25 @@ What I propose after reading the code.
 
 ## 7. Decisions
 
-Settled: restructure first, then release; the structure is `D:\DI`'s own; models not in git, listed with
-download sources in the Markdown.
+Settled by the author:
+- Restructure first, then release. The structure is `D:\DI`'s own; no folder moves.
+- **AIMs of whatever nature stay together** (`AIMs/`): basic or composite, RSR, SAF and PSE included. Apps are apps
+  (`Apps/`).
+- **`mpai-sw` holds only what Thalia requires.** CAV, MMM, MKG, `CAV/Recordings`, the HCI apps and `legacy/` are
+  not published there. (Thalia's selection is `release/thalia`.)
+- Models are not in git; the Markdown lists them with their sources. The list is
+  `docs/MAS-App-Models.md` in `mpai-sw`.
 
-Still open:
-1. **RSR, SAF, PSE.** RSR is shared. Are SAF and PSE shared composites, or the app's? (It matters for which
-   app's manifest lists their L3s.)
-2. **What of `D:\DI` is published in `mpai-sw`:** the CAV applications, MMM, MKG, `CAV/Recordings`, the HCI
-   apps, `legacy/`: each in or out?
-3. **The MPAI-developed models already in `mpai-community`:** which, and where, for the Markdown.
+What the existing `mpai-sw` models Markdown leaves to do (from reading it, 2026-10-10):
+1. **It covers four apps** (MAD, AMQ, MAT, MPD). ACR and MAC need three more entries: `scrfd_10g_bnkps.onnx`,
+   `glintr100.onnx` (InsightFace `buffalo_l`) and `ecapa-tdnn.onnx` (SpeechBrain `spkrec-ecapa-voxceleb`, converted
+   to ONNX; medium confidence in `docs/models-provenance.md`). Sizes and SHA-256 from `D:\CI\Models`.
+2. **BLIP is both bundled and listed.** The old `mpai-sw` carries the four BLIP ONNX files through Git LFS
+   ("the one model MPAI built"), while the Markdown lists BLIP as a model to obtain. One of the two must change.
+3. **The licence warning stays:** "Several are research or non-commercial licences, and the Piper voices each have
+   their own." It must be resolved per model before the release says it is redistributable.
+
+Still open: which models, besides BLIP, are the MPAI-developed ones in `mpai-community`.
 
 ## 8. Risks
 
