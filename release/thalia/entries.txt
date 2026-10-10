@@ -1,0 +1,4 @@
+MAS/Service/src/MasService.csproj
+UserAgent/Clients/Desktop/src/RcaApp.csproj
+UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj
+UserAgent/Clients/Browser/Client/RcaWeb.Client.csproj
