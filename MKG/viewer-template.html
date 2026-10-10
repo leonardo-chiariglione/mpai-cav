@@ -64,7 +64,7 @@ header h1 { cursor:pointer; }
 </header>
 <aside>
   <h2>Kinds of item</h2>
-  <p class="sub" style="margin:0 0 6px">Tick the kinds that the list below, the search and the picture include. Unticked kinds are left out.</p>
+  <p class="sub" style="margin:0 0 6px">Items of a kind you untick do not appear in the "List of items" below, in the results of the search box at the top, or in the picture in the centre.</p>
 <div id="kinds"></div>
   <h2>Of these standards</h2>
   <div id="stds"></div>
@@ -73,7 +73,7 @@ header h1 { cursor:pointer; }
   <label class="f"><input type="checkbox" id="onlyComposite">composite AIMs</label>
   <label class="f"><input type="checkbox" id="onlyCode">with code</label>
   <label class="f"><input type="checkbox" id="onlyGap">not aligned to M3194</label>
-  <h2>List of items</h2>
+  <h2 id="listHead">List of items</h2>
   <ul id="results"></ul>
 </aside>
 <div id="home"></div>
@@ -179,8 +179,14 @@ function results() {
 }
 document.querySelectorAll('input').forEach(i => i.addEventListener('input', ev => {
   results();
+  if (ev.target.id === 'q' && ev.target.value.trim()) $('listHead').scrollIntoView({block:'start'});   // typing in the search box shows the list of what matches
   if (current && ev.target.classList.contains('kind') && !document.body.classList.contains('home')) select(current);     // the picture follows the kinds ticked
 }));
+$('q').addEventListener('keydown', ev => {     // Enter opens the first item of the list: PAF-RSR, Enter
+  if (ev.key !== 'Enter') return;
+  const first = document.querySelector('#results li');
+  if (first) first.click();
+});
 
 // ---- graph
 const cy = cytoscape({ container: $('cy'), wheelSensitivity:.3, maxZoom:0.8, minZoom:0.05,
