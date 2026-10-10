@@ -137,12 +137,16 @@ What the existing `mpai-sw` models Markdown leaves to do (from reading it, 2026-
 1. **It covers four apps** (MAD, AMQ, MAT, MPD). ACR and MAC need three more entries: `scrfd_10g_bnkps.onnx`,
    `glintr100.onnx` (InsightFace `buffalo_l`) and `ecapa-tdnn.onnx` (SpeechBrain `spkrec-ecapa-voxceleb`, converted
    to ONNX; medium confidence in `docs/models-provenance.md`). Sizes and SHA-256 from `D:\CI\Models`.
-2. **BLIP is both bundled and listed.** The old `mpai-sw` carries the four BLIP ONNX files through Git LFS
-   ("the one model MPAI built"), while the Markdown lists BLIP as a model to obtain. One of the two must change.
+2. **BLIP.** It stays where it is in `mpai-community`: the folder `Models/BLIP` of `mpai-sw`, like any other
+   folder (no special treatment; the repository has no notion of a bundle, only a script or an app assembles
+   one). The Markdown should say, for BLIP, what it is (the one model MPAI built, exported to ONNX from
+   Salesforce `blip-vqa-base`) and that it is in `Models/BLIP`, instead of listing it as a model to obtain
+   elsewhere. The four files are large (about 1.5 GB), which is why the old repo stores them with Git LFS
+   (`.gitattributes`); that stays as it is, and the CI must fetch them.
 3. **The licence warning stays:** "Several are research or non-commercial licences, and the Piper voices each have
    their own." It must be resolved per model before the release says it is redistributable.
 
-Still open: which models, besides BLIP, are the MPAI-developed ones in `mpai-community`.
+Still open: which models, besides BLIP, are MPAI-developed and already in `mpai-community`.
 
 ## 8. Risks
 
