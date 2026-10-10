@@ -5,7 +5,7 @@ Status: DRAFT for review. Nothing in `D:\DI` has been changed. Written from `ori
 
 ## 1. The principles agreed
 
-1. The unit of reuse is the **basic AIM**. The collection of all MPAI AIMs, by standard, is the **MPAI MW**.
+1. The unit of reuse is the **basic AIM**. The collection of all MPAI AIMs, by standard (`AIMs/`), is the **MPAI MW**.
 2. A **composite** is reused or kept with its application by a judgement about that AIM, not by a rule:
    RSR is reused as it is (shared); CAV-HCI is CAV's alone.
 3. An **application** draws only on the MW AIMs it needs, and only the application sees its own AIMs.
@@ -14,8 +14,7 @@ Status: DRAFT for review. Nothing in `D:\DI` has been changed. Written from `ori
 5. She is **not blind at run time**: she knows what is loaded and may keep an expensive model (Whisper) loaded
    because it is likely to be used again.
 6. Thalia and the CAV applications stay separate. The repository holds applications of any nature, each
-   self-contained, over the MW. The User Agent stands on its own. Apps are organised by standard; MKG, which
-   depends on none, is outside that grouping.
+   self-contained, over the MW. The structure is `D:\DI`'s own.
 7. Resetting a model costs less than loading it.
 
 ## 2. What the code does today
@@ -39,32 +38,27 @@ Status: DRAFT for review. Nothing in `D:\DI` has been changed. Written from `ori
 | 15 | Ollama (EDP) is outside the process. A conversation's memory is carried by the workflow, not the Service; `Session_End` clears Shared Storage only. | `Program.cs`, `UserAgent.cs` |
 | 16 | Providers share an engine between leaves of a Module (ACR: one ArcFace, one ECAPA, one SCRFD for EFD and ESD). A plug-in "builds its own dependencies inside Create", so on the package route that sharing is lost unless engines are cached by model. | `AcrProvider.cs`, `IAimPlugin.cs` |
 
-## 3. Target structure
+## 3. Structure: the one `D:\DI` already has, unchanged
 
-Decided by the author (2026-10-10): all AIMs in one group organised by standard; the User Agent stands on its
-own, as in the AIF architecture; apps are organised by standard; MKG is an app that depends on no standard.
+No folder is renamed or moved. The structure the author described is the existing one:
 
-```
-mpai-sw/
-  AIF/            the framework: Controller, Store, Trust, Communication
-  UserAgent/      stands on its own: Wdl, Rca, Remote, PhysicalLayer, UaKit, SpatialAudio, Clients
-  MW/             all the AIMs, by standard; each with its plug-in, L3 and data types
-    MMC/ PAF/ OSD/ CAE/ CAV/ CVE/ ...
-  Apps/           by standard
-    MMC/   MAD/ AMQ/ MAT/ MPD/ ACR/ MAC/     composite L3, workflow, icon, README, manifest
-    MAS/   Thalia/                           the combination: Service, Server, app list, build
-    CAV/   ...
-    MKG/                                     no standard
-  schemas/        by standard
-```
+| Principle | Where it is |
+|---|---|
+| All AIMs in one group, by standard (the "MPAI MW") | `AIMs/` (`MMC`, `PAF`, `OSD`, `CAE3`, `CAV`, `CVE`; plus `Core`, `Onnx`, `AMDs`) |
+| The framework | `AIF/` |
+| The User Agent stands on its own | `UserAgent/` |
+| An app is a folder | `Apps/MAD`, `AMQ`, `MAT`, `MPD`, `ACR`, `MAC` |
+| Thalia is a combination of apps | `Apps/MAS-App` (its `app.json` lists the apps) with the Service in `MAS/` |
+| MKG depends on no standard | `MKG/` |
+| Schemas by standard | `schemas/` |
 
-- A composite (an L3) lives in the app that wants it. A composite shared by judgement (RSR) lives in `MW`.
-- **Thalia references no AIM and no provider.** She sees an app as an L3 in the Store and the packages of its leaves.
-- An app's manifest lists the MW AIMs it needs. Thalia's closure is the union of her apps' manifests, plus the
-  Service, the Server and the User Agent.
-- **Models are not in git.** They stay in `D:\CI` and are not published. Each app's Markdown lists, for every model,
-  its file name, size, SHA-256 and where to download it. The models MPAI developed are already in
-  `mpai-community`: link them there; do not copy them.
+What is wrong is not the structure but one coupling inside it: the Service is compiled against the AIMs of
+every app (section 2, findings 1 to 4). Steps 0 to 5 remove it. Nothing moves.
+
+- **Models are not in git.** They stay in `D:\CI` and are not published. Each app's Markdown lists, for every
+  model, its file name, size, SHA-256 and where to download it. The models MPAI developed are already in
+  `mpai-community`: link them there.
+- A **release** is a selection of `D:\DI` that keeps its paths. Thalia's selection is `release/thalia`.
 
 ## 4. Steps, in order
 
@@ -95,8 +89,9 @@ name and `WarmUp.cs` by what each app declares: its Module id, whether it uses t
 (in its own folder, e.g. `warmup.json`). Thalia reads the app list from the config, `Apps/MAS-App/app.json` or the
 Store. *Done when:* adding an app is a folder, an L3 and a package, with no change to Thalia.
 
-**Step 6. Move the code to the target folders** (section 3) and one manifest per app. *Done when:* the manifest
-walk (`Copy-Thalia.ps1`, adapted) produces exactly the tree of one app.
+**Step 6. One manifest per app,** in the app's folder, listing the `AIMs/` projects and data it needs; Thalia's
+selection becomes the union of her apps' manifests plus the Service and the User Agent. *Done when:* the manifest
+walk (`Copy-Thalia.ps1`, adapted) gives the same tree as the 46-project closure minus the AIMs, plus the apps'.
 
 **Step 7. The release.** CI, Markdown, the gallery without the author's descriptors, then `mpai-sw`.
 
@@ -129,15 +124,15 @@ What I propose after reading the code.
 
 ## 7. Decisions
 
-Settled: order (restructure first, then release); AIMs in one group by standard (MW); the User Agent on its own;
-apps by standard; MKG outside any standard; models not in git, listed with download sources in the Markdown.
+Settled: restructure first, then release; the structure is `D:\DI`'s own; models not in git, listed with
+download sources in the Markdown.
 
-Still open (needed before Step 6):
-1. **RSR, SAF, PSE.** RSR is shared. Are SAF and PSE shared composites in MW, or the app's?
-2. **Pieces not yet placed:** MMM (server, client, viewer, instance), `CAV/Recordings`, `legacy/` and
-   `Test/legacy`, the HCI apps (`HciApp`, `HciSceneTest`): apps, published as they are, or left out?
-3. **Thalia's place.** She combines MMC apps but is a MAS app, so `Apps/MAS/Thalia`: confirm.
-4. **Which MPAI-developed models are in `mpai-community`,** and at what address, for the Markdown.
+Still open:
+1. **RSR, SAF, PSE.** RSR is shared. Are SAF and PSE shared composites, or the app's? (It matters for which
+   app's manifest lists their L3s.)
+2. **What of `D:\DI` is published in `mpai-sw`:** the CAV applications, MMM, MKG, `CAV/Recordings`, the HCI
+   apps, `legacy/`: each in or out?
+3. **The MPAI-developed models already in `mpai-community`:** which, and where, for the Markdown.
 
 ## 8. Risks
 
