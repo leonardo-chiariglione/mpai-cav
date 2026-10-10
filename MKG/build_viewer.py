@@ -1,13 +1,17 @@
 """Builds mkg-viewer.html: one self-contained page (data embedded) to explore the MKG.
 
-Usage: python build_viewer.py [mkg.ttl]
+Usage: python build_viewer.py [mkg.ttl]            the page for this machine: MKG/mkg-viewer.html
+       python build_viewer.py [mkg.ttl] --public   the page for the web: MKG/public/index.html, with the user guide beside it;
+                                                   no path of this machine, and no repository that is not public
 """
-import json, os, re, sys
+import json, os, re, shutil, sys
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDF
 
 here = os.path.dirname(os.path.abspath(__file__))
-ttl = sys.argv[1] if len(sys.argv) > 1 else 'mkg.ttl'
+public = '--public' in sys.argv
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+ttl = args[0] if args else 'mkg.ttl'
 g = Graph()
 g.parse(os.path.join(here, ttl), format='turtle')
 V = 'https://mpai.community/kg/vocab#'
@@ -74,8 +78,30 @@ try:
     commit = subprocess.run(['git', '-C', os.path.dirname(here), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
 except Exception:
     commit = ''
-data = {'nodes': list(nodes.values()), 'edges': edges, 'meta': {'generated': datetime.date.today().isoformat(), 'commit': commit}}
-html = open(os.path.join(here, 'viewer-template.html'), encoding='utf-8').read().replace('/*DATA*/null', json.dumps(data, ensure_ascii=False))
+meta = {'generated': datetime.date.today().isoformat(), 'commit': commit}
 out = os.path.join(here, 'mkg-viewer.html')
+if public:
+    # WHAT THE WEB MAY SEE. The repository of a software project is a folder of this machine: D:\DI is the public repository
+    # mpai-cav; what was found in D:\AI is not published. The path inside the repository stays, the machine's folder goes.
+    for n in nodes.values():
+        if n['kind'] == 'Software':
+            n['repository'] = 'mpai-cav' if n['repository'].upper().startswith('D:\\DI') else 'not published'
+    # the page is about what MPAI has published: software that is not in a public repository is left out, with what refers to it
+    # (to show it, marked "not published", comment out the next three lines)
+    for i in [i for i, n in nodes.items() if n['kind'] == 'Software' and n['repository'] == 'not published']:
+        del nodes[i]
+    edges = [e for e in edges if e[0] in nodes and e[2] in nodes]
+    guide = os.path.join(here, 'MKG-User-Guide.docx')
+    outdir = os.path.join(here, 'public')
+    os.makedirs(outdir, exist_ok=True)
+    if os.path.exists(guide):
+        shutil.copy2(guide, outdir)
+        meta['guide'] = 'MKG-User-Guide.docx'
+    out = os.path.join(outdir, 'index.html')
+data = {'nodes': list(nodes.values()), 'edges': edges, 'meta': meta}
+html = open(os.path.join(here, 'viewer-template.html'), encoding='utf-8').read().replace('/*DATA*/null', json.dumps(data, ensure_ascii=False))
+if public:
+    leaks = re.findall(r'[A-Za-z]:\\\\[A-Za-z]', html)
+    assert not leaks, 'a path of this machine is still in the public page: %s' % leaks[:3]
 open(out, 'w', encoding='utf-8').write(html)
 print('written', out, '- %d nodes, %d relations' % (len(nodes), len(edges)))

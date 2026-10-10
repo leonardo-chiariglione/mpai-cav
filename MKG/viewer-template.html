@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MPAI Knowledge Graph</title>
+<meta name="description" content="The MPAI Knowledge Graph (MKG): the standards, AI Modules, Data Types, composites, implementations and software published by MPAI, with their connections.">
+<meta name="robots" content="index,follow">
 <style>
 :root { --bg:#f6f7f9; --panel:#fff; --ink:#000000; --muted:#000000; --line:#9aa3b2; --accent:#0a2fa0;
         --aim:#3b82f6; --dt:#16a34a; --l3:#a855f7; --std:#f59e0b; }
@@ -116,6 +118,29 @@ const usedBy = {}; DATA.nodes.filter(n => n.kind === 'DataType').forEach(d => d.
 
 const $ = id => document.getElementById(id);
 const el = (tag, attrs, ...kids) => { const e = document.createElement(tag); Object.entries(attrs || {}).forEach(([k, v]) => k === 'class' ? e.className = v : e.setAttribute(k, v)); kids.flat(Infinity).forEach(k => e.append(k)); return e; };
+// DIAGNOSTIC: open the page with ?debug at the end of its address and a small box says, live, what the page measures and
+// how many times a measure changed in the last 5 seconds - for when something on the screen moves and it must be found.
+if (/[?&]debug\b/.test(location.search)) {
+  const box = el('pre', {style:'position:fixed; top:4px; right:4px; z-index:99999; margin:0; padding:6px 8px; font:12px/1.3 Consolas,monospace; background:#ffffe0; color:#000; border:1px solid #333; pointer-events:none; white-space:pre'});
+  document.body.append(box);
+  const log = []; let last = null;
+  setInterval(() => {
+    const se = document.scrollingElement, c = document.getElementById('cy'), cn = c ? c.getBoundingClientRect() : {width:0, height:0};
+    const leg = [...document.querySelectorAll('div')].find(d => d.style.bottom === '8px' && d.style.position === 'absolute');
+    const m = {win: innerWidth + 'x' + innerHeight, doc: se.clientWidth + 'x' + se.clientHeight + ' (scroll ' + se.scrollWidth + 'x' + se.scrollHeight + ')',
+               picture: cn.width.toFixed(1) + 'x' + cn.height.toFixed(1), legendTop: leg ? leg.getBoundingClientRect().top.toFixed(1) : '-',
+               zoom: cy ? cy.zoom().toFixed(3) : '-', pan: cy ? cy.pan().x.toFixed(1) + ',' + cy.pan().y.toFixed(1) : '-', dpr: devicePixelRatio, scrollY: scrollY};
+    const key = JSON.stringify(m), now = performance.now();
+    if (last !== null && key !== last.key) log.push({t: now, what: Object.keys(m).filter(k => m[k] !== last.m[k])});
+    last = {key, m};
+    while (log.length && now - log[0].t > 5000) log.shift();
+    const counts = {}; log.forEach(l => l.what.forEach(w => counts[w] = (counts[w] || 0) + 1));
+    box.textContent = 'MKG diagnostic (?debug)\n' + Object.entries(m).map(([k, v]) => k.padEnd(10) + v).join('\n') +
+      '\nchanges in the last 5 s: ' + (log.length || 'none') + (log.length ? '\n  ' + Object.entries(counts).map(([k, v]) => k + ' x' + v).join('\n  ') : '');
+  }, 100);
+}
+// the page for the web has its user guide beside it
+if ((DATA.meta || {}).guide) $('count').after(el('a', {href:DATA.meta.guide, target:'_blank', class:'n', style:'margin-left:auto; font-size:17px; text-decoration:underline'}, 'User guide (Word)'));
 function extUrl(n) {
   if (!n) return '';
   const std = n.std && N['STD:' + n.std];
@@ -297,7 +322,7 @@ function detail(n) {
   if (n.kind === 'AIM') tags.append(el('span', {class:'tag'}, n.subs.length ? 'composite' : 'leaf'));
   if (n.notAligned) tags.append(el('span', {class:'tag warn'}, 'topology not yet by Data Type (M3194)'));
   if (n.webOnly) tags.append(el('span', {class:'tag warn'}, 'only listed on a web page: no schema in the repository'));
-  if (n.sourceAI) tags.append(el('span', {class:'tag'}, 'schema in D:\\AI only'));
+  if (n.sourceAI) tags.append(el('span', {class:'tag'}, 'schema still under development: not yet in the repository'));
   if (n.notInM3260) tags.append(el('span', {class:'tag warn'}, 'not in the table of M3260'));
   if (n.codeDiffers) tags.append(el('span', {class:'tag warn'}, 'code differs from the web page: ' + n.webCode));
   if (n.declaredOnly) tags.append(el('span', {class:'tag warn'}, 'no schema in these standards'));
@@ -362,7 +387,7 @@ function detail(n) {
   }
   if (n.kind === 'Standard') { if (n.version) t.append(row('Latest version', n.version)); if (!n.inM3260) t.append(row('Note', el('span', {class:'warn'}, 'not in the table of M3260'))); }
   if (n.kind === 'Part') t.append(row('Part', n.partAcronym));
-  if (n.kind === 'Software') { t.append(row('Project', n.path + '  (' + n.repository + ')')); t.append(row('Kind', n.softwareKind)); }
+  if (n.kind === 'Software') { t.append(row('Project', n.path + (n.repository ? '  (' + n.repository + ')' : ''))); t.append(row('Kind', n.softwareKind)); }
   if (n.kind === 'Unit') t.append(row('Status', n.unitStatus));
 }
 results();
