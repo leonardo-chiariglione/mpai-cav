@@ -18,13 +18,16 @@ public sealed class HighwaySimulation
     private const int AttitudesPerStep = 5;
     private const double OdometryScale = 1.015, GnssSigma = 1.5, MaxAcceleration = 3, MaxDeceleration = 8;
 
-    private readonly Random noise, grain;
+    public const int RearEvery = 3;                  // a look behind every 0.3 s
+    public const int RearCropX = 640, RearCropY = 390;   // the window of the rear picture the detector is given, in its full resolution: the horizon (row 540) is in it
+    private readonly Random noise, grain, rearGrain = new(77);
     private double odoX, odoY;
     private int attitudes;
 
     public HighwayWorld World { get; }
     public RoadMap Map { get; }
     public RigCamera Camera { get; }                 // the camera whose pictures go to the ESS
+    public RigCamera RearCamera { get; } = HighwayRig.Standard(1, 1)[2];   // RearLeft, not reduced: the second camera, looking back
     public DateTimeOffset Start { get; }
     public double SpeedLimit { get; }                // m/s
     public double EgoSpeed => World.Ego.Speed;
@@ -40,11 +43,11 @@ public sealed class HighwaySimulation
         noise = new Random(seed * 7919 + 1); grain = new Random(seed * 104729 + 3);
     }
 
-    // The Offline Map: a way point at each end of one road, east, of one lane (the lane the CAV is in: the
-    // AMS keeps to the centreline of its road), the speed limit in m/s.
+    // The Offline Map: a way point at each end of one road, east, of two lanes (the lane the CAV is in: the
+    // AMS keeps to the centreline of its road, the right lane: the Path), the speed limit in m/s.
     public static RoadMap HighwayMap(double speedLimit, double length = 60_000) =>
         new("Highway", 45.0703, 7.6869, [new WayPoint("H0", 0, 0, "Start"), new WayPoint("H1", length, 0, "End")],
-            [new RoadSegment("H01", "H0", "H1", speedLimit, 1)]);
+            [new RoadSegment("H01", "H0", "H1", speedLimit, HighwayRoad.Lanes)]);
 
     // What the ESS is told of its camera: the settings of the scene-description AIM that follow from the rig.
     public IReadOnlyDictionary<string, string> EssSettings() => new Dictionary<string, string>
@@ -58,9 +61,36 @@ public sealed class HighwaySimulation
         ["CameraLeft"] = Camera.Y.ToString("0.###", CultureInfo.InvariantCulture)
     };
 
+    // What the ESS is told of the camera that looks back. The camera captures at full resolution (1920 x 1080, a focal
+    // length of 2,637 px, a view of 40 degrees); a window of 640 x 360 around the horizon is cut from it and given to the
+    // vehicle detector - at the reduced scale a car behind is found only to 80 m, in the window to 250 m. Its horizon
+    // is at row 150 of the window and the middle of the picture at its column 320.
+    public IReadOnlyDictionary<string, string> RearEssSettings() => new Dictionary<string, string>
+    {
+        ["RearFocalPixels"] = RearCamera.Focal.ToString("0.####", CultureInfo.InvariantCulture),
+        ["RearCameraHeight"] = RearCamera.Z.ToString("0.###", CultureInfo.InvariantCulture),
+        ["RearHorizonRow"] = (RearCamera.Height / 2.0 - RearCropY).ToString("0.###", CultureInfo.InvariantCulture),
+        ["RearImageWidth"] = "640",
+        // The camera is 2.0 m behind the ego's centre: 4.4 m behind its front.
+        ["RearCameraAhead"] = (RearCamera.X - World.Ego.Length / 2).ToString("0.###", CultureInfo.InvariantCulture),
+        ["RearCameraLeft"] = RearCamera.Y.ToString("0.###", CultureInfo.InvariantCulture)
+    };
+
+    // The window of the rear camera's picture, as the detector is given it: clean at full resolution, cut, then given the
+    // grain and the blur of a real camera.
+    public byte[] RearWindow()
+    {
+        var frame = HighwayCameras.Capture(RearCamera, World.Ego, World.Others);
+        var window = new byte[640 * 360 * 3];
+        for (var y = 0; y < 360; y++) Buffer.BlockCopy(frame.Rgb, ((RearCropY + y) * frame.Width + RearCropX) * 3, window, y * 640 * 3, 640 * 3);
+        HighwayCameras.Finish(window, 640, 360, rearGrain);
+        return window;
+    }
+
     // ---- what the sensors capture --------------------------------------------------------------
 
-    public Simulation.Sensed Sense()
+    // camera: false where nothing looks at the picture (perfect perception): it is then not made.
+    public Simulation.Sensed Sense(bool camera = true, bool rear = true)
     {
         var ego = World.Ego;
         var messages = new List<(string, string)>();
@@ -81,8 +111,14 @@ public sealed class HighwaySimulation
         var (lat, lon) = Map.Geodetic(ego.X + Gaussian(GnssSigma), ego.Y + Gaussian(GnssSigma));
         messages.Add(("CAV-GNO-V2.0", Gnss(ms0, lat, lon)));
 
-        var frame = HighwayCameras.Capture(Camera, ego, World.Others, grain);
-        messages.Add(("OSD-BVO-V1.5", Frame(ms0, frame.Png)));
+        if (camera)
+        {
+            var frame = HighwayCameras.Capture(Camera, ego, World.Others, grain);
+            messages.Add(("OSD-BVO-V1.5", Frame(ms0, frame.Png, "BVO", $"front camera {Camera.Name}")));
+            // The camera that looks back, on the same port: its picture says by its orientation which way it looks.
+            if (rear && World.StepNumber % RearEvery == 0)
+                messages.Add(("OSD-BVO-V1.5", Frame(ms0, Png.Encode(640, 360, RearWindow()), "BVR", $"rear camera {RearCamera.Name}, window", RearCamera.YawDegrees)));
+        }
 
         var vehicles = new JsonArray();
         foreach (var v in World.Others.OrderBy(v => v.X))
@@ -91,7 +127,7 @@ public sealed class HighwaySimulation
             if (ahead < -60 || ahead > 250) continue;
             vehicles.Add(new JsonObject
             {
-                ["Id"] = v.Id, ["Lane"] = v.Lane - ego.Lane, ["Distance"] = Math.Round(ahead, 3), ["Speed"] = Math.Round(v.Speed, 3), ["Truck"] = v.Truck
+                ["Id"] = v.Id, ["Lane"] = v.Lane - ego.Lane, ["Distance"] = Math.Round(ahead, 3), ["Speed"] = Math.Round(v.Velocity, 3), ["Truck"] = v.Truck
             });
         }
         var gap = GapAhead();
@@ -117,10 +153,12 @@ public sealed class HighwaySimulation
         return lead is null ? null : gap;
     }
 
-    // The ego accelerates as asked, within what a car can do, and the world moves on.
-    public void Advance(double acceleration)
+    // The ego accelerates as asked, within what a car can do, and - where the Trajectory it follows says where it
+    // is to be, to the left of the road's centreline, north on the map's frame - steers to it; the world moves on.
+    public void Advance(double acceleration, double? north = null)
     {
         World.EgoAcceleration = Math.Clamp(acceleration, -MaxDeceleration, MaxAcceleration);
+        World.EgoTargetY = north;
         World.Advance();
     }
 
@@ -174,16 +212,18 @@ public sealed class HighwaySimulation
         }.ToJsonString();
     }
 
-    private string Frame(long ms, byte[] png) => new JsonObject
+    private string Frame(long ms, byte[] png, string prefix, string what, double yaw = 0) => new JsonObject
     {
-        ["Header"] = "OSD-BVO-V1.5", ["BasicVisualObjectID"] = $"BVO{World.StepNumber:D6}",
-        ["BasicVisualObjectTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["SpaceTimeID"] = $"BVO{World.StepNumber:D6}-ST", ["Time"] = SimpleTime($"BVO{World.StepNumber:D6}-T", ms) },
+        ["Header"] = "OSD-BVO-V1.5", ["BasicVisualObjectID"] = $"{prefix}{World.StepNumber:D6}",
+        ["BasicVisualObjectTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["SpaceTimeID"] = $"{prefix}{World.StepNumber:D6}-ST", ["Time"] = SimpleTime($"{prefix}{World.StepNumber:D6}-T", ms),
+            // Where the camera looks: its yaw from the CAV's heading.
+            ["SpatialAttitude1"] = new JsonObject { ["Orientation"] = new JsonObject { ["Orientation"] = new JsonArray(0.0, 0.0, yaw) } } },
         ["BasicVisualObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(png) }),
         ["VisualQualifier"] = new JsonObject
         {
-            ["Header"] = "TFA-VIQ-V1.5", ["VisualQualifierID"] = $"VIQ{World.StepNumber:D6}", ["SubTypes"] = new JsonObject(),
+            ["Header"] = "TFA-VIQ-V1.5", ["VisualQualifierID"] = $"{prefix}-VIQ{World.StepNumber:D6}", ["SubTypes"] = new JsonObject(),
             ["Formats"] = new JsonObject { ["Content"] = new JsonObject { ["2D"] = new JsonObject { ["Static"] = "PNG" } } }
         },
-        ["DescrMetadata"] = $"Simulated front camera {Camera.Name}, t = {World.Time.ToString("0.0", CultureInfo.InvariantCulture)} s"
+        ["DescrMetadata"] = $"Simulated {what}, t = {World.Time.ToString("0.0", CultureInfo.InvariantCulture)} s"
     }.ToJsonString();
 }

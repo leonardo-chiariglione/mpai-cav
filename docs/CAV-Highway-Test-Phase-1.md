@@ -1,4 +1,4 @@
-# CAV reference software - test phase 1: highway overtaking
+﻿# CAV reference software - test phase 1: highway overtaking
 
 MPAI document M3253 - specification of the synthetic test scenario, draft, 2026-10-08.
 
@@ -46,7 +46,7 @@ Limits for now: a blind spot beside the car (closer than about 10 m), no LiDAR o
 5. Return to the right lane once safely past the slower vehicle, and only if the right lane has room.
 6. Abort the manoeuvre if a fast vehicle appears behind, or if the vehicle ahead in the left lane brakes.
 
-Today's Autonomous Motion Subsystem only follows the vehicle ahead and keeps its lane (Path Selection Planning stage 1: "lane changes are a later stage"). Steps 2 to 6 are new work.
+Stage 1 of the Autonomous Motion Subsystem only follows the vehicle ahead and keeps its lane. Steps 2 to 6 are Stage 2 (2026/10/11): the rear cameras are in the Environment Sensing Subsystem, and the lane change is a decision of Path Selection Planning, switched on by the setting LaneChange (off by default: Stage 1 is unchanged). Only the abort of step 6 is not yet done.
 
 ## 5. What is measured in each run
 
@@ -72,8 +72,8 @@ Today's Autonomous Motion Subsystem only follows the vehicle ahead and keeps its
 1. Road and traffic generator - written, not yet tested.
 2. The four-camera model, with tests and sample images.
 3. A baseline run with today's Autonomous Motion Subsystem (expected: it gets stuck behind slow vehicles; the run measures by how much).
-4. Rear sensing in the Environment Sensing Subsystem.
-5. The lane-change planning.
+4. Rear sensing in the Environment Sensing Subsystem - done. A second instance of the scene-description AIM (OSD-BVS-V1.5-I03, setting Facing = Rear) looks at a window of the rear camera's picture every 0.3 s, and the Basic Environment Description takes its objects on its second port: what is behind has a negative X.
+5. The lane-change planning - done, without the abort. Path Selection Planning (LaneChangePlanner) decides from the Full Environment Descriptors, remembers what the cameras no longer see, and gives the Path a lane change; Motion Selection Planning follows the Path laterally too; the simulation steers the ego along the Trajectory. The staged overtaking (a slow truck, three fast cars coming up behind it in the left lane) passes: the CAV waits for the fast cars, pulls out, passes the truck and returns to the right lane, with no collision and nobody braking hard for it (tests TheCavOvertakesTheTruckOnPerfectPerception and TheCavOvertakesTheTruckOnItsOwnSenses; the traces are in Test/Reports/Highway).
 6. A batch runner and a report in the style of the existing test reports.
 
 ## 8. Assumptions and open points
@@ -81,3 +81,13 @@ Today's Autonomous Motion Subsystem only follows the vehicle ahead and keeps its
 - Rear detection must reach about 95 m for a vehicle closing at 11 m/s, and about 190 m at 20 m/s (assuming a braking limit of 3 m/s2, a 20 m minimum gap and 5 s for the manoeuvre and the reaction).
 - Stereo distance error is about 1.3 m at 50 m, 5 m at 100 m and 11 m at 150 m (assuming a quarter pixel matching precision).
 - Still to set: the planned speed, the decision distance, the pass/fail thresholds, the exact list of sensors the MPAI-CAV specification expects, and where the batch of runs executes.
+
+## 9. The two-way road (added 2026/10/12)
+
+A two-lane road with a lane for each direction. The CAV is held up by a slow truck (20 m/s, 100 m ahead; the CAV wants 30 m/s) and the lane to its left carries the traffic that comes the other way.
+
+- **What the CAV sees alone.** The truck hides the lane beyond it: the line of sight past the truck's side reaches 2.8 times the distance to the truck's rear (112 m at 40 m/s behind a truck 40 m ahead), and no sensor sees beyond 150 m. The pass needs about 17 s in the other lane (2.5 s to get out, the time to gain 85 m on the truck at 1.5 m/s2 acceleration, 4 s to get back): against a vehicle coming at 24 m/s that is about 1,000 m of lane known to be free. Alone, the CAV cannot know it, so it stays behind the truck.
+- **What the other CAVs tell it.** A CAV that comes the other way sends its Full Environment Descriptors (an Ego-Remote AMS Message) - where it is and what it sees. The CAV's Full Environment Description places them on its own map; the Path Selection Planning takes the lane to be known as far as its own sight and the reports, together, go without a break (each report covers from the CAV back by RemoteReach metres, 1,500 here). Beyond that a vehicle is assumed, coming at OncomingSpeed. It pulls out only if the vehicle that would meet it first cannot do so before the pass is over, with SafetyDistance (60 m) to spare.
+- **If what it knew proves wrong.** Out, and not yet level with the truck: back behind it. Level or ahead: faster past it, the margin behind the truck halved.
+- **The staged run** (HighwayOncomingTests): a car not a CAV 500 m ahead, which the truck hides; a CAV 900 m ahead, which sees the car and says so; another CAV 2.5 km ahead. Alone the CAV follows the truck for the whole run (90 s). Told by the CAVs it waits while the car and the first CAV go by, pulls out at about 19.5 s with 1,500 m to the vehicle coming, passes, and is back in its lane at about 38 s; the vehicle that would meet it first never nearer than 8 s or 100 m while it is out; no collision. LaneChangePlannerOpposingTests tests the decisions alone, with what it does when what it knew proves wrong.
+- **Assumptions.** The reports are exact within the reach; a reach of 1,500 m stands for what a CAV perceives and what the CAVs it is in touch with have told it - no sensor sees as far. The Motion Selection Planning and the Traffic Obstacle Avoidance do not follow what comes the other way: it is the Path Selection Planning's to meet, or not to pull out for. The cameras and the ESS have not been tried on this road: the runs are on perfect perception, with the truck's shadow.

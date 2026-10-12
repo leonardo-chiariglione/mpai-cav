@@ -31,11 +31,14 @@ public sealed class HighwayVehicle
     public double Height { get; init; } = 1.45;
     public (byte R, byte G, byte B) Paint { get; init; } = CameraRenderer.Silver;
     public double BaseSpeed { get; init; }                      // m/s, what the driver wants
+    public int Direction { get; init; } = 1;                    // 1: with the road (east); -1: against it, the traffic of a two-way road's other lane
+    public string? CavId { get; init; }                         // a CAV that reports what it perceives to the CAVs around it
 
     public double X { get; internal set; }                      // m along the road, of the centre
     public double Y { get; internal set; }                      // m to the left of the right lane's centreline
     public double Heading { get; internal set; }                // radians, anticlockwise from the road's direction
-    public double Speed { get; internal set; }
+    public double Speed { get; internal set; }                  // m/s, along the way it goes
+    public double Velocity => Direction * Speed;                // m/s along the road: negative for the traffic that comes the other way
     public double Acceleration { get; internal set; }
     public bool ChangingLane => Changing;
     public int Lane => (int)Math.Clamp(Math.Round(Y / HighwayRoad.LaneWidth), 0, HighwayRoad.Lanes - 1);
@@ -79,6 +82,12 @@ public sealed class HighwayWorld
     // The acceleration the ego holds (m/s2), from the next step on.
     public double EgoAcceleration { get; set; }
 
+    // Where the ego is steered to (m to the left of the right lane's centreline), or none: the lane it is
+    // in. The ego moves towards it at no more than MaxLateralSpeed (m/s), as a vehicle steered along a
+    // Trajectory does - the Motion Actuation Subsystem executes what the Trajectory says laterally too.
+    public double? EgoTargetY { get; set; }
+    public const double MaxLateralSpeed = 2.0;
+
     // Whether the other drivers change lane. A staged scenario may keep them in their lanes, so that what it is
     // meant to show happens as it was staged.
     public bool NpcsChangeLane { get; set; } = true;
@@ -113,10 +122,13 @@ public sealed class HighwayWorld
         new(seed, others, egoSpeed, egoLane);
 
     // A vehicle of a scenario: a car (or a truck) at x, in a lane, at a speed.
-    public static HighwayVehicle Vehicle(string id, double x, int lane, double speed, bool truck = false, (byte R, byte G, byte B)? paint = null) =>
+    // oncoming: it comes the other way (the lane to the left of a two-way road); cav: the identity of a CAV.
+    public static HighwayVehicle Vehicle(string id, double x, int lane, double speed, bool truck = false, (byte R, byte G, byte B)? paint = null,
+                                         bool oncoming = false, string? cav = null) =>
         new()
         {
             Id = id, Truck = truck, BaseSpeed = speed, X = x, Y = HighwayRoad.LaneCentre(lane), Speed = speed,
+            Direction = oncoming ? -1 : 1, CavId = cav, Heading = oncoming ? Math.PI : 0,
             Length = truck ? 12 : 4.5, Width = truck ? 2.5 : 1.8, Height = truck ? 3.6 : 1.45,
             Paint = paint ?? (truck ? TruckWhite : CameraRenderer.Silver)
         };
@@ -212,8 +224,10 @@ public sealed class HighwayWorld
         HighwayVehicle? best = null; var gap = double.PositiveInfinity;
         foreach (var other in Everyone())
         {
-            if (ReferenceEquals(other, me) || other.X <= me.X || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
-            var g = other.X - me.X - (other.Length + me.Length) / 2;
+            if (ReferenceEquals(other, me) || other.Direction != me.Direction) continue;
+            var along = me.Direction * (other.X - me.X);
+            if (along <= 0 || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
+            var g = along - (other.Length + me.Length) / 2;
             if (g < gap) { gap = g; best = other; }
         }
         return (best, best is null ? double.PositiveInfinity : Math.Max(g0(gap), 0.01));
@@ -225,8 +239,10 @@ public sealed class HighwayWorld
         HighwayVehicle? best = null; var gap = double.PositiveInfinity;
         foreach (var other in Everyone())
         {
-            if (ReferenceEquals(other, me) || other.X >= me.X || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
-            var g = me.X - other.X - (other.Length + me.Length) / 2;
+            if (ReferenceEquals(other, me) || other.Direction != me.Direction) continue;
+            var along = me.Direction * (me.X - other.X);
+            if (along <= 0 || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
+            var g = along - (other.Length + me.Length) / 2;
             if (g < gap) { gap = g; best = other; }
         }
         return (best, best is null ? double.PositiveInfinity : Math.Max(gap, 0.01));
@@ -253,7 +269,7 @@ public sealed class HighwayWorld
 
     private void Decide(HighwayVehicle me, double time)
     {
-        if (me.Changing) return;
+        if (me.Changing || me.Direction < 0) return;
         if (me.Lane == 0)
         {
             var (lead, gap) = Leader(me, me.Y);
@@ -285,9 +301,16 @@ public sealed class HighwayWorld
     {
         a.Acceleration = acceleration;
         var v = Math.Max(0, a.Speed + acceleration * Step);
-        a.X += (a.Speed + v) / 2 * Step;
+        a.X += a.Direction * (a.Speed + v) / 2 * Step;
         a.Speed = v;
-        if (!a.Changing) { a.Heading = 0; return; }
+        if (ReferenceEquals(a, Ego) && EgoTargetY is { } target)
+        {
+            var dy = Math.Clamp(target - a.Y, -MaxLateralSpeed * Step, MaxLateralSpeed * Step);
+            a.Y += dy;
+            a.Heading = Math.Atan2(dy / Step, Math.Max(a.Speed, 1));
+            return;
+        }
+        if (!a.Changing) { a.Heading = a.Direction < 0 ? Math.PI : 0; return; }
         var t = (time + Step - a.ChangeStart) / a.ChangeDuration;
         if (t >= 1) { a.Y = a.ToY; a.Changing = false; a.Heading = 0; return; }
         a.Y = a.FromY + (a.ToY - a.FromY) * t * t * (3 - 2 * t);
@@ -338,5 +361,5 @@ public sealed class HighwayWorld
     // What there is around the ego: each other vehicle, how far ahead (negative: behind) of the ego
     // its centre is, its lane, its speed.
     public IReadOnlyList<(string Id, int Lane, double Ahead, double Speed)> Around() =>
-        npcs.Select(a => (a.Id, a.Lane, a.X - Ego.X, a.Speed)).OrderBy(a => a.Item3).ToList();
+        npcs.Select(a => (a.Id, a.Lane, a.X - Ego.X, a.Velocity)).OrderBy(a => a.Item3).ToList();
 }

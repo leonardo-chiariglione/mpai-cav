@@ -30,6 +30,13 @@ public sealed class HighwayRecording
         image.SaveAsJpeg(Path.Combine(folder, "f", $"{step:D6}.jpg"), jpeg);
     }
 
+    // The rear camera's window, given as PNG: what the ESS was given.
+    public void RearPng(int step, byte[] png)
+    {
+        using var image = Image.Load<Rgb24>(png);
+        image.SaveAsJpeg(Path.Combine(folder, "r", $"{step:D6}.jpg"), jpeg);
+    }
+
     // A picture given as raw RGB (the rear camera's window, 640 x 360).
     public void Rear(int step, byte[] rgb)
     {

@@ -71,7 +71,7 @@ public sealed class EssInTheLoop : IDisposable
 public sealed class CavInTheLoop : IDisposable
 {
     public const string Ams = "1CAV-AMS-V2.0-I01";
-    private readonly EssInTheLoop ess;
+    private readonly EssInTheLoop? ess;
     private readonly Mpai.Aif.Api.ControllerApi api;
     private readonly string location = Path.Combine(Path.GetTempPath(), "mpai-p8s8-" + Guid.NewGuid().ToString("N"));
 
@@ -79,10 +79,11 @@ public sealed class CavInTheLoop : IDisposable
 
     // The loop for any world that gives the ESS its Offline Map and the sensed messages: settingsPath is the
     // AIM settings the two Modules read (the repository's, unless the camera or the like is not the first one's).
-    public CavInTheLoop(Mpai.Cav.Map.RoadMap map, string destination, string? settingsPath = null)
+    // withEss: false where the Basic Environment Descriptors are given to the AMS (perfect perception): no ESS is run.
+    public CavInTheLoop(Mpai.Cav.Map.RoadMap map, string destination, string? settingsPath = null, bool withEss = true)
     {
         var settings = settingsPath ?? Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
-        ess = new EssInTheLoop(settingsPath);
+        if (withEss) ess = new EssInTheLoop(settingsPath);
         api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, settings, new AmsProvider());
         var started = api.StartFlow(Ams);
         if (started != AifError.OK) throw new InvalidOperationException($"{Ams} did not start: {started}");
@@ -90,6 +91,9 @@ public sealed class CavInTheLoop : IDisposable
         api.InputWrite(Ams, AmsTypes.Map, 1, map.ToOfflineMapObject(0), 5000);
         api.InputWrite(Ams, AmsTypes.Hci, 1, AmsStage1Tests.Destination(destination), 5000);
     }
+
+    // What another CAV reports (an Ego-Remote AMS Message): to the Full Environment Description of the AMS.
+    public void Hear(string era, int timeoutMs = 5000) => api.InputWrite(Ams, FullEnvironmentDescription.Remote, 1, era, timeoutMs);
 
     public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs) Step(Simulation.Sensed sensed, int timeoutMs = 5000)
     {
@@ -99,7 +103,13 @@ public sealed class CavInTheLoop : IDisposable
 
     public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs, JsonNode? Bed) StepWithBed(Simulation.Sensed sensed, int timeoutMs = 5000)
     {
-        var (bed, alerts) = ess.Step(sensed);
+        var (bed, alerts) = ess!.Step(sensed);
+        return StepOnBed(bed!, alerts, sensed.FrameMs, timeoutMs);
+    }
+
+    // The same, from Basic Environment Descriptors given (and the Alerts, if any).
+    public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs, JsonNode? Bed) StepOnBed(JsonNode bed, List<JsonNode> alerts, long frameMs, int timeoutMs = 5000)
+    {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         foreach (var alert in alerts) api.InputWrite(Ams, AmsTypes.Alert, 1, alert.ToJsonString(), timeoutMs);
         api.InputWrite(Ams, AmsTypes.Bed, 1, bed!.ToJsonString(), timeoutMs);
@@ -107,7 +117,7 @@ public sealed class CavInTheLoop : IDisposable
         while (command is null && api.OutputRead(Ams, AmsTypes.Message, 1, timeoutMs) is { Error: AifError.OK, Json: { } json })
         {
             var message = JsonNode.Parse(json)!;
-            if (AmsTypes.Ms(message["AMSMASMessageTime"]) == sensed.FrameMs) command = message;   // an older one is passed over
+            if (AmsTypes.Ms(message["AMSMASMessageTime"]) == frameMs) command = message;   // an older one is passed over
         }
         var latency = clock.Elapsed.TotalMilliseconds;
         while (api.OutputRead(Ams, AmsTypes.Data, 1, 0) is { Error: AifError.OK }) { }           // the AMS Data, not used here
@@ -118,7 +128,7 @@ public sealed class CavInTheLoop : IDisposable
     {
         api.StopFlow(Ams);
         api.Dispose();
-        ess.Dispose();
+        ess?.Dispose();
         try { Directory.Delete(location, recursive: true); } catch { }
     }
 }

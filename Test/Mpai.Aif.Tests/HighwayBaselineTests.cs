@@ -19,7 +19,7 @@ namespace Mpai.Aif.Tests;
 [Collection(Timing.Name)]
 public class HighwayBaselineTests
 {
-    private const double Planned = 30;                  // m/s, 108 km/h: the speed the CAV wants, and the road's limit
+    private const double Planned = HighwayScenarios.Planned;
 
     // The AIM settings of the repository with the scene-description AIM told where the rig's camera is.
     private static string SettingsFor(HighwaySimulation sim)
@@ -36,15 +36,17 @@ public class HighwayBaselineTests
     private sealed record StepInfo(HighwaySimulation Sim, Simulation.Sensed Sensed, JsonNode? Bed, double Held, double LatencyMs, int Step, int Alerts, double WallSeconds);
 
     // Runs one scenario for the seconds given and returns what it showed.
-    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null)
+    // overtake: the CAV's Path Selection Planning may change lane, and the camera that looks back is in the loop.
+    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null, bool overtake = false)
     {
         var sim = new HighwaySimulation(world, Planned);
-        var settings = SettingsFor(sim);
+        var settings = overtake ? HighwayScenarios.Settings(sim) : SettingsFor(sim);
         try
         {
             using var cav = new CavInTheLoop(sim.Map, "H1", settings);
             double minGap = double.PositiveInfinity, hardest = 0, jerk = 0, lastA = 0, held = 0, firstBrakeGap = double.NaN, firstBrakeSpeed = double.NaN;
             double slowSeconds = 0, startHardest = 0, seenGap = double.NaN, seenTruthGap = double.NaN;
+            double? north = null;
             int startHardestStep = -1, seenStep = -1;
             int uncommanded = 0, alerts = 0, steps = 0;
             var latencies = new List<double>();
@@ -53,7 +55,7 @@ public class HighwayBaselineTests
             var wall = System.Diagnostics.Stopwatch.StartNew();
             for (; steps < seconds * 10 && !sim.Collided; steps++)
             {
-                var sensed = sim.Sense();
+                var sensed = sim.Sense(camera: true, rear: overtake);
                 var (alertList, command, latency, bed) = cav.StepWithBed(sensed);
                 if (sim.GapAhead() is { } g) minGap = Math.Min(minGap, g);
                 // When the ESS first reports a vehicle where the truth has one in the CAV's way (within 8 m of its gap).
@@ -67,12 +69,13 @@ public class HighwayBaselineTests
                     latencies.Add(latency);
                     var points = command["AMSMessage"]!["Trajectory"]!["Trajectory"]!;
                     held = (TrafficObstacleAvoidance.Speed(points[1]!) - TrafficObstacleAvoidance.Speed(points[0]!)) / MotionSelectionPlanning.Step;
+                    north = HighwayOvertakingTests.Asked(command).North;
                 }
                 else uncommanded++;
                 alerts += alertList.Count;
                 observe?.Invoke(new StepInfo(sim, sensed, bed, held, latency, steps, alerts, wall.Elapsed.TotalSeconds));
                 if (steps >= 20 && double.IsNaN(firstBrakeGap) && held < -0.3 && sim.GapAhead() is { } gb) { firstBrakeGap = gb; firstBrakeSpeed = sim.EgoSpeed; }
-                sim.Advance(held);
+                sim.Advance(held, overtake ? north : null);
                 speeds.Add(sim.EgoSpeed);
                 if (sim.EgoSpeed < Planned - 1) slowSeconds += HighwaySimulation.Step;
                 // The first 2 s are the CAV starting up (the AMS has no Path yet); what comes after is driving.
@@ -146,18 +149,11 @@ public class HighwayBaselineTests
         }
         else if (mode is "behind" or "overtake")
         {
-            // THE STAGED SCENARIO: the CAV in the right lane at its planned speed; a slow truck 200 m ahead; and fast cars
-            // coming up behind it in the left lane - a first at 36 m/s from 90 m behind, a second at 40 m/s from 260 m, a
-            // third at 39 m/s from 430 m - and one that follows it in its own lane. The drivers keep their lanes.
-            (byte, byte, byte) green = (70, 110, 80), sand = (150, 140, 110), blue = CameraRenderer.Blue, dark = (40, 40, 44), white = CameraRenderer.White;
-            world = HighwayWorld.Scenario([
-                HighwayWorld.Vehicle("Truck", 2.4 + 200 + 6, 0, 22, truck: true),
-                HighwayWorld.Vehicle("Fast1", -90, 1, 36, paint: blue),
-                HighwayWorld.Vehicle("Fast2", -260, 1, 40, paint: white),
-                HighwayWorld.Vehicle("Fast3", mode == "overtake" ? -520 : -430, 1, 39, paint: dark),
-                HighwayWorld.Vehicle("Tail", -45, 0, 30, paint: sand)], Planned);
-            world.NpcsChangeLane = false;
-            label = mode == "overtake" ? "overtaking, by a prototype planner: wait for the fast cars, then pass the truck" : "a slow truck ahead, fast cars coming up behind";
+            // THE STAGED SCENARIO (HighwayScenarios.Overtaking): a slow truck 200 m ahead, fast cars coming up behind it in the
+            // left lane, and one that follows it in its own lane. With "overtake" the CAV may change lane: it is its own planning
+            // that waits for the fast cars, pulls out, passes the truck and returns.
+            world = HighwayScenarios.Overtaking(thirdCarFar: mode == "overtake");
+            label = mode == "overtake" ? "overtaking: the CAV decides - wait for the fast cars, then pass the truck" : "a slow truck ahead, fast cars coming up behind";
         }
         else
         {
@@ -165,83 +161,46 @@ public class HighwayBaselineTests
             label = "a slow truck 150 m ahead";
         }
 
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
-        using var rearWatch = new HighwayRearWatch(model);
         var recording = string.IsNullOrEmpty(recordTo) ? null : new HighwayRecording(recordTo);
         using var view = new HighwayLiveView("http://127.0.0.1:7100");
         Console.WriteLine("The run is on http://127.0.0.1:7100/");
-        view.Publish(LiveState(null, world, label, done: false, rear: null), null);
+        view.Publish(LiveState(null, world, label, done: false, rear: []), null);
 
-        IReadOnlyList<HighwayRearWatch.Seen> rear = [];
+        IReadOnlyList<RearSeen> rear = [];
         int rearPic = -1, frontPic = -1;
-        var plan = mode == "overtake" ? "following" : "";
-        var memory = new Dictionary<int, (double Time, double Behind, double Left, double? Closing)>();
+        var plan = "following";
+        var lastY = world.Ego.Y;
         Run(label, world, seconds, info =>
         {
             byte[]? rearPng = null;
-            if (info.Step % 3 == 0)                                       // a look behind every 0.3 s
+            if (info.Sensed.Messages.Where(m => m.DataType == "OSD-BVO-V1.5").Skip(1).FirstOrDefault().Json is { } rearFrame)    // a look behind every 0.3 s
             {
-                var (seen, window) = rearWatch.Look(world);
-                rear = seen; rearPic = info.Step;
-                rearPng = Mpai.Cav.Recordings.Png.Encode(640, 360, window);
-                recording?.Rear(info.Step, window);
+                rearPic = info.Step;
+                rearPng = Convert.FromBase64String(JsonNode.Parse(rearFrame)!["BasicVisualObjectData"]![0]!["Data"]!.GetValue<string>());
+                recording?.RearPng(info.Step, rearPng);
             }
-            if (mode == "overtake" && info.Step % 3 == 0) plan = OvertakePlan(world, rear, plan, memory);
+            // What the ESS says is behind: the objects of its Basic Environment Descriptors that are.
+            rear = (info.Bed?["BasicEnvironmentObjects"]?.AsArray() ?? []).Select(o => (Pos: o?["SpatialAttitude"]?["Position"], Id: o?["BasicEnvironmentObjectID"]?.GetValue<string>() ?? "?"))
+                .Where(o => o.Pos?["CartPosition"] is JsonArray p && p.Count >= 2 && (double)p[0]! < 0)
+                .Select(o => new RearSeen(o.Id, -(double)o.Pos!["CartPosition"]![0]! - world.Ego.Length, (double)o.Pos!["CartPosition"]![1]!,
+                                          o.Pos["CartVelocity"] is JsonArray v && v.Count >= 1 ? (double)v[0]! : null)).ToList();
+            // The plan, as the CAV's Path says it: the lane it is in and which way it is moving.
+            var y = world.Ego.Y;
+            plan = world.Ego.Y < 0.15 && y <= lastY + 1e-6 ? "following" : y - lastY > 0.002 ? "pulling out to pass" : lastY - y > 0.002 ? "back to the right lane" : y > 3.3 ? "passing" : plan;
+            lastY = y;
             var front = FramePng(info.Sensed);
             if (front is not null && info.Step % 2 == 0) { frontPic = info.Step; recording?.Front(info.Step, front); }
             var json = LiveState(info, world, label, done: false, rear: rear, front: frontPic, rearPic: rearPic, plan: plan);
             recording?.State(json);
             view.Publish(json, front, rearPng);
-        });
+        }, overtake: mode == "overtake");
         view.Publish(LiveState(null, world, label, done: true, rear: rear, last: true, front: frontPic, rearPic: rearPic, plan: plan), null);
         recording?.Finish(label);
         Thread.Sleep(hold * 1000);
     }
 
-    // A PROTOTYPE PLANNER, OUTSIDE THE REFERENCE SOFTWARE (M3253 build step 5, tried in the harness): it takes the
-    // lane to the left when a slower vehicle is near ahead, the left lane is clear ahead, and the rear watch sees no
-    // vehicle in the left lane close behind or closing so that it would arrive within 16 s. It goes back to the right
-    // when the vehicle it passed is 30 m behind and the right lane is free ahead. The vehicle ahead and the clear
-    // road ahead are read from the simulation (the front camera already gives the CAV its leader); what is behind is
-    // only what the rear watch saw. The CAV's own Stage 1 planner is not changed: the lane is changed in the world.
-    private static string OvertakePlan(HighwayWorld world, IReadOnlyList<HighwayRearWatch.Seen> rear, string plan,
-                                        Dictionary<int, (double Time, double Behind, double Left, double? Closing)> memory)
-    {
-        var ego = world.Ego; var now = world.Time;
-        // What the rear watch has seen is remembered: a vehicle seen closing in the left lane is taken to be still there,
-        // at the distance its closing speed predicts (12 m/s if that was not yet known), until it has passed - the detector
-        // loses a vehicle that is near, and the CAV must not pull out in front of one it has just stopped seeing.
-        foreach (var r in rear) memory[r.Id] = (now, r.Behind, r.Left, r.Closing);
-        foreach (var id in memory.Keys.ToList())
-        {
-            var m = memory[id];
-            if (now - m.Time > 8 || m.Behind - (m.Closing ?? 12) * (now - m.Time) < -10) memory.Remove(id);
-        }
-        if (ego.ChangingLane) return plan;
-        var leftY = HighwayRoad.LaneCentre(1); var rightY = HighwayRoad.LaneCentre(0);
-        if (ego.Lane == 0)
-        {
-            var (lead, gap) = world.Leader(ego, ego.Y);
-            if (lead is null || gap > 60 || lead.Speed > Planned - 3) return "following";
-            if (world.Leader(ego, leftY).Gap < 80) return "wants to pass: a vehicle ahead in the left lane";
-            var unsafeBehind = memory.Values.Any(m =>
-            {
-                if (m.Left < 1.5 || m.Left > 5.5) return false;
-                var closing = m.Closing ?? 12;
-                var behind = m.Behind - closing * (now - m.Time);
-                return m.Closing is null || behind < 30 || (closing > 0 && (behind - 10) / closing < 16);
-            });
-            if (unsafeBehind) return "wants to pass: waiting, a vehicle is coming up in the left lane";
-            world.ChangeEgoLane(1);
-            return "pulling out to pass";
-        }
-        if (world.Follower(ego, rightY).Gap > 30 && world.Leader(ego, rightY).Gap > 60)
-        {
-            world.ChangeEgoLane(0);
-            return "passed: back to the right lane";
-        }
-        return "passing";
-    }
+    // A vehicle the ESS says is behind: how far behind the ego's rear bumper, how far to its left, how fast it comes (m/s, positive: nearer).
+    private sealed record RearSeen(string Id, double Behind, double Left, double? Closing);
 
     private static byte[]? FramePng(Simulation.Sensed sensed)
     {
@@ -251,7 +210,7 @@ public class HighwayBaselineTests
 
     private static JsonArray Vec(double a, double b) => new(a, b);
 
-    private static string LiveState(StepInfo? info, HighwayWorld world, string label, bool done, IReadOnlyList<HighwayRearWatch.Seen>? rear, bool last = false, int front = -1, int rearPic = -1, string plan = "")
+    private static string LiveState(StepInfo? info, HighwayWorld world, string label, bool done, IReadOnlyList<RearSeen>? rear, bool last = false, int front = -1, int rearPic = -1, string plan = "")
     {
         var ego = world.Ego;
         var vehicles = new JsonArray(world.Others.Where(v => Math.Abs(v.X - ego.X) < 300).OrderBy(v => v.X).Select(v => (JsonNode)new JsonObject
