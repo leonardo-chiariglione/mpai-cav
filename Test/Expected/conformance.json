@@ -64,6 +64,8 @@
   "1PAF-FPE-V1.6-I01": "conforms",
   "1PAF-GBD-V1.6-I01": "conforms",
   "1PAF-GFD-V1.6-I01": "conforms",
+  "1PAF-MSC-V1.6-I01": "conforms",
+  "1PAF-PDX-V1.6-I01": "conforms",
   "1PAF-RSR-V1.6-I01": "conforms",
   "1PAF-SAF-V1.6-I01": "Input PAF-AVT-V1.6 (AvatarModel): optional here, required in the L2.",
   "1PAF-SAR-V1.6-I01": "conforms",

@@ -1,0 +1,23 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/OSD/V1.5/data/HeadModel.json",
+  "title":                      "Head Model V1.5",
+  "description":                "The head of an avatar as the propagation of its speech needs it, in its simplest, parametric form: a sphere, the mouth in front of the characteristic point of the face that gives the avatar's Spatial Attitude, and the radiation of the speech as a dipole.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "HeadModelID" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "OSD-HDM-V1.5", "description": "Identifier and version (OSD-HDM-V1.5)." },
+    "MInstanceID":              { "type": "string", "description": "Identifier of M-Instance." },
+    "UEnvironmentID":           { "type": "string", "description": "Identifier of UEnvironment." },
+    "HeadModelID":              { "type": "string", "description": "Identifier of the Head Model." },
+    "HeadModelTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "CharacteristicPoint":      { "type": "string", "default": "centre of the head", "description": "The point of the face whose Spatial Attitude the Head Model is relative to." },
+    "HeadRadius":               { "type": "number", "exclusiveMinimum": 0, "default": 0.0875, "description": "Metres, of the sphere that is the head." },
+    "MouthPosition":            { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "default": [0.0875, 0, -0.04], "description": "X ahead, Y left, Z up, in metres, from the characteristic point, in the frame of the head." },
+    "SpeechDipoleWeight":       { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5, "description": "How the speech radiates from the mouth: 0 equally in all directions, 0.5 a cardioid (forward), 1 a dipole (forward and backward)." },
+    "SpeechDipolePower":        { "type": "number", "minimum": 0, "default": 1, "description": "How focused that shape is; 0 equally in all directions, whatever the weight." },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

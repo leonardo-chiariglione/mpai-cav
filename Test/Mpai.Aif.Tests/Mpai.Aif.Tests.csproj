@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Mas\Mpai.Cav.Mas.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />
+    <ProjectReference Include="..\..\AIMs\PAF\V1.6\VCR\Mpai.Paf.Vcr.csproj" />
     <ProjectReference Include="..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />
     <ProjectReference Include="..\..\MMM\Server\Mpai.Mmm.Server.csproj" />

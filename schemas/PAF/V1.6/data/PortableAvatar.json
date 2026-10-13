@@ -35,8 +35,14 @@
                               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
                               { "type": "string" } ] } },
 
-    "EntityState":          { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
-                              "description": "Entity State of the Avatar." },
+    "FaceDescriptorsObject": { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/FaceDescriptorsObject.json",
+                              "description": "Face Descriptors of the Avatar: the animation of its face." },
+
+    "BodyDescriptorsObject": { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/BodyDescriptorsObject.json",
+                              "description": "Body Descriptors of the Avatar: the animation of its body." },
+
+    "EntityPersonalStatus": { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityPersonalStatus.json",
+                              "description": "Entity Personal Status of the Avatar." },
 
     "Accessories":          { "type": "array", "minItems": 1, "description": "Set of Accessories attached to the Avatar.", "items": { 
                               "type": "object", "additionalProperties": false, "required": [ "Accessory" ], "properties": {

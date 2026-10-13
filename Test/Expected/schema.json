@@ -111,16 +111,17 @@
   "OSD/V1.5/AIMs/RADARObjectAcquisition.json": "valid",
   "OSD/V1.5/AIMs/UltrasoundObjectAcquisition.json": "valid",
   "OSD/V1.5/AIMs/UserIdentification.json": "valid",
-  "PAF/V1.6/AIMs/AudioVisualSceneCreation.json": "valid",
   "PAF/V1.6/AIMs/AudioVisualSceneRendering.json": "valid",
   "PAF/V1.6/AIMs/AvatarAndSpeechRendering.json": "valid",
   "PAF/V1.6/AIMs/AvatarVideoconferenceServer.json": "valid",
+  "PAF/V1.6/AIMs/BodyPersonalStatusExtraction.json": "valid",
   "PAF/V1.6/AIMs/EntityBodyDescription.json": "valid",
   "PAF/V1.6/AIMs/EntityFaceDescription.json": "valid",
   "PAF/V1.6/AIMs/FaceIdentityRecognition.json": "valid",
   "PAF/V1.6/AIMs/FacePersonalStatusExtraction.json": "valid",
   "PAF/V1.6/AIMs/GenerativeBodyDescription.json": "valid",
   "PAF/V1.6/AIMs/GenerativeFaceDescription.json": "valid",
+  "PAF/V1.6/AIMs/MultimodalSceneCreation.json": "valid",
   "PAF/V1.6/AIMs/PSBodyInterpretation.json": "valid",
   "PAF/V1.6/AIMs/PSFaceInterpretation.json": "valid",
   "PAF/V1.6/AIMs/PersonalStatusDisplay.json": "valid",
@@ -133,6 +134,5 @@
   "PAF/V1.6/AIMs/SpeakingAvatarSynthesis.json": "valid",
   "PAF/V1.6/AIMs/VideoconferenceClientReceiver.json": "valid",
   "PAF/V1.6/AIMs/VideoconferenceClientTransmitter.json": "valid",
-  "PAF/V1.6/AIMs/VirtualMeetingSecretary.json": "valid",
-  "PAF/V1.6/AIMs/VisualSceneCreation.json": "valid"
+  "PAF/V1.6/AIMs/VirtualMeetingSecretary.json": "valid"
 }

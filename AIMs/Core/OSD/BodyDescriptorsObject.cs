@@ -37,6 +37,13 @@ public sealed class BodyDescriptorsObject
             BodyDescriptorsQualifier = BodyDescriptorsQualifier.For(contentFormat)
         };
 
+    // THE BODY AS THE SPATIAL ATTITUDES OF ITS NODES (the author, 2026/10/11: the body descriptors should simply be the OSA of the nodes between joints): the
+    // content format that says so, and the Object built from the Spatial Attitudes (OSD-OSA-V1.5), one for each node, as a JSON array.
+    public const string NodeAttitudes = "OSA (Spatial Attitudes of the nodes between joints, OSD-OSA-V1.5)";
+
+    public static BodyDescriptorsObject FromNodeAttitudes(IEnumerable<string> spatialAttitudes)
+        => FromContent("[" + string.Join(",", spatialAttitudes) + "]", NodeAttitudes);
+
     // The descriptor data carried inline, if present (e.g. the BVH text).
     public string? Content() => BodyDescriptorsData.FirstOrDefault(d => d.Data is not null)?.Data;
 
