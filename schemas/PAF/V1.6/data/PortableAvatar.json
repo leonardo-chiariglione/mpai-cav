@@ -35,6 +35,10 @@
                               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
                               { "type": "string" } ] } },
 
+    "FaceDescriptorsObject": { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/FaceDescriptorsObject.json", "description": "Face Descriptors Object of the Avatar: descriptive (of a human) or generative (of a machine)." },
+    "BodyDescriptorsObject": { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/BodyDescriptorsObject.json", "description": "Body Descriptors Object of the Avatar: descriptive (of a human) or generative (of a machine)." },
+    "PersonalStatus":       { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityPersonalStatus.json", "description": "Personal Status of the Entity the Avatar represents." },
+
     "EntityState":          { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
                               "description": "Entity State of the Avatar." },
 

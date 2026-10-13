@@ -1,0 +1,36 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-EDP-V2.5-I02", "AIMName": "1MMC-EDP-V2.5-I02"},
+  "Header":           "MMC-EDP-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Entity Dialogue Processing as the Virtual Meeting Secretary: it runs when it has the Summary, the Refined Text, the Meaning and the Personal Status of an utterance (the Input Text is taken where present). It gives the Summary back to Summary Creation (Edited Summary) and out of the Module (Output Summary). When the utterance is addressed to the secretary, it also answers - from the Summary, with a language model - with the Machine Text, the Machine Personal Status and the Machine Avatar Model, from which Personal Status Display forms the VMS Portable Avatar; asked to record something, it adds it to the Summary.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "Summary", "Direction": "Input", "DataType": "MMC-SUM-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextDescriptors", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "RefinedText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MachineAvatarModel", "Direction": "Output", "DataType": "OSD-B3O-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MachineTextObject", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MachinePersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EditedSummary", "Direction": "Output", "DataType": "MMC-SUM-V2.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "OutputSummary", "Direction": "Output", "DataType": "MMC-SUM-V2.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/EDP",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Mmc.Edp",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "2.5",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "4 GB",   "Request": "6 GB",   "Maximum": "8 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High",   "Maximum": "High"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

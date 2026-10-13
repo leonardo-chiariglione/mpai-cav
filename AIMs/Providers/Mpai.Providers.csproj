@@ -38,6 +38,9 @@
     <ProjectReference Include="..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
     <ProjectReference Include="..\PAF\V1.6\EFD\Mpai.Paf.Efd.csproj" />
     <ProjectReference Include="..\MMC\V2.5\ESD\Mpai.Mmc.Esd.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\PDX\Mpai.Paf.Pdx.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\PMX\Mpai.Paf.Pmx.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\SCM\Mpai.Mmc.Scm.csproj" />
   </ItemGroup>
 
 </Project>

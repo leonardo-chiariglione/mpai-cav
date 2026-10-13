@@ -1,0 +1,33 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-SCM-V2.5-I01", "AIMName": "1MMC-SCM-V2.5-I01"},
+  "Header":           "MMC-SCM-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Summary Creation Module: adds what an entity said - one line: the Entity ID, the Emotion of the Personal Status it said it with, its Refined Text - to the Summary it was given back edited, and gives the Summary. The Meaning (Text Descriptors) is taken but not yet used. It runs when it has the Entity ID, the Refined Text, the Meaning and the Personal Status of an utterance; the Edited Summary is taken where present (there is none before the first utterance). It keeps nothing: the Summary goes round through Entity Dialogue Processing.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "EntityID", "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextDescriptors", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "EditedSummary", "Direction": "Input", "DataType": "MMC-SUM-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Summary", "Direction": "Output", "DataType": "MMC-SUM-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/SCM",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Mmc.Scm",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "2.5",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.1 GB", "Request": "0.2 GB", "Maximum": "0.5 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Low",    "Maximum": "Medium"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

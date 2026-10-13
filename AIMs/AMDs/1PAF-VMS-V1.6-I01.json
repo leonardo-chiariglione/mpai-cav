@@ -1,0 +1,47 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-VMS-V1.6-I01", "AIMName": "1PAF-VMS-V1.6-I01"},
+  "Header":           "PAF-VMS-V1.6",
+
+  "APIProfile":       "Basic",
+  "Execution":        "Continuous",
+  "Description":      "Virtual Meeting Secretary: the User Agent writes the Portable Avatar of each participant who speaks; the Module gives the Summary of the meeting after each, and the VMS Portable Avatar when the secretary speaks. Portable Avatar Demultiplexing gives the participant's speech (or text), ID and Personal Status; Automatic Speech Recognition and Natural Language Understanding give the Refined Text and its Meaning; Summary Creation adds them to the Summary; Entity Dialogue Processing (the secretary) edits it, gives it out and back to Summary Creation, and answers when addressed; Personal Status Display forms the VMS Portable Avatar. The Summary goes round between Summary Creation and Entity Dialogue Processing, so the Module runs continuously (AIF V3.0 EXE-3).",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "PortableAvatars", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Summary", "Direction": "Output", "DataType": "MMC-SUM-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "VMSPortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PDX-V1.6-I01", "AIMName": "1PAF-PDX-V1.6-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-NLU-V2.5-I01", "AIMName": "1MMC-NLU-V2.5-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-SCM-V2.5-I01", "AIMName": "1MMC-SCM-V2.5-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-EDP-V2.5-I02", "AIMName": "1MMC-EDP-V2.5-I02", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PSD-V1.6-I01", "AIMName": "1PAF-PSD-V1.6-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{"Output":{"AIMName":"","DataType":"PAF-PAV-V1.6"},"Input":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"PAF-PAV-V1.6"}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"OSD-BSO-V1.5"},"Input":{"AIMName":"1MMC-ASR-V2.5-I01","DataType":"OSD-BSO-V1.5"}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"OSD-BTO-V1.5","PortNumber":1}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-BTO-V1.5","PortNumber":1}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"OSD-IID-V1.5"},"Input":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"OSD-IID-V1.5"}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"MMC-EPS-V2.5"}},
+                       {"Output":{"AIMName":"1PAF-PDX-V1.6-I01","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-EPS-V2.5","PortNumber":1}},
+                       {"Output":{"AIMName":"1MMC-ASR-V2.5-I01","DataType":"OSD-BTO-V1.5","PortNumber":1},"Input":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"OSD-BTO-V1.5","PortNumber":2}},
+                       {"Output":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"OSD-BTO-V1.5"}},
+                       {"Output":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-BTO-V1.5","PortNumber":3}},
+                       {"Output":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"MMC-TDO-V2.5"},"Input":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"MMC-TDO-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-NLU-V2.5-I01","DataType":"MMC-TDO-V2.5"},"Input":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-TDO-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"MMC-SUM-V2.5"},"Input":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-SUM-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-SUM-V2.5","PortNumber":1},"Input":{"AIMName":"1MMC-SCM-V2.5-I01","DataType":"MMC-SUM-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-SUM-V2.5","PortNumber":2},"Input":{"AIMName":"","DataType":"MMC-SUM-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-B3O-V1.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"OSD-B3O-V1.5"}},
+                       {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"MMC-EPS-V2.5"}},
+                       {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
+                       {"Output":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"PAF-PAV-V1.6"},"Input":{"AIMName":"","DataType":"PAF-PAV-V1.6"}}],
+
+  "Implementations":  [],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.1 GB", "Request": "0.2 GB", "Maximum": "0.5 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Low",    "Maximum": "Medium"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
