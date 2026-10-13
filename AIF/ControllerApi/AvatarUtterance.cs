@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Text.Json.Nodes;
+
 using Mpai.Core;
 using Mpai.Core.OSD;
 
@@ -32,5 +35,21 @@ public sealed record AvatarUtterance(
         var wav = speaking?.Speech()?.Data;
         if (speaking is null || wav is not { Length: > 0 }) return null;
         return new AvatarUtterance(wav, speaking.Face(), translatedText, speaking.Body());
+    }
+
+    // A PORTABLE AVATAR (PAF-PAV-V1.6), as Portable Avatar Multiplexing writes it - the
+    // Virtual Meeting Secretary's - unpacked the same way: the first Speech Object it
+    // carries, and its Face and Body Descriptors Objects. Null when it carries no speech.
+    public static AvatarUtterance? FromPortableAvatar(string? json, string? text = null)
+    {
+        if (string.IsNullOrWhiteSpace(json) || JsonNode.Parse(json) is not JsonObject pav) return null;
+        T? Part<T>(JsonNode? node) where T : class
+        {
+            try { return node is JsonObject o ? MpaiJson.FromJson<T>(o.ToJsonString()) : null; }
+            catch { return null; }
+        }
+        var speech = (pav["SPOOrSPOID"] as JsonArray)?.Select(Part<BasicSpeechObject>).FirstOrDefault(s => s is not null);
+        if (speech?.Data is not { Length: > 0 } wav) return null;
+        return new AvatarUtterance(wav, Part<FaceDescriptorsObject>(pav["FaceDescriptorsObject"]), text, Part<BodyDescriptorsObject>(pav["BodyDescriptorsObject"]));
     }
 }

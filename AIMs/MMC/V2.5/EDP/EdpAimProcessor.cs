@@ -73,7 +73,7 @@ public sealed class EdpAimProcessor : IAimProcessor
     private readonly string _persona;
 
     public EdpAimProcessor(string instanceId, OllamaClient llm, AimPortReader ports, ISharedStorage? privateStorage = null,
-                           string persona = "Thalia")
+                           string persona = "Thalia", string avatarModel = "cav-avatar.glb")
     {
         _persona          = persona;
         _private          = privateStorage;
@@ -89,19 +89,42 @@ public sealed class EdpAimProcessor : IAimProcessor
         _textPort         = ports.Input("OSD-BTO-V1.5");
         _descriptorsPort  = ports.Input("MMC-TDO-V2.5");
         _psPort           = ports.Input("MMC-EPS-V2.5");
-        _userIdPort       = ports.Input("OSD-IID-V1.5", 1);
-        _visualObjectIdsPort = ports.Input("OSD-IID-V1.5", 2);
-        _audioObjectIdsPort  = ports.Input("OSD-IID-V1.5", 3);
-        _bmsPort          = ports.Input("OSD-BMS-V1.5");
+        _userIdPort       = ports.InputOrDefault("OSD-IID-V1.5", 1, "");
+        _visualObjectIdsPort = ports.InputOrDefault("OSD-IID-V1.5", 2, "");
+        _audioObjectIdsPort  = ports.InputOrDefault("OSD-IID-V1.5", 3, "");
+        _bmsPort          = ports.InputOrDefault("OSD-BMS-V1.5", "");
         _outTextPort      = ports.Output("OSD-BTO-V1.5");
         _outPsPort        = ports.Output("MMC-EPS-V2.5");
-        _outSummaryPort   = ports.Output("MMC-SUM-V2.5");
+        _outSummaryPort   = ports.Output("MMC-SUM-V2.5", 1);
+
+        // THE SECRETARY (PAF-VMS): an L3 with a second Summary output, the Output
+        // Summary, and the Refined Text as its own input (#3). A Port that is not
+        // there resolves to the one of its Data Type that is, hence the comparisons.
+        var outputSummary = ports.OutputOrDefault("MMC-SUM-V2.5", 2, "");
+        var refined       = ports.InputOrDefault("OSD-BTO-V1.5", 3, "");
+        _secretary        = outputSummary.Length > 0 && outputSummary != _outSummaryPort;
+        _outSummary2Port  = _secretary ? outputSummary : "";
+        _refinedTextPort  = _secretary && refined != _textPort ? refined : "";
+        _outModelPort     = _secretary ? ports.OutputOrDefault("OSD-B3O-V1.5", "") : "";
+        _avatarModel      = avatarModel;
     }
+
+    // ---- The Virtual Meeting Secretary --------------------------------------------
+    private readonly bool _secretary;
+    private readonly string _outSummary2Port;   // MMC-SUM #2: the Summary out of the Module
+    private readonly string _refinedTextPort;   // OSD-BTO #3: the Refined Text, from NLU
+    private readonly string _outModelPort;      // OSD-B3O: the secretary's Avatar Model
+    private readonly string _avatarModel;       // its ID: the model the User Agent has
+
+    // A participant who says the word speaks to the secretary.
+    private static readonly System.Text.RegularExpressions.Regex Addressed =
+        new(@"\bsecretary\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     public string InstanceId => _instanceId;
 
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
+        if (_secretary) return System.Threading.Tasks.Task.FromResult(Secretary(message));
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
         // IN AUDIO SCENE MANAGEMENT the Scene and the words reach EDP as the Module's Channels bring them, not always together: the Scene it is told of is kept (in its
         // Private Storage), and the words that come later are understood against it. A Scene on its own is nothing said: no reply, and no error.
@@ -225,6 +248,72 @@ public sealed class EdpAimProcessor : IAimProcessor
             MessageType = message.MessageType,
             Ports = ports
         });
+    }
+
+    // THE VIRTUAL MEETING SECRETARY. Each utterance of a participant arrives with the
+    // Summary that Summary Creation made of the meeting so far, the utterance added.
+    // The Summary goes back to Summary Creation (Edited Summary) and out of the Module
+    // (Output Summary). Only when the utterance names the secretary does it answer -
+    // from the Summary, with the language model - giving its Text, its Personal
+    // Status and its Avatar Model, of which Personal Status Display forms the VMS
+    // Portable Avatar; asked to record something, it adds a note to the Summary.
+    // Without the language model the secretary keeps the Summary and says nothing.
+    private Message Secretary(Message message)
+    {
+        var summary = Read<Summary>(message, _summaryPort)?.Text() ?? "";
+        var said = (_refinedTextPort.Length > 0 ? ReadText(message, _refinedTextPort) : null) ?? ReadText(message, _textPort) ?? "";
+        var ports = new Dictionary<string, string>();
+
+        if (Addressed.IsMatch(said))
+        {
+            var system =
+                "You are the secretary of a meeting held by avatars. You keep its Summary: one line per " +
+                "utterance, \"Who (how they felt): what they said\". A participant has just spoken to you. " +
+                "Answer briefly, from the Summary only, what they ask; if they ask you to record, note or " +
+                "minute something, say that you did. Return ONLY a compact JSON object with these keys: " +
+                "\"response\" (your spoken reply, a short plain string), " +
+                "\"emotion\" (one of HAPPINESS, CALMNESS, SADNESS, ANGER, FEAR, NEUTRAL), " +
+                "\"attitude\" (one of respectful, friendly, confident, neutral), " +
+                "\"note\" (what to add to the Summary as the secretary's note, or an empty string).";
+            var prompt = $"The Summary of the meeting so far:\n{summary}\n\nWhat was said to you: \"{said}\"";
+            try
+            {
+                var raw = _llm.ChatJsonAsync(system, prompt).GetAwaiter().GetResult();
+                var (response, emotion, attitude, _) = ParseReply(raw, said);
+                var note = NoteOf(raw);
+                if (!string.IsNullOrWhiteSpace(note))
+                    summary = (summary.Length == 0 ? "" : summary + "\n") + "Secretary's note: " + note.Replace('\n', ' ').Trim();
+                // The Text last: written in this order, the Avatar Model and the
+                // Personal Status are waiting when the Text sets Personal Status
+                // Display going, on a Module that runs continuously.
+                if (!string.IsNullOrWhiteSpace(response))
+                {
+                    if (_outModelPort.Length > 0)
+                        ports[_outModelPort] = MpaiJson.ToJson(new Basic3DModelObject { Basic3DModelObjectID = _avatarModel });
+                    ports[_outPsPort] = MpaiJson.ToJson(MachinePersonalStatus(emotion, attitude));
+                    ports[_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(response));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MMC-EDP-V2.5] the secretary could not answer (is Ollama running?): {ex.Message}");
+            }
+        }
+
+        var edited = MpaiJson.ToJson(Summary.Of(summary));
+        ports[_outSummaryPort] = edited;
+        ports[_outSummary2Port] = edited;
+        return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
+    }
+
+    private static string? NoteOf(string reply)
+    {
+        try
+        {
+            return FirstBalancedObject(StripFences(reply)) is { } obj && JsonNode.Parse(obj)?["note"] is JsonValue v
+                   && v.TryGetValue<string>(out var note) ? note : null;
+        }
+        catch { return null; }
     }
 
     // THE CAV'S DIALOGUE: null where this is not one - no map, no AMS-HCI Message,

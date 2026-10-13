@@ -1,0 +1,30 @@
+{
+    "Name": "Virtual Meeting Secretary",
+    "Description": "Hold a meeting with a secretary taking the minutes. Say \"secretary\" to ask it what was said, or to have something noted.",
+    "Icon": "icon.svg",
+    "Pane": "wide",
+    "Version": "1.0",
+    "Standard": "MPAI-PAF V1.6",
+    "UseCase": "VMS",
+    "Module": "1PAF-VMS-V1.6-I01",
+    "Keywords": [
+        "meeting",
+        "minutes",
+        "secretary",
+        "summary",
+        "notes",
+        "videoconference"
+    ],
+    "Categories": [
+        "Conversation"
+    ],
+    "Languages": [
+        "en"
+    ],
+    "Asks": [
+        "microphone",
+        "typed text",
+        "your name"
+    ],
+    "Keeps": "The minutes of the meeting, for this meeting only; nothing once it ends."
+}

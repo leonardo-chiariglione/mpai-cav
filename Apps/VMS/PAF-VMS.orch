@@ -1,0 +1,34 @@
+# =============================================================================
+#  PAF-VMS.orch - Virtual Meeting Secretary
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which runs continuously: its Summary goes round
+#  from Summary Creation to Entity Dialogue Processing and back, so it is not
+#  run an exchange at a time. The User Agent binds three devices to its
+#  boundary for the life of the workflow:
+#    Participant - what a participant says (speech or typed text), with who
+#                  says it and how, as a Portable Avatar
+#    Minutes     - the Summary of the meeting, shown after each utterance
+#    Secretary   - the secretary's Portable Avatar, played on its avatar, when
+#                  it is spoken to (the word "secretary") and answers
+#  It names no AIM.
+# =============================================================================
+
+workflow PAF-VMS over 1PAF-VMS-V1.6-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  Participant (PAF-PAV-V1.6) from device "Participant"
+    deliver Minutes (MMC-SUM-V2.5) to device "Minutes"
+    deliver Secretary (PAF-PAV-V1.6) to device "Secretary"
+
+    prompt "The meeting has begun. Say secretary to ask what was said, or to have something noted."
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+
+    ask Controller to stop

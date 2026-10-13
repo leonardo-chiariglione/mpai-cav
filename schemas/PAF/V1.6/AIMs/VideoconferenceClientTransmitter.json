@@ -7,7 +7,8 @@
   "Header":               "PAF-VCT-V1.6",
 
   "APIProfile":           "Secure",
-  "Description":          "Videoconference Client Transmitter: on the participant side, describes what the microphone and the camera deliver (the Units of the User Agent acquire them), extracts the Personal Status, and composes the Participant Portable Avatar for the Avatar Videoconference Server; it also gives the server the Speech Object and the Face Object for authentication.",
+  "Execution":            "Continuous",
+  "Description":          "Videoconference Client Transmitter: on the participant side, describes what the microphone and the camera deliver (the Units of the User Agent acquire them), extracts the Personal Status, and composes the Participant Portable Avatar for the Avatar Videoconference Server; it also gives the server the Speech Object and the Face Object for authentication. Its External Ports (IsRemote) - the Portable Avatar, and the Speech and Face Objects for authentication - go to the Avatar Videoconference Server through Communication; it runs continuously.",
 
   "InternalTypes":        [ ],
 
@@ -17,9 +18,9 @@
                           {"Name": "LanguageSelector", "Direction": "Input", "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "ParticipantID", "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "SpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "FaceObject", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "ParticipantPortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                          {"Name": "SpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": true},
+                          {"Name": "FaceObject", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": true},
+                          {"Name": "ParticipantPortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": true}],
 
   "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-BMS-V1.5", "Relation": ""}},
                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": ""}},

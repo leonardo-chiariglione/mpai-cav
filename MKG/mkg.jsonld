@@ -1875,7 +1875,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/7",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/7",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -4100,7 +4100,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/3",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/3",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -6595,7 +6595,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/15",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/15",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -14781,7 +14781,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/OSD-OPV-V1.5/0",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/OSD-OPV-V1.5/0",
   "@type": [
    "https://mpai.community/kg/vocab#Port"
   ],
@@ -15596,7 +15596,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/1",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/1",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -15607,7 +15607,7 @@
   ],
   "https://mpai.community/kg/vocab#fromAIM": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#fromType": [
@@ -19119,7 +19119,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/13",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/13",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -19140,7 +19140,7 @@
   ],
   "https://mpai.community/kg/vocab#toAIM": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#toType": [
@@ -20072,7 +20072,7 @@
     "@id": "https://mpai.community/kg/aim/PAF-SAS-V1.6"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    },
    {
     "@id": "https://mpai.community/kg/aim/PAF-VCT-V1.6"
@@ -29537,7 +29537,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/6",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/6",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -33363,13 +33363,13 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6",
   "@type": [
    "https://mpai.community/kg/vocab#AIM"
   ],
   "https://mpai.community/kg/vocab#acronym": [
    {
-    "@value": "PAF-CRX-V1.6"
+    "@value": "PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#apiProfile": [
@@ -33384,61 +33384,61 @@
   ],
   "https://mpai.community/kg/vocab#flow": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/1"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/1"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/2"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/2"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/3"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/3"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/4"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/4"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/5"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/5"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/6"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/7"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/7"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/8"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/8"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/9"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/9"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/10"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/10"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/11"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/11"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/12"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/12"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/13"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/13"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/14"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/14"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/15"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/15"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/16"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/16"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/17"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/17"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/18"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/18"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/19"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/19"
    }
   ],
   "https://mpai.community/kg/vocab#ofStandard": [
@@ -33448,19 +33448,19 @@
   ],
   "https://mpai.community/kg/vocab#port": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/PAF-PAV-V1.6/0"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/PAF-PAV-V1.6/0"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/OSD-OPV-V1.5/0"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/OSD-OPV-V1.5/0"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/XRV-SAV-V1.0/0"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/XRV-SAV-V1.0/0"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BTO-V1.5/0"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BTO-V1.5/0"
    },
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BMS-V1.5/0"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BMS-V1.5/0"
    }
   ],
   "https://mpai.community/kg/vocab#schema": [
@@ -37821,7 +37821,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/5",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/5",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -46031,7 +46031,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/10",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/10",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -53196,7 +53196,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/2",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/2",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -55870,7 +55870,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/18",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/18",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -58751,7 +58751,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/19",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/19",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -63452,7 +63452,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/PAF-PAV-V1.6/0",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/PAF-PAV-V1.6/0",
   "@type": [
    "https://mpai.community/kg/vocab#Port"
   ],
@@ -65018,7 +65018,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BMS-V1.5/0",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BMS-V1.5/0",
   "@type": [
    "https://mpai.community/kg/vocab#Port"
   ],
@@ -65534,7 +65534,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/16",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/16",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -69020,7 +69020,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/17",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/17",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -72495,7 +72495,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/14",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/14",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -72516,7 +72516,7 @@
   ],
   "https://mpai.community/kg/vocab#toAIM": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#toType": [
@@ -72792,7 +72792,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/8",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/8",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -72813,7 +72813,7 @@
   ],
   "https://mpai.community/kg/vocab#toAIM": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#toType": [
@@ -79010,7 +79010,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/XRV-SAV-V1.0/0",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/XRV-SAV-V1.0/0",
   "@type": [
    "https://mpai.community/kg/vocab#Port"
   ],
@@ -79603,7 +79603,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BTO-V1.5/0",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BTO-V1.5/0",
   "@type": [
    "https://mpai.community/kg/vocab#Port"
   ],
@@ -81162,7 +81162,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/11",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/11",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -83180,7 +83180,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/12",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/12",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -83191,7 +83191,7 @@
   ],
   "https://mpai.community/kg/vocab#fromAIM": [
    {
-    "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6"
+    "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6"
    }
   ],
   "https://mpai.community/kg/vocab#fromType": [
@@ -86903,7 +86903,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/9",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/9",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],
@@ -94236,7 +94236,7 @@
   ]
  },
  {
-  "@id": "https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/4",
+  "@id": "https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/4",
   "@type": [
    "https://mpai.community/kg/vocab#Flow"
   ],

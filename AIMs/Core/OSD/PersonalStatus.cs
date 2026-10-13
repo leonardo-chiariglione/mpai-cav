@@ -135,6 +135,30 @@ public sealed class BodyPersonalStatus
     public SocialAttitude? BodySocialAttitude { get; init; }
 }
 
+// THE PERSONAL STATUS IN THE ENTITY STATE (the author, 2026/10/13): a Portable Avatar carries an Entity State; it is implemented as the Personal Status, the other
+// elements of the Entity State being left out for the time being. Its Cognitive State, Emotion and Social Attitude are those of the Entity Personal Status - the first
+// modality that has each, in the order Text, Speech, Face, Body.
+public static class PersonalStatusInEntityState
+{
+    public static System.Text.Json.Nodes.JsonObject Of(EntityPersonalStatus status)
+    {
+        var emotion = status.TextPersonalStatus?.TextEmotion ?? status.SpeechPersonalStatus?.SpeechEmotion ?? status.FacePersonalStatus?.FaceEmotion ?? status.BodyPersonalStatus?.BodyEmotion;
+        var cognitive = status.TextPersonalStatus?.TextCognitiveState ?? status.SpeechPersonalStatus?.SpeechCognitiveState ?? status.FacePersonalStatus?.FaceCognitiveState ?? status.BodyPersonalStatus?.BodyCognitiveState;
+        var social = status.TextPersonalStatus?.TextSocialAttitude ?? status.SpeechPersonalStatus?.SpeechSocialAttitude ?? status.FacePersonalStatus?.FaceSocialAttitude ?? status.BodyPersonalStatus?.BodySocialAttitude;
+        var state = new System.Text.Json.Nodes.JsonObject { ["Header"] = "MMC-EST-V2.5", ["EntityStateID"] = Guid.NewGuid().ToString() };
+        if (cognitive is not null) state["CognitiveState"] = System.Text.Json.Nodes.JsonNode.Parse(MpaiJson.ToJson(cognitive));
+        if (emotion is not null) state["Emotion"] = System.Text.Json.Nodes.JsonNode.Parse(MpaiJson.ToJson(emotion));
+        if (social is not null) state["SocialAttitude"] = System.Text.Json.Nodes.JsonNode.Parse(MpaiJson.ToJson(social));
+        return state;
+    }
+
+    public static System.Text.Json.Nodes.JsonObject? Of(string entityPersonalStatusJson)
+    {
+        try { return MpaiJson.FromJson<EntityPersonalStatus>(entityPersonalStatusJson) is { } status ? Of(status) : null; }
+        catch { return null; }
+    }
+}
+
 // MMC-EPS-V2.5 - Entity Personal Status: the modality container, assembled by
 // Personal Status Multiplexing from the per-modality Personal Statuses. Each is
 // optional; at least one is expected.
