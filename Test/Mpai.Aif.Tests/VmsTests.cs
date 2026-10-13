@@ -70,6 +70,71 @@ public class VmsTests
         finally { api.StopFlow(Vms); }
     }
 
+    // THE APP (Apps/VMS): its own workflow, run by the User Agent's interpreter over the
+    // Module, with the three devices it binds - a Participant that says what two
+    // people say, waiting for the minutes before the next speaks; the Minutes; the
+    // Secretary, whose Portable Avatar a client would play.
+    [Fact]
+    public async Task App()
+    {
+        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "VMS", "PAF-VMS.orch")));
+        var app = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "VMS", "app.json")))!;
+        Assert.Equal(Vms, (string?)app["Module"]);
+
+        using var llm = new FakeOllama(new JsonObject
+        {
+            ["response"] = Answer, ["emotion"] = "CALMNESS", ["attitude"] = "respectful", ["note"] = Note
+        }.ToJsonString());
+        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Amds, "no-settings.json"), store => new Provider(store, llm.Url));
+
+        var happy = MpaiJson.ToJson(new EntityPersonalStatus
+        {
+            TextPersonalStatus = new TextPersonalStatus { TextEmotion = Emotion.Of(FactorLabel.Of("HAPPINESS", "happy", null, 0.8)) }
+        });
+        var said = new Queue<Mpai.Rca.MeetingUtterance>(new[]
+        {
+            new Mpai.Rca.MeetingUtterance("Alice", Text: "We should move the launch to May.", PersonalStatusJson: happy),
+            new Mpai.Rca.MeetingUtterance("Bob", SpeechJson: new JsonObject { ["Header"] = "OSD-BSO-V1.5", ["Words"] = "I agree with Alice." }.ToJsonString()),
+            new Mpai.Rca.MeetingUtterance("Alice", Text: "Secretary, please note that the launch moves to May.")
+        });
+        var minutesSeen = new SemaphoreSlim(1);
+        var minutes = new List<string>();
+        var secretary = new List<string>();
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+        var devices = new Mpai.Rca.DeviceRegistry()
+            .RegisterDevice("Participant", new Mpai.Rca.ParticipantDevice(async cancel =>
+            {
+                await minutesSeen.WaitAsync(cancel);                  // each speaks after the minutes of the last
+                lock (said) return said.Count > 0 ? said.Dequeue() : null;
+            }))
+            .RegisterDevice("Minutes", new Mpai.Rca.MinutesDevice(text =>
+            {
+                lock (minutes) minutes.Add(text);
+                minutesSeen.Release();
+                return Task.CompletedTask;
+            }))
+            .RegisterDevice("Secretary", new Mpai.Rca.SecretaryDevice(pav =>
+            {
+                lock (secretary) secretary.Add(pav);
+                stop.CancelAfter(500);                                // the meeting's business is done
+                return Task.CompletedTask;
+            }));
+
+        var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, _ => { });
+        try { await interpreter.RunAsync(workflow, stop.Token); } catch (OperationCanceledException) { }
+
+        Assert.Equal(new[]
+        {
+            "Alice (happy): We should move the launch to May.",
+            "Alice (happy): We should move the launch to May.\nBob: I agree with Alice.",
+            "Alice (happy): We should move the launch to May.\nBob: I agree with Alice.\nAlice: Secretary, please note that the launch moves to May.\n" +
+            $"Secretary's note: {Note}"
+        }, minutes);
+        var pav = Assert.Single(secretary);
+        Assert.Equal("1MMC-TTS-V2.5-I01", (string?)JsonNode.Parse(pav)!["SPOOrSPOID"]![0]!["StandIn"]);
+    }
+
     // A Portable Avatar codec carries the Portable Avatar as it is, its Header checked.
     [Fact]
     public void PortableAvatarCrossesMas()

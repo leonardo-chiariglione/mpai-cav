@@ -393,6 +393,10 @@ public class WorkflowTests
         {
             if (step.Kind == StepKind.Take && step.Port is { } offered) yield return ("Input", offered);
             if (step.Kind == StepKind.Give) foreach (var asked in step.Ports) yield return ("Output", asked);
+            // A Continuous Module's boundary bound to a device or a record: streamed
+            // to an Input Port, delivered from an Output Port.
+            if (step.Kind == StepKind.Stream && step.Port is { } streamed) yield return ("Input", streamed);
+            if (step.Kind == StepKind.Deliver && step.Port is { } delivered) yield return ("Output", delivered);
             foreach (var inner in Requests(step.Body.Concat(step.Else).Concat(step.Alternatives.Where(a => a != step))))
                 yield return inner;
         }
