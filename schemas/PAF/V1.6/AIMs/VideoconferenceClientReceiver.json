@@ -3,8 +3,8 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/VideoconferenceClientReceiver.json",
   "title":                "Videoconference Client Receiver V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-CRX-V1.6"},
-  "Header":               "PAF-CRX-V1.6",
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-VCR-V1.6"},
+  "Header":               "PAF-VCR-V1.6",
 
   "APIProfile":           "Basic",
   "Execution":            "Continuous",

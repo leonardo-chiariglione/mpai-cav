@@ -13183,164 +13183,164 @@ aim:PAF-ASR-V1.6 a mkg:AIM ;
     mkg:label "PortableAvatar" ;
     mkg:optional false .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/1> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/1> a mkg:Flow ;
     mkg:dataType datatype:PAF-PAV-V1.6 ;
-    mkg:fromAIM aim:PAF-CRX-V1.6 ;
+    mkg:fromAIM aim:PAF-VCR-V1.6 ;
     mkg:fromType datatype:PAF-PAV-V1.6 ;
     mkg:toAIM aim:PAF-PDX-V1.6 ;
     mkg:toType datatype:PAF-PAV-V1.6 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/10> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/10> a mkg:Flow ;
     mkg:dataType datatype:OSD-OSA-V1.5 ;
     mkg:fromAIM aim:PAF-VSC-V1.6 ;
     mkg:fromType datatype:OSD-OSA-V1.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:OSD-OSA-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/11> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/11> a mkg:Flow ;
     mkg:dataType datatype:OSD-BMS-V1.5 ;
     mkg:fromAIM aim:PAF-AVC-V1.6 ;
     mkg:fromType datatype:OSD-BMS-V1.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:OSD-BMS-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/12> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/12> a mkg:Flow ;
     mkg:dataType datatype:OSD-OPV-V1.5 ;
-    mkg:fromAIM aim:PAF-CRX-V1.6 ;
+    mkg:fromAIM aim:PAF-VCR-V1.6 ;
     mkg:fromType datatype:OSD-OPV-V1.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:OSD-OPV-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/13> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/13> a mkg:Flow ;
     mkg:dataType datatype:XRV-SAV-V1.0 ;
     mkg:fromAIM aim:PAF-RSR-V1.6 ;
     mkg:fromType datatype:XRV-SAV-V1.0 ;
-    mkg:toAIM aim:PAF-CRX-V1.6 ;
+    mkg:toAIM aim:PAF-VCR-V1.6 ;
     mkg:toType datatype:XRV-SAV-V1.0 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/14> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/14> a mkg:Flow ;
     mkg:dataType datatype:OSD-BMS-V1.5 ;
     mkg:fromAIM aim:PAF-RSR-V1.6 ;
     mkg:fromType datatype:OSD-BMS-V1.5 ;
-    mkg:toAIM aim:PAF-CRX-V1.6 ;
+    mkg:toAIM aim:PAF-VCR-V1.6 ;
     mkg:toType datatype:OSD-BMS-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/15> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/15> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-VSC-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/16> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/16> a mkg:Flow ;
     mkg:dataType datatype:OSD-B3O-V1.5 ;
     mkg:fromAIM aim:PAF-VSC-V1.6 ;
     mkg:fromType datatype:OSD-B3O-V1.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:OSD-B3O-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/17> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/17> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:PAF-VSC-V1.6 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/18> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/18> a mkg:Flow ;
     mkg:dataType datatype:OSD-B3O-V1.5 ;
     mkg:fromAIM aim:PAF-AVC-V1.6 ;
     mkg:fromType datatype:OSD-B3O-V1.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:OSD-B3O-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/19> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/19> a mkg:Flow ;
     mkg:dataType datatype:MMC-EPS-V2.5 ;
     mkg:fromAIM aim:PAF-AVC-V1.6 ;
     mkg:fromType datatype:MMC-EPS-V2.5 ;
     mkg:toAIM aim:PAF-RSR-V1.6 ;
     mkg:toType datatype:MMC-EPS-V2.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/2> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/2> a mkg:Flow ;
     mkg:dataType datatype:OSD-IID-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-IID-V1.5 ;
     mkg:toAIM aim:PAF-VSC-V1.6 ;
     mkg:toType datatype:OSD-IID-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/3> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/3> a mkg:Flow ;
     mkg:dataType datatype:OSD-BMS-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-BMS-V1.5 ;
     mkg:toAIM aim:PAF-VSC-V1.6 ;
     mkg:toType datatype:OSD-BMS-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/4> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/4> a mkg:Flow ;
     mkg:dataType datatype:OSD-B3O-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-B3O-V1.5 ;
     mkg:toAIM aim:PAF-VSC-V1.6 ;
     mkg:toType datatype:OSD-B3O-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/5> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/5> a mkg:Flow ;
     mkg:dataType datatype:OSD-OSA-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-OSA-V1.5 ;
     mkg:toAIM aim:PAF-VSC-V1.6 ;
     mkg:toType datatype:OSD-OSA-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/6> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/6> a mkg:Flow ;
     mkg:dataType datatype:OSD-IID-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-IID-V1.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:OSD-IID-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/7> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/7> a mkg:Flow ;
     mkg:dataType datatype:OSD-BSO-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-BSO-V1.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:OSD-BSO-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/8> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/8> a mkg:Flow ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
     mkg:fromAIM aim:PAF-PDX-V1.6 ;
     mkg:fromType datatype:OSD-BTO-V1.5 ;
-    mkg:toAIM aim:PAF-CRX-V1.6 ;
+    mkg:toAIM aim:PAF-VCR-V1.6 ;
     mkg:toType datatype:OSD-BTO-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/9> a mkg:Flow ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/9> a mkg:Flow ;
     mkg:dataType datatype:OSD-BVS-V1.5 ;
     mkg:fromAIM aim:PAF-VSC-V1.6 ;
     mkg:fromType datatype:OSD-BVS-V1.5 ;
     mkg:toAIM aim:PAF-AVC-V1.6 ;
     mkg:toType datatype:OSD-BVS-V1.5 .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/OSD-OPV-V1.5/0> a mkg:Port ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/OSD-OPV-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-OPV-V1.5 ;
     mkg:direction "Input" ;
     mkg:label "PointOfView" ;
     mkg:optional false .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/PAF-PAV-V1.6/0> a mkg:Port ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/PAF-PAV-V1.6/0> a mkg:Port ;
     mkg:dataType datatype:PAF-PAV-V1.6 ;
     mkg:direction "Input" ;
     mkg:label "PortableAvatars" ;
     mkg:optional false .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BMS-V1.5/0> a mkg:Port ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BMS-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BMS-V1.5 ;
     mkg:direction "Output" ;
     mkg:label "MultimodalScene" ;
     mkg:optional false .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BTO-V1.5/0> a mkg:Port ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BTO-V1.5/0> a mkg:Port ;
     mkg:dataType datatype:OSD-BTO-V1.5 ;
     mkg:direction "Output" ;
     mkg:label "OutputText" ;
     mkg:optional false .
 
-<https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/XRV-SAV-V1.0/0> a mkg:Port ;
+<https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/XRV-SAV-V1.0/0> a mkg:Port ;
     mkg:dataType datatype:XRV-SAV-V1.0 ;
     mkg:direction "Output" ;
     mkg:label "SpeakingAvatar" ;
@@ -21929,35 +21929,35 @@ aim:OSD-VSD-V1.5 a mkg:AIM ;
     mkg:webPage <https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-scene-description/> ;
     mkg:webSpec <https://mpai.community/standards/mpai-osd/v1-5/> .
 
-aim:PAF-CRX-V1.6 a mkg:AIM ;
-    mkg:acronym "PAF-CRX-V1.6" ;
+aim:PAF-VCR-V1.6 a mkg:AIM ;
+    mkg:acronym "PAF-VCR-V1.6" ;
     mkg:apiProfile "Basic" ;
     mkg:description "Videoconference Client Receiver: from the Portable Avatar it receives from the server and the Point of View of the participant, it creates the Visual Scene of the avatars, merges it with their speech into the Audio-Visual Scene, passing the Avatars and their Personal Statuses on, renders the Speaking Avatar and passes the Basic Multimodal Scene through, which the User Agent delivers; the Output Text is the text of the Portable Avatar." ;
-    mkg:flow <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/1>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/10>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/11>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/12>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/13>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/14>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/15>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/16>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/17>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/18>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/19>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/2>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/3>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/4>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/5>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/6>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/7>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/8>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/flow/9> ;
+    mkg:flow <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/1>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/10>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/11>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/12>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/13>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/14>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/15>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/16>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/17>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/18>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/19>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/2>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/3>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/4>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/5>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/6>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/7>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/8>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/flow/9> ;
     mkg:ofStandard standard:PAF ;
-    mkg:port <https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/OSD-OPV-V1.5/0>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Input/PAF-PAV-V1.6/0>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BMS-V1.5/0>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/OSD-BTO-V1.5/0>,
-        <https://mpai.community/kg/aim/PAF-CRX-V1.6/port/Output/XRV-SAV-V1.0/0> ;
+    mkg:port <https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/OSD-OPV-V1.5/0>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Input/PAF-PAV-V1.6/0>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BMS-V1.5/0>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/OSD-BTO-V1.5/0>,
+        <https://mpai.community/kg/aim/PAF-VCR-V1.6/port/Output/XRV-SAV-V1.0/0> ;
     mkg:schema <https://schemas.mpai.community/PAF/V1.6/AIMs/VideoconferenceClientReceiver.json> ;
     mkg:subAIM aim:PAF-AVC-V1.6,
         aim:PAF-PDX-V1.6,
@@ -25556,7 +25556,7 @@ standard:PAF a mkg:Standard ;
         aim:PAF-AVC-V1.6,
         aim:PAF-AVR-V1.6,
         aim:PAF-AVS-V1.6,
-        aim:PAF-CRX-V1.6,
+        aim:PAF-VCR-V1.6,
         aim:PAF-EBD-V1.6,
         aim:PAF-EFD-V1.6,
         aim:PAF-FIR-V1.6,
