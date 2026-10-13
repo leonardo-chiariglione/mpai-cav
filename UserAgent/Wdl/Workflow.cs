@@ -33,6 +33,7 @@ public enum StepKind
     Give,             // ask Controller to give from M: L (T:n), ...
     Status,           // ask Controller for status      - into the label Status
     StopAim,          // ask Controller to stop AIM A
+    KeepStorage,      // ask Controller to keep storage in "where" - the Module's Shared Storage is where the User says (M3213 3.6)
 
     // --- the User Agent's own ---
     Acquire,          // acquire L (T) [via VAD] [or L (T) [via VAD] ...]
@@ -96,7 +97,7 @@ public sealed class Step
     public bool IsControllerRequest => Kind is
         StepKind.StartModule or StepKind.StopModule or StepKind.PauseModule or
         StepKind.ResumeModule or StepKind.Take or StepKind.Give or
-        StepKind.Status or StepKind.StopAim;
+        StepKind.Status or StepKind.StopAim or StepKind.KeepStorage;
 }
 
 // A workflow: the Modules it drives, what it does on Start, what on Stop, and

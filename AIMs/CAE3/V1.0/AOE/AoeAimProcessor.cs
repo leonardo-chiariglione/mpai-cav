@@ -22,6 +22,10 @@ namespace Mpai.Cae.Aoe;
 //   ModifiedObjects   what it is like: loudness (LUFS) and the Object part of the
 //                     Acoustic Profile
 //   UserPoV           where it is heard from, when heard on its own
+//   AddedObjects      the named Objects, each with its place and its time, make a new
+//                     Audio Object (AUO), which is kept in Shared Storage; the report
+//                     names it (ResultID). The Module gives a User Agent an Audio
+//                     Object that way: the User Agent reads it in Shared Storage.
 //
 // Every edit is a new version in Shared Storage. Where an Object is in a Scene is
 // Audio Scene Editing's (AddedObjects, MovedObjects, ChangedObjects): a command
@@ -35,9 +39,13 @@ public sealed class AoeAimProcessor : IAimProcessor
     private readonly string _objectPort;
     private readonly string _objectOut;
     private readonly string _reportOut;
+    private readonly string _auoIn;       // an Audio Object the User Agent read from its external storage
+    private readonly string _auoOut;      // the Audio Object this made (composed, or stored from outside)
 
     // What is open, between runs.
     private string? _open;
+    private readonly UndoJournal _undo = new();
+    private string? _composed;            // the Audio Object a command of this run made
 
     public string InstanceId { get; }
 
@@ -50,6 +58,8 @@ public sealed class AoeAimProcessor : IAimProcessor
         _objectPort  = ports.Input("OSD-BAO-V1.5");
         _objectOut   = ports.Output("OSD-BAO-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
+        _auoIn       = ports.InputOrDefault("OSD-AUO-V1.5", "");
+        _auoOut      = ports.OutputOrDefault("OSD-AUO-V1.5", "");
     }
 
     public Task<Message> ProcessAsync(Message message)
@@ -64,6 +74,18 @@ public sealed class AoeAimProcessor : IAimProcessor
             Console.WriteLine($"[CAE-AOE-V1.0] open {_open}");
         }
 
+        // 1b. an Audio Object read from outside is stored here, and given back as stored.
+        string? made = null;
+        if (_auoIn.Length > 0 && message.Ports.TryGetValue(_auoIn, out var auoJson) && !string.IsNullOrWhiteSpace(auoJson))
+        {
+            // An Audio Object that holds nothing and names one Shared Storage has is that one, asked for by its identifier (as a Basic Audio Object is opened); any other
+            // is stored.
+            var given = MpaiJson.FromJson<AudioObject>(auoJson);
+            var bare = (given.BasicAudioObjects?.Count ?? 0) == 0 && (given.SubAudioObjects?.Count ?? 0) == 0;
+            made = bare && !string.IsNullOrWhiteSpace(given.AudioObjectID) && _aoe.Has(given.AudioObjectID) ? given.AudioObjectID : _aoe.StoreAudioObject(given).AssetId;
+            Console.WriteLine($"[CAE-AOE-V1.0] audio object {made}");
+        }
+
         // 2. a User PoV on its Port: where the open Object is heard from.
         if (_povPort.Length > 0 && _open is not null && message.Ports.TryGetValue(_povPort, out var povJson) && !string.IsNullOrWhiteSpace(povJson))
             _open = _aoe.EditBasicObjectProperties(_open, listenerPointOfView: MpaiJson.FromJson<PointOfView>(povJson)).AssetId;
@@ -73,9 +95,20 @@ public sealed class AoeAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            Apply(command, report);
+            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            else
+            {
+                var before = _open;
+                Apply(command, report);
+                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+            }
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
+
+        // 3b. an Audio Object made, as it is kept in Shared Storage.
+        if (made is null) made = _composed;
+        _composed = null;
+        if (made is not null && _auoOut.Length > 0) outputs[_auoOut] = System.Text.Encoding.UTF8.GetString(_aoe.Raw(made));
 
         // 4. the open Object, as it now stands.
         if (_open is not null) outputs[_objectOut] = MpaiJson.ToJson(_aoe.Get(_open));
@@ -88,18 +121,33 @@ public sealed class AoeAimProcessor : IAimProcessor
         });
     }
 
+    // The Objects, each with its place and its time, as ONE new Audio Object.
+    private void Compose(ObjectPlacements composed, PointOfView? pov, CommandReport report)
+    {
+        var parts = new List<(string, SpaceTime?)>();
+        foreach (var entry in composed.Objects)
+        {
+            var id = !string.IsNullOrWhiteSpace(entry.ObjectID?.ObjectID) ? entry.ObjectID!.ObjectID : entry.ObjectID?.BasicAudioObject?.BasicAudioObjectID;
+            if (string.IsNullOrWhiteSpace(id) || !_aoe.Has(id)) { report.Failed("AddedObjects", id, "an Audio Object is made of Objects that Shared Storage holds, named by their identifiers"); return; }
+            parts.Add((id, entry.SpatialAttitude is null ? null : new SpaceTime { SpatialAttitude1 = entry.SpatialAttitude, Time = entry.SpatialAttitude.SpatialAttitudeTime ?? new SimpleTime() }));
+        }
+        try { _composed = _aoe.Compose(parts, pov).AssetId; report.Done("AddedObjects", null, _composed); }
+        catch (Exception e) { report.Failed("AddedObjects", null, e.Message); }
+    }
+
     private void Apply(UserCommand command, CommandReport report)
     {
         var data = command.UserCommandData;
         if (data is null) return;
         const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
-        foreach (var (action, any) in new[] { ("AddedObjects", data.AddedObjects is { Objects.Count: > 0 }),
-                                              ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
+        foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
                                               ("ChangedObjects", data.ChangedObjects is { Objects.Count: > 0 }),
                                               ("RemovedObjects", data.RemovedObjects is { Objects.Count: > 0 }) })
             if (any) report.NotSupported(action, _open, inScene);
         if (data.TranslatedObjects is { Objects.Count: > 0 })
             report.NotSupported("TranslatedObjects", _open, "speech is translated by Speech Object Editing");
+
+        if (data.AddedObjects is { Objects.Count: > 0 } composed) Compose(composed, data.UserPoV, report);
 
         if (_open is null)
         {

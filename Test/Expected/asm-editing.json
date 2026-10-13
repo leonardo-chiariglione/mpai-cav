@@ -2,7 +2,7 @@
   "1 a BAO arriving: what AOE gives back": "OSD-BAO-V1.5 BAO000001, valid",
   "2 its Acoustic Profile modified, heard from behind": "BAO000003, loudness -18, UserPoV behind, valid",
   "2 the report": "Done: UserPoV BAO000001 Done -> BAO000002, ModifiedObjects BAO000002 Done -> BAO000003",
-  "3 composing in Object Editing: the report": "Failed: AddedObjects BAO000004 NotSupported",
+  "3 composing in Object Editing: the report": "Done: AddedObjects  Done -> AUO000001",
   "4 the report": "Done: AddedObjects BAO000003 Done -> BAS000001, AddedObjects BAO000004 Done -> BAS000002, UserPoV BAS000002 Done -> BAS000003",
   "4 two BAOs placed in a scene": "OSD-BAS-V1.5 of 2 members, UserPoV set, valid",
   "5 moved and removed": "1 member(s), valid",

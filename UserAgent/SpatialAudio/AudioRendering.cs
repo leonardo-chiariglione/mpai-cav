@@ -54,7 +54,7 @@ public sealed class AudioRendering(string steamAudioFolder, SpatialRenderer.Layo
         foreach (var group in members.GroupBy(m => m.User))
         {
             var sources = group.Select(m => new SpatialRenderer.Source(
-                SceneAudio.Mono(m.Object.Data, SpatialRenderer.Rate), m.Position, m.YawDeg, m.PitchDeg, 1,
+                SceneAudio.Shape(SceneAudio.WithLevel(m.Object, SceneAudio.Mono(m.Object.Data, SpatialRenderer.Rate), SpatialRenderer.Rate), m.StartSeconds, m.EndSeconds, SpatialRenderer.Rate), m.Position, m.YawDeg, m.PitchDeg, 1,
                 DirectionalPattern.FromPlot(m.Object.BasicAudioObjectProperties?.AcousticProfile?.DirectionalPatterns))).ToList();
             var part = renderer.Render(sources, SceneAudio.UserOf(group.Key));
             if (part.Length > mix.Length) Array.Resize(ref mix, part.Length);

@@ -392,9 +392,69 @@ public sealed class AseAim
         return new RepositoryAsset { AssetId = newId, AssetType = AssetType.BAS };
     }
 
+    // Sets the acoustics of a Basic scene (the Scene part of the Acoustic Profile): a NEW version, as every edit.
+    public RepositoryAsset SetBasicSceneAcousticProfile(string sceneAssetId, AcousticProfile acousticProfile)
+    {
+        if (!storage.Exists(sceneAssetId))
+            throw new InvalidOperationException($"{sceneAssetId} does not exist.");
+        if (!IsType(sceneAssetId, "BAS"))
+            throw new InvalidOperationException($"{sceneAssetId} is not a Basic Scene.");
+
+        var existing = Deserialize<BasicAudioSceneDescriptors>(storage.Get(sceneAssetId));
+        var newId = NextId("BAS");
+        foreach (var entry in existing.BasicAudioSceneDescriptorsEntries)
+            if (entry.AudioObjectIDOrAudioObject?.BasicAudioObjectID is { Length: > 0 } member)
+                PutReference(newId, member);
+
+        storage.Put(newId, Serialize(new BasicAudioSceneDescriptors
+        {
+            MInstanceID = mInstanceId,
+            BasicAudioSceneDescriptorsID = newId,
+            BasicAudioSceneDescriptorsTime = existing.BasicAudioSceneDescriptorsTime,
+            BASSpaceTime = existing.BASSpaceTime ?? Origin(),
+            UserPoV = existing.UserPoV,
+            ClosedSpace = existing.ClosedSpace,
+            AcousticProfile = acousticProfile,
+            AudioObjectCount = existing.AudioObjectCount,
+            BasicAudioSceneDescriptorsEntries = existing.BasicAudioSceneDescriptorsEntries
+        }));
+        return new RepositoryAsset { AssetId = newId, AssetType = AssetType.BAS };
+    }
+
+    // Sets the space a Basic scene is in - a room built round its members: a NEW version, as every edit.
+    public RepositoryAsset SetBasicSceneClosedSpace(string sceneAssetId, System.Text.Json.Nodes.JsonArray closedSpace)
+    {
+        if (!storage.Exists(sceneAssetId))
+            throw new InvalidOperationException($"{sceneAssetId} does not exist.");
+        if (!IsType(sceneAssetId, "BAS"))
+            throw new InvalidOperationException($"{sceneAssetId} is not a Basic Scene.");
+
+        var existing = Deserialize<BasicAudioSceneDescriptors>(storage.Get(sceneAssetId));
+        var newId = NextId("BAS");
+        foreach (var entry in existing.BasicAudioSceneDescriptorsEntries)
+            if (entry.AudioObjectIDOrAudioObject?.BasicAudioObjectID is { Length: > 0 } member)
+                PutReference(newId, member);
+
+        storage.Put(newId, Serialize(new BasicAudioSceneDescriptors
+        {
+            MInstanceID = mInstanceId,
+            BasicAudioSceneDescriptorsID = newId,
+            BasicAudioSceneDescriptorsTime = existing.BasicAudioSceneDescriptorsTime,
+            BASSpaceTime = existing.BASSpaceTime ?? Origin(),
+            UserPoV = existing.UserPoV,
+            ClosedSpace = closedSpace,
+            AcousticProfile = existing.AcousticProfile,
+            AudioObjectCount = existing.AudioObjectCount,
+            BasicAudioSceneDescriptorsEntries = existing.BasicAudioSceneDescriptorsEntries
+        }));
+        return new RepositoryAsset { AssetId = newId, AssetType = AssetType.BAS };
+    }
+
     // Resolves a stored Basic scene into a fully self-contained structure:
     // its own fields, with every ID-stub BasicAudioObject entry replaced by
     // its full, live content.
+    public bool Has(string assetId) => storage.Exists(assetId);
+
     public BasicAudioSceneDescriptors MaterializeBasicScene(string sceneAssetId)
     {
         if (!storage.Exists(sceneAssetId))

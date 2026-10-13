@@ -44,6 +44,7 @@ public sealed class SseAimProcessor : IAimProcessor
     private readonly string _reportOut;
 
     private string? _open;
+    private readonly UndoJournal _undo = new();
 
     public string InstanceId { get; }
 
@@ -91,7 +92,13 @@ public sealed class SseAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            Apply(command, pov, report);
+            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            else
+            {
+                var before = _open;
+                Apply(command, pov, report);
+                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+            }
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
         else if (pov is not null && Load(_open) is { } scene)

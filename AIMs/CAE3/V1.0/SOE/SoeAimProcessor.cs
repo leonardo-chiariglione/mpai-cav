@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -42,6 +43,7 @@ public sealed class SoeAimProcessor : IAimProcessor
     private readonly string _reportOut;
 
     private string? _open;
+    private readonly UndoJournal _undo = new();
 
     // The translation asked for and not yet arrived, and the report that waits for it:
     // in continuous execution the command and the translation come in different runs.
@@ -91,6 +93,8 @@ public sealed class SoeAimProcessor : IAimProcessor
             {
                 SpeechStore.Put(_storage, SpeechStore.Replacing(original, MpaiJson.FromJson<BasicSpeechObject>(translationJson), pending.Entry.SpeechQualifier));
                 _open = id;
+                // what the translation replaced is kept: revoking the command puts the original back, in every Scene that holds it
+                _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_storage, original); return id; });
                 report.Done("TranslatedObjects", id, id);
                 Console.WriteLine($"[CAE-SOE-V1.0] {id} replaced by its translation into {pending.Entry.TargetLanguage}");
             }
@@ -103,12 +107,19 @@ public sealed class SoeAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
+            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) { _undo.Revoke(revoked, report); outputs[_reportOut] = MpaiJson.ToJson(report.Report()); goto opened; }
             var waiting = Apply(command, report, outputs);
+            if (_overwritten.Count > 0)
+            {
+                var kept = _overwritten.ToList(); _overwritten.Clear();
+                _undo.Record(command.UserCommandID, () => true, () => { for (var i = kept.Count - 1; i >= 0; i--) SpeechStore.Put(_storage, kept[i]); return _open; });
+            }
             // A translation is reported when it comes back; anything else now.
             if (!waiting && _reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
 
         // 5. the open Object, as it now stands.
+        opened:
         if (Open() is { } open) outputs[_objectOut] = MpaiJson.ToJson(open);
         return Task.FromResult(new Message
         {
@@ -120,6 +131,10 @@ public sealed class SoeAimProcessor : IAimProcessor
     }
 
     private const string SpeechQualifierHeader = "TFA-SPQ-V1.5";
+
+    // What the command being executed overwrites, in the order it does: put back in the reverse order when it is revoked.
+    private readonly List<BasicSpeechObject> _overwritten = new();
+    private void Keep(BasicSpeechObject speech) => _overwritten.Add(speech);
 
     private BasicSpeechObject? Open() => _open is null ? null : SpeechStore.Get(_storage, _open);
 
@@ -138,7 +153,7 @@ public sealed class SoeAimProcessor : IAimProcessor
 
         if (data.UserPoV is not null)
         {
-            if (Open() is { } speech) { SpeechStore.Put(_storage, SpeechStore.With(speech, userPoV: data.UserPoV)); report.Done("UserPoV", _open, _open); }
+            if (Open() is { } speech) { Keep(speech); SpeechStore.Put(_storage, SpeechStore.With(speech, userPoV: data.UserPoV)); report.Done("UserPoV", _open, _open); }
             else report.Failed("UserPoV", null, "no Basic Speech Object is open");
         }
 
@@ -153,6 +168,7 @@ public sealed class SoeAimProcessor : IAimProcessor
                     System.Text.Json.Nodes.JsonNode.Parse(qJson)?["Header"]?.GetValue<string>() == SpeechQualifierHeader)
                     qualifier = MpaiJson.FromJson<SpeechQualifier>(qJson);
                 if (qualifier is null && entry.SpatialAttitude is null) { report.Failed("ChangedObjects", id, "nothing to change: a Speech Qualifier or a Spatial Attitude is expected"); continue; }
+                Keep(speech);
                 SpeechStore.Put(_storage, SpeechStore.With(speech, qualifier: qualifier,
                     spaceTime: entry.SpatialAttitude is null ? null : new SpaceTime { SpatialAttitude1 = entry.SpatialAttitude }));
                 report.Done("ChangedObjects", id, id);

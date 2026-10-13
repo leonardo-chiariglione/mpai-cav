@@ -8,16 +8,18 @@
   "anyOf":                      [ { "required": [ "UserCommandData" ] }, { "required": [ "UserCommandReport" ] } ],
   "properties":                 {
 
-    "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
     "Header":                   { "type": "string", "const": "CAE-UCM-V1.0" },
     "MInstanceID":              { "type": "string" },
     "UEnvironmentID":           { "type": "string" },
     "UserCommandID":            { "type": "string" },
     "UserCommandTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
+  "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
+
     "UserCommandData":          { "type": "object", "additionalProperties": false, "properties": {
       "UserPoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
       "LUFS":                   { "type": "number" },
+      "RevokedUserCommandID":   { "type": "string", "description": "The User Command to revoke, by its UserCommandID (the author, 2026/10/11: every User Command has an ID, and one can revoke an earlier one). It goes to the AIM that executed that command, which undoes it if it can; the report says whether it did: Done, Failed, or NotSupported where the AIM cannot undo it." },
 
       "AcquiredObject":         { "$ref": "#/$defs/ManagedObject" },
       "DeliveredObject":        { "$ref": "#/$defs/ManagedObject" },
@@ -51,6 +53,13 @@
           "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
 
+      "ClosedSpace":           { "type": "array", "minItems": 1, "maxItems": 1, "description": "The space the open Scene is in - a room built round its Objects: a Closed Space, by ID or in full. It replaces the one the Scene had.", "items": { "oneOf": [
+                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json" },
+                                { "type": "string" } ] } },
+
+      "ModifiedScene":          { "type": "object", "additionalProperties": false, "description": "The acoustics of the open Scene: what happens to the sound of its Objects on the way to the listener. The Acoustic Profile given is the one the Scene has from now on.", "properties": {
+        "AcousticProfile":      { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene" } } },
+
       "TranslatedObjects":      { "type": "object", "additionalProperties": false, "description": "Speech Objects to translate into another language, with Text and Speech Translation (MMC-TST). The source language is the one the Speech Object's own Qualifier states. The translated Speech Object replaces the original in the Scene, at its place: there is no Object in two versions, nor two Objects at one place.", "properties": {
         "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "SpeechQualifier" ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
@@ -60,7 +69,7 @@
       "ReportTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
       "Outcome":                { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ], "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes." },
       "Actions":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ], "properties": {
-        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "TranslatedObjects" ], "description": "The field of UserCommandData the action comes from." },
+        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects" ], "description": "The field of UserCommandData the action comes from." },
         "ObjectID":             { "type": "string", "description": "The Object or Scene acted on." },
         "Outcome":              { "type": "string", "enum": [ "Done", "Failed", "NotSupported" ] },
         "ResultID":             { "type": "string", "description": "The identifier of what the action produced: every edit is a new version." },

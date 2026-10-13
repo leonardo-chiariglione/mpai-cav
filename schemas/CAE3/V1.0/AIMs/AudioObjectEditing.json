@@ -15,7 +15,9 @@
                            {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObject", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EditedAudioObject", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "UserCommandReport", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "UserCommandReport", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioObjectFromOutside", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MadeAudioObject", "Direction": "Output", "DataType": "OSD-AUO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
   "Topology":             [],

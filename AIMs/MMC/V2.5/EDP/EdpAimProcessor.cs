@@ -65,6 +65,8 @@ public sealed class EdpAimProcessor : IAimProcessor
     private readonly ISharedStorage? _private;
     private string? _cavState;               // where no Private Storage is given
     private const string CavKey = "cav-dialogue";
+    private const string SceneKey = "asm-scene";
+    private string? _asmScene;               // where no Private Storage is given
 
     // WHO SPEAKS: the persona interacting with the person - Thalia in MPAI as a
     // Service, the CAV in the car. Given by the provider, which knows where EDP runs.
@@ -101,7 +103,12 @@ public sealed class EdpAimProcessor : IAimProcessor
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
+        // IN AUDIO SCENE MANAGEMENT the Scene and the words reach EDP as the Module's Channels bring them, not always together: the Scene it is told of is kept (in its
+        // Private Storage), and the words that come later are understood against it. A Scene on its own is nothing said: no reply, and no error.
+        if (_asmScenePort.Length > 0 && message.Ports.TryGetValue(_asmScenePort, out var told) && !string.IsNullOrWhiteSpace(told)) RememberScene(told);
         if (Asm(message) is { } asm) return System.Threading.Tasks.Task.FromResult(asm);
+        if (_asmScenePort.Length > 0 && message.Ports.ContainsKey(_asmScenePort) && !message.Ports.ContainsKey(_textPort))
+            return System.Threading.Tasks.Task.FromResult(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() });
         string? userText = ReadText(message, _textPort);
         if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
@@ -226,7 +233,9 @@ public sealed class EdpAimProcessor : IAimProcessor
     // what the User says becomes User Commands, and EDP says what was done or asks.
     private Message? Asm(Message message)
     {
-        if (_asmScenePort.Length == 0 || !message.Ports.TryGetValue(_asmScenePort, out var sceneJson) || string.IsNullOrWhiteSpace(sceneJson)) return null;
+        if (_asmScenePort.Length == 0) return null;
+        var sceneJson = message.Ports.TryGetValue(_asmScenePort, out var given) && !string.IsNullOrWhiteSpace(given) ? given : RecallScene();
+        if (string.IsNullOrWhiteSpace(sceneJson)) return null;
         var text = ReadText(message, _textPort);
         if (string.IsNullOrWhiteSpace(text)) return null;
         var scene = MpaiJson.FromJson<BasicAudioSceneDescriptors>(sceneJson);
@@ -287,6 +296,18 @@ public sealed class EdpAimProcessor : IAimProcessor
         if (toAms is not null && _ahmOutPort.Length > 0) ports[_ahmOutPort] = toAms.ToJsonString();
         if (Port(_summaryPort) is { } summary) ports[_outSummaryPort] = summary;
         return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
+    }
+
+    private void RememberScene(string json)
+    {
+        if (_private is null) _asmScene = json;
+        else _private.MPAI_AIFM_SharedStorage_Put(SceneKey, Encoding.UTF8.GetBytes(json));
+    }
+
+    private string? RecallScene()
+    {
+        if (_private is null) return _asmScene;
+        return _private.MPAI_AIFM_SharedStorage_Exists(SceneKey) ? Encoding.UTF8.GetString(_private.MPAI_AIFM_SharedStorage_Get(SceneKey)) : null;
     }
 
     private string? LoadCav()

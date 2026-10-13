@@ -107,6 +107,10 @@ public sealed class UserCommandData
     public PointOfView? UserPoV { get; init; }
     public double?      LUFS    { get; init; }
 
+    // THE USER COMMAND TO REVOKE, by its ID (the author, 2026/10/11): it goes to the AIM that executed that command, which undoes it if it can; its report says
+    // whether it did (Done, Failed, or NotSupported).
+    public string?      RevokedUserCommandID { get; init; }
+
     // The eight operations. Exactly one is expected to be populated.
     public ManagedObject?   AcquiredObject  { get; init; }
     public ManagedObject?   DeliveredObject { get; init; }
@@ -116,6 +120,14 @@ public sealed class UserCommandData
     public ObjectMovements?  MovedObjects    { get; init; }
     public ObjectChanges?    ChangedObjects  { get; init; }
     public ObjectChanges?    ModifiedObjects { get; init; }
+
+    // THE SPACE THE OPEN SCENE IS IN (a room built round its objects): a Closed Space (OSD-CSP), by ID or in full, as the scene itself carries it. It replaces
+    // the one the scene had. Audio Scene Editing's.
+    public JsonArray?        ClosedSpace     { get; init; }
+
+    // THE ACOUSTICS OF THE OPEN SCENE (the Scene part of the Acoustic Profile: reflectivity, reverberation, diffusion, absorption, Doppler), as the Scene is to have
+    // them. Audio Scene Editing's, as ModifiedObjects, with the Object part of the profile, is Audio Object Editing's.
+    public SceneChange?      ModifiedScene   { get; init; }
 
     // Speech Objects to translate (the author, 2026/10/03), with Text and Speech
     // Translation; each translation replaces its original, at its place.
@@ -185,6 +197,11 @@ public sealed class ObjectTranslation
 
     [JsonIgnore]
     public string? TargetLanguage => SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode;
+}
+
+public sealed class SceneChange
+{
+    public AcousticProfile? AcousticProfile { get; init; }
 }
 
 public sealed class ObjectChanges

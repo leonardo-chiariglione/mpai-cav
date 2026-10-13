@@ -441,6 +441,16 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
+            case StepKind.KeepStorage:
+            {
+                var where = Fill(step.Text ?? "");
+                var done  = await north.SharedStorageInitAsync(Module, where);
+                if (done != AifError.OK)
+                    throw new NotSupportedException($"line {step.Line}: the Controller did not keep the storage of {Module} in '{where}' ({done}).");
+                say($"[C] storage of {Module} in {where}");
+                break;
+            }
+
             case StepKind.StopAim:
             {
                 var done = await north.StopAimAsync(Module, step.Variable!);

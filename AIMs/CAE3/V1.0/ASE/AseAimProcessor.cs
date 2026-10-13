@@ -19,8 +19,12 @@ namespace Mpai.Cae.Ase;
 // first Object added to no open Scene creates one:
 //
 //   AddedObjects     place the named Basic Audio Objects
-//   MovedObjects     old attitude -> new attitude
+//   MovedObjects     old attitude -> new attitude; the Object is the one at the old PoV
+//                    (Point of View: position and orientation associated to it, and the
+//                    time it sounds, if stated) when no identifier names it
 //   ChangedObjects   where a placed Object is
+//   ClosedSpace      the room the Scene is in
+//   ModifiedScene    the acoustics of the Scene (its Acoustic Profile)
 //   UserPoV          where the Scene is heard from (also on its own Port)
 //
 //   RemovedObjects   take placed Objects out
@@ -40,6 +44,7 @@ public sealed class AseAimProcessor : IAimProcessor
 
     // What is open, between runs.
     private string? _open;
+    private readonly UndoJournal _undo = new();
 
     public string InstanceId { get; }
 
@@ -63,7 +68,8 @@ public sealed class AseAimProcessor : IAimProcessor
         if (message.Ports.TryGetValue(_scenePort, out var sceneJson) && !string.IsNullOrWhiteSpace(sceneJson))
         {
             var id = MpaiJson.FromJson<BasicAudioSceneDescriptors>(sceneJson).BasicAudioSceneDescriptorsID;
-            if (!string.IsNullOrWhiteSpace(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {_open}"); }
+            // A Scene the storage does not hold cannot be opened: the one open stays, and nothing is raised - an AIM that threw would stop the Module.
+            if (!string.IsNullOrWhiteSpace(id) && _ase.Has(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {_open}"); }
         }
 
         PointOfView? pov = null;
@@ -75,7 +81,13 @@ public sealed class AseAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            Apply(command, pov, report);
+            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            else
+            {
+                var before = _open;
+                Apply(command, pov, report);
+                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+            }
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
         else if (pov is not null && _open is not null)
@@ -132,21 +144,52 @@ public sealed class AseAimProcessor : IAimProcessor
         }
 
         if (data.MovedObjects is { Objects.Count: > 0 } moved)
+        {
+            var handled = new List<SpatialAttitude>();
             foreach (var entry in moved.Objects)
-                Place("MovedObjects", IdOf(entry.ObjectID), entry.NewSpatialAttitude, report);
+            {
+                if (IdOf(entry.ObjectID) is { } named) { Place("MovedObjects", named, entry.NewSpatialAttitude, report); continue; }
+                if (handled.Any(h => SamePoV(h, entry.OldSpatialAttitude))) continue;       // those at that PoV have moved already
+                foreach (var id in At("MovedObjects", entry.OldSpatialAttitude, report)) Place("MovedObjects", id, entry.NewSpatialAttitude, report);
+                if (entry.OldSpatialAttitude is { } old) handled.Add(old);
+            }
+        }
 
         if (data.ChangedObjects is { Objects.Count: > 0 } changed)
             foreach (var entry in changed.Objects)
                 Place("ChangedObjects", IdOf(entry.ObjectID), entry.SpatialAttitude, report);
 
         if (data.RemovedObjects is { Objects.Count: > 0 } removed)
+        {
+            var handled = new List<SpatialAttitude>();
             foreach (var entry in removed.Objects)
             {
-                var id = IdOf(entry.ObjectID);
-                var result = id is null ? null : _ase.RemoveFromBasicScene(_open, id);
-                if (result is null) report.Failed("RemovedObjects", id, "the open Scene has no such member");
-                else { _open = result.AssetId; report.Done("RemovedObjects", id, _open); }
+                var ids = IdOf(entry.ObjectID) is { } named ? [named] : handled.Any(h => SamePoV(h, entry.SpatialAttitude)) ? [] : At("RemovedObjects", entry.SpatialAttitude, report);
+                if (IdOf(entry.ObjectID) is null && entry.SpatialAttitude is { } where) handled.Add(where);
+                foreach (var id in ids)
+                {
+                    var result = _ase.RemoveFromBasicScene(_open, id);
+                    if (result is null) report.Failed("RemovedObjects", id, "the open Scene has no such member");
+                    else { _open = result.AssetId; report.Done("RemovedObjects", id, _open); }
+                }
             }
+        }
+
+        // The acoustics of the Scene: its Acoustic Profile, as given.
+        if (data.ModifiedScene?.AcousticProfile is { } acoustics)
+        {
+            var before = _open;
+            _open = _ase.SetBasicSceneAcousticProfile(_open, acoustics).AssetId;
+            report.Done("ModifiedScene", before, _open);
+        }
+
+        // The room: the space the Scene is in, replaced as given.
+        if (data.ClosedSpace is { Count: > 0 } room)
+        {
+            var before = _open;
+            _open = _ase.SetBasicSceneClosedSpace(_open, room).AssetId;
+            report.Done("ClosedSpace", before, _open);
+        }
 
         // Once, on the Scene: its User PoV overrides each member's.
         if (listener is not null)
@@ -155,6 +198,42 @@ public sealed class AseAimProcessor : IAimProcessor
             _open = _ase.SetBasicSceneListener(_open, listener).AssetId;
             report.Done("UserPoV", before, _open);
         }
+    }
+
+    // THE OBJECT AT A PoV: a command that names no identifier says where the Object is - its position, and when it sounds if that is stated. The members of the open Scene
+    // there are the Object (several at one PoV are moved or taken out together, for nothing tells them apart); none there is a failure.
+    private List<string> At(string action, SpatialAttitude? at, CommandReport report)
+    {
+        var found = new List<string>();
+        if (at?.Position?.CartPosition is not { Length: >= 3 } want)
+        {
+            report.Failed(action, null, "the Object is named neither by an identifier nor by its PoV");
+            return found;
+        }
+        double? wantStart = at.SpatialAttitudeTime is null ? null : StartOf(at.SpatialAttitudeTime);
+        foreach (var entry in _ase.MaterializeBasicScene(_open!).BasicAudioSceneDescriptorsEntries)
+        {
+            if (entry.AudioObjectIDOrAudioObject is not { } member) continue;
+            if (entry.AudioObjectSpaceTime?.SpatialAttitude1?.Position?.CartPosition is not { Length: >= 3 } there) continue;
+            var d = Math.Sqrt(Math.Pow(there[0] - want[0], 2) + Math.Pow(there[1] - want[1], 2) + Math.Pow(there[2] - want[2], 2));
+            if (d > 0.05) continue;
+            if (wantStart is { } w && Math.Abs(StartOf(entry.AudioObjectSpaceTime?.Time) - w) > 0.05) continue;
+            found.Add(member.BasicAudioObjectID);
+        }
+        if (found.Count == 0) report.Failed(action, null, "the open Scene has no Object at that PoV");
+        return found;
+    }
+
+    private static bool SamePoV(SpatialAttitude? a, SpatialAttitude? b) =>
+        a?.Position?.CartPosition is { Length: >= 3 } p && b?.Position?.CartPosition is { Length: >= 3 } q
+        && Math.Abs(p[0] - q[0]) < 0.05 && Math.Abs(p[1] - q[1]) < 0.05 && Math.Abs(p[2] - q[2]) < 0.05
+        && (a.SpatialAttitudeTime is null || b.SpatialAttitudeTime is null || Math.Abs(StartOf(a.SpatialAttitudeTime) - StartOf(b.SpatialAttitudeTime)) < 0.05);
+
+    private static double StartOf(SimpleTime? time)
+    {
+        var segment = time?.SimpleTimeData?.FirstOrDefault(s => s.TimeType == false);
+        if (segment is null) return 0;
+        return segment.TimeUnit switch { "01" => segment.StartTime / 1e3, "10" => segment.StartTime / 1e6, "11" => segment.StartTime / 1e9, _ => segment.StartTime };
     }
 
     // A move or a change is the member re-placed at the new attitude.
@@ -169,7 +248,7 @@ public sealed class AseAimProcessor : IAimProcessor
     private static PointOfView Origin() => new() { PointOfViewID = Guid.NewGuid().ToString(), CartPosition = [0, 0, 0], Orientation = [0, 0, 0] };
 
     private static SpaceTime? Placement(SpatialAttitude? attitude) =>
-        attitude is null ? null : new SpaceTime { SpatialAttitude1 = attitude };
+        attitude is null ? null : new SpaceTime { SpatialAttitude1 = attitude, Time = attitude.SpatialAttitudeTime ?? new SimpleTime() };   // when the attitude is stated for a time, that time is when the member sounds
 
     private static string? IdOf(ManagedObject? managed) =>
         managed is null ? null

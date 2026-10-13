@@ -41,7 +41,7 @@ public class AsmTranslationTests
         var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MatProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(store)));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();
@@ -103,5 +103,69 @@ public class AsmTranslationTests
             try { Directory.Delete(work, true); } catch { }
         }
         Expected.Match("asm-translation.json", r);
+    }
+
+    // THE TRANSLATION REVOKED (the author, 2026/10/11): the User Command that translated is revoked by its ID; Speech Object Editing, which executed it, puts the original back
+    // under its identifier - in every Scene that holds it.
+    [SkippableFact]
+    public void ATranslationIsRevoked()
+    {
+        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
+        string Model(string aim, string key) => Path.Combine(Repository.Root, (string)all[aim]![key]!);
+        Skip.IfNot(File.Exists(Model("1MMC-TTT-V2.5-I01", "TttEncoderModel")) && File.Exists(Model("1MMC-TTS-V2.5-I01", "Voice:it")), "the translation or the Italian voice is absent: the model files are obtained separately.");
+
+        var work = Path.Combine(Path.GetTempPath(), "asm-revoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(work);
+        var settings = Path.Combine(work, "aim-settings.json");
+        File.WriteAllText(settings, all.ToJsonString());
+        var tts = all["1MMC-TTS-V2.5-I01"]!.AsObject().ToDictionary(p => p.Key, p =>
+            File.Exists(Path.Combine(Repository.Root, (string)p.Value!)) ? Path.Combine(Repository.Root, (string)p.Value!) : (string)p.Value!);
+        var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
+
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(store)));
+        try
+        {
+            Assert.Equal(AifError.OK, api.StartFlow(Asm));
+            api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
+            api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(english));
+            var translate = new UserCommand
+            {
+                UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+                UserCommandData = new UserCommandData
+                {
+                    TranslatedObjects = new ObjectTranslations { Objects = [new ObjectTranslation
+                    {
+                        ObjectID = new ManagedObject { ObjectID = english.BasicSpeechObjectID },
+                        SpeechQualifier = new SpeechQualifier
+                        {
+                            SpeechQualifierID = Guid.NewGuid().ToString(),
+                            Attributes = new SpeechAttributes { Metadata = new SpeechMetadata { Language = new Language { LanguageCode = "it" } } }
+                        }
+                    }] }
+                }
+            };
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(translate));
+            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
+
+            var storage = api.SharedStorage(Asm)!;
+            BasicSpeechObject? Stored() => storage.MPAI_AIFM_RuledStorage_Get(english.BasicSpeechObjectID, out var b).ToString() == "OK"
+                ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(b)) : null;
+            Assert.False(Stored()!.Data.SequenceEqual(english.Data));                                  // the translation stands under the original's identifier
+
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            {
+                UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+                UserCommandData = new UserCommandData { RevokedUserCommandID = translate.UserCommandID }
+            }));
+            var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000);
+            Assert.Equal(AifError.OK, report.Error);
+            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport!.Outcome);
+            Assert.True(Stored()!.Data.SequenceEqual(english.Data));                                   // the original is back
+        }
+        finally
+        {
+            api.StopFlow(Asm);
+            try { Directory.Delete(work, true); } catch { }
+        }
     }
 }

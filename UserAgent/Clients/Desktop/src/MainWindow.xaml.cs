@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -446,7 +446,7 @@ public partial class MainWindow : Window
         {
             Title = "Workflow Description",
             Filter = "Workflow Description (*.orch)|*.orch|All files (*.*)|*.*",
-            InitialDirectory = Path.Combine(MpaiPaths.Root, "UserAgent", "Orchestration")
+            InitialDirectory = Path.Combine(MpaiPaths.Root, "Apps")
         };
         if (dialog.ShowDialog() == true) Load(dialog.FileName);
     }

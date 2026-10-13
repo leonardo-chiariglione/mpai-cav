@@ -33,6 +33,12 @@ public sealed class WorkflowReader
     private static readonly Regex AskStatus =
         new(@"^ask\s+Controller\s+for\s+status\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // Where the Module's Shared Storage is held is the User's decision, made through
+    // the User Agent: 'ask Controller to keep storage in "<where>"', the words
+    // taking {Label} of what the User gave.
+    private static readonly Regex AskStorage =
+        new(@"^ask\s+Controller\s+to\s+keep\s+storage\s+in\s+(?<where>.+?)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private static readonly Regex AskStopAim =
         new(@"^ask\s+Controller\s+to\s+stop\s+AIM\s+(?<aim>\S+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -178,6 +184,10 @@ public sealed class WorkflowReader
     {
         if (AskStatus.IsMatch(line))
             return new Step { Kind = StepKind.Status, Line = n };
+
+        var storage = AskStorage.Match(line);
+        if (storage.Success)
+            return new Step { Kind = StepKind.KeepStorage, Text = storage.Groups["where"].Value.Trim().Trim('"'), Line = n };
 
         var stopAim = AskStopAim.Match(line);
         if (stopAim.Success)
