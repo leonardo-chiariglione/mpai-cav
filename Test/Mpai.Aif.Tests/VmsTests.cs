@@ -157,7 +157,7 @@ public class VmsTests
         ["PortableAvatarID"] = Guid.NewGuid().ToString(),
         ["AvatarOrAvatarID"] = new JsonArray(who),
         ["TextObject"] = JsonNode.Parse(MpaiJson.ToJson(BasicTextObject.FromText(text))),
-        ["EntityState"] = PersonalStatusInEntityState.Of(new EntityPersonalStatus
+        ["EntityState"] = EntityStates.OfPersonalStatus(new EntityPersonalStatus
         {
             TextPersonalStatus = new TextPersonalStatus { TextEmotion = Emotion.Of(FactorLabel.Of(category, adjective, null, 0.8)) }
         })

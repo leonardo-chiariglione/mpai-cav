@@ -138,9 +138,9 @@ public sealed class BodyPersonalStatus
 // THE PERSONAL STATUS IN THE ENTITY STATE (the author, 2026/10/13): a Portable Avatar carries an Entity State; it is implemented as the Personal Status, the other
 // elements of the Entity State being left out for the time being. Its Cognitive State, Emotion and Social Attitude are those of the Entity Personal Status - the first
 // modality that has each, in the order Text, Speech, Face, Body.
-public static class PersonalStatusInEntityState
+public static class EntityStates
 {
-    public static System.Text.Json.Nodes.JsonObject Of(EntityPersonalStatus status)
+    public static System.Text.Json.Nodes.JsonObject OfPersonalStatus(EntityPersonalStatus status)
     {
         var emotion = status.TextPersonalStatus?.TextEmotion ?? status.SpeechPersonalStatus?.SpeechEmotion ?? status.FacePersonalStatus?.FaceEmotion ?? status.BodyPersonalStatus?.BodyEmotion;
         var cognitive = status.TextPersonalStatus?.TextCognitiveState ?? status.SpeechPersonalStatus?.SpeechCognitiveState ?? status.FacePersonalStatus?.FaceCognitiveState ?? status.BodyPersonalStatus?.BodyCognitiveState;
@@ -152,9 +152,9 @@ public static class PersonalStatusInEntityState
         return state;
     }
 
-    public static System.Text.Json.Nodes.JsonObject? Of(string entityPersonalStatusJson)
+    public static System.Text.Json.Nodes.JsonObject? OfPersonalStatus(string entityPersonalStatusJson)
     {
-        try { return MpaiJson.FromJson<EntityPersonalStatus>(entityPersonalStatusJson) is { } status ? Of(status) : null; }
+        try { return MpaiJson.FromJson<EntityPersonalStatus>(entityPersonalStatusJson) is { } status ? OfPersonalStatus(status) : null; }
         catch { return null; }
     }
 }

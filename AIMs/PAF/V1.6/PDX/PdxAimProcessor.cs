@@ -47,7 +47,7 @@ public sealed class PdxAimProcessor : IAimProcessor
         _avatarIdPort  = ports.OutputOrDefault("OSD-IID-V1.5", "");
         _scenePort     = ports.OutputOrDefault("OSD-BMS-V1.5", "");
         _spaceTimePort = ports.OutputOrDefault("OSD-SPT-V1.5", "");
-        _modelPort     = ports.OutputOrDefault("OSD-B3O-V1.5", "");
+        _modelPort     = ports.OutputOrDefault("PAF-AVT-V1.6", "");      // the Avatar (PAF-AVT): its ID, its 3D model and its animation
         _selectorPort  = ports.OutputOrDefault("OSD-SEL-V1.5", "");
         _speechPort    = ports.OutputOrDefault("OSD-BSO-V1.5", "");
         _textPort      = ports.OutputOrDefault("OSD-BTO-V1.5", "");
@@ -79,7 +79,8 @@ public sealed class PdxAimProcessor : IAimProcessor
         Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(PersonalStatusOf(pav))));
         Give(_scenePort, pav["AVSceneDescriptors"]);
         Give(_spaceTimePort, pav["AvatarSpaceTime"] ?? pav["PortableAvatarSpaceTime"]);
-        Give(_modelPort, avatars.OfType<JsonObject>().FirstOrDefault());
+        // The Avatar is not the Avatar Model: it is the Avatar data type (PAF-AVT), made of the avatar's ID, its 3D model, and the Face and Body Descriptors - its animation.
+        if (avatars.OfType<JsonObject>().FirstOrDefault() is { } model) Give(_modelPort, AvatarOf(IdOf(pav, avatars), model, pav));
         Give(_selectorPort, pav["LanguageSelector"]);
         Give(_facePort, pav["FaceDescriptorsObject"]);
         Give(_bodyPort, pav["BodyDescriptorsObject"]);
@@ -90,6 +91,14 @@ public sealed class PdxAimProcessor : IAimProcessor
         else Give(_speechPort, speeches.OfType<JsonObject>().FirstOrDefault());
 
         return Done(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = outputs });
+    }
+
+    private static JsonObject AvatarOf(string id, JsonObject model, JsonObject pav)
+    {
+        var data = new JsonObject { ["ModelOrModelID"] = new JsonArray(new JsonObject { ["3DModel"] = model.DeepClone() }) };
+        if (pav["FaceDescriptorsObject"] is JsonObject face) data["FaceDescriptorsObject"] = face.DeepClone();
+        if (pav["BodyDescriptorsObject"] is JsonObject body) data["BodyDescriptorsObject"] = body.DeepClone();
+        return new JsonObject { ["Header"] = "PAF-AVT-V1.6", ["AvatarID"] = id, ["AvatarData"] = data };
     }
 
     private static System.Threading.Tasks.Task<Message> Done(Message m) => System.Threading.Tasks.Task.FromResult(m);

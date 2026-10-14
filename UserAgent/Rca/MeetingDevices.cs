@@ -55,7 +55,7 @@ public sealed class ParticipantDevice(Func<CancellationToken, Task<MeetingUttera
         if (said.SpeechJson is not null)
             pav["SPOOrSPOID"] = new JsonArray(JsonNode.Parse(said.SpeechJson));
         if (said.PersonalStatusJson is not null)
-            pav["EntityState"] = Mpai.Core.OSD.PersonalStatusInEntityState.Of(said.PersonalStatusJson);
+            pav["EntityState"] = Mpai.Core.OSD.EntityStates.OfPersonalStatus(said.PersonalStatusJson);
         return pav.ToJsonString();
     }
 }
