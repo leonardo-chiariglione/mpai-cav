@@ -4,29 +4,25 @@ using AIF.Controller;
 
 namespace Mpai.Paf.Vcr;
 
-// MULTIMODAL SCENE CREATION, THE AVATAR-BASED VIDEOCONFERENCE (PAF-MSC-V1.6; the VCR of the author's figure of 2026/10/11, in which Visual Scene Creation
-// is gone: what it did was minimal). For each avatar that PDX gives - its ID, the Avatar (PAF-AVT: the model and its animation), its Spatial Attitude -
-// the speech PDX gives for it, and the Multimodal Scene Descriptors (OSD-BMS) of the meeting, it:
-//  - PLACES THE AVATAR IN THE SCENE: a Basic Object of the Scene named by its ID - the nickname - at the Space-Time of its Spatial Attitude. The model is not
-//    in the Scene: there is nobody yet to display the Scene to. Every avatar placed stays, by its ID, as the meeting goes on;
-//  - ADDS ITS SPEECH TO ITS MOUTH: the speech, named by its ID, at the Space-Time of the avatar's mouth. The source of the speech of a Speaking Avatar is
-//    implicitly its mouth, and where that is the model could say; a standard FacePointHeight above its Spatial Attitude (1.6 m by default) is taken;
-//  - gives Response and Scene Rendering the avatar: the Avatar (PAF-AVT), its ID, its speech and its Spatial Attitude, each on its own Port - what its Speaking
-//    Avatar Synthesis needs to form the Speaking Avatar (the author, 2026/10/11: a Speaking Avatar is an Avatar plus speech).
-// The speech of an avatar comes straight from PDX, and may come before the rest of the avatar: it is kept, one for each Portable Avatar, and joined to the
-// avatar it came with. An avatar that says nothing is given out all the same, without speech. It runs continuously.
+// MULTIMODAL SCENE CREATION, THE AVATAR-BASED VIDEOCONFERENCE (PAF-MSC-V1.6; the VCR of the author's figure, slide 27 of PAF Reference Models). It takes what PDX gives
+// for each Portable Avatar - the Avatar's ID (OSD-IID), the Avatar (PAF-AVT: its ID, its 3D model, its animation and, where it speaks, its speech), its Spatial Attitude
+// (OSD-OSA) - and the Multimodal Scene Descriptors (OSD-BMS) of the meeting, and
+//  - PLACES THE AVATAR IN THE SCENE: a Basic Object of the Scene, named by the Avatar's ID, at the Space-Time of its Spatial Attitude. Every avatar placed stays, by its
+//    ID, as the meeting goes on;
+//  - ADDS ITS SPEECH TO ITS MOUTH: the speech of the Avatar, at the Space-Time of the avatar's mouth - its Spatial Attitude, a standard FacePointHeight (1.6 m) above;
+//  - gives the Rendering the set: the Scene, the ID, the Avatar, its speech and its Spatial Attitude.
+// THE DATA OF ONE PORTABLE AVATAR TRAVEL TOGETHER (the author, 2026/10/14): PDX gives, for each Portable Avatar, its ID, its Avatar and its Spatial Attitude, and the
+// Avatar holds its speech; so the n-th of each is of the n-th Portable Avatar, and the Avatar says whose it is. The Speech Objects PDX also gives on their own Port are
+// not needed: the Avatar has its speech. It runs continuously.
 public sealed class MultimodalSceneCreation(string instanceId, IReadOnlyDictionary<string, string>? settings = null) : IAimProcessor, IAimRunner
 {
     public const string Scene = "OSD-BMS-V1.5", Iid = "OSD-IID-V1.5", Avatar = "PAF-AVT-V1.6", Attitude = "OSD-OSA-V1.5", Speech = "OSD-BSO-V1.5",
                         SpaceTime = "OSD-SPT-V1.5";
 
-    private sealed record Whole(JsonNode? Iid = null, JsonNode? Avatar = null, JsonNode? Attitude = null);
-
     private readonly double faceHeight = settings is not null && settings.TryGetValue("FacePointHeight", out var h) && double.TryParse(h, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 1.6;
-    private readonly Dictionary<string, Whole> waiting = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, Queue<JsonNode>> speeches = new(StringComparer.Ordinal);
+    private readonly Queue<JsonNode> ids = new(), avatars = new(), attitudes = new();
     private readonly List<(string Id, JsonObject Entry)> placed = [];            // the avatars in the Scene, in the order first placed
-    private readonly List<(string Id, JsonObject Entry)> speaking = [];          // the speech of each avatar in the Scene, by ID
+    private readonly List<(string Id, JsonObject Entry)> speaking = [];          // the speech of each avatar in the Scene, by the avatar's ID
     private JsonObject? scene;
 
     public string InstanceId { get; } = instanceId;
@@ -47,32 +43,28 @@ public sealed class MultimodalSceneCreation(string instanceId, IReadOnlyDictiona
     public List<(string DataType, int Port, string Json)> Take(string dataType, JsonNode json)
     {
         var made = new List<(string, int, string)>();
-        string? id;
         switch (dataType)
         {
             case Scene: scene = json.DeepClone().AsObject(); return made;
-            case Speech:
-                id = (string?)json["BasicSpeechObjectID"] is { } sid ? AvatarIds.AvatarOf(sid) : null;
-                if (id is not null) { if (!speeches.TryGetValue(id, out var q)) speeches[id] = q = new Queue<JsonNode>(); q.Enqueue(json); }
-                return made;
-            case Iid: id = (string?)json["InstanceIdentifier"]; break;
-            case Avatar: id = (string?)json["AvatarID"]; break;
-            default: id = (string?)json["ObjectSpatialAttitudeID"] is { } oid ? AvatarIds.AvatarOf(oid) : null; break;
+            case Speech: return made;                                            // the Avatar has its speech
+            case Iid: ids.Enqueue(json); break;
+            case Avatar: avatars.Enqueue(json); break;
+            default: attitudes.Enqueue(json); break;
         }
-        if (id is null) return made;
-        var part = waiting.GetValueOrDefault(id) ?? new Whole();
-        part = dataType switch { Iid => part with { Iid = json }, Avatar => part with { Avatar = json }, _ => part with { Attitude = json } };
-        if (part.Iid is null || part.Avatar is null || part.Attitude is null) { waiting[id] = part; return made; }
-        waiting.Remove(id);
+        if (ids.Count == 0 || avatars.Count == 0 || attitudes.Count == 0) return made;
 
-        JsonNode? said = speeches.TryGetValue(id, out var queue) && queue.Count > 0 ? queue.Dequeue() : null;
-        Place(id, part.Attitude);
-        if (said is not null) Hear(id, part.Attitude);
+        var iid = ids.Dequeue(); var avatar = avatars.Dequeue(); var attitude = attitudes.Dequeue();
+        var id = (string?)avatar["AvatarID"] ?? (string?)iid["InstanceIdentifierData"]?[0]?["InstanceLabel"];
+        if (id is null) return made;
+        var said = avatar["AvatarData"]?["SpeechObjectOrSpeechObjectID"]?.AsArray().Select(x => x?["SpeechObject"]).FirstOrDefault(x => x is not null);
+
+        Place(id, attitude);
+        if (said is not null) Hear(id, (string?)said["BasicSpeechObjectID"] ?? "speech of " + id, attitude);
         made.Add((Scene, 1, Describe().ToJsonString()));
-        made.Add((Iid, 1, part.Iid.ToJsonString()));
-        made.Add((Avatar, 1, part.Avatar.ToJsonString()));
+        made.Add((Iid, 1, iid.ToJsonString()));
+        made.Add((Avatar, 1, avatar.ToJsonString()));
         if (said is not null) made.Add((Speech, 1, said.ToJsonString()));
-        made.Add((Attitude, 1, part.Attitude.ToJsonString()));
+        made.Add((Attitude, 1, attitude.ToJsonString()));
         return made;
     }
 
@@ -94,14 +86,14 @@ public sealed class MultimodalSceneCreation(string instanceId, IReadOnlyDictiona
     }
 
     // The avatar at its Spatial Attitude; placed anew where it was placed.
-    private void Place(string id, JsonNode attitude) => Keep(placed, id, Member(id, AvatarIds.Part(id, "placement"), attitude));
+    private void Place(string id, JsonNode attitude) => Keep(placed, id, Member(id, id + " placement", attitude));
 
     // The speech at the avatar's mouth: its Spatial Attitude, FacePointHeight higher; the last of the avatar is the one that is heard.
-    private void Hear(string id, JsonNode attitude)
+    private void Hear(string id, string speechId, JsonNode attitude)
     {
         var mouth = attitude.DeepClone().AsObject();
         if (mouth["Position"]?["CartPosition"] is JsonArray { Count: 3 } p) p[2] = Math.Round((double)p[2]! + faceHeight, 4);
-        Keep(speaking, id, Member(AvatarIds.Part(id, "speech"), AvatarIds.Part(id, "mouth-st"), mouth));
+        Keep(speaking, id, Member(speechId, id + " mouth", mouth));
     }
 
     // The Scene of the meeting, or an empty one, with the avatars placed in it and the speech they have said.

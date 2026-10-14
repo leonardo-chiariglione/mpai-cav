@@ -3,8 +3,11 @@
   "title":                "Entity State V2.5",
   "type":                 "object",
   "additionalProperties": false,
-  "required":             [ "Header", "EntityStateID", "CognitiveState", "Emotion", "SocialAttitude", "SpatialAttitude",
-                            "Intentions", "Motivation", "Beliefs", "Goals", "Knowledge", "Engagement", "Focus", "TemporalCue" ], "properties": {
+  "required":             [ "Header", "EntityStateID" ],
+  "anyOf":                [ { "required": ["SpatialAttitude"] }, { "required": ["CognitiveState"] }, { "required": ["Emotion"] }, { "required": ["SocialAttitude"] },
+                            { "required": ["Intentions"] }, { "required": ["Motivation"] }, { "required": ["Beliefs"] }, { "required": ["Goals"] },
+                            { "required": ["Knowledge"] }, { "required": ["Engagement"] }, { "required": ["Focus"] }, { "required": ["TemporalCue"] } ],
+  "properties": {
 
     "Header":             { "type": "string", "const": "MMC-EST-V2.5" },
     "MInstanceID":        { "type": "string" },

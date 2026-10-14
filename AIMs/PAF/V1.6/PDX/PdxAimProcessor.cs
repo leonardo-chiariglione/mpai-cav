@@ -80,7 +80,7 @@ public sealed class PdxAimProcessor : IAimProcessor
         Give(_scenePort, pav["AVSceneDescriptors"]);
         Give(_spaceTimePort, pav["AvatarSpaceTime"] ?? pav["PortableAvatarSpaceTime"]);
         // The Avatar is not the Avatar Model: it is the Avatar data type (PAF-AVT), made of the avatar's ID, its 3D model, and the Face and Body Descriptors - its animation.
-        if (avatars.OfType<JsonObject>().FirstOrDefault() is { } model) Give(_modelPort, AvatarOf(IdOf(pav, avatars), model, pav));
+        if (avatars.OfType<JsonObject>().FirstOrDefault() is { } model) Give(_modelPort, AvatarOf(IdOf(pav, avatars), model, pav, speeches.OfType<JsonObject>().FirstOrDefault()));
         Give(_selectorPort, pav["LanguageSelector"]);
         Give(_facePort, pav["FaceDescriptorsObject"]);
         Give(_bodyPort, pav["BodyDescriptorsObject"]);
@@ -93,11 +93,13 @@ public sealed class PdxAimProcessor : IAimProcessor
         return Done(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = outputs });
     }
 
-    private static JsonObject AvatarOf(string id, JsonObject model, JsonObject pav)
+    private static JsonObject AvatarOf(string id, JsonObject model, JsonObject pav, JsonObject? speech)
     {
         var data = new JsonObject { ["ModelOrModelID"] = new JsonArray(new JsonObject { ["3DModel"] = model.DeepClone() }) };
         if (pav["FaceDescriptorsObject"] is JsonObject face) data["FaceDescriptorsObject"] = face.DeepClone();
         if (pav["BodyDescriptorsObject"] is JsonObject body) data["BodyDescriptorsObject"] = body.DeepClone();
+        // The Avatar has its speech, so that what follows - Multimodal Scene Creation - needs no other way to tell whose speech it is.
+        if (speech is not null) data["SpeechObjectOrSpeechObjectID"] = new JsonArray(new JsonObject { ["SpeechObject"] = speech.DeepClone() });
         return new JsonObject { ["Header"] = "PAF-AVT-V1.6", ["AvatarID"] = id, ["AvatarData"] = data };
     }
 
