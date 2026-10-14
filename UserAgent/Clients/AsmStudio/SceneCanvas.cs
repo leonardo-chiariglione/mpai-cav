@@ -38,7 +38,7 @@ public sealed class SceneCanvas : Control
         this.studio = studio;
         DoubleBuffered = true; AllowDrop = true; ResizeRedraw = true;
         BackColor = Color.FromArgb(250, 251, 253);
-        studio.SceneChanged += () => { if (IsHandleCreated) BeginInvoke(() => { if (Selected is not null) Selected = studio.Members.FirstOrDefault(m => m.Id == Selected.Id); Invalidate(); }); };
+        studio.SceneChanged += () => { if (IsHandleCreated) BeginInvoke(() => { if (Selected is not null) Selected = studio.Members.FirstOrDefault(m => m.Name == Selected.Name); Invalidate(); }); };
     }
 
     public void Select(Member? m) { Selected = m; SelectionChanged?.Invoke(m); Invalidate(); }
@@ -46,7 +46,7 @@ public sealed class SceneCanvas : Control
     private PointF ToScreen(double x, double y) => new((float)(origin.X + x * scale), (float)(origin.Y - y * scale));
     private (double X, double Y) ToWorld(float sx, float sy) => ((sx - origin.X) / scale, (origin.Y - sy) / scale);
 
-    private (double X, double Y) PlaceOf(Member m) => dragged is not null && m.Id == dragged.Id && dragTo is { } d ? d : (m.X, m.Y);
+    private (double X, double Y) PlaceOf(Member m) => dragged is not null && m.Name == dragged.Name && dragTo is { } d ? d : (m.X, m.Y);
 
     protected override void OnResize(EventArgs e)
     {
@@ -135,9 +135,9 @@ public sealed class SceneCanvas : Control
             var (px, py) = PlaceOf(m); var p = ToScreen(px, py);
             var speech = m.Name.EndsWith(".bso", StringComparison.OrdinalIgnoreCase);
             var colour = speech ? Color.FromArgb(150, 90, 190) : Color.FromArgb(225, 130, 40);
-            var isSelected = Selected is not null && Selected.Id == m.Id;
-            var r = isSelected || (hover is not null && hover.Id == m.Id) ? 14 : 12;
-            var rad = (turning is not null && turning.Id == m.Id && turnTo is { } turnedTo ? turnedTo : m.Yaw) * Math.PI / 180; var dx = (float)(-Math.Sin(rad)); var dy = (float)(-Math.Cos(rad));    // on the screen: up is ahead
+            var isSelected = Selected is not null && Selected.Name == m.Name;
+            var r = isSelected || (hover is not null && hover.Name == m.Name) ? 14 : 12;
+            var rad = (turning is not null && turning.Name == m.Name && turnTo is { } turnedTo ? turnedTo : m.Yaw) * Math.PI / 180; var dx = (float)(-Math.Sin(rad)); var dy = (float)(-Math.Cos(rad));    // on the screen: up is ahead
             using (var arrow = new Pen(colour, 2.5f) { EndCap = LineCap.ArrowAnchor }) g.DrawLine(arrow, p.X, p.Y, p.X + dx * 30, p.Y + dy * 30);
             using (var fill = new SolidBrush(colour)) g.FillEllipse(fill, p.X - r, p.Y - r, 2 * r, 2 * r);
             using (var ring = new Pen(isSelected ? Color.FromArgb(30, 40, 60) : Color.White, isSelected ? 3 : 2)) g.DrawEllipse(ring, p.X - r, p.Y - r, 2 * r, 2 * r);
@@ -256,7 +256,7 @@ public sealed class SceneCanvas : Control
         if (dragged is not null) { dragTo = (Math.Round(wx, 2), Math.Round(wy, 2)); Invalidate(); return; }
         if (panning) { origin = new PointF(originAtPan.X + e.X - panFrom.X, originAtPan.Y + e.Y - panFrom.Y); Invalidate(); return; }
         var h = HitTest(e.Location);
-        if (h?.Id != hover?.Id) { hover = h; Invalidate(); }
+        if (h?.Name != hover?.Name) { hover = h; Invalidate(); }
         base.Cursor = HitListenerNose(e.Location) || HitArrow(e.Location) is not null ? Cursors.Cross : h is not null || HitListener(e.Location) ? Cursors.Hand : CursorOf(HitRoom(e.Location));
     }
 

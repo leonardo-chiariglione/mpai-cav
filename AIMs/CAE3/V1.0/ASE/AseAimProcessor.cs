@@ -115,6 +115,10 @@ public sealed class AseAimProcessor : IAimProcessor
         if (data.TranslatedObjects is { Objects.Count: > 0 })
             report.NotSupported("TranslatedObjects", _open, "speech is translated by Speech Object Editing");
 
+        // What is taken out first, then what is put in: one command replaces an Object with another at the same PoV. An Object is named by an identifier, by the Object
+        // itself (the Object or ID of the data types), or - for taking out and moving - by where it is.
+        if (_open is not null && data.RemovedObjects is { Objects.Count: > 0 }) TakeOut(data.RemovedObjects, report);
+
         if (data.AddedObjects is { Objects.Count: > 0 } added)
             foreach (var entry in added.Objects)
             {
@@ -158,22 +162,6 @@ public sealed class AseAimProcessor : IAimProcessor
         if (data.ChangedObjects is { Objects.Count: > 0 } changed)
             foreach (var entry in changed.Objects)
                 Place("ChangedObjects", IdOf(entry.ObjectID), entry.SpatialAttitude, report);
-
-        if (data.RemovedObjects is { Objects.Count: > 0 } removed)
-        {
-            var handled = new List<SpatialAttitude>();
-            foreach (var entry in removed.Objects)
-            {
-                var ids = IdOf(entry.ObjectID) is { } named ? [named] : handled.Any(h => SamePoV(h, entry.SpatialAttitude)) ? [] : At("RemovedObjects", entry.SpatialAttitude, report);
-                if (IdOf(entry.ObjectID) is null && entry.SpatialAttitude is { } where) handled.Add(where);
-                foreach (var id in ids)
-                {
-                    var result = _ase.RemoveFromBasicScene(_open, id);
-                    if (result is null) report.Failed("RemovedObjects", id, "the open Scene has no such member");
-                    else { _open = result.AssetId; report.Done("RemovedObjects", id, _open); }
-                }
-            }
-        }
 
         // The acoustics of the Scene: its Acoustic Profile, as given.
         if (data.ModifiedScene?.AcousticProfile is { } acoustics)
@@ -234,6 +222,22 @@ public sealed class AseAimProcessor : IAimProcessor
         var segment = time?.SimpleTimeData?.FirstOrDefault(s => s.TimeType == false);
         if (segment is null) return 0;
         return segment.TimeUnit switch { "01" => segment.StartTime / 1e3, "10" => segment.StartTime / 1e6, "11" => segment.StartTime / 1e9, _ => segment.StartTime };
+    }
+
+    private void TakeOut(ObjectPlacements removed, CommandReport report)
+    {
+        var handled = new List<SpatialAttitude>();
+        foreach (var entry in removed.Objects)
+        {
+            var ids = IdOf(entry.ObjectID) is { } named ? [named] : handled.Any(h => SamePoV(h, entry.SpatialAttitude)) ? [] : At("RemovedObjects", entry.SpatialAttitude, report);
+            if (IdOf(entry.ObjectID) is null && entry.SpatialAttitude is { } where) handled.Add(where);
+            foreach (var id in ids)
+            {
+                var result = _ase.RemoveFromBasicScene(_open!, id);
+                if (result is null) report.Failed("RemovedObjects", id, "the open Scene has no such member");
+                else { _open = result.AssetId; report.Done("RemovedObjects", id, _open); }
+            }
+        }
     }
 
     // A move or a change is the member re-placed at the new attitude.

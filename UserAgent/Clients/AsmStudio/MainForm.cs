@@ -292,7 +292,7 @@ public sealed class MainForm : Form
     private void SaveScene()
     {
         if (studio.Members.Count == 0) { Report(new Outcome(false, "There is no scene to save.")); return; }
-        var current = studio.Catalog.Items.FirstOrDefault(i => i.Kind == "asd" && i.Id == studio.Catalog.OpenScene);
+        var current = studio.CurrentScene;
         using var form = new Form { Text = "Save scene", ClientSize = new Size(360, 90), FormBorderStyle = FormBorderStyle.FixedDialog, StartPosition = FormStartPosition.CenterParent, MaximizeBox = false, MinimizeBox = false };
         var name = new TextBox { Left = 70, Top = 14, Width = 270, Text = current?.Name ?? "scene" };
         var ok = new Button { Text = "Save", DialogResult = DialogResult.OK, Left = 180, Top = 50, Width = 75 }; var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 265, Top = 50, Width = 75 };

@@ -1,4 +1,4 @@
-using Mpai.Core;
+﻿using Mpai.Core;
 using Mpai.Core.OSD;
 namespace Mpai.AsmStudio;
 
@@ -74,7 +74,7 @@ internal static class SelfTest
             Asked("remove the bell", "remove", 0, 0, false);
             var violin = await studio.ImportSoundAsync(Tone("violin", 440, 1.0));
             var drums = await studio.ImportSoundAsync(Tone("drums", 110, 1.0));
-            Check("a sound is imported under its name", violin.File == "violin.auo" && violin.Id is not null && Math.Abs(violin.Seconds - 1.0) < 0.05, $"{violin.File}, {violin.Id}, {violin.Seconds:0.00} s");
+            Check("a sound is imported under its name", violin.File == "violin.auo" && violin.Data is not null && Math.Abs(violin.Seconds - 1.0) < 0.05, $"{violin.File}, {violin.Seconds:0.00} s");
             Check("a second with the same name is named apart", (await studio.ImportSoundAsync(Tone("violin", 330, 0.5))).File == "violin (2).auo");
 
             var a = await studio.AddAsync(violin, 2, 3); var b = await studio.AddAsync(drums, -3, 2);
@@ -135,9 +135,9 @@ internal static class SelfTest
 
             // THE OBJECT ON STAGE, AS THE COMMANDS LEFT IT, is kept as an audio object (AUO) and comes back with its place and time.
             var kept = studio.SaveObject(vi, "violin late");
-            Check("the object on stage is saved as an audio object", kept is { File: "violin late.auo", Audio: true }, $"{kept?.File} {kept?.Id}");
+            Check("the object on stage is saved as an audio object", kept is { File: "violin late.auo", Audio: true }, $"{kept?.File}");
             var removedFirst = await studio.RemoveAsync(vi);
-            lines.Add($"info removed the object on stage: {removedFirst.Ok} {removedFirst.Text}; members now: {string.Join(", ", studio.Members.Select(m => m.Name + " " + m.Id))}");
+            lines.Add($"info removed the object on stage: {removedFirst.Ok} {removedFirst.Text}; members now: {string.Join(", ", studio.Members.Select(m => m.Name))}");
             var back = await studio.AddAsync(kept!, 5, 5); var bm = studio.Members.FirstOrDefault(m => m.Name == "violin late.auo");
             Check("an audio object brings its start time and goes where it is said", back.Ok && bm is not null && Math.Abs(bm.Start - 3) < 1e-6 && Math.Abs(bm.X - 5) < 0.01 && Math.Abs(bm.Y - 5) < 0.01, $"{back.Text}; {bm}");
             await studio.RemoveAsync(bm!);
@@ -146,9 +146,10 @@ internal static class SelfTest
             // READING FROM A FILE: a Basic Audio Object and an Audio Object, both.
             var baoFile = Path.Combine(folder, "drums-bao.auo"); File.WriteAllText(baoFile, studio.ObjectJson(drums)!);
             var fromBao = await studio.ImportFileAsync(baoFile);
-            Check("a Basic Audio Object is read from a file", fromBao is { Audio: false } && fromBao.Id != drums.Id && Math.Abs(fromBao.Seconds - 1.0) < 0.05, $"{fromBao.File} {fromBao.Id} {fromBao.Seconds:0.00} s");
+            Check("a Basic Audio Object is read from a file", fromBao is { Audio: false } && Math.Abs(fromBao.Seconds - 1.0) < 0.05, $"{fromBao.File} {fromBao.Seconds:0.00} s");
             // An Audio Object read from the user's external storage is given to the Module, which stores it.
-            var inner = MpaiJson.FromJson<BasicAudioObject>(studio.ObjectJson(drums)!);
+            var pairTone = await studio.ImportSoundAsync(Tone("pairtone", 220, 1.0));
+            var inner = MpaiJson.FromJson<BasicAudioObject>(studio.ObjectJson(pairTone)!);
             var auoFile = Path.Combine(folder, "pair.auo");
             File.WriteAllText(auoFile, MpaiJson.ToJson(new AudioObject
             {
@@ -164,7 +165,7 @@ internal static class SelfTest
                 }]
             }));
             var fromAuo = await studio.ImportFileAsync(auoFile);
-            Check("an Audio Object is read from a file", fromAuo is { Audio: true } && Math.Abs(fromAuo.Seconds - 3.0) < 0.1, $"{fromAuo.File} {fromAuo.Id} {fromAuo.Seconds:0.00} s");
+            Check("an Audio Object is read from a file", fromAuo is { Audio: true } && Math.Abs(fromAuo.Seconds - 3.0) < 0.1, $"{fromAuo.File} {fromAuo.Seconds:0.00} s");
             var put = await studio.AddAsync(fromAuo, null, null); var pm = studio.Members.FirstOrDefault(m => m.Name == "pair.auo");
             Check("and it is put in the scene with the place and the time it came with", put.Ok && pm is not null && Math.Abs(pm.Start - 2) < 1e-6 && Math.Abs(pm.X - 1) < 0.01 && Math.Abs(pm.Y - 2) < 0.01, $"{put.Text}; {pm}");
             Check("a sound captured and not edited stays a Basic Audio Object", violin is { Audio: false });
@@ -185,7 +186,7 @@ internal static class SelfTest
             var vm = studio.Members.First(m => m.Name == "violin.auo"); var level0 = studio.LoudnessOf(vm);
             var rms0 = Rms(studio.Render(), 0, 1);
             var louder6 = await studio.LoudnessAsync(vm, 6, null); var vm2 = studio.Members.First(m => m.Name == "violin.auo");
-            Check("an object is made louder by the AIM, and keeps its name and its place in the scene", louder6.Ok && vm2.Id != vm.Id && Math.Abs(vm2.X - vm.X) < 1e-6 && Math.Abs(studio.LoudnessOf(vm2) - (level0 + 6)) < 0.01, $"{louder6.Text} {vm.Id} -> {vm2.Id}; {level0:0.0} -> {studio.LoudnessOf(vm2):0.0} LUFS");
+            Check("an object is made louder by the AIM, and keeps its name and its place in the scene", louder6.Ok && vm2.ObjectJson != vm.ObjectJson && Math.Abs(vm2.X - vm.X) < 1e-6 && Math.Abs(studio.LoudnessOf(vm2) - (level0 + 6)) < 0.01, $"{louder6.Text}; {level0:0.0} -> {studio.LoudnessOf(vm2):0.0} LUFS");
             var rms1 = Rms(studio.Render(), 0, 1);
             Check("and it is heard louder", rms1 > rms0 * 1.15, $"{rms0:0.0000} -> {rms1:0.0000}");
             await studio.MoveAsync(vm2, vm2.X, vm2.Y, null, 0);                 // turned away from the listener
@@ -201,9 +202,9 @@ internal static class SelfTest
             var spec = await studio.SpectrogramAsync(vm5); var vm6 = studio.Members.First(m => m.Name == "violin.auo");
             Check("a spectrogram is measured, and the rest is kept", spec.Ok && studio.ProfileText(vm6).Contains("points") && studio.ProfileText(vm6).Contains("2000") && studio.ProfileText(vm6).Contains("cardioid"), spec.Text);
             await studio.UndoAsync(); await studio.UndoAsync();                 // the spectrogram, the range
-            Check("the direction is undone", (await studio.UndoAsync()).Ok && studio.Members.First(m => m.Name == "violin.auo").Id == vm3.Id);
+            Check("the direction is undone", (await studio.UndoAsync()).Ok && studio.Members.First(m => m.Name == "violin.auo").ObjectJson == vm3.ObjectJson);
             await studio.UndoAsync(); await studio.UndoAsync();                 // the turn, the loudness
-            Check("the loudness is undone", studio.Members.First(m => m.Name == "violin.auo").Id == vm.Id, $"{studio.Members.First(m => m.Name == "violin.auo").Id} against {vm.Id}");
+            Check("the loudness is undone", studio.Members.First(m => m.Name == "violin.auo").ObjectJson == vm.ObjectJson);
 
             // THE USER IS MOVED, NOT A SOUND: "move me", "move the listener"; a misheard "display" is not "play".
             var lm = Intent.Parse("Move me to the center of the room."); var lu = Intent.Parse("Move me the listener 3 meters up"); var lc = Intent.Parse("move bell.auo to the center of the room");

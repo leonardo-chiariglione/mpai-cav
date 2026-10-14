@@ -70,7 +70,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         if (message.Ports.TryGetValue(_objectPort, out var objectJson) && !string.IsNullOrWhiteSpace(objectJson))
         {
             var basic = MpaiJson.FromJson<BasicAudioObject>(objectJson);
-            _open = _aoe.Has(basic.BasicAudioObjectID) ? basic.BasicAudioObjectID : _aoe.CreateObject(basic).AssetId;
+            _open = !string.IsNullOrWhiteSpace(basic.BasicAudioObjectID) && _aoe.Has(basic.BasicAudioObjectID) ? basic.BasicAudioObjectID : _aoe.CreateObject(basic).AssetId;      // an Object with no identifier, or one the storage does not hold, is a new one
             Console.WriteLine($"[CAE-AOE-V1.0] open {_open}");
         }
 
@@ -78,11 +78,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         string? made = null;
         if (_auoIn.Length > 0 && message.Ports.TryGetValue(_auoIn, out var auoJson) && !string.IsNullOrWhiteSpace(auoJson))
         {
-            // An Audio Object that holds nothing and names one Shared Storage has is that one, asked for by its identifier (as a Basic Audio Object is opened); any other
-            // is stored.
-            var given = MpaiJson.FromJson<AudioObject>(auoJson);
-            var bare = (given.BasicAudioObjects?.Count ?? 0) == 0 && (given.SubAudioObjects?.Count ?? 0) == 0;
-            made = bare && !string.IsNullOrWhiteSpace(given.AudioObjectID) && _aoe.Has(given.AudioObjectID) ? given.AudioObjectID : _aoe.StoreAudioObject(given).AssetId;
+            made = _aoe.StoreAudioObject(MpaiJson.FromJson<AudioObject>(auoJson)).AssetId;
             Console.WriteLine($"[CAE-AOE-V1.0] audio object {made}");
         }
 
@@ -108,7 +104,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         // 3b. an Audio Object made, as it is kept in Shared Storage.
         if (made is null) made = _composed;
         _composed = null;
-        if (made is not null && _auoOut.Length > 0) outputs[_auoOut] = System.Text.Encoding.UTF8.GetString(_aoe.Raw(made));
+        if (made is not null && _auoOut.Length > 0) outputs[_auoOut] = MpaiJson.ToJson(_aoe.Materialize(made));         // whole: the Objects it is made of are in it
 
         // 4. the open Object, as it now stands.
         if (_open is not null) outputs[_objectOut] = MpaiJson.ToJson(_aoe.Get(_open));
@@ -149,6 +145,13 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         if (data.AddedObjects is { Objects.Count: > 0 } composed) Compose(composed, data.UserPoV, report);
 
+        // The Object the command modifies, where it gives one - itself, or its identifier - is the one open from here on.
+        if (data.ModifiedObjects is { Objects.Count: > 0 } first && first.Objects[0].ObjectID is { } target)
+        {
+            var given = !string.IsNullOrWhiteSpace(target.ObjectID) ? target.ObjectID : target.BasicAudioObject?.BasicAudioObjectID;
+            if (!string.IsNullOrWhiteSpace(given) && _aoe.Has(given)) _open = given;
+        }
+
         if (_open is null)
         {
             if (data.UserPoV is not null || data.ModifiedObjects is { Objects.Count: > 0 } || data.LUFS is not null)
@@ -163,7 +166,8 @@ public sealed class AoeAimProcessor : IAimProcessor
             report.Done("UserPoV", before, _open);
         }
 
-        // What the Object is like: its loudness and its Acoustic Profile (Object part).
+        // What the Object is like: its loudness and its Acoustic Profile (Object part). The Object is the one open, or the one the entry gives (the Object itself, or its
+        // identifier), which is then open.
         if (data.ModifiedObjects is { Objects.Count: > 0 } modified)
             foreach (var entry in modified.Objects)
             {

@@ -34,30 +34,38 @@ public static class Paths
     }
 }
 
-// What the user calls a thing: a name and a kind, as in a directory - violin.auo, hello.bso, concert.asd.
+// What the user calls a thing: a name and a kind, as in a directory - violin.auo, hello.bso, concert.asd. What it is - the Object or the Scene, as the Module gave it - is
+// data the User Agent keeps in a file of the workspace; the User Agent does not look into it, and holds no identifier of the Module's.
 public sealed class Item
 {
     public string Name { get; set; } = "";
     public string Kind { get; set; } = "auo";            // auo: an audio object; bso: speech; asd: a scene
-    public string? Id { get; set; }                       // the Basic Audio Object (auo, bso) or the Basic Audio Scene (asd) in Shared Storage
+    public string? Data { get; set; }                     // the file of the workspace that holds it: the Object (a Basic Audio Object, or an Audio Object) or the Scene, as JSON
+    // An object held as it was edited - placed, timed, composed - is an Audio Object (AUO); one that was only captured or read is a Basic Audio Object (BAO).
+    public bool Audio { get; set; }
+    public string? Key { get; set; }                      // a Basic Audio Object: what tells its sound from another - a hash of its data, not an identifier
     public double Seconds { get; set; }
     public string? Text { get; set; }                     // what a speech says
     public string? Language { get; set; }                 // the language it is spoken in (BCP 47, as the voice states it), for a speech
     public string File => Name + "." + Kind;
-    // An object held as it was edited - placed, timed, composed - is an Audio Object (AUO); one that was only captured or read is a Basic Audio Object (BAO).
-    public bool Audio => Id?.StartsWith("AUO", StringComparison.Ordinal) == true;
     public override string ToString() => File;
 }
 
 public sealed class Catalog
 {
     public List<Item> Items { get; set; } = [];
-    public string? OpenScene { get; set; }
 
     private static string FilePath => Path.Combine(Paths.Workspace, "catalog.json");
     public static Catalog Load()
     {
-        try { if (System.IO.File.Exists(FilePath)) return JsonSerializer.Deserialize<Catalog>(System.IO.File.ReadAllText(FilePath)) ?? new(); }
+        try
+        {
+            if (System.IO.File.Exists(FilePath) && JsonSerializer.Deserialize<Catalog>(System.IO.File.ReadAllText(FilePath)) is { } c)
+            {
+                c.Items.RemoveAll(i => i.Data is null || !System.IO.File.Exists(Path.Combine(Studio.LibraryFolder, i.Data)));     // an item of an older form, or whose file is gone
+                return c;
+            }
+        }
         catch { }
         return new();
     }
@@ -69,7 +77,7 @@ public sealed class Catalog
     public Item? ByFile(string file) => Items.FirstOrDefault(i => i.File.Equals(file, StringComparison.OrdinalIgnoreCase));
     public Item? ByName(string name) => Items.FirstOrDefault(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && i.Kind != "asd")
                                      ?? Items.FirstOrDefault(i => i.File.Equals(name, StringComparison.OrdinalIgnoreCase));
-    public Item? ByObject(string? id) => id is null ? null : Items.FirstOrDefault(i => i.Kind != "asd" && i.Id == id);
+    public Item? ByObject(string? key) => key is null ? null : Items.FirstOrDefault(i => i.Kind != "asd" && i.Key == key);
     public string Unique(string name, string kind)
     {
         var candidate = name; var n = 2;
@@ -79,7 +87,7 @@ public sealed class Catalog
 }
 
 // Start: when it begins to sound, in seconds from the start of the scene. Group: the audio object it came from, when that holds more than one sound.
-public sealed record Member(string Id, string Name, double X, double Y, double Z, double Yaw, double Start = 0, string? Group = null, double? End = null);
+public sealed record Member(string Key, string Name, double X, double Y, double Z, double Yaw, double Start = 0, string? Group = null, double? End = null, string ObjectJson = "");
 public sealed record Outcome(bool Ok, string Text);
 
 // The user in the scene: where the scene is heard from, and which way the user faces (yaw, degrees: 0 faces ahead, +y).
@@ -95,8 +103,7 @@ public sealed class Studio : IDisposable
     private readonly List<string> done = [];                 // the User Commands that can be revoked, the last last
     private readonly SemaphoreSlim turn = new(1, 1);          // one exchange with the editing AIMs at a time
     private readonly SemaphoreSlim voiceTurn = new(1, 1);     // one with the voice and the dialogue
-    private readonly Dictionary<string, Item> placedAs = [];     // the sounds that came into the scene inside an audio object, by that audio object
-    private readonly Dictionary<string, string> held = [];       // the objects the Module gave, by their identifiers: a version never changes
+    private readonly Dictionary<string, Item> placedAs = [];     // the sounds that came into the scene inside an audio object, by their key, to that audio object
 
     public Catalog Catalog { get; }
     public IReadOnlyList<Member> Members { get; private set; } = [];
@@ -105,6 +112,8 @@ public sealed class Studio : IDisposable
     public AcousticProfile? SceneProfile { get; private set; }   // the acoustics of the scene (the Scene part of the Acoustic Profile), if it has any
     public Acoustics? Acoustics => Mpai.AsmStudio.Acoustics.From(SceneProfile, Room);   // what the scene does to sound: none, unless something says there is reverberation
     public string? SceneJson { get; private set; }
+    public Item? CurrentScene { get; private set; }          // the scene item that is open, if it was opened or saved by name
+    public static string LibraryFolder => Path.Combine(Paths.Workspace, "library");
     public bool CanUndo => done.Count > 0;
     public string Model { get; set; } = "llama3.2:3b";
     public event Action? SceneChanged;
@@ -120,22 +129,34 @@ public sealed class Studio : IDisposable
 
     // ---- the library ---------------------------------------------------------------------------
 
-    // A sound the user has: a WAV file, named as the file is unless a name is given.
-    public async Task<Item> ImportSoundAsync(string wavPath, string? name = null)
+    // What the library holds of a thing: kept in a file of the workspace.
+    private Item Keep(string kind, string name, string json, bool audio, double seconds)
     {
-        var wav = await File.ReadAllBytesAsync(wavPath);
-        var item = new Item { Kind = "auo", Name = Catalog.Unique(name ?? Path.GetFileNameWithoutExtension(wavPath), "auo") };
-        item.Id = await CreateObjectAsync(wav, item.Name);
-        item.Seconds = Seconds(wav);
-        Catalog.Items.Add(item); Catalog.Save(); CatalogChanged?.Invoke();
-        return item;
+        var file = Guid.NewGuid().ToString("N") + ".json";
+        Directory.CreateDirectory(LibraryFolder);
+        System.IO.File.WriteAllText(Path.Combine(LibraryFolder, file), json);
+        return new Item { Kind = kind, Name = name, Data = file, Audio = audio, Key = audio || kind == "asd" ? null : ObjectKey(json), Seconds = seconds };
     }
+
+    private string? Held(Item item)
+    {
+        try { return item.Data is null ? null : System.IO.File.ReadAllText(Path.Combine(LibraryFolder, item.Data)); }
+        catch { return null; }
+    }
+
+    // What tells a sound from another, to the User Agent: a hash of the data of the Basic Audio Object - not an identifier, which is the Module's.
+    public static string ObjectKey(string baoJson) => Hash(JsonNode.Parse(baoJson)?["BasicAudioObjectData"]?.ToJsonString() ?? baoJson);
+    public static string ObjectKey(BasicAudioObject bao) => ObjectKey(MpaiJson.ToJson(bao));
+    private static string Hash(string text) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text)))[..24];
+
+    // A sound the user has: a WAV file, named as the file is unless a name is given.
+    public async Task<Item> ImportSoundAsync(string wavPath, string? name = null) =>
+        await ImportSoundAsync(await File.ReadAllBytesAsync(wavPath), name ?? Path.GetFileNameWithoutExtension(wavPath));
 
     public async Task<Item> ImportSoundAsync(byte[] wav, string name)
     {
-        var item = new Item { Kind = "auo", Name = Catalog.Unique(name, "auo") };
-        item.Id = await CreateObjectAsync(wav, item.Name);
-        item.Seconds = Seconds(wav);
+        name = Catalog.Unique(name, "auo");
+        var item = Keep("auo", name, await CreateObjectAsync(wav, name), false, Seconds(wav));
         Catalog.Items.Add(item); Catalog.Save(); CatalogChanged?.Invoke();
         return item;
     }
@@ -159,28 +180,21 @@ public sealed class Studio : IDisposable
         switch (header)
         {
             case "OSD-BAO-V1.5":
+                // A Basic Audio Object read from a file is a new one here: whatever identifier it came with is another storage's.
                 var bao = MpaiJson.FromJson<BasicAudioObject>(json);
-                item = new Item { Kind = "auo", Name = name, Id = await StoreBaoAsync(json), Seconds = Seconds(bao.Data) };
+                item = Keep("auo", name, await ObjectExchangeAsync(json), false, Seconds(bao.Data));      // an Object the Module does not hold is a new one for it
                 break;
             case "OSD-AUO-V1.5":
-                // An Audio Object read from the user's external storage is given to the Module at its Audio Object Port; the Module stores it (its sounds one by one) and
-                // names it. How long it lasts is read from the file, which holds the sounds.
+                // An Audio Object read from the user's external storage is given to the Module at its Audio Object Port; the Module stores it (its sounds one by one) and gives
+                // it back whole. How long it lasts is read from the file, which holds the sounds.
                 var read = MpaiJson.FromJson<AudioObject>(json);
                 var seconds = SceneAudio.Members(read).Select(m => m.EndSeconds ?? m.StartSeconds + Seconds(m.Object.Data)).DefaultIfEmpty(0).Max();
-                var stored = await AudioObjectExchangeAsync(json);
-                item = new Item { Kind = "auo", Name = name, Id = (string)JsonNode.Parse(stored)!["AudioObjectID"]!, Seconds = seconds };
+                item = Keep("auo", name, await AudioObjectExchangeAsync(json), true, seconds);
                 break;
             default: throw new InvalidDataException($"{Path.GetFileName(path)} holds {header ?? "no Header"}: a Basic Audio Object or an Audio Object is read.");
         }
         Catalog.Items.Add(item); Catalog.Save(); CatalogChanged?.Invoke();
         return item;
-    }
-
-    // A Basic Audio Object read from a file is a new one here: whatever identifier it came with is another workspace's.
-    private async Task<string> StoreBaoAsync(string baoJson)
-    {
-        var node = JsonNode.Parse(baoJson)!; node["BasicAudioObjectID"] = "";
-        return (string)JsonNode.Parse(await ObjectExchangeAsync(node.ToJsonString()))!["BasicAudioObjectID"]!;
     }
 
     // A few sounds to begin with, made here: a bell, a drum, a hum - and, if the synthesiser is there, someone saying a word.
@@ -223,9 +237,9 @@ public sealed class Studio : IDisposable
         var voice = await SpeakAsync(textObject);
         if (voice.Data.Length < 100) throw new InvalidOperationException("The voice made no sound.");
         var spoken = voice.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? textObject.TextQualifier?.Attributes?.Language?.LanguageCode;
-        var item = new Item { Kind = "bso", Name = Catalog.Unique(name, "bso"), Text = textObject.GetText(), Language = spoken };
-        item.Id = await CreateObjectAsync(voice.Data, item.Name);
-        item.Seconds = Seconds(voice.Data);
+        name = Catalog.Unique(name, "bso");
+        var item = Keep("bso", name, await CreateObjectAsync(voice.Data, name), false, Seconds(voice.Data));
+        item.Text = textObject.GetText(); item.Language = spoken;
         Catalog.Items.Add(item); Catalog.Save(); CatalogChanged?.Invoke();
         return item;
     }
@@ -242,8 +256,8 @@ public sealed class Studio : IDisposable
         Catalog.Items.Remove(item); Catalog.Save(); CatalogChanged?.Invoke();
     }
 
-    // The object as the Module holds it (a Basic Audio Object, as JSON), for whoever wants to give it on: asked of the Module, by its identifier.
-    public string? ObjectJson(Item item) => item.Id is null || item.Audio ? null : ObjectJsonById(item.Id);
+    // The Object as the Module gave it (a Basic Audio Object, as JSON), for whoever wants to give it on.
+    public string? ObjectJson(Item item) => item.Audio ? null : Held(item);
 
     public byte[]? SoundOf(Item item)
     {
@@ -252,23 +266,10 @@ public sealed class Studio : IDisposable
         catch { return null; }
     }
 
-    // Opening an Object by its identifier is how the Module is asked for it: the Object comes back at the same Port.
-    private string? ObjectJsonById(string id)
-    {
-        lock (held) if (held.TryGetValue(id, out var known)) return known;
-        turn.Wait();
-        try
-        {
-            link.DrainEditing();
-            link.Write(ModuleLink.Bao, 1, new JsonObject { ["Header"] = "OSD-BAO-V1.5", ["BasicAudioObjectID"] = id }.ToJsonString());
-            var json = link.Read(ModuleLink.Bao, 1, 20_000);
-            if (json is not null && (string?)JsonNode.Parse(json)?["BasicAudioObjectID"] == id) lock (held) held[id] = json;
-            return json;
-        }
-        finally { turn.Release(); }
-    }
+    // The Audio Object as the Module gave it (JSON).
+    public string? AudioObjectJson(Item item) => item.Audio ? Held(item) : null;
 
-    // One exchange with Audio Object Editing at its Audio Object Port: an Audio Object read from outside given, the Audio Object as the Module keeps it back.
+    // One exchange with Audio Object Editing at its Audio Object Port: an Audio Object read from outside given, the Audio Object as the Module keeps it, whole, back.
     private async Task<string> AudioObjectExchangeAsync(string auoJson)
     {
         await turn.WaitAsync();
@@ -283,27 +284,6 @@ public sealed class Studio : IDisposable
         }
         finally { turn.Release(); }
     }
-
-    // The Audio Object as the Shared Storage holds it (JSON), for whoever wants to give it on.
-    public string? AudioObjectJson(Item item) => item.Id is not null && item.Audio ? AudioObjectJsonById(item.Id) : null;
-
-    // An Audio Object the Module keeps, asked for by its identifier at the Audio Object Port, as a Basic Audio Object is: the Module gives it back as it keeps it.
-    private string? AudioObjectJsonById(string id)
-    {
-        lock (held) if (held.TryGetValue(id, out var known)) return known;
-        try
-        {
-            var json = AudioObjectExchangeAsync(new JsonObject { ["Header"] = "OSD-AUO-V1.5", ["AudioObjectID"] = id }.ToJsonString()).GetAwaiter().GetResult();
-            lock (held) held[id] = json;
-            return json;
-        }
-        catch { return null; }
-    }
-
-    private AudioObject? AudioObjectIn(string id) => AudioObjectJsonById(id) is { } json ? MpaiJson.FromJson<AudioObject>(json) : null;
-
-    private double SecondsOf(AudioObject auo) =>
-        SceneAudio.Members(auo).Select(m => m.EndSeconds ?? m.StartSeconds + (ItemOf(m.Object.BasicAudioObjectID)?.Seconds ?? 0)).DefaultIfEmpty(0).Max();
 
     // One exchange with Audio Object Editing: a Basic Audio Object given, the Object as the Module holds it back.
     private async Task<string> ObjectExchangeAsync(string baoJson)
@@ -334,8 +314,8 @@ public sealed class Studio : IDisposable
             }
         };
         var made = BasicAudioObject.FromData(wav, qualifier);
-        var bao = new BasicAudioObject { BasicAudioObjectID = made.BasicAudioObjectID, BasicAudioObjectData = made.BasicAudioObjectData, AudioQualifier = made.AudioQualifier, DescrMetadata = name, MInstanceID = "ASM" };
-        return (string)JsonNode.Parse(await ObjectExchangeAsync(MpaiJson.ToJson(bao)))!["BasicAudioObjectID"]!;
+        var bao = new BasicAudioObject { BasicAudioObjectID = "", BasicAudioObjectData = made.BasicAudioObjectData, AudioQualifier = made.AudioQualifier, DescrMetadata = name, MInstanceID = "ASM" };
+        return await ObjectExchangeAsync(MpaiJson.ToJson(bao));
     }
 
     public static (int Rate, int Bits, int Channels) Format(byte[] wav)
@@ -374,33 +354,33 @@ public sealed class Studio : IDisposable
         UserCommandID = "C" + Guid.NewGuid().ToString("N")[..10], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
     };
 
-    // Puts the object of the library in the scene - facing the listener - where the user says.
-    // A basic audio object is put where it is said (x, y; or in front of the listener where nothing is said). An audio object (AUO) brings its own
-    // places and times: where it is said, the first of its sounds goes there and the others keep their places around it.
+    // Puts the object of the library in the scene - facing the listener - where the user says. The command carries the Object itself (the Object or ID of the data types):
+    // the User Agent holds no identifier. A basic audio object is put where it is said (x, y; or in front of the listener where nothing is said). An audio object (AUO)
+    // brings its own places and times: where it is said, the first of its sounds goes there and the others keep their places around it.
     public Task<Outcome> AddAsync(Item item, double? x, double? y, double z = 0, double yaw = 180)
     {
-        if (item.Id is null) return Task.FromResult(new Outcome(false, $"{item.File} is not a sound."));
+        if (item.Kind == "asd" || Held(item) is not { } json) return Task.FromResult(new Outcome(false, $"{item.File} is not a sound."));
         if (!item.Audio)
         {
-            if (Members.Any(m => m.Id == item.Id || (placedAs.TryGetValue(m.Id, out var held) && held == item))) return Task.FromResult(new Outcome(false, $"{item.File} is already in the scene."));
+            if (Members.Any(m => m.Key == item.Key || (placedAs.TryGetValue(m.Key, out var held) && held == item))) return Task.FromResult(new Outcome(false, $"{item.File} is already in the scene."));
             double px = x ?? 0, py = y ?? 2;
-            placedAs.Remove(item.Id);                            // put in as itself, not as part of an audio object it was once in
+            placedAs.Remove(item.Key!);                          // put in as itself, not as part of an audio object it was once in
             return RunAsync(Command(new UserCommandData
             {
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = item.Id }, SpatialAttitude = At(px, py, z, yaw, 0) }] }
+                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = MpaiJson.FromJson<BasicAudioObject>(json) }, SpatialAttitude = At(px, py, z, yaw, 0) }] }
             }), $"{item.File} is in the scene, {Describe(px, py)}.");
         }
 
         List<SceneAudio.Member> parts;
-        try { parts = AudioObjectIn(item.Id) is { } held ? SceneAudio.Members(held).ToList() : []; }
+        try { parts = SceneAudio.Members(MpaiJson.FromJson<AudioObject>(json)).ToList(); }
         catch (Exception e) { return Task.FromResult(new Outcome(false, $"{item.File} cannot be read: {e.Message}")); }
-        if (parts.Count == 0) return Task.FromResult(new Outcome(false, $"{item.File} holds no sound, or is not in the Shared Storage."));
-        if (parts.Any(p => Members.Any(m => m.Id == p.Object.BasicAudioObjectID))) return Task.FromResult(new Outcome(false, $"{item.File} is already in the scene."));
+        if (parts.Count == 0) return Task.FromResult(new Outcome(false, $"{item.File} holds no sound."));
+        if (parts.Any(p => Members.Any(m => m.Key == ObjectKey(p.Object)))) return Task.FromResult(new Outcome(false, $"{item.File} is already in the scene."));
         double dx = x is null ? 0 : x.Value - parts[0].Position[0], dy = y is null ? 0 : y.Value - parts[0].Position[1];
-        foreach (var p in parts) placedAs[p.Object.BasicAudioObjectID] = item;
+        foreach (var p in parts) placedAs[ObjectKey(p.Object)] = item;
         var placed = parts.Select(p => new ObjectPlacement
         {
-            ObjectID = new ManagedObject { ObjectID = p.Object.BasicAudioObjectID },
+            ObjectID = new ManagedObject { BasicAudioObject = p.Object },
             SpatialAttitude = At(p.Position[0] + dx, p.Position[1] + dy, p.Position[2], p.YawDeg, p.StartSeconds, p.EndSeconds)
         }).ToList();
         var first = placed[0].SpatialAttitude!.Position.CartPosition;
@@ -470,48 +450,45 @@ public sealed class Studio : IDisposable
     // THE SCENE'S (Audio Scene Editing: ModifiedScene):      Reflectivity, Reverberation, Diffusion, Absorption, Doppler.
     // A command changes one field and keeps the others; the profile sent is the whole of the new one.
 
-    private Item? ItemOf(string id) => placedAs.GetValueOrDefault(id) ?? Catalog.ByObject(id);
+    private Item? ItemOf(string key) => placedAs.GetValueOrDefault(key) ?? Catalog.ByObject(key);
 
-    // The Basic Audio Object a member is, as it is kept.
-    public BasicAudioObject? ObjectOf(Member m) => ObjectById(m.Id);
+    // The Basic Audio Object a member is, as the Module gave it with the Scene.
+    public BasicAudioObject? ObjectOf(Member m) => m.ObjectJson.Length == 0 ? null : MpaiJson.FromJson<BasicAudioObject>(m.ObjectJson);
 
-    private BasicAudioObject? ObjectById(string id) => ObjectJsonById(id) is { } json ? MpaiJson.FromJson<BasicAudioObject>(json) : null;
-
-    // WHAT AUDIO OBJECT EDITING DOES, AND THE SCENE FOLLOWS: the Module opens the object and edits it (a new version of it); the scene then has the new version in
-    // the place of the old one, in one command - so that undo gives the old one back.
+    // WHAT AUDIO OBJECT EDITING DOES, AND THE SCENE FOLLOWS: the command carries the Object to edit, itself; the Module edits it (a new version of it) and gives it back; the
+    // scene then has the new version in the place of the old one - the old one taken out, the new one put where it was, by its PoV - in one command, so that undo gives the
+    // old one back.
     private async Task<Outcome> EditObjectAsync(Member m, UserCommandData data, string said)
     {
-        string newId;
+        string newObject;
         await turn.WaitAsync();
         try
         {
             var (reportJson, objectJson) = await Task.Run(() =>
             {
                 link.DrainEditing();
-                link.Write(ModuleLink.Bao, 1, new JsonObject { ["Header"] = "OSD-BAO-V1.5", ["BasicAudioObjectID"] = m.Id }.ToJsonString());
-                link.Read(ModuleLink.Bao, 1);                                         // the Object, open
                 link.Write(ModuleLink.Ucm, 1, MpaiJson.ToJson(Command(data)));
                 var report = link.Read(ModuleLink.Ucm, 1);
                 return (report, report is null ? null : link.Read(ModuleLink.Bao, 1));
             });
             var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport;
             if (report is not { Outcome: "Done" or "Partly" } || objectJson is null) return new Outcome(false, report?.Actions.FirstOrDefault(a => a.Outcome != "Done")?.Reason ?? "That could not be done.");
-            newId = (string)JsonNode.Parse(objectJson)!["BasicAudioObjectID"]!;
-            lock (held) held[newId] = objectJson;
+            newObject = objectJson;
         }
         finally { turn.Release(); }
-        if (ItemOf(m.Id) is { } via) placedAs[newId] = via;
+        var edited = MpaiJson.FromJson<BasicAudioObject>(newObject);
+        if (ItemOf(m.Key) is { } via) placedAs[ObjectKey(edited)] = via;
         return await RunAsync(Command(new UserCommandData
         {
-            AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = newId }, SpatialAttitude = At(m.X, m.Y, m.Z, m.Yaw, m.Start, m.End) }] },
-            RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = m.Id } }] }
+            RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { SpatialAttitude = At(m.X, m.Y, m.Z, m.Yaw, m.Start, m.End) }] },
+            AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = edited }, SpatialAttitude = At(m.X, m.Y, m.Z, m.Yaw, m.Start, m.End) }] }
         }), said);
     }
 
     // The profile an object has, or one to begin with: the fields the schema requires.
     private AcousticProfile ProfileOf(Member m)
     {
-        var bao = ObjectById(m.Id);
+        var bao = ObjectOf(m);
         return bao?.BasicAudioObjectProperties?.AcousticProfile ?? new AcousticProfile
         {
             AcousticProfileID = Guid.NewGuid().ToString(), FrequencyRange = new FrequencyRange { MinFrequencyHz = 20, MaxFrequencyHz = 20000 },
@@ -530,7 +507,7 @@ public sealed class Studio : IDisposable
     };
 
     private Task<Outcome> ObjectProfileAsync(Member m, Func<AcousticProfile, AcousticProfile> change, string said) =>
-        EditObjectAsync(m, new UserCommandData { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { ObjectID = m.Id }, AcousticProfile = change(ProfileOf(m)) }] } }, said);
+        EditObjectAsync(m, new UserCommandData { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { BasicAudioObject = ObjectOf(m) }, AcousticProfile = change(ProfileOf(m)) }] } }, said);
 
     private Task<Outcome> SceneProfileAsync(Func<AcousticProfile, AcousticProfile> change, string said)
     {
@@ -610,7 +587,7 @@ public sealed class Studio : IDisposable
 
     public Task<Outcome> SpectrogramAsync(Member m)
     {
-        var bao = ObjectById(m.Id);
+        var bao = ObjectOf(m);
         if (bao is null) return Task.FromResult(new Outcome(false, $"{m.Name} cannot be read."));
         var plot = SpectrogramPlot(SceneAudio.Mono(bao.Data, 48000), 48000);
         return ObjectProfileAsync(m, p => Changed(p, spectrogram: plot), $"The spectrogram of {m.Name} is measured: {plot.Data!.TwoD!.Count} points.");
@@ -681,7 +658,7 @@ public sealed class Studio : IDisposable
     // The profile of an object, or of the scene, in words: what the AIMs keep of it.
     public string ProfileText(Member m)
     {
-        var bao = ObjectById(m.Id); var profile = bao?.BasicAudioObjectProperties?.AcousticProfile;
+        var bao = ObjectOf(m); var profile = bao?.BasicAudioObjectProperties?.AcousticProfile;
         var measured = bao is null ? double.NaN : SceneAudio.Lufs(SceneAudio.Mono(bao.Data, 48000));
         var direction = profile?.DirectionalPatterns?.DescrMetadata ?? (profile?.DirectionalPatterns is null ? "omnidirectional" : "a pattern of its own");
         var span = m.End is { } e ? $"sounds from {m.Start:0.##} s to {e:0.##} s" : $"starts at {m.Start:0.##} s";
@@ -698,27 +675,28 @@ public sealed class Studio : IDisposable
     }
 
     // THE OBJECT ON STAGE, AS THE COMMANDS LEFT IT, kept under a name: where it is and when it begins, with its sound(s) - an Audio Object. The original is untouched.
-    // The Module makes the Audio Object (Audio Object Editing: AddedObjects, each with its place and time) and names it in its report; the User Agent keeps the name.
+    // The Module makes the Audio Object (Audio Object Editing: AddedObjects, the Objects themselves, each with its place and time) and gives it whole at its Audio Object Port.
     public Item? SaveObject(Member m, string name)
     {
         var group = GroupOf(m);
         var command = Command(new UserCommandData
         {
-            AddedObjects = new ObjectPlacements { Objects = group.Select(o => new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = o.Id }, SpatialAttitude = At(o.X, o.Y, o.Z, o.Yaw, o.Start, o.End) }).ToList() }
+            AddedObjects = new ObjectPlacements { Objects = group.Select(o => new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = ObjectOf(o) }, SpatialAttitude = At(o.X, o.Y, o.Z, o.Yaw, o.Start, o.End) }).ToList() }
         });
-        string? reportJson;
+        string? reportJson, auo;
         turn.Wait();
         try
         {
             link.DrainEditing();
             link.Write(ModuleLink.Ucm, 1, MpaiJson.ToJson(command));
             reportJson = link.Read(ModuleLink.Ucm, 1);
+            auo = reportJson is null ? null : link.Read(ModuleLink.Auo, 1, 20_000);
         }
         finally { turn.Release(); }
         var action = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport?.Actions.FirstOrDefault(a => a.Action == "AddedObjects");
-        if (action is not { Outcome: "Done", ResultID: { Length: > 0 } made }) throw new InvalidOperationException(action?.Reason ?? "The Module did not make the Audio Object.");
-        var seconds = group.Max(o => o.End ?? (ItemOf(o.Id)?.Seconds ?? 0) + o.Start);
-        var item = new Item { Kind = "auo", Name = Catalog.Unique(name, "auo"), Id = made, Seconds = seconds };
+        if (action is not { Outcome: "Done" } || auo is null) throw new InvalidOperationException(action?.Reason ?? "The Module did not make the Audio Object.");
+        var seconds = group.Max(o => o.End ?? (ItemOf(o.Key)?.Seconds ?? 0) + o.Start);
+        var item = Keep("auo", Catalog.Unique(name, "auo"), auo, true, seconds);
         Catalog.Items.Add(item); Catalog.Save(); CatalogChanged?.Invoke();
         return item;
     }
@@ -749,35 +727,41 @@ public sealed class Studio : IDisposable
                 var report = link.Read(ModuleLink.Ucm, 2);
                 var parsed = report is null ? null : MpaiJson.FromJson<UserCommand>(report).UserCommandReport;
                 var ok = parsed is { Outcome: "Done" or "Partly" };
-                return (report, SceneFrom(ok ? 60_000 : 1_500, parsed?.Actions.LastOrDefault(a => a.ResultID is { Length: > 0 })?.ResultID));
+                // A scene comes after a command that edits it; after one that revokes, perhaps none - when the revoked command had made the scene, there is no scene any more.
+                return (report, SceneFrom(ok && command.UserCommandData?.RevokedUserCommandID is null ? 60_000 : 2_000));
             });
             ReadScene(scene);
             var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport;
             var ok = report is { Outcome: "Done" or "Partly" };
             if (ok && record) done.Add(command.UserCommandID);
-            if (record && ok) Catalog.OpenScene = SceneId(); Catalog.Save();
+            if (ok) KeepLastScene();
             var reason = report?.Actions.FirstOrDefault(a => a.Outcome != "Done")?.Reason;
             return new Outcome(ok, ok ? (said ?? "Done.") : (reason ?? (reportJson is null ? "The Module did not answer." : "That could not be done.")));
         }
         finally { turn.Release(); }
     }
 
-    // The Scene the Module gave after the exchange. Audio Scene Editing also gives the open Scene when Audio Object Editing gives it an Object, so Scenes may be waiting
-    // that are not of this exchange: the one wanted is the one the report names; failing it, the last there is.
-    private string? SceneFrom(int milliseconds, string? wanted)
+    // The Scene the Module gave after the exchange. Audio Scene Editing also gives the open Scene when Audio Object Editing gives it an Object, so more than one may be
+    // waiting; they come in the order they were made, and the last is the Scene as it now is.
+    private string? SceneFrom(int milliseconds)
     {
-        string? last = null;
+        var last = link.Read(ModuleLink.Bas, 1, milliseconds);
+        if (last is null) return null;
         for (var i = 0; i < 8; i++)
         {
-            var json = link.Read(ModuleLink.Bas, 1, i == 0 ? milliseconds : 1_500);
-            if (json is null) break;
-            last = json;
-            if (wanted is null || (string?)JsonNode.Parse(json)?["BasicAudioSceneDescriptorsID"] == wanted) break;
+            var next = link.Read(ModuleLink.Bas, 1, 250);
+            if (next is null) break;
+            last = next;
         }
         return last;
     }
 
-    private string? SceneId() => SceneJson is null ? null : (string?)JsonNode.Parse(SceneJson)?["BasicAudioSceneDescriptorsID"];
+    // The scene as it was left, kept by the User Agent (what the Module gave): it is given back to the Module at the next start.
+    private static string LastScenePath => Path.Combine(Paths.Workspace, "last-scene.json");
+    private void KeepLastScene()
+    {
+        try { if (SceneJson is not null) System.IO.File.WriteAllText(LastScenePath, SceneJson); } catch { }
+    }
 
     private void ReadScene(string? json)
     {
@@ -799,15 +783,16 @@ public sealed class Studio : IDisposable
                 var p = sa?.Position?.CartPosition is { Length: >= 3 } c ? c : new double[3];
                 var yaw = sa?.Orientation?.EulerAngles is { Length: >= 3 } a ? a[2] : 0;
                 var start = SceneAudio.StartOf(e.AudioObjectSpaceTime); var end = SceneAudio.EndOf(e.AudioObjectSpaceTime);
-                if (placedAs.TryGetValue(bao.BasicAudioObjectID, out var via))
+                var key = ObjectKey(bao); var held = MpaiJson.ToJson(bao);
+                if (placedAs.TryGetValue(key, out var via))
                 {
                     var k = seen[via.File] = seen.GetValueOrDefault(via.File) + 1;
-                    list.Add(new Member(bao.BasicAudioObjectID, k == 1 ? via.File : $"{via.File} ({k})", p[0], p[1], p[2], yaw, start, via.File, end));
+                    list.Add(new Member(key, k == 1 ? via.File : $"{via.File} ({k})", p[0], p[1], p[2], yaw, start, via.File, end, held));
                 }
                 else
                 {
-                    var item = Catalog.ByObject(bao.BasicAudioObjectID);
-                    list.Add(new Member(bao.BasicAudioObjectID, item?.File ?? bao.DescrMetadata ?? bao.BasicAudioObjectID, p[0], p[1], p[2], yaw, start, null, end));
+                    var item = Catalog.ByObject(key);
+                    list.Add(new Member(key, item?.File ?? bao.DescrMetadata ?? "a sound", p[0], p[1], p[2], yaw, start, null, end, held));
                 }
             }
             Members = list;
@@ -822,42 +807,47 @@ public sealed class Studio : IDisposable
 
     public Item? SaveScene(string name)
     {
-        var id = SceneId();
-        if (id is null) return null;
+        if (SceneJson is null) return null;
         var existing = Catalog.Items.FirstOrDefault(i => i.Kind == "asd" && i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        var item = existing ?? new Item { Kind = "asd", Name = name };
-        item.Id = id;
-        if (existing is null) Catalog.Items.Add(item);
+        var item = Keep("asd", existing?.Name ?? name, SceneJson, false, 0);
+        if (existing is not null) { try { System.IO.File.Delete(Path.Combine(LibraryFolder, existing.Data!)); } catch { } Catalog.Items.Remove(existing); }
+        Catalog.Items.Add(item); CurrentScene = item;
         Catalog.Save(); CatalogChanged?.Invoke();
         return item;
     }
 
+    // The Scene is given back to the Module, as the Module gave it, at Basic Audio Scene 1; the Module opens it and gives it back.
     public async Task<Outcome> OpenSceneAsync(Item scene)
     {
-        if (scene.Id is null) return new Outcome(false, $"{scene.File} is not a scene of the Module.");
+        if (Held(scene) is not { } json) return new Outcome(false, $"{scene.File} cannot be read.");
+        return await OpenSceneAsync(json, scene, $"{scene.File} is open.");
+    }
+
+    private async Task<Outcome> OpenSceneAsync(string json, Item? scene, string said)
+    {
         await turn.WaitAsync();
         try
         {
-            // The Scene is given by its identifier at Basic Audio Scene 1; the Module opens it and gives it back.
-            var json = await Task.Run(() =>
+            var back = await Task.Run(() =>
             {
                 link.DrainEditing();
-                link.Write(ModuleLink.Bas, 1, new JsonObject { ["Header"] = "OSD-BAS-V1.5", ["BasicAudioSceneDescriptorsID"] = scene.Id }.ToJsonString());
-                return SceneFrom(20_000, scene.Id);
+                link.Write(ModuleLink.Bas, 1, json);
+                return SceneFrom(20_000);
             });
-            if (json is null) return new Outcome(false, $"{scene.File} is not in the storage.");
+            if (back is null) return new Outcome(false, "The Module did not open that scene.");
             done.Clear();
-            ReadScene(json);
-            Catalog.OpenScene = scene.Id; Catalog.Save();
-            return new Outcome(true, $"{scene.File} is open.");
+            ReadScene(back);
+            CurrentScene = scene;
+            KeepLastScene();
+            return new Outcome(true, said);
         }
         finally { turn.Release(); }
     }
 
     public async Task RestoreAsync()
     {
-        if (Catalog.OpenScene is { } id)
-            await OpenSceneAsync(new Item { Kind = "asd", Name = "(last)", Id = id });
+        try { if (System.IO.File.Exists(LastScenePath)) await OpenSceneAsync(System.IO.File.ReadAllText(LastScenePath), null, "The last scene is open."); }
+        catch { }
     }
 
     // ---- hearing ------------------------------------------------------------------------------------

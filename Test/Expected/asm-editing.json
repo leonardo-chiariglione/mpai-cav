@@ -6,7 +6,7 @@
   "4 the report": "Done: AddedObjects BAO000003 Done -> BAS000001, AddedObjects BAO000004 Done -> BAS000002, UserPoV BAS000002 Done -> BAS000003",
   "4 two BAOs placed in a scene": "OSD-BAS-V1.5 of 2 members, UserPoV set, valid",
   "5 moved and removed": "1 member(s), valid",
-  "5 the report": "Partly: MovedObjects BAO000004 Done -> BAS000004, RemovedObjects BAO000003 Done -> BAS000005, RemovedObjects BAO999999 Failed",
+  "5 the report": "Partly: RemovedObjects BAO000003 Done -> BAS000004, RemovedObjects BAO999999 Failed, MovedObjects BAO000004 Done -> BAS000005",
   "6 the User Commands": "valid",
   "6 the reports": "valid",
   "7 versions kept in Shared Storage": "BAO 4, BAS 5"
