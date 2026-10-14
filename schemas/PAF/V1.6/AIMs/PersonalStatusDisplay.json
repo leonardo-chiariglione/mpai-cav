@@ -11,7 +11,7 @@
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "MachineID", "Direction": "Input", "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "MachineID", "Direction": "Input", "DataType": "string", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "SpeechModel", "Direction": "Input", "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -24,7 +24,7 @@
                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-GBD-V1.6", "Relation": ""}},
                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": ""}}],
 
-  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-IID-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-IID-V1.5"}},
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}},
                           {"Output": {"AIMName": "", "DataType": "AIP-MLO-V1.0"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "AIP-MLO-V1.0"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-GFD-V1.6", "DataType": "OSD-BTO-V1.5"}},

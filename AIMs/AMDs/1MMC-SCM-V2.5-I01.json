@@ -6,7 +6,7 @@
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "EntityID", "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "EntityID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextDescriptors", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},

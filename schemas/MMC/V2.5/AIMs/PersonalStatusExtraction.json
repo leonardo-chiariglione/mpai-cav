@@ -19,8 +19,8 @@
                      {"Name": "BodyDescriptors",     "Direction": "Input",  "DataType": "PAF-BDO-V1.6",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "PersonalStatus",      "Direction": "Output", "DataType": "MMC-EPS-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextPersonalStatus",  "Direction": "Input",  "DataType": "MMC-TPS-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AvatarID",            "Direction": "Input",  "DataType": "OSD-IID-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "OutputAvatarID",      "Direction": "Output", "DataType": "OSD-IID-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "AvatarID",            "Direction": "Input",  "DataType": "string",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "OutputAvatarID",      "Direction": "Output", "DataType": "string",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ETD-V2.5", "Relation": "" } },
                      { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ESD-V2.5", "Relation": "" } },

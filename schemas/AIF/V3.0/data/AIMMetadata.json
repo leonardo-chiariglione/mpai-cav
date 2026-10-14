@@ -145,8 +145,8 @@
     "PortType":           { "description": "What a Port carries: an MPAI Data Type, or a type of the type system of AIF V3.0 (Metadata, 1.1).",
                             "anyOf": [ { "$ref": "#/$defs/MPAIIdentifier" }, { "$ref": "#/$defs/AIFType" } ] },
 
-    "AIFType":            { "type": "string", "description": "A type of the type system of AIF V3.0 (Metadata, 1.1): a base type - int8, int16, int32, int64, uint8 or byte, uint16, uint32, uint64, float32, float64, boolean (one byte, 0 or 1) - or a struct or variant in braces, each optionally an array ([]).",
-                            "pattern": "^((int8|int16|int32|int64|uint8|byte|uint16|uint32|uint64|float32|float64|boolean)|\\{.+\\})(\\[\\])*$" },
+    "AIFType":            { "type": "string", "description": "A type of the type system of AIF V3.0 (Metadata, 1.1): a base type - int8, int16, int32, int64, uint8 or byte, uint16, uint32, uint64, float32, float64, boolean (one byte, 0 or 1), string (UTF-8 text) - or a struct or variant in braces, each optionally an array ([]).",
+                            "pattern": "^((int8|int16|int32|int64|uint8|byte|uint16|uint32|uint64|float32|float64|boolean|string)|\\{.+\\})(\\[\\])*$" },
 
     "GroupNumber":        { "anyOf": [ { "type": "integer", "minimum": 1 }, { "$dynamicRef": "#placeholder" } ] },
 

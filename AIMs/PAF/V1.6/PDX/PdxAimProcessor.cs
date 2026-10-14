@@ -44,7 +44,7 @@ public sealed class PdxAimProcessor : IAimProcessor
     {
         _instanceId    = instanceId;
         _inPort        = ports.Input("PAF-PAV-V1.6");
-        _avatarIdPort  = ports.OutputOrDefault("OSD-IID-V1.5", "");
+        _avatarIdPort  = ports.OutputOrDefault("string", "");          // the Avatar ID: an ID, declared, not an Instance Identifier
         _scenePort     = ports.OutputOrDefault("OSD-BMS-V1.5", "");
         _spaceTimePort = ports.OutputOrDefault("OSD-SPT-V1.5", "");
         _modelPort     = ports.OutputOrDefault("PAF-AVT-V1.6", "");      // the Avatar (PAF-AVT): its ID, its 3D model and its animation
@@ -75,7 +75,7 @@ public sealed class PdxAimProcessor : IAimProcessor
         var avatars = pav["AvatarOrAvatarID"] as JsonArray ?? new JsonArray();
         var speeches = pav["SPOOrSPOID"] as JsonArray ?? new JsonArray();
 
-        Give(_avatarIdPort, JsonNode.Parse(MpaiJson.ToJson(Identifier(IdOf(pav, avatars)))));
+        Give(_avatarIdPort, JsonValue.Create(IdOf(pav, avatars)));
         Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(PersonalStatusOf(pav))));
         Give(_scenePort, pav["AVSceneDescriptors"]);
         Give(_spaceTimePort, pav["AvatarSpaceTime"] ?? pav["PortableAvatarSpaceTime"]);
@@ -110,20 +110,6 @@ public sealed class PdxAimProcessor : IAimProcessor
         ?? (string?)avatars.OfType<JsonObject>().FirstOrDefault()?["Basic3DModelObjectID"]
         ?? (string?)pav["PortableAvatarID"]
         ?? "";
-
-    private static InstanceIdentifier Identifier(string id) => new()
-    {
-        InstanceIdentifier_ = id,
-        InstanceIdentifierData =
-        {
-            new InstanceCandidate
-            {
-                InstanceLabel = id,
-                LabelConfidenceLevel = 1,
-                Taxonomy = new InstanceTaxonomy { TaxonomyLevelIDs = { "entity", "avatar" } }
-            }
-        }
-    };
 
     private static string TextOf(JsonNode text)
     {

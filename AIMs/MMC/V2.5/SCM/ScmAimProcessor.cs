@@ -25,7 +25,7 @@ namespace Mpai.Mmc.Scm;
 public sealed class ScmAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
-    private readonly string _entityIdPort;     // OSD-IID
+    private readonly string _entityIdPort;     // the ID of the entity that spoke: an ID (string), declared
     private readonly string _textPort;         // OSD-BTO: the Refined Text
     private readonly string _psPort;           // MMC-EPS
     private readonly string _editedPort;       // MMC-SUM in: the Edited Summary
@@ -34,7 +34,7 @@ public sealed class ScmAimProcessor : IAimProcessor
     public ScmAimProcessor(string instanceId, AimPortReader ports)
     {
         _instanceId   = instanceId;
-        _entityIdPort = ports.Input("OSD-IID-V1.5");
+        _entityIdPort = ports.Input("string");
         _textPort     = ports.Input("OSD-BTO-V1.5");
         _psPort       = ports.Input("MMC-EPS-V2.5");
         _editedPort   = ports.Input("MMC-SUM-V2.5");
@@ -54,7 +54,7 @@ public sealed class ScmAimProcessor : IAimProcessor
         // NO WORDS IS NOTHING SAID: the Summary goes on as it came in.
         if (said.Length > 0)
         {
-            var who = Read<InstanceIdentifier>(_entityIdPort)?.InstanceIdentifierData.FirstOrDefault()?.InstanceLabel;
+            var who = message.Ports.TryGetValue(_entityIdPort, out var named) && !string.IsNullOrWhiteSpace(named) ? System.Text.Json.JsonSerializer.Deserialize<string>(named) : null;
             var how = EmotionOf(Read<EntityPersonalStatus>(_psPort));
             var line = $"{(string.IsNullOrWhiteSpace(who) ? "A participant" : who)}{(how is null ? "" : $" ({how})")}: {said}";
             record = record.Length == 0 ? line : record + "\n" + line;

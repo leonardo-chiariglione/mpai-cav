@@ -5,7 +5,7 @@ using AIF.Controller;
 namespace Mpai.Paf.Vcr;
 
 // MULTIMODAL SCENE CREATION, THE AVATAR-BASED VIDEOCONFERENCE (PAF-MSC-V1.6; the VCR of the author's figure, slide 27 of PAF Reference Models). It takes what PDX gives
-// for each Portable Avatar - the Avatar's ID (OSD-IID), the Avatar (PAF-AVT: its ID, its 3D model, its animation and, where it speaks, its speech), its Spatial Attitude
+// for each Portable Avatar - the Avatar's ID (an ID, a string: the nickname), the Avatar (PAF-AVT: its ID, its 3D model, its animation and, where it speaks, its speech), its Spatial Attitude
 // (OSD-OSA) - and the Multimodal Scene Descriptors (OSD-BMS) of the meeting, and
 //  - PLACES THE AVATAR IN THE SCENE: a Basic Object of the Scene, named by the Avatar's ID, at the Space-Time of its Spatial Attitude. Every avatar placed stays, by its
 //    ID, as the meeting goes on;
@@ -16,7 +16,7 @@ namespace Mpai.Paf.Vcr;
 // not needed: the Avatar has its speech. It runs continuously.
 public sealed class MultimodalSceneCreation(string instanceId, IReadOnlyDictionary<string, string>? settings = null) : IAimProcessor, IAimRunner
 {
-    public const string Scene = "OSD-BMS-V1.5", Iid = "OSD-IID-V1.5", Avatar = "PAF-AVT-V1.6", Attitude = "OSD-OSA-V1.5", Speech = "OSD-BSO-V1.5",
+    public const string Scene = "OSD-BMS-V1.5", Iid = "string", Avatar = "PAF-AVT-V1.6", Attitude = "OSD-OSA-V1.5", Speech = "OSD-BSO-V1.5",
                         SpaceTime = "OSD-SPT-V1.5";
 
     private readonly double faceHeight = settings is not null && settings.TryGetValue("FacePointHeight", out var h) && double.TryParse(h, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 1.6;
@@ -54,7 +54,7 @@ public sealed class MultimodalSceneCreation(string instanceId, IReadOnlyDictiona
         if (ids.Count == 0 || avatars.Count == 0 || attitudes.Count == 0) return made;
 
         var iid = ids.Dequeue(); var avatar = avatars.Dequeue(); var attitude = attitudes.Dequeue();
-        var id = (string?)avatar["AvatarID"] ?? (string?)iid["InstanceIdentifierData"]?[0]?["InstanceLabel"];
+        var id = (string?)avatar["AvatarID"] ?? (iid is JsonValue named && named.TryGetValue<string>(out var nickname) ? nickname : null);
         if (id is null) return made;
         var said = avatar["AvatarData"]?["SpeechObjectOrSpeechObjectID"]?.AsArray().Select(x => x?["SpeechObject"]).FirstOrDefault(x => x is not null);
 

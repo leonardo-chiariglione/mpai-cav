@@ -11,7 +11,7 @@
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "AvatarID",           "Direction": "Input",  "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "AvatarID",           "Direction": "Input",  "DataType": "string", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AvatarSpaceTime",    "Direction": "Input",  "DataType": "OSD-SPT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false, "PortNumber": 1},
                            {"Name": "AvatarModel",        "Direction": "Input",  "DataType": "OSD-B3O-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "LanguageSelector",   "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},

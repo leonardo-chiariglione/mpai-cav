@@ -6,7 +6,7 @@
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "MachineID", "Direction": "Input", "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "MachineID", "Direction": "Input", "DataType": "string", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -18,7 +18,7 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-GBD-V1.6-I01", "AIMName": "1PAF-GBD-V1.6-I01", "Relation": "Internal" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I01", "AIMName": "1PAF-PMX-V1.6-I01", "Relation": "Internal" } }],
 
-  "Topology":         [{"Output":{"AIMName":"","DataType":"OSD-IID-V1.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"OSD-IID-V1.5"}},
+  "Topology":         [{"Output":{"AIMName":"","DataType":"string"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"string"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BTO-V1.5"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},

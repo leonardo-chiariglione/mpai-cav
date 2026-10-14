@@ -103,7 +103,7 @@ public class MscTests
     public async Task TheIDAndTheSpatialAttitudeArePassedOn()
     {
         var written = await Chain("anna");
-        Assert.Equal(Names, written.Where(w => w.DataType == "OSD-IID-V1.5").Select(w => (string)Parse(w.Json)["InstanceIdentifierData"]![0]!["InstanceLabel"]!));
+        Assert.Equal(Names, written.Where(w => w.DataType == "string").Select(w => (string)Parse(w.Json)!));
         Assert.Equal(["osa-anna", "osa-bruno", "osa-carla", "osa-dario"],
                      written.Where(w => w.DataType == "OSD-OSA-V1.5").Select(w => (string)Parse(w.Json)["ObjectSpatialAttitudeID"]!));
     }

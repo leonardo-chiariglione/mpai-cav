@@ -32,7 +32,7 @@ public sealed class PmxAimProcessor : IAimProcessor
     public PmxAimProcessor(string instanceId, AimPortReader ports)
     {
         _instanceId          = instanceId;
-        _avatarIdPort        = ports.InputOrDefault("OSD-IID-V1.5", "");
+        _avatarIdPort        = ports.InputOrDefault("string", "");              // the Avatar ID: an ID, not an Instance Identifier
         _avatarSpaceTimePort = ports.InputOrDefault("OSD-SPT-V1.5", 1, "");
         _sceneSpaceTimePort  = ports.InputOrDefault("OSD-SPT-V1.5", 2, "");
         _modelPort           = ports.InputOrDefault("OSD-B3O-V1.5", "");
@@ -67,7 +67,7 @@ public sealed class PmxAimProcessor : IAimProcessor
 
         // The Avatar: its Model, and its ID - each an item of AvatarOrAvatarID.
         var model = In(_modelPort);
-        var id = In(_avatarIdPort) is { } iid ? LabelOf(iid) : null;
+        var id = In(_avatarIdPort) is JsonValue named && named.TryGetValue<string>(out var nickname) ? nickname : null;
         if (model is not null || !string.IsNullOrWhiteSpace(id))
         {
             var avatar = new JsonArray();
@@ -96,11 +96,5 @@ public sealed class PmxAimProcessor : IAimProcessor
             MessageType = message.MessageType,
             Ports = new Dictionary<string, string> { [_outPort] = pav.ToJsonString() }
         });
-    }
-
-    private static string? LabelOf(JsonNode iid)
-    {
-        try { return MpaiJson.FromJson<InstanceIdentifier>(iid.ToJsonString())?.InstanceIdentifierData.FirstOrDefault()?.InstanceLabel; }
-        catch { return null; }
     }
 }
