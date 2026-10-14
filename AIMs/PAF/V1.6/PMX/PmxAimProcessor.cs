@@ -32,7 +32,7 @@ public sealed class PmxAimProcessor : IAimProcessor
     public PmxAimProcessor(string instanceId, AimPortReader ports)
     {
         _instanceId          = instanceId;
-        _avatarIdPort        = ports.InputOrDefault("string", "");              // the Avatar ID: an ID, not an Instance Identifier
+        _avatarIdPort        = ports.InputOrDefault("string", "");              // the Avatar ID: an ID (a string), or the Instance Identifier of what Service Participant Authentication identified
         _avatarSpaceTimePort = ports.InputOrDefault("OSD-SPT-V1.5", 1, "");
         _sceneSpaceTimePort  = ports.InputOrDefault("OSD-SPT-V1.5", 2, "");
         _modelPort           = ports.InputOrDefault("OSD-B3O-V1.5", "");
@@ -67,7 +67,7 @@ public sealed class PmxAimProcessor : IAimProcessor
 
         // The Avatar: its Model, and its ID - each an item of AvatarOrAvatarID.
         var model = In(_modelPort);
-        var id = In(_avatarIdPort) is JsonValue named && named.TryGetValue<string>(out var nickname) ? nickname : null;
+        var id = In(_avatarIdPort) is { } given ? NameOf(given) : null;
         if (model is not null || !string.IsNullOrWhiteSpace(id))
         {
             var avatar = new JsonArray();
@@ -96,5 +96,13 @@ public sealed class PmxAimProcessor : IAimProcessor
             MessageType = message.MessageType,
             Ports = new Dictionary<string, string> { [_outPort] = pav.ToJsonString() }
         });
+    }
+
+    // The name of an avatar: the ID as it is, or the label of the Instance Identifier.
+    private static string? NameOf(JsonNode given)
+    {
+        if (given is JsonValue v) return v.TryGetValue<string>(out var id) ? id : null;
+        try { return MpaiJson.FromJson<InstanceIdentifier>(given.ToJsonString())?.InstanceIdentifierData.FirstOrDefault()?.InstanceLabel; }
+        catch { return null; }
     }
 }
