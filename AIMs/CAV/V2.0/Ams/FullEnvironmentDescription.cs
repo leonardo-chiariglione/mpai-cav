@@ -22,16 +22,35 @@ namespace Mpai.Cav.Ams;
 // on the map's frame both share - predicted by its velocity to this instant; marked
 // Remote; left out where this CAV perceives it itself, or where it is this CAV; not
 // used when older than MaxAge ms. The Controller verified who sent it.
+//
+// WHAT AN INDICATOR SAYS (the author, 2026/10/14). A vehicle the ESS sees with its indicator lit - Left or Right: TurnIndicator of its Basic
+// Environment Object - is going to turn at the next junction of the Offline Map it is heading for, within JunctionReach m. The CAV
+// predicts the turn as drivers make it: the vehicle goes on, slows to TurnSpeed m/s (at DecelerationToTurn m/s2), follows an arc of
+// TurnRadius m to the road it turns into and leaves it. An indicator blinks, so it is taken for lit for IndicatorMemory ms after it was
+// seen so. The roads are two-way, the vehicles keep to the right: half the road's lane width (RoadLaneWidth) to the right of the axis.
+//
+// WHAT A REMOTE CAV INTENDS (the author, 2026/10/14: the connected attribute). A Sender Info message (M3241: "the Trajectory the Ego
+// CAV intends to adopt") carries the Trajectory the Remote CAV is to follow - where it will be in the next seconds, which is what a turn
+// at a junction is: the CAV that hears it knows, before the vehicle has turned, where it goes. The entry of the Remote CAV itself then
+// carries its PredictedPath: its places (East, North) at times (T seconds after the instant of the Full Environment Descriptors).
 public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDictionary<string, string>? settings = null) : IAimProcessor, IAimRunner
 {
     public const string Remote = "CAV-ERA-V2.0";
     private readonly string? cav = settings?.TryGetValue("CAVID", out var id) == true ? id : null;
     private readonly double sendEvery = EssJson.Setting(settings ?? new Dictionary<string, string>(), "SendEvery", 200),
                             maxAge = EssJson.Setting(settings ?? new Dictionary<string, string>(), "MaxAge", 1000);
+    private readonly double junctionReach = EssJson.Setting(settings ?? new Dictionary<string, string>(), "JunctionReach", 300),
+                            turnRadius = EssJson.Setting(settings ?? new Dictionary<string, string>(), "TurnRadius", 10),
+                            turnSpeed = EssJson.Setting(settings ?? new Dictionary<string, string>(), "TurnSpeed", 7),
+                            decelerationToTurn = EssJson.Setting(settings ?? new Dictionary<string, string>(), "DecelerationToTurn", 2),
+                            indicatorMemory = EssJson.Setting(settings ?? new Dictionary<string, string>(), "IndicatorMemory", 1000),
+                            roadLaneWidth = EssJson.Setting(settings ?? new Dictionary<string, string>(), "RoadLaneWidth", RoadMap.LaneWidth);
+    private readonly Dictionary<string, (string Turn, long Seen)> signalling = new(StringComparer.Ordinal);    // each vehicle that shows an indicator, and when it last did
     private RoadMap? map;
     private long count, sent;
     private long? lastSent;
     private readonly Dictionary<string, JsonNode> reported = new(StringComparer.Ordinal);    // the latest of each Remote CAV
+    private readonly Dictionary<string, JsonNode> intended = new(StringComparer.Ordinal);    // the Trajectory each Remote CAV last said it will follow
 
     public string InstanceId { get; } = instanceId;
     public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("CAV-FED runs continuously.");
@@ -58,11 +77,18 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
     // Descriptors is kept, the latest of each CAV. Null where it is; else why not.
     public string? Heard(JsonNode message)
     {
+        if (message["Message"]?["Trajectory"] is { } said && (string?)message["Message"]?["EgoCAVID"] is { } sender)        // Sender Info: where it goes
+        {
+            if (sender != cav) intended[sender] = said.DeepClone();
+            return null;
+        }
         if (message["Message"]?["RemoteFED"] is not JsonObject fed || (string?)message["Message"]?["RemoteCAVID"] is not { } from)
             return $"{(string?)message["EgoRemoteAMSMessageID"]}: not a Response with Full Environment Descriptors - not used in Stage 1.";
         if (from == cav) return null;
         if (!reported.TryGetValue(from, out var known) || AmsTypes.Ms(known["FullEnvironmentDescriptorsTime"]) <= AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]))
+        {
             reported[from] = fed;
+        }
         return null;
     }
 
@@ -94,17 +120,18 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
         var ms = AmsTypes.Ms(bed["BasicEnvironmentDescriptorsTime"]);
 
         var objects = new JsonArray();
-        var seen = new List<(double X, double Y)>();
+        var seen = new List<(double X, double Y, JsonObject Entry)>();
         foreach (var o in bed["BasicEnvironmentObjects"]?.AsArray() ?? [])
         {
             var p = EssJson.Vector(o?["SpatialAttitude"]?["Position"]?["CartPosition"]);
             if (p is null) continue;
-            seen.Add((p.Value.X, p.Value.Y));
             // Ahead X and left Y of the CAV, turned to the map's frame.
             var (x, y) = (east + p.Value.X * Math.Cos(heading) - p.Value.Y * Math.Sin(heading), north + p.Value.X * Math.Sin(heading) + p.Value.Y * Math.Cos(heading));
             var placed = AmsTypes.Match(map!, x, y, heading);
             var entry = new JsonObject { ["BasicEnvironmentObject"] = o!.DeepClone(), ["Source"] = "Ego" };
             if (placed is { } q) entry["Placement"] = AmsTypes.Placement(q.Segment, q.Along, AmsTypes.LaneOf(q.Left - (ego?.Left ?? 0)));
+            if (SignalledPath(o, (x, y), attitude, heading, ms) is { } predicted) entry["PredictedPath"] = predicted;
+            seen.Add((p.Value.X, p.Value.Y, entry));
             objects.Add(entry);
         }
         foreach (var entry in FromRemote(ms, east, north, heading, attitude, ego?.Left ?? 0, seen)) objects.Add(entry);
@@ -130,9 +157,100 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
         return fed;
     }
 
+    // Where a vehicle that signals is going to be, if its indicator was seen lit lately: null where it was not, or no junction is ahead of it.
+    private JsonArray? SignalledPath(JsonNode? o, (double East, double North) at, JsonNode egoAttitude, double egoHeading, long ms)
+    {
+        var id = (string?)o?["BasicEnvironmentObjectID"];
+        if (id is null || map is null) return null;
+        if ((string?)o?["TurnIndicator"] is { } turn) signalling[id] = (turn, ms);
+        if (!signalling.TryGetValue(id, out var said) || ms - said.Seen > indicatorMemory) return null;
+        var own = EssJson.Vector(egoAttitude["Position"]?["CartVelocity"]) ?? (0, 0, 0);
+        var rel = EssJson.Vector(o?["SpatialAttitude"]?["Position"]?["CartVelocity"]) ?? (0, 0, 0);
+        var (vx, vy) = (own.X + rel.X * Math.Cos(egoHeading) - rel.Y * Math.Sin(egoHeading), own.Y + rel.X * Math.Sin(egoHeading) + rel.Y * Math.Cos(egoHeading));
+        var speed = Math.Sqrt(vx * vx + vy * vy);
+        if (speed < 1) return null;
+        return TurnPath(at, Math.Atan2(vy, vx), speed, said.Turn == "Left");
+    }
+
+    // The turn of a vehicle at (East, North) heading as given, at its speed, at the next junction ahead of it: its places each 0.5 s for 14 s.
+    public JsonArray? TurnPath((double East, double North) at, double heading, double speed, bool left)
+    {
+        var (ux, uy) = (Math.Cos(heading), Math.Sin(heading));
+        var (nx, ny) = (-uy, ux);                                                  // to the left of the vehicle
+        var half = roadLaneWidth / 2;
+        // The junction ahead: a way point where three or more segments meet, within reach, in front, near the road the vehicle is on. Its
+        // centre is where the axis of that road - half a lane to the vehicle's left - meets the road across.
+        (double East, double North)? centre = null; var best = double.MaxValue;
+        foreach (var w in map!.WayPoints)
+        {
+            if (map.Segments.Count(s => s.From == w.Id || s.To == w.Id) < 3) continue;
+            var (dx, dy) = (w.East - at.East, w.North - at.North);
+            var (along, across) = (dx * ux + dy * uy, dx * nx + dy * ny);
+            if (along <= 0 || along > junctionReach || Math.Abs(across) > 2 * roadLaneWidth + 2 || along >= best) continue;
+            best = along;
+            centre = (w.East + nx * (half - across), w.North + ny * (half - across));
+        }
+        if (centre is not { } c) return null;
+        // Where the arc begins, half a lane to the right of the axis: a left turn begins the radius less half a lane before the centre, a right
+        // turn the radius more.
+        var before = left ? turnRadius - half : turnRadius + half;
+        var begin = (East: c.East - before * ux - half * nx, North: c.North - before * uy - half * ny);
+        var toArc = (begin.East - at.East) * ux + (begin.North - at.North) * uy;
+        var arc = Math.PI / 2 * turnRadius;
+        var side = left ? 1 : -1;
+        var (cx, cy) = (begin.East + side * turnRadius * nx, begin.North + side * turnRadius * ny);
+
+        (double East, double North) At(double along)
+        {
+            if (along <= toArc) return (at.East + along * ux, at.North + along * uy);
+            var turned = Math.Min(along - toArc, arc) / turnRadius * side;
+            var (px, py) = (begin.East - cx, begin.North - cy);
+            var (e, n) = (cx + px * Math.Cos(turned) - py * Math.Sin(turned), cy + px * Math.Sin(turned) + py * Math.Cos(turned));
+            var leaving = Math.Max(0, along - toArc - arc);
+            return (e + leaving * (ux * Math.Cos(turned) - uy * Math.Sin(turned)), n + leaving * (ux * Math.Sin(turned) + uy * Math.Cos(turned)));
+        }
+
+        var points = new JsonArray();
+        double s = 0, v = speed, nextAt = 0;
+        for (double time = 0; time <= 14 + 1e-9; time += 0.1)
+        {
+            if (time >= nextAt - 1e-9)
+            {
+                var (e, n) = At(s);
+                points.Add(new JsonObject { ["T"] = Math.Round(time, 2), ["East"] = Math.Round(e, 3), ["North"] = Math.Round(n, 3) });
+                nextAt += 0.5;
+            }
+            // Its speed: down to the speed of the turn by the time it gets there, the turn at that speed, then away.
+            var remaining = toArc - s;
+            if (remaining > 0 && v > turnSpeed && remaining < (v * v - turnSpeed * turnSpeed) / (2 * decelerationToTurn)) v = Math.Max(turnSpeed, v - decelerationToTurn * 0.1);
+            else if (s > toArc + arc) v = Math.Min(speed, v + 1.5 * 0.1);
+            s += v * 0.1;
+        }
+        return points;
+    }
+
+    // The places a Trajectory says a vehicle will be at, at 0.5 s from one another, from the instant given on.
+    public static JsonArray? PredictedPath(JsonNode trajectory, long ms)
+    {
+        var points = trajectory["Trajectory"]?.AsArray();
+        if (points is null || points.Count == 0) return null;
+        var path = new JsonArray(); double next = 0;
+        foreach (var point in points)
+        {
+            var st = point?["ExpectedSpaceTime"];
+            var p = EssJson.Vector(st?["SpatialAttitude1"]?["Position"]?["CartPosition"]);
+            if (p is null) continue;
+            var time = (AmsTypes.Ms(st?["Time"]) - ms) / 1000.0;
+            if (time < next) continue;
+            path.Add(new JsonObject { ["T"] = Math.Round(time, 2), ["East"] = Math.Round(p.Value.X, 3), ["North"] = Math.Round(p.Value.Y, 3) });
+            next = time + 0.5;
+        }
+        return path.Count > 0 ? path : null;
+    }
+
     // WHAT OTHER CAVs PERCEIVE, placed as this CAV's own: the objects each reports -
     // and itself - where this CAV does not perceive something already, nor is.
-    private IEnumerable<JsonObject> FromRemote(long ms, double east, double north, double heading, JsonNode attitude, double egoLeft, List<(double X, double Y)> seen)
+    private IEnumerable<JsonObject> FromRemote(long ms, double east, double north, double heading, JsonNode attitude, double egoLeft, List<(double X, double Y, JsonObject Entry)> seen)
     {
         var own = EssJson.Vector(attitude["Position"]?["CartVelocity"]) ?? (0, 0, 0);
         foreach (var (from, fed) in reported)
@@ -164,10 +282,16 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
                 var (dx, dy) = (wx - east, wy - north);
                 var (x, y) = (dx * Math.Cos(heading) + dy * Math.Sin(heading), -dx * Math.Sin(heading) + dy * Math.Cos(heading));
                 if (Math.Abs(x) < 3 && Math.Abs(y) < 2) continue;                                // this CAV
-                if (seen.Any(s => Math.Abs(s.X - x) < 3 && Math.Abs(s.Y - y) < 2)) continue;     // perceived here too
+                var here = seen.FirstOrDefault(s => Math.Abs(s.X - x) < 3 && Math.Abs(s.Y - y) < 2);
+                if (here.Entry is not null)                                                      // perceived here too: what it says of where it goes is its
+                {
+                    if (objectId == from && intended.TryGetValue(from, out var told) && PredictedPath(told, ms) is { } said) here.Entry["PredictedPath"] = said;
+                    continue;
+                }
                 var (rvx, rvy) = (velocity.X - own.X, velocity.Y - own.Y);
                 var relative = (rvx * Math.Cos(heading) + rvy * Math.Sin(heading), -rvx * Math.Sin(heading) + rvy * Math.Cos(heading), 0.0);
                 var reportedId = $"{from}/{objectId}";
+                var path = objectId == from && intended.TryGetValue(from, out var trajectory) ? PredictedPath(trajectory, ms) : null;
                 var entry = new JsonObject
                 {
                     ["BasicEnvironmentObject"] = new JsonObject
@@ -180,6 +304,7 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
                     },
                     ["Source"] = "Remote"
                 };
+                if (path is not null) entry["PredictedPath"] = path;
                 if (AmsTypes.Match(map!, wx, wy, heading) is { } q) entry["Placement"] = AmsTypes.Placement(q.Segment, q.Along, AmsTypes.LaneOf(q.Left - egoLeft));
                 yield return entry;
             }

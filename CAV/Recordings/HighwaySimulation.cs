@@ -38,16 +38,24 @@ public sealed class HighwaySimulation
     {
         World = world; SpeedLimit = speedLimit;
         Camera = HighwayRig.Standard(cameraReduction, cameraReduction)[0];
-        Map = HighwayMap(speedLimit);
+        Map = HighwayMap(speedLimit, junction: world.Junction);
         Start = start ?? new DateTimeOffset(2026, 1, 1, 8, 0, 0, TimeSpan.Zero);
         noise = new Random(seed * 7919 + 1); grain = new Random(seed * 104729 + 3);
     }
 
     // The Offline Map: a way point at each end of one road, east, of two lanes (the lane the CAV is in: the
     // AMS keeps to the centreline of its road, the right lane: the Path), the speed limit in m/s.
-    public static RoadMap HighwayMap(double speedLimit, double length = 60_000) =>
-        new("Highway", 45.0703, 7.6869, [new WayPoint("H0", 0, 0, "Start"), new WayPoint("H1", length, 0, "End")],
-            [new RoadSegment("H01", "H0", "H1", speedLimit, HighwayRoad.Lanes)]);
+    public static RoadMap HighwayMap(double speedLimit, double length = 60_000, Junction? junction = null) =>
+        junction is null
+            ? new("Highway", 45.0703, 7.6869, [new WayPoint("H0", 0, 0, "Start"), new WayPoint("H1", length, 0, "End")],
+                  [new RoadSegment("H01", "H0", "H1", speedLimit, HighwayRoad.Lanes)])
+            // With a junction: the highway in two segments that meet at the way point J, and the road that crosses it, N to S, 2 km each side.
+            : new("Highway", 45.0703, 7.6869,
+                  [new WayPoint("H0", 0, 0, "Start"), new WayPoint("J", junction.X, 0, "Junction"), new WayPoint("H1", length, 0, "End"),
+                   new WayPoint("N", junction.X, 2000, "North"), new WayPoint("S", junction.X, -2000, "South")],
+                  [new RoadSegment("H0J", "H0", "J", speedLimit, HighwayRoad.Lanes), new RoadSegment("JH1", "J", "H1", speedLimit, HighwayRoad.Lanes),
+                   new RoadSegment("NJ", "N", "J", 14, 2), new RoadSegment("JN", "J", "N", 14, 2),
+                   new RoadSegment("SJ", "S", "J", 14, 2), new RoadSegment("JS", "J", "S", 14, 2)]);
 
     // What the ESS is told of its camera: the settings of the scene-description AIM that follow from the rig.
     public IReadOnlyDictionary<string, string> EssSettings() => new Dictionary<string, string>

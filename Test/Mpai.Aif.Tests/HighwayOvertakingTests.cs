@@ -59,7 +59,7 @@ public static class HighwayTruthBed
     // occlude: a vehicle is seen only where a line from the ego's eye (its front, in its lane) to it - its centre or either end of
     // the face towards the ego - is not blocked by another; sightRange: the farthest the ego sees ahead (200 m, 250 m behind, when it is
     // not occluded).
-    public static JsonNode Of(HighwaySimulation sim, long ms, bool occlude = false, double sightRange = 200)
+    public static JsonNode Of(HighwaySimulation sim, long ms, bool occlude = false, double sightRange = 200, double? indicatorRange = null)
     {
         var world = sim.World; var ego = world.Ego;
         var id = $"TRUTH{world.StepNumber:D6}";
@@ -73,14 +73,18 @@ public static class HighwayTruthBed
             var x = centre > 0 ? centre - v.Length / 2 - ego.Length / 2 : centre + v.Length / 2 - ego.Length / 2;
             if (x > (occlude ? sightRange : 200) || x < -250 || Math.Abs(v.Y - ego.Y) > 9) continue;
             if (occlude && !Seen(world, v)) continue;
-            objects.Add(new JsonObject
+            var entry = new JsonObject
             {
                 ["BasicEnvironmentObjectID"] = v.Id,
                 ["InstanceIdentifier"] = EssJson.Identifier(v.Truck ? "truck" : "car", 1),
-                ["SpatialAttitude"] = EssJson.Attitude($"{id}-{v.Id}", ms, (x, v.Y - ego.Y, 0), (0.1, 0.1, 0.1), (v.Velocity - ego.Speed, 0, 0)),
+                ["SpatialAttitude"] = EssJson.Attitude($"{id}-{v.Id}", ms, (x, v.Y - ego.Y, 0), (0.1, 0.1, 0.1),
+                    v.Scripted ? (v.VelocityVector.X - ego.Speed, v.VelocityVector.Y, 0) : (v.Velocity - ego.Speed, 0, 0)),
                 ["ExistenceConfidence"] = 1.0, ["Motion"] = "Dynamic",
                 ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual" })
-            });
+            };
+            // Its indicator, if it is lit now and near enough to be read (perfect perception of it: the ESS reads it from the picture in the next round).
+            if (indicatorRange is { } reach && Math.Abs(centre) < reach && v.Indicator(world.Time) is var shown and not Turn.None) entry["TurnIndicator"] = shown.ToString();
+            objects.Add(entry);
         }
         return new JsonObject
         {
@@ -126,19 +130,24 @@ public static class HighwayTruthBed
     {
         var world = sim.World; var d = me.Direction;
         var id = $"{me.CavId}-{world.StepNumber:D6}";
-        var attitude = EssJson.Attitude($"{id}-EGO", ms, (me.X, me.Y, 0), (0.1, 0.1, 0.1), (me.Velocity, 0, 0),
-            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(0.0, 0.0, d < 0 ? 180.0 : 0.0) });
+        var attitude = EssJson.Attitude($"{id}-EGO", ms, (me.X, me.Y, 0), (0.1, 0.1, 0.1), me.Scripted ? (me.VelocityVector.X, me.VelocityVector.Y, 0) : (me.Velocity, 0, 0),
+            new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = $"{id}-EGO-O", ["Orientation"] = new JsonArray(0.0, 0.0, me.Scripted ? me.Heading * 180 / Math.PI : d < 0 ? 180.0 : 0.0) });
+        var (ch, sh) = (Math.Cos(me.Heading), Math.Sin(me.Heading));
         var objects = new JsonArray();
         foreach (var o in world.Others)
         {
             if (ReferenceEquals(o, me)) continue;
-            var ahead = d * (o.X - me.X);
+            var ahead = me.Scripted ? (o.X - me.X) * ch + (o.Y - me.Y) * sh : d * (o.X - me.X);
             if (ahead > reach || ahead < -100) continue;
             objects.Add(new JsonObject
             {
                 ["BasicEnvironmentObjectID"] = o.Id,
                 ["InstanceIdentifier"] = EssJson.Identifier(o.Truck ? "truck" : "car", 1),
-                ["SpatialAttitude"] = EssJson.Attitude($"{id}-{o.Id}", ms, (ahead, d * (o.Y - me.Y), 0), (0.1, 0.1, 0.1), (d * (o.Velocity - me.Velocity), 0, 0)),
+                ["SpatialAttitude"] = me.Scripted
+                    ? EssJson.Attitude($"{id}-{o.Id}", ms, (ahead, -(o.X - me.X) * sh + (o.Y - me.Y) * ch, 0), (0.1, 0.1, 0.1),
+                        ((o.VelocityVector.X - me.VelocityVector.X) * ch + (o.VelocityVector.Y - me.VelocityVector.Y) * sh,
+                         -(o.VelocityVector.X - me.VelocityVector.X) * sh + (o.VelocityVector.Y - me.VelocityVector.Y) * ch, 0))
+                    : EssJson.Attitude($"{id}-{o.Id}", ms, (ahead, d * (o.Y - me.Y), 0), (0.1, 0.1, 0.1), (d * (o.Velocity - me.Velocity), 0, 0)),
                 ["ExistenceConfidence"] = 1.0, ["Motion"] = "Dynamic",
                 ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual" })
             });

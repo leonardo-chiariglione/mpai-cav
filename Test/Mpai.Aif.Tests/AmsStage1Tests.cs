@@ -93,7 +93,11 @@ public sealed class CavInTheLoop : IDisposable
     }
 
     // What another CAV reports (an Ego-Remote AMS Message): to the Full Environment Description of the AMS.
-    public void Hear(string era, int timeoutMs = 5000) => api.InputWrite(Ams, FullEnvironmentDescription.Remote, 1, era, timeoutMs);
+    public void Hear(string era, int timeoutMs = 5000)
+    {
+        if (api.InputWrite(Ams, FullEnvironmentDescription.Remote, 1, era, timeoutMs) is var result && result != AifError.OK)
+            throw new InvalidOperationException($"the Ego-Remote AMS Message was not accepted: {result}");
+    }
 
     public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs) Step(Simulation.Sensed sensed, int timeoutMs = 5000)
     {

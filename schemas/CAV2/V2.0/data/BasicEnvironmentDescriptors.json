@@ -36,6 +36,8 @@
                             "description": "Position and orientation, their velocities and accelerations, each with its accuracy, relative to the EgoSpatialAttitude." },
       "Extent":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BoundingBox.json",
                             "description": "The space the object occupies: a 3D Bounding Box." },
+      "TurnIndicator":    { "enum": [ "Left", "Right" ],
+                            "description": "Which way the object - a vehicle - signals that it will turn: its direction indicator, where it is seen lit." },
       "ExistenceConfidence": { "type": "number", "minimum": 0, "maximum": 1,
                             "description": "The confidence that the object exists." },
       "Motion":           { "enum": [ "Static", "Dynamic", "Unknown" ],

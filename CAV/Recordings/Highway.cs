@@ -44,6 +44,28 @@ public sealed class HighwayVehicle
     public int Lane => (int)Math.Clamp(Math.Round(Y / HighwayRoad.LaneWidth), 0, HighwayRoad.Lanes - 1);
     public double DesiredSpeed(double time) => BaseSpeed * (1 + Fluctuation) * (time < SlowUntil ? SlowFactor : 1);
 
+    // A VEHICLE OF THE JUNCTION follows a path at the speed a profile gives, and does not react to the traffic: a staged driver.
+    // Intends: what it will do at the junction, which its indicator says from SignalFrom (metres along its path) until it has
+    // turned, and which a CAV can tell the others (its route).
+    public HighwayPath? Path { get; init; }
+    public SpeedProfile? Profile { get; init; }
+    public Turn Intends { get; init; }
+    public double SignalFrom { get; init; }
+    public double PathS { get; internal set; }
+    public double SpeedFactor { get; set; } = 1;                    // what a staging of the scenario makes of its speed, to have it arrive when it is to
+    public bool Scripted => Path is not null;
+    public (double X, double Y) VelocityVector => (Speed * Math.Cos(Heading), Speed * Math.Sin(Heading));
+
+    // Is its indicator lit at this time? It blinks, 1.5 times a second, from SignalFrom until the turn is over.
+    public Turn Indicator(double time)
+    {
+        if (Path is null || Intends == Turn.None || PathS < SignalFrom || PathS > Path.TurnSpan().End) return Turn.None;
+        return time * 1.5 % 1 < 0.5 ? Intends : Turn.None;
+    }
+
+    // Is it signalling at all - lit or not at this instant?
+    public Turn Signals => Path is not null && Intends != Turn.None && PathS >= SignalFrom && PathS <= Path.TurnSpan().End ? Intends : Turn.None;
+
     internal double Fluctuation, SlowFactor = 1, SlowUntil;
     internal bool Changing;
     internal double FromY, ToY, ChangeStart, ChangeDuration;
@@ -92,6 +114,12 @@ public sealed class HighwayWorld
     // meant to show happens as it was staged.
     public bool NpcsChangeLane { get; set; } = true;
 
+    // The junction, where another road crosses this one, or none.
+    public Junction? Junction { get; set; }
+
+    // What a scenario does before each step: a staging, which times a staged vehicle by where the ego is.
+    public Action<HighwayWorld>? Staging { get; set; }
+
     // What the run has shown: collisions of the traffic among itself (there should be none) and of
     // the ego with anyone, the nearest the ego has been to a vehicle (bumper to bumper, m), the
     // hardest braking (m/s2) a driver behind the ego has done because of it, and the hardest of all.
@@ -132,6 +160,21 @@ public sealed class HighwayWorld
             Length = truck ? 12 : 4.5, Width = truck ? 2.5 : 1.8, Height = truck ? 3.6 : 1.45,
             Paint = paint ?? (truck ? TruckWhite : CameraRenderer.Silver)
         };
+
+    // A staged vehicle of the junction: it goes along the path at the speed of the profile, and intends what it will do at the junction;
+    // it signals from signalAhead metres before it begins to turn.
+    public static HighwayVehicle Scripted(string id, HighwayPath path, SpeedProfile profile, Turn intends, double signalAhead = 40,
+                                          (byte R, byte G, byte B)? paint = null, string? cav = null, bool truck = false)
+    {
+        var (x, y, heading) = path.At(0);
+        return new HighwayVehicle
+        {
+            Id = id, Truck = truck, BaseSpeed = profile.At(0), X = x, Y = y, Heading = heading, Speed = profile.At(0), CavId = cav,
+            Direction = Math.Cos(heading) >= 0 ? 1 : -1, Path = path, Profile = profile, Intends = intends,
+            SignalFrom = Math.Max(0, path.TurnSpan().Begin - signalAhead),
+            Length = truck ? 12 : 4.5, Width = truck ? 2.5 : 1.8, Height = truck ? 3.6 : 1.45, Paint = paint ?? (truck ? TruckWhite : CameraRenderer.Silver)
+        };
+    }
 
     private static readonly (byte R, byte G, byte B) TruckWhite = (225, 225, 230), TruckBlue = (60, 90, 150);
 
@@ -224,7 +267,7 @@ public sealed class HighwayWorld
         HighwayVehicle? best = null; var gap = double.PositiveInfinity;
         foreach (var other in Everyone())
         {
-            if (ReferenceEquals(other, me) || other.Direction != me.Direction) continue;
+            if (ReferenceEquals(other, me) || other.Direction != me.Direction || other.Scripted) continue;
             var along = me.Direction * (other.X - me.X);
             if (along <= 0 || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
             var g = along - (other.Length + me.Length) / 2;
@@ -239,7 +282,7 @@ public sealed class HighwayWorld
         HighwayVehicle? best = null; var gap = double.PositiveInfinity;
         foreach (var other in Everyone())
         {
-            if (ReferenceEquals(other, me) || other.Direction != me.Direction) continue;
+            if (ReferenceEquals(other, me) || other.Direction != me.Direction || other.Scripted) continue;
             var along = me.Direction * (me.X - other.X);
             if (along <= 0 || Math.Abs(other.Y - y) >= (other.Width + me.Width) / 2 + 0.25) continue;
             var g = along - (other.Length + me.Length) / 2;
@@ -250,6 +293,7 @@ public sealed class HighwayWorld
 
     private double AccelerationOf(HighwayVehicle me, double time)
     {
+        if (me.Scripted) return 0;
         var (lead, gap) = Leader(me, me.Y);
         return Idm(me.Speed, me.DesiredSpeed(time), gap, lead is null ? 0 : me.Speed - lead.Speed);
     }
@@ -269,7 +313,7 @@ public sealed class HighwayWorld
 
     private void Decide(HighwayVehicle me, double time)
     {
-        if (me.Changing || me.Direction < 0) return;
+        if (me.Changing || me.Direction < 0 || me.Scripted) return;
         if (me.Lane == 0)
         {
             var (lead, gap) = Leader(me, me.Y);
@@ -299,6 +343,15 @@ public sealed class HighwayWorld
 
     private void Move(HighwayVehicle a, double acceleration, double time)
     {
+        if (a.Path is not null && a.Profile is not null)
+        {
+            var speed = a.Profile.At(a.PathS) * a.SpeedFactor;
+            a.Acceleration = (speed - a.Speed) / Step; a.Speed = speed;
+            a.PathS += speed * Step;
+            var (px, py, ph) = a.Path.At(a.PathS);
+            a.X = px; a.Y = py; a.Heading = ph;
+            return;
+        }
         a.Acceleration = acceleration;
         var v = Math.Max(0, a.Speed + acceleration * Step);
         a.X += a.Direction * (a.Speed + v) / 2 * Step;
@@ -320,6 +373,7 @@ public sealed class HighwayWorld
     // One step of 0.1 s.
     public void Advance()
     {
+        Staging?.Invoke(this);
         var time = Time;
         var acceleration = new double[npcs.Count];
         for (var i = 0; i < npcs.Count; i++) acceleration[i] = AccelerationOf(npcs[i], time);
@@ -349,13 +403,44 @@ public sealed class HighwayWorld
             for (var j = i + 1; j < all.Count; j++)
             {
                 var a = all[i]; var b = all[j];
-                if (Math.Abs(a.Y - b.Y) >= (a.Width + b.Width) / 2) continue;
-                var gap = Math.Abs(a.X - b.X) - (a.Length + b.Length) / 2;
+                double gap;
+                if (a.Scripted || b.Scripted)
+                {
+                    gap = Separation(a, b);                                    // bodies of any heading: the oriented boxes
+                    if (gap > 30) continue;
+                }
+                else
+                {
+                    if (Math.Abs(a.Y - b.Y) >= (a.Width + b.Width) / 2) continue;
+                    gap = Math.Abs(a.X - b.X) - (a.Length + b.Length) / 2;
+                }
                 var ego = ReferenceEquals(a, Ego) ? b : ReferenceEquals(b, Ego) ? a : null;
                 if (ego is not null) NearestToEgo = Math.Min(NearestToEgo, gap);
                 if (gap >= 0) continue;
                 if (ego is not null) EgoCollisions.Add((Time, ego.Id)); else TrafficCollisions.Add((Time, a.Id, b.Id));
             }
+    }
+
+    // The distance between the bodies of two vehicles of any headings (negative: they overlap): the largest separation along the
+    // sides of either box, which is exact for boxes apart and never positive for boxes that overlap.
+    public static double Separation(HighwayVehicle a, HighwayVehicle b)
+    {
+        var best = double.NegativeInfinity;
+        foreach (var box in new[] { a, b })
+            foreach (var angle in new[] { box.Heading, box.Heading + Math.PI / 2 })
+            {
+                var (ux, uy) = (Math.Cos(angle), Math.Sin(angle));
+                var centres = Math.Abs((b.X - a.X) * ux + (b.Y - a.Y) * uy);
+                best = Math.Max(best, centres - Reach(a, ux, uy) - Reach(b, ux, uy));
+            }
+        return best;
+    }
+
+    // How far a vehicle's body reaches from its centre along the direction (ux, uy).
+    private static double Reach(HighwayVehicle v, double ux, double uy)
+    {
+        var (c, s) = (Math.Cos(v.Heading), Math.Sin(v.Heading));
+        return Math.Abs(ux * c + uy * s) * v.Length / 2 + Math.Abs(-ux * s + uy * c) * v.Width / 2;
     }
 
     // What there is around the ego: each other vehicle, how far ahead (negative: behind) of the ego

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Mpai.Cav.Ams;
+using Mpai.Cav.Ess;
 using Mpai.Cav.Map;
 using Mpai.Cav.Recordings;
 
@@ -24,6 +25,29 @@ public sealed class RemoteCav
     // What it sends at this step, if it is time.
     public string? Report(HighwaySimulation sim, long ms, double reach) =>
         fed.ToSend(fed.Describe(HighwayTruthBed.OfVehicle(sim, Vehicle, ms, reach)))?.ToJsonString();
+
+    // What a connected CAV tells: where it is going - a Sender Info message of the Ego-Remote AMS Message, the Trajectory it intends to adopt
+    // (for the seconds given), for a staged vehicle the one its path and its speeds make.
+    public string Intent(long ms, double seconds) => new JsonObject
+    {
+        ["Header"] = FullEnvironmentDescription.Remote, ["EgoRemoteAMSMessageID"] = $"{Vehicle.CavId}-INT{ms}", ["CAVIdentifier"] = Vehicle.CavId,
+        ["EgoRemoteAMSMessageTime"] = EssJson.SimpleTime($"{Vehicle.CavId}-INT{ms}-T", ms),
+        ["Message"] = new JsonObject { ["EgoCAVID"] = Vehicle.CavId, ["Trajectory"] = Plan(Vehicle, ms, seconds) }
+    }.ToJsonString();
+
+    // Where a staged vehicle will be in the next seconds, if it goes on as its path and its speeds say: a Trajectory, a point each 0.1 s.
+    public static JsonObject Plan(HighwayVehicle v, long ms, double seconds)
+    {
+        var points = new JsonArray(); var s = v.PathS; var id = $"{v.CavId}-PLAN{ms}";
+        for (var k = 0; k <= (int)(seconds * 10); k++)
+        {
+            var speed = v.Profile!.At(s); var (x, y, h) = v.Path!.At(s);
+            var point = EssJson.Attitude($"{id}-{k}", ms + k * 100, (x, y, 0), (0.5, 0.5, 0.1), (speed * Math.Cos(h), speed * Math.Sin(h), 0));
+            points.Add(new JsonObject { ["ExpectedSpaceTime"] = EssJson.SpaceTime($"{id}-{k}-ST", ms + k * 100, point) });
+            s += speed * 0.1;
+        }
+        return new JsonObject { ["Header"] = "OSD-TRJ-V1.5", ["TrajectoryID"] = id, ["TrajectoryTime"] = EssJson.SimpleTime(id + "-T", ms), ["Trajectory"] = points };
+    }
 }
 
 // THE TWO-WAY ROAD (the author, 2026/10/12): a two-lane road, a lane for each direction. The CAV is held up by a slow truck, and

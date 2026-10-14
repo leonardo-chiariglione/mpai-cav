@@ -38,4 +38,9 @@
       "BasicEnvironmentObject": { "$ref": "https://schemas.mpai.community/CAV2/V2.0/data/BasicEnvironmentDescriptors.json#/$defs/BasicEnvironmentObject",
                             "description": "The object as the ESS describes it, relative to the CAV." },
       "Placement":        { "$ref": "#/$defs/Placement" },
+      "PredictedPath":    { "type": "array", "description": "Where the object is going to be: its places, at times from the instant of these descriptors - a turn it has said it will make (a Trajectory in a Sender Info message), or that its indicator says.",
+                            "items": { "type": "object", "additionalProperties": false, "required": [ "T", "East", "North" ], "properties": {
+        "T":              { "type": "number", "description": "Seconds from the instant of the descriptors." },
+        "East":           { "type": "number", "description": "m" },
+        "North":          { "type": "number", "description": "m" } } } },
       "Source":           { "enum": [ "Ego", "Remote" ], "description": "Perceived by this CAV, or reported by another." } } } } }
