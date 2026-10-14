@@ -1,0 +1,29 @@
+{
+    "Name": "Audio Scene Management",
+    "Description": "Build an audio scene from sounds and speech, place them, change them, and hear the scene. Say or type what you want, or use the mouse.",
+    "Icon": "icon.svg",
+    "Pane": "wide",
+    "Version": "1.0",
+    "Standard": "MPAI-CAE V3.0",
+    "UseCase": "ASM",
+    "Module": "1CAE-ASM-V1.0-I01",
+    "Keywords": [
+        "audio",
+        "scene",
+        "sound",
+        "speech",
+        "editing"
+    ],
+    "Categories": [
+        "Audio"
+    ],
+    "Languages": [
+        "en"
+    ],
+    "Asks": [
+        "microphone",
+        "typed text",
+        "where to keep your sounds and scenes"
+    ],
+    "Keeps": "The sounds and scenes of the user, in the storage the user chooses."
+}

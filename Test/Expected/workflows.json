@@ -1,6 +1,7 @@
 {
   "Apps/ACR/MMC-ACR.orch": "Module 1MMC-ACR-V2.5-I01: 11 offers, 4 asks; every Port declared",
   "Apps/AMQ/MMC-AMQ.orch": "Module 1MMC-AMQ-V2.5-I01: 15 offers, 8 asks; every Port declared",
+  "Apps/ASM/ASM.orch": "Module 1CAE-ASM-V1.0-I01: 9 offers, 16 asks; every Port declared",
   "Apps/MAC/MMC-MAC.orch": "Module 1MMC-MAC-V2.5-I01: 7 offers, 4 asks; every Port declared",
   "Apps/MAD/MMC-MAD.orch": "Module 1MMC-MAD-V2.5-I01: 10 offers, 5 asks; every Port declared",
   "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 11 offers, 6 asks; every Port declared",

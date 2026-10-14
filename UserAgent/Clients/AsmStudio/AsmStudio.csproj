@@ -23,6 +23,8 @@
     <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\Wdl\Mpai.Wdl.csproj" />
     <ProjectReference Include="..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
     <ProjectReference Include="..\..\SpatialAudio\Mpai.SpatialAudio.csproj" />
