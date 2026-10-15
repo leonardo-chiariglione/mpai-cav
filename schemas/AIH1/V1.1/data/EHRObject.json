@@ -2,6 +2,7 @@
   "$id":                "https://schemas.mpai.community/AIH1/V1.1/data/EHRObject.json",
   "title":              "EHR Object V1.1",
   "type":               "object",
+  "required":           [ "Header", "EHRObjectID", "EHRObjectTime", "EHRData" ],
   "properties":         {
 
     "Header":           { "type": "string", "const": "AIH-EHO-V1.1" },

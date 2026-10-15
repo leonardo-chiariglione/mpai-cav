@@ -13,7 +13,7 @@
     "AuditID":                    { "type": "string", "description": "Unique audit envelope ID." },
     "AuditTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
 
-    "Audit":                      { "type": "object", "additionalProperties": false, "oneOf": [
+    "Audit":                      { "type": "object", "oneOf": [
                                   { "type": "object", "additionalProperties": false, "required": [ "Request" ], "properties": {
       "Request":                  { "type": "object", "additionalProperties": false, "required": [ "AuditPeriod", "ProcessingOperations" ],
                                     "properties": {
