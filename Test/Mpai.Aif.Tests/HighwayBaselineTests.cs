@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIF.Controller;
@@ -37,10 +37,19 @@ public class HighwayBaselineTests
 
     // Runs one scenario for the seconds given and returns what it showed.
     // overtake: the CAV's Path Selection Planning may change lane, and the camera that looks back is in the loop.
-    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null, bool overtake = false)
+    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null, bool overtake = false, bool junction = false)
     {
         var sim = new HighwaySimulation(world, Planned);
-        var settings = overtake ? HighwayScenarios.Settings(sim) : SettingsFor(sim);
+        var settings = overtake || junction ? HighwayScenarios.Settings(sim) : SettingsFor(sim);
+        if (junction)      // as the junction tests drive it: the CAV keeps its lane, and a vehicle coming the other way is tracked fast
+        {
+            var patched = JsonNode.Parse(File.ReadAllText(settings))!.AsObject();
+            patched["1CAV-PSP-V2.0-I01"]!["LaneChange"] = "0";
+            patched["1CAV-BED-V2.0-I01"]!["ClosingSpeed"] = "45";
+            patched["1CAV-BED-V2.0-I01"]!["YoungBeta"] = "0.6";
+            File.WriteAllText(settings, patched.ToJsonString());
+        }
+        var remotes = junction ? world.Others.Where(v => v.CavId is not null).Select(v => new RemoteCav(v, sim.Map)).ToList() : [];
         try
         {
             using var cav = new CavInTheLoop(sim.Map, "H1", settings);
@@ -55,7 +64,12 @@ public class HighwayBaselineTests
             var wall = System.Diagnostics.Stopwatch.StartNew();
             for (; steps < seconds * 10 && !sim.Collided; steps++)
             {
-                var sensed = sim.Sense(camera: true, rear: overtake);
+                var sensed = sim.Sense(camera: true, rear: overtake, detail: junction);
+                foreach (var remote in remotes)     // a connected vehicle tells the CAV where it is and where it is going
+                {
+                    if (remote.Report(sim, sensed.FrameMs, 1500) is { } era) cav.Hear(era);
+                    if (steps % 2 == 0) cav.Hear(remote.Intent(sensed.FrameMs, 14));
+                }
                 var (alertList, command, latency, bed) = cav.StepWithBed(sensed);
                 if (sim.GapAhead() is { } g) minGap = Math.Min(minGap, g);
                 // When the ESS first reports a vehicle where the truth has one in the CAV's way (within 8 m of its gap).
@@ -147,6 +161,18 @@ public class HighwayBaselineTests
             world = new HighwayWorld(seed, new TrafficOptions(FlowPerLane: 700), egoSpeed: Planned);
             label = $"traffic of seed {seed}";
         }
+        else if (mode is "junction-route" or "junction-lights" or "junction-nothing")
+        {
+            // THE JUNCTION (HighwayIntersectionTests): an oncoming vehicle turns left across the CAV's way, timed to meet it. The same turn three ways: its route told
+            // (a connected vehicle), its indicator seen in the picture, or nothing.
+            world = IntersectionScenarios.OncomingLeftTurn(connected: mode == "junction-route", signals: mode != "junction-nothing");
+            label = mode switch
+            {
+                "junction-route" => "junction: the oncoming car tells the CAV its route (it will turn left)",
+                "junction-lights" => "junction: the CAV sees the indicator of the oncoming car in the picture",
+                _ => "junction: the oncoming car turns left, and the CAV is told nothing"
+            };
+        }
         else if (mode is "behind" or "overtake")
         {
             // THE STAGED SCENARIO (HighwayScenarios.Overtaking): a slow truck 200 m ahead, fast cars coming up behind it in the
@@ -193,7 +219,7 @@ public class HighwayBaselineTests
             var json = LiveState(info, world, label, done: false, rear: rear, front: frontPic, rearPic: rearPic, plan: plan);
             recording?.State(json);
             view.Publish(json, front, rearPng);
-        }, overtake: mode == "overtake");
+        }, overtake: mode == "overtake", junction: mode.StartsWith("junction"));
         view.Publish(LiveState(null, world, label, done: true, rear: rear, last: true, front: frontPic, rearPic: rearPic, plan: plan), null);
         recording?.Finish(label);
         Thread.Sleep(hold * 1000);
@@ -216,7 +242,7 @@ public class HighwayBaselineTests
         var vehicles = new JsonArray(world.Others.Where(v => Math.Abs(v.X - ego.X) < 300).OrderBy(v => v.X).Select(v => (JsonNode)new JsonObject
         {
             ["id"] = v.Id, ["x"] = v.X, ["y"] = v.Y, ["len"] = v.Length, ["wid"] = v.Width, ["speed"] = v.Speed, ["truck"] = v.Truck,
-            ["paint"] = new JsonArray((int)v.Paint.R, (int)v.Paint.G, (int)v.Paint.B)
+            ["paint"] = new JsonArray((int)v.Paint.R, (int)v.Paint.G, (int)v.Paint.B), ["h"] = Math.Round(v.Heading, 3), ["ind"] = (int)v.Indicator(world.Time)
         }).ToArray());
 
         var ess = new JsonArray();
@@ -238,7 +264,7 @@ public class HighwayBaselineTests
             ["wall"] = Math.Round(info?.WallSeconds ?? 0, 2), ["label"] = label, ["done"] = done,
             ["planned"] = Planned, ["limit"] = Planned,
             ["ego"] = new JsonObject { ["x"] = ego.X, ["y"] = ego.Y, ["speed"] = ego.Speed, ["acc"] = ego.Acceleration, ["length"] = ego.Length, ["width"] = ego.Width },
-            ["vehicles"] = vehicles, ["ess"] = ess, ["plan"] = plan,
+            ["vehicles"] = vehicles, ["ess"] = ess, ["plan"] = plan, ["junction"] = world.Junction is { } j ? new JsonObject { ["x"] = j.X, ["half"] = Junction.LaneWidth } : null,
             ["rear"] = new JsonArray((rear ?? []).Select(r => (JsonNode)new JsonObject
                 { ["id"] = r.Id, ["behind"] = Math.Round(r.Behind, 1), ["left"] = Math.Round(r.Left, 2), ["closing"] = r.Closing is { } c ? Math.Round(c, 2) : null }).ToArray()),
             ["front"] = front < 0 ? null : front, ["rearPic"] = rearPic < 0 ? null : rearPic,
@@ -248,3 +274,4 @@ public class HighwayBaselineTests
         }.ToJsonString();
     }
 }
+

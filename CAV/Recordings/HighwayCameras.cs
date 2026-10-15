@@ -48,7 +48,8 @@ public sealed record CameraFrame(string Camera, int Width, int Height, double Fo
 // is not the same noise).
 public static class HighwayCameras
 {
-    public static CameraFrame Capture(RigCamera cam, HighwayVehicle ego, IEnumerable<HighwayVehicle> others, Random? grain = null)
+    // time: the world's, which says whether the indicator of a vehicle that signals is lit.
+    public static CameraFrame Capture(RigCamera cam, HighwayVehicle ego, IEnumerable<HighwayVehicle> others, Random? grain = null, double time = 0)
     {
         int W = cam.Width, H = cam.Height;
         double f = cam.Focal;
@@ -83,7 +84,9 @@ public static class HighwayCameras
             .OrderByDescending(a => a.Depth).ToList();
         foreach (var (v, _) in order)
         {
-            double xRear = v.X - v.Length / 2, xFront = v.X + v.Length / 2;
+            // Its rear and its front: a vehicle that comes the other way (heading against the road) has its front where the road's lower x is.
+            var way = Math.Cos(v.Heading) >= 0 ? 1 : -1;
+            double xRear = v.X - way * v.Length / 2, xFront = v.X + way * v.Length / 2;
             double Depth(double x) => (x - cx) * dx + (v.Y - cy) * dy;
             var showRear = Depth(xRear) < Depth(xFront);                 // the nearer end is the one in view
             var xf = showRear ? xRear : xFront;
@@ -110,6 +113,10 @@ public static class HighwayCameras
                 if (v.Truck) Shapes.TruckEnd(left, top, cw, ch, v.Paint, !showRear, Put);
                 else if (showRear) CameraRenderer.Car(left, top, cw, ch, v.Paint, Put);
                 else Shapes.CarFront(left, top, cw, ch, v.Paint, Put);
+                // Its indicator, if it is lit: at the corner on the side of the vehicle's own left or right - which, seen from behind, is the
+                // picture's left, and, seen from ahead, its right.
+                if (v.Indicator(time) is var lit and not Turn.None)
+                    Shapes.Lamp(left, top, cw, ch, (lit == Turn.Left) == showRear, Put);
             }
 
             int bl = (int)Math.Floor(corners.Min(p => p.U)), bt = (int)Math.Floor(corners.Min(p => p.V));
@@ -312,6 +319,15 @@ internal static class Shapes
 
     private static (double, double, double) Shade((byte R, byte G, byte B) c, double k) => (c.R * k, c.G * k, c.B * k);
     private static (double, double, double) Plain(int r, int g, int b) => (r, g, b);
+
+    // A direction indicator, lit: amber, at an upper corner of the end of the vehicle, brighter at its middle.
+    public static void Lamp(int left, int top, int cw, int ch, bool onPictureLeft, Action<int, int, int, int, int> put)
+    {
+        var (u0, u1) = onPictureLeft ? (0.02, 0.21) : (0.79, 0.98);
+        Fill(left, top, cw, ch, (u, v) => v > 0.44 && v < 0.62 && u > u0 && u < u1, (u, v) => Plain(255, 168, 0), put);
+        var (c0, c1) = (u0 + 0.05, u1 - 0.05);
+        Fill(left, top, cw, ch, (u, v) => v > 0.49 && v < 0.57 && u > c0 && u < c1, (u, v) => Plain(255, 205, 60), put);
+    }
 
     public static void CarFront(int left, int top, int cw, int ch, (byte R, byte G, byte B) paint, Action<int, int, int, int, int> put)
     {

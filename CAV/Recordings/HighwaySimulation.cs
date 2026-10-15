@@ -19,8 +19,10 @@ public sealed class HighwaySimulation
     private const double OdometryScale = 1.015, GnssSigma = 1.5, MaxAcceleration = 3, MaxDeceleration = 8;
 
     public const int RearEvery = 3;                  // a look behind every 0.3 s
+    public const int DetailEvery = 2;                // a look far ahead every 0.2 s: an indicator is lit for 0.33 s, whatever the time it is
+    public const int DetailCropX = 640, DetailCropY = 390;   // the window of the telephoto picture the detector is given, in its full resolution: the horizon (row 540) is in it
     public const int RearCropX = 640, RearCropY = 390;   // the window of the rear picture the detector is given, in its full resolution: the horizon (row 540) is in it
-    private readonly Random noise, grain, rearGrain = new(77);
+    private readonly Random noise, grain, rearGrain = new(77), detailGrain = new(91);
     private double odoX, odoY;
     private int attitudes;
 
@@ -28,6 +30,9 @@ public sealed class HighwaySimulation
     public RoadMap Map { get; }
     public RigCamera Camera { get; }                 // the camera whose pictures go to the ESS
     public RigCamera RearCamera { get; } = HighwayRig.Standard(1, 1)[2];   // RearLeft, not reduced: the second camera, looking back
+    // The telephoto camera that looks far ahead, between the two of the front pair: 30 degrees, not reduced. A vehicle 150 m away is 44 pixels
+    // wide in it - its indicator, seven.
+    public RigCamera TeleCamera { get; } = new("FrontTele", 1.9, 0, 1.40, 0, 30);
     public DateTimeOffset Start { get; }
     public double SpeedLimit { get; }                // m/s
     public double EgoSpeed => World.Ego.Speed;
@@ -84,6 +89,29 @@ public sealed class HighwaySimulation
         ["RearCameraLeft"] = RearCamera.Y.ToString("0.###", CultureInfo.InvariantCulture)
     };
 
+    // What the ESS is told of the telephoto camera: the settings of the scene-description AIM that follow from it, with the Detail prefix. Its
+    // window is 640 x 360 around the horizon (row 150 of it), the middle of the picture at its column 320.
+    public IReadOnlyDictionary<string, string> DetailEssSettings() => new Dictionary<string, string>
+    {
+        ["DetailFocalPixels"] = TeleCamera.Focal.ToString("0.####", CultureInfo.InvariantCulture),
+        ["DetailCameraHeight"] = TeleCamera.Z.ToString("0.###", CultureInfo.InvariantCulture),
+        ["DetailHorizonRow"] = (TeleCamera.Height / 2.0 - DetailCropY).ToString("0.###", CultureInfo.InvariantCulture),
+        ["DetailImageWidth"] = "640",
+        ["DetailCameraAhead"] = (TeleCamera.X - World.Ego.Length / 2).ToString("0.###", CultureInfo.InvariantCulture),
+        ["DetailCameraLeft"] = TeleCamera.Y.ToString("0.###", CultureInfo.InvariantCulture)
+    };
+
+    // The window of the telephoto camera's picture, as the detector is given it: clean at full resolution, cut, then the grain and the blur of a
+    // real camera.
+    public byte[] DetailWindow()
+    {
+        var frame = HighwayCameras.Capture(TeleCamera, World.Ego, World.Others, time: World.Time);
+        var window = new byte[640 * 360 * 3];
+        for (var y = 0; y < 360; y++) Buffer.BlockCopy(frame.Rgb, ((DetailCropY + y) * frame.Width + DetailCropX) * 3, window, y * 640 * 3, 640 * 3);
+        HighwayCameras.Finish(window, 640, 360, detailGrain);
+        return window;
+    }
+
     // The window of the rear camera's picture, as the detector is given it: clean at full resolution, cut, then given the
     // grain and the blur of a real camera.
     public byte[] RearWindow()
@@ -98,7 +126,8 @@ public sealed class HighwaySimulation
     // ---- what the sensors capture --------------------------------------------------------------
 
     // camera: false where nothing looks at the picture (perfect perception): it is then not made.
-    public Simulation.Sensed Sense(bool camera = true, bool rear = true)
+    // detail: the telephoto window goes with the front picture, before it.
+    public Simulation.Sensed Sense(bool camera = true, bool rear = true, bool detail = false)
     {
         var ego = World.Ego;
         var messages = new List<(string, string)>();
@@ -121,7 +150,9 @@ public sealed class HighwaySimulation
 
         if (camera)
         {
-            var frame = HighwayCameras.Capture(Camera, ego, World.Others, grain);
+            var frame = HighwayCameras.Capture(Camera, ego, World.Others, grain, World.Time);
+            if (detail && World.StepNumber % DetailEvery == 0)
+                messages.Add(("OSD-BVO-V1.5", Frame(ms0, Png.Encode(640, 360, DetailWindow()), "BVD", $"telephoto camera {TeleCamera.Name}, window")));
             messages.Add(("OSD-BVO-V1.5", Frame(ms0, frame.Png, "BVO", $"front camera {Camera.Name}")));
             // The camera that looks back, on the same port: its picture says by its orientation which way it looks.
             if (rear && World.StepNumber % RearEvery == 0)

@@ -62,17 +62,19 @@
 <script src="data.js" onerror="void 0"></script>
 <script src="narration.js" onerror="void 0"></script>
 <script>
-const SX = 5, SY = 15, BEHIND = 100;                     // pixels a metre along the road and across it; metres shown behind the CAV
+const SX = 5, BEHIND = 100;                              // pixels a metre along the road; metres shown behind the CAV
+let SY = 15, YLOW = 4.5;                                 // pixels a metre across the road (at a junction: true scale, and the crossing road shown to the south); metres shown south of the lanes
 const road = document.getElementById('road'), g = road.getContext('2d');
 const chart = document.getElementById('chart'), c = chart.getContext('2d');
 const $ = id => document.getElementById(id);
-const yPx = y => road.height - 22 - (y + 4.5) * SY;
+const yPx = y => road.height - 22 - (y + YLOW) * SY;
 const kmh = v => (v * 3.6).toFixed(0);
 const pad = n => String(n).padStart(6, '0');
 const REPLAY = window.REPLAY;
 let history = [];
 
 function draw(s) {
+  SY = s.junction ? 5 : 15; YLOW = s.junction ? 36 : 4.5;
   const W = road.width, H = road.height, x0 = s.ego.x - BEHIND;
   const xPx = x => (x - x0) * SX;
   g.clearRect(0, 0, W, H);
@@ -82,7 +84,14 @@ function draw(s) {
   g.fillStyle = '#e8e8e8';
   g.fillRect(0, yPx(-1.75) - 1, W, 2); g.fillRect(0, yPx(5.25) - 1, W, 2);                    // the edge lines
   for (let x = Math.floor(x0 / 16) * 16; x < x0 + W / SX; x += 16) g.fillRect(xPx(x), yPx(1.75) - 1, 4 * SX, 2);   // dashes: 4 m every 16
-  g.fillStyle = '#b8bcc2'; g.fillRect(0, yPx(5.85) - 3, W, 4);                                // the guard rail
+  if (!s.junction) { g.fillStyle = '#b8bcc2'; g.fillRect(0, yPx(5.85) - 3, W, 4); }             // the guard rail
+  if (s.junction) {                                                                            // the road that crosses: two lanes, north and south of the highway
+    const jx0 = xPx(s.junction.x - s.junction.half * 2), jw = s.junction.half * 4 * SX;
+    g.fillStyle = '#5a5e64'; g.fillRect(jx0 - 6, 0, jw + 12, H);
+    g.fillStyle = '#4a4e54'; g.fillRect(jx0, 0, jw, H);
+    g.fillRect(jx0 - 6, yPx(5.25), jw + 12, yPx(-1.75) - yPx(5.25));                            // the crossing itself
+    g.fillStyle = '#e8e8e8'; g.fillRect(xPx(s.junction.x) - 1, 0, 2, yPx(5.25)); g.fillRect(xPx(s.junction.x) - 1, yPx(-1.75), 2, H - yPx(-1.75));
+  }
   g.fillStyle = '#9aa3ad'; g.font = '11px system-ui';
   for (let d = -100; d <= 140; d += 20) {                                                      // distances from the CAV's front
     const px = xPx(s.ego.x + s.ego.length / 2 + d); g.fillRect(px, H - 18, 1, 6);
@@ -91,8 +100,13 @@ function draw(s) {
 
   const car = (v, ego) => {
     const px = xPx(v.x - v.len / 2), py = yPx(v.y + v.wid / 2), w = v.len * SX, h = v.wid * SY;
-    g.fillStyle = ego ? '#ff3b3b' : `rgb(${v.paint[0]},${v.paint[1]},${v.paint[2]})`; g.fillRect(px, py, w, h);
-    g.lineWidth = ego ? 3 : 1; g.strokeStyle = ego ? '#ffffff' : '#101418'; g.strokeRect(px, py, w, h);
+    g.fillStyle = ego ? '#ff3b3b' : `rgb(${v.paint[0]},${v.paint[1]},${v.paint[2]})`;
+    g.save(); g.translate(xPx(v.x), yPx(v.y)); g.scale(SX, -SY); g.rotate(v.h || 0);           // in metres: forward is +x, left is +y
+    g.fillRect(-v.len / 2, -v.wid / 2, v.len, v.wid);
+    g.lineWidth = (ego ? 3 : 1) / SY; g.strokeStyle = ego ? '#ffffff' : '#101418'; g.strokeRect(-v.len / 2, -v.wid / 2, v.len, v.wid);
+    if (v.ind) { g.fillStyle = '#ffb000'; g.strokeStyle = '#fff3c4'; g.lineWidth = 0.08;       // the indicator, lit: the corners of its front and rear, on the side it turns to
+      for (const sx of [v.len / 2 - 0.4, -v.len / 2 + 0.4]) { g.beginPath(); g.ellipse(sx, (v.ind === 1 ? 1 : -1) * (v.wid / 2 - 0.2), 0.45, 0.45, 0, 0, 7); g.fill(); g.stroke(); } }
+    g.restore();
     g.fillStyle = ego ? '#ff8080' : '#e6e8eb'; g.font = (ego ? 'bold ' : '') + '11px system-ui';
     g.fillText(ego ? 'CAV ' + kmh(v.speed) + ' km/h' : v.id + ' ' + kmh(v.speed), px, py - 3);
   };
@@ -215,12 +229,13 @@ function replay() {
   $('controls').style.display = 'flex';
   if (location.protocol === 'file:' || /\/(behind|overtake|traffic|truck)\//.test(location.pathname)) $('menubtn').style.display = '';
   $('slider').max = n - 1;
-  let i = 0, playing = CUES.length === 0, last = performance.now(), carry = 0, shown = -1;
+  let i = 0, playing = true, last = performance.now(), carry = 0, shown = -1;
   if (CUES.length) {
     $('caption').style.display = 'block'; $('voice').style.display = '';
-    $('play').textContent = 'Play';
     $('voice').onclick = () => { const on = $('voice').dataset.on !== '1'; $('voice').dataset.on = on ? '1' : '0'; $('voice').textContent = 'Voice: ' + (on ? 'on' : 'off'); if (!on && 'speechSynthesis' in window) speechSynthesis.cancel(); if (on) say('The voice is on.'); };
     if ('speechSynthesis' in window) speechSynthesis.getVoices();
+    const first = () => { removeEventListener('pointerdown', first); removeEventListener('keydown', first); cueShown = -1; if (playing) updateCue(states[i].t, true); };
+    addEventListener('pointerdown', first); addEventListener('keydown', first);
   }
   const render = () => {
     const s = states[i];
