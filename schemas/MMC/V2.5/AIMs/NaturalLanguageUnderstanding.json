@@ -8,9 +8,13 @@
 
   "ExternalPorts":   [{"Name": "InputText",          "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RecognisedText",     "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                          {"Name": "InputSelector",     "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                          {"Name": "InstanceIdentifier", "Direction": "Input",  "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                          {"Name": "VisualSceneGeometry", "Direction": "Input",  "DataType": "OSD-BVG-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextDescriptors",    "Direction": "Output", "DataType": "MMC-TDO-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RefinedText",        "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "TextPersonalStatus", "Direction": "Output", "DataType": "MMC-TPS-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "TextPersonalStatus", "Direction": "Output", "DataType": "MMC-TPS-V2.5",                                       "Technology": "", "Protocol": "", "IsRemote": ""},
+                          {"Name": "OutputInstanceIdentifier", "Direction": "Output", "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

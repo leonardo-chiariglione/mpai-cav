@@ -1,0 +1,330 @@
+{
+  "Identifier": {
+    "ImplementerID": "IIDRA-assigned",
+    "ImplementationID": "MMC-MQA-V2.5-I01",
+    "AIMName": "MMC-MQA-V2.5"
+  },
+  "Header": "MMC-MQA-V2.5",
+  "APIProfile": "Basic",
+  "Description": "Multimodal Question Answering (slide 16 of the MMC Reference Models): answers a question about a visual object, put as a Text Object or as speech, with a Portable Avatar. Visual Instance Identification (CVE-VII) gives the Instance Identifier of the object, Automatic Speech Recognition the text of a spoken question, Natural Language Understanding the Refined Text and the Text Descriptors Object (the former Meaning), Question Analysis the Intention, Answer to Question the Machine Text, and Portable Avatar Multiplexing the Portable Avatar, which needs the ID of the machine.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "InputSelector",
+      "Direction": "Input",
+      "DataType": "OSD-SEL-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TextObject",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechObject",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MachineID",
+      "Direction": "Input",
+      "DataType": "string",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PortableAvatar",
+      "Direction": "Output",
+      "DataType": "PAF-PAV-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "CVE-VII-V1.0",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "MMC-ASR-V2.5",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "MMC-NLU-V2.5",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "MMC-QAM-V2.5",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "MMC-AQM-V2.5",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String from Implementer */",
+        "AIMName": "PAF-PMX-V1.6",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-SEL-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-SEL-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "CVE-VII-V1.0",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CVE-VII-V1.0",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-AQM-V2.5",
+        "DataType": "OSD-BTO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-AQM-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "MMC-TDO-V2.5"
+      },
+      "Input": {
+        "AIMName": "MMC-AQM-V2.5",
+        "DataType": "MMC-TDO-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-NLU-V2.5",
+        "DataType": "MMC-TDO-V2.5"
+      },
+      "Input": {
+        "AIMName": "MMC-QAM-V2.5",
+        "DataType": "MMC-TDO-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-QAM-V2.5",
+        "DataType": "MMC-INT-V2.5"
+      },
+      "Input": {
+        "AIMName": "MMC-AQM-V2.5",
+        "DataType": "MMC-INT-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-AQM-V2.5",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PAF-PMX-V1.6",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "string"
+      },
+      "Input": {
+        "AIMName": "PAF-PMX-V1.6",
+        "DataType": "string"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PAF-PMX-V1.6",
+        "DataType": "PAF-PAV-V1.6"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PAF-PAV-V1.6"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "MMC-AQM-V2.5-I01", "AIMName": "MMC-AQM-V2.5"},
+  "Header":            "MMC-AQM-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Answer to Question Module (slide 4 of the MMC Reference Models, as the composite MMC-MQA, slide 16, uses it): answers a question from its Refined Text, the Text Descriptors Object (the former Meaning), the Instance Identifier of the visual object the question is about, where there is one, and the Intention the Question Analysis Module found, and gives the answer as a Text Object.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "TextDescriptors", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "InstanceIdentifier", "Direction": "Input", "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "Intention", "Direction": "Input", "DataType": "MMC-INT-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MachineText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+
+  "Topology":             [],
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
+
+  "DataXMData":         { },
+  "Documentation":     [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

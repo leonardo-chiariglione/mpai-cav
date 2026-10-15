@@ -30,6 +30,7 @@
     "BasicVisualObjectProperties":      { "type": "object", "properties": {
       "BasicVisualObjectIdentifier":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InstanceIdentifier.json" },
       "BasicVisualObjectSpaceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "TurnIndicator":                  { "enum": [ "Left", "Right" ], "description": "Which way a vehicle signals that it will turn: its direction indicator, seen lit." },
       "PerceptStatus":                  { "type": "boolean" },
       "Resize":                         { "type": "array", "items": { "type": "object", "properties": {
         "Rx":                           { "type": "number" },

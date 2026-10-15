@@ -14,7 +14,7 @@
 
     "SpeakingAvatarData":      { "type": "object", "additionalProperties": false, "properties": {
 
-      "Avatar":                { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/Avatar.json" },
+      "Avatar":                { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json" },
       "SpeechObject":          { "anyOf": [ { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" }, { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" } ] },
 
       "AudioBehaviour":        { "type": "object" },

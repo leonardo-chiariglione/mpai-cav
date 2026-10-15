@@ -19,8 +19,9 @@
     "AvatarSpaceTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when the Avatar is located in the Audio-Visual Scene." },
     "AvatarSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Spatial Attitude (position and orientation) of the Avatar with respect to the Audio-Visual Scene described by AVSceneDescriptors." },
 
-    "AvatarOrAvatarID":     { "type": "array", "description": "Either a 3D Model Object representing the Avatar or the Avatar's ID.", "items": { "oneOf": [
+    "AvatarOrAvatarID":     { "type": "array", "description": "The Avatar's ID (a string) and its Model: a 3D Model Object or a Basic 3D Model Object (for instance, one that names a file the receiver holds).", "items": { "oneOf": [
                               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelObject.json" },
                               { "type": "string" } ] } },
 
     "LanguageSelector":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Selector.json", "description": "Avatar's Language Preference." },
@@ -31,8 +32,9 @@
                               { "$ref": "https://schemas.mpai.community/AIP/V1.0/data/MLModelObject.json" },
                               { "type": "string" } ] } },
 
-    "SPOOrSPOID":           { "type": "array", "description": "Either a Speech Object that the Avatar utters or its ID.", "items": { "oneOf": [
+    "SPOOrSPOID":           { "type": "array", "description": "Either a Speech Object (or a Basic Speech Object) that the Avatar utters or its ID.", "items": { "oneOf": [
                               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
+                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
                               { "type": "string" } ] } },
 
     "FaceDescriptorsObject": { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/FaceDescriptorsObject.json", "description": "Face Descriptors Object of the Avatar: descriptive (of a human) or generative (of a machine)." },
@@ -45,6 +47,8 @@
                               "type": "object", "additionalProperties": false, "required": [ "Accessory" ], "properties": {
       "Accessory":          { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/Accessory.json", "description": "An Accessory attached to the Avatar." },
       "AccessorySpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Accessory is located on the Avatar." } } } },
+
+    "ProcessID":            { "type": "string", "description": "Identifier of the process that made or last changed this Portable Avatar (what the retired Avatar, PAF-AVT, carried as ProcessID)." },
 
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                               "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Portable Avatar in a trusted data exchange context." },

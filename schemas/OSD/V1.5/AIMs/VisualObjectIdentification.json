@@ -1,0 +1,37 @@
+{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "OSD-VOI-V1.5-I01", "AIMName": "OSD-VOI-V1.5"},
+  "Header":            "OSD-VOI-V1.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Visual Object Identification: gives the Instance Identifier of the visual object a human or an avatar indicates, from the Body Descriptors of the one who indicates, the Visual Scene Geometry and the Visual Objects. Ports as the composites MMC-CAS (slide 7) and MMC-CPS (slide 8) draw it; it is not Visual Instance Identification (CVE-VII), which identifies one Target Visual Object against a taxonomy and which an earlier definition of this AIM has inside.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "BodyDescriptors", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "VisualSceneGeometry", "Direction": "Input", "DataType": "OSD-BVG-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "VisualObjects", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "VisualInstanceID", "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+
+  "Topology":             [],
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                      { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                      { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                      { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
+
+  "DataXMData":         { },
+  "Documentation":     [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-osd/"}]}

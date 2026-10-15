@@ -17,7 +17,7 @@
     { "Name": "TextObject"    , "Direction": "Input",   "DataType": "OSD-BTO-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpaceTime"     , "Direction": "Input",   "DataType": "OSD-SPT-V1.5",  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "TextDescriptors", "Direction": "Input",   "DataType": "MMC-TDO-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "PersonalStatus", "Direction": "Input",   "DataType": "MMC-EPS-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "PersonalStatus", "Direction": "Input",   "DataType": "MMC-EPS-V2.5",  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "EditedSummary" , "Direction": "Input",   "DataType": "MMC-SUM-V2.5",  "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Summary"       , "Direction": "Output",  "DataType": "MMC-SUM-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],

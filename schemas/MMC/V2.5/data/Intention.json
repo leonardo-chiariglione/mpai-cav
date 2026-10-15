@@ -1,0 +1,21 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/MMC/V2.5/data/Intention.json",
+  "title":                    "Intention V2.5",
+  "type":                     "object",
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "MMC-INT-V2.5" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "IntentionID":            { "type": "string" },
+    "IntentionTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "Intention":              { "type": "array", "items": { "type": "object", "properties": {
+      "qtopic":               { "type": "string" },
+      "qfocus":               { "type": "string" },
+      "qLAT":                 { "type": "string" },
+      "qSAT":                 { "type": "string" },
+      "qdomain":              { "type": "string" } } } },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }
