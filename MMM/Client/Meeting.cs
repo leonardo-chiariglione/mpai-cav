@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Nodes;
 
@@ -13,7 +14,7 @@ namespace Mpai.Mmm.Client;
 // The services act on the M-Instance only through its MMM-API, as any Process does; they are not part of the M-Instance.
 public static class Meeting
 {
-    public const string Parcel = "MeetingParcel", Room = "MeetingRoom", Avs = "AVS", Secretary = "Secretary", SecretaryPersona = "Secretary-Persona", Minutes = "Minutes-" + Room;
+    public const string Parcel = "MeetingParcel", Room = "MeetingRoom", Avs = "AVS", Secretary = "Secretary", Asr = "ASR", SecretaryPersona = "Secretary-Persona", Minutes = "Minutes-" + Room;
     public const double ParcelX = 12, ParcelY = 0;   // where the parcel is, in metres (east, north)
 
     // The seats around the table: place within the Room (metres: x east, y north) and the yaw of a Persona looking at the table's centre (0 looks north).
@@ -27,6 +28,7 @@ public static class Meeting
     public static void Setup(MInstance m)
     {
         m.AddService(Avs);
+        m.AddService(Asr);                                  // the speech recognition: a service of its own, that any Process may ask
         m.AddService(Secretary, SecretaryPersona, "Persona2.glb");
         m.AddLocation(Parcel, owner: Avs, x: ParcelX, y: ParcelY, size: 12);
         m.AddLocation(Room, owner: Avs, x: 0, y: 0, size: 8, at: Parcel);
@@ -60,8 +62,12 @@ public static class Meeting
 }
 
 // The Processes of the meeting, run against the MMM-API at http. Pump them from time to time (the server does, a few times a second).
-public sealed class MeetingServices(HttpClient http, MInstance m)
+// recognize: what the ASR Service recognises words with (Whisper); none, it finds no words.
+public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? recognize = null)
 {
+    private readonly MmmClient asr = new(http, Meeting.Asr, m.TokenOf(Meeting.Asr));
+    private readonly Dictionary<string, (string Speaker, long Since, long SpeechMs)> asked = new();   // forwarded Speech Object -> who spoke, when the Secretary got it, how long it lasts
+    private readonly List<(string Speaker, long SpeechMs, long TotalMs)> latencies = [];
     private readonly MmmClient avs = new(http, Meeting.Avs, m.TokenOf(Meeting.Avs));
     private readonly MmmClient secretary = new(http, Meeting.Secretary, m.TokenOf(Meeting.Secretary));
     private readonly Dictionary<string, string> seatOf = new();               // User -> seat
@@ -70,6 +76,9 @@ public sealed class MeetingServices(HttpClient http, MInstance m)
     private readonly SemaphoreSlim one = new(1, 1);
 
     public IReadOnlyList<string> TheMinutes => minutes;
+
+    // For each Speech Object that reached the minutes: who, how long it lasts, and how long from the Secretary getting it to its words being in the minutes.
+    public IReadOnlyList<(string Speaker, long SpeechMs, long TotalMs)> Latencies { get { lock (latencies) return latencies.ToList(); } }
 
     // The Secretary comes to the Metaverse Square, and asks to join the meeting like any participant.
     public async Task StartAsync()
@@ -96,9 +105,22 @@ public sealed class MeetingServices(HttpClient http, MInstance m)
             foreach (var (id, from) in await secretary.InboxAsync())
             {
                 if (!handled.Add($"{Meeting.Secretary}|{id}")) continue;
-                var text = Meeting.TextOf((await secretary.ReadAsync(id)).Item);
+                var item = (await secretary.ReadAsync(id)).Item;
+                if (Speech.Is(item))   // what a participant said: the Secretary has it recognised by the ASR Service, which is not its own
+                {
+                    var forward = $"Forward-{id}";
+                    asked[forward] = (from, Stopwatch.GetTimestamp(), Speech.DurationMs(item));
+                    await secretary.PerformAsync("MM-Send", Uc2.C(forward, to: Meeting.Asr, with: (JsonObject)item!["ItemValueOrRef"]![0]!.DeepClone()));
+                    continue;
+                }
+                var text = Meeting.TextOf(item);
                 if (text is null) continue;
-                if (text.StartsWith("seat=", StringComparison.Ordinal)) await Sit(Meeting.ParseSeat(text));
+                if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && asked.Remove(id["Words-".Length..], out var who))
+                {
+                    if (text != NoWords) { minutes.Add($"{who.Speaker}: {text}"); await Say(secretary, Meeting.Minutes, Meeting.Avs, string.Join("\n", minutes)); }
+                    lock (latencies) latencies.Add((who.Speaker, who.SpeechMs, (long)Stopwatch.GetElapsedTime(who.Since).TotalMilliseconds));
+                }
+                else if (text.StartsWith("seat=", StringComparison.Ordinal)) await Sit(Meeting.ParseSeat(text));
                 else if (text.StartsWith("say:", StringComparison.Ordinal))
                 {
                     minutes.Add($"{from}: {text[4..].Trim()}");
@@ -107,6 +129,28 @@ public sealed class MeetingServices(HttpClient http, MInstance m)
             }
         }
         finally { one.Release(); }
+    }
+
+    private const string NoWords = "[no words]";
+    private readonly SemaphoreSlim asrOne = new(1, 1);
+
+    // The ASR Service recognises the words of the Speech Objects it is sent, and answers the Process that sent them. Slow (seconds), so it has its own pump: the
+    // seats and the minutes do not wait for it.
+    public async Task PumpAsrAsync()
+    {
+        await asrOne.WaitAsync();
+        try
+        {
+            foreach (var (id, from) in await asr.InboxAsync())
+            {
+                if (!handled.Add($"{Meeting.Asr}|{id}")) continue;
+                var item = (await asr.ReadAsync(id)).Item;
+                if (!Speech.Is(item)) continue;
+                var words = recognize is null ? "" : await recognize(Speech.PcmOf(item));
+                await Say(asr, $"Words-{id}", from, string.IsNullOrWhiteSpace(words) ? NoWords : words.Trim());
+            }
+        }
+        finally { asrOne.Release(); }
     }
 
     // The AVS Service gives a User the right to move its Persona to a free seat, and tells it which. A User that has a seat is told it again.

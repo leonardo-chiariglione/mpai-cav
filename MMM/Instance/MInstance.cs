@@ -516,8 +516,9 @@ public sealed class MInstance
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (Need(service, c.To, "To") is { } f2) return f2;
         if (!processes.ContainsKey(c.To!)) return Fail(404, service, "IncID", $"no Process {c.To}");
-        var message = with.FirstOrDefault(i => Header(i) == "MMM-MSG-V2.2");
-        items[c.Nil!] = new Item { ID = c.Nil!, DataType = "MMM-MSG-V2.2", Body = message, Owner = source };
+        // What is sent: a Message, or a Speech Object - a User's own capture of what it said, with the time it lasts (a Basic Speech Object, OSD-BSO).
+        var message = with.FirstOrDefault(i => Header(i) is "MMM-MSG-V2.2" or "OSD-BSO-V1.5");
+        items[c.Nil!] = new Item { ID = c.Nil!, DataType = message is null ? "MMM-MSG-V2.2" : Header(message)!, Body = message, Owner = source };
         (inboxes.TryGetValue(c.To!, out var box) ? box : inboxes[c.To!] = []).Add(c.Nil!);
         return Ok(200, service, new Complements { With = GrantAll(with, c.To!) });
     }

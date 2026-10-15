@@ -86,9 +86,16 @@ var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? 
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.
-var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m);
+// The ASR Service recognises with Whisper (the repository's Models\Whisper), if it is there.
+var whisper = new WhisperAsr(repo);
+if (whisper.Available) { whisper.Start(); Console.WriteLine("Whisper starting for the ASR Service (the model loads in a few seconds)."); }
+else Console.WriteLine("Models\\Whisper is not there: the ASR Service finds no words.");
+var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m, whisper.Available ? whisper.RecognizeAsync : null);
 await meeting.StartAsync();
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
+var minutesShown = 0;
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });
+_ = Task.Run(async () => { while (true) { var minutes = meeting.TheMinutes; while (minutesShown < minutes.Count) Console.WriteLine("minutes: " + minutes[minutesShown++]); await Task.Delay(200); } });
 if (demo >= 0)
 {
     using var http = new HttpClient { BaseAddress = new Uri(url) };

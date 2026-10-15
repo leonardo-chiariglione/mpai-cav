@@ -231,6 +231,38 @@ async function sit() {
   if (mv.http !== 200) { client.status = `${client.name}: cannot sit: ${mv.http}`; return; }
   Object.assign(client, { loc: seat.seat, at: seat.room, ox: Number(seat.x), oy: Number(seat.y), x: Number(seat.x), y: Number(seat.y), yaw, seated: true, sent: '' });
   client.status = `${client.name}: seated at ${seat.seat}`;
+  if (new URLSearchParams(location.search).has('mic')) microphone();
+}
+
+// THE MICROPHONE (&mic): the client captures and cuts. When the User speaks - a voice activity detection of the level - what it said is cut (with a little before
+// and after), and sent once, to the Secretary, as a Speech Object that has its own time: when it started and how long it lasted. Not a request per chunk.
+async function microphone() {
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { client.status += ' (no microphone)'; return; }
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  const src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(4096, 1, 1);
+  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, MIN = 0.4 * RATE, MAX = 20 * RATE, PRE = 0.2 * RATE;
+  let pre = [], speech = [], silent = 0, startedAt = 0, n = 0;
+  const level = f => Math.sqrt(f.reduce((s, v) => s + v * v, 0) / f.length);
+  const send = async (floats, at) => {
+    const pcm = new Int16Array(floats.length); for (let i = 0; i < floats.length; i++) pcm[i] = Math.max(-1, Math.min(1, floats[i])) * 32767;
+    let bin = ''; const bytes = new Uint8Array(pcm.buffer); for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    const id = `Speech-${client.name}-${++n}`;
+    const so = { Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id,
+      BasicSpeechObjectTime: { Header: 'OSD-STM-V1.5', SimpleTimeID: id + '-T', SimpleTimeData: [{ FlagsByte: 3, StartTime: at, EndTime: at + Math.round(pcm.length * 1000 / RATE), AccuracyMode: 'single', AccuracyPlusMinus: 1 }] },
+      BasicSpeechObjectData: [{ Data: btoa(bin) }] };
+    await act('communicate/mm-send', client.name, { Nil: id, To: 'Secretary', With: [so] });
+  };
+  node.onaudioprocess = e => {
+    const f = Array.from(e.inputBuffer.getChannelData(0)), loud = level(f) > THRESHOLD;
+    if (!speech.length && !loud) { pre.push(...f); if (pre.length > PRE) pre = pre.slice(pre.length - PRE); return; }
+    if (!speech.length) { speech = pre.concat(f); startedAt = Date.now() - Math.round(speech.length * 1000 / RATE); silent = 0; return; }
+    speech.push(...f); silent = loud ? 0 : silent + f.length;
+    if (silent >= HANG || speech.length >= MAX) { const done = speech, at = startedAt; speech = []; pre = []; if (done.length - silent >= MIN) send(done, at); }
+  };
+  src.connect(node); node.connect(ctx.destination);
+  client.status += ' - listening';
 }
 async function capture() {   // MM-Capture: the Things of the M-Location that this Point of View sees
   const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
