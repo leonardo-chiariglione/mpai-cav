@@ -24,6 +24,7 @@ if (repo is null) { Console.Error.WriteLine("The repository (MMM/Viewer, schemas
 
 var m = new MInstance(Path.Combine(repo, "schemas"));
 Uc2.Setup(m);
+m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
 
 // What a step means, said under its caption - for the steps whose point is not seen on the stage.
 var notes = new Dictionary<int, string>

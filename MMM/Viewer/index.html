@@ -179,12 +179,72 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
   if (voiceOn) say(spoken || 'The voice is on.'); else speechSynthesis.cancel();
 });
 
+// ---------------------------------------------------------------- the client (?user=Name)
+// The human's side of a User: it drives the devices - the keys and the screen here - and renders; the logic is the M-Instance's. It performs Process
+// Actions on the MMM-API as its User: Register (once), MM-Add (its Persona at the Metaverse Square), MM-Capture (what it sees there, from its Point of View,
+// five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
+const userName = new URLSearchParams(location.search).get('user');
+const client = userName ? { name: userName, human: userName + '-human', persona: userName + '-Persona', at: 'MVS', token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], status: 'joining...', keys: new Set() } : null;
+const HALF = 3.8;   // the Square is 8 m across
+const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
+  Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
+  Orientation: { Header: 'OSD-OOR-V1.5', OrientationID: id + '-O', Orientation: [yaw, 0, 0] } });   // yaw, pitch, roll: degrees (provisional convention: zero looks north, positive turns to the west)
+async function act(path, source, complements) {
+  const rs = await fetch('/api/v2.2/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID(), ...(client.token ? { Authorization: 'Bearer ' + client.token } : {}) },
+    body: JSON.stringify({ SourceProcessID: source, Action: '', Complements: complements }) });
+  return { http: rs.status, tokens: rs.headers.get('MMM-Tokens'), body: await rs.json().catch(() => null) };
+}
+async function join() {
+  const profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
+    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [{ PersonaID: client.persona }] }] } };
+  const reg = await act('identity/register', client.human, { With: [profile] });
+  if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
+  client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => p[0] === client.name)?.[1];
+  let h = 0; for (const c of client.name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  client.x = Math.cos(h % 628 / 100) * 2.5; client.y = Math.sin(h % 628 / 100) * 2.5; client.yaw = Number(new URLSearchParams(location.search).get('yaw') ?? 0);
+  const add = await act('locate/mm-add', client.name, { Nil: client.persona, At: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
+  client.status = add.http === 200 ? `${client.name}: in ${client.at}` : `cannot join: ${add.http}`;
+  if (add.http === 200) { capture(); setInterval(capture, 200); setInterval(sendPose, 150); }
+}
+async function capture() {   // MM-Capture: the Things of the M-Location that this Point of View sees
+  const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
+  const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
+  const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
+  if (r.http === 200 && scene) client.things = scene.Things;
+}
+async function sendPose() {   // MM-Move: the Persona stands where its User put it, looking where it looks
+  const key = [client.x, client.y, client.yaw].map(v => v.toFixed(2)).join(' ');
+  if (key === client.sent) return; client.sent = key;
+  await act('locate/mm-move', client.name, { Nil: client.persona, From: client.at, To: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
+}
+if (client) {
+  controls.enabled = false;
+  addEventListener('keydown', e => client.keys.add(e.key.toLowerCase()));
+  addEventListener('keyup', e => client.keys.delete(e.key.toLowerCase()));
+  join();
+}
+function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn; the camera is the Persona's eyes
+  const k = client.keys, rad = client.yaw * Math.PI / 180;
+  const fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
+  const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
+  client.yaw = (client.yaw + turn * 90 * dt + 360) % 360;
+  client.x = Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
+  client.y = Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
+  camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');   // three.js looks along -z (north) at rotation 0
+}
+
 // ---------------------------------------------------------------- the M-Instance
 async function refresh() {
   let state;
-  try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
-  document.getElementById('title').textContent = `M-Instance ${state.MInstanceID} - ${state.Performed} Process Actions`;
-  document.getElementById('recent').innerHTML = (state.Recent ?? []).slice().reverse().map(a =>
+  if (client) {
+    state = { MInstanceID: 'MI1', Performed: 0, Recent: [], Things: client.things, Hidden: [] };
+    document.getElementById('title').textContent = client.status;
+    document.getElementById('recent').textContent = 'W/S walk, A/D turn. You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ');
+  } else {
+    try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
+  }
+  if (!client) document.getElementById('title').textContent = `M-Instance ${state.MInstanceID} - ${state.Performed} Process Actions`;
+  if (!client) document.getElementById('recent').innerHTML = (state.Recent ?? []).slice().reverse().map(a =>
     `<div><span class="${a.Http < 300 ? 'ok' : 'no'}">${a.Http} ${a.Status}</span> ${a.Source} → ${a.Action} (${a.Destination})</div>`).join('') || 'no Process Action yet';
 
   // A demonstration in progress: the step just shown, and how to go on (Space, right arrow, a click).
@@ -211,13 +271,17 @@ async function refresh() {
       d = { object, shape, target: new THREE.Vector3(t.X, t.Z ?? 0, -t.Y) }; drawn.set(t.ID, d);
     }
     d.target.set(t.X, (t.Z ?? 0) + (isRoom ? 0.06 : 0), -t.Y);
+<<<<<<< HEAD
+=======
+    d.yaw = t.Yaw ?? null;
+>>>>>>> 4db7e3a (MMM Phase 2: MM-Capture, yaw, default Persona models, the first-person client (?user=Name) in the viewer; test; yaw convention noted as provisional)
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
       d.target.y = at?.At ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).
-    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID);
+    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID) && !(client && t.ID === client.persona);   // you do not see your own Persona from inside it
     const l = d.object.userData.label;
     if (l) l.visible = d.object.visible;
     if (l) l.element.textContent = t.Kind === 'Persona' ? `${t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
@@ -237,8 +301,9 @@ renderer.setAnimationLoop(() => {
       if (Math.hypot(dir.x, dir.z) > 0.2) d.object.rotation.y = Math.atan2(dir.x, dir.z);
       p.addScaledVector(dir, step);
     }
+    if (d.yaw != null) d.object.rotation.y = Math.PI + d.yaw * Math.PI / 180;   // a Persona looks where its yaw says (the model faces +z at rest; yaw 0 is north, -z)
   }
-  controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
+  if (client) drive(dt); else controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });
 await refresh(); setInterval(refresh, 500);
 window.viewerReady = true;

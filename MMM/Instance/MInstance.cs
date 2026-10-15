@@ -64,7 +64,8 @@ public sealed class MInstance
     {
         ["Register"] = "RGSrvc", ["Transact"] = "TRSrvc", ["MM-Add"] = "LCSrvc", ["MM-Move"] = "LCSrvc",
         ["MM-Animate"] = "LCSrvc", ["Property Change"] = "LCSrvc", ["MM-Send"] = "COSrvc",
-        ["Rights Change"] = "RTSrvc", ["Identify"] = "IDSrvc", ["UM-Capture"] = "EISrvc", ["MU-Actuate"] = "EISrvc"
+        ["Rights Change"] = "RTSrvc", ["Identify"] = "IDSrvc", ["UM-Capture"] = "EISrvc", ["MU-Actuate"] = "EISrvc",
+        ["MM-Capture"] = "LCSrvc"
     };
 
     public MInstance(string schemasRoot, string id = "MI1", string environmentId = "ME1")
@@ -102,6 +103,9 @@ public sealed class MInstance
 
     // The 3D Model that renders an Item - a Persona's, once it exists.
     private readonly Dictionary<string, string> models = new(StringComparer.Ordinal);
+    // The 3D Models (GLB files) given in turn to the Personae of the Users that register without one of their own.
+    public IReadOnlyList<string> DefaultModels { get; set; } = [];
+    private int registered;
     public void SetModel(string itemId, string model)
     {
         lock (gate) { models[itemId] = model; if (items.TryGetValue(itemId, out var it)) it.Model = model; }
@@ -221,6 +225,10 @@ public sealed class MInstance
                     {
                         ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
+<<<<<<< HEAD
+=======
+                        ["Yaw"] = YawOf(i),
+>>>>>>> 4db7e3a (MMM Phase 2: MM-Capture, yaw, default Persona models, the first-person client (?user=Name) in the viewer; test; yaw convention noted as provisional)
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
                     };
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
@@ -298,6 +306,7 @@ public sealed class MInstance
             "MM-Animate" => MMAnimate(service, rq.SourceProcessID, c, refs, with),
             "MM-Send" => MMSend(service, rq.SourceProcessID, c, with),
             "MM-Move" => MMMove(service, rq.SourceProcessID, c, with),
+            "MM-Capture" => MMCapture(service, rq.SourceProcessID, c, with),
             "Property Change" => PropertyChange(service, rq.SourceProcessID, c, with),
             "MU-Actuate" => MUActuate(service, rq.SourceProcessID, c, refs, with),
             "Rights Change" => RightsChange(service, rq.SourceProcessID, c, with),
@@ -329,7 +338,7 @@ public sealed class MInstance
                 var proc = new Process { ID = u, Kind = "User", HumanID = human, Token = NewToken() };
                 processes[u] = proc; tokens[u] = proc.Token!; users.Add(u);
                 foreach (var pid in personae)
-                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = models.GetValueOrDefault(pid) };
+                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
             }
         }
         items[profile["PersonalProfileID"]?.GetValue<string>() ?? $"Profile-{human}"] =
@@ -396,6 +405,40 @@ public sealed class MInstance
         if (!MayEnter(source, "MM-Move", c.Nil!, c.To!)) return Fail(403, service, "InsRights", $"{source} may not move {c.Nil} to {c.To}");
         it.Location = c.To; it.SpatialAttitude = SpatialAttitude(with) ?? it.SpatialAttitude;
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
+    }
+
+    // The yaw of an Item (degrees: the first angle of the Orientation of its Spatial Attitude; zero looks north, positive turns to the west - provisional,
+    // until the specification states the convention), or null.
+    private static double? YawOf(Item it) =>
+        it.SpatialAttitude?["Orientation"]?["Orientation"] is JsonArray a && a.Count >= 1 && a[0] is not null ? a[0]!.GetValue<double>() : null;
+
+    // LCSrvc. MM-Capture takes the part of the Audio-Visual Scene of an M-Location that a Point of View sees: here, the Things - Locations and Items, with
+    // their place in metres (X east, Y north, Z up) and their yaw - that are in the M-Location (or in a Location inside it) and perceptible. A simplification of
+    // the Scene Descriptors of OSD, to be replaced by them; the Aperture of the Point of View does not yet limit what is returned.
+    private Outcome MMCapture(string service, string source, Complements c, List<JsonObject> with)
+    {
+        if (Need(service, c.At, "At") is { } f1) return f1;
+        if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
+        if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!)) return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
+        var things = Snapshot()["Things"]!.AsArray().OfType<JsonObject>().ToList();
+        bool Inside(JsonObject t)
+        {
+            for (var depth = 0; depth < 8 && t is not null; depth++)
+            {
+                if ((string?)t["ID"] == c.At) return true;
+                var at = (string?)t["At"];
+                t = at is null ? null! : things.FirstOrDefault(x => (string?)x["ID"] == at)!;
+            }
+            return false;
+        }
+        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false).Select(t => (JsonNode)t.DeepClone()).ToArray();
+        var item = new JsonObject
+        {
+            ["ItemName"] = $"Scene-{c.At}", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID,
+            ["ItemValueOrRef"] = new JsonArray(new JsonObject { ["At"] = c.At, ["Things"] = new JsonArray(scene) }),
+            ["DescrMetadata"] = "The perceptible Things of the M-Location, simplified: not yet the Scene Descriptors of OSD"
+        };
+        return Ok(200, service, new Complements { With = [item] });
     }
 
     // LCSrvc. MM-Animate animates an Item its Process owns with an Animation Stream it owns.
