@@ -2,7 +2,7 @@
   "Header":           "PAF-PSD-V1.6",
 
   "APIProfile":       "Basic",
-  "Description":      "Personal Status Display: from the Text Object, the Avatar Model and the Personal Status of a machine (and its ID, where given), produces the Portable Avatar of the machine uttering the text: Personal Status Demultiplexing splits the Personal Status by modality; Text-To-Speech speaks the text with the Speech Personal Status; Generative Face and Body Description animate the face and the body from the text and the speech, with the Face and Body Personal Status; Portable Avatar Multiplexing puts the speech, the face and body descriptors, the Avatar Model, the ID and the Personal Status into the Portable Avatar. The Speech Model of the L2 is not taken: this Text-To-Speech has its own voice.",
+  "Description":      "Personal Status Display: from the Text Object, the Avatar Model and the Personal Status of a machine (and its ID, where given), produces the Portable Avatar of the machine uttering the text: Personal Status Demultiplexing splits the Personal Status by modality; Text-To-Speech speaks the text with the Speech Personal Status; Generative Face and Body Description animate the face and the body from the text and the speech, with the Face and Body Personal Status; Portable Avatar Multiplexing (continuous) puts the speech, the face and body descriptors, the Avatar Model, the ID and the Personal Status into updates of the Portable Avatar as they come. The Speech Model of the L2 is not taken: this Text-To-Speech has its own voice.",
 
   "InternalTypes":    [],
 
@@ -16,24 +16,24 @@
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I01", "AIMName": "1MMC-TTS-V2.5-I01", "Relation": "Internal" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-GFD-V1.6-I01", "AIMName": "1PAF-GFD-V1.6-I01", "Relation": "Internal" } },
                        { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-GBD-V1.6-I01", "AIMName": "1PAF-GBD-V1.6-I01", "Relation": "Internal" } },
-                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I01", "AIMName": "1PAF-PMX-V1.6-I01", "Relation": "Internal" } }],
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I02", "AIMName": "1PAF-PMX-V1.6-I02", "Relation": "Internal" } }],
 
-  "Topology":         [{"Output":{"AIMName":"","DataType":"string"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"string"}},
+  "Topology":         [{"Output":{"AIMName":"","DataType":"string"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"string"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BTO-V1.5"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
                        {"Output":{"AIMName":"","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
                        {"Output":{"AIMName":"","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1MMC-PDX-V2.5-I01","DataType":"MMC-EPS-V2.5"}},
-                       {"Output":{"AIMName":"","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"MMC-EPS-V2.5"}},
+                       {"Output":{"AIMName":"","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"MMC-EPS-V2.5"}},
                        {"Output":{"AIMName":"1MMC-PDX-V2.5-I01","DataType":"MMC-SPS-V2.5"},"Input":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"MMC-SPS-V2.5"}},
                        {"Output":{"AIMName":"1MMC-PDX-V2.5-I01","DataType":"MMC-FPS-V2.5"},"Input":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"MMC-FPS-V2.5"}},
                        {"Output":{"AIMName":"1MMC-PDX-V2.5-I01","DataType":"MMC-BPS-V2.5"},"Input":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"MMC-BPS-V2.5"}},
                        {"Output":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BSO-V1.5"},"Input":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"OSD-BSO-V1.5"}},
                        {"Output":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BSO-V1.5"},"Input":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"OSD-BSO-V1.5"}},
-                       {"Output":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BSO-V1.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"OSD-BSO-V1.5"}},
-                       {"Output":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"PAF-FDO-V1.6"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"PAF-FDO-V1.6"}},
-                       {"Output":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"PAF-BDO-V1.6"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"PAF-BDO-V1.6"}},
-                       {"Output":{"AIMName":"","DataType":"OSD-B3O-V1.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"OSD-B3O-V1.5"}},
-                       {"Output":{"AIMName":"1PAF-PMX-V1.6-I01","DataType":"PAF-PAV-V1.6"},"Input":{"AIMName":"","DataType":"PAF-PAV-V1.6"}}],
+                       {"Output":{"AIMName":"1MMC-TTS-V2.5-I01","DataType":"OSD-BSO-V1.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"OSD-BSO-V1.5"}},
+                       {"Output":{"AIMName":"1PAF-GFD-V1.6-I01","DataType":"PAF-FDO-V1.6"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"PAF-FDO-V1.6"}},
+                       {"Output":{"AIMName":"1PAF-GBD-V1.6-I01","DataType":"PAF-BDO-V1.6"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"PAF-BDO-V1.6"}},
+                       {"Output":{"AIMName":"","DataType":"OSD-B3O-V1.5"},"Input":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"OSD-B3O-V1.5"}},
+                       {"Output":{"AIMName":"1PAF-PMX-V1.6-I02","DataType":"PAF-PAV-V1.6"},"Input":{"AIMName":"","DataType":"PAF-PAV-V1.6"}}],
 
   "Implementations":  [],
 

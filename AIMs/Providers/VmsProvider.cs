@@ -40,7 +40,7 @@ public sealed class VmsProvider : IAimProvider, IDisposable
     public bool CanCreate(string aimName) =>
         aimName is "1PAF-PDX-V1.6-I01" or "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SCM-V2.5-I01"
                 or "1MMC-EDP-V2.5-I02" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
-                or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I01";
+                or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I02";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
@@ -55,7 +55,7 @@ public sealed class VmsProvider : IAimProvider, IDisposable
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1PAF-PMX-V1.6-I01" => new PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-PMX-V1.6-I02" => new ContinuousPmx(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"VmsProvider does not provide '{aimName}'.")
         };
 

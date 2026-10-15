@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -42,26 +42,15 @@ public class VmsTests
             Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
             Assert.Equal("Alice (happy): We should move the launch to May.", SummaryOf(api));
 
-            // Bob speaks, with no Personal Status in his Portable Avatar.
+            // Bob speaks, with no Personal Status in his Portable Avatar: the Summary goes on all the same (Personal Status is optional to Summary Creation).
             Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Spoken("Bob"), 5000));
             Assert.Equal("Alice (happy): We should move the launch to May.\nBob: I agree with Alice.", SummaryOf(api));
-            Assert.Equal(AifError.NotProduced, api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 0).Error);
 
-            // Alice speaks to the secretary: it notes, and answers with its Portable Avatar.
+            // Alice speaks to the secretary: it notes.
             Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
             Assert.Equal("Alice (happy): We should move the launch to May.\nBob: I agree with Alice.\n" +
                          "Alice (calm): Secretary, please note that the launch moves to May.\n" +
                          $"Secretary's note: {Note}", SummaryOf(api));
-
-            var read = api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 10000);
-            Assert.Equal(AifError.OK, read.Error);
-            var pav = JsonNode.Parse(read.Json!)!.AsObject();
-            Assert.Equal("PAF-PAV-V1.6", (string?)pav["Header"]);
-            Assert.Equal("cav-avatar.glb", (string?)pav["AvatarOrAvatarID"]![0]!["Basic3DModelObjectID"]);
-            Assert.Equal("1MMC-TTS-V2.5-I01", (string?)pav["SPOOrSPOID"]![0]!["StandIn"]);
-            Assert.Equal("1PAF-GFD-V1.6-I01", (string?)pav["FaceDescriptorsObject"]!["StandIn"]);
-            Assert.Equal("1PAF-GBD-V1.6-I01", (string?)pav["BodyDescriptorsObject"]!["StandIn"]);
-            Assert.Equal("CALMNESS", (string?)pav["EntityState"]!["Emotion"]!["Category"]);
 
             // The language model was asked once, with the Summary as it then stood.
             Assert.Single(llm.Prompts);
@@ -70,6 +59,39 @@ public class VmsTests
         finally { api.StopFlow(Vms); }
     }
 
+    // THE SECRETARY'S PORTABLE AVATAR. Portable Avatar Multiplexing (PAF-PMX-V1.6-I02) runs continuously on its own Ports and updates the avatar with whatever arrives, under the
+    // ID it holds: the Model once, then what changes. The Secretary is quiet while nobody speaks to it; when it is addressed, the updates that follow - folded as a receiver
+    // folds them - give the avatar with its Model, its voice, its face and body and its emotion.
+    [Fact]
+    public void SecretarySpeaks()
+    {
+        using var llm = new FakeOllama(new JsonObject
+        {
+            ["response"] = Answer, ["emotion"] = "CALMNESS", ["attitude"] = "respectful", ["note"] = Note
+        }.ToJsonString());
+        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Amds, "no-settings.json"), store => new Provider(store, llm.Url));
+        Assert.Equal(AifError.OK, api.StartFlow(Vms));
+        try
+        {
+            Assert.Equal(AifError.OK, api.InputWrite(Vms, "string", 1, "\"Secretary\"", 5000));
+            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "We should move the launch to May.", "HAPPINESS", "happy"), 5000));
+            Assert.DoesNotContain(Drain(api), u => u["SPOOrSPOID"] is not null);
+
+            Assert.Equal(AifError.OK, api.InputWrite(Vms, "string", 1, "\"Secretary\"", 5000));
+            Assert.Equal(AifError.OK, api.InputWrite(Vms, "PAF-PAV-V1.6", 1, Typed("Alice", "Secretary, please note that the launch moves to May.", "CALMNESS", "calm"), 5000));
+            var updates = Drain(api);
+            Assert.Contains(updates, u => u["SPOOrSPOID"] is not null);                                        // an update in which it speaks
+            var pav = Folded(updates);                                                                         // the avatar as a receiver holds it after them
+            Assert.Equal("PAF-PAV-V1.6", (string?)pav["Header"]);
+            Assert.Contains("Secretary", pav["AvatarOrAvatarID"]!.AsArray().Select(x => x is JsonValue v && v.TryGetValue<string>(out var s) ? s : null));   // the secretary's own ID
+            Assert.Equal("cav-avatar.glb", (string?)pav["AvatarOrAvatarID"]!.AsArray().OfType<JsonObject>().First()["Basic3DModelObjectID"]);
+            Assert.Equal("1MMC-TTS-V2.5-I01", (string?)pav["SPOOrSPOID"]![0]!["StandIn"]);
+            Assert.Equal("1PAF-GFD-V1.6-I01", (string?)pav["FaceDescriptorsObject"]!["StandIn"]);
+            Assert.Equal("1PAF-GBD-V1.6-I01", (string?)pav["BodyDescriptorsObject"]!["StandIn"]);
+            Assert.Equal("CALMNESS", (string?)pav["EntityState"]!["Emotion"]!["Category"]);
+        }
+        finally { api.StopFlow(Vms); }
+    }
     // THE APP (Apps/VMS): its own workflow, run by the User Agent's interpreter over the
     // Module, with the three devices it binds - a Participant that says what two
     // people say, waiting for the minutes before the next speaks; the Minutes; the
@@ -117,7 +139,7 @@ public class VmsTests
             .RegisterDevice("Secretary", new Mpai.Rca.SecretaryDevice(pav =>
             {
                 lock (secretary) secretary.Add(pav);
-                stop.CancelAfter(500);                                // the meeting's business is done
+                if (pav.Contains("SPOOrSPOID")) stop.CancelAfter(500);   // it has spoken: the meeting's business is done (its other updates are quiet)
                 return Task.CompletedTask;
             }));
 
@@ -131,7 +153,7 @@ public class VmsTests
             "Alice (happy): We should move the launch to May.\nBob: I agree with Alice.\nAlice: Secretary, please note that the launch moves to May.\n" +
             $"Secretary's note: {Note}"
         }, minutes);
-        var pav = Assert.Single(secretary);
+        var pav = Assert.Single(secretary.Where(p => p.Contains("SPOOrSPOID")));
         Assert.Equal("1MMC-TTS-V2.5-I01", (string?)JsonNode.Parse(pav)!["SPOOrSPOID"]![0]!["StandIn"]);
     }
 
@@ -142,6 +164,34 @@ public class VmsTests
         var codecs = Mpai.Aif.PortData.PortDataCodecs.Default();
         var pav = Typed("Alice", "Hello.", "HAPPINESS", "happy");
         Assert.Equal(JsonNode.Parse(pav)!.ToJsonString(), codecs.ToInternal("PAF-PAV-V1.6", codecs.ToWire("PAF-PAV-V1.6", pav)));
+    }
+
+    // The updates folded into one avatar, as a receiver does: what an update carries replaces what was held; the Avatar's Model and its ID are one list.
+    private static JsonObject Folded(IEnumerable<JsonObject> updates)
+    {
+        var avatar = new JsonObject();
+        JsonNode? model = null; string? id = null;
+        foreach (var update in updates)
+            foreach (var (name, value) in update)
+            {
+                if (name != "AvatarOrAvatarID") { avatar[name] = value?.DeepClone(); continue; }
+                foreach (var item in value!.AsArray())
+                    if (item is JsonObject) model = item.DeepClone(); else if (item is JsonValue v && v.TryGetValue<string>(out var s)) id = s;
+            }
+        var list = new JsonArray();
+        if (model is not null) list.Add(model);
+        if (id is not null) list.Add(JsonValue.Create(id));
+        avatar["AvatarOrAvatarID"] = list;
+        return avatar;
+    }
+
+    // The updates of the secretary's Portable Avatar there are to read.
+    private static List<JsonObject> Drain(ControllerApi api)
+    {
+        var updates = new List<JsonObject>();
+        for (var read = api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 10000); read.Error == AifError.OK; read = api.OutputRead(Vms, "PAF-PAV-V1.6", 1, 1000))
+            updates.Add(JsonNode.Parse(read.Json!)!.AsObject());
+        return updates;
     }
 
     private static string SummaryOf(ControllerApi api)
@@ -245,3 +295,12 @@ public class VmsTests
         public void Dispose() { listener.Stop(); listener.Close(); }
     }
 }
+
+
+
+
+
+
+
+
+

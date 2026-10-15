@@ -22,10 +22,12 @@ on Start:
 
     stream  Participant (PAF-PAV-V1.6) from device "Participant"
     deliver Minutes (MMC-SUM-V2.5) to device "Minutes"
+    stream  MachineID (string:1) from device "Secretary"
     deliver Secretary (PAF-PAV-V1.6) to device "Secretary"
 
     prompt "The meeting has begun. Say secretary to ask what was said, or to have something noted."
 
+    # The secretary's own ID comes from its device, once; Portable Avatar Multiplexing holds it and puts it in every update of the avatar.
     loop until Stop:
         wait 1s
 

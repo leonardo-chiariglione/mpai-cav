@@ -66,8 +66,13 @@ public sealed class PmxAimProcessor : IAimProcessor
         }
 
         // The Avatar: its Model, and its ID - each an item of AvatarOrAvatarID.
+        // Where it starts from an Input Portable Avatar, what the Avatar already has stays unless it is given anew: the Model the participant sent at the introduction is not lost
+        // when the server's PMX puts in the ID.
         var model = In(_modelPort);
         var id = In(_avatarIdPort) is { } given ? NameOf(given) : null;
+        var held = pav["AvatarOrAvatarID"] as JsonArray;
+        model ??= held?.OfType<JsonObject>().FirstOrDefault()?.DeepClone();
+        if (string.IsNullOrWhiteSpace(id)) id = held?.OfType<JsonValue>().Select(v => v.TryGetValue<string>(out var s) ? s : null).FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
         if (model is not null || !string.IsNullOrWhiteSpace(id))
         {
             var avatar = new JsonArray();
@@ -99,7 +104,7 @@ public sealed class PmxAimProcessor : IAimProcessor
     }
 
     // The name of an avatar: the ID as it is, or the label of the Instance Identifier.
-    private static string? NameOf(JsonNode given)
+    public static string? NameOf(JsonNode given)
     {
         if (given is JsonValue v) return v.TryGetValue<string>(out var id) ? id : null;
         try { return MpaiJson.FromJson<InstanceIdentifier>(given.ToJsonString())?.InstanceIdentifierData.FirstOrDefault()?.InstanceLabel; }

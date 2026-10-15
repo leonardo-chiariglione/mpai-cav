@@ -47,6 +47,7 @@ public static class AimBinaries
         ["1MMC-SCM-V2.5-I01"] = typeof(Mpai.Mmc.Scm.ScmAimProcessor),
         ["1PAF-PDX-V1.6-I01"] = typeof(Mpai.Paf.Pdx.PdxAimProcessor),
         ["1PAF-PMX-V1.6-I01"] = typeof(Mpai.Paf.Pmx.PmxAimProcessor),
+        ["1PAF-PMX-V1.6-I02"] = typeof(Mpai.Paf.Pmx.ContinuousPmx),
         ["1MMC-ESD-V2.5-I01"] = typeof(Mpai.Mmc.Esd.EsdAimProcessor),
     };
 

@@ -1,0 +1,43 @@
+﻿{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I02", "AIMName": "1PAF-PMX-V1.6-I02"},
+  "Header":           "PAF-PMX-V1.6",
+
+  "APIProfile":       "Basic",
+  "Description":      "Portable Avatar Multiplexing: puts what it is given into one Portable Avatar - the Avatar ID, the Avatar Model, the Language Selector, the Speech and Text Objects, the Speech Model, the Face and Body Descriptors Objects, the Personal Status, the Audio-Visual Scene and its Space-Time, the Spatial Attitude - starting, where one is given, from an Input Portable Avatar. It runs continuously, on its own Ports: whatever arrives is put into an update of the avatar at once, under the Avatar ID it holds - the Avatar Model once, then only what changes - and what arrives before the ID waits for it.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "AvatarID", "Direction": "Input", "DataType": ["string", "OSD-IID-V1.5"], "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AvatarSpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "PortNumber": 1, "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "LanguageSelector", "Direction": "Input", "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "RecognisedText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "InputText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "FaceDescriptors", "Direction": "Input", "DataType": "PAF-FDO-V1.6", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "BodyDescriptors", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AVSceneSpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "PortNumber": 2, "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AVSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "InputPortableAvatar", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpatialAttitudes", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/PMX",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Paf.Pmx",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.6",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.1 GB", "Request": "0.2 GB", "Maximum": "0.5 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Low",    "Maximum": "Medium"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-paf/v1-6/"}]}
+
+

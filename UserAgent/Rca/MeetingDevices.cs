@@ -82,14 +82,15 @@ public sealed class MinutesDevice(Func<string, Task> show) : IDevice
 
 // THE SECRETARY: its Portable Avatar (PAF-PAV-V1.6), given to whatever plays it - the
 // client turns it into an utterance of its avatar (AvatarUtterance.FromPortableAvatar).
-public sealed class SecretaryDevice(Func<string, Task> play) : IDevice
+public sealed class SecretaryDevice(Func<string, Task> play, string id = "Secretary") : IDevice
 {
     public Task DeliverAsync(string dataType, string json, CancellationToken cancel) => play(json);
 
+    // The avatar's own ID is the device's to give, once, as the meeting begins: the Portable Avatars the Module makes carry it.
     public async IAsyncEnumerable<(string DataType, string Json)> ReadAsync([EnumeratorCancellation] CancellationToken cancel)
     {
+        yield return ("string", System.Text.Json.JsonSerializer.Serialize(id));
         await Task.Delay(Timeout.Infinite, cancel).ContinueWith(_ => { });
-        yield break;
     }
 
     public Task SafeStopAsync() => Task.CompletedTask;
