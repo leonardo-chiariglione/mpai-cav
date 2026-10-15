@@ -1,5 +1,3 @@
 {
-  "1MMC-EDP-V2.5-I02": "Summary: L2 optional, L3 required; TextDescriptors: L2 optional, L3 required; PersonalStatus: L2 optional, L3 required; RefinedText: L2 optional, L3 required",
-  "1PAF-PMX-V1.6-I01": "FaceDescriptors: L2 optional, L3 required; BodyDescriptors: L2 optional, L3 required",
-  "1PAF-SAF-V1.6-I01": "AvatarModel: L2 required, L3 optional"
+  "1MMC-EDP-V2.5-I02": "Summary: L2 optional, L3 required; TextDescriptors: L2 optional, L3 required; RefinedText: L2 optional, L3 required"
 }

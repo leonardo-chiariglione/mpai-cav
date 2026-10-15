@@ -7,6 +7,6 @@
   "Apps/MAS/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 11 offers, 6 asks; every Port declared",
   "Apps/MAT/MMC-MAT.orch": "Module 1MMC-MAT-V2.5-I01: 10 offers, 5 asks; every Port declared",
   "Apps/MPD/MMC-MPD.orch": "Module 1MMC-MPD-V2.5-I01: 11 offers, 5 asks; every Port declared",
-  "Apps/VMS/PAF-VMS.orch": "Module 1PAF-VMS-V1.6-I01: 1 offers, 2 asks; every Port declared",
+  "Apps/VMS/PAF-VMS.orch": "Module 1PAF-VMS-V1.6-I01: 2 offers, 2 asks; every Port declared",
   "UserAgent/Orchestration/MPAI-MAS.orch": "Module 1MAS-APP-V1.0-I01: 11 offers, 6 asks; every Port declared"
 }
