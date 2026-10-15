@@ -271,10 +271,7 @@ async function refresh() {
       d = { object, shape, target: new THREE.Vector3(t.X, t.Z ?? 0, -t.Y) }; drawn.set(t.ID, d);
     }
     d.target.set(t.X, (t.Z ?? 0) + (isRoom ? 0.06 : 0), -t.Y);
-<<<<<<< HEAD
-=======
     d.yaw = t.Yaw ?? null;
->>>>>>> 4db7e3a (MMM Phase 2: MM-Capture, yaw, default Persona models, the first-person client (?user=Name) in the viewer; test; yaw convention noted as provisional)
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
       d.target.y = at?.At ? 0.14 : 0.06;   // standing on a room's floor, or on a pad

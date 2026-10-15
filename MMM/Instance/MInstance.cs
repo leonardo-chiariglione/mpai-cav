@@ -225,10 +225,7 @@ public sealed class MInstance
                     {
                         ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
-<<<<<<< HEAD
-=======
                         ["Yaw"] = YawOf(i),
->>>>>>> 4db7e3a (MMM Phase 2: MM-Capture, yaw, default Persona models, the first-person client (?user=Name) in the viewer; test; yaw convention noted as provisional)
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
                     };
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
