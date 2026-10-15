@@ -8,7 +8,8 @@ $cases = @(
     @{ Key = '4'; Mode = 'overtake';         Seconds = 100; Name = 'Overtaking the truck: the CAV waits for the fast cars, pulls out, passes and returns' },
     @{ Key = '5'; Mode = 'junction-route';   Seconds = 70; Name = 'Junction: an oncoming car turns left across the CAV - it tells the CAV its route' },
     @{ Key = '6'; Mode = 'junction-lights';  Seconds = 70; Name = 'Junction: the same turn - the CAV sees the indicator in the picture' },
-    @{ Key = '7'; Mode = 'junction-nothing'; Seconds = 70; Name = 'Junction: the same turn - the CAV is told nothing' }
+    @{ Key = '7'; Mode = 'junction-nothing'; Seconds = 70; Name = 'Junction: the same turn - the CAV is told nothing' },
+    @{ Key = '8'; Mode = 'junction-overtake'; Seconds = 75; Name = 'Junction: the car ahead slows and signals right - the CAV reads it, sees the other lane empty, and passes' }
 )
 Write-Host ''
 Write-Host '  THE CAV' -ForegroundColor Cyan

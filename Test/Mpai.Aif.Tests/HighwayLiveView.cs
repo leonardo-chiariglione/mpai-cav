@@ -14,6 +14,7 @@ public sealed class HighwayLiveView : IDisposable
     private volatile string state = "{}";
     private volatile byte[] frame = [];
     private volatile byte[] rear = [];
+    private volatile byte[] tele = [];
 
     public HighwayLiveView(string url)
     {
@@ -34,14 +35,20 @@ public sealed class HighwayLiveView : IDisposable
             ctx.Response.Headers.CacheControl = "no-store";
             return rear.Length == 0 ? Results.NotFound() : Results.Bytes(rear, "image/png");
         });
+        app.MapGet("/tele.png", (HttpContext ctx) =>
+        {
+            ctx.Response.Headers.CacheControl = "no-store";
+            return tele.Length == 0 ? Results.NotFound() : Results.Bytes(tele, "image/png");
+        });
         app.StartAsync().GetAwaiter().GetResult();
     }
 
-    public void Publish(string json, byte[]? png, byte[]? rearPng = null)
+    public void Publish(string json, byte[]? png, byte[]? rearPng = null, byte[]? telePng = null)
     {
         state = json;
         if (png is not null) frame = png;
         if (rearPng is not null) rear = rearPng;
+        if (telePng is not null) tele = telePng;
     }
 
     public void Dispose() => app.StopAsync().GetAwaiter().GetResult();

@@ -55,6 +55,13 @@ public sealed record LaneChange(double FromOffset, double ToOffset, double Start
 // makes it go back behind the truck if it has not drawn level, else get past as soon as it can. The Motion Selection
 // Planning and the Traffic Obstacle Avoidance leave what comes the other way to this planner.
 // Settings: OpposingLane, OncomingSpeed, SafetyDistance, OwnRange, RemoteReach, PassAcceleration, PullOutSeconds.
+//
+// A VEHICLE AHEAD THAT TURNS OFF (the junction round, 2026/10/15). Where the Full Environment Descriptors say - by its PredictedPath, which
+// the indicator seen lit and the Offline Map's junction give - that the vehicle ahead is going to turn off at the junction, the CAV passes
+// it only if the pass is over JunctionMargin metres before the place where the turn begins: it is not passed at the junction, where the
+// vehicle slows to turn. And PeekOffset: the CAV can lean that many metres to the left in its lane to look past the vehicle ahead, so the
+// vehicle does not hide the lane to the left beyond the stretch the line of sight past its side reaches (0, the default: it does).
+// Settings: JunctionMargin (default 30), PeekOffset (default 0).
 public sealed class LaneChangePlanner
 {
     public enum Phase { Following, PullingOut, Passing, Returning }
@@ -67,6 +74,10 @@ public sealed class LaneChangePlanner
         public double? Speed;                            // its own, m/s, where it is known
         public bool RearFace = true;                     // X is its rear (seen from behind it), else its front
         public double Time, LastSeen, FirstSeen;
+        public string? Indicator; public double IndicatorAt = -1e9;   // the indicator seen lit on it, and when
+        public bool TurnsRight;                          // it is going to turn right: its PredictedPath leaves the lane to the right, or its right indicator was seen lit and the map has a junction ahead,
+        public double? TurnAhead;                        // where it begins to: metres ahead of the ego
+        public List<(double T, double S)>? PredictedS;   // how far along its way it will have gone at each time (s from now), as its PredictedPath says
         public List<(double T, double X)> History = [];
         public double Length => Class is "truck" or "bus" ? 12 : 4.5;
     }
@@ -75,13 +86,14 @@ public sealed class LaneChangePlanner
     private readonly double decisionDistance, leftAheadClear, behindDistance, behindSeconds, behindMargin, changeSeconds, returnBehind,
                             rightAheadClear, slowerBy, egoLength, memory, maxLeft;
     private readonly bool opposing;
-    private readonly double oncomingSpeed, safetyDistance, ownRange, remoteReach, passAcceleration, pullOutSeconds;
+    private readonly double oncomingSpeed, safetyDistance, ownRange, remoteReach, passAcceleration, pullOutSeconds, junctionMargin, peekOffset, indicatorHold, turnSpeed, decelerationToTurn;
     private readonly Dictionary<string, Seen> seen = new(StringComparer.Ordinal);
     private readonly List<(double X, double Speed, string Id)> oncoming = [];     // what comes the other way: metres ahead, m/s
     private readonly List<double> remoteCavs = [];                                // where the CAVs coming the other way are
     private bool hurry;
     private double now, egoSpeed;
     private string? passing;                             // the vehicle being passed
+    private double? junctionNow;                         // metres to the next junction of the Route, as the Path Selection Planning gives it
     private double leftSince;
     private LaneChange? current;
 
@@ -107,7 +119,16 @@ public sealed class LaneChangePlanner
         remoteReach = EssJson.Setting(settings, "RemoteReach", 1500);
         passAcceleration = EssJson.Setting(settings, "PassAcceleration", 1.5);
         pullOutSeconds = EssJson.Setting(settings, "PullOutSeconds", 2.5);
+        junctionMargin = EssJson.Setting(settings, "JunctionMargin", 30);
+        peekOffset = EssJson.Setting(settings, "PeekOffset", 0);
+        indicatorHold = EssJson.Setting(settings, "IndicatorHold", 1);
+        turnSpeed = EssJson.Setting(settings, "TurnSpeed", 7);
+        decelerationToTurn = EssJson.Setting(settings, "DecelerationToTurn", 2);
     }
+
+    // What the planner last saw and decided, for whoever watches the run (the animation of the test harness); not an output of the AIM.
+    public static volatile string LastStatus = "", LastLead = "", LastVerify = "";
+    public static double LastHorizon, LastNeeded, LastTurnAhead = double.NaN, LastPassTime;
 
     public bool Enabled => enabled;
     public Phase Now { get; private set; } = Phase.Following;
@@ -119,14 +140,22 @@ public sealed class LaneChangePlanner
 
     // What the Full Environment Descriptors say at this instant, with s the ego's distance along the Route and
     // speed the planned speed: the lane change to begin, or none.
-    public LaneChange? Update(JsonNode fed, double s, double planned, int lanes)
+    public LaneChange? Update(JsonNode fed, double s, double planned, int lanes, double? junctionAhead = null)
     {
         if (!enabled) return null;
         now = AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]) / 1000.0;
         egoSpeed = AmsTypes.Ego(fed["EgoSpatialAttitude"]!).Speed;
-        Observe(fed);
+        junctionNow = junctionAhead;
+        Observe(fed, junctionAhead);
         if (opposing) ObserveOncoming(fed);
 
+        var change = Decide(fed, s, planned, lanes);
+        LastStatus = Status;
+        return change;
+    }
+
+    private LaneChange? Decide(JsonNode fed, double s, double planned, int lanes)
+    {
         switch (Now)
         {
             case Phase.Following: return Follow(s, planned, lanes);
@@ -146,9 +175,90 @@ public sealed class LaneChangePlanner
         }
     }
 
+    // How far along its way a vehicle will have gone at each time (seconds from now), from its PredictedPath.
+    private static List<(double T, double S)> AlongTime(JsonArray path)
+    {
+        var s = new List<(double T, double S)>();
+        double along = 0; (double E, double N)? last = null;
+        foreach (var p in path)
+        {
+            if (p?["East"] is not { } e || p["North"] is not { } n || p["T"] is not { } t) continue;
+            var here = ((double)e, (double)n);
+            if (last is { } l) along += Math.Sqrt((here.Item1 - l.E) * (here.Item1 - l.E) + (here.Item2 - l.N) * (here.Item2 - l.N));
+            s.Add(((double)t, along)); last = here;
+        }
+        return s;
+    }
+
+    // The way of a vehicle that is to turn where the arc begins, distance metres ahead of its front: how far along it will have gone at each time.
+    private List<(double T, double S)> TurnTravel(double v0, double distance)
+    {
+        var s = new List<(double T, double S)>();
+        var brake = Math.Max(0, (v0 * v0 - turnSpeed * turnSpeed) / (2 * decelerationToTurn));              // the distance in which it slows to the turn
+        double along = 0, v = v0;
+        for (double t = 0; t <= 14 + 1e-9; t += 0.5)
+        {
+            s.Add((t, along));
+            for (var k = 0; k < 5; k++)
+            {
+                if (v > turnSpeed && distance - along <= brake) v = Math.Max(turnSpeed, v - decelerationToTurn * 0.1);
+                along += v * 0.1;
+                if (along >= distance && v > turnSpeed) v = turnSpeed;
+            }
+        }
+        return s;
+    }
+
+    // How far the vehicle has gone after t seconds, as its predicted way says; after the end of it, at the speed it has there.
+    private static double LeadTravel(List<(double T, double S)> s, double t)
+    {
+        if (s.Count == 0) return 0;
+        if (t <= s[0].T) return s[0].S;
+        for (var i = 1; i < s.Count; i++)
+            if (t <= s[i].T) { var f = (t - s[i - 1].T) / Math.Max(1e-6, s[i].T - s[i - 1].T); return s[i - 1].S + f * (s[i].S - s[i - 1].S); }
+        var n = s.Count; var v = n > 1 ? (s[n - 1].S - s[n - 2].S) / Math.Max(1e-6, s[n - 1].T - s[n - 2].T) : 0;
+        return s[n - 1].S + v * (t - s[n - 1].T);
+    }
+
+    // THE PASS AGAINST THE WAY THE VEHICLE AHEAD IS GOING TO GO (its PredictedPath: it slows for the turn): the seconds it takes - the ego
+    // goes on and speeds up at PassAcceleration to the speed it wants, until it is ReturnBehind metres ahead of the vehicle, then returns to
+    // its lane (the seconds returned) - and the metres the ego goes until it is ahead of the vehicle.
+    private double PredictedPass(Seen lead, double planned, bool pullOut, out double travel)
+    {
+        var vp = Math.Max(planned, egoSpeed);
+        var need = returnBehind + egoLength + lead.X + lead.Length;
+        double sEgo = 0, v = egoSpeed, t = 0;
+        for (; t < 30; t += 0.1)
+        {
+            if (sEgo - LeadTravel(lead.PredictedS!, t) >= need && t >= (pullOut ? pullOutSeconds : 0)) break;
+            v = Math.Min(vp, v + passAcceleration * 0.1); sEgo += v * 0.1;
+        }
+        travel = sEgo;                       // where the pass is over; the lane is regained after that, where it can be
+        return t + changeSeconds;
+    }
+
+    // Where the PredictedPath of a vehicle leaves the lane it is in: metres along its heading from its first place, and to which side (right: true).
+    private static (double Along, bool Right)? TurnOff(JsonArray path, out (double East, double North) first)
+    {
+        first = default;
+        var pts = new List<(double E, double N)>();
+        foreach (var p in path) if (p?["East"] is { } e && p["North"] is { } n) pts.Add(((double)e, (double)n));
+        if (pts.Count < 3) return null;
+        var (x0, y0) = pts[0]; first = (x0, y0);
+        double h0 = 0; var have = false;
+        foreach (var (x, y) in pts.Skip(1)) if (Math.Sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0)) >= 1) { h0 = Math.Atan2(y - y0, x - x0); have = true; break; }
+        if (!have) return null;
+        foreach (var (x, y) in pts)
+        {
+            double dx = x - x0, dy = y - y0, across = -dx * Math.Sin(h0) + dy * Math.Cos(h0);
+            if (Math.Abs(across) > 1.0) return (dx * Math.Cos(h0) + dy * Math.Sin(h0), across < 0);
+        }
+        return null;
+    }
+
     // ---- what is around, and what is remembered -------------------------------------------------
 
-    private void Observe(JsonNode fed)
+    private void Observe(JsonNode fed, double? junctionAhead)
     {
         var seenNow = new HashSet<string>();
         foreach (var o in fed["FullEnvironmentObjects"]?.AsArray() ?? [])
@@ -168,6 +278,26 @@ public sealed class LaneChangePlanner
             // Its speed: the slope of its distance over the last seconds - the filter of the ESS follows a
             // vehicle seen a few times by lagging - and, until there are the looks for it, not known.
             t.Speed = Slope(t) is { } slope ? egoSpeed + slope : null;
+            // Where it is going to turn off, if its indicator was seen lit and the map has a junction ahead of it.
+            if ((string?)b["TurnIndicator"] is { } lit) { t.Indicator = lit; t.IndicatorAt = now; }
+            t.TurnsRight = false; t.TurnAhead = null; t.PredictedS = null;
+            if (o?["PredictedPath"] is JsonArray predicted && TurnOff(predicted, out var from) is { } off)
+            {
+                var (east, north, heading, _) = AmsTypes.Ego(fed["EgoSpatialAttitude"]!);
+                t.TurnsRight = off.Right;
+                t.TurnAhead = (from.East - east) * Math.Cos(heading) + (from.North - north) * Math.Sin(heading) + off.Along;
+                t.PredictedS = AlongTime(predicted);
+            }
+            // Its right indicator seen lit lately, and a junction ahead on the Route: it turns right there - the predicted path of the Full
+            // Environment Descriptors reaches only 14 s on, and that may not be as far as the turn.
+            if (!t.TurnsRight && t.Indicator == "Right" && now - t.IndicatorAt <= indicatorHold && junctionAhead is { } j && j > 0)
+            {
+                t.TurnsRight = true; t.TurnAhead = j - 12;
+                // The Full Environment Descriptors give no path (the indicator is not in sight now): it slows for the turn as drivers do - on at its speed, then at
+                // DecelerationToTurn to TurnSpeed where the arc begins, and on at that.
+                if (t.PredictedS is null && t.Speed is { } v0) t.PredictedS = TurnTravel(Math.Max(1, v0), t.TurnAhead.Value - (t.X + t.Length));
+            }
+            if (t.X > 0 && Math.Abs(t.Y) < 1.75) LastLead = $"{id} X={t.X:0} v={t.Speed:0.0} predicted={(o?["PredictedPath"] as JsonArray)?.Count ?? 0} turnAhead={(t.TurnAhead is { } ta ? ta.ToString("0") : "-")} indicator={(string?)b["TurnIndicator"] ?? "-"}";
             seenNow.Add(id);
         }
         foreach (var t in seen.Values.ToList())
@@ -202,7 +332,7 @@ public sealed class LaneChangePlanner
         Seen? lead = null;
         foreach (var t in seen.Values)
             if (t.LastSeen == now && t.X > 0 && Math.Abs(t.Y) < 1.75 && (lead is null || t.X < lead.X)) lead = t;
-        if (lead is null || lead.X > decisionDistance || lead.Speed is not { } ls || ls > planned - slowerBy) return null;
+        if (lead is null || lead.X > decisionDistance || lead.Speed is not { } ls || (ls > planned - slowerBy && !lead.TurnsRight)) return null;   // one that turns off is going to slow
         if (lanes < 2) { Status = "following: no lane to the left"; return null; }
 
         if (opposing)
@@ -254,7 +384,7 @@ public sealed class LaneChangePlanner
     private double OwnHorizon(Seen? ahead)
     {
         if (ahead is null || ahead.X <= 0) return ownRange;
-        var edge = ahead.Y + (ahead.Class is "truck" or "bus" ? 1.25 : 0.9);          // its left side, to the left of the CAV
+        var edge = ahead.Y + (ahead.Class is "truck" or "bus" ? 1.25 : 0.9) - peekOffset;   // its left side, to the left of the CAV (which may lean out to look)
         var lane = RoadMap.LaneWidth + ahead.Y;                                          // the lane that comes, to the left of the CAV
         return edge <= 0.1 ? ownRange : Math.Min(ownRange, ahead.X * lane / edge);
     }
@@ -293,11 +423,36 @@ public sealed class LaneChangePlanner
     // May the CAV pull out to pass the vehicle ahead? why: what it knows.
     private bool OpposingClear(Seen lead, double planned, out string why)
     {
-        var time = PassTime(Math.Max(0, returnBehind - Behind(lead)), egoSpeed, lead.Speed ?? egoSpeed, planned, pullOut: true, goBack: true);
+        double travelPredicted = double.NaN;
+        var time = lead.PredictedS is { Count: > 2 } ? PredictedPass(lead, planned, pullOut: true, out travelPredicted)
+                                                      : PassTime(Math.Max(0, returnBehind - Behind(lead)), egoSpeed, lead.Speed ?? egoSpeed, planned, pullOut: true, goBack: true);
         var vp = Math.Max(planned, (lead.Speed ?? egoSpeed) + 1);
         var (d, vo, what) = FirstToMeet(OwnHorizon(lead));
         var needed = time * (vp + vo) + safetyDistance;
         why = $"{what}; the pass takes {time:0.0} s and needs {needed:0} m";
+        LastHorizon = d; LastNeeded = needed; LastPassTime = time; LastTurnAhead = lead.TurnAhead ?? double.NaN;
+        // The vehicle ahead turns off at the junction: the pass is to be over, JunctionMargin metres before the place where the turn begins.
+        if (lead.TurnsRight && lead.TurnAhead is { } turnAt)
+        {
+            var travel = double.IsNaN(travelPredicted) ? time * (egoSpeed + vp) / 2 : travelPredicted;
+            if (travel + junctionMargin > turnAt)
+            {
+                why = $"the car ahead turns right in {turnAt:0} m; the pass takes {time:0.0} s ({travel:0} m) and is to be over {junctionMargin:0} m before";
+                return false;
+            }
+            why += $"; the car ahead turns right in {turnAt:0} m";
+        }
+        else if (junctionNow is { } ja && ja > 0 && ja < 400)
+        {
+            // A junction ahead, and the car ahead has not said what it will do there (no indicator): it may turn across the lane the CAV would pass in, or stop.
+            // It is not passed at the junction: the pass is to be over, junctionMargin metres before it (30 where the margin is the other way round).
+            var travel = double.IsNaN(travelPredicted) ? time * (egoSpeed + vp) / 2 : travelPredicted;
+            if (travel + Math.Abs(junctionMargin) > ja)
+            {
+                why = $"a junction in {ja:0} m, and the car ahead has not said what it will do there: the pass ({travel:0} m) would not be over {Math.Abs(junctionMargin):0} m before it";
+                return false;
+            }
+        }
         if (d > needed) return true;
         why = (what.StartsWith("the lane") ? "oncoming traffic cannot be ruled out: " : "oncoming traffic: ") + why;
         return false;
@@ -308,9 +463,11 @@ public sealed class LaneChangePlanner
     private LaneChange? Verify(double s, double planned)
     {
         if (passing is null || !seen.TryGetValue(passing, out var p)) return null;
-        var time = PassTime(Math.Max(0, returnBehind - Behind(p)), egoSpeed, p.Speed ?? egoSpeed, planned, pullOut: false, goBack: true);
+        var time = p.PredictedS is { Count: > 2 } ? PredictedPass(p, planned, pullOut: false, out _)
+                                                   : PassTime(Math.Max(0, returnBehind - Behind(p)), egoSpeed, p.Speed ?? egoSpeed, planned, pullOut: false, goBack: true);
         var vp = Math.Max(planned, (p.Speed ?? egoSpeed) + 1);
         var (d, vo, what) = FirstToMeet(OwnHorizon(p));
+        LastVerify = $"d={d:0} vo={vo:0} time={time:0.0} needs={time * (vp + vo) + safetyDistance / 2:0} p.X={p.X:0} p.Y={p.Y:0.0} p.v={p.Speed:0.0} ego v={egoSpeed:0.0}";
         if (d > time * (vp + vo) + safetyDistance / 2) return null;
         if (p.X > 0 && !hurry)
         {

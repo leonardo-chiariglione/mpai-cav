@@ -58,7 +58,20 @@ public sealed class PathSelectionPlanning(string instanceId, IReadOnlyDictionary
         var limit = (double?)fed["RoadAhead"]?[0]?["SpeedLimit"] ?? 13.9;
         var lanes = (int?)fed["RoadAhead"]?[0]?["Lanes"] ?? 1;
         var planned = EssJson.Setting(settings, "DesiredSpeed", limit);
-        return planner.Update(fed, lastS, planned, lanes) is { } change ? MakePath(change, AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"])) : null;
+        return planner.Update(fed, lastS, planned, lanes, JunctionAhead(east, north)) is { } change ? MakePath(change, AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"])) : null;
+    }
+
+    // How far ahead on the Route the next junction of the Offline Map is (a way point where three or more segments meet), or none.
+    private double? JunctionAhead(double east, double north)
+    {
+        double? best = null;
+        foreach (var w in map!.WayPoints)
+        {
+            if (map.Segments.Count(g => g.From == w.Id || g.To == w.Id) < 3) continue;
+            var along = line!.Project(w.East, w.North, lastS).S - lastS;
+            if (along > 0 && (best is null || along < best)) best = along;
+        }
+        return best;
     }
 
     // The Path: the Route's line, the lane change given or none, a Point of View every 5 m. Where the Path is

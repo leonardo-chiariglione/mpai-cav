@@ -149,12 +149,17 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
         return seen;
     }
 
+    // What the last telephoto window showed, for whoever watches the run (the test harness); not an output of the AIM.
+    public static volatile string LastFar = "";
+
     // What the telephoto window shows, each vehicle with its indicator, if it is lit.
     private IReadOnlyList<Seen> DescribeFar(byte[] image, Camera camera)
     {
         var seen = Describe(image, camera, false);
         using var picture = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgb24>(image);
-        return seen.Select(o => o with { Turn = ReadIndicator(picture, o) }).ToList();
+        var read = seen.Select(o => o with { Turn = ReadIndicator(picture, o) }).ToList();
+        LastFar = string.Join("; ", read.Select(o => $"{o.Class} {o.Score:0.00} ahead {o.Ahead:0} left {o.Left:0.0} box {o.Box.X1:0}-{o.Box.X2:0},{o.Box.Y1:0}-{o.Box.Y2:0} turn {o.Turn ?? "-"}"));
+        return read;
     }
 
     // The front picture's objects and the telephoto window's: the same vehicle, once - with the window's indicator, and the position of the

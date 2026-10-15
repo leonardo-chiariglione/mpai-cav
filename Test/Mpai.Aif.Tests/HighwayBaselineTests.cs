@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIF.Controller;
@@ -37,10 +37,16 @@ public class HighwayBaselineTests
 
     // Runs one scenario for the seconds given and returns what it showed.
     // overtake: the CAV's Path Selection Planning may change lane, and the camera that looks back is in the loop.
-    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null, bool overtake = false, bool junction = false)
+    private static Dictionary<string, string> Run(string name, HighwayWorld world, int seconds, Action<StepInfo>? observe = null, bool overtake = false, bool junction = false, bool junctionOvertake = false)
     {
         var sim = new HighwaySimulation(world, Planned);
-        var settings = overtake || junction ? HighwayScenarios.Settings(sim) : SettingsFor(sim);
+        var settings = overtake || junction || junctionOvertake ? HighwayScenarios.Settings(sim, opposingLane: junctionOvertake) : SettingsFor(sim);
+        if (junctionOvertake)      // the car that turns off: the CAV overtakes on a two-way road, leaning out to look, with the junction in its map
+        {
+            var tuned = JsonNode.Parse(File.ReadAllText(settings))!.AsObject();
+            OvertakeAtJunction.Patch(tuned);
+            File.WriteAllText(settings, tuned.ToJsonString());
+        }
         if (junction)      // as the junction tests drive it: the CAV keeps its lane, and a vehicle coming the other way is tracked fast
         {
             var patched = JsonNode.Parse(File.ReadAllText(settings))!.AsObject();
@@ -64,7 +70,7 @@ public class HighwayBaselineTests
             var wall = System.Diagnostics.Stopwatch.StartNew();
             for (; steps < seconds * 10 && !sim.Collided; steps++)
             {
-                var sensed = sim.Sense(camera: true, rear: overtake, detail: junction);
+                var sensed = sim.Sense(camera: true, rear: overtake, detail: junction || junctionOvertake);
                 foreach (var remote in remotes)     // a connected vehicle tells the CAV where it is and where it is going
                 {
                     if (remote.Report(sim, sensed.FrameMs, 1500) is { } era) cav.Hear(era);
@@ -89,7 +95,7 @@ public class HighwayBaselineTests
                 alerts += alertList.Count;
                 observe?.Invoke(new StepInfo(sim, sensed, bed, held, latency, steps, alerts, wall.Elapsed.TotalSeconds));
                 if (steps >= 20 && double.IsNaN(firstBrakeGap) && held < -0.3 && sim.GapAhead() is { } gb) { firstBrakeGap = gb; firstBrakeSpeed = sim.EgoSpeed; }
-                sim.Advance(held, overtake ? north : null);
+                sim.Advance(held, overtake || junctionOvertake ? north : null);
                 speeds.Add(sim.EgoSpeed);
                 if (sim.EgoSpeed < Planned - 1) slowSeconds += HighwaySimulation.Step;
                 // The first 2 s are the CAV starting up (the AMS has no Path yet); what comes after is driving.
@@ -173,6 +179,13 @@ public class HighwayBaselineTests
                 _ => "junction: the oncoming car turns left, and the CAV is told nothing"
             };
         }
+        else if (mode is "junction-overtake")
+        {
+            // THE CAR THAT TURNS OFF (OvertakeAtJunction, Downloads\CAV-Overtaking-at-a-Junction.md): the CAV follows an ordinary car that slows and lights
+            // its right indicator for a junction; the other lane is empty; the CAV reads the indicator, predicts the turn, passes.
+            world = OvertakeAtJunction.LeadTurnsRight();
+            label = "junction: the car ahead turns right - the CAV reads its indicator, sees the other lane empty, and passes it";
+        }
         else if (mode is "behind" or "overtake")
         {
             // THE STAGED SCENARIO (HighwayScenarios.Overtaking): a slow truck 200 m ahead, fast cars coming up behind it in the
@@ -193,13 +206,13 @@ public class HighwayBaselineTests
         view.Publish(LiveState(null, world, label, done: false, rear: []), null);
 
         IReadOnlyList<RearSeen> rear = [];
-        int rearPic = -1, frontPic = -1;
+        int rearPic = -1, frontPic = -1, telePic = -1;
         var plan = "following";
         var lastY = world.Ego.Y;
         Run(label, world, seconds, info =>
         {
             byte[]? rearPng = null;
-            if (info.Sensed.Messages.Where(m => m.DataType == "OSD-BVO-V1.5").Skip(1).FirstOrDefault().Json is { } rearFrame)    // a look behind every 0.3 s
+            if (info.Sensed.Messages.Where(m => m.DataType == "OSD-BVO-V1.5" && m.Json.Contains("\"BVR")).FirstOrDefault().Json is { } rearFrame)    // a look behind every 0.3 s
             {
                 rearPic = info.Step;
                 rearPng = Convert.FromBase64String(JsonNode.Parse(rearFrame)!["BasicVisualObjectData"]![0]!["Data"]!.GetValue<string>());
@@ -214,13 +227,15 @@ public class HighwayBaselineTests
             var y = world.Ego.Y;
             plan = world.Ego.Y < 0.15 && y <= lastY + 1e-6 ? "following" : y - lastY > 0.002 ? "pulling out to pass" : lastY - y > 0.002 ? "back to the right lane" : y > 3.3 ? "passing" : plan;
             lastY = y;
-            var front = FramePng(info.Sensed);
+            var front = FramePng(info.Sensed, "BVO");
+            var tele = FramePng(info.Sensed, "BVD");                                  // the telephoto window, every 0.2 s
+            if (tele is not null) { telePic = info.Step; recording?.Tele(info.Step, tele); }
             if (front is not null && info.Step % 2 == 0) { frontPic = info.Step; recording?.Front(info.Step, front); }
-            var json = LiveState(info, world, label, done: false, rear: rear, front: frontPic, rearPic: rearPic, plan: plan);
+            var json = LiveState(info, world, label, done: false, rear: rear, front: frontPic, rearPic: rearPic, plan: plan, telePic: telePic, extra: mode == "junction-overtake" ? PlannerView(world) : null);
             recording?.State(json);
-            view.Publish(json, front, rearPng);
-        }, overtake: mode == "overtake", junction: mode.StartsWith("junction"));
-        view.Publish(LiveState(null, world, label, done: true, rear: rear, last: true, front: frontPic, rearPic: rearPic, plan: plan), null);
+            view.Publish(json, front, rearPng, tele);
+        }, overtake: mode == "overtake", junction: mode is "junction-route" or "junction-lights" or "junction-nothing", junctionOvertake: mode == "junction-overtake");
+        view.Publish(LiveState(null, world, label, done: true, rear: rear, last: true, front: frontPic, rearPic: rearPic, plan: plan, telePic: telePic), null);
         recording?.Finish(label);
         Thread.Sleep(hold * 1000);
     }
@@ -228,15 +243,15 @@ public class HighwayBaselineTests
     // A vehicle the ESS says is behind: how far behind the ego's rear bumper, how far to its left, how fast it comes (m/s, positive: nearer).
     private sealed record RearSeen(string Id, double Behind, double Left, double? Closing);
 
-    private static byte[]? FramePng(Simulation.Sensed sensed)
+    private static byte[]? FramePng(Simulation.Sensed sensed, string tag = "BVO")
     {
-        var json = sensed.Messages.FirstOrDefault(m => m.DataType == "OSD-BVO-V1.5").Json;
+        var json = sensed.Messages.FirstOrDefault(m => m.DataType == "OSD-BVO-V1.5" && m.Json.Contains("\"" + tag)).Json;
         return json is null ? null : Convert.FromBase64String(JsonNode.Parse(json)!["BasicVisualObjectData"]![0]!["Data"]!.GetValue<string>());
     }
 
     private static JsonArray Vec(double a, double b) => new(a, b);
 
-    private static string LiveState(StepInfo? info, HighwayWorld world, string label, bool done, IReadOnlyList<RearSeen>? rear, bool last = false, int front = -1, int rearPic = -1, string plan = "")
+    private static string LiveState(StepInfo? info, HighwayWorld world, string label, bool done, IReadOnlyList<RearSeen>? rear, bool last = false, int front = -1, int rearPic = -1, string plan = "", int telePic = -1, JsonObject? extra = null)
     {
         var ego = world.Ego;
         var vehicles = new JsonArray(world.Others.Where(v => Math.Abs(v.X - ego.X) < 300).OrderBy(v => v.X).Select(v => (JsonNode)new JsonObject
@@ -258,7 +273,7 @@ public class HighwayBaselineTests
         var sim = info?.Sim;
         var gap = sim?.GapAhead();
         var lead = world.Leader(ego, ego.Y).Vehicle;
-        return new JsonObject
+        var state = new JsonObject
         {
             ["t"] = Math.Round(world.Time, 2), ["step"] = info?.Step ?? (last ? int.MaxValue - 1 : -1) + (last ? 0 : 0),
             ["wall"] = Math.Round(info?.WallSeconds ?? 0, 2), ["label"] = label, ["done"] = done,
@@ -270,8 +285,25 @@ public class HighwayBaselineTests
             ["front"] = front < 0 ? null : front, ["rearPic"] = rearPic < 0 ? null : rearPic,
             ["gap"] = gap is { } g ? Math.Round(g, 2) : null, ["essGap"] = essGap is { } eg ? Math.Round(eg, 2) : null,
             ["leadSpeed"] = lead is null ? null : Math.Round(lead.Speed, 2),
-            ["command"] = info is null ? 0 : Math.Round(info.Held, 3), ["alerts"] = info?.Alerts ?? 0, ["latencyMs"] = Math.Round(info?.LatencyMs ?? 0, 1)
-        }.ToJsonString();
+            ["command"] = info is null ? 0 : Math.Round(info.Held, 3), ["alerts"] = info?.Alerts ?? 0, ["latencyMs"] = Math.Round(info?.LatencyMs ?? 0, 1),
+            ["tele"] = telePic < 0 ? null : telePic
+        };
+        if (extra is not null) foreach (var (k, v) in extra) state[k] = v?.DeepClone();
+        return state.ToJsonString();
+    }
+
+    // What the CAV's planner knows and has decided, for the animation: its own words, the stretch of the lane that comes the other way it knows to be clear,
+    // and where it predicts the car ahead will turn off.
+    private static JsonObject PlannerView(HighwayWorld world)
+    {
+        var ego = world.Ego;
+        var turn = Mpai.Cav.Ams.LaneChangePlanner.LastTurnAhead;
+        return new JsonObject
+        {
+            ["follow"] = true, ["status"] = Mpai.Cav.Ams.LaneChangePlanner.LastStatus,
+            ["free"] = Mpai.Cav.Ams.LaneChangePlanner.LastHorizon > 0 ? Math.Round(Mpai.Cav.Ams.LaneChangePlanner.LastHorizon) : null,
+            ["turnAt"] = double.IsNaN(turn) ? null : Math.Round(ego.X + ego.Length / 2 + turn, 1)
+        };
     }
 }
 

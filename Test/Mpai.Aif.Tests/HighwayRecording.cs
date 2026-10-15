@@ -19,6 +19,7 @@ public sealed class HighwayRecording
         this.folder = folder;
         Directory.CreateDirectory(Path.Combine(folder, "f"));
         Directory.CreateDirectory(Path.Combine(folder, "r"));
+        Directory.CreateDirectory(Path.Combine(folder, "t"));
     }
 
     public void State(string json) => states.Add(json);
@@ -35,6 +36,13 @@ public sealed class HighwayRecording
     {
         using var image = Image.Load<Rgb24>(png);
         image.SaveAsJpeg(Path.Combine(folder, "r", $"{step:D6}.jpg"), jpeg);
+    }
+
+    // The telephoto window, given as PNG: what the ESS was given to read an indicator far ahead.
+    public void Tele(int step, byte[] png)
+    {
+        using var image = Image.Load<Rgb24>(png);
+        image.SaveAsJpeg(Path.Combine(folder, "t", $"{step:D6}.jpg"), jpeg);
     }
 
     // A picture given as raw RGB (the rear camera's window, 640 x 360).

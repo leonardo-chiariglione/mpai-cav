@@ -144,7 +144,7 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
         var (east, north, heading, _) = AmsTypes.Ego(attitude);
         var paths = new List<List<(double T, double East, double North)>>();
         foreach (var o in fed["FullEnvironmentObjects"]?.AsArray() ?? [])
-            if (o?["PredictedPath"] is JsonArray path)
+            if (o?["PredictedPath"] is JsonArray path && !FollowedAhead(path, east, north, heading))
                 paths.Add(path.Select(p => ((double)p!["T"]!, (double)p["East"]!, (double)p["North"]!)).ToList());
         if (paths.Count == 0) return 0;
 
@@ -174,6 +174,20 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
     }
 
     private const double YieldHorizon = 14;
+
+    // A vehicle on the CAV's own road, going the same way - ahead of it in its lane, or beside or behind it where it passes - is FOLLOWED (the
+    // Motion Selection Planning keeps the gap) or left behind, not yielded to: its path lies along the CAV's own, and it is no crossing. If it
+    // turns off, its path leaves the road; where the CAV passes it, it is the Path Selection Planning that takes the CAV out of the lane.
+    private static bool FollowedAhead(JsonArray path, double east, double north, double heading)
+    {
+        if (path.Count < 2) return false;
+        double e0 = (double)path[0]!["East"]!, n0 = (double)path[0]!["North"]!, e1 = (double)path[1]!["East"]!, n1 = (double)path[1]!["North"]!;
+        var (dx, dy) = (e0 - east, n0 - north);
+        var (along, across) = (dx * Math.Cos(heading) + dy * Math.Sin(heading), -dx * Math.Sin(heading) + dy * Math.Cos(heading));
+        var turn = Math.Atan2(n1 - n0, e1 - e0) - heading;
+        turn = Math.Atan2(Math.Sin(turn), Math.Cos(turn));
+        return Math.Abs(across) < 4.0 && Math.Abs(turn) < 0.5;          // ahead or behind, in the lane or beside it (the CAV may be passing it)
+    }
 
     // Where a predicted path has the vehicle at t: between its points; where it ends, at its last.
     private static (double East, double North) At(List<(double T, double East, double North)> path, double t)
