@@ -286,12 +286,12 @@ public partial class RcaShell : ComponentBase
 
         devices.Run = async app => await RunAppAsync(app);
 
-        // THE AVATAR: a Speaking Avatar - speech, face and body together - and the
+        // THE AVATAR: a Portable Avatar - speech, face and body together - and the
         // time it takes to say it.
         devices.RegisterPresent("avatar", async data =>
         {
-            if (!data.TryGetValue("XRV-SAV-V1.0", out var sav) ||
-                AvatarUtterance.FromSpeakingAvatar(sav) is not { } utterance) return;
+            if (!data.TryGetValue("PAF-PAV-V1.6", out var sav) ||
+                AvatarUtterance.FromPortableAvatar(sav) is not { } utterance) return;
             var wav = utterance.MachineSpeechWav;
             await Js.InvokeVoidAsync("rca.present",
                 utterance.FaceDescriptors is null ? null : MpaiJson.ToJson(utterance.FaceDescriptors),
@@ -302,7 +302,7 @@ public partial class RcaShell : ComponentBase
 
         // THE AVATAR, AS AN INPUT: the model this client holds and draws (Thalia,
         // Ready Player Me), by its identifier, for the Module to animate.
-        devices.RegisterAcquire("PAF-AVT-V1.6", (_, _) =>
+        devices.RegisterAcquire("PAF-PAV-V1.6", (_, _) =>
             Task.FromResult<string?>(AvatarUtterance.AvatarDatum("cav-avatar.glb")));
 
         // THE STAGE: a picture the person handed over.

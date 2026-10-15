@@ -27,7 +27,7 @@ a Module that has an ID has access to the data it stands for.
 
 ## 3. What travels
 
-A participant's **Speaking Avatar** that is transmitted is **the Avatar ID, the Face and Body Descriptors, and the Speech** (with the Personal Status that
+A participant's **Portable Avatar** that is transmitted is **the Avatar ID, the Face and Body Descriptors, and the Speech** (with the Personal Status that
 makes the descriptors expressive). The Portable Avatar's schema now has those fields: **FaceDescriptorsObject**, **BodyDescriptorsObject** and
 **EntityPersonalStatus**, in place of the Entity State, which is not used here. The avatar model is not sent again: the ID refers to it.
 
@@ -42,7 +42,7 @@ makes the descriptors expressive). The Portable Avatar's schema now has those fi
 ## 5. The data, end to end
 
 microphone and camera (Units) -> **VCT** (in the client) -> Portable Avatar -> **AVS** (on the server: demultiplexing, authentication, summary with the VMS,
-multiplexing) -> each client's **VCR** (PDX -> MSC -> RSR) -> Speaking Avatars with their IDs, the Multimodal Scene, the Point of View, the Output Text
+multiplexing) -> each client's **VCR** (PDX -> MSC -> RSR) -> Portable Avatars with their IDs, the Multimodal Scene, the Point of View, the Output Text
 -> the Units (3OD, SOD).
 
 ## 6. The head model (HDM): there is none, so one is to be found
@@ -78,7 +78,7 @@ The ABV is one App of the Service (an `Apps/ABV` folder: workflow, `app.json`, i
 
 ## 9. Build order
 
-1. The code and L3s of PDX, VSC, MSC and the RSR for the Speaking Avatars; the VCR composite L3; tests with synthetic Portable Avatars of four participants.
+1. The code and L3s of PDX, VSC, MSC and the RSR for the Portable Avatars; the VCR composite L3; tests with synthetic Portable Avatars of four participants.
 2. The VCT and AVS code that is missing (PMX, SPA, the VCT composite).
 3. The ABV App, the AVS User Agent (registration, seating).
 4. The client: the Units, the meeting page.

@@ -24,10 +24,10 @@ Relevant MPAI Technical Specifications:
 |---|---|---|---|
 | **MAC** | Multimodal Access Control | Recognise a person from **face and voice** and grant or deny access; access is granted only when both modalities agree. | [User](MPAIApps/HCIApps/MacApp/docs/MAC-User.md) / [Developer](MPAIApps/HCIApps/MacApp/docs/MAC-Developer.md) |
 | **ACR** | Access Control Registration | **Enrol** a new person's face and voice into the gallery that MAC reads. | [User](MPAIApps/HCIApps/AcrApp/docs/ACR-User.md) / [Developer](MPAIApps/HCIApps/AcrApp/docs/ACR-Developer.md) |
-| **MAD** | Multimodal Anonymous Dialogue | Hold a spoken **conversation** with a Speaking Avatar; no identity, a local LLM composes the replies. | [User](MPAIApps/HCIApps/MadApp/docs/MAD-User.md) / [Developer](MPAIApps/HCIApps/MadApp/docs/MAD-Developer.md) |
-| **MAT** | Multimodal Anonymous Translation | Speak or type in one language; the Speaking Avatar **translates** and speaks it in another. | [User](MPAIApps/HCIApps/MatApp/docs/MAT-User.md) / [Developer](MPAIApps/HCIApps/MatApp/docs/MAT-Developer.md) |
+| **MAD** | Multimodal Anonymous Dialogue | Hold a spoken **conversation** with a Portable Avatar; no identity, a local LLM composes the replies. | [User](MPAIApps/HCIApps/MadApp/docs/MAD-User.md) / [Developer](MPAIApps/HCIApps/MadApp/docs/MAD-Developer.md) |
+| **MAT** | Multimodal Anonymous Translation | Speak or type in one language; the Portable Avatar **translates** and speaks it in another. | [User](MPAIApps/HCIApps/MatApp/docs/MAT-User.md) / [Developer](MPAIApps/HCIApps/MatApp/docs/MAT-Developer.md) |
 
-Each application presents a 3-D **Speaking Avatar** that guides the user by voice.
+Each application presents a 3-D **Portable Avatar** that guides the user by voice.
 
 ---
 
@@ -77,9 +77,9 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 | MAT | `MMC-MAT-V2.5` | `MMC-ASR` (Whisper speech->text), `MMC-TTT` (M2M100 translation), `PAF-RSR` (avatar speaks the translation) |
 
 `PAF-RSR` (Response and Scene Rendering) is a composite of `PAF-PSD` + `MMC-TTS` + `PAF-SAF`,
-and `PAF-SAF` (Speaking Avatar Formation) a composite of `PAF-GFD` + `PAF-GBD` + `PAF-SAS`; it is shared by all the apps.
+and `PAF-SAF` (Portable Avatar Formation) a composite of `PAF-GFD` + `PAF-GBD` + `PAF-SAS`; it is shared by all the apps.
 It takes the reply's Text and an Avatar - the model the client holds - and outputs a
-Speaking Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Whoever
+Portable Avatar (`XRV-SAV`): the speech, and the face and body motion that go with it. Whoever
 requested it places it: `PAF-SAR` (Scene and Avatar Rendering), a separate AIM, takes the Speaking
 Avatar, a Scene (`OSD-BMS` of an Audio Scene and a 3D Model Scene), a Point of View and the Avatar PoV
 where the requester wants the avatar, and gives the 3D Model Scene with the avatar (`OSD-B3S`), which the client's 3D
@@ -97,7 +97,7 @@ detection, camera (Windows Media Capture), loudspeaker, the avatar page - and a 
 
 ```
 AIF/            AI Framework runtime (Controller, Store, Communication/{Shared,Global}Storage)
-  ControllerApi/  the Controller API (formerly the North API) and the Speaking Avatar type
+  ControllerApi/  the Controller API (formerly the North API) and the Portable Avatar type
   PortData/     the wire form of each Data Type
 AIMs/           AI Modules
   AMDs/         L3 Module descriptors (JSON)

@@ -795,10 +795,12 @@ public sealed class WorkflowInterpreter
         catch { return ""; }
     }
 
-    // A literal in a workflow is words; the Data Type says what to make of them.
+    // A literal in a workflow is words; the Data Type says what to make of them: a Text Object, or an ID (string - a machine's ID, a nickname).
     private static string Literal(string dataType, string text) =>
         dataType.StartsWith("OSD-BTO", StringComparison.OrdinalIgnoreCase)
             ? Mpai.Core.MpaiJson.ToJson(Mpai.Core.BasicTextObject.FromText(text))
-            : throw new NotSupportedException(
-                  $"a workflow may write a literal for a Text Object; {dataType} must be acquired.");
+            : dataType == "string"
+                ? System.Text.Json.JsonSerializer.Serialize(text)
+                : throw new NotSupportedException(
+                      $"a workflow may write a literal for a Text Object or an ID; {dataType} must be acquired.");
 }

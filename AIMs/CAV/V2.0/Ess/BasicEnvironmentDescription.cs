@@ -51,11 +51,19 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
         public double Speed;                                  // its own, along the ego's heading, when last seen
         public double Existence = 0.5;
         public int Misses;
+        public int Hits;                                      // the times it was seen: a young track has no speed of its own yet
         public long First, Last;
         public string? From, Object;
+        public string? Turn;                                          // the indicator seen lit in the latest descriptors that showed it
+        public long TurnAt = long.MinValue;
     }
 
     private readonly double gate = EssJson.Setting(settings, "Gate", 3);
+    // FOR SOMETHING THAT COMES AT THE EGO FAST (the junction round: a vehicle coming the other way). Off unless the settings say so, so that the picture of what is
+    // ahead in the lane - the overtaking, the braking of the vehicle ahead - is what it was: ClosingSpeed is the speed (m/s) a young track may close in on the ego
+    // between two sightings and still be the same track; YoungBeta is how fast a young track learns its speed (the Beta of an old one where it is not set).
+    private readonly double closingSpeed = EssJson.Setting(settings, "ClosingSpeed", 0);
+    private readonly double youngBeta = EssJson.Setting(settings, "YoungBeta", -1);
     private readonly int dropAfter = (int)EssJson.Setting(settings, "DropAfterMisses", 5);
     private readonly long quiet = (long)EssJson.Setting(settings, "Quiet", 1000);
     private readonly double keepNear = EssJson.Setting(settings, "KeepNear", 15);
@@ -141,7 +149,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
             var cls = obj?["BasicVisualObjectProperties"]?["BasicVisualObjectIdentifier"]?["InstanceIdentifier"]?.GetValue<string>() ?? "object";
             var score = (double?)obj?["BasicVisualObjectProperties"]?["BasicVisualObjectIdentifier"]?["InstanceIdentifierData"]?[0]?["LabelConfidenceLevel"] ?? 0.5;
 
-            var track = free.Where(t => Distance(t, p) < gate + t.AccuracyX).OrderBy(t => Distance(t, p)).FirstOrDefault();
+            var track = free.Where(t => Distance(t, p) < gate + t.AccuracyX || Closing(t, p, dtStream)).OrderBy(t => Distance(t, p)).FirstOrDefault();
             if (track is null)
             {
                 track = new Track { Id = $"T{++tracksMade:D4}", Class = cls, X = p.X, Y = p.Y, First = ms };
@@ -152,19 +160,26 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
                 free.Remove(track);
                 double rx = p.X - track.X, ry = p.Y - track.Y;
                 track.X += Alpha * rx; track.Y += Alpha * ry;
-                if (dtStream > 0) { track.Vx += Beta * rx / dtStream; track.Vy += Beta * ry / dtStream; }
+                var beta = track.Hits < 4 && youngBeta >= 0 ? youngBeta : Beta;    // a young track learns its speed fast, where the settings say so
+                if (dtStream > 0) { track.Vx += beta * rx / dtStream; track.Vy += beta * ry / dtStream; }
                 track.Existence += (1 - track.Existence) * 0.3;
             }
-            track.Class = cls; track.Score = score; track.Misses = 0; track.Last = ms;
+            track.Class = cls; track.Score = score; track.Misses = 0; track.Last = ms; track.Hits++;
             // Its own speed: not backwards - the filter lags while the ego brakes, and a
             // vehicle ahead in the lane does not come back at it.
             track.Speed = Math.Max(0, track.Vx + egoSpeed);
             track.AccuracyX = accuracy.X; track.AccuracyY = accuracy.Y;
             track.From = id; track.Object = obj?["BasicVisualObjectID"]?.GetValue<string>();
+            if ((string?)obj?["BasicVisualObjectProperties"]?["TurnIndicator"] is { } turn) { track.Turn = turn; track.TurnAt = ms; }
         }
         foreach (var t in free) { t.Misses++; if (!Kept(t, ms)) t.Existence *= 0.7; }
         tracks.RemoveAll(t => t.Misses >= dropAfter && !Kept(t, ms));
     }
+
+    // A young track of something far that comes fast at the CAV - a vehicle coming the other way is 40 m/s nearer at each second, and the telephoto
+    // window shows it only each 0.2 s: it has moved metres, which the gate of a track that has no speed yet does not allow. In the same lane's width.
+    private bool Closing(Track t, (double X, double Y, double Z) p, double dt) =>
+        closingSpeed > 0 && t.Hits < 4 && Math.Abs(t.Y - p.Y) < 2.0 + t.AccuracyY && Math.Abs(t.X - p.X) < gate + t.AccuracyX + closingSpeed * Math.Max(dt, 0.1);
 
     // In the ego's lane, ahead and near, and not unseen for too long.
     private bool Kept(Track t, long ms) => t.X > 0 && t.X < keepNear && Math.Abs(t.Y) < laneHalf && (keepFor <= 0 || ms - t.Last <= keepFor);
@@ -187,7 +202,7 @@ public sealed class BasicEnvironmentDescription(string instanceId, IReadOnlyDict
             ["Contributions"] = new JsonArray(new JsonObject { ["Technology"] = "Visual", ["SceneDescriptorsID"] = t.From, ["ObjectID"] = t.Object }),
             ["FirstObserved"] = EssJson.SimpleTime($"{id}-{t.Id}-F", t.First),
             ["LastObserved"] = EssJson.SimpleTime($"{id}-{t.Id}-L", t.Last)
-        }).ToArray());
+        }.WithIf("TurnIndicator", t.TurnAt == t.Last && t.Hits >= 3 ? t.Turn : null)).ToArray());     // lit in what was seen last: it blinks, the Full Environment Description keeps it
         var bed = new JsonObject
         {
             ["Header"] = Descriptors, ["BasicEnvironmentDescriptorsID"] = id,

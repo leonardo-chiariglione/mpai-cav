@@ -70,3 +70,8 @@ _backup-*/
 
 # the public instance on Windows, published Release (MAS/Service/windows/publish.ps1)
 /deploy/
+
+# the ABV demo server certificate (made on first run)
+ABV/Server/abv-cert.pfx
+ABV/Server/bin/
+ABV/Server/obj/

@@ -13,7 +13,7 @@ namespace Mpai.Paf.Psd;
 // The inverse of Personal Status Multiplexing (MMC-PMX). Takes one Entity Personal
 // Status (the machine's, from Entity Dialogue Processing) and splits it into the
 // per-modality Personal Statuses - Text, Speech, Face, and Body - of which the Response
-// and Scene Rendering composite then uses to render the speaking avatar (affective
+// and Scene Rendering composite then uses to render the Portable Avatar (affective
 // Text-To-Speech, facial expression, body). It de-multiplexes; it does not
 // compute. A modality absent from the Entity Personal Status is emitted as null.
 //

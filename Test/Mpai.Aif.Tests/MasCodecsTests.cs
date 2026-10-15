@@ -8,11 +8,11 @@ namespace Mpai.Aif.Tests;
 
 // WHAT A REMOTE CLIENT CAN GIVE AND RECEIVE. Over MPAI-MAS a Datum crosses only if a
 // codec gives it a wire form, and the Remote Client Application refuses any other
-// Data Type. When RSR took an Avatar and gave a Speaking Avatar (2026/10/03), neither
+// Data Type. When RSR took an Avatar and gave a Portable Avatar (2026/10/03), neither
 // had a codec: every App was out of reach over MPAI-MAS, and only the Service tests -
 // not in the ordinary matrix - would have said so (found testing the Linux update,
 // 2026/10/04). Judged here, fast: every boundary Port of every Module of MAS-App has a
-// Data Type the codecs know, and the Avatar and the Speaking Avatar go to the wire and
+// Data Type the codecs know, and the Avatar and the Portable Avatar go to the wire and
 // back unchanged.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
@@ -39,17 +39,9 @@ public class MasCodecsTests
         }
 
         var avatar = AvatarUtterance.AvatarDatum("cav-avatar.glb");
-        result["the Avatar to the wire and back"] = Same(codecs, "PAF-AVT-V1.6", avatar);
-        var speaking = MpaiJson.ToJson(new SpeakingAvatar
-        {
-            SpeakingAvatarID = "s",
-            SpeakingAvatarData = new SpeakingAvatarData
-            {
-                Avatar = MpaiJson.FromJson<Avatar>(avatar).Speaking(null, new FaceDescriptorsObject { FaceDescriptorsObjectID = "f" }, null),
-                SpeechObject = new BasicSpeechObject { BasicSpeechObjectID = "hello", Data = new byte[64] }
-            }
-        });
-        result["the Speaking Avatar to the wire and back"] = Same(codecs, "XRV-SAV-V1.0", speaking);
+        result["the Avatar Model to the wire and back"] = Same(codecs, "OSD-B3O-V1.5", avatar);
+        var speaking = MpaiJson.ToJson(TestAvatar.Speaking("s", new byte[64]).Speaking(null, new FaceDescriptorsObject { FaceDescriptorsObjectID = "f" }, null));
+        result["the Portable Avatar to the wire and back"] = Same(codecs, "PAF-PAV-V1.6", speaking);
         Expected.Match("mas-codecs.json", result);
     }
 

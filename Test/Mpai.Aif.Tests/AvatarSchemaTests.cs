@@ -6,7 +6,7 @@ namespace Mpai.Aif.Tests;
 
 // THE AVATAR AND THE SPEAKING AVATAR, IN C# AND IN THEIR SCHEMAS (the author,
 // 2026/10/03). Response and Scene Rendering takes an Avatar - the Model to
-// animate - and outputs a Speaking Avatar (XRV-SAV), ready to play: the Avatar
+// animate - and outputs a Portable Avatar (PAF-PAV), ready to play: the Avatar
 // with its Speech and the Face and Body Descriptors that animate it. What the C#
 // classes write is checked against the schemas; what is not valid says why.
 [Trait("Group", "Fast")]
@@ -30,7 +30,7 @@ public class AvatarSchemaTests
     [Fact]
     public void AvatarsAsTheSchemasSayThem()
     {
-        var model = Avatar.OfModel("avatars/thalia.glb", "thalia");
+        var model = PortableAvatar.OfModel("avatars/thalia.glb", "thalia");
         var speech = BasicSpeechObject.FromData(new byte[3200], new SpeechQualifier
         {
             SpeechQualifierID = "q",
@@ -42,18 +42,14 @@ public class AvatarSchemaTests
         });
         var face = new FaceDescriptorsObject { FaceDescriptorsObjectID = "face" };
         var body = BodyDescriptorsObject.FromContent("HIERARCHY\nROOT Hips\n", "BVH");
-        var speaking = new SpeakingAvatar
-        {
-            SpeakingAvatarID = "thalia-says-hello",
-            SpeakingAvatarData = new SpeakingAvatarData { Avatar = model.Speaking(speech, face, body), SpeechObject = speech }
-        };
+        var speaking = model.Speaking(speech, face, body);
 
         Expected.Match("avatar-schemas.json", new Dictionary<string, string>
         {
-            ["an Avatar that is only a Model, by ID"] = Check("PAF/V1.6/data/Avatar.json", model),
-            ["a Speaking Avatar: the Avatar with its Speech, Face and Body Descriptors"] = Check("XRV1/V1.0/data/SpeakingAvatar.json", speaking),
-            ["the Speaking Avatar keeps the Model"] = speaking.Avatar()?.ModelId() ?? "none",
-            ["the Speaking Avatar's face and body"] = $"{(speaking.Face() is null ? "no face" : "face")}, {speaking.Body()?.GetContentFormat() ?? "no body"}"
+            ["a Portable Avatar that is only a Model, by ID"] = Check("PAF/V1.6/data/PortableAvatar.json", model),
+            ["a Portable Avatar with its Speech, Face and Body Descriptors"] = Check("PAF/V1.6/data/PortableAvatar.json", speaking),
+            ["the Portable Avatar keeps the Model"] = speaking.ModelId() ?? "none",
+            ["the Portable Avatar's face and body"] = $"{(speaking.FaceDescriptorsObject is null ? "no face" : "face")}, {speaking.BodyDescriptorsObject?.GetContentFormat() ?? "no body"}"
         });
     }
 }

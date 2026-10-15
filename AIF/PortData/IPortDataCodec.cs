@@ -57,10 +57,10 @@ public sealed class PortDataCodecs
             .Register(new SelectorCodec())
             .Register(new SummaryCodec())
             .Register(new EntityPersonalStatusCodec())
-            .Register(new AvatarCodec())
-            .Register(new SpeakingAvatarCodec())
+            .Register(new Basic3DModelObjectCodec())
             .Register(new PortableAvatarCodec())
-            .Register(new BooleanCodec());
+            .Register(new BooleanCodec())
+            .Register(new StringCodec());
 
     public PortDataCodecs Register(
         IPortDataCodec codec)

@@ -11,8 +11,6 @@ using Mpai.Mmc.Tiq;
 using Mpai.Paf.Fpe;
 using Mpai.Paf.Gfd;
 using Mpai.Paf.Gbd;
-using Mpai.Paf.Sas;
-using Mpai.Paf.Sar;
 using Mpai.Paf.Psd;
 
 namespace Mpai.Providers;
@@ -37,8 +35,6 @@ public static class AimBinaries
         ["1MMC-PDX-V2.5-I01"] = typeof(PsdAimProcessor),
         ["1PAF-GFD-V1.6-I01"] = typeof(GfdAimProcessor),
         ["1PAF-GBD-V1.6-I01"] = typeof(GbdAimProcessor),
-        ["1PAF-SAS-V1.6-I01"] = typeof(SasAimProcessor),
-        ["1PAF-SAR-V1.6-I01"] = typeof(SarAimProcessor),
         ["1PAF-FIR-V1.6-I01"] = typeof(Mpai.Paf.Fir.FirAimProcessor),
         ["1MMC-SIR-V2.5-I01"] = typeof(Mpai.Mmc.Sir.SirAimProcessor),
         ["1OSD-IDR-V1.5-I01"] = typeof(Mpai.Osd.Idr.IdrAimProcessor),

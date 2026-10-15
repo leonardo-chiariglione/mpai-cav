@@ -24,8 +24,8 @@ internal static class Program
     private const string BVO = "OSD-BVO-V1.5";   // visual (face) input
     private const string BLO = "OSD-BLO-V1.5";   // lidar input
     private const string IID = "OSD-IID-V1.5";   // OutputUserID
-    private const string SAV = "XRV-SAV-V1.0";   // SpeakingAvatar: speech, face and body
-    private const string AVT = "PAF-AVT-V1.6";   // Avatar input
+    private const string SAV = "PAF-PAV-V1.6";   // Portable Avatar: speech, face and body
+    private const string AVT = "OSD-B3O-V1.5";   // Avatar Model input
     private const string BTO = "OSD-BTO-V1.5";   // OutputText
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
@@ -71,9 +71,9 @@ internal static class Program
             inputs.Add(new ControllerApi.Datum(BLO, MpaiJson.ToJson(blo)));
             Console.WriteLine("built synthetic OSD-BLO.");
 
-            // --- the Avatar (PAF-AVT) the reply animates, by its model's identifier ---
+            // --- the Avatar (PAF-PAV) the reply animates, by its model's identifier ---
             inputs.Add(new ControllerApi.Datum(AVT, AvatarUtterance.AvatarDatum("cav-avatar.glb")));
-            Console.WriteLine("built PAF-AVT.");
+            Console.WriteLine("built PAF-PAV.");
             Console.WriteLine();
 
             Console.WriteLine("StartFlow(CAV-HCI)...");
@@ -88,7 +88,7 @@ internal static class Program
 
             Console.WriteLine("--- outputs ---");
             Dump("OutputUserID (OSD-IID)", r.ByType(IID));
-            Dump("SpeakingAvatar (XRV-SAV)", r.ByType(SAV));
+            Dump("Portable Avatar (PAF-PAV)", r.ByType(SAV));
             Dump("OutputText   (OSD-BTO)", r.ByType(BTO));
 
             // decode the identity if present

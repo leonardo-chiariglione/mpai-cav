@@ -11,8 +11,6 @@ using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;    // GfdAimProcessor
 using Mpai.Paf.Gbd;         // GbdAimProcessor
-using Mpai.Paf.Sas;         // SasAimProcessor
-using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace Mpai.Providers;
 
@@ -21,7 +19,7 @@ namespace Mpai.Providers;
 // ONLY the leaf AIMs the topology names:
 //   MMC-ASR - speech to text (Whisper)
 //   MMC-EDP - dialogue (local LLM via Ollama), using the running Summary as memory
-//   MMC-PDX, MMC-TTS, PAF-GFD, PAF-GBD, PAF-SAS - the Response and Scene Rendering leaves
+//   MMC-PDX, MMC-TTS, PAF-GFD, PAF-GBD, PAF-PMX - the Response and Scene Rendering leaves
 // No orchestration here; the User Agent drives the Module through the Controller.
 public sealed class MadProvider : IAimProvider, IDisposable
 {
@@ -37,8 +35,7 @@ public sealed class MadProvider : IAimProvider, IDisposable
 
     public bool CanCreate(string aimName) =>
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1MMC-PDX-V2.5-I01" or "1PAF-GFD-V1.6-I01"
-                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01"
-                or "1PAF-SAR-V1.6-I01";
+                or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I01";
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
         {
@@ -48,8 +45,7 @@ public sealed class MadProvider : IAimProvider, IDisposable
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1PAF-SAR-V1.6-I01" => new SarAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-PMX-V1.6-I01" => new Mpai.Paf.Pmx.PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"MadProvider does not provide '{aimName}'.")
         };
 

@@ -16,23 +16,23 @@ on Start:
     ask Controller to start
 
     # The Avatar this client holds and draws: every utterance animates it.
-    acquire Avatar (PAF-AVT-V1.6)
+    acquire AvatarModel (OSD-B3O-V1.5)
 
     # --- the welcome, in two parts with a pause between them ---
 
     offer Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI Picture Question
         Answering Service."
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   WelcomeSpeakingAvatar (XRV-SAV-V1.0)
-    present WelcomeSpeakingAvatar
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   WelcomePortableAvatar (PAF-PAV-V1.6)
+    present WelcomePortableAvatar
 
     wait 1s
 
     offer Invitation (OSD-BTO-V1.5:1) = "Do you want to ask a question about a
         picture?"
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   InvitationSpeakingAvatar (XRV-SAV-V1.0)
-    present InvitationSpeakingAvatar
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   InvitationPortableAvatar (PAF-PAV-V1.6)
+    present InvitationPortableAvatar
 
     # --- what the person answers decides what follows ---
 
@@ -49,9 +49,9 @@ on Start:
         branch on ReplyText contains "yes" {
 
             offer Choose (OSD-BTO-V1.5:1) = "Please select a picture."
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   ChooseSpeakingAvatar (XRV-SAV-V1.0)
-            present ChooseSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   ChoosePortableAvatar (PAF-PAV-V1.6)
+            present ChoosePortableAvatar
 
             acquire Picture (OSD-BVO-V1.5) = { "Formats": { "Content": { "2D": { "Static": "JPEG" } } } }
             present Picture
@@ -65,25 +65,25 @@ on Start:
             } else {
                 offer UserQuestion (OSD-BSO-V1.5:1)
             }
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   Answer (OSD-BTO-V1.5:1), MachineSpeakingAvatar (XRV-SAV-V1.0)
-            present MachineSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   Answer (OSD-BTO-V1.5:1), MachinePortableAvatar (PAF-PAV-V1.6)
+            present MachinePortableAvatar
             display Answer
 
             wait 2s
 
             offer Again (OSD-BTO-V1.5:1) = "Do you want to ask a question about
                 another picture?"
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   AgainSpeakingAvatar (XRV-SAV-V1.0)
-            present AgainSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   AgainPortableAvatar (PAF-PAV-V1.6)
+            present AgainPortableAvatar
 
         } else {
 
             offer Farewell (OSD-BTO-V1.5:1) = "Maybe another time."
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   FarewellSpeakingAvatar (XRV-SAV-V1.0)
-            present FarewellSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   FarewellPortableAvatar (PAF-PAV-V1.6)
+            present FarewellPortableAvatar
             end
 
         }

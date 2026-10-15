@@ -8,6 +8,7 @@
   "InternalTypes":    [],
 
   "ExternalPorts":    [{"Name": "PortableAvatars", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Summary", "Direction": "Output", "DataType": "MMC-SUM-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "VMSPortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
@@ -36,6 +37,7 @@
                        {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-B3O-V1.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"OSD-B3O-V1.5"}},
                        {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"MMC-EPS-V2.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"MMC-EPS-V2.5"}},
                        {"Output":{"AIMName":"1MMC-EDP-V2.5-I02","DataType":"OSD-BTO-V1.5"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"OSD-BTO-V1.5"}},
+                       {"Output":{"AIMName":"","DataType":"string"},"Input":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"string"}},
                        {"Output":{"AIMName":"1PAF-PSD-V1.6-I01","DataType":"PAF-PAV-V1.6"},"Input":{"AIMName":"","DataType":"PAF-PAV-V1.6"}}],
 
   "Implementations":  [],

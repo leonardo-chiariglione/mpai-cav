@@ -68,6 +68,13 @@ public static class EssJson
         })
     };
 
+    // The object with the property, if there is a value for it: none, where there is none (a property that is absent is not a null).
+    public static JsonObject WithIf(this JsonObject o, string name, string? value)
+    {
+        if (value is not null) o[name] = value;
+        return o;
+    }
+
     public static JsonArray Triple((double X, double Y, double Z) v) => new(Math.Round(v.X, 4), Math.Round(v.Y, 4), Math.Round(v.Z, 4));
 
     public static (double X, double Y, double Z)? Vector(JsonNode? array) =>

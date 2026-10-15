@@ -35,8 +35,8 @@ public partial class MainWindow : Window
     private const string BLO = "OSD-BLO-V1.5";
     private const string BSO = "OSD-BSO-V1.5";
     private const string BTO = "OSD-BTO-V1.5";
-    private const string SAV = "XRV-SAV-V1.0";   // Speaking Avatar: speech, face and body
-    private const string AVT = "PAF-AVT-V1.6";   // the Avatar to animate
+    private const string SAV = "PAF-PAV-V1.6";   // Portable Avatar: speech, face and body
+    private const string AVT = "OSD-B3O-V1.5";   // the Avatar Model to animate
 
     // The avatar this App holds and draws (Thalia, Ready Player Me), by its identifier:
     // the Avatar input of every Module that renders with Response and Scene Rendering.
@@ -218,7 +218,7 @@ public partial class MainWindow : Window
         if (!r.Ok) { Diag("front-end Advance err=" + r.Error); return (null, face is not null); }
 
         _lastUserId   = r.ByType(IID);
-        _lastReply    = AvatarUtterance.FromSpeakingAvatar(r.ByType(SAV));
+        _lastReply    = AvatarUtterance.FromPortableAvatar(r.ByType(SAV));
         string? recognised = TextOf(r.ByType(BTO, 2));
         return (recognised, face is not null);
     }
@@ -238,13 +238,13 @@ public partial class MainWindow : Window
         var inputs = new List<ControllerApi.Datum>
         {
             // PAF-RSR takes the Text twice, one Port per consumer (M3194 Input group 1):
-            // #1 for Text-To-Speech, #2 for Speaking Avatar Formation.
+            // #1 for Text-To-Speech, #2 for Portable Avatar Formation.
             new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new ControllerApi.Datum(AVT, AvatarDatum)
         };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok || AvatarUtterance.FromSpeakingAvatar(r.ByType(SAV)) is not { } utterance) return;
+        if (!r.Ok || AvatarUtterance.FromPortableAvatar(r.ByType(SAV)) is not { } utterance) return;
         await _avatar!.PresentAsync(utterance);
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
     }

@@ -18,25 +18,25 @@ on Start:
     ask Controller to start
 
     # The Avatar this client holds and draws: every utterance animates it.
-    acquire Avatar (PAF-AVT-V1.6)
+    acquire AvatarModel (OSD-B3O-V1.5)
 
     # Said once, at the start, and written in the text window: what becomes of
     # the person's data.
     offer Welcome (OSD-BTO-V1.5:1) = "Welcome to MPAI as a Service. My name is
         Thalia. Any text, audio, and visual data of yours that I may have captured
         will be removed at the end of this session."
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   WelcomeSpeakingAvatar (XRV-SAV-V1.0)
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   WelcomePortableAvatar (PAF-PAV-V1.6)
     display Welcome
-    present WelcomeSpeakingAvatar
+    present WelcomePortableAvatar
 
     # With others using the Service now, she says so; alone, she says nothing.
     acquire Company (OSD-BTO-V1.5) = { "Attributes": { "TextRole": "Concurrency" } }
     branch on Company {
         offer Company (OSD-BTO-V1.5:1)
-        offer Avatar (PAF-AVT-V1.6:1)
-        ask   CompanySpeakingAvatar (XRV-SAV-V1.0)
-        present CompanySpeakingAvatar
+        offer AvatarModel (OSD-B3O-V1.5:1)
+        ask   CompanyPortableAvatar (PAF-PAV-V1.6)
+        present CompanyPortableAvatar
     }
 
     loop until Stop:
@@ -45,9 +45,9 @@ on Start:
         run Chosen
 
         offer Again (OSD-BTO-V1.5:1) = "Do you want to try another App?"
-        offer Avatar (PAF-AVT-V1.6:1)
-        ask   AgainSpeakingAvatar (XRV-SAV-V1.0)
-        present AgainSpeakingAvatar
+        offer AvatarModel (OSD-B3O-V1.5:1)
+        ask   AgainPortableAvatar (PAF-PAV-V1.6)
+        present AgainPortableAvatar
 
         # --- what the person answers decides what follows ---
 
@@ -62,17 +62,17 @@ on Start:
         branch on ReplyText contains "yes" {
 
             offer Choose (OSD-BTO-V1.5:1) = "Please choose an App."
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   ChooseSpeakingAvatar (XRV-SAV-V1.0)
-            present ChooseSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   ChoosePortableAvatar (PAF-PAV-V1.6)
+            present ChoosePortableAvatar
 
         } else {
 
             offer Farewell (OSD-BTO-V1.5:1) = "Thank you for using MPAI as a
                 Service. Goodbye."
-            offer Avatar (PAF-AVT-V1.6:1)
-            ask   FarewellSpeakingAvatar (XRV-SAV-V1.0)
-            present FarewellSpeakingAvatar
+            offer AvatarModel (OSD-B3O-V1.5:1)
+            ask   FarewellPortableAvatar (PAF-PAV-V1.6)
+            present FarewellPortableAvatar
             end
 
         }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- PAF-GBD-V1.6, Generative Body Description: the Machine Body Descriptors - a
-       speaking avatar's body animation, BVH - from the Text and the Machine Speech. -->
+       Portable Avatar's body animation, BVH - from the Text and the Machine Speech. -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

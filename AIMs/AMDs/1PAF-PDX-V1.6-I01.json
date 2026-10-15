@@ -8,16 +8,15 @@
 
   "ExternalPorts":    [{"Name": "PortableAvatar", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AvatarID", "Direction": "Output", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "AVSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SpaceTime", "Direction": "Output", "DataType": "OSD-SPT-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "Avatar",      "Direction": "Output", "DataType": "PAF-AVT-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AvatarSpaceTime", "Direction": "Output", "DataType": "OSD-SPT-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AvatarModel", "Direction": "Output", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "LanguageSelector", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "TextObject", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "BodyDescriptors", "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "SpatialAttitude", "Direction": "Output", "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "AVSceneSpaceTime", "Direction": "Output", "DataType": "OSD-SPT-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "AVSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 

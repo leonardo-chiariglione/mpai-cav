@@ -136,8 +136,8 @@ public sealed class LoudspeakerUnit
     }
 }
 
-// AVATAR: the 3D page that draws and animates the speaking avatar (cav-webview.html,
-// in a WebView2 the application owns): it plays a Speaking Avatar unpacked - the
+// AVATAR: the 3D page that draws and animates the Portable Avatar (cav-webview.html,
+// in a WebView2 the application owns): it plays a Portable Avatar unpacked - the
 // speech with the Face and Body Descriptors - and draws a 3D Model Scene from a Point
 // of View. post sends one message to the page.
 public sealed class AvatarUnit(Func<string, Task> post)

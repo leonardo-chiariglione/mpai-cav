@@ -62,7 +62,7 @@
 <script src="data.js" onerror="void 0"></script>
 <script src="narration.js" onerror="void 0"></script>
 <script>
-const SX = 5, BEHIND = 100;                              // pixels a metre along the road; metres shown behind the CAV
+let SX = 5; const BEHIND = 100;                          // pixels a metre along the road (at a junction the view is fixed on it); metres shown behind the CAV
 let SY = 15, YLOW = 4.5;                                 // pixels a metre across the road (at a junction: true scale, and the crossing road shown to the south); metres shown south of the lanes
 const road = document.getElementById('road'), g = road.getContext('2d');
 const chart = document.getElementById('chart'), c = chart.getContext('2d');
@@ -74,8 +74,8 @@ const REPLAY = window.REPLAY;
 let history = [];
 
 function draw(s) {
-  SY = s.junction ? 5 : 15; YLOW = s.junction ? 36 : 4.5;
-  const W = road.width, H = road.height, x0 = s.ego.x - BEHIND;
+  SX = s.junction ? 6 : 5; SY = s.junction ? 5 : 15; YLOW = s.junction ? 36 : 4.5;
+  const W = road.width, H = road.height, x0 = s.junction ? s.junction.x - road.width / (2 * SX) : s.ego.x - BEHIND;   // at a junction the view is centred on it: both cars are in it as they come
   const xPx = x => (x - x0) * SX;
   g.clearRect(0, 0, W, H);
   g.fillStyle = '#3d5a35'; g.fillRect(0, 0, W, H);                                           // grass
@@ -93,8 +93,9 @@ function draw(s) {
     g.fillStyle = '#e8e8e8'; g.fillRect(xPx(s.junction.x) - 1, 0, 2, yPx(5.25)); g.fillRect(xPx(s.junction.x) - 1, yPx(-1.75), 2, H - yPx(-1.75));
   }
   g.fillStyle = '#9aa3ad'; g.font = '11px system-ui';
-  for (let d = -100; d <= 140; d += 20) {                                                      // distances from the CAV's front
-    const px = xPx(s.ego.x + s.ego.length / 2 + d); g.fillRect(px, H - 18, 1, 6);
+  const ref = s.junction ? s.junction.x : s.ego.x + s.ego.length / 2;                            // distances from the CAV's front, or from the junction
+  for (let d = s.junction ? -80 : -100; d <= (s.junction ? 80 : 140); d += 20) {
+    const px = xPx(ref + d); g.fillRect(px, H - 18, 1, 6);
     if (d !== 0) g.fillText((d > 0 ? '+' : '') + d + ' m', px + 3, H - 6);
   }
 
@@ -193,7 +194,41 @@ async function poll() {
 
 
 // ---- narration: sentences at given times, shown as a caption and spoken (the browser's voice; it needs a click first) ----
-const CUES = window.NARRATION || [];
+// A junction run: the replay starts where something happens (the car that turns is within 330 m), and says what is shown, from the run's own data.
+function startIndex(S) {
+  if (!S[0].junction) return 0;
+  const k = S.findIndex(s => s.vehicles.some(v => v.x - s.ego.x < 330 && v.x > s.ego.x)), b = S.findIndex(s => s.t > 25 && s.ego.acc < -0.6);
+  const m = [k, b].filter(x => x >= 0);
+  return m.length ? Math.max(0, Math.min(...m) - 35) : 0;                           // where the car is first near, or where the CAV first reacts: 3.5 s before
+}
+function junctionCues(S, label) {
+  const first = f => S.find(f) || null, car = s => s.vehicles.find(v => v.id === 'Turning');
+  const how = /tells/.test(label) ? 'route' : /indicator/.test(label) ? 'lights' : 'nothing';
+  const seen = first(s => { const v = car(s); return v && v.x - s.ego.x < 330 && v.x > s.ego.x; });
+  const ind = first(s => { const v = car(s); return v && v.ind; });
+  const brake = first(s => s.t > 25 && s.ego.acc < -0.6);
+  const turn = first(s => { const v = car(s); return v && Math.abs(v.h - Math.PI) > 0.25; });
+  const clear = first(s => { const v = car(s); return v && v.y < -4; });
+  const end = S[S.length - 1], crashed = end.t < S[0].t + 60 && S.length < 650;
+  const cues = [];
+  const add = (t, text) => { if (t != null) cues.push({ t, text }); };
+  if (seen) {
+    const t0 = Math.min(seen.t, brake ? brake.t : 1e9) - 3.5;
+    add(t0, 'The CAV (red) drives toward a junction at ' + kmh(S.find(s => s.t >= t0).ego.speed) + ' km/h. An oncoming car (blue) is coming the other way, and it is going to turn left across the CAV’s lane.');
+    add(t0 + 2.5, { route: 'The oncoming car is a connected vehicle: it tells the CAV where it is going, a left turn across its way.',
+                  lights: 'The oncoming car tells nothing. The CAV can only see it, and read its indicator in the telephoto picture.',
+                  nothing: 'The oncoming car tells nothing and shows no indicator. To the CAV it is just a car coming the other way.' }[how]);
+  }
+  if (ind) add(ind.t, 'The indicator blinks: the car is going to turn left.');
+  if (brake) add(brake.t, { route: 'The CAV slows down in good time: it knows about the turn from the route it was told.',
+                            lights: 'The CAV has read the indicator and brakes. It saw it late, so the braking is hard.',
+                            nothing: 'The CAV brakes only when the car is already in its way.' }[how]);
+  if (turn) add(turn.t, 'The car turns left, across the CAV’s lane.');
+  if (crashed) add(end.t - 0.2,'Told nothing, the CAV meets the car in its lane: the collision the other two runs avoid.');
+  else if (clear) add(clear.t, 'The car has cleared the road. The CAV passes the junction without touching it.');
+  return cues.sort((a, b) => a.t - b.t);
+}
+const CUES = window.NARRATION || (REPLAY && REPLAY.states[0] && REPLAY.states[0].junction ? junctionCues(REPLAY.states, REPLAY.label || '') : []);
 let cueShown = -1;
 function pickVoice() {
   const v = speechSynthesis.getVoices().filter(x => /^en/i.test(x.lang));
@@ -229,7 +264,8 @@ function replay() {
   $('controls').style.display = 'flex';
   if (location.protocol === 'file:' || /\/(behind|overtake|traffic|truck)\//.test(location.pathname)) $('menubtn').style.display = '';
   $('slider').max = n - 1;
-  let i = 0, playing = true, last = performance.now(), carry = 0, shown = -1;
+  let i = startIndex(states), playing = true, last = performance.now(), carry = 0, shown = -1;
+  if (states[0].junction) $('speed').value = '0.5';                                 // the junction is over in a few seconds: half speed
   if (CUES.length) {
     $('caption').style.display = 'block'; $('voice').style.display = '';
     $('voice').onclick = () => { const on = $('voice').dataset.on !== '1'; $('voice').dataset.on = on ? '1' : '0'; $('voice').textContent = 'Voice: ' + (on ? 'on' : 'off'); if (!on && 'speechSynthesis' in window) speechSynthesis.cancel(); if (on) say('The voice is on.'); };

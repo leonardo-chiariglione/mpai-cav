@@ -7,7 +7,7 @@ secretariat@mpai.community. Licence: BSD-3-Clause (see `LICENSE`).
 This repository holds one application, **MAS-App**: a Service that offers four
 AI applications over the network, and two clients - one for the desktop, one
 for the browser - through which a person uses them. Every application presents
-a 3-D Speaking Avatar that listens, looks, answers and shows expression.
+a 3-D Portable Avatar that listens, looks, answers and shows expression.
 
 | App | Name | What it does |
 |---|---|---|

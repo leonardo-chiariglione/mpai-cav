@@ -15,8 +15,6 @@ using Mpai.Paf.Psd;    // PsdAimProcessor
 using Mpai.Aims.Tts;   // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;    // GfdAimProcessor
 using Mpai.Paf.Gbd;         // GbdAimProcessor
-using Mpai.Paf.Sas;         // SasAimProcessor
-using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace Mpai.Providers;
 
@@ -27,7 +25,7 @@ namespace Mpai.Providers;
 //   SPE - speech affect (wav2vec2)    FPE - face affect (HSEmotion)
 //   PMX - multiplexes the modalities into an Entity Personal Status
 //   EDP - affective dialogue (local LLM)
-//   PSD, TTS, GFD, GBD, SAS - the Response and Scene Rendering leaves
+//   PSD, TTS, GFD, GBD, PMX - the Response and Scene Rendering leaves
 // Moved from MpdApp, where it named AIMs by their Standard names.
 public sealed class MpdProvider : IAimProvider, IDisposable
 {
@@ -45,8 +43,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
         aimName is "1MMC-ASR-V2.5-I01" or "1MMC-NLU-V2.5-I01" or "1MMC-SPE-V2.5-I01" or "1PAF-FPE-V1.6-I01"
                 or "1MMC-PMX-V2.5-I01" or "1MMC-EDP-V2.5-I01" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01"
                 or "1PAF-GFD-V1.6-I01"
-                or "1PAF-GBD-V1.6-I01" or "1PAF-SAS-V1.6-I01"
-                or "1PAF-SAR-V1.6-I01";
+                or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I01";
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
         => aimName switch
@@ -61,8 +58,7 @@ public sealed class MpdProvider : IAimProvider, IDisposable
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1PAF-GFD-V1.6-I01" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1PAF-GBD-V1.6-I01" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1PAF-SAS-V1.6-I01" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1PAF-SAR-V1.6-I01" => new SarAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "1PAF-PMX-V1.6-I01" => new Mpai.Paf.Pmx.PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             _ => throw new NotSupportedException($"MpdProvider does not provide '{aimName}'.")
         };
 

@@ -35,8 +35,6 @@ using Mpai.Paf.Psd;         // PsdAimProcessor
 using Mpai.Aims.Tts;        // TtsAimProcessor, TtsFactory
 using Mpai.Paf.Gfd;         // GfdAimProcessor
 using Mpai.Paf.Gbd;         // GbdAimProcessor
-using Mpai.Paf.Sas;         // SasAimProcessor
-using Mpai.Paf.Sar;         // SarAimProcessor
 
 namespace HciApp;
 
@@ -45,7 +43,7 @@ namespace HciApp;
 // supplies ONLY the 18 leaf AIMs the topology names, across three groups:
 //   scene front-end : BAS, BVS, BLS, AVA, QCV, ASI, VSI, AII, VII
 //   recognisers     : FIR, SIR, IDR  (against the shared enrolment gallery)
-//   dialogue/render : ASR, NLU, SPE, FPE, PMX, EDP, PSD, TTS, GFD, GBD, SAS
+//   dialogue/render : ASR, NLU, SPE, FPE, PMX, EDP, PSD, TTS, GFD, GBD, PMX
 // Heavy engines are built once and shared: SCRFD (FIR + VSI), ArcFace, ECAPA,
 // YOLOX (VII), the YAMNet SoundClassifier (ASI + AII), the emotion estimators
 // (SPE, FPE), one Ollama client (EDP), and the SubjectGallery (FIR/SIR/IDR).
@@ -113,8 +111,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             "MMC-TTS-V2.5" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "PAF-GFD-V1.6" => new GfdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "PAF-GBD-V1.6" => new GbdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "PAF-SAS-V1.6" => new SasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "PAF-SAR-V1.6" => new SarAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "PAF-PMX-V1.6" => new Mpai.Paf.Pmx.PmxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
 
             _ => throw new NotSupportedException($"HciProvider does not provide '{aimName}'.")
         };

@@ -12,11 +12,10 @@ $cases = @(
 )
 Write-Host ''
 Write-Host '  THE CAV' -ForegroundColor Cyan
-Write-Host '  Run in real time:'
+Write-Host '  A   WATCH THE ANIMATIONS of the recorded runs (opens in your browser, nothing runs)' -ForegroundColor Green
+Write-Host '  Or run a use case in real time (it takes a few minutes; the animation opens as it runs):'
 foreach ($c in $cases) { Write-Host ('    {0}  {1}' -f $c.Key, $c.Name) }
-Write-Host '  Watch the animations of recorded runs:'
-Write-Host '    A  open the animations'
-Write-Host '    Q  quit'
+Write-Host '  Q   quit'
 Write-Host ''
 $pick = (Read-Host '  Your choice').Trim().ToUpper()
 if ($pick -eq 'A') { Start-Process (Join-Path $PSScriptRoot 'Demos\index.html'); return }
@@ -29,3 +28,4 @@ Write-Host '  The animation opens in your browser in a few seconds (http://127.0
 Start-Job { Start-Sleep 25; Start-Process 'http://127.0.0.1:7100/' } | Out-Null
 Set-Location (Join-Path $root 'Test\Mpai.Aif.Tests')
 dotnet test --filter 'FullyQualifiedName~TheCavOnTheHighwayLive' 2>&1 | Select-String -Pattern 'Passed!|Failed!|error' 
+

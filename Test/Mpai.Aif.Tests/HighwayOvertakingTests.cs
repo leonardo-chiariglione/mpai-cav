@@ -43,6 +43,7 @@ public static class HighwayScenarios
         {
             foreach (var (key, value) in sim.EssSettings()) settings["1OSD-BVS-V1.5-I02"]![key] = value;
             foreach (var (key, value) in sim.RearEssSettings()) settings["1OSD-BVS-V1.5-I02"]![key] = value;
+            foreach (var (key, value) in sim.DetailEssSettings()) settings["1OSD-BVS-V1.5-I02"]![key] = value;
         }
         var path = Path.Combine(Path.GetTempPath(), "mpai-highway-settings-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, settings.ToJsonString());

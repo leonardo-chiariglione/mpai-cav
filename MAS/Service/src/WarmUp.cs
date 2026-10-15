@@ -51,7 +51,7 @@ internal static class WarmUp
         if (speech is null)  say($"  warm-up: no question.wav in {directory ?? "(no WarmUpDirectory)"} - spoken turns skipped");
         if (picture is null) say($"  warm-up: no picture.jpg in {directory ?? "(no WarmUpDirectory)"} - picture turns skipped");
 
-        var avt = ("PAF-AVT-V1.6#1", avatar);
+        var avt = ("OSD-B3O-V1.5#1", avatar);
 
         // MAS-App: the Welcome every client hears first, before choosing an App.
         Turn(runner, say, "MAS-App welcome", Program.MasModule, Text(1, "Welcome."), avt);

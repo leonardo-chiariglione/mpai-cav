@@ -104,38 +104,42 @@ public class HighwayIntersectionTests
     public sealed record Trace(double T, double X, double Speed, double Acceleration, double Gap);
 
     // What the CAV knows of the vehicle that turns: nothing but where it is and how it moves; or, connected, where it says it will go; or its
-    // indicator, which it sees lit (within 150 m).
-    public enum Knows { Nothing, Route, Lights }
+    // indicator, which it sees lit (within 150 m); or the same from the picture: the ESS looks at the front camera and at the telephoto window.
+    public enum Knows { Nothing, Route, Lights, Picture }
 
     // Drives the scenario for the seconds given on perfect perception of what is in sight (200 m): the CAV's AMS, no ESS. The
     // vehicle that turns, where it is a CAV, tells the CAV its route (the Trajectory it follows) when it is to.
-    public static (List<Trace> Trace, HighwayWorld World) Drive(HighwayWorld world, int seconds, Knows knows)
+    public static (List<Trace> Trace, HighwayWorld World) Drive(HighwayWorld world, int seconds, Knows knows, Action<double, JsonNode?>? onBed = null)
     {
         var sim = new HighwaySimulation(world, HighwayScenarios.Planned);
         var settings = HighwayScenarios.Settings(sim);
         var patched = JsonNode.Parse(File.ReadAllText(settings))!.AsObject();
         patched["1CAV-PSP-V2.0-I01"]!["LaneChange"] = "0";                  // it keeps its lane; what it does is its speed
+        patched["1CAV-BED-V2.0-I01"]!["ClosingSpeed"] = "45";               // a vehicle coming the other way closes in 40 m/s: its young track keeps up
+        patched["1CAV-BED-V2.0-I01"]!["YoungBeta"] = "0.6";                 // and learns its speed fast
         File.WriteAllText(settings, patched.ToJsonString());
         var remotes = world.Others.Where(v => v.CavId is not null).Select(v => new RemoteCav(v, sim.Map)).ToList();
         var trace = new List<Trace>();
         try
         {
-            using var cav = new CavInTheLoop(sim.Map, "H1", settings, withEss: false);
+            using var cav = new CavInTheLoop(sim.Map, "H1", settings, withEss: knows == Knows.Picture);
             double held = 0; double? north = null;
             for (var step = 0; step < seconds * 10 && !sim.Collided; step++)
             {
-                var sensed = sim.Sense(camera: false);
+                var sensed = sim.Sense(camera: knows == Knows.Picture, rear: false, detail: knows == Knows.Picture);
                 if (knows == Knows.Route)
                     foreach (var remote in remotes)
                     {
                         if (remote.Report(sim, sensed.FrameMs, 1500) is { } era) cav.Hear(era);
                         if (step % 2 == 0) cav.Hear(remote.Intent(sensed.FrameMs, 14));      // where it is going, each 200 ms
                     }
-                var (_, command, _, _) = cav.StepOnBed(HighwayTruthBed.Of(sim, sensed.FrameMs, occlude: false, sightRange: 200, indicatorRange: knows == Knows.Lights ? 150 : null), [], sensed.FrameMs);
+                JsonNode? command, bed;
+                if (knows == Knows.Picture) (_, command, _, bed) = cav.StepWithBed(sensed);
+                else (_, command, _, bed) = cav.StepOnBed(HighwayTruthBed.Of(sim, sensed.FrameMs, occlude: false, sightRange: 200, indicatorRange: knows == Knows.Lights ? 150 : null), [], sensed.FrameMs);
+                onBed?.Invoke(world.Time, bed);
                 if (command is not null) (held, north) = HighwayOvertakingTests.Asked(command);
                 var ego = world.Ego; var gap = world.Others.Count == 0 ? 9999 : world.Others.Min(v => HighwayWorld.Separation(ego, v));
                 trace.Add(new Trace(world.Time, ego.X, ego.Speed, ego.Acceleration, gap));
-                if (Environment.GetEnvironmentVariable("JDEBUG") == "1" && world.Time > 50 && world.Time < 60 && world.Others.Count > 0) Console.WriteLine($"JD t={world.Time:0.0} ego x={ego.X:0.0} v={ego.Speed:0.00} a={ego.Acceleration:0.0} held={held:0.00} car x={world.Others[0].X:0.0} y={world.Others[0].Y:0.0} v={world.Others[0].Speed:0.0}");
                 sim.Advance(held, north);
             }
         }
@@ -181,6 +185,31 @@ public class HighwayIntersectionTests
         Report("junction-straight-route", trace);
         Assert.Empty(world.EgoCollisions);
         Assert.True(trace.Where(t => t.T > 30).Min(t => t.Speed) > 28.5, $"slowest after 30 s: {trace.Where(t => t.T > 30).Min(t => t.Speed):0.0} m/s");
+    }
+
+    // THE ESS READS THE INDICATOR FROM THE PICTURE: the front camera sees the car only when it is near; the telephoto window sees it far, and sees
+    // its indicator lit - amber at the corner of its front. The CAV knows the turn as it did when it was given the indicator: it does not collide,
+    // and it does not brake before the indicator was seen.
+    [SkippableFact]
+    [Trait("Group", "Models")]
+    [Trait("Duration", "Long")]
+    public void ReadingTheIndicatorFromThePictureItLetsTheVehicleTurnAcrossItsWay()
+    {
+        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        var world = Left(connected: false);
+        var firstRead = double.NaN; var distanceThen = double.NaN; var lit = 0;
+        var (trace, _) = Drive(world, 70, Knows.Picture, (time, bed) =>
+        {
+            var seen = bed?["BasicEnvironmentObjects"]?.AsArray().FirstOrDefault(o => o?["TurnIndicator"] is not null);
+            if (seen is null) return;
+            lit++;
+            if (double.IsNaN(firstRead)) { firstRead = time; distanceThen = (double)seen["SpatialAttitude"]!["Position"]!["CartPosition"]![0]!; }
+        });
+        Report("junction-left-turn-picture", trace);
+        Assert.True(lit > 3, $"the ESS saw the indicator in {lit} sets of descriptors");
+        Assert.Empty(world.EgoCollisions);
+        Assert.True(trace.Min(t => t.Gap) > 1.0, $"nearest approach {trace.Min(t => t.Gap):0.0} m; the indicator was first read at {firstRead:0.0} s, {distanceThen:0} m ahead");
+        Assert.True(distanceThen > 60, $"the indicator was first read {distanceThen:0} m ahead");
     }
 
     // Told nothing, the CAV goes on until the vehicle is in its lane: what it can do then is what its brakes can.

@@ -28,6 +28,13 @@ namespace Mpai.Cav.Ess;
 // Description is where the vehicles behind are - the distance of the front of each from the ego's front, negative:
 // behind it - and how far to the left of the ego, the Point of View of its descriptors turned back the same way; it
 // gives no Alert: what comes up behind is not in the ego's way.
+// THE TELEPHOTO WINDOW (the author, 2026/10/14: the ESS reads the turn indicators from the picture). A frame whose description says it is a
+// telephoto window - a window of a long-lens camera's picture at its full resolution, looking along the CAV's heading; its settings have the
+// prefix Detail - is described with that camera's model, and held: what it shows goes with the front picture that follows it, in one set of
+// descriptors - the vehicles it shows beyond where the front picture finds them, and, of each, its indicator: the pixels at either side of the
+// vehicle's box that are amber (a lit indicator is, and nothing else of a vehicle is), the side which, seen from behind the vehicle, is its
+// left; seen from ahead - it is coming at the CAV, by the prior descriptors - its right. TurnIndicator of the Basic Visual Object's properties
+// says Left or Right; none when it is not lit - it blinks, and what is said of it over the instants is the Basic Environment Description's.
 // Every frame is described: a frame arriving while another is described waits
 // (Block, in its L3) - the CAV is to perform, not to keep up (M3233).
 public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDisposable
@@ -39,7 +46,9 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
     private readonly YoloxObjectDetector detector;
     private sealed record Camera(double Focal, double Height, double Horizon, double Width, double Ahead, double Left);
     private readonly Camera front;
-    private readonly Camera? back;
+    private readonly Camera? back, far;
+    private IReadOnlyList<Seen>? farSeen;
+    private long farMs;
     private readonly double laneHalf, alertDistance, alertTime;
     private JsonNode? prior;
     private long frames, alerts;
@@ -52,6 +61,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
                                            scoreThreshold: (float)EssJson.Setting(settings, "ScoreThreshold", 0.3));
         front = Look("", settings);
         back = settings.ContainsKey("RearFocalPixels") ? Look("Rear", settings) : null;
+        far = settings.ContainsKey("DetailFocalPixels") ? Look("Detail", settings) : null;
         // Where the camera is, from the point the distances are given to - the ego's front - and its centreline:
         // CameraAhead metres ahead of that point (negative: behind it), CameraLeft metres to the left. Zero, as
         // the camera of the first simulation was, they change nothing; a rig whose cameras are not there says so.
@@ -87,10 +97,17 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
             var image = Image(frame, ports);
             if (image is null) { context.Report("A frame without image data was not described."); continue; }
             var ms = EssJson.Milliseconds(frame["BasicVisualObjectTime"]?["Time"]) ?? ports.Now.ToUnixTimeMilliseconds();
+            if (((string?)frame["DescrMetadata"])?.Contains("telephoto") == true)
+            {
+                if (far is null) { context.Report("A telephoto window and no settings for it (Detail...): not described."); continue; }
+                farSeen = DescribeFar(image, far); farMs = ms;
+                continue;
+            }
             var rear = LooksBack(frame);
             if (rear && back is null) { context.Report("A frame from a camera that looks back, and no settings for it: not described."); continue; }
 
             var objects = Describe(image, rear ? back! : front, rear);
+            if (!rear && farSeen is not null && ms - farMs <= 150) objects = Merge(objects, farSeen);
             var id = $"BVS{++frames:D6}";
             await ports.WriteAsync(Descriptors, 1, SceneDescriptors(id, ms, objects, rear ? back! : front, rear).ToJsonString());
 
@@ -106,7 +123,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
 
     // ---- what is in a frame --------------------------------------------------------
 
-    public sealed record Seen(int Index, string Class, double Score, double Ahead, double Left, double AheadAccuracy, ObjectDetection Box);
+    public sealed record Seen(int Index, string Class, double Score, double Ahead, double Left, double AheadAccuracy, ObjectDetection Box, string? Turn = null);
 
     public IReadOnlyList<Seen> Describe(byte[] image) => Describe(image, front, false);
 
@@ -130,6 +147,73 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
             seen.Add(new Seen(seen.Count + 1, d.ClassName, d.Score, ahead, left, fromCamera * fromCamera / (focal * height), d));
         }
         return seen;
+    }
+
+    // What the telephoto window shows, each vehicle with its indicator, if it is lit.
+    private IReadOnlyList<Seen> DescribeFar(byte[] image, Camera camera)
+    {
+        var seen = Describe(image, camera, false);
+        using var picture = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgb24>(image);
+        return seen.Select(o => o with { Turn = ReadIndicator(picture, o) }).ToList();
+    }
+
+    // The front picture's objects and the telephoto window's: the same vehicle, once - with the window's indicator, and the position of the
+    // one that knows it better - and those only the window shows.
+    private static IReadOnlyList<Seen> Merge(IReadOnlyList<Seen> front, IReadOnlyList<Seen> far)
+    {
+        var merged = front.ToList();
+        foreach (var f in far)
+        {
+            var i = merged.FindIndex(g => Math.Abs(g.Left - f.Left) < 2.0 && Math.Abs(g.Ahead - f.Ahead) < 4 + 0.15 * f.Ahead);
+            if (i < 0) merged.Add(f);
+            else
+            {
+                var better = f.AheadAccuracy < merged[i].AheadAccuracy ? f : merged[i];
+                merged[i] = better with { Turn = f.Turn ?? merged[i].Turn };
+            }
+        }
+        return merged.Select((o, k) => o with { Index = k + 1 }).ToList();
+    }
+
+    // Which indicator of the vehicle in the box is lit, if one is: amber pixels in the middle band of the box, at its left third or its right.
+    private string? ReadIndicator(SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgb24> picture, Seen o)
+    {
+        var b = o.Box;
+        int x0 = Math.Max(0, (int)b.X1), x1 = Math.Min(picture.Width - 1, (int)b.X2), h = (int)(b.Y2 - b.Y1);
+        int y0 = Math.Max(0, (int)(b.Y1 + 0.30 * h)), y1 = Math.Min(picture.Height - 1, (int)(b.Y1 + 0.80 * h));
+        if (x1 - x0 < 6 || y1 - y0 < 3) return null;
+        int third = (x1 - x0 + 1) / 3, left = 0, right = 0;
+        for (var y = y0; y <= y1; y++)
+            for (var x = x0; x <= x1; x++)
+            {
+                var p = picture[x, y];
+                if (!Amber(p.R, p.G, p.B)) continue;
+                if (x < x0 + third) left++; else if (x > x1 - third) right++;
+            }
+        if (Math.Max(left, right) < 3 || Math.Max(left, right) < 2 * Math.Min(left, right)) return null;
+        var onPictureLeft = left > right;
+        // From behind, the vehicle's left is the picture's left; from ahead, its right.
+        return onPictureLeft == !Oncoming(o) ? "Left" : "Right";
+    }
+
+    // Amber: red, a good half of it green, little blue - what a vehicle's body is not, and a lit indicator is, through the grain of the camera.
+    private static bool Amber(byte r, byte g, byte b) => r >= 170 && g >= 0.35 * r && g <= 0.92 * r && b <= 0.5 * g;
+
+    // Whether the vehicle comes at the CAV (its front is what is seen): by the prior descriptors' object nearest to it, whose speed relative
+    // to the CAV is then high and against it; without a prior, one in the lane to the left does.
+    private bool Oncoming(Seen o)
+    {
+        double best = 8, speed = 0; var known = false;
+        foreach (var e in prior?["BasicEnvironmentObjects"]?.AsArray() ?? [])
+        {
+            var p = EssJson.Vector(e?["SpatialAttitude"]?["Position"]?["CartPosition"]);
+            var v = EssJson.Vector(e?["SpatialAttitude"]?["Position"]?["CartVelocity"]);
+            if (p is null || v is null) continue;
+            var dist = Math.Sqrt(Math.Pow(p.Value.X - o.Ahead, 2) + Math.Pow(p.Value.Y - o.Left, 2));
+            if (dist < best) { best = dist; speed = v.Value.X; known = true; }
+        }
+        // A prior that knows no speed yet (a track just made) says nothing: the lane to the left is the other way's.
+        return known && Math.Abs(speed) > 1 ? speed < -8 : o.Left > laneHalf;
     }
 
     // In the ego's lane and nearer than the distance, or reached within the time at
@@ -187,7 +271,7 @@ public sealed class BasicVisualSceneDescription : IAimProcessor, IAimRunner, IDi
         {
             ["BasicVisualObjectIdentifier"] = EssJson.Identifier(o.Class, o.Score),
             ["BasicVisualObjectSpaceTime"] = EssJson.SpaceTime($"{id}-O{o.Index}-ST", ms, Placed($"{id}-O{o.Index}", ms, o))
-        }
+        }.WithIf("TurnIndicator", o.Turn)
     };
 
     private static byte[]? Image(JsonNode frame, IAimPorts ports)

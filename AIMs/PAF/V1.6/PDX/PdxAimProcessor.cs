@@ -18,13 +18,11 @@ namespace Mpai.Paf.Pdx;
 // and Body Descriptors Objects, the Spatial Attitude. A component the Portable
 // Avatar does not carry is not given.
 //
-// TWO ARE ALWAYS GIVEN, because what follows a Portable Avatar needs them to know
-// who spoke and how - in the Virtual Meeting Secretary, Summary Creation waits for
-// both:
-//   - the Avatar ID: the Avatar's ID where the Portable Avatar carries one, else the
-//     Portable Avatar's own;
-//   - the Personal Status: the Portable Avatar's, else the one its Entity State
-//     describes (Cognitive State, Emotion, Social Attitude), else a neutral one.
+// ONE IS ALWAYS GIVEN, because what follows a Portable Avatar needs it to know whose
+// update it is: the Avatar ID, the Avatar's ID where the Portable Avatar carries one,
+// else the Portable Avatar's own. Everything else is given only if the Portable Avatar
+// carries it - no empty placeholders (author's ruling 2026/10/14: the Avatar Model is
+// shown if it is there, a default avatar is placed if it is not).
 //
 // SPEECH OR TEXT, NOT BOTH. A Portable Avatar may carry both a Speech Object and its
 // Text (the Videoconference Client Transmitter puts in what it recognised). The
@@ -37,28 +35,29 @@ public sealed class PdxAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly string _inPort;
-    private readonly string _avatarIdPort, _scenePort, _spaceTimePort, _modelPort, _selectorPort,
-                            _speechPort, _textPort, _psPort, _facePort, _bodyPort, _attitudePort;
+    private readonly string _avatarIdPort, _avatarSpaceTimePort, _modelPort, _selectorPort, _speechPort, _textPort, _speechModelPort, _psPort, _sceneSpaceTimePort, _scenePort;
 
     public PdxAimProcessor(string instanceId, AimPortReader ports)
     {
-        _instanceId    = instanceId;
-        _inPort        = ports.Input("PAF-PAV-V1.6");
-        _avatarIdPort  = ports.OutputOrDefault("string", "");          // the Avatar ID: an ID, declared, not an Instance Identifier
-        _scenePort     = ports.OutputOrDefault("OSD-BMS-V1.5", "");
-        _spaceTimePort = ports.OutputOrDefault("OSD-SPT-V1.5", "");
-        _modelPort     = ports.OutputOrDefault("PAF-AVT-V1.6", "");      // the Avatar (PAF-AVT): its ID, its 3D model and its animation
-        _selectorPort  = ports.OutputOrDefault("OSD-SEL-V1.5", "");
-        _speechPort    = ports.OutputOrDefault("OSD-BSO-V1.5", "");
-        _textPort      = ports.OutputOrDefault("OSD-BTO-V1.5", "");
-        _psPort        = ports.OutputOrDefault("MMC-EPS-V2.5", "");
-        _facePort      = ports.OutputOrDefault("PAF-FDO-V1.6", "");
-        _bodyPort      = ports.OutputOrDefault("PAF-BDO-V1.6", "");
-        _attitudePort  = ports.OutputOrDefault("OSD-OSA-V1.5", "");
+        _instanceId          = instanceId;
+        _inPort              = ports.Input("PAF-PAV-V1.6");
+        // The ten outputs of the figure of PAF-PDX (PAF Reference Models, slide 16).
+        _avatarIdPort        = ports.OutputOrDefault("string", "");                 // the Avatar ID: an ID, declared, not an Instance Identifier
+        _avatarSpaceTimePort = ports.OutputOrDefault("OSD-SPT-V1.5", 1, "");
+        _modelPort           = ports.OutputOrDefault("OSD-B3O-V1.5", "");          // the Avatar Model: the 3D model of the avatar
+        _selectorPort        = ports.OutputOrDefault("OSD-SEL-V1.5", "");
+        _speechPort          = ports.OutputOrDefault("OSD-BSO-V1.5", "");
+        _textPort            = ports.OutputOrDefault("OSD-BTO-V1.5", "");
+        _speechModelPort     = ports.OutputOrDefault("AIP-MLO-V1.0", "");          // the ML Model for Speech Synthesis
+        _psPort              = ports.OutputOrDefault("MMC-EPS-V2.5", "");
+        _sceneSpaceTimePort  = ports.OutputOrDefault("OSD-SPT-V1.5", 2, "");
+        _scenePort           = ports.OutputOrDefault("OSD-BMS-V1.5", "");
     }
 
     public string InstanceId => _instanceId;
 
+    // A Portable Avatar is an UPDATE of an avatar: it names the avatar and carries what changed. The Avatar ID is always given, because what follows needs to know whose
+    // update it is; every other item is given only when the Portable Avatar carries it.
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
         if (!message.Ports.TryGetValue(_inPort, out var json) || string.IsNullOrWhiteSpace(json))
@@ -74,18 +73,19 @@ public sealed class PdxAimProcessor : IAimProcessor
 
         var avatars = pav["AvatarOrAvatarID"] as JsonArray ?? new JsonArray();
         var speeches = pav["SPOOrSPOID"] as JsonArray ?? new JsonArray();
+        var models = pav["MLModelOrMLModelID"] as JsonArray ?? new JsonArray();
 
         Give(_avatarIdPort, JsonValue.Create(IdOf(pav, avatars)));
-        Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(PersonalStatusOf(pav))));
-        Give(_scenePort, pav["AVSceneDescriptors"]);
-        Give(_spaceTimePort, pav["AvatarSpaceTime"] ?? pav["PortableAvatarSpaceTime"]);
-        // The Avatar is not the Avatar Model: it is the Avatar data type (PAF-AVT), made of the avatar's ID, its 3D model, and the Face and Body Descriptors - its animation.
-        if (avatars.OfType<JsonObject>().FirstOrDefault() is { } model) Give(_modelPort, AvatarOf(IdOf(pav, avatars), model, pav, speeches.OfType<JsonObject>().FirstOrDefault()));
+        Give(_avatarSpaceTimePort, pav["AvatarSpaceTime"] ?? pav["PortableAvatarSpaceTime"]);
+        Give(_modelPort, avatars.OfType<JsonObject>().FirstOrDefault());
         Give(_selectorPort, pav["LanguageSelector"]);
-        Give(_facePort, pav["FaceDescriptorsObject"]);
-        Give(_bodyPort, pav["BodyDescriptorsObject"]);
-        Give(_attitudePort, pav["AvatarSpatialAttitude"]);
+        Give(_speechModelPort, models.OfType<JsonObject>().FirstOrDefault());
+        if (PersonalStatusOf(pav) is { } status) Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(status)));
+        Give(_sceneSpaceTimePort, pav["AVSceneSpaceTime"]);
+        Give(_scenePort, pav["AVSceneDescriptors"]);
 
+        // Speech or text, not both: a Portable Avatar may carry both (the transmitter puts in what it recognised); the text is then what was said, and the speech is not
+        // given, so that the words are not recognised a second time and counted twice.
         var text = pav["TextObject"];
         if (text is not null && !string.IsNullOrWhiteSpace(TextOf(text))) Give(_textPort, text);
         else Give(_speechPort, speeches.OfType<JsonObject>().FirstOrDefault());
@@ -93,19 +93,10 @@ public sealed class PdxAimProcessor : IAimProcessor
         return Done(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = outputs });
     }
 
-    private static JsonObject AvatarOf(string id, JsonObject model, JsonObject pav, JsonObject? speech)
-    {
-        var data = new JsonObject { ["ModelOrModelID"] = new JsonArray(new JsonObject { ["3DModel"] = model.DeepClone() }) };
-        if (pav["FaceDescriptorsObject"] is JsonObject face) data["FaceDescriptorsObject"] = face.DeepClone();
-        if (pav["BodyDescriptorsObject"] is JsonObject body) data["BodyDescriptorsObject"] = body.DeepClone();
-        // The Avatar has its speech, so that what follows - Multimodal Scene Creation - needs no other way to tell whose speech it is.
-        if (speech is not null) data["SpeechObjectOrSpeechObjectID"] = new JsonArray(new JsonObject { ["SpeechObject"] = speech.DeepClone() });
-        return new JsonObject { ["Header"] = "PAF-AVT-V1.6", ["AvatarID"] = id, ["AvatarData"] = data };
-    }
-
     private static System.Threading.Tasks.Task<Message> Done(Message m) => System.Threading.Tasks.Task.FromResult(m);
 
-    private static string IdOf(JsonObject pav, JsonArray avatars) =>
+    // The ID of the avatar a Portable Avatar updates; also the Videoconference Client Receiver's, which demultiplexes what it receives.
+    public static string IdOf(JsonObject pav, JsonArray avatars) =>
         avatars.OfType<JsonValue>().Select(v => v.TryGetValue<string>(out var s) ? s : null).FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))
         ?? (string?)avatars.OfType<JsonObject>().FirstOrDefault()?["Basic3DModelObjectID"]
         ?? (string?)pav["PortableAvatarID"]
@@ -118,8 +109,8 @@ public sealed class PdxAimProcessor : IAimProcessor
     }
 
     // The Personal Status of the Portable Avatar is its Entity State, as far as it is implemented: the Cognitive State, the Emotion and the Social Attitude (the
-    // other elements of the Entity State are not used for the time being); else neutral.
-    private static EntityPersonalStatus PersonalStatusOf(JsonObject pav)
+    // other elements of the Entity State are not used for the time being); none where the Portable Avatar has no Entity State.
+    private static EntityPersonalStatus? PersonalStatusOf(JsonObject pav)
     {
         if (pav["EntityState"] is JsonObject state)
         {
@@ -138,9 +129,6 @@ public sealed class PdxAimProcessor : IAimProcessor
                 };
         }
 
-        return new EntityPersonalStatus
-        {
-            TextPersonalStatus = new TextPersonalStatus { TextEmotion = Emotion.Of(FactorLabel.Of("NEUTRAL", "neutral", null, 0.5)) }
-        };
+        return null;
     }
 }

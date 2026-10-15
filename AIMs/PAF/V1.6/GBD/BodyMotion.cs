@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Mpai.Paf.Gbd;
 
-// A SPEAKING BODY, AS BVH. The motion of a speaking avatar's body for one utterance,
+// A SPEAKING BODY, AS BVH. The motion of a Portable Avatar's body for one utterance,
 // as long as its speech, at 30 frames a second:
 //   - at rest, always: breathing in the chest, a slow sway of the head, a slow shift of
 //     the weight;

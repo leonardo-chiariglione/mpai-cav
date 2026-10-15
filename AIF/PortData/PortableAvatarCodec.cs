@@ -8,7 +8,7 @@ namespace Mpai.Aif.PortData;
 // Virtual Meeting Secretary takes it from each participant, and gives its own.
 //
 // It crosses MPAI-MAS as Portable Avatar Multiplexing writes it: carried as it is,
-// its Header checked, as the Speaking Avatar is. ITS COMPONENTS ARE IN THE FORM
+// its Header checked, as the Portable Avatar is. ITS COMPONENTS ARE IN THE FORM
 // THEY HAVE INSIDE THIS IMPLEMENTATION - the Basic Text and Speech Objects where the
 // schema has Text and Speech Objects, for one - so another implementation reading
 // it would have to know that form. Converting each component to its schema form,

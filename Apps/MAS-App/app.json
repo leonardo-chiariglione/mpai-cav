@@ -1,6 +1,6 @@
 ﻿{
     "Name": "MPAI as a Service",
-    "Description": "Conversation, questions about pictures, translation, affective dialogue and access control with a speaking avatar.",
+    "Description": "Conversation, questions about pictures, translation, affective dialogue and access control with a Portable Avatar.",
     "Apps": [
         "MAD",
         "AMQ",

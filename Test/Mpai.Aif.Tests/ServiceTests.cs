@@ -227,7 +227,7 @@ public class ServiceTests
             // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
             // the language model unreachable, say - returns quickly with nothing to
             // say, and would pass for a fast one.
-            Assert.True(AvatarUtterance.FromSpeakingAvatar(r.ByType("XRV-SAV-V1.0")) is not null, $"{module}: the turn produced no speech");
+            Assert.True(AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no speech");
         }
         client.StopFlow(module);
         times.Sort();
@@ -243,12 +243,12 @@ public class ServiceTests
         try { return json is null ? "" : MpaiJson.FromJson<BasicTextObject>(json).GetText(); } catch { return json ?? ""; }
     }
 
-    // The Speaking Avatar (XRV-SAV) carries the speech.
+    // The Portable Avatar carries the speech.
     private static bool Spoke(ControllerApi.Result r) =>
-        r.Ok && AvatarUtterance.FromSpeakingAvatar(r.ByType("XRV-SAV-V1.0")) is { MachineSpeechWav.Length: > 200 };
+        r.Ok && AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is { MachineSpeechWav.Length: > 200 };
 
     // The Avatar the reply animates: every Module that renders with RSR takes one.
-    private static ControllerApi.Datum Avatar => new("PAF-AVT-V1.6", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
+    private static ControllerApi.Datum Avatar => new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
 
     private static string Data(string file) => Path.Combine(Repository.Root, "Test", "Data", file);
 

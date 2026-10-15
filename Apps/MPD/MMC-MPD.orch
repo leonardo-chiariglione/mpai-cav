@@ -18,21 +18,21 @@ on Start:
     ask Controller to start
 
     # The Avatar this client holds and draws: every utterance animates it.
-    acquire Avatar (PAF-AVT-V1.6)
+    acquire AvatarModel (OSD-B3O-V1.5)
 
     offer Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI Multimodal Affective Dialogue Service."
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   WelcomeSpeakingAvatar (XRV-SAV-V1.0)
-    present WelcomeSpeakingAvatar
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   WelcomePortableAvatar (PAF-PAV-V1.6)
+    present WelcomePortableAvatar
 
     offer Available (OSD-BTO-V1.5:1) = "The service is available. Tell me what is on your mind."
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   AvailableSpeakingAvatar (XRV-SAV-V1.0)
-    present AvailableSpeakingAvatar
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   AvailablePortableAvatar (PAF-PAV-V1.6)
+    present AvailablePortableAvatar
 
     offer Farewell (OSD-BTO-V1.5:1) = "Thank you for the conversation. Goodbye."
-    offer Avatar (PAF-AVT-V1.6:1)
-    ask   FarewellSpeakingAvatar (XRV-SAV-V1.0)
+    offer AvatarModel (OSD-B3O-V1.5:1)
+    ask   FarewellPortableAvatar (PAF-PAV-V1.6)
 
     loop until Stop:
 
@@ -45,9 +45,9 @@ on Start:
             offer UserSpeech (OSD-BSO-V1.5)
         }
         offer UserFace (OSD-BVO-V1.5)
-        offer Avatar (PAF-AVT-V1.6:1)
-        ask   Memory (MMC-SUM-V2.5), MachineSpeakingAvatar (XRV-SAV-V1.0)
-        present MachineSpeakingAvatar
+        offer AvatarModel (OSD-B3O-V1.5:1)
+        ask   Memory (MMC-SUM-V2.5), MachinePortableAvatar (PAF-PAV-V1.6)
+        present MachinePortableAvatar
 
         # The conversation's memory goes back with the next turn and nowhere
         # else: it starts empty with this conversation and ends with it.
@@ -55,6 +55,6 @@ on Start:
 
 on Stop:
 
-    present FarewellSpeakingAvatar
+    present FarewellPortableAvatar
 
     ask Controller to stop

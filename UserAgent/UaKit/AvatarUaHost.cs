@@ -16,7 +16,7 @@ using Mpai.PhysicalLayer;    // the Units: Microphone, Avatar
 namespace Mpai.UaKit;
 
 // AvatarUaHost - the reusable plumbing shared by User Agent applications that
-// present a speaking avatar. It drives two Units of the User Agent's Physical Layer
+// present a Portable Avatar. It drives two Units of the User Agent's Physical Layer
 // (MPAI-AIF V3.0) - never an AIM:
 //   - the Avatar Unit: the WebView-hosted 3D page, to which it delivers a Speaking
 //     Avatar (speech + Face and Body Descriptors) for playback and lip-sync;
@@ -96,7 +96,7 @@ public sealed class AvatarUaHost
     }
 
     // Start the continuous listen loop: capture a spoken turn (VAD auto-stop) -> hand it
-    // to the app's handler -> present the returned Speaking Avatar -> wait for the avatar
+    // to the app's handler -> present the returned Portable Avatar -> wait for the avatar
     // to finish speaking -> listen again, until StopLoop. Empty captures (nobody spoke)
     // simply listen again. The handler runs off the UI thread.
     public void StartLoop(Func<BasicSpeechObject, AvatarUtterance> handleTurn)

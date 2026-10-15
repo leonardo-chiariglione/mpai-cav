@@ -6,7 +6,7 @@ namespace Mpai.Paf.Gbd;
 
 // PAF-GBD-V1.6 - Generative Body Description, as an AIF IAimProcessor: the body's
 // counterpart of GFD. It produces the Machine Body Descriptors - the body animation of
-// a speaking avatar, for one utterance - from:
+// a Portable Avatar, for one utterance - from:
 //   - Text Object        : the words - a question ends with open palms, assent begins
 //                          with nods, a sentence ends with a nod;
 //   - Machine Speech     : the synthesised speech - how long the body speaks, and the

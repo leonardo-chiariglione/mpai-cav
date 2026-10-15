@@ -78,35 +78,57 @@ function sit(root) {
 // The secretary types the minutes: the arms come forward to a laptop on the table; the forearms and hands tap while a minute is being written.
 function typistPose(root) {
   const arms = [];
+  const axisOf = b => new THREE.Vector3(1, 0, 0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion()).invert());   // the side axis of the avatar, in the bone's own frame: fingers and wrists bend about it
   for (const side of ['L', 'R']) {
     const ar = sideBone(root, 'arm', side), fo = sideBone(root, 'fore', side), ha = sideBone(root, 'hand', side);
     if (!ar || !fo) continue;
     const o = Math.sign(ar.getWorldPosition(new THREE.Vector3()).x) * 0.1;
-    aim(root, ar, fo, new THREE.Vector3(o, -0.5, 0.8));
-    if (ha) aim(root, fo, ha, new THREE.Vector3(-o * 0.5, 0.06, 1));
-    const axisOf = b => new THREE.Vector3(1, 0, 0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion()).invert());
-    arms.push({ fo, ha, foBase: fo.quaternion.clone(), haBase: ha?.quaternion.clone(), foAxis: axisOf(fo), haAxis: ha && axisOf(ha), ph: side === 'L' ? 0 : 2.1 });
+    aim(root, ar, fo, new THREE.Vector3(o, -0.5, 0.75));                 // the upper arm hangs, the elbow near the body
+    if (ha) { aim(root, fo, ha, new THREE.Vector3(-o * 0.6, 0.5, 1));        // the forearm forward and a little up to the wrist, a little in toward the keys
+      ha.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(axisOf(ha), 0.35)); }    // and the wrist bent down, so that the hand lies flat over the keys
+    // The fingers: bones Finger0 (thumb) to Finger4, each of three joints (Finger1, Finger11, Finger12). They rest a little curled, as on keys.
+    const fingers = [];
+    const prefix = new RegExp('_' + side + '_Finger(\\d)(\\d)?$');
+    root.traverse(o2 => {
+      const m = o2.isBone && prefix.exec(o2.name);
+      if (m) fingers.push({ bone: o2, finger: +m[1], joint: m[2] ? +m[2] : 0 });
+    });
+    root.updateMatrixWorld(true);
+    for (const f of fingers) { f.base = f.bone.quaternion.clone(); f.axis = axisOf(f.bone); }
+    arms.push({ fo, ha, fingers, foBase: fo.quaternion.clone(), haBase: ha?.quaternion.clone(), foAxis: axisOf(fo), haAxis: ha && axisOf(ha), side: side === 'L' ? 0 : 1 });
   }
   for (const [re, ang] of [[/(^|[ _.:])Neck$/, 0.14], [/(^|[ _.:])Head$/, 0.3]]) {          // the head bent toward the keys
     let b = null; root.traverse(o => { if (!b && o.isBone && re.test(o.name.replace(/^mixamorig:?/, ''))) b = o; });
     if (!b) continue;
     root.updateMatrixWorld(true);
-    const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion()).invert());
-    b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(ax, ang));
+    b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(axisOf(b), ang));
   }
   return arms;
 }
-function typistTap(arms, t, amp) {
-  const q = new THREE.Quaternion();
-  for (const a of arms) {
-    a.fo.quaternion.copy(a.foBase).multiply(q.setFromAxisAngle(a.foAxis, amp * 0.13 * Math.sin(t * 12 + a.ph)));
-    if (a.ha) a.ha.quaternion.copy(a.haBase).multiply(q.setFromAxisAngle(a.haAxis, amp * 0.4 * Math.sin(t * 17 + a.ph * 1.7)));
-  }
+// One keystroke of one finger: a quick press and release, at random moments (a hash of the slot, the finger and the hand); the more it types, the more strokes.
+function stroke(t, id, amp) {
+  const x = t * 8 + id * 0.37, k = Math.floor(x), u = x - k;
+  const h = Math.sin(k * 12.9898 + id * 78.233) * 43758.5453, r = h - Math.floor(h);
+  return r < 0.3 * amp ? Math.sin(Math.PI * u) ** 2 : 0;
 }
-function makeLaptop() {                    // a keyboard on the table in front of the seat (a screen would hide the secretary from the others); origin on the floor at the seat's point
+function typistTap(arms, t, amp) {
+  const q = new THREE.Quaternion(), REST = [0.22, 0.3, 0.18], TAP = [0.3, 0.4, 0.25];            // radians for the three joints of a finger
+  for (const a of arms) {
+    let press = 0;
+    for (const f of a.fingers) {
+      const id = a.side * 5 + f.finger, s = f.finger === 0 ? 0.25 * stroke(t, id, amp) : stroke(t, id, amp);
+      press += s;
+      const rest = f.finger === 0 ? 0.35 : 1;                                                    // the thumb rests nearly straight
+      f.bone.quaternion.copy(f.base).multiply(q.setFromAxisAngle(f.axis, REST[f.joint] * rest + TAP[f.joint] * s));
+    }
+    // the hand and forearm: calm, a slow drift and a small dip with the keys pressed
+    a.fo.quaternion.copy(a.foBase).multiply(q.setFromAxisAngle(a.foAxis, 0.012 * Math.sin(t * 1.3 + a.side * 2) + 0.01 * amp * Math.sin(t * 3.1 + a.side)));
+    if (a.ha) a.ha.quaternion.copy(a.haBase).multiply(q.setFromAxisAngle(a.haAxis, 0.03 * Math.sin(t * 0.9 + a.side) + 0.018 * Math.min(press, 2)));
+  }
+}function makeLaptop() {                    // a keyboard on the table in front of the seat (a screen would hide the secretary from the others); origin on the floor at the seat's point
   const g = new THREE.Group(), body = new THREE.MeshStandardMaterial({ color: 0x1b1f25, roughness: 0.5, metalness: 0.3 }), keys = new THREE.MeshStandardMaterial({ color: 0xc9ced6, roughness: 0.6 });
-  const kb = bx(0.44, 0.02, 0.15, body); kb.position.set(0, 0.79, 0.62); g.add(kb);
-  const kk = bx(0.41, 0.006, 0.12, keys); kk.position.set(0, 0.803, 0.62); g.add(kk);
+  const kb = bx(0.44, 0.02, 0.15, body); kb.position.set(0, 0.79, 0.67); g.add(kb);
+  const kk = bx(0.41, 0.006, 0.12, keys); kk.position.set(0, 0.803, 0.67); g.add(kk);
   return g;
 }
 async function makeAvatar(file, seated = false, typist = false) {
@@ -509,6 +531,10 @@ window.abv = { free: false, people, speakers, stats, get turn() { return turn; }
 
 if (BOT || AUTO) { start(BOT || AUTO, params.get('avatar') || 'Persona1', !BOT); }
 else showJoin();
+
+
+
+
 
 
 
