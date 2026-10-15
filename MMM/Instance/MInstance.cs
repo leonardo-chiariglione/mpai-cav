@@ -92,13 +92,33 @@ public sealed class MInstance
     // An M-Location (in the M-Environment, drawn by the viewer) or, universe: true, a
     // U-Location (in the Universe, where Data are captured and R-Items rendered).
     public void AddLocation(string id, string? owner = null, bool isPublic = false, double x = 0, double y = 0, double size = 4,
-                            bool perceptible = true, bool universe = false)
+                            bool perceptible = true, bool universe = false, string? at = null)   // at: the M-Location it is placed in (a Room on its Parcel, a Seat in its Room); x, y then are metres within it
     {
         lock (gate) items[id] = new Item
         {
             ID = id, DataType = universe ? "MMM-ULC" : "MMM-LOC", Owner = owner, Public = isPublic, Place = [x, y], Size = size,
-            Perceptible = perceptible
+            Perceptible = perceptible, Location = at
         };
+    }
+
+    // A Service Process (a Process of the M-Instance that is not a human's User: a meeting service, a machine that takes part), with a token, and
+    // the Persona it manifests itself with, if any.
+    public string AddService(string id, string? personaId = null, string? model = null)
+    {
+        lock (gate)
+        {
+            var proc = new Process { ID = id, Kind = "Service", Token = NewToken() };
+            processes[id] = proc;
+            if (personaId is not null)
+                items[personaId] = new Item { ID = personaId, DataType = "OSD-3DO-V1.5", Owner = id, Model = model };
+            return proc.Token!;
+        }
+    }
+
+    // The Messages in the inbox of a Process, with who sent each (the Process that owns the Message Item).
+    public IReadOnlyList<(string ID, string From)> InboxWithSenders(string process)
+    {
+        lock (gate) return (inboxes.GetValueOrDefault(process) ?? []).Select(i => (i, items.TryGetValue(i, out var it) ? it.Owner ?? "" : "")).ToList();
     }
 
     // The 3D Model that renders an Item - a Persona's, once it exists.
@@ -225,7 +245,7 @@ public sealed class MInstance
                     {
                         ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
-                        ["Yaw"] = YawOf(i),
+                        ["Yaw"] = YawOf(i), ["Depth"] = DepthOf(i),
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
                     };
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
@@ -404,6 +424,9 @@ public sealed class MInstance
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }
 
+    // How many M-Locations contain an Item, one inside the other: a Persona at the Square 1, one at a Seat in a Room on a Parcel 3.
+    private int DepthOf(Item it) { var n = 0; for (var l = it.Location; l is not null && n < 8 && items.TryGetValue(l, out var p); l = p.Location) n++; return n; }
+
     // The yaw of an Item (degrees: the first angle of the Orientation of its Spatial Attitude; zero looks north, positive turns to the west - provisional,
     // until the specification states the convention), or null.
     private static double? YawOf(Item it) =>
@@ -416,7 +439,10 @@ public sealed class MInstance
     {
         if (Need(service, c.At, "At") is { } f1) return f1;
         if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
-        if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!)) return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
+        // A Process captures an M-Location it may read or enter, or one that one of its Items is in (its Persona seated in the Room).
+        bool IsIn(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == c.At) return true; return false; }
+        if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!) && !items.Values.Any(i => i.Owner == source && IsIn(i.Location)))
+            return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
         var things = Snapshot()["Things"]!.AsArray().OfType<JsonObject>().ToList();
         bool Inside(JsonObject t)
         {

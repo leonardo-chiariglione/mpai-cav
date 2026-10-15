@@ -184,7 +184,7 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 // Actions on the MMM-API as its User: Register (once), MM-Add (its Persona at the Metaverse Square), MM-Capture (what it sees there, from its Point of View,
 // five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
 const userName = new URLSearchParams(location.search).get('user');
-const client = userName ? { name: userName, human: userName + '-human', persona: userName + '-Persona', at: 'MVS', token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], status: 'joining...', keys: new Set() } : null;
+const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], status: 'joining...', keys: new Set() } : null;
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -196,7 +196,7 @@ async function act(path, source, complements) {
 }
 async function join() {
   const profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
-    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [{ PersonaID: client.persona }] }] } };
+    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p })) }] } };   // a User has its own Personae: the ones it registers with
   const reg = await act('identity/register', client.human, { With: [profile] });
   if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
   client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => p[0] === client.name)?.[1];
@@ -204,7 +204,33 @@ async function join() {
   client.x = Math.cos(h % 628 / 100) * 2.5; client.y = Math.sin(h % 628 / 100) * 2.5; client.yaw = Number(new URLSearchParams(location.search).get('yaw') ?? 0);
   const add = await act('locate/mm-add', client.name, { Nil: client.persona, At: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
   client.status = add.http === 200 ? `${client.name}: in ${client.at}` : `cannot join: ${add.http}`;
+  if (add.http === 200 && new URLSearchParams(location.search).has('meet')) await sit();
   if (add.http === 200) { capture(); setInterval(capture, 200); setInterval(sendPose, 150); }
+}
+// The meeting (&meet): the User asks the AVS Service for a seat (MM-Send), reads which it was given, and moves its Persona there (MM-Move) with the right
+// the AVS Service gave it. The AVS Service and the Secretary are Processes of the M-Instance; the client is only this User.
+const simpleTime = id => ({ Header: 'OSD-STM-V1.5', SimpleTimeID: id, SimpleTimeData: [{ FlagsByte: 3, StartTime: 1767254400000, EndTime: 1767254400000, AccuracyMode: 'single', AccuracyPlusMinus: 1 }] });
+const message = (id, text) => ({ Header: 'MMM-MSG-V2.2', MInstanceID: 'MI1', MessageID: id, MessageData: [{ MessageData: text }] });
+async function sit() {
+  const join = `Join-${client.name}`;
+  await act('communicate/mm-send', client.name, { Nil: join, To: 'AVS', With: [message(join, 'join;persona=' + client.persona)] });   // the Persona it brings to this meeting: one of its own
+  let told = null;
+  for (let i = 0; i < 50 && !told; i++) {   // the AVS Service answers within a moment
+    await new Promise(r => setTimeout(r, 200));
+    const rs = await fetch(`/api/v2.2/items/Seat-${client.name}`, { headers: { Authorization: 'Bearer ' + client.token } });
+    if (rs.ok) told = (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData;
+  }
+  const seat = Object.fromEntries((told ?? '').split(';').map(p => p.split('=')));
+  if (!seat.seat) { client.status = `${client.name}: no seat (${told ?? 'no answer'})`; return; }
+  const pa = `PA-Sit-${client.persona}`;
+  const sitPA = { Header: 'MMM-2MP-V2.2', MInstanceID: 'MI1', MMMovePAID: pa, Time: simpleTime(pa + '-T'),
+    MMMovePARQ: { RQ1: { Complement: 'Nil', ItemID: client.persona }, RQ3: { Complement: 'To', PointOfView2: { Header: 'OSD-OPV-V1.5', PointOfViewID: seat.seat, CartPosition: [0, 0, 0], Orientation: [0, 0, 0] } } } };
+  const right = { Header: 'MMM-RGT-V2.2', MInstanceID: 'MI1', RightsID: 'Seat-Move-' + client.persona, RightsData: [{ DeonticVerb: 'May', Level: 'Acquired', PAIDOrPA: [{ ProcessActionID: pa }] }] };
+  const yaw = Number(seat.yaw);
+  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: 'MVS', To: seat.seat, With: [spatial('SA-' + client.name + '-Seat', 0, 0, yaw), sitPA, right] });
+  if (mv.http !== 200) { client.status = `${client.name}: cannot sit: ${mv.http}`; return; }
+  Object.assign(client, { loc: seat.seat, at: seat.room, ox: Number(seat.x), oy: Number(seat.y), x: Number(seat.x), y: Number(seat.y), yaw, seated: true, sent: '' });
+  client.status = `${client.name}: seated at ${seat.seat}`;
 }
 async function capture() {   // MM-Capture: the Things of the M-Location that this Point of View sees
   const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
@@ -215,7 +241,7 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
 async function sendPose() {   // MM-Move: the Persona stands where its User put it, looking where it looks
   const key = [client.x, client.y, client.yaw].map(v => v.toFixed(2)).join(' ');
   if (key === client.sent) return; client.sent = key;
-  await act('locate/mm-move', client.name, { Nil: client.persona, From: client.at, To: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
+  await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: client.loc, With: [spatial('SA-' + client.name, client.x - client.ox, client.y - client.oy, client.yaw)] });
 }
 if (client) {
   controls.enabled = false;
@@ -225,11 +251,12 @@ if (client) {
 }
 function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn; the camera is the Persona's eyes
   const k = client.keys, rad = client.yaw * Math.PI / 180;
-  const fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
+  let fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
   const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
   client.yaw = (client.yaw + turn * 90 * dt + 360) % 360;
-  client.x = Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
-  client.y = Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
+  if (client.seated) fwd = 0;   // seated: it turns its head, it does not walk
+  client.x = client.seated ? client.x : Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
+  client.y = client.seated ? client.y : Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
   camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');   // three.js looks along -z (north) at rotation 0
 }
 
@@ -274,7 +301,7 @@ async function refresh() {
     d.yaw = t.Yaw ?? null;
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
-      d.target.y = at?.At ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
+      d.target.y = (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).

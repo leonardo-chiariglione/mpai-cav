@@ -70,6 +70,9 @@ public static class MmmServer
             : m.MayRead(p, itemID) ? Results.Json(m.AsAnyItem(it)) : Results.StatusCode(403));
         app.MapGet("/api/v2.2/items/{itemID}/rights", (HttpContext ctx, string itemID) =>
             Caller(ctx) is null ? Results.Unauthorized() : Results.Json(m.HoldersOf(itemID).Select(h => new { processID = h, rights = m.RightsOf(h) })));
+        // Not in MMM-TEC V2.2: how a Process learns which Messages reached it (it reads each by its identifier with GET items/{itemID}).
+        app.MapGet("/api/v2.2/processes/{processID}/inbox", (HttpContext ctx, string processID) =>
+            Caller(ctx) != processID ? Results.StatusCode(403) : Results.Json(m.InboxWithSenders(processID).Select(i => new { itemID = i.ID, from = i.From })));
         app.MapGet("/api/v2.2/processes/{processID}/rights", (HttpContext ctx, string processID) =>
             Caller(ctx) is null ? Results.Unauthorized() : Results.Json(m.RightsOf(processID)));
         app.MapGet("/api/v2.2/processes/{processID}/capabilities", (HttpContext ctx, string processID) =>

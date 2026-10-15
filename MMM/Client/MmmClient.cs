@@ -35,6 +35,17 @@ public sealed class MmmClient(HttpClient http, string processId, string? token =
         return new Result((int)rs.StatusCode, body, tokens);
     }
 
+    // The Messages that reached this Process, and who sent each (an extension of the MMM-API of this M-Instance, not of MMM-TEC V2.2).
+    public async Task<IReadOnlyList<(string ID, string From)>> InboxAsync()
+    {
+        using var msg = new HttpRequestMessage(HttpMethod.Get, $"/api/v2.2/processes/{Uri.EscapeDataString(ProcessID)}/inbox");
+        if (Token is not null) msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+        using var rs = await http.SendAsync(msg);
+        if (!rs.IsSuccessStatusCode) return [];
+        return (JsonNode.Parse(await rs.Content.ReadAsStringAsync()) as JsonArray ?? [])
+            .Select(i => (i!["itemID"]!.GetValue<string>(), i["from"]!.GetValue<string>())).ToList();
+    }
+
     // An Item, as the M-Instance lets this Process read it; the HTTP status otherwise.
     public async Task<(int Http, JsonObject? Item)> ReadAsync(string itemId)
     {

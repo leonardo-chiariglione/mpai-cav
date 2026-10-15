@@ -30,20 +30,20 @@ public static class Uc2
 
     private const string MI = "MI1";
 
-    private static JsonObject SimpleTime(string id) => new()
+    public static JsonObject SimpleTime(string id) => new()
     {
         ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = id,
         ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = 1_767_254_400_000, ["EndTime"] = 1_767_254_400_000, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
     };
 
-    private static JsonObject PointOfView(string id) => new()
+    public static JsonObject PointOfView(string id) => new()
     {
         ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = id,
         ["CartPosition"] = new JsonArray(0.0, 0.0, 0.0), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
     };
 
     // x, y: where the Item stands within the Location it is placed at, in metres (0, 0: the centre): x east, y north, z up - the axes of space.
-    private static JsonObject SpatialAttitude(string id, double x = 0, double y = 0) => new()
+    public static JsonObject SpatialAttitude(string id, double x = 0, double y = 0) => new()
     {
         ["Header"] = "OSD-OSA-V1.5", ["ObjectSpatialAttitudeID"] = id,
         ["Position"] = new JsonObject { ["Header"] = "OSD-OPS-V1.5", ["PositionID"] = $"{id}-P", ["CartPosition"] = new JsonArray(x, y, 0.0) },
@@ -53,7 +53,7 @@ public static class Uc2
     // A concrete Process Action the M-Instance keeps, for a Right to name: its Header
     // says the Action, its Request Complements the Items.
     // rq: the slot of each Complement in the PA's schema (RQ1 is Nil, ...), its Complement, its value.
-    private static JsonObject PA(string header, string name, string id, params (string Slot, string Complement, string Key, JsonNode Value)[] rq)
+    public static JsonObject PA(string header, string name, string id, params (string Slot, string Complement, string Key, JsonNode Value)[] rq)
     {
         var pa = new JsonObject
         {
@@ -67,7 +67,7 @@ public static class Uc2
         return pa;
     }
 
-    private static JsonObject Rights(string id, string verb, string level, params string[] pas) => new()
+    public static JsonObject Rights(string id, string verb, string level, params string[] pas) => new()
     {
         ["Header"] = "MMM-RGT-V2.2", ["MInstanceID"] = MI, ["RightsID"] = id,
         ["RightsData"] = new JsonArray(new JsonObject
@@ -100,12 +100,12 @@ public static class Uc2
         ["TransactionStatus"] = "Model"
     };
 
-    private static JsonObject Message(string id, string text) => new()
+    public static JsonObject Message(string id, string text) => new()
     {
         ["Header"] = "MMM-MSG-V2.2", ["MInstanceID"] = MI, ["MessageID"] = id, ["MessageData"] = new JsonArray(new JsonObject { ["MessageData"] = text })
     };
 
-    private static Complements C(string? nil = null, string? at = null, string? from = null, string? to = null, params JsonNode[] with) =>
+    public static Complements C(string? nil = null, string? at = null, string? from = null, string? to = null, params JsonNode[] with) =>
         new() { Nil = nil, At = at, From = from, To = to, With = with.Length == 0 ? null : with.Select(w => (JsonNode?)w).ToList() };
 
     public static string Said(MmmClient.Result r) =>

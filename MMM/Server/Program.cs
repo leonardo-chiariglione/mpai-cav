@@ -25,6 +25,7 @@ if (repo is null) { Console.Error.WriteLine("The repository (MMM/Viewer, schemas
 var m = new MInstance(Path.Combine(repo, "schemas"));
 Uc2.Setup(m);
 m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
+Meeting.Setup(m);                                      // the meeting room, its seats, the AVS Service and the Secretary
 
 // What a step means, said under its caption - for the steps whose point is not seen on the stage.
 var notes = new Dictionary<int, string>
@@ -84,6 +85,10 @@ void Next()
 var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null);
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
+// The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.
+var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m);
+await meeting.StartAsync();
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 if (demo >= 0)
 {
     using var http = new HttpClient { BaseAddress = new Uri(url) };
