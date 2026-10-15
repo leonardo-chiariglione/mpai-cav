@@ -75,6 +75,14 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     private readonly List<string> minutes = [];
     private readonly SemaphoreSlim one = new(1, 1);
 
+    // Who may be in the meeting is a human decision, the convener's: the first User that convenes it. The AVS Service seats only the Users it has been told to
+    // invite (the Secretary, a machine of the room, is always invited). An invitation is a Message from the AVS Service; it replaces the meeting code of ABV.
+    private string? convener;
+    private readonly HashSet<string> invited = [Meeting.Secretary];
+    private readonly Dictionary<string, string> personaOf = new();            // User -> the Persona it brought
+    private readonly HashSet<string> participants = new();                   // the Secretary's: the Users that have a seat and receive the minutes
+    private int sequence;
+
     public IReadOnlyList<string> TheMinutes => minutes;
 
     // For each Speech Object that reached the minutes: who, how long it lasts, and how long from the Secretary getting it to its words being in the minutes.
@@ -99,8 +107,26 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             {
                 if (!handled.Add($"{Meeting.Avs}|{id}")) continue;
                 var text = Meeting.TextOf((await avs.ReadAsync(id)).Item);
-                if (text is not null && text.StartsWith("join", StringComparison.Ordinal))
-                    await Seat(from, Meeting.ParseSeat(text.Replace("join;", "")).GetValueOrDefault("persona") ?? $"{from}-Persona");
+                if (text is null) continue;
+                if (text == "convene")
+                {
+                    if (convener is null) { convener = from; invited.Add(from); await Say(avs, $"Convened-{from}", from, "convened"); }
+                    else await Say(avs, $"Convened-{from}", from, $"already convened by {convener}");
+                }
+                else if (text.StartsWith("invite;user=", StringComparison.Ordinal) || text.StartsWith("revoke;user=", StringComparison.Ordinal))
+                {
+                    var who = text[(text.IndexOf('=') + 1)..];
+                    if (from != convener) { await Say(avs, $"Refused-{id}", from, "only the convener decides who is in the meeting"); continue; }
+                    if (text.StartsWith("invite", StringComparison.Ordinal)) await Invite(who); else await Revoke(who);
+                }
+                else if (text.StartsWith("join", StringComparison.Ordinal))
+                {
+                    if (!invited.Contains(from)) { await Say(avs, $"Seat-{id}", from, "not invited"); continue; }   // the answer is to this request: a User asks again after it is invited
+                    var persona = Meeting.ParseSeat(text.Replace("join;", "")).GetValueOrDefault("persona") ?? $"{from}-Persona";
+                    await Seat(from, persona, $"Seat-{id}");
+                    personaOf[from] = persona;
+                    if (from != Meeting.Secretary) await Say(avs, $"Participant-{from}-{++sequence}", Meeting.Secretary, $"participant;user={from}");
+                }
             }
             foreach (var (id, from) in await secretary.InboxAsync())
             {
@@ -115,16 +141,23 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                 }
                 var text = Meeting.TextOf(item);
                 if (text is null) continue;
-                if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && asked.Remove(id["Words-".Length..], out var who))
+                if (from == Meeting.Avs && text.StartsWith("participant;user=", StringComparison.Ordinal))
                 {
-                    if (text != NoWords) { minutes.Add($"{who.Speaker}: {text}"); await Say(secretary, Meeting.Minutes, Meeting.Avs, string.Join("\n", minutes)); }
+                    var user = text[(text.IndexOf('=') + 1)..];
+                    participants.Add(user);
+                    if (minutes.Count > 0) await Publish(user);          // a participant that comes late is given the minutes so far
+                }
+                else if (from == Meeting.Avs && text.StartsWith("left;user=", StringComparison.Ordinal)) participants.Remove(text[(text.IndexOf('=') + 1)..]);
+                else if (from == Meeting.Asr && id.StartsWith("Words-", StringComparison.Ordinal) && asked.Remove(id["Words-".Length..], out var who))
+                {
+                    if (text != NoWords) { minutes.Add($"{who.Speaker}: {text}"); await Publish(); }
                     lock (latencies) latencies.Add((who.Speaker, who.SpeechMs, (long)Stopwatch.GetElapsedTime(who.Since).TotalMilliseconds));
                 }
                 else if (text.StartsWith("seat=", StringComparison.Ordinal)) await Sit(Meeting.ParseSeat(text));
                 else if (text.StartsWith("say:", StringComparison.Ordinal))
                 {
                     minutes.Add($"{from}: {text[4..].Trim()}");
-                    await Say(secretary, Meeting.Minutes, Meeting.Avs, string.Join("\n", minutes));   // the minutes belong to the room: the Secretary hands them to its service
+                    await Publish();
                 }
             }
         }
@@ -153,18 +186,42 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
         finally { asrOne.Release(); }
     }
 
+    // The minutes belong to the room: the Secretary hands them to the AVS Service, and gives a copy to each participant - an Item of its own for each, so that a
+    // participant who is taken out of the meeting keeps what it had and is given no more.
+    private async Task Publish(string? only = null)
+    {
+        var text = string.Join("\n", minutes);
+        if (only is null) await Say(secretary, Meeting.Minutes, Meeting.Avs, text);
+        foreach (var u in only is null ? participants.ToList() : [only]) await Say(secretary, $"{Meeting.Minutes}-for-{u}", u, text);
+    }
+
+    private async Task Invite(string user)
+    {
+        invited.Add(user);
+        await Say(avs, $"Invitation-{user}", user, $"invitation;room={Meeting.Room};from={convener}");
+    }
+
+    // The convener takes a User out of the meeting: the AVS Service withdraws its right to a seat (the Rights of Use Case 2: May Not prevails) and tells the Secretary.
+    private async Task Revoke(string user)
+    {
+        invited.Remove(user);
+        if (personaOf.TryGetValue(user, out var persona) && seatOf.TryGetValue(user, out var seatId))
+            await avs.PerformAsync("Rights Change", Uc2.C(user, with: [Meeting.SitPA(persona, seatId), Uc2.Rights($"Seat-Revoke-{persona}", "May Not", "Granted", Meeting.SitID(persona))]));
+        await Say(avs, $"Left-{user}-{++sequence}", Meeting.Secretary, $"left;user={user}");
+    }
+
     // The AVS Service gives a User the right to move its Persona to a free seat, and tells it which. A User that has a seat is told it again.
-    private async Task Seat(string user, string persona)
+    private async Task Seat(string user, string persona, string replyId)
     {
         if (!seatOf.TryGetValue(user, out var seatId))
         {
             var free = Meeting.Seats.FirstOrDefault(s => !seatOf.ContainsValue(s.ID));
-            if (free.ID is null) { await Say(avs, $"Seat-{user}", user, "full"); return; }
+            if (free.ID is null) { await Say(avs, replyId, user, "full"); return; }
             seatOf[user] = seatId = free.ID;
         }
         var pa = Meeting.SitPA(persona, seatId);   // the Persona the User brings: the right is for it (a User moves only Personae it owns, whatever it is told)
         await avs.PerformAsync("Rights Change", Uc2.C(user, with: [pa, Uc2.Rights($"Seat-Right-{persona}", "May", "Granted", Meeting.SitID(persona))]));
-        await Say(avs, $"Seat-{user}", user, Meeting.SeatText(Meeting.Seats.First(s => s.ID == seatId), persona));
+        await Say(avs, replyId, user, Meeting.SeatText(Meeting.Seats.First(s => s.ID == seatId), persona));
     }
 
     // The Secretary moves its Persona to the seat it was given.

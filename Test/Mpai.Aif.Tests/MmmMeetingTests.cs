@@ -42,7 +42,7 @@ public class MmmMeetingTests
     {
         Assert.Equal(200, (await user.PerformAsync("MM-Send", Uc2.C($"Join-{user.ProcessID}", to: Meeting.Avs, with: Uc2.Message($"Join-{user.ProcessID}", Meeting.JoinText(persona))))).Http);
         await services.PumpAsync();
-        var told = Meeting.ParseSeat(Meeting.TextOf((await user.ReadAsync($"Seat-{user.ProcessID}")).Item)!);
+        var told = Meeting.ParseSeat(Meeting.TextOf((await user.ReadAsync($"Seat-Join-{user.ProcessID}")).Item)!);
         var yaw = double.Parse(told["yaw"], CultureInfo.InvariantCulture);
         Assert.Equal(persona, told["persona"]);                     // the right is for the Persona the User brought
         var pa = Meeting.SitPA(persona, told["seat"]);
@@ -75,6 +75,10 @@ public class MmmMeetingTests
         await services.StartAsync();                                  // the Secretary asks to join
         await services.PumpAsync();                                   // the AVS Service gives it a seat
         await services.PumpAsync();                                   // the Secretary goes to it
+        // Anna convenes the meeting and invites Bruno (the Secretary is always invited): the room is not open.
+        foreach (var (id, text) in new[] { ("Convene-Anna", "convene"), ("Invite-Bruno", "invite;user=Bruno") })
+            await anna.PerformAsync("MM-Send", Uc2.C(id, to: Meeting.Avs, with: Uc2.Message(id, text)));
+        await services.PumpAsync();
         var a = await SitDown(http, services, anna, "Anna-Formal");
         var b = await SitDown(http, services, bruno, "Bruno-Persona");
         Assert.NotEqual(a.Seat, b.Seat);

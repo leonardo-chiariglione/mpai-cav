@@ -441,7 +441,10 @@ public sealed class MInstance
         if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
         // A Process captures an M-Location it may read or enter, or one that one of its Items is in (its Persona seated in the Room).
         bool IsIn(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == c.At) return true; return false; }
-        if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!) && !items.Values.Any(i => i.Owner == source && IsIn(i.Location)))
+        // ...unless a Right bars it from the places in it (May Not: the convener took it out of the meeting).
+        bool Barred() => (holdings.GetValueOrDefault(source) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                             .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && IsIn(t.Target));
+        if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!) && !(items.Values.Any(i => i.Owner == source && IsIn(i.Location)) && !Barred()))
             return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
         var things = Snapshot()["Things"]!.AsArray().OfType<JsonObject>().ToList();
         bool Inside(JsonObject t)
@@ -519,7 +522,8 @@ public sealed class MInstance
         // What is sent: a Message, or a Speech Object - a User's own capture of what it said, with the time it lasts (a Basic Speech Object, OSD-BSO).
         var message = with.FirstOrDefault(i => Header(i) is "MMM-MSG-V2.2" or "OSD-BSO-V1.5");
         items[c.Nil!] = new Item { ID = c.Nil!, DataType = message is null ? "MMM-MSG-V2.2" : Header(message)!, Body = message, Owner = source };
-        (inboxes.TryGetValue(c.To!, out var box) ? box : inboxes[c.To!] = []).Add(c.Nil!);
+        var box = inboxes.TryGetValue(c.To!, out var b) ? b : inboxes[c.To!] = [];
+        if (!box.Contains(c.Nil!)) box.Add(c.Nil!);          // a Message sent again under the same identifier replaces the first
         return Ok(200, service, new Complements { With = GrantAll(with, c.To!) });
     }
 

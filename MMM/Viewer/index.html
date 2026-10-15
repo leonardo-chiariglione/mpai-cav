@@ -212,13 +212,19 @@ async function join() {
 const simpleTime = id => ({ Header: 'OSD-STM-V1.5', SimpleTimeID: id, SimpleTimeData: [{ FlagsByte: 3, StartTime: 1767254400000, EndTime: 1767254400000, AccuracyMode: 'single', AccuracyPlusMinus: 1 }] });
 const message = (id, text) => ({ Header: 'MMM-MSG-V2.2', MInstanceID: 'MI1', MessageID: id, MessageData: [{ MessageData: text }] });
 async function sit() {
-  const join = `Join-${client.name}`;
-  await act('communicate/mm-send', client.name, { Nil: join, To: 'AVS', With: [message(join, 'join;persona=' + client.persona)] });   // the Persona it brings to this meeting: one of its own
+  // Who is in the meeting is the convener's decision (&convene; &invite=Name,Name): the room is open only to the invited. Not invited, the User waits for the
+  // invitation - a Message of the AVS Service - and asks again.
+  const q = new URLSearchParams(location.search), tell = (id, text) => act('communicate/mm-send', client.name, { Nil: id, To: 'AVS', With: [message(id, text)] });
+  const read = async id => { const rs = await fetch(`/api/v2.2/items/${id}`, { headers: { Authorization: 'Bearer ' + client.token } }); return rs.ok ? (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData : null; };
+  const pause = ms => new Promise(r => setTimeout(r, ms));
+  if (q.has('convene')) { await tell(`Convene-${client.name}-${Date.now()}`, 'convene'); for (const u of (q.get('invite') ?? '').split(',').filter(Boolean)) await tell(`Invite-${u}-${Date.now()}`, 'invite;user=' + u); }
   let told = null;
-  for (let i = 0; i < 50 && !told; i++) {   // the AVS Service answers within a moment
-    await new Promise(r => setTimeout(r, 200));
-    const rs = await fetch(`/api/v2.2/items/Seat-${client.name}`, { headers: { Authorization: 'Bearer ' + client.token } });
-    if (rs.ok) told = (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData;
+  for (let attempt = 0; attempt < 120 && !(told ?? '').startsWith('seat='); attempt++) {
+    const join = `Join-${client.name}-${Date.now()}`;   // each request has its own identifier, and so its own answer
+    await tell(join, 'join;persona=' + client.persona);   // the Persona it brings to this meeting: one of its own
+    told = null;
+    for (let i = 0; i < 50 && !told; i++) { await pause(200); told = await read(`Seat-${join}`); }   // the AVS Service answers within a moment
+    if (told === 'not invited') { client.status = `${client.name}: waiting for an invitation`; for (let i = 0; i < 20 && !(await read(`Invitation-${client.name}`)); i++) await pause(500); }
   }
   const seat = Object.fromEntries((told ?? '').split(';').map(p => p.split('=')));
   if (!seat.seat) { client.status = `${client.name}: no seat (${told ?? 'no answer'})`; return; }
