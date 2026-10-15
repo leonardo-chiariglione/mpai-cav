@@ -89,8 +89,11 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     public IReadOnlyList<(string Speaker, long SpeechMs, long TotalMs)> Latencies { get { lock (latencies) return latencies.ToList(); } }
 
     // The Secretary comes to the Metaverse Square, and asks to join the meeting like any participant.
+    private bool started;
     public async Task StartAsync()
     {
+        if (started) return;          // once: a second MM-Add would put the Secretary's Persona back at the Square
+        started = true;
         await secretary.PerformAsync("MM-Add", Uc2.C(Meeting.SecretaryPersona, at: "MVS", with: Uc2.SpatialAttitude("SA-Secretary", 0, 3)));
         await Say(secretary, "Join-Secretary", Meeting.Avs, Meeting.JoinText(Meeting.SecretaryPersona));
     }

@@ -142,3 +142,9 @@ rebuilt and published once, at the end of the day (the author, 2026/10/11).
 - CAV: launcher CAV/Cav.bat (seven use cases live; animations page CAV/Demos); the live test gains the junction modes junction-route, junction-lights, junction-nothing; the viewer draws a crossing road, turned vehicles and indicators. Planned tonight: overtaking a car that turns off at a junction (Downloads\CAV-Overtaking-at-a-Junction.md).
 - ABV demo (ABV/): server, browser client, protocol, avatars (Rocketbox, MIT) pushed; the Secretary types the minutes.
 - Rebuild the MKG for: PAF-PMX I02, PAF-PSD L3, PAF-VMS (device ID).
+
+## 2026-10-15 (evening) - MMM: a meeting as services (Phases 1-6)
+- MMM implementation (D:\DI\MMM): axes x east, y north, z up; Orientation yaw, pitch, roll (yaw 0 north, provisional); MM-Capture (simplified scene); first-person client in the viewer; a meeting as services - room Location with seat Locations, AVS Service (Process: convening, invitations, seats, rights), Secretary (machine Process with its own Persona, minutes), ASR Service (Process, Whisper), Speech Objects with their own duration (OSD-BSO), minutes for the participants only. Doc: docs/MMM-Meeting.md.
+- Rules from the author: a User may have many Personae, all its own (it brings one to an event); the places of a meeting are assigned by the AVS Service; who is in is a human decision; no meeting code.
+- Not in MMM-TEC (flagged): GET processes/{id}/inbox; Discover not implemented; a removed participant's Persona stays in its seat.
+- Rebuild the MKG for: nothing new in the standards; the MMM implementation notes only.

@@ -1,0 +1,21 @@
+{
+  "01 Anna, Bruno and Carla register and come to the Square": "registered: 3 Users; Anna has two Personae and brings the formal one",
+  "02 The Secretary takes a seat": "Secretary-Persona at MeetingRoom-S1",
+  "03 Anna convenes the meeting": "convened",
+  "04 Carla, not invited, asks for a seat": "not invited; move to a seat 403",
+  "05 Anna invites Bruno": "invitation",
+  "06 Anna and Bruno take their seats": "Anna seated at MeetingRoom-S2; Bruno seated at MeetingRoom-S3",
+  "07 Anna speaks": "200; minutes: 1 lines",
+  "08 Bruno speaks": "200; minutes: 2 lines",
+  "09 Carla cannot read the minutes": "read 403",
+  "10 Carla is invited and comes": "seated at MeetingRoom-S4",
+  "11 Carla is given the minutes so far": "Anna: Good morning. We have a quorum, so let us begin. | Bruno: Thank you, Anna. I propose that we approve the budget.",
+  "12 Carla speaks": "200; minutes: 3 lines",
+  "13 Anna takes Bruno out of the meeting": "Bruno captures the room: 403",
+  "14 Anna speaks again": "200; minutes: 4 lines",
+  "15 The minutes": "Anna: Good morning. We have a quorum, so let us begin. | Bruno: Thank you, Anna. I propose that we approve the budget. | Carla: Sorry I am late. I second the proposal. | Anna: Bruno has left the meeting. The budget is approved.",
+  "16 What Bruno has": "Anna: Good morning. We have a quorum, so let us begin. | Bruno: Thank you, Anna. I propose that we approve the budget. | Carla: Sorry I am late. I second the proposal.",
+  "Activity Data, Process Actions recorded": "66",
+  "what Anna sees in the room": "Anna-Formal, Bruno-Persona, Carla-Persona, Secretary-Persona",
+  "where the Personae are": "Anna-Formal@MeetingRoom-S2, Anna-Persona@-, Bruno-Persona@MeetingRoom-S3, Carla-Persona@MeetingRoom-S4, Secretary-Persona@MeetingRoom-S1"
+}

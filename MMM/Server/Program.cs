@@ -90,12 +90,30 @@ Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}
 var whisper = new WhisperAsr(repo);
 if (whisper.Available) { whisper.Start(); Console.WriteLine("Whisper starting for the ASR Service (the model loads in a few seconds)."); }
 else Console.WriteLine("Models\\Whisper is not there: the ASR Service finds no words.");
-var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m, whisper.Available ? whisper.RecognizeAsync : null);
+// --meeting-demo [seconds]: the bots of the meeting use case play it against this server, a step at a time (default 5 s apart), for the viewer - open /viewer/?look=12,0 -
+// to show. The bots have no voices, so the ASR Service recognises the words of a script instead of Whisper.
+var meetingDemo = Array.IndexOf(args, "--meeting-demo");
+var meetingPause = meetingDemo >= 0 && meetingDemo + 1 < args.Length && double.TryParse(args[meetingDemo + 1], out var mp) ? mp : 5.0;
+var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
 await meeting.StartAsync();
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 var minutesShown = 0;
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });
 _ = Task.Run(async () => { while (true) { var minutes = meeting.TheMinutes; while (minutesShown < minutes.Count) Console.WriteLine("minutes: " + minutes[minutesShown++]); await Task.Delay(200); } });
+if (meetingDemo >= 0)
+{
+    using var bots = new HttpClient { BaseAddress = new Uri(url) };
+    m.Caption = "A meeting in the MMM"; m.Say = "A meeting in the M M M: three participants and the Secretary meet in a room, through the M M M A P I only.";
+    await Task.Delay(TimeSpan.FromSeconds(meetingPause));
+    var record = await MeetingUseCase.RunAsync(bots, m, meeting, async (step, note) =>
+    {
+        Console.WriteLine(step);
+        m.Caption = step; m.Note = note; m.Say = note;
+        await Task.Delay(TimeSpan.FromSeconds(meetingPause));
+    });
+    m.Caption = "The meeting is over"; m.Note = null; m.Say = "The meeting is over.";
+    Console.WriteLine("Meeting use case done.");
+}
 if (demo >= 0)
 {
     using var http = new HttpClient { BaseAddress = new Uri(url) };

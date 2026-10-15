@@ -72,7 +72,10 @@ function frame() {
   const halfWidth = 16, hfov = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
   const dist = Math.max(halfWidth / Math.tan(hfov / 2), 14);
   const dir = new THREE.Vector3(0, 0.55, 0.83).normalize();
-  controls.target.set(1, 0.5, 1); camera.position.copy(controls.target).addScaledVector(dir, dist); controls.update();
+  const look = new URLSearchParams(location.search).get('look');   // ?look=x,y: frame the place at x east, y north (a meeting room), closer
+  const [lx, ly] = look ? look.split(',').map(Number) : [null, null];
+  if (look) controls.target.set(lx, 0.5, -ly); else controls.target.set(1, 0.5, 1);
+  camera.position.copy(controls.target).addScaledVector(dir, look ? dist * 0.55 : dist); controls.update();
 }
 frame();
 addEventListener('resize', () => { frame(); renderer.setSize(innerWidth, innerHeight); labels.setSize(innerWidth, innerHeight); });
