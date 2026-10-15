@@ -33,7 +33,7 @@ public sealed class MInstance
         public string Status { get; set; } = "Final";
         public JsonNode? SpatialAttitude { get; set; }
         public string? Animation { get; set; }       // the Animation Stream animating it
-        public double[]? Place { get; set; }         // a Location's place, x and z in metres: in the
+        public double[]? Place { get; set; }         // a Location's place, x (east) and y (north) in metres: in the
                                                      // M-Environment, or in the Location it is at
         public double Size { get; set; }             // a Location's side, metres
         public string? Model { get; set; }           // the 3D Model that renders it (a GLB file)
@@ -90,12 +90,12 @@ public sealed class MInstance
     // ---------------------------------------------------------------- the state an M-Instance starts with
     // An M-Location (in the M-Environment, drawn by the viewer) or, universe: true, a
     // U-Location (in the Universe, where Data are captured and R-Items rendered).
-    public void AddLocation(string id, string? owner = null, bool isPublic = false, double x = 0, double z = 0, double size = 4,
+    public void AddLocation(string id, string? owner = null, bool isPublic = false, double x = 0, double y = 0, double size = 4,
                             bool perceptible = true, bool universe = false)
     {
         lock (gate) items[id] = new Item
         {
-            ID = id, DataType = universe ? "MMM-ULC" : "MMM-LOC", Owner = owner, Public = isPublic, Place = [x, z], Size = size,
+            ID = id, DataType = universe ? "MMM-ULC" : "MMM-LOC", Owner = owner, Public = isPublic, Place = [x, y], Size = size,
             Perceptible = perceptible
         };
     }
@@ -182,11 +182,11 @@ public sealed class MInstance
         lock (gate)
         {
             // Where an Item stands within its Location when its Spatial Attitude says so
-            // (x and z of its Position, in metres); an Item without, stands at the Location's centre.
+            // (x east and y north of its Position, in metres - the axes of space: x east, y north, z up); an Item without, stands at the Location's centre.
             double[]? Spot(Item it) =>
                 it.SpatialAttitude?["Position"]?["CartPosition"] is JsonArray a && a.Count >= 3
-                && a[0] is not null && a[2] is not null && (a[0]!.GetValue<double>() != 0 || a[2]!.GetValue<double>() != 0)
-                    ? [a[0]!.GetValue<double>(), a[2]!.GetValue<double>()] : null;
+                && a[0] is not null && a[1] is not null && (a[0]!.GetValue<double>() != 0 || a[1]!.GetValue<double>() != 0)
+                    ? [a[0]!.GetValue<double>(), a[1]!.GetValue<double>()] : null;
             double[] Where(Item it, int depth = 0)
             {
                 var own = it.Place ?? Spot(it) ?? [0, 0];
@@ -220,7 +220,7 @@ public sealed class MInstance
                     var o = new JsonObject
                     {
                         ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
-                        ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Z"] = w[1],
+                        ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
                     };
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;

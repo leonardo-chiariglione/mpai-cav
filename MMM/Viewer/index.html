@@ -207,10 +207,10 @@ async function refresh() {
     if (d && d.shape !== shape) { scene.remove(d.object); d.object.userData.label?.element.remove(); drawn.delete(t.ID); d = null; }
     if (!d) {
       const object = shape === 'persona' ? await persona(t) : shape === 'room' ? room(t) : pad(t);
-      object.position.set(t.X, 0, t.Z); scene.add(object);
-      d = { object, shape, target: new THREE.Vector3(t.X, 0, t.Z) }; drawn.set(t.ID, d);
+      object.position.set(t.X, t.Z ?? 0, -t.Y); scene.add(object);          // the axes of space - X east, Y north, Z up - to those of three.js: x east, y up, z towards the viewer (south)
+      d = { object, shape, target: new THREE.Vector3(t.X, t.Z ?? 0, -t.Y) }; drawn.set(t.ID, d);
     }
-    d.target.set(t.X, isRoom ? 0.06 : 0, t.Z);
+    d.target.set(t.X, (t.Z ?? 0) + (isRoom ? 0.06 : 0), -t.Y);
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
       d.target.y = at?.At ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
