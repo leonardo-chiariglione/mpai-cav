@@ -137,5 +137,13 @@
   "PAF/V1.6/AIMs/ServiceParticipantAuthentication.json": "valid",
   "PAF/V1.6/AIMs/VideoconferenceClientReceiver.json": "/SubAIMs: minItems Value should have at least 1 items",
   "PAF/V1.6/AIMs/VideoconferenceClientTransmitter.json": "valid",
-  "PAF/V1.6/AIMs/VirtualMeetingSecretary.json": "valid"
+  "PAF/V1.6/AIMs/VirtualMeetingSecretary.json": "valid",
+  "XRV1/V1.0/AIMs/ActionGeneration.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/EnvironmentDescription.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/LiveTheatricalPerformance.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/OperatorCommandInterpretation.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/ParticipantStatusInterpretation.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/PerformanceStatusInterpretation.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/REExperienceGeneration.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/VEExperienceGeneration.json": "/: required Required properties [\"Header\"] are not present"
 }

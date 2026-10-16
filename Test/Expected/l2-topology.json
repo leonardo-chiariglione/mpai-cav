@@ -39,5 +39,6 @@
   "PAF-RSR-V1.6": "loads",
   "PAF-SAF-V1.6": "loads",
   "PAF-VCT-V1.6": "loads",
-  "PAF-VMS-V1.6": "loads"
+  "PAF-VMS-V1.6": "loads",
+  "XRV-LTP-V1.0": "fails: XRV-LTP-V1.0: Topology end 'XRV-END-V1.0.ParticipantData' uses the label 'ParticipantData', which XRV-LTP-V1.0 does not declare. Declare it in its InternalTypes (or ExternalPorts), or state the end's ..."
 }
