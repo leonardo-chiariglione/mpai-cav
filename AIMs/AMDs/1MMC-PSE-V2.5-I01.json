@@ -9,7 +9,7 @@
                        {"Name": "FacePersonalStatus",   "DataType": "MMC-FPS-V2.5"}],
 
   "ExternalPorts":    [{"Name": "TextPersonalStatus", "Direction": "Input",  "DataType": "MMC-TPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "BasicSpeechObject",       "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "BasicSpeechObject",       "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FaceObject",         "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus",     "Direction": "Output", "DataType": "MMC-EPS-V2.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 

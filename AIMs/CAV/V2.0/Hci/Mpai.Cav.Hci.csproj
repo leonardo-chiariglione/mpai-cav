@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\BLS\Mpai.Osd.Bls.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\AVA\Mpai.Osd.Ava.csproj" />
+    <ProjectReference Include="..\..\..\OSD\V1.5\AUS\Mpai.Osd.Aus.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VII\Mpai.Osd.Vii.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
     <ProjectReference Include="..\..\..\CAE3\V1.0\ASI\Mpai.Cae.Asi.csproj" />

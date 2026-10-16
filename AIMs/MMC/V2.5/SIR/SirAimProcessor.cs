@@ -57,7 +57,7 @@ public sealed class SirAimProcessor : IAimProcessor
                 $"MMC-SIR-V2.5: no speech on input port '{_speechPort}'.");
         }
 
-        var speech = MpaiJson.FromJson<BasicSpeechObject>(speechJson);
+        var speech = SpeechInputs.Basic(speechJson);
         if (speech is null || speech.Data.Length == 0)
         {
             return Message.Error(message.MessageId, InstanceId,

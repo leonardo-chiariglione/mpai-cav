@@ -43,7 +43,7 @@ public sealed class SpeAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Basic Speech Object on input port"));
 
-        var speech = MpaiJson.FromJson<BasicSpeechObject>(bsoJson);
+        var speech = SpeechInputs.Basic(bsoJson);
         if (speech is null || speech.Data.Length == 0)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "empty Basic Speech Object"));

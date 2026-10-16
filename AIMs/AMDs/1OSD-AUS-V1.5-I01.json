@@ -6,7 +6,7 @@
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "SpeechFile",    "Direction": "Input",  "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "SpeechFile",    "Direction": "Input",  "DataType": ["OSD-SPO-V1.5", "OSD-BSO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeechObject",  "Direction": "Output", "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeakerTime",   "Direction": "Output", "DataType": "OSD-STM-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeechOverlap", "Direction": "Output", "DataType": "OSD-SOL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
