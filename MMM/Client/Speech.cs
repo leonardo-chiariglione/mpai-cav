@@ -15,19 +15,57 @@ public static class Speech
 
     public const string Header = "OSD-BSO-V1.5";
 
+    private static JsonObject Time(string id, long startMs, long endMs) => new()
+    {
+        ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = id,
+        ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = startMs, ["EndTime"] = endMs, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
+    };
+
+    // The Speech Qualifier of the data (TFA-SPQ-V1.5): its own time - the same as the Speech Object's -, the content (raw PCM, 16 kHz, 16 bits), what it was captured with
+    // (a microphone, one channel) and, if the data is a stream, the stream format it is delivered in - a parameter of the Qualifier.
+    private static JsonObject Qualifier(string id, long startMs, long endMs, string? streamFormat) => new()
+    {
+        ["Header"] = "TFA-SPQ-V1.5", ["MInstanceID"] = "MI1", ["SpeechQualifierID"] = $"{id}-Q",
+        ["SpeechQualifierTime"] = Time($"{id}-QT", startMs, endMs),
+        ["SubTypes"] = new JsonObject(),
+        ["Formats"] = new JsonObject
+        {
+            ["ContentFormats"] = new JsonObject { ["RawData"] = new JsonObject { ["Header"] = "TFA-PCM-V1.5", ["PCM"] = new JsonObject { ["SamplingFrequency"] = Rate, ["SamplePrecision"] = 16 } } },
+            ["TransportFormats"] = streamFormat is null ? new JsonObject() : new JsonObject { ["StreamFormat"] = streamFormat }
+        },
+        ["Attributes"] = new JsonObject
+        {
+            ["Source"] = "Real",
+            ["Device"] = new JsonObject
+            {
+                ["DeviceRole"] = "Capture", ["DeviceType"] = "Microphone",
+                ["CaptureConfiguration"] = new JsonObject { ["ChannelCount"] = 1, ["SamplingMode"] = "Mono" }
+            }
+        }
+    };
+
     // A Speech Object of the PCM the User captured, starting at startMs (Unix time, milliseconds) and lasting as long as the PCM does.
-    public static JsonObject Make(string id, byte[] pcm16k, long startMs) => new()
+    public static JsonObject Make(string id, byte[] pcm16k, long startMs)
+    {
+        var end = startMs + pcm16k.Length / 2 * 1000L / Rate;
+        return new JsonObject
+        {
+            ["Header"] = Header, ["MInstanceID"] = "MI1", ["BasicSpeechObjectID"] = id,
+            ["BasicSpeechObjectTime"] = Time($"{id}-T", startMs, end),
+            ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(pcm16k) }),
+            ["BasicSpeechDataQualifier"] = Qualifier(id, startMs, end, null)
+        };
+    }
+
+    // A Speech Object that is a stream: declared when the speech starts, with the time it lasts (it does not have to be redefined until that time is over) and the address its
+    // data is delivered from; the data arrives as it is captured. The Qualifier says the stream format: WebSocket. Whoever wants to hear it - the receiver decides, from this User
+    // and not from that one - opens that address, so that it understands what it receives.
+    public static JsonObject Declare(string id, long startMs, long durationMs, string dataUri) => new()
     {
         ["Header"] = Header, ["MInstanceID"] = "MI1", ["BasicSpeechObjectID"] = id,
-        ["BasicSpeechObjectTime"] = new JsonObject
-        {
-            ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = $"{id}-T",
-            ["SimpleTimeData"] = new JsonArray(new JsonObject
-            {
-                ["FlagsByte"] = 3, ["StartTime"] = startMs, ["EndTime"] = startMs + pcm16k.Length / 2 * 1000L / Rate, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1
-            })
-        },
-        ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(pcm16k) })
+        ["BasicSpeechObjectTime"] = Time($"{id}-T", startMs, startMs + durationMs),
+        ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["DataURI"] = dataUri }),
+        ["BasicSpeechDataQualifier"] = Qualifier(id, startMs, startMs + durationMs, "WebSocket")
     };
 
     // The Speech Object as the M-Instance returns an Item (the Body is the first of its ItemValueOrRef), or as it is.

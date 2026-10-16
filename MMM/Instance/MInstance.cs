@@ -37,6 +37,7 @@ public sealed class MInstance
                                                      // M-Environment, or in the Location it is at
         public double Size { get; set; }             // a Location's side, metres
         public string? Model { get; set; }           // the 3D Model that renders it (a GLB file)
+        public bool Streaming { get; set; }          // a Speech Object whose data is still arriving, as a stream
     }
 
     public sealed class Process
@@ -185,6 +186,36 @@ public sealed class MInstance
         }
     }
 
+    // ---------------------------------------------------------------- Speech Objects that are streams
+    // The Speech Object a Process may feed: its own, still a stream. Its declared end (Unix milliseconds), or null.
+    public long? StreamToFeed(string process, string id)
+    {
+        lock (gate)
+            return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Owner == process && it.Streaming
+                   && it.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0]?["EndTime"] is JsonNode e ? e.GetValue<long>() : null;
+    }
+
+    // The stream is over: what arrived is the Speech Object's data, and it is no longer a stream.
+    public void StreamComplete(string id, byte[] pcm)
+    {
+        lock (gate)
+        {
+            if (!items.TryGetValue(id, out var it) || it.Body?["BasicSpeechObjectData"]?[0] is not JsonObject data) return;
+            data["Data"] = Convert.ToBase64String(pcm);
+            it.Streaming = false;
+        }
+    }
+
+    // The data of a Speech Object that is complete, or null.
+    public byte[]? SpeechData(string id)
+    {
+        lock (gate)
+            return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && !it.Streaming
+                   && it.Body?["BasicSpeechObjectData"]?[0]?["Data"]?.GetValue<string>() is { } d ? Convert.FromBase64String(d) : null;
+    }
+
+    public bool IsStream(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Streaming; }
+
     // A Speech Object is heard by whoever has an Item in the Room around the seat it was placed at - its User's Persona seated in it - unless a Right bars it from the
     // places in it (May Not: it was taken out of the meeting).
     private bool HeardBy(string process, Item speech)
@@ -265,7 +296,7 @@ public sealed class MInstance
                     if (i.Animation is not null) o["Animation"] = i.Animation;
                     // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
                     if (i.DataType == "OSD-BSO-V1.5" && i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0] is JsonNode st)
-                    { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); }
+                    { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming; }
                     return (JsonNode)o;
                 }).ToArray())
             };
@@ -422,7 +453,9 @@ public sealed class MInstance
         var created = false;
         if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == "OSD-BSO-V1.5" && (string?)i["BasicSpeechObjectID"] == c.Nil) is { } speech)
         {
-            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source };
+            // A Speech Object declared with a DataURI and no data is a stream: its data arrives, as it is captured, until its time is over or its User ends it.
+            var first = speech["BasicSpeechObjectData"]?[0];
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source, Streaming = first?["DataURI"] is not null && first["Data"] is null };
             created = true;
         }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
@@ -560,7 +593,9 @@ public sealed class MInstance
         var created = false;
         if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == "OSD-BSO-V1.5" && (string?)i["BasicSpeechObjectID"] == c.Nil) is { } speech)
         {
-            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source };
+            // A Speech Object declared with a DataURI and no data is a stream: its data arrives, as it is captured, until its time is over or its User ends it.
+            var first = speech["BasicSpeechObjectData"]?[0];
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source, Streaming = first?["DataURI"] is not null && first["Data"] is null };
             created = true;
         }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");

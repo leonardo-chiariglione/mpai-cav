@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Builder;
@@ -30,6 +31,8 @@ public static class MmmServer
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls(url);
         var app = builder.Build();
+        app.UseWebSockets();
+        var streams = new SpeechStreams();
         var replies = new ConcurrentDictionary<string, (int Http, string Body, string? Tokens)>();
 
         string? Caller(HttpContext ctx) =>
@@ -82,7 +85,39 @@ public static class MmmServer
             ["MInstanceID"] = m.ID, ["MEnvironmentID"] = m.EnvironmentID,
             ["Actions"] = new JsonArray(m.Performed.Select(a => (JsonNode)a).ToArray())
         }));
-        if (viewer is not null)
+        // The Speech Objects that are streams. The client feeds the M-Instance with a WebSocket (a browser cannot give a WebSocket a header, so its token is in the address);
+        // whoever may hear the Speech Object listens on a WebSocket, the stream format of its Speech Qualifier: 16 kHz mono Int16 PCM, from the start, as it goes on.
+        app.Map("/ws/v2.2/speech/{itemID}", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (m.StreamToFeed(p, itemID) is not { } end) { ctx.Response.StatusCode = 403; return; }   // only its User feeds a Speech Object, and only while it is a stream
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            await streams.FeedAsync(socket, itemID, end, m, ctx.RequestAborted);
+        });
+        // Whoever hears a Speech Object chooses to: its User's client opens the Speech Object's address, a WebSocket (the stream format its Speech Qualifier declares), and receives
+        // the PCM from the start of the Speech Object and as it goes on, then the end. Receiving is the receiver's decision (from this User, not from that one); the M-Instance
+        // only refuses whoever may not hear: outside the room, or taken out of the meeting.
+        app.Map("/ws/v2.2/speech/{itemID}/listen", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (m.Get(itemID) is null) { ctx.Response.StatusCode = 404; return; }
+            if (!m.MayRead(p, itemID)) { ctx.Response.StatusCode = 403; return; }
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            try
+            {
+                if (m.SpeechData(itemID) is { } done)                           // already over: what it was, then the end
+                    for (var i = 0; i < done.Length; i += 8192) await socket.SendAsync(done.AsMemory(i, Math.Min(8192, done.Length - i)), WebSocketMessageType.Binary, true, ctx.RequestAborted);
+                else
+                    await foreach (var chunk in streams.ReadAsync(itemID, ctx.RequestAborted)) await socket.SendAsync(chunk, WebSocketMessageType.Binary, true, ctx.RequestAborted);
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "over", CancellationToken.None);
+            }
+            catch (OperationCanceledException) { }
+            catch (WebSocketException) { }
+        });        if (viewer is not null)
         {
             var root = Path.GetFullPath(viewer);
             app.MapGet("/viewer/state", () => Results.Json(state?.Invoke() ?? m.Snapshot()));

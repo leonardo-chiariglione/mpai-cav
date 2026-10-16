@@ -243,32 +243,50 @@ async function sit() {
   if (new URLSearchParams(location.search).has('mic')) microphone();
 }
 
-// THE MICROPHONE (&mic): the client captures and cuts. When the User speaks - a voice activity detection of the level - what it said is cut (with a little before
-// and after), and sent once, to the Secretary, as a Speech Object that has its own time: when it started and how long it lasted. Not a request per chunk.
+// THE MICROPHONE (&mic): the client captures and streams. When the User starts to speak - a voice activity detection of the level - it declares a Speech Object at its seat at
+// once: the time it lasts (3 s), its Speech Qualifier (raw PCM, stream format WebSocket) and where its data is delivered from. The data goes out as it is captured, over a
+// WebSocket, and whoever has chosen to hear this User opens the same kind of WebSocket and receives it from the start. Nothing is redefined until the time is over: if the
+// User is still speaking, the next Speech Object takes over; if it stops, the stream ends.
 async function microphone() {
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
   catch (e) { client.status += ' (no microphone)'; return; }
   const ctx = new AudioContext({ sampleRate: 16000 });
-  const src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(4096, 1, 1);
-  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, MIN = 0.4 * RATE, MAX = 8 * RATE, PRE = 0.2 * RATE;
-  let pre = [], speech = [], silent = 0, startedAt = 0, n = 0;
+  const src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(1024, 1, 1);
+  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, PRE = 0.2 * RATE, DURATION = 3000;
+  let pre = [], current = null, silent = 0, n = 0;
   const level = f => Math.sqrt(f.reduce((s, v) => s + v * v, 0) / f.length);
-  const send = async (floats, at) => {
-    const pcm = new Int16Array(floats.length); for (let i = 0; i < floats.length; i++) pcm[i] = Math.max(-1, Math.min(1, floats[i])) * 32767;
-    let bin = ''; const bytes = new Uint8Array(pcm.buffer); for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
-    const id = `Speech-${client.name}-${++n}`;
-    const so = { Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id,
-      BasicSpeechObjectTime: { Header: 'OSD-STM-V1.5', SimpleTimeID: id + '-T', SimpleTimeData: [{ FlagsByte: 3, StartTime: at, EndTime: at + Math.round(pcm.length * 1000 / RATE), AccuracyMode: 'single', AccuracyPlusMinus: 1 }] },
-      BasicSpeechObjectData: [{ Data: btoa(bin) }] };
-    if (client.seated) await act('locate/mm-add', client.name, { Nil: id, At: client.loc, With: [so] });   // placed at its seat, where it is heard from
-  };
+  const int16 = f => { const p = new Int16Array(f.length); for (let i = 0; i < f.length; i++) p[i] = Math.max(-1, Math.min(1, f[i])) * 32767; return p; };
+  const time = (id, a, b) => ({ Header: 'OSD-STM-V1.5', SimpleTimeID: id, SimpleTimeData: [{ FlagsByte: 3, StartTime: a, EndTime: b, AccuracyMode: 'single', AccuracyPlusMinus: 1 }] });
+  function begin(first) {   // declares the Speech Object; its data follows as it is captured
+    const id = `Speech-${client.name}-${++n}-${Date.now()}`, start = Date.now() - Math.round(first.length * 1000 / RATE), end = start + DURATION;
+    const so = { Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id, BasicSpeechObjectTime: time(id + '-T', start, end),
+      BasicSpeechObjectData: [{ DataURI: `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${id}/listen` }],
+      BasicSpeechDataQualifier: { Header: 'TFA-SPQ-V1.5', MInstanceID: 'MI1', SpeechQualifierID: id + '-Q', SpeechQualifierTime: time(id + '-QT', start, end), SubTypes: {},
+        Formats: { ContentFormats: { RawData: { Header: 'TFA-PCM-V1.5', PCM: { SamplingFrequency: RATE, SamplePrecision: 16 } } }, TransportFormats: { StreamFormat: 'WebSocket' } },
+        Attributes: { Source: 'Real', Device: { DeviceRole: 'Capture', DeviceType: 'Microphone', CaptureConfiguration: { ChannelCount: 1, SamplingMode: 'Mono' } } } } };
+    const o = { id, end, queue: [int16(first)], ws: null, ready: false };
+    act('locate/mm-add', client.name, { Nil: id, At: client.loc, With: [so] }).then(r => {
+      if (r.http !== 200) { o.dead = true; return; }
+      o.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${id}?token=${encodeURIComponent(client.token)}`);
+      o.ws.binaryType = 'arraybuffer';
+      o.ws.onopen = () => { o.ready = true; for (const p of o.queue.splice(0)) o.ws.send(p.buffer); if (o.closing) o.ws.close(); };
+    });
+    return o;
+  }
+  const feed = (o, f) => { const p = int16(f); if (o.ready) o.ws.send(p.buffer); else o.queue.push(p); };
+  const finish = o => { o.closing = true; if (o.ready) o.ws.close(); };
   node.onaudioprocess = e => {
-    const f = Array.from(e.inputBuffer.getChannelData(0)), loud = level(f) > THRESHOLD;
-    if (!speech.length && !loud) { pre.push(...f); if (pre.length > PRE) pre = pre.slice(pre.length - PRE); return; }
-    if (!speech.length) { speech = pre.concat(f); startedAt = Date.now() - Math.round(speech.length * 1000 / RATE); silent = 0; return; }
-    speech.push(...f); silent = loud ? 0 : silent + f.length;
-    if (silent >= HANG || speech.length >= MAX) { const done = speech, at = startedAt; speech = []; pre = []; if (done.length - silent >= MIN) send(done, at); }
+    if (!client.seated) return;
+    const f = Array.from(e.inputBuffer.getChannelData(0)), loud = level(f) > THRESHOLD, now = Date.now();
+    if (!current) {
+      if (!loud) { pre.push(...f); if (pre.length > PRE) pre = pre.slice(pre.length - PRE); return; }
+      current = begin(pre.concat(f)); pre = []; silent = 0; return;
+    }
+    if (current.dead) { current = null; return; }
+    feed(current, f); silent = loud ? 0 : silent + f.length;
+    if (silent >= HANG) { finish(current); current = null; }
+    else if (now >= current.end) { finish(current); current = begin(f); silent = 0; }   // the time is over and the User is still speaking: the next Speech Object takes over
   };
   src.connect(node); node.connect(ctx.destination);
   client.status += ' - listening';
@@ -280,24 +298,41 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
   if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); }
 }
 
-// HEARING: a Speech Object in the room is what somebody said. The client reads its data once and plays it from the seat it was said at, as the Persona's ears
-// would hear it (a panner at the seat; the listener is where this User sits and looks). What the User says itself it does not play back.
+// HEARING: a Speech Object in the room is what somebody said, or is saying. Hearing is the receiver's decision - from Anna, not from Carla: the panel lists who is in the room
+// and this User ticks whom it hears (&hear=Anna,Bruno starts with only those) - and its client opens the Speech Object's address, a WebSocket, the stream format its Speech
+// Qualifier declares, so that it understands what it receives: 16 kHz mono PCM from the start of the Speech Object and as it goes on. It is played as it arrives, from the
+// seat it is said at, as the Persona's ears would hear it (a panner at the seat; the listener is where this User sits and looks), with a little buffer. What the User says itself it does not play back.
 const heard = new Set(); let hearCtx = null;
+const wants = new Map(), hearParam = new URLSearchParams(location.search).get('hear');   // who this User has chosen to hear (or not)
+const wantsFrom = who => wants.has(who) ? wants.get(who) : (hearParam === null || hearParam.split(',').includes(who));
 function ears() { hearCtx ??= new AudioContext(); if (hearCtx.state === 'suspended') hearCtx.resume().catch(() => {}); return hearCtx; }
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { if (client) ears(); });   // a browser lets a page play sound only after a press or a click
-async function hear(t) {
-  if (heard.has(t.ID) || t.Owner === client.name) return;
+function renderEars() {
+  const owners = [...new Set(client.things.filter(t => t.Kind === 'Persona' && t.Owner && t.Owner !== client.name).map(t => t.Owner))].sort();
+  const key = owners.map(o => o + wantsFrom(o)).join();
+  if (key === renderEars.key) return; renderEars.key = key;
+  let box = document.getElementById('ears');
+  if (!box) { box = document.createElement('div'); box.id = 'ears'; box.style.marginTop = '6px'; document.getElementById('panel').appendChild(box); }
+  box.replaceChildren(...owners.map(o => { const l = document.createElement('label'), c = document.createElement('input'); l.style.display = 'block'; c.type = 'checkbox'; c.checked = wantsFrom(o); c.onchange = () => wants.set(o, c.checked); l.append(c, ' hear ' + o); return l; }));
+}
+function hear(t) {
+  if (heard.has(t.ID) || t.Owner === client.name || !wantsFrom(t.Owner)) return;
+  if (!t.Streaming && Date.now() - t.End > 3000) return;   // what was said some time ago is not replayed to a newcomer
   heard.add(t.ID);
-  const rs = await fetch(`/api/v2.2/items/${t.ID}`, { headers: { Authorization: 'Bearer ' + client.token } });
-  if (!rs.ok) return;
-  const b64 = (await rs.json()).ItemValueOrRef?.[0]?.BasicSpeechObjectData?.[0]?.Data; if (!b64) return;
-  const bin = atob(b64), n = bin.length >> 1, ctx = ears(), buf = ctx.createBuffer(1, n, 16000), ch = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) ch[i] = ((bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8)) << 16 >> 16) / 32768;
-  const src = ctx.createBufferSource(), pan = ctx.createPanner(); src.buffer = buf;
+  const ctx = ears(), pan = ctx.createPanner(), ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${t.ID}/listen?token=${encodeURIComponent(client.token)}`);
   pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 1;
   pan.positionX.value = t.X; pan.positionY.value = 1.5; pan.positionZ.value = -t.Y;   // x east, y up, z towards the south: the axes of the viewer
-  src.connect(pan).connect(ctx.destination); src.start();
-  client.heard.push(`${t.Owner} (${(n / 16000).toFixed(1)} s)`);
+  pan.connect(ctx.destination); ws.binaryType = 'arraybuffer';
+  let carry = new Uint8Array(0), next = 0, first = true;
+  ws.onmessage = e => {
+    const value = new Uint8Array(e.data), bytes = new Uint8Array(carry.length + value.length); bytes.set(carry); bytes.set(value, carry.length);
+    const n = bytes.length >> 1; carry = bytes.slice(n * 2); if (!n) return;
+    const buf = ctx.createBuffer(1, n, 16000), ch = buf.getChannelData(0), dv = new DataView(bytes.buffer);
+    for (let i = 0; i < n; i++) ch[i] = dv.getInt16(2 * i, true) / 32768;
+    const s = ctx.createBufferSource(); s.buffer = buf; s.connect(pan);
+    const at = Math.max(next, ctx.currentTime + 0.12); s.start(at); next = at + n / 16000;
+    if (first) { first = false; client.heard.push(`${t.Owner} (first sound ${Date.now() - t.Start} ms after it began)`); }
+  };
 }
 async function sendPose() {   // MM-Move: the Persona stands where its User put it, looking where it looks
   const key = [client.x, client.y, client.yaw].map(v => v.toFixed(2)).join(' ');
@@ -329,6 +364,7 @@ async function refresh() {
   if (client) {
     state = { MInstanceID: 'MI1', Performed: 0, Recent: [], Things: client.things, Hidden: [] };
     document.getElementById('title').textContent = client.status;
+    renderEars();
     document.title = client.heard.length ? 'heard: ' + client.heard.join(', ') : 'M-Instance viewer';   // what the tab says: what this User has heard
     document.getElementById('recent').textContent = 'W/S walk, A/D turn. You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.join(', ') : '');
   } else {

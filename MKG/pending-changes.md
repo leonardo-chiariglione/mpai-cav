@@ -152,3 +152,8 @@ rebuilt and published once, at the end of the day (the author, 2026/10/11).
 ## 2026-10-16 - MMM: hearing (Phase 7)
 - A User's speech is placed at its seat as a Speech Object (MM-Add; the AVS Service grants the right with the seat); MM-Capture returns it (kind Speech); the participants read its data and play it from the seat; the Secretary hears the room by capturing it (no second copy sent). MM-Add can make a Speech Object where it is added. MM-Capture is not in the Activity Data. Whisper noise-word filter of ABV ported. Doc: docs/MMM-Meeting.md.
 - Rebuild the MKG for: nothing new in the standards.
+
+## 2026-10-16 (later) - MMM: streamed Speech Objects (Phase 8)
+- A Speech Object is declared when speech starts (time declared, not redefined until over) with its Speech Qualifier TFA-SPQ-V1.5 (PCM; StreamFormat WebSocket) and a DataURI (a WebSocket address); the data goes out as it is captured; whoever has chosen to hear that User (the receiver decides: from A, not from C) opens the address and receives it from the start, played from the seat. The Secretary takes it when it is over. First sound about 0.1-0.3 s after the Speech Object began (localhost, warm).
+- Schema: "WebSocket" added to TFA/V1.5/formats/SpeechStreamFormats.json (the Speech Qualifier's stream formats) in D:\DI\schemas, to be published on schemas.mpai.community by the author.
+- Rebuild the MKG for: nothing new in the standards.

@@ -18,4 +18,6 @@
     { "const": "SRT",
       "description": "Secure Reliable Transport (SRT), a modern low-latency, packet-lossÃ¢â‚¬â€œresilient streaming protocol suitable for live speech contribution." },
     { "const": "HDS",
-      "description": "HTTP Dynamic Streaming (HDS), AdobeÃ¢â‚¬â„¢s segmented streaming protocol, historically used for audio and video distribution." } ] }
+      "description": "HTTP Dynamic Streaming (HDS), AdobeÃ¢â‚¬â„¢s segmented streaming protocol, historically used for audio and video distribution." },
+    { "const": "WebSocket",
+      "description": "WebSocket (RFC 6455), a persistent, full-duplex connection over HTTP, used to carry a continuous stream of speech or audio between a client and a server." } ] }

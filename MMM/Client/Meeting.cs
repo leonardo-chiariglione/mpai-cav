@@ -183,7 +183,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = "POV-Secretary", ["CartPosition"] = new JsonArray(0.0, 0.0, 1.6), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
         }));
         if (seen.Http != 200) return;
-        foreach (var thing in (seen.Response.Complements?.With?[0]?["ItemValueOrRef"]?[0]?["Things"]?.AsArray() ?? []).OfType<JsonObject>().Where(t => (string?)t["Kind"] == "Speech"))
+        foreach (var thing in (seen.Response.Complements?.With?[0]?["ItemValueOrRef"]?[0]?["Things"]?.AsArray() ?? []).OfType<JsonObject>().Where(t => (string?)t["Kind"] == "Speech" && (bool?)t["Streaming"] != true))   // a stream still going on is taken when it is over
         {
             var id = (string)thing["ID"]!;
             if (!handled.Add($"{Meeting.Secretary}|heard|{id}")) continue;
