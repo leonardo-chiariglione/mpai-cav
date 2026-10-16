@@ -73,6 +73,28 @@ public class AudioSegmentationTests
             Assert.True(Math.Abs(turns[i].Start - starts[i]) < 0.6, $"turn {i + 1} begins at {turns[i].Start:F2} s, the voice at {starts[i]:F2} s: {shown}");
     }
 
+    // For comparing another implementation (the pyannote of the V1.4 reference software) on the same
+    // audio: writes the dialogue as a 16 kHz mono WAV where MPAI_AUS_DIALOGUE_WAV names a file.
+    [SkippableFact]
+    public void WritesTheDialogueWhereAskedForComparison()
+    {
+        var path = Environment.GetEnvironmentVariable("MPAI_AUS_DIALOGUE_WAV");
+        Skip.If(string.IsNullOrEmpty(path), "MPAI_AUS_DIALOGUE_WAV is not set.");
+        RequireModels();
+        var (samples, starts) = Dialogue((SayA1, A), (SayB, B), (SayA2, A));
+        var pcm = new byte[samples.Length * 2];
+        for (int i = 0; i < samples.Length; i++)
+        {
+            short v = (short)Math.Clamp((int)Math.Round(samples[i] * 32767f), short.MinValue, short.MaxValue);
+            pcm[2 * i] = (byte)(v & 0xFF); pcm[2 * i + 1] = (byte)((v >> 8) & 0xFF);
+        }
+        using var fs = File.Create(path!);
+        using var bw = new BinaryWriter(fs);
+        bw.Write("RIFF"u8.ToArray()); bw.Write(36 + pcm.Length); bw.Write("WAVE"u8.ToArray()); bw.Write("fmt "u8.ToArray());
+        bw.Write(16); bw.Write((short)1); bw.Write((short)1); bw.Write(16000); bw.Write(32000); bw.Write((short)2); bw.Write((short)16);
+        bw.Write("data"u8.ToArray()); bw.Write(pcm.Length); bw.Write(pcm);
+        File.WriteAllText(path + ".txt", "voices begin at " + string.Join(", ", starts.Select(s => s.ToString("F2"))) + " s; speakers A, B, A");
+    }
     [SkippableFact]
     public void OneSpeakerIsOneSpeaker()
     {
