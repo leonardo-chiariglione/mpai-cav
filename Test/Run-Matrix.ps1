@@ -43,8 +43,8 @@ $informativeBuilds = @(
     'MAS\Store\Service\StoreService.csproj',
     'MAS\Store\App\StoreApp.csproj'
 )
-# The programs in legacy (and Test\legacy) are not built: MAS-App replaced them
-# (M3209). legacy\RcaConsole does not build (DeviceRegistry.Acquire changed under it).
+# The standalone programs (Apps\MMC\*\Standalone, and Test\legacy) are not built: MAS-App replaced them
+# (M3209). UserAgent\RcaConsole does not build (DeviceRegistry.Acquire changed under it).
 
 $blocking    = [System.Collections.Generic.List[string]]::new()
 $informative = [System.Collections.Generic.List[string]]::new()

@@ -190,7 +190,7 @@ public class SystemTests
         public CodeIndex(string root)
         {
             var sep = Path.DirectorySeparatorChar;
-            foreach (var dir in new[] { "AIMs", "MPAIApps", "CAV" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
+            foreach (var dir in new[] { "AIMs", Path.Combine("Apps", "CAV", "HCIApps"), "CAV" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
                 foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories)
                                            .Where(f => !f.Contains($"{sep}obj{sep}") && !f.Contains($"{sep}bin{sep}")))
                     text[f] = File.ReadAllText(f);
