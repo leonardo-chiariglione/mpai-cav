@@ -190,7 +190,7 @@ public class ServiceTests
         {
             ["typed MAD turn"]  = Median(MAD, new[] { Text(2, "Name one fruit. Answer in five words."), Avatar }),
             ["spoken MAD turn"] = Median(MAD, new[] { Speech("question.wav"), Avatar }),
-            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(2, "What color is the picture?"), Avatar })
+            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId })
         };
 
         var file = Path.Combine(Repository.Root, "Test", "Expected", "timing.json");
@@ -227,7 +227,8 @@ public class ServiceTests
             // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
             // the language model unreachable, say - returns quickly with nothing to
             // say, and would pass for a fast one.
-            Assert.True(AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no speech");
+            // AMQ gives its answer as words in the Portable Avatar; the other Modules, speech.
+            Assert.True(module == AMQ ? AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null : AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no answer");
         }
         client.StopFlow(module);
         times.Sort();
@@ -235,12 +236,12 @@ public class ServiceTests
     }
 
     private static ControllerApi.Result Ask(RemoteControllerApi client, string picture) =>
-        client.Advance(AMQ, new[] { Picture(picture), Text(2, "What color is the picture?"), Avatar });
+        client.Advance(AMQ, new[] { Picture(picture), Text(1, "What color is the picture?"), MachineId });
 
     private static string Answer(ControllerApi.Result r)
     {
-        var json = r.ByType("OSD-BTO-V1.5");
-        try { return json is null ? "" : MpaiJson.FromJson<BasicTextObject>(json).GetText(); } catch { return json ?? ""; }
+        // AMQ answers as a Portable Avatar that carries the answer as a Text Object; the others say it aloud, and give their words as text too.
+        return AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "";
     }
 
     // The Portable Avatar carries the speech.
@@ -248,6 +249,9 @@ public class ServiceTests
         r.Ok && AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is { MachineSpeechWav.Length: > 200 };
 
     // The Avatar the reply animates: every Module that renders with RSR takes one.
+    // The Machine ID the Module gives its Portable Avatar to.
+    private static ControllerApi.Datum MachineId => new("string", 1, "\"cav-machine\"");
+
     private static ControllerApi.Datum Avatar => new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
 
     private static string Data(string file) => Path.Combine(Repository.Root, "Test", "Data", file);

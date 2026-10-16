@@ -77,6 +77,42 @@ public class AppModulesTests
         finally { api.StopFlow(AMQ); }
     }
 
+    // THE APP, NOT ONLY THE MODULE: the workflow of the App (Apps/AMQ/MMC-AMQ.orch) run by the User Agent's
+    // interpreter, with simulated devices instead of a person - a picture chosen (red.jpg), a question typed
+    // (the microphone never hears anything), a stage and an avatar that record what they are given. The
+    // answer reaches the avatar as the machine's Portable Avatar carrying the answer as a Text Object.
+    [SkippableFact]
+    public async Task AmqAppAnswersThroughItsWorkflow()
+    {
+        RequireModels();
+        using var api = Controller();
+        using var done = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        string? shown = null, staged = null;
+
+        var devices = new Mpai.Rca.DeviceRegistry()
+            .RegisterAcquire("OSD-BVO-V1.5", (_, _) => Task.FromResult<string?>(Picture("red.jpg").Json))
+            .RegisterAcquire("OSD-BTO-V1.5", (_, _) => Task.FromResult<string?>(Text(1, "What color is the picture?").Json))
+            .RegisterAcquire("OSD-BSO-V1.5", async (_, _, abandon) => { try { await Task.Delay(Timeout.Infinite, abandon); } catch (OperationCanceledException) { } return null; })
+            .RegisterPresent("stage", data => { if (data.TryGetValue("OSD-BVO-V1.5", out var v)) staged = v; return Task.CompletedTask; })
+            .RegisterPresent("avatar", data =>
+            {
+                if (data.TryGetValue("PAF-PAV-V1.6", out var pav) && AvatarUtterance.TextOfPortableAvatar(pav) is { } words)
+                {
+                    shown = words;
+                    done.Cancel();                           // one answer is enough: the person leaves (Stop)
+                }
+                return Task.CompletedTask;
+            });
+
+        var said = new List<string>();
+        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "AMQ", "MMC-AMQ.orch")));
+        var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, line => { lock (said) said.Add(line); });
+        try { await interpreter.RunAsync(workflow, done.Token); } catch (OperationCanceledException) { }
+
+        Assert.True(staged is not null, "the picture was never put on the stage: " + string.Join(" / ", said));
+        Assert.True(shown is not null && shown.Contains("red", StringComparison.OrdinalIgnoreCase),
+            $"the avatar was given \"{shown}\" to a question about a red picture: " + string.Join(" / ", said));
+    }
     [SkippableFact]
     public void MadAnswersATypedTurn()
     {

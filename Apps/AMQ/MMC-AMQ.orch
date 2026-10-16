@@ -6,6 +6,15 @@
 #  identified by Data Type and Port Number, and asks for data identified the
 #  same way. It names no AIM.
 #
+#  The Module is Answer to Multimodal Question (MMC-AMQ): it takes a picture,
+#  a question about it - spoken, or typed - and the ID of the machine that
+#  answers, and gives the answer as that machine's Portable Avatar, which carries
+#  the answer as a Text Object. The client shows the words and has them spoken.
+#
+#  There is no welcome here: this App runs under the MAS launcher, which welcomes
+#  the person and offers the Apps (MPAI-MAS.orch). The person chooses a picture,
+#  asks, hears the answer, and goes on with another picture until Stop.
+#
 #  A step completes before the next begins.
 # =============================================================================
 
@@ -15,78 +24,34 @@ on Start:
 
     ask Controller to start
 
-    # The Avatar this client holds and draws: every utterance animates it.
-    acquire AvatarModel (OSD-B3O-V1.5)
-
-    # --- the welcome, in two parts with a pause between them ---
-
-    offer Welcome (OSD-BTO-V1.5:1) = "Welcome to the MPAI Picture Question
-        Answering Service."
-    offer AvatarModel (OSD-B3O-V1.5:1)
-    ask   WelcomePortableAvatar (PAF-PAV-V1.6)
-    present WelcomePortableAvatar
-
-    wait 1s
-
-    offer Invitation (OSD-BTO-V1.5:1) = "Do you want to ask a question about a
-        picture?"
-    offer AvatarModel (OSD-B3O-V1.5:1)
-    ask   InvitationPortableAvatar (PAF-PAV-V1.6)
-    present InvitationPortableAvatar
-
-    # --- what the person answers decides what follows ---
-
     loop until Stop:
 
-        # spoken, it goes to the Module to be recognised; typed, it is already text
-        acquire Reply (OSD-BSO-V1.5) via VAD
-             or ReplyText (OSD-BTO-V1.5)
-        branch on Reply {
-            offer Reply (OSD-BSO-V1.5:2)
-            ask   ReplyText (OSD-BTO-V1.5:2)
-        }
+        # --- the picture the person chooses, shown on the stage ---
 
-        branch on ReplyText contains "yes" {
+        acquire Picture (OSD-BVO-V1.5) = { "Formats": { "Content": { "2D": { "Static": "JPEG" } } } }
+        present Picture
 
-            offer Choose (OSD-BTO-V1.5:1) = "Please select a picture."
-            offer AvatarModel (OSD-B3O-V1.5:1)
-            ask   ChoosePortableAvatar (PAF-PAV-V1.6)
-            present ChoosePortableAvatar
+        # --- the question, spoken or typed, whichever comes first ---
 
-            acquire Picture (OSD-BVO-V1.5) = { "Formats": { "Content": { "2D": { "Static": "JPEG" } } } }
-            present Picture
+        acquire UserQuestion (OSD-BSO-V1.5) via VAD
+             or TypedQuestion (OSD-BTO-V1.5)
 
-            acquire UserQuestion (OSD-BSO-V1.5) via VAD
-                 or TypedQuestion (OSD-BTO-V1.5)
+        # --- the Module is given the picture, the question and the machine's ID ---
 
-            offer Picture (OSD-BVO-V1.5)
-            branch on TypedQuestion {
-                offer TypedQuestion (OSD-BTO-V1.5:2)
-            } else {
-                offer UserQuestion (OSD-BSO-V1.5:1)
-            }
-            offer AvatarModel (OSD-B3O-V1.5:1)
-            ask   Answer (OSD-BTO-V1.5:1), MachinePortableAvatar (PAF-PAV-V1.6)
-            present MachinePortableAvatar
-            display Answer
-
-            wait 2s
-
-            offer Again (OSD-BTO-V1.5:1) = "Do you want to ask a question about
-                another picture?"
-            offer AvatarModel (OSD-B3O-V1.5:1)
-            ask   AgainPortableAvatar (PAF-PAV-V1.6)
-            present AgainPortableAvatar
-
+        offer Picture (OSD-BVO-V1.5)
+        branch on TypedQuestion {
+            offer TypedQuestion (OSD-BTO-V1.5:1)
         } else {
-
-            offer Farewell (OSD-BTO-V1.5:1) = "Maybe another time."
-            offer AvatarModel (OSD-B3O-V1.5:1)
-            ask   FarewellPortableAvatar (PAF-PAV-V1.6)
-            present FarewellPortableAvatar
-            end
-
+            offer UserQuestion (OSD-BSO-V1.5:1)
         }
+        offer MachineID (string:1) = "Thalia"
+
+        # --- and gives the answer, as the machine's Portable Avatar ---
+
+        ask   MachinePortableAvatar (PAF-PAV-V1.6)
+        present MachinePortableAvatar
+
+        wait 2s
 
 on Stop:
     ask Controller to stop

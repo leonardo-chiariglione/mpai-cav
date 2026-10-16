@@ -24,6 +24,22 @@ public sealed record AvatarUtterance(
     public static string AvatarDatum(string modelId) =>
         new JsonObject { ["Header"] = "OSD-B3O-V1.5", ["Basic3DModelObjectID"] = modelId }.ToJsonString();
 
+    // THE WORDS OF A PORTABLE AVATAR THAT CARRIES NO SPEECH: its Text Object, as Answer to Multimodal
+    // Question gives its answer - the machine's Portable Avatar, saying it in text. A client that cannot
+    // play speech from it shows the words and has them spoken (it asks the Controller: it renders no
+    // AIM's work itself). Null when the Portable Avatar holds no Text Object, or one with no words.
+    public static string? TextOfPortableAvatar(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || JsonNode.Parse(json) is not JsonObject pav) return null;
+        if (pav["TextObject"] is not JsonObject text) return null;
+        try
+        {
+            var words = MpaiJson.FromJson<BasicTextObject>(text.ToJsonString())?.GetText();
+            return string.IsNullOrWhiteSpace(words) ? null : words;
+        }
+        catch { return null; }
+    }
+
     // A PORTABLE AVATAR (PAF-PAV-V1.6), as Response and Scene Rendering - or Portable Avatar Multiplexing, the Virtual Meeting Secretary's - outputs it,
     // unpacked for presentation: the first Speech Object it carries, and its Face and Body Descriptors Objects. Null when it carries no speech.
     public static AvatarUtterance? FromPortableAvatar(string? json, string? text = null)

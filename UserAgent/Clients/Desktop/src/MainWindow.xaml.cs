@@ -832,8 +832,20 @@ public partial class MainWindow : Window
         // until she has finished speaking.
         devices.RegisterPresent("avatar", async data =>
         {
-            if (!data.TryGetValue("PAF-PAV-V1.6", out var sav) ||
-                AvatarUtterance.FromPortableAvatar(sav) is not { } utterance) return;
+            if (!data.TryGetValue("PAF-PAV-V1.6", out var sav)) return;
+
+            if (AvatarUtterance.FromPortableAvatar(sav) is not { } utterance)
+            {
+                // A Portable Avatar that says its words as a Text Object and carries no speech (the answer
+                // of Answer to Multimodal Question): the words are shown, and spoken by the Module that
+                // gives this client its voice.
+                if (AvatarUtterance.TextOfPortableAvatar(sav) is { } words)
+                {
+                    Instruct(words);
+                    await SpeakAsync(words);
+                }
+                return;
+            }
 
             await _avatar!.PresentAsync(utterance);
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.8));

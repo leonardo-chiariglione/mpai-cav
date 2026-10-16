@@ -290,8 +290,15 @@ public partial class RcaShell : ComponentBase
         // time it takes to say it.
         devices.RegisterPresent("avatar", async data =>
         {
-            if (!data.TryGetValue("PAF-PAV-V1.6", out var sav) ||
-                AvatarUtterance.FromPortableAvatar(sav) is not { } utterance) return;
+            if (!data.TryGetValue("PAF-PAV-V1.6", out var sav)) return;
+            if (AvatarUtterance.FromPortableAvatar(sav) is not { } utterance)
+            {
+                // A Portable Avatar that says its words as a Text Object and carries no speech (the answer of
+                // Answer to Multimodal Question): the words are shown. (This client plays speech only from
+                // a Portable Avatar that carries it.)
+                if (AvatarUtterance.TextOfPortableAvatar(sav) is { } words) Instruct(words);
+                return;
+            }
             var wav = utterance.MachineSpeechWav;
             await Js.InvokeVoidAsync("rca.present",
                 utterance.FaceDescriptors is null ? null : MpaiJson.ToJson(utterance.FaceDescriptors),
