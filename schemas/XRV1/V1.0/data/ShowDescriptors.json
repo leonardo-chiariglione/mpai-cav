@@ -1,0 +1,33 @@
+{ "$id":                          "https://schemas.mpai.community/XRV1/V1.0/data/ShowDescriptors.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "title":                        "Show Descriptors V1.0",
+  "description":                  "Descriptor collection for RE/VE Environment show components.",
+  "type":                         "object", 
+  "required":                     [ "Header", "ShowDescriptorsID", "ShowDescriptors" ],
+  "additionalProperties":         false, "unevaluatedProperties": false, "properties": {
+
+    "Header":                     { "type": "string", "const": "XRV-SHD-V1.0" },
+
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+
+    "ShowDescriptorsID":          { "type": "string" },
+
+    "ShowDescriptorsTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ShowDescriptors":            { "type": "object", "additionalProperties": false, "properties": {
+      "REPerformanceDescriptors": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REPerformanceDescriptors.json" },
+      "REParticipantDescriptors": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REParticipantDescriptors.json" },
+      "REOperatorDescriptors":    { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REOperatorDescriptors.json" },
+      "VEPerformanceDescriptors": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEPerformanceDescriptors.json" },
+      "VEParticipantDescriptors": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEParticipantDescriptors.json" },
+      "VEOperatorDescriptors":    { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEOperatorDescriptors.json" },
+      "REPerformanceStatus":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REPerformanceStatus.json" },
+      "REParticipantStatus":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REParticipantStatus.json" },
+      "REOperatorStatus":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/REOperatorStatus.json" },
+      "VEPerformanceStatus":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEPerformanceStatus.json" },
+      "VEParticipantStatus":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEParticipantStatus.json" },
+      "VEOperatorStatus":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VEOperatorStatus.json" } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

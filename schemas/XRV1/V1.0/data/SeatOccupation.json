@@ -1,0 +1,48 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/SeatOccupation.json",
+  "title":                      "Seat Occupation V1.0",
+  "description":                "Seat occupation map with sector/row/seat activities and optional participant bindings.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "unevaluatedProperties":      false,
+  "required":                   ["Header", "SeatOccupationID", "SeatOccupation"],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-SOC-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "SeatOccupationID":         { "type": "string" },
+    "SeatOccupationTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SeatOccupation":           { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["Sector"], "properties": {
+
+      "Sector":                 { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["SectorID", "Rows"], "properties": {
+
+        "SectorID":             { "type": "string" },
+
+        "SectorActivity":       { "type": "object", "additionalProperties": false, "properties": {
+          "AudioBehaviour":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+          "VisualBehaviour":    { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" } } },
+
+        "Rows":                 { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["RowID", "Seats"], "properties": {
+
+          "RowID":              { "type": "string" },
+
+          "RowActivity":        { "type": "object", "additionalProperties": false, "properties": {
+            "AudioBehaviour":   { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+            "VisualBehaviour":  { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" } } },
+
+          "Seats":              { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["SeatID"], "properties": {
+
+            "SeatID":           { "type": "string" },
+
+            "SeatActivity":     { "type": "object", "additionalProperties": false, "properties": {
+              "AudioBehaviour": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+              "VisualBehaviour":{ "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" } } },
+
+            "ParticipantID":    { "type": "string" },
+            "PointOfView":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } } } } } } } } } } },
+
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,64 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/XRV1/V1.0/data/VEParticipantStatus.json",
+  "title":                        "VE Participant Status V1.0",
+  "description":                  "Status of individual and collective participants in a Virtual Environment (VE).",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "VEParticipantStatusID", "VEParticipantStatusTime", "VEParticipantStatusData" ],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "XRV-VTS-V1.0" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "VEParticipantStatusID":      { "type": "string" },
+    "VEParticipantStatusTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SeatOccupation":               { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/SeatOccupation.json" },
+
+    "VEParticipantStatusData":    { "type": "object", "additionalProperties": false, "required": [ "IndividualStatuses", "CollectiveStatuses" ], "properties": {
+
+      "IndividualStatuses":       { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "VEParticipantID" ], "properties": {
+
+        "VEParticipantID":        { "type": "string" },
+        "SeatID":                 { "type": "string" },
+        "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+        "AudioBehaviour":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+        "VisualBehaviour":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
+        "PersonalStatus":         { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/PersonalStatus.json" },
+
+        "Brainwavefreq":          { "type": "object", "additionalProperties": false, "description": "Brainwave frequencies: the frequency, in Hz, of each EEG band.", "properties": {
+          "alpha":                { "type": "number", "minimum": 8, "maximum": 13, "description": "Frequency of the alpha band, in Hz (8 to 13 Hz)." },
+          "theta":                { "type": "number", "minimum": 4, "maximum": 8, "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
+          "delta":                { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
+          "beta":                 { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
+          "gamma":                { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
+
+        "BiometricData":          { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
+        "ControllerData":         { "type": "string" } } } },
+
+      "CollectiveStatuses":       { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "GroupID" ], "properties": {
+
+        "GroupID":                { "type": "string" },
+        "CentroidPosition":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json" },
+        "PrincipalAxes":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Orientation.json" },
+
+        "PrincipalAxisVariances": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "description": "Variances along principal axes [V1, V2, V3]." },
+        "ParticipantPercentage":  { "type": "number", "minimum": 0, "maximum": 100 },
+
+      "BiometricData":            { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
+        "Brainwavefreq":          { "type": "object", "additionalProperties": false, "description": "Brainwave frequencies: the frequency, in Hz, of each EEG band.", "properties": {
+          "alpha":                { "type": "number", "minimum": 8, "maximum": 13, "description": "Frequency of the alpha band, in Hz (8 to 13 Hz)." },
+          "theta":                { "type": "number", "minimum": 4, "maximum": 8, "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
+          "delta":                { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
+          "beta":                 { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
+          "gamma":                { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
+
+        "AudioBehaviour":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+        "VisualBehaviour":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
+
+        "Participants":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ParticipantID" ], "properties": {
+          "ParticipantID":        { "type": "string" },
+          "DistanceFromCentroid": { "type": "number", "minimum": 0 } } } } } } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

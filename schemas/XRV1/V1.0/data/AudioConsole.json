@@ -1,0 +1,51 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/XRV1/V1.0/data/AudioConsole.json",
+  "title":                    "Audio Console V1.0",
+  "type":                     "object", 
+  "additionalProperties":     false, 
+  "required":                 [ "Header", "AudioConsoleID", "AudioConsoleData" ],
+  "properties":               {
+
+    "Header":                { "type": "string", "const": "XRV-AUC-V1.0" },
+    "MInstanceID":           { "type": "string" },
+    "UEnvironmentID":        { "type": "string" },
+    "AudioConsoleID":        { "type": "string" },
+    "AudioConsoleTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ManufacturerID":        { "type": "string" },
+
+    "MasterVolume":          { "type": "number"},
+
+    "AudioConsoleData":      { "type": "array", "items": { "type": "object", "properties": {
+      
+      "MetaverseObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
+
+      "TrackSelection":      { "type": "string" },
+      "Volume":              { "type": "number" },
+      "AudioRouting":        { "type": "string" },
+      "AudioEffects":        { "type": "object", "properties": {
+
+        "PointOfView":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+        "Filters":           { "type": "object", "properties": {
+          "FilterType":      { "type": "array", "items": { "type": "object", "properties": {
+            "LowPass":       { "type": "number" },
+            "BandPass":      { "type": "number" },
+            "HighPass":      { "type": "number" } } } },
+          "QFactor":         { "type": "number" },
+          "Frequency":       { "type": "number" },
+          "Reverb":          { "type": "number" } } },
+
+        "Delay":             { "type": "number" },
+        "PitchShift":        { "type": "number" },
+
+        "Tremolo":           { "type": "array", "items": { "type": "object", "properties": {
+          "VolumeRange":     { "type": "number" },
+          "TremoloFrequency":{ "type": "number" } } } },
+
+        "Vibrato":           { "type": "array", "items": { "type": "object", "properties": {
+          "FrequencyRange":  { "type": "number" },
+          "VibratoFrequency":{ "type": "number" } } } } } } } } },
+
+    "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":         { "type": "string", "maxLength": 2048 } } }

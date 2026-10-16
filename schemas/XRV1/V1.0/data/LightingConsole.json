@@ -1,0 +1,55 @@
+{ "$schema":                     "https://json-schema.org/draft/2020-12/schema",
+  "$id":                         "https://schemas.mpai.community/XRV1/V1.0/data/LightingConsole.json",
+  "title":                       "Lighting Console V1.0",
+  "type":                        "object",
+  "additionalProperties":        false,
+  "required":                    [ "Header", "LightingConsoleID", "LightingCommands" ],
+  "properties":                  {
+
+    "Header":                    { "type": "string", "const": "XRV-LTC-V1.0" },
+    "MInstanceID":               { "type": "string" },
+    "UEnvironmentID":            { "type": "string" },
+    "LightingConsoleID":         { "type": "string" },
+    "LightingConsoleTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "LightingConsoleSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "LightingCueNumber":         { "type": "number" },
+
+    "MasterDimmer":              { "type": "number" },
+
+    "LightingCommands":          { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
+
+      "MetaverseObject":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
+
+      "ManufacturerID":          { "type": "string" },
+      "FixtureID":               { "type": "string" },
+      "FixturePoV":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+      "LightSource":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json" },
+      "Dimming":                 { "type": "string" },
+
+      "Colour":                  { "type": "object", "additionalProperties": false, "properties": {
+        "ComponentID":           { "type": "number" },
+        "ControlObject":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+      "Gobo":                    { "type": "object", "additionalProperties": false, "properties": {
+        "GoboID":                { "type": "string" },
+        "Rotation":              { "type": "boolean" },
+        "Direction":             { "type": "number" },
+        "Rate":                  { "type": "number" },
+        "ControlObject":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+      "Prism":                   { "type": "object", "additionalProperties": false, "properties": {
+        "PrismID":               { "type": "string" },
+        "Rotation":              { "type": "boolean" },
+        "Direction":             { "type": "number" },
+        "Rate":                  { "type": "number" },
+        "ControlObject":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+      "Pan":                     { "type": "number" },
+      "Tilt":                    { "type": "number" },
+      "BeamFocus":               { "type": "number" },
+      "AudioResponse":           { "type": "boolean" } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

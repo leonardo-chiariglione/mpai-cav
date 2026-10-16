@@ -1,0 +1,39 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/XRV1/V1.0/data/VEParticipantDescriptors.json",
+  "title":                          "VE Participant Descriptors V1.0",
+  "description":                    "Descriptors of participants in a Virtual Environment (VE): scene, per-participant identity, pose, avatar, speech, and biometrics.",
+  "type":                           "object",
+  "additionalProperties":           false,
+  "required":                       [ "Header", "VEParticipantDescriptorsID", "VEParticipantDescriptorsData" ],
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "XRV-VTD-V1.0" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironmentID":               { "type": "string" },
+    "VEParticipantDescriptorsID":   { "type": "string" },
+    "VEParticipantDescriptorsTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "AVSceneDescriptors":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json" },
+
+    "SeatOccupation":               { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/SeatOccupation.json" },
+
+    "VEParticipantDescriptorsData": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": [ "VEParticipantID" ], "properties": {
+
+      "VEParticipantID":            { "type": "string" },
+      "SeatID":                     { "type": "string" },
+      "SpatialAttitude":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+
+      "BiometricData":              { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
+      "Brainwavefreq":              { "type": "object", "additionalProperties": false, "description": "Brainwave frequencies: the frequency, in Hz, of each EEG band.", "properties": {
+        "alpha":                    { "type": "number", "minimum": 8, "maximum": 13, "description": "Frequency of the alpha band, in Hz (8 to 13 Hz)." },
+        "theta":                    { "type": "number", "minimum": 4, "maximum": 8, "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
+        "delta":                    { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
+        "beta":                     { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
+        "gamma":                    { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
+      "ControllerData":             { "type": "string" },
+
+        "AvatarOrAvatarID":         { "type": "array", "items": { "oneOf": [
+                                    { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json" },
+                                    { "type": "string" } ] }, "description": "Array of Portable Avatars (objects) or Portable Avatar IDs (string)." } } } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

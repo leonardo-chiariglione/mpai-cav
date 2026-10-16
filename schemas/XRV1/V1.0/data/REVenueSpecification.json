@@ -1,0 +1,44 @@
+{ "$id":                          "https://schemas.mpai.community/XRV1/V1.0/data/REVenueSpecification.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+
+  "title":                        "RE Venue Specification V1.0", 
+  "description":                  "Specification of an RE Venue.",
+  "type":                         "object", 
+  "required":                     [ "Header" ], 
+  "additionalProperties":         false, 
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "XRV-RVS-V1.0" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "REVenueSpecificationID":     { "type": "string" },
+    "REVenueSpecificationTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "REVenueSpecificationModel":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelSceneDescriptors.json" },
+
+    "RealObjects":                { "type": "array", "items": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" } },
+
+    "DMXUniverses":               { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "UniverseID", "Channels" ], "properties": {
+      "UniverseID":               { "type": "integer", "minimum": 0 },
+      "Protocol":                 { "type": "string", "enum": [ "DMX", "RDM" ] },
+      "Channels":                 { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ChannelNumber", "ChannelDefinition" ], "properties": {
+        "ChannelNumber":          { "type": "integer", "minimum": 1, "maximum": 512 },
+        "ChannelDefinition":      { "type": "string" },
+        "FixtureID":              { "type": "string" } } } } } } },
+
+    "MIDIDevices":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "DeviceID", "Channels" ], "properties": {
+      "DeviceID":                 { "type": "string" },
+      "Channels":                 { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ChannelNumber", "ChannelDefinition" ], "properties": {
+        "ChannelNumber":          { "type": "integer", "minimum": 1, "maximum": 16 },
+        "ChannelDefinition":      { "type": "string" } } } } } } },
+
+    "SeatingChart":               { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "SectorID", "Rows" ], "properties": {
+      "SectorID":                 { "type": "string" },
+      "Rows":                     { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "RowID", "Seats" ], "properties": {
+        "RowID":                  { "type": "string" },
+        "Seats":                  { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "SeatID" ], "properties": {
+          "SeatID":               { "type": "string" },
+          "SpatialAttitude":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } } } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

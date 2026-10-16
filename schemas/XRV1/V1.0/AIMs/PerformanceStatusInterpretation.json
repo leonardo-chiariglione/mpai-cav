@@ -1,0 +1,46 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/PerformanceStatusInterpretation.json",
+  "title":                "Performance Status Interpretation V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-PFI-V1.0"},
+
+  "APIProfile":           "Basic",
+  "Description":          "The Performance Status Interpretation (XRV-PFI) AIM interprets the RE Performance Descriptors and VE Performance Descriptors to produce only the RE and VE Performance Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
+
+  "ExternalPorts":        [{"Name": "REPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-RFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-VFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REPerformanceStatus",     "Direction": "Output", "DataType": "XRV-RFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEPerformanceStatus",     "Direction": "Output", "DataType": "XRV-VFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [ ],
+
+  "Topology":             [ ],
+
+  "Implementations":      [{ "ImplementationURI": "/* absolute URI locating the Implementation */",
+                             "BinaryName":        "/* provided by implementer */",
+                             "Architecture":      "/* x86-64 | ARM64 */",
+                             "MASPort":           443,
+                             "Firewall":          [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                             "OperatingSystem":   "/* Windows | Linux | MacOS */",
+                             "Version":           "/* implementer version */",
+                             "Source":            "/* AIMStorage | MPAIStore */",
+                             "Destination":       "/* provided by implementer */" }],
+
+  "ResourcePolicies":     [{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" }],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/performance-status-interpretation/"}]}

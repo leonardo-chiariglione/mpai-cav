@@ -1,0 +1,33 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json",
+  "title":                      "Visual Behaviour V1.0",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "Behaviour" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-VBH-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "VisualBehaviourID":        { "type": "string" },
+    "VisualBehaviourTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Behaviour":                { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "properties": {
+
+        "SpatialAttitude":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+        "ClappingIntensity":    { "type": "number" },
+
+        "Dancing":              { "type": "object", "additionalProperties": false, "properties": {
+          "DancingIntensity":   { "type": "number" },
+          "DanceObject":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/DanceObject.json" } } },
+
+        "Gazing":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+        "HandsWaving":          { "type": "boolean" },
+        "Jumping":              { "type": "number" },
+        "Pointing":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+        "RaisingArmsIntensity": { "type": "number" },
+        "StadiumWave":          { "type": "boolean" },
+        "StandSit":             { "type": "boolean" } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

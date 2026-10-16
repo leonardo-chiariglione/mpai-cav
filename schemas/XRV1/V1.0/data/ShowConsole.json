@@ -1,0 +1,108 @@
+{ "$schema":                   "https://json-schema.org/draft/2020-12/schema",
+  "$id":                       "https://schemas.mpai.community/XRV1/V1.0/data/ShowConsole.json",
+  "title":                     "Show Console V1.0",
+  "description":               "Descriptor for show console elements: rigging, skybox, automation, set pieces, pyro, and robotics.",
+  "type":                      "object",
+  "additionalProperties":      false,
+  "required":                  ["Header", "ShowConsoleID", "ShowConsoleData"],
+  "properties":                {
+
+    "Header":                  { "type": "string", "const": "XRV-SHC-V1.0" },
+    "MInstanceID":             { "type": "string" },
+    "UEnvironmentID":          { "type": "string" },
+    "ShowConsoleID":           { "type": "string" },
+    "ShowConsoleTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "ShowConsoleData":         { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+
+      "MetaverseObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
+
+      "Rigging":               { "type": "object", "additionalProperties": false, "properties": {
+        "ManufacturerID":      { "type": "string" },
+        "OperationID":         { "type": "string" },
+        "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+      "SkyBox":                { "type": "object", "additionalProperties": false, "properties": {
+        "ManufacturerID":      { "type": "string" },
+        "OperationID":         { "type": "string" },
+        "LightSource":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json" },
+        "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+      "StageAutomation":       { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+
+        "Elevators":           { "type": "object", "additionalProperties": false, "properties": {
+          "ElevatorID":        { "type": "string" },
+          "ManufacturerID":    { "type": "string" },
+          "OperationID":       { "type": "string" },
+          "ControlObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+        "Curtains":            { "type": "object", "additionalProperties": false, "properties": {
+          "CurtainID":         { "type": "string" },
+          "ManufacturerID":    { "type": "string" },
+          "OperationID":       { "type": "string" },
+          "ControlObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+        "Turntable":           { "type": "object", "additionalProperties": false, "properties": {
+          "TurntableID":       { "type": "string" },
+          "ManufacturerID":    { "type": "string" },
+          "OperationID":       { "type": "string" },
+          "ControlObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } } } },
+
+      "SetPieces":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+
+        "Lights":              { "type": "object", "additionalProperties": false, "properties": {
+          "LightID":           { "type": "string" },
+          "ControlObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+        "Motors":              { "type": "object", "additionalProperties": false, "properties": {
+          "MotorID":           { "type": "string" },
+          "ControlObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } } } },
+
+      "FogHaze":               { "type": "object", "additionalProperties": false, "properties": {
+        "ManufacturerID":      { "type": "string" },
+        "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },        
+
+      "Pyro":                  { "type": "object", "additionalProperties": false, "properties": {
+
+        "ManufacturerID":      { "type": "string" },
+
+        "Elements":            { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+
+          "FlashPots":         { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+            "OperationID":     { "type": "string" },
+            "ControlObject":   { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
+
+          "FrameProjectors":   { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+            "OperationID":     { "type": "string" },
+            "ControlObject":   { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
+
+          "AirBursts":         { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+            "OperationID":     { "type": "string" },
+            "ControlObject":   { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } } } } } } },
+
+      "Effects":             { "type": "object", "additionalProperties": false, "properties": {
+        "ManufacturerID":    { "type": "string" },
+        "Elements":          { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "Type":            { "type": "string", "enum": ["Snow","Bubbles","Confetti","Cannons"] },
+          "OperationID":     { "type": "string" },
+          "ControlObject":   { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } } } },
+
+      "RoboticControls":     { "type": "object", "additionalProperties": false, "properties": {
+        "ManufacturerID":    { "type": "string" },
+        "Elements":          { "type": "object", "additionalProperties": false, "properties": {
+
+          "ManufacturerID":  { "type": "string" },
+          "PointOfView":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+          "JointMotion":     { "type": "object", "additionalProperties": false, "properties": {
+            "ManufacturerID":{ "type": "string" },
+            "OperationID":   { "type": "string" },
+            "ControlObject": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
+
+          "GripCommands":    { "type": "object", "additionalProperties": false, "properties": {
+            "ManufacturerID":{ "type": "string" },
+            "OperationID":   { "type": "string" },
+            "ControlObject": { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } } } } } } } },
+
+    "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":           { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,50 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/ActionGeneration.json",
+  "title":                "Action Generation V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-ACG-V1.0"},
+
+  "APIProfile":           "Basic",
+  "Description":          "The Action Generation (XRV-ACG) AIM uses Performance Status, Participant Status, and Operator Status to produce the RE Action IDs and VE Action IDs that instantiate Actions from the Action Table in the RE Experience Generation and VE Experience Generation AIMs per the Script, and the next Cue Point ID that informs the Performance, Participant, and Operator Status Interpretation AIMs to look for the next Cue Conditions.",
+
+  "ExternalPorts":        [{"Name": "REPerformanceStatus",     "Direction": "Input",  "DataType": "XRV-RFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEPerformanceStatus",     "Direction": "Input",  "DataType": "XRV-VFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REParticipantStatus",     "Direction": "Input",  "DataType": "XRV-RTS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEParticipantStatus",     "Direction": "Input",  "DataType": "XRV-VTS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REOperatorStatus",        "Direction": "Input",  "DataType": "XRV-ROS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEOperatorStatus",        "Direction": "Input",  "DataType": "XRV-VOS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Script",                  "Direction": "Input",  "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ActionTable",             "Direction": "Input",  "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ScriptVenueAssociations", "Direction": "Input",  "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Input",  "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REActionID",              "Direction": "Output", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "PortNumber": 1},
+                           {"Name": "VEActionID",              "Direction": "Output", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "PortNumber": 2},
+                           {"Name": "CuePointID",              "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [ ],
+
+  "Topology":             [ ],
+
+  "Implementations":      [{ "ImplementationURI": "/* absolute URI locating the Implementation */",
+                             "BinaryName":        "/* provided by implementer */",
+                             "Architecture":      "/* x86-64 | ARM64 */",
+                             "MASPort":           443,
+                             "Firewall":          [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                             "OperatingSystem":   "/* Windows | Linux | MacOS */",
+                             "Version":           "/* implementer version */",
+                             "Source":            "/* AIMStorage | MPAIStore */",
+                             "Destination":       "/* provided by implementer */" }],
+
+  "ResourcePolicies":     [{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" }],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/action-generation/"}]}

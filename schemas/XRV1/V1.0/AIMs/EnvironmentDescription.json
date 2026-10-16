@@ -1,0 +1,52 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/EnvironmentDescription.json",
+  "title":                "Environment Description V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-END-V1.0"},
+
+  "APIProfile":           "Basic",
+  "Description":          "The Environment Description (XRV-END) AIM captures raw Data from the Real and Virtual Environments including audio, visual, and other data in a variety of formats defined by the Qualifier standard; using Script-Venue Associations, identifies and separates the Performance elements, Participant elements and Operator elements that are relevant to subsequent processing; packages them into Performance, Participant, and Operator Descriptors for both the Real and Virtual Environments, and a combination of all Descriptors called Show Descriptors; and passes the Descriptors to downstream AIMs.",
+
+  "ExternalPorts":        [{"Name": "VEDataIn",                "Direction": "Input", "DataType": "XRV-VDI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEVenueSpecification",    "Direction": "Input", "DataType": "XRV-VVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REDataIn",                "Direction": "Input", "DataType": "XRV-RDI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REVenueSpecification",    "Direction": "Input", "DataType": "XRV-RVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REPerformanceDescriptors", "Direction": "Output", "DataType": "XRV-RFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEPerformanceDescriptors", "Direction": "Output", "DataType": "XRV-VFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REParticipantDescriptors", "Direction": "Output", "DataType": "XRV-RTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEParticipantDescriptors", "Direction": "Output", "DataType": "XRV-VTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REOperatorDescriptors",   "Direction": "Output", "DataType": "XRV-ROD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEOperatorDescriptors",   "Direction": "Output", "DataType": "XRV-VOD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ShowDescriptors",         "Direction": "Output", "DataType": "XRV-SHD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [ ],
+
+  "Topology":             [ ],
+
+  "Implementations":      [{ "ImplementationURI": "/* absolute URI locating the Implementation */",
+                             "BinaryName":        "/* provided by implementer */",
+                             "Architecture":      "/* x86-64 | ARM64 */",
+                             "MASPort":           443,
+                             "Firewall":          [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                             "OperatingSystem":   "/* Windows | Linux | MacOS */",
+                             "Version":           "/* implementer version */",
+                             "Source":            "/* AIMStorage | MPAIStore */",
+                             "Destination":       "/* provided by implementer */" }],
+
+  "ResourcePolicies":     [{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
+                           { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
+                           { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
+                           { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" }],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/ai-modules/environment-description/"}]}

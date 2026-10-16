@@ -1,0 +1,46 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/XRV1/V1.0/data/Event.json",
+  "title":                    "Event V1.0",
+  "type":                     "object",
+  "properties":               {
+
+    "Header":                { "type": "string", "const": "XRV-EVT-V1.0" },
+
+    "MInstanceID":           { "type": "string" },
+    "UEnvironmentID":        { "type": "string" },
+    "EventID":               { "type": "string" },
+
+    "EventTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "AVSceneDescriptors":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json" },
+
+    "EventData":             { "type": "array", "items": { "type": "object", "properties": {
+
+      "PortableAvatar":      { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json" },
+      "AudioBehaviour":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
+      "VisualBehaviour":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
+      "BiometricData":       { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
+      "ControllerData":      { "type": "string" } } } },
+
+    "ObjectDynamics":        { "type": "array", "items": { "type": "object", "properties": {
+
+      "ObjectID":            { "type": "string" },
+
+      "SpatialAttitude":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+
+      "OtherObjects":        { "type": "object", "properties": {
+        "SpatialAttitude":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
+
+      "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
+
+    "StageSettings":         { "type": "array", "items": { "type": "object", "properties": {
+      "Set":                 { "type": "string" },
+      "FX":                  { "type": "object" },
+      "Lighting":            { "type": "string" },
+      "Fog":                 { "type": "string" },
+      "Fire":                { "type": "string" },
+      "Pyro":                { "type": "string" } } } },
+
+    "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+
+    "DescrMetadata":         { "type": "string" } } }

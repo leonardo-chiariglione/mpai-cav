@@ -1,0 +1,31 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json",
+  "title":                  "Audio Behaviour V1.0",
+  "type":                   "object", 
+  "additionalProperties":   false, 
+  "required":               [ "Header", "BehaviourData" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "XRV-ABH-V1.0" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "AudioBehaviourID":     { "type": "string" },
+    "AudioBehaviourTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "BehaviourData":        { "type": "object", "additionalProperties": false, "properties": {
+
+      "BooingIntensity":    { "type": "number" },
+      "ClappingIntensity":  { "type": "number" },
+      "LaughingIntensity":  { "type": "number" },
+      "ShoutingIntensity":  { "type": "number" },
+
+      "Singing":            { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "required": [ "SingingIntensity", "Song" ], "properties": {
+        "SingingIntensity": { "type": "number" },
+        "Song":             { "type": "string" } } } },
+
+      "Speaking":           { "type": "object", "additionalProperties": false, "required": [ "SpeakingIntensity", "UtteredText" ], "properties": {
+        "SpeakingIntensity":{ "type": "number" },
+        "UtteredText":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextObject.json" } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

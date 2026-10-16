@@ -1,0 +1,22 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/XRV1/V1.0/data/VEDataIn.json",
+  "title":                    "VE Data In V1.0",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "VEDataInID", "VEDataInTime", "VEDataIn" ],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "XRV-VDI-V1.0" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "VEDataInID":             { "type": "string" },
+    "VEDataInTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "VEDataIn":               { "type": "object", "additionalProperties": false, "properties": {
+
+      "MetaverseObjects":     { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
+        "MetaverseObject":    { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" } },
+        "required":           ["MetaverseObject"] } } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

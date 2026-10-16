@@ -1,0 +1,69 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/XRV1/V1.0/data/ScriptVenueAssociations.json",
+  "title":                    "Script-Venue Associations V1.0",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 ["Header", "ScriptVenueAssociationsID", "ScriptVenueAssociationsTime"],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "XRV-SVA-V1.0" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "ScriptVenueAssociationsID":   { "type": "string" },
+    "ScriptVenueAssociationsTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "REAssociations":         { "$ref": "#/$defs/Associations" },
+    "VEAssociations":         { "$ref": "#/$defs/Associations" },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } },
+
+  "$defs":                    {
+
+    "Association":            { "type": "object", "additionalProperties": false, "properties": {
+      "Name":                 { "type": "string" },
+      "MetaName":             { "type": "string" },
+      "Nickname":             { "type": "string" },
+      "Mnemonic":             { "type": "string" },
+      "VenueElementID":       { "type": "string" },
+      "DataSourceQualifier":  { "type": "string" },
+      "DataSinkQualifier":    { "type": "string" } } },
+
+    "AvatarAssociation":      { "type": "object", "additionalProperties": false, "properties": {
+      "Nickname":             { "type": "string" },
+      "AvatarID":             { "type": "string" },
+      "SpatialAttitude":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+      "VenueElementID":       { "type": "string" },
+      "DataSourceQualifier":  { "type": "string" },
+      "DataSinkQualifier":    { "type": "string" } } },
+
+    "StatusElement":          { "type": "object", "additionalProperties": false, "properties": {
+      "StatusElementID":      { "type": "string" },
+      "Parameters":           { "type": "array", "items": { "type": "string" } },
+      "DataSourceQualifier":  { "type": "string" } } },
+
+    "ActionElement":          { "type": "object", "additionalProperties": false, "properties": {
+      "ActionID":             { "type": "string" },
+      "Parameters":           { "type": "array", "items": { "type": "string" } },
+      "DataSinkQualifier":    { "type": "string" } } },
+
+    "Associations":           { "type": "object", "additionalProperties": false, "properties": {
+
+      "PerformanceDesignations": { "type": "object", "additionalProperties": false, "properties": {
+        "Characters":         { "type": "array", "items": { "$ref": "#/$defs/Association" } },
+        "PerformerAvatars":   { "type": "array", "items": { "$ref": "#/$defs/AvatarAssociation" } },
+        "TheatricalSetList":  { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "TheatricalSet":    { "$ref": "#/$defs/Association" },
+          "Objects":          { "type": "array", "items": { "$ref": "#/$defs/Association" } } } } },
+        "PerformanceStatusElements": { "type": "array", "items": { "$ref": "#/$defs/StatusElement" } } } },
+
+      "ParticipantDesignations": { "type": "object", "additionalProperties": false, "properties": {
+        "Participants":       { "type": "array", "items": { "$ref": "#/$defs/Association" } },
+        "ParticipantAvatars": { "type": "array", "items": { "$ref": "#/$defs/AvatarAssociation" } },
+        "ParticipantStatusElements": { "type": "array", "items": { "$ref": "#/$defs/StatusElement" } } } },
+
+      "OperatorDesignations": { "type": "object", "additionalProperties": false, "properties": {
+        "Consoles":           { "type": "array", "items": { "$ref": "#/$defs/Association" } },
+        "OperatorStatusElements": { "type": "array", "items": { "$ref": "#/$defs/StatusElement" } } } },
+
+      "ActionElements":       { "type": "array", "items": { "$ref": "#/$defs/ActionElement" } } } } } }

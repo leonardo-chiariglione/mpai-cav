@@ -1,0 +1,68 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/VideoConsole.json",
+  "title":                      "Video Console V1.0",
+  "description":                "Descriptor for video console configuration and effects.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "VideoConsoleID", "VideoConsoleData" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-VIC-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "VideoConsoleID":           { "type": "string" },
+    "VideoConsoleSpaceTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "VideoConsoleData":         { "type": "object", "additionalProperties": false, "properties": {
+
+      "MetaverseObject":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
+
+      "GlobalVolume":           { "type": "number" },
+      "GlobalLuminance":        { "type": "number" },
+
+      "Elements":               { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+
+        "ClipSelection":        { "type": "string" },
+        "Volume":               { "type": "number" },
+        "VideoRouting":         { "type": "string" },
+
+        "VideoEffects":         { "type": "object", "additionalProperties": false, "properties": {
+
+          "PointOfView":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+          "Filters":            { "type": "object", "additionalProperties": false, "properties": {
+
+            "VideoClipID":      { "type": "string" },
+            "VideoDeviceID":    { "type": "string" },
+
+            "CameraCommands":   { "type": "object", "additionalProperties": false, "properties": {
+              "PointOfView":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+              "Zoom":           { "type": "number" },
+              "Focus":          { "type": "number" },
+              "Aperture":       { "type": "number" } } },
+
+            "TonalityControl":  { "type": "object", "properties": {
+              "Brightness":     { "type": "number" },
+              "Contrast":       { "type": "number" },
+              "Colour":         { "type": "number" },
+              "Highlight":      { "type": "number" },
+              "Shadows":        { "type": "number" },
+              "Gamma":          { "type": "number" } } },
+
+            "VidEffectsControl":{ "type": "object", "additionalProperties": false, "properties": {
+              "Position":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json" },
+              "Scaling":        { "type": "object", "properties": {
+                "H":            { "type": "number" },
+                "V":            { "type": "number" } } },
+              "Warping":        { "type": "string" },
+              "BlendMode":      { "type": "number" },
+              "Transparency":   { "type": "number" },
+              "ColourCycling":  { "type": "object", "properties": {
+                "Range":        { "type": "number" },
+                "Frequency":    { "type": "number" } } },
+              "Kaleidoscope":   { "type": "string" },
+              "PlayBackSpeed":  { "type": "number" },
+              "PlayBackControl":{ "type": "string", "enum": [ "Play", "Pause", "Stop", "Loop" ] } } } } } } } } } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

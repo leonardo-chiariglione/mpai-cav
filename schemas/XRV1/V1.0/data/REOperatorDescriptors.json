@@ -1,0 +1,23 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/REOperatorDescriptors.json",
+  "title":                      "RE Operator Descriptors V1.0",
+  "description":                "Descriptor set for Runtime Environment (RE) operator consoles and context.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   ["Header", "REOperatorDescriptorsID", "REOperatorDescriptors"],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-ROD-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "REOperatorDescriptorsID":  { "type": "string" },
+    "REOperatorDescriptorsTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "REOperatorDescriptors":    { "type": "object", "additionalProperties": false, "required": ["AudioConsole", "VideoConsole"], "properties": {
+      "AudioConsole":           { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioConsole.json" },
+      "VideoConsole":           { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VideoConsole.json" },
+      "ShowConsole":            { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ShowConsole.json" },
+      "LightingConsole":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/LightingConsole.json" } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

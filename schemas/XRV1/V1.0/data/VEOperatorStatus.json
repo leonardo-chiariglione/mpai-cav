@@ -1,0 +1,23 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/VEOperatorStatus.json",
+  "title":                      "VE Operator Status V1.0",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "VEOperatorStatusID", "VEOperatorStatusData" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-VOS-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "VEOperatorStatusID":       { "type": "string" },
+    "VEOperatorStatusSpaceTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+
+    "VEOperatorStatusData":     { "type": "object", "additionalProperties": false, "properties": {
+
+        "AudioConsole":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioConsole.json" },
+        "VideoConsole":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VideoConsole.json" },
+        "ShowConsole":          { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ShowConsole.json" },
+        "LightingConsole":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/LightingConsole.json" } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }
