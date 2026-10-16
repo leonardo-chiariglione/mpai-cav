@@ -148,3 +148,7 @@ rebuilt and published once, at the end of the day (the author, 2026/10/11).
 - Rules from the author: a User may have many Personae, all its own (it brings one to an event); the places of a meeting are assigned by the AVS Service; who is in is a human decision; no meeting code.
 - Not in MMM-TEC (flagged): GET processes/{id}/inbox; Discover not implemented; a removed participant's Persona stays in its seat.
 - Rebuild the MKG for: nothing new in the standards; the MMM implementation notes only.
+
+## 2026-10-16 - MMM: hearing (Phase 7)
+- A User's speech is placed at its seat as a Speech Object (MM-Add; the AVS Service grants the right with the seat); MM-Capture returns it (kind Speech); the participants read its data and play it from the seat; the Secretary hears the room by capturing it (no second copy sent). MM-Add can make a Speech Object where it is added. MM-Capture is not in the Activity Data. Whisper noise-word filter of ABV ported. Doc: docs/MMM-Meeting.md.
+- Rebuild the MKG for: nothing new in the standards.

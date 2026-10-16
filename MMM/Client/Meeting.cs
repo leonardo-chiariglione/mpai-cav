@@ -44,6 +44,11 @@ public static class Meeting
     public static JsonObject SitPA(string persona, string seat) =>
         Uc2.PA("MMM-2MP-V2.2", "MMMove", SitID(persona), ("RQ1", "Nil", "ItemID", persona), ("RQ3", "To", "PointOfView2", Uc2.PointOfView(seat)));
 
+    // The right to place what it says - a Speech Object - at its seat: the seat is where it is heard from.
+    public static string SpeakID(string user) => $"PA-Speak-{user}";
+    public static JsonObject SpeakPA(string user, string seat) =>
+        Uc2.PA("MMM-2DP-V2.2", "MMAdd", SpeakID(user), ("RQ2", "At", "MLocationID", seat));
+
     // What a User asks: to join, with the Persona it brings (one of its own; if it names none, the one of its name).
     public static string JoinText(string persona) => $"join;persona={persona}";
 
@@ -135,13 +140,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             {
                 if (!handled.Add($"{Meeting.Secretary}|{id}")) continue;
                 var item = (await secretary.ReadAsync(id)).Item;
-                if (Speech.Is(item))   // what a participant said: the Secretary has it recognised by the ASR Service, which is not its own
-                {
-                    var forward = $"Forward-{id}";
-                    asked[forward] = (from, Stopwatch.GetTimestamp(), Speech.DurationMs(item));
-                    await secretary.PerformAsync("MM-Send", Uc2.C(forward, to: Meeting.Asr, with: (JsonObject)item!["ItemValueOrRef"]![0]!.DeepClone()));
-                    continue;
-                }
+                if (Speech.Is(item)) { await Forward(id, from, item!); continue; }   // sent to the Secretary directly
                 var text = Meeting.TextOf(item);
                 if (text is null) continue;
                 if (from == Meeting.Avs && text.StartsWith("participant;user=", StringComparison.Ordinal))
@@ -163,8 +162,34 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                     await Publish();
                 }
             }
+            await Hear();
         }
         finally { one.Release(); }
+    }
+
+    // What a participant said: the Secretary has it recognised by the ASR Service, which is not its own.
+    private async Task Forward(string id, string speaker, JsonObject item)
+    {
+        var forward = $"Forward-{id}";
+        asked[forward] = (speaker, Stopwatch.GetTimestamp(), Speech.DurationMs(item));
+        await secretary.PerformAsync("MM-Send", Uc2.C(forward, to: Meeting.Asr, with: (JsonObject)item["ItemValueOrRef"]![0]!.DeepClone()));
+    }
+
+    // The Secretary hears the room like any participant: it captures it, and the Speech Objects placed at the seats are what was said. Not yet seated, it hears nothing.
+    private async Task Hear()
+    {
+        var seen = await secretary.PerformAsync("MM-Capture", Uc2.C(at: Meeting.Room, with: new JsonObject
+        {
+            ["Header"] = "OSD-OPV-V1.5", ["PointOfViewID"] = "POV-Secretary", ["CartPosition"] = new JsonArray(0.0, 0.0, 1.6), ["Orientation"] = new JsonArray(0.0, 0.0, 0.0)
+        }));
+        if (seen.Http != 200) return;
+        foreach (var thing in (seen.Response.Complements?.With?[0]?["ItemValueOrRef"]?[0]?["Things"]?.AsArray() ?? []).OfType<JsonObject>().Where(t => (string?)t["Kind"] == "Speech"))
+        {
+            var id = (string)thing["ID"]!;
+            if (!handled.Add($"{Meeting.Secretary}|heard|{id}")) continue;
+            var item = (await secretary.ReadAsync(id)).Item;
+            if (Speech.Is(item)) await Forward(id, (string?)thing["Owner"] ?? "?", item!);
+        }
     }
 
     private const string NoWords = "[no words]";
@@ -209,7 +234,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     {
         invited.Remove(user);
         if (personaOf.TryGetValue(user, out var persona) && seatOf.TryGetValue(user, out var seatId))
-            await avs.PerformAsync("Rights Change", Uc2.C(user, with: [Meeting.SitPA(persona, seatId), Uc2.Rights($"Seat-Revoke-{persona}", "May Not", "Granted", Meeting.SitID(persona))]));
+            await avs.PerformAsync("Rights Change", Uc2.C(user, with: [Meeting.SitPA(persona, seatId), Uc2.Rights($"Seat-Revoke-{persona}", "May Not", "Granted", Meeting.SitID(persona)),
+                                                                       Meeting.SpeakPA(user, seatId), Uc2.Rights($"Speak-Revoke-{user}", "May Not", "Granted", Meeting.SpeakID(user))]));
         await Say(avs, $"Left-{user}-{++sequence}", Meeting.Secretary, $"left;user={user}");
     }
 
@@ -223,7 +249,9 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             seatOf[user] = seatId = free.ID;
         }
         var pa = Meeting.SitPA(persona, seatId);   // the Persona the User brings: the right is for it (a User moves only Personae it owns, whatever it is told)
-        await avs.PerformAsync("Rights Change", Uc2.C(user, with: [pa, Uc2.Rights($"Seat-Right-{persona}", "May", "Granted", Meeting.SitID(persona))]));
+        // ...and the right to place what it says at that seat.
+        await avs.PerformAsync("Rights Change", Uc2.C(user, with: [pa, Uc2.Rights($"Seat-Right-{persona}", "May", "Granted", Meeting.SitID(persona)),
+                                                                   Meeting.SpeakPA(user, seatId), Uc2.Rights($"Speak-Right-{user}", "May", "Granted", Meeting.SpeakID(user))]));
         await Say(avs, replyId, user, Meeting.SeatText(Meeting.Seats.First(s => s.ID == seatId), persona));
     }
 

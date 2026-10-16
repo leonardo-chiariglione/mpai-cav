@@ -108,14 +108,47 @@ public sealed class WhisperAsr : IDisposable
             using var form = new MultipartFormDataContent();
             var file = new ByteArrayContent(Wav(pcm16k)); file.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
             form.Add(file, "file", "speech.wav");
-            form.Add(new StringContent("json"), "response_format");
+            form.Add(new StringContent("verbose_json"), "response_format");
             form.Add(new StringContent("0.0"), "temperature");
             using var response = await http.PostAsync("inference", form);
             if (!response.IsSuccessStatusCode) return "";
             using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            return json.RootElement.TryGetProperty("text", out var t) ? (t.GetString() ?? "").Trim() : "";
+            var root = json.RootElement;
+
+            // Noise and breath make Whisper write words that nobody said, often in another script. The words are kept only if the language it found is one of those the
+            // participants speak (ABV_LANGS, default English, Italian, Portuguese, Spanish, French, German) and its own segments are neither "no speech" nor doubtful.
+            var detected = root.TryGetProperty("language", out var l) ? (l.GetString() ?? "") : "";
+            if (detected.Length > 0 && !Languages.Contains(detected, StringComparer.OrdinalIgnoreCase) && !Languages.Contains(NameToCode(detected), StringComparer.OrdinalIgnoreCase)) return "";
+            var kept = new StringBuilder();
+            if (root.TryGetProperty("segments", out var segments) && segments.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var s in segments.EnumerateArray())
+                {
+                    var noSpeech = s.TryGetProperty("no_speech_prob", out var n) && n.TryGetDouble(out var nd) ? nd : 0;
+                    var logprob = s.TryGetProperty("avg_logprob", out var a) && a.TryGetDouble(out var ad) ? ad : 0;
+                    if (noSpeech > 0.55 || logprob < -1.1) continue;
+                    kept.Append(' ').Append(s.TryGetProperty("text", out var t) ? t.GetString() : "");
+                }
+            }
+            else if (root.TryGetProperty("text", out var text)) kept.Append(text.GetString());
+            return Clean(kept.ToString());
         }
         finally { one.Release(); }
+    }
+
+    // The languages the participants speak (ISO codes), from ABV_LANGS; whisper-server may name the language in full.
+    public static readonly string[] Languages = (Environment.GetEnvironmentVariable("ABV_LANGS") ?? "en,it,pt,es,fr,de").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string NameToCode(string name) => name.ToLowerInvariant() switch
+    {
+        "english" => "en", "italian" => "it", "portuguese" => "pt", "spanish" => "es", "french" => "fr", "german" => "de", _ => name
+    };
+
+    // Whisper writes captions for what is not speech ("[BLANK_AUDIO]", "(music)"): not words.
+    private static string Clean(string text)
+    {
+        var t = System.Text.RegularExpressions.Regex.Replace(text, @"\[[^\]]*\]|\([^)]*\)|\*[^*]*\*", " ");
+        return System.Text.RegularExpressions.Regex.Replace(t, @"\s+", " ").Trim();
     }
 
     private static byte[] Wav(byte[] pcm)

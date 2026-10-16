@@ -66,6 +66,7 @@ public static class MeetingUseCase
         Task<MmmClient.Result> Tell(MmmClient who, string id, string text) => who.PerformAsync("MM-Send", Uc2.C(id, to: Meeting.Avs, with: Uc2.Message(id, text)));
         string Text(MmmClient who, string id) => Meeting.TextOf(who.ReadAsync(id).Result.Item) ?? "-";
         var asked = 0;
+        var seatOfUser = new Dictionary<string, string>();
         // Asks for a seat with the Persona it brings; goes there if it was given one.
         async Task<string> Sit(MmmClient who, string persona)
         {
@@ -77,15 +78,18 @@ public static class MeetingUseCase
             var move = await who.PerformAsync("MM-Move", Uc2.C(persona, from: "MVS", to: seat["seat"],
                 with: [MeetingServices.SeatedAt($"SA-{persona}-Seat", double.Parse(seat["yaw"], CultureInfo.InvariantCulture)), Meeting.SitPA(persona, seat["seat"]),
                        Uc2.Rights($"Seat-Move-{persona}", "May", "Acquired", Meeting.SitID(persona))]));
+            if (move.Http == 200) seatOfUser[who.ProcessID] = seat["seat"];
             return move.Http == 200 ? $"seated at {seat["seat"]}" : $"move {move.Http}";
         }
         var spoken = 0;
+        var lastSpeech = "";
+        // What a User says is placed, as a Speech Object, at its seat: that is where it is heard from. The Secretary hears it as any participant does, by capturing the room.
         async Task<string> Speak(MmmClient who)
         {
-            var id = $"Speech-{who.ProcessID}-{++spoken}";
-            var sent = await who.PerformAsync("MM-Send", Uc2.C(id, to: Meeting.Secretary, with: Speech.Make(id, Tone(2), 1_767_254_400_000)));
+            var id = lastSpeech = $"Speech-{who.ProcessID}-{++spoken}";
+            var added = await who.PerformAsync("MM-Add", Uc2.C(id, at: seatOfUser[who.ProcessID], with: Speech.Make(id, Tone(2), DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
             await Settle();
-            return $"{sent.Http}; minutes: {services.TheMinutes.Count} lines";
+            return $"{added.Http}; minutes: {services.TheMinutes.Count} lines";
         }
         async Task<MmmClient> Register(string name, string brings, params string[] personae)
         {
@@ -124,7 +128,15 @@ public static class MeetingUseCase
             "The AVS Service gives each the right to move the Persona it brings to a free seat. The places of the meeting are the seats the AVS Service assigns.");
 
         await Done("Anna speaks", await Speak(anna),
-            "What Anna says is cut by her client and sent once, as a Speech Object with its own duration, to the Secretary. The Secretary has the ASR Service recognise it, and writes the words in the minutes.");
+            "What Anna says is cut by her client and placed once, at her seat, as a Speech Object with its own duration. The Secretary hears the room as any participant does, has the ASR Service recognise the speech, and writes the words in the minutes.");
+
+        var heardNow = await bruno.PerformAsync("MM-Capture", Uc2.C(at: Meeting.Room, with: PointOfView()));
+        var heardIds = (heardNow.Response.Complements?.With?[0]?["ItemValueOrRef"]?[0]?["Things"]?.AsArray() ?? []).OfType<JsonObject>()
+                                .Where(t => (string?)t["Kind"] == "Speech").Select(t => $"{t["ID"]} at {t["At"]}").ToList();
+        var brunoHears = (await bruno.ReadAsync(lastSpeech)).Http;
+        var carlaHears = (await carla.ReadAsync(lastSpeech)).Http;
+        await Done("Bruno hears Anna; Carla, outside, does not", $"Bruno\'s capture shows {string.Join(", ", heardIds)}; he reads it {brunoHears}; Carla reads it {carlaHears}",
+            "The room's participants see the Speech Object when they capture the room and read its data, to play it from the seat it was said at. Carla is not in the room.");
         await Done("Bruno speaks", await Speak(bruno), "The same for Bruno.");
         var carlaMinutes = (await carla.ReadAsync($"{Meeting.Minutes}-for-Anna")).Http;
         await Done("Carla cannot read the minutes", $"read {carlaMinutes}", "The minutes belong to the room. Only the participants are given a copy; Carla is not one.");
@@ -141,6 +153,7 @@ public static class MeetingUseCase
         await Done("Anna takes Bruno out of the meeting", $"Bruno captures the room: {inRoom.Http}",
             "Anna says Bruno is out. The AVS Service withdraws his right to a seat. He can no longer see the room.");
         await Done("Anna speaks again", await Speak(anna), "Anna speaks again. Bruno is given no more of the minutes.");
+        await Done("Bruno no longer hears", $"he reads it {(await bruno.ReadAsync(lastSpeech)).Http}", "He is out of the meeting: what is said in the room is not his to hear.");
         var final = Text(anna, $"{Meeting.Minutes}-for-Anna");
         await Done("The minutes", final.Replace("\n", " | "), "The minutes, as the participants have them.");
         await Done("What Bruno has", Text(bruno, $"{Meeting.Minutes}-for-Bruno").Replace("\n", " | "),

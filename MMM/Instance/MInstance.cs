@@ -180,9 +180,21 @@ public sealed class MInstance
         lock (gate)
         {
             if (!items.TryGetValue(itemId, out var it)) return false;
-            return it.Owner == process || it.Public || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
+            return it.Owner == process || it.Public || HeardBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
                    || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId || Targets(items[r].Body!).Contains(itemId));
         }
+    }
+
+    // A Speech Object is heard by whoever has an Item in the Room around the seat it was placed at - its User's Persona seated in it - unless a Right bars it from the
+    // places in it (May Not: it was taken out of the meeting).
+    private bool HeardBy(string process, Item speech)
+    {
+        if (speech.DataType != "OSD-BSO-V1.5" || speech.Location is null || !items.TryGetValue(speech.Location, out var seat) || seat.Location is null) return false;
+        var room = seat.Location;
+        bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
+        if (!items.Values.Any(i => i.Owner == process && InRoom(i.Location))) return false;
+        return !(holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                         .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
     }
 
     public JsonObject AsAnyItem(Item it) => new()
@@ -225,7 +237,7 @@ public sealed class MInstance
                                                   (i.Location is not null && items.TryGetValue(i.Location, out var at) && at.DataType == "MMM-LOC"))
                                       .OrderBy(i => i.ID, StringComparer.Ordinal).ToList();
             // Items at the same Location stand side by side.
-            var side = located.Where(i => i.DataType != "MMM-LOC").GroupBy(i => i.Location!)
+            var side = located.Where(i => i.DataType != "MMM-LOC" && i.DataType != "OSD-BSO-V1.5").GroupBy(i => i.Location!)
                               .SelectMany(g => g.Select((it, k) => (it.ID, Offset: (k - (g.Count() - 1) / 2.0) * 0.9)))
                               .ToDictionary(x => x.ID, x => x.Offset);
             return new JsonObject
@@ -243,7 +255,7 @@ public sealed class MInstance
                     var w = Where(i);
                     var o = new JsonObject
                     {
-                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : "Item",
+                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : i.DataType == "OSD-BSO-V1.5" ? "Speech" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
                         ["Yaw"] = YawOf(i), ["Depth"] = DepthOf(i),
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
@@ -251,6 +263,9 @@ public sealed class MInstance
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
                     if (i.Model is not null) o["Model"] = i.Model;
                     if (i.Animation is not null) o["Animation"] = i.Animation;
+                    // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
+                    if (i.DataType == "OSD-BSO-V1.5" && i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0] is JsonNode st)
+                    { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); }
                     return (JsonNode)o;
                 }).ToArray())
             };
@@ -276,8 +291,9 @@ public sealed class MInstance
         lock (gate)
         {
             var outcome = PerformLocked(caller, rq);
-            activity.Add(new Activity(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), rq.SourceProcessID, rq.Action,
-                                      outcome.Response.DestinationProcessID, outcome.Http, outcome.Response.PaStatus.Code));
+            if (rq.Action != "MM-Capture")     // looking changes nothing: it is not the record of what happened
+                activity.Add(new Activity(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), rq.SourceProcessID, rq.Action,
+                                          outcome.Response.DestinationProcessID, outcome.Http, outcome.Response.PaStatus.Code));
             return outcome;
         }
     }
@@ -402,10 +418,17 @@ public sealed class MInstance
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (Need(service, c.At, "At") is { } f2) return f2;
+        // A Speech Object is made where it is added: a User places what it said at its seat, and the Item is its own.
+        var created = false;
+        if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == "OSD-BSO-V1.5" && (string?)i["BasicSpeechObjectID"] == c.Nil) is { } speech)
+        {
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source };
+            created = true;
+        }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
         if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
         if (it.Owner != source && !Allowed(source, "MM-Add", c.Nil, c.At)) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
-        if (!MayEnter(source, "MM-Add", c.Nil!, c.At!)) return Fail(403, service, "InsRights", $"{source} may not place Items at {c.At}");
+        if (!MayEnter(source, "MM-Add", c.Nil!, c.At!)) { if (created) items.Remove(c.Nil!); return Fail(403, service, "InsRights", $"{source} may not place Items at {c.At}"); }
         it.Location = c.At; it.SpatialAttitude = SpatialAttitude(with);
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }
@@ -457,7 +480,8 @@ public sealed class MInstance
             }
             return false;
         }
-        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false).Select(t => (JsonNode)t.DeepClone()).ToArray();
+        var heardSince = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 60_000;   // a Speech Object is heard while it lasts: what was said more than a minute ago is not returned
+        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false && ((string?)t["Kind"] != "Speech" || (t["End"]?.GetValue<long>() ?? 0) >= heardSince)).Select(t => (JsonNode)t.DeepClone()).ToArray();
         var item = new JsonObject
         {
             ["ItemName"] = $"Scene-{c.At}", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID,
@@ -532,6 +556,13 @@ public sealed class MInstance
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (Need(service, c.At, "At") is { } f2) return f2;
+        // A Speech Object is made where it is added: a User places what it said at its seat, and the Item is its own.
+        var created = false;
+        if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == "OSD-BSO-V1.5" && (string?)i["BasicSpeechObjectID"] == c.Nil) is { } speech)
+        {
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source };
+            created = true;
+        }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
         if (it.Owner != source) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
         var ritem = $"RItem-{c.Nil}";

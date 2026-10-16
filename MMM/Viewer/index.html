@@ -187,7 +187,7 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 // Actions on the MMM-API as its User: Register (once), MM-Add (its Persona at the Metaverse Square), MM-Capture (what it sees there, from its Point of View,
 // five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
 const userName = new URLSearchParams(location.search).get('user');
-const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], status: 'joining...', keys: new Set() } : null;
+const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -251,7 +251,7 @@ async function microphone() {
   catch (e) { client.status += ' (no microphone)'; return; }
   const ctx = new AudioContext({ sampleRate: 16000 });
   const src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(4096, 1, 1);
-  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, MIN = 0.4 * RATE, MAX = 20 * RATE, PRE = 0.2 * RATE;
+  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, MIN = 0.4 * RATE, MAX = 8 * RATE, PRE = 0.2 * RATE;
   let pre = [], speech = [], silent = 0, startedAt = 0, n = 0;
   const level = f => Math.sqrt(f.reduce((s, v) => s + v * v, 0) / f.length);
   const send = async (floats, at) => {
@@ -261,7 +261,7 @@ async function microphone() {
     const so = { Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id,
       BasicSpeechObjectTime: { Header: 'OSD-STM-V1.5', SimpleTimeID: id + '-T', SimpleTimeData: [{ FlagsByte: 3, StartTime: at, EndTime: at + Math.round(pcm.length * 1000 / RATE), AccuracyMode: 'single', AccuracyPlusMinus: 1 }] },
       BasicSpeechObjectData: [{ Data: btoa(bin) }] };
-    await act('communicate/mm-send', client.name, { Nil: id, To: 'Secretary', With: [so] });
+    if (client.seated) await act('locate/mm-add', client.name, { Nil: id, At: client.loc, With: [so] });   // placed at its seat, where it is heard from
   };
   node.onaudioprocess = e => {
     const f = Array.from(e.inputBuffer.getChannelData(0)), loud = level(f) > THRESHOLD;
@@ -277,7 +277,27 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
   const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
-  if (r.http === 200 && scene) client.things = scene.Things;
+  if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); }
+}
+
+// HEARING: a Speech Object in the room is what somebody said. The client reads its data once and plays it from the seat it was said at, as the Persona's ears
+// would hear it (a panner at the seat; the listener is where this User sits and looks). What the User says itself it does not play back.
+const heard = new Set(); let hearCtx = null;
+function ears() { hearCtx ??= new AudioContext(); if (hearCtx.state === 'suspended') hearCtx.resume().catch(() => {}); return hearCtx; }
+for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { if (client) ears(); });   // a browser lets a page play sound only after a press or a click
+async function hear(t) {
+  if (heard.has(t.ID) || t.Owner === client.name) return;
+  heard.add(t.ID);
+  const rs = await fetch(`/api/v2.2/items/${t.ID}`, { headers: { Authorization: 'Bearer ' + client.token } });
+  if (!rs.ok) return;
+  const b64 = (await rs.json()).ItemValueOrRef?.[0]?.BasicSpeechObjectData?.[0]?.Data; if (!b64) return;
+  const bin = atob(b64), n = bin.length >> 1, ctx = ears(), buf = ctx.createBuffer(1, n, 16000), ch = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) ch[i] = ((bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8)) << 16 >> 16) / 32768;
+  const src = ctx.createBufferSource(), pan = ctx.createPanner(); src.buffer = buf;
+  pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 1;
+  pan.positionX.value = t.X; pan.positionY.value = 1.5; pan.positionZ.value = -t.Y;   // x east, y up, z towards the south: the axes of the viewer
+  src.connect(pan).connect(ctx.destination); src.start();
+  client.heard.push(`${t.Owner} (${(n / 16000).toFixed(1)} s)`);
 }
 async function sendPose() {   // MM-Move: the Persona stands where its User put it, looking where it looks
   const key = [client.x, client.y, client.yaw].map(v => v.toFixed(2)).join(' ');
@@ -298,7 +318,9 @@ function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn;
   if (client.seated) fwd = 0;   // seated: it turns its head, it does not walk
   client.x = client.seated ? client.x : Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
   client.y = client.seated ? client.y : Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
-  camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');   // three.js looks along -z (north) at rotation 0
+  camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');
+  const L = hearCtx?.listener;   // the ears are where the eyes are
+  if (L?.positionX) { L.positionX.value = client.x; L.positionY.value = 1.6; L.positionZ.value = -client.y; L.forwardX.value = -Math.sin(rad); L.forwardY.value = 0; L.forwardZ.value = -Math.cos(rad); L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; }   // three.js looks along -z (north) at rotation 0
 }
 
 // ---------------------------------------------------------------- the M-Instance
@@ -307,7 +329,8 @@ async function refresh() {
   if (client) {
     state = { MInstanceID: 'MI1', Performed: 0, Recent: [], Things: client.things, Hidden: [] };
     document.getElementById('title').textContent = client.status;
-    document.getElementById('recent').textContent = 'W/S walk, A/D turn. You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ');
+    document.title = client.heard.length ? 'heard: ' + client.heard.join(', ') : 'M-Instance viewer';   // what the tab says: what this User has heard
+    document.getElementById('recent').textContent = 'W/S walk, A/D turn. You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.join(', ') : '');
   } else {
     try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
   }
