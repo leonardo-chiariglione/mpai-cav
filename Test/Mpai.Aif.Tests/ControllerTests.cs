@@ -231,10 +231,13 @@ public class ControllerTests
         {
             const string module = "1TST-NST-V1.0-I01";
             api.StartFlow(module);
+            result["Controller API: the Module's state before Pause"] = api.Status(module).State.ToString();
             result["Controller API: Pause"] = api.Pause(module).ToString();
+            result["Controller API: the Module's state after Pause"] = api.Status(module).State.ToString();
             api.InputWrite(module, Text, 1, "p");
             result["Controller API: a read with timeout 600 while paused"] = Shown(api.OutputRead(module, Text, 1, 600));
             result["Controller API: Resume"] = api.Resume(module).ToString();
+            result["Controller API: the Module's state after Resume"] = api.Status(module).State.ToString();
             result["Controller API: a read after Resume"] = Shown(api.OutputRead(module, Text, 1, 3000));
             api.StopFlow(module);
             result["Controller API: Pause, Module not started"] = api.Pause(module).ToString();

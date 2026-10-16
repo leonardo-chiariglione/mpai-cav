@@ -87,11 +87,16 @@ public sealed class AimHost : IDisposable
             lc.Resume();
     }
 
+    // Whether the Module is Suspended: paused, and not yet resumed (Basic API state).
+    private bool _suspended;
+    public bool IsSuspended { get { lock (_module) return _suspended; } }
+
     // MPAI_AIFU_MODULE_Pause: every AIM completes what it is doing and waits.
     public void PauseModule()
     {
         lock (_module)
         {
+            _suspended = true;
             if (_running.Task.IsCompleted)
                 _running = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             foreach (var lc in _lifecycles.Values) lc.Pause();
@@ -103,6 +108,7 @@ public sealed class AimHost : IDisposable
     {
         lock (_module)
         {
+            _suspended = false;
             _running.TrySetResult();
             foreach (var lc in _lifecycles.Values) lc.Resume();
         }

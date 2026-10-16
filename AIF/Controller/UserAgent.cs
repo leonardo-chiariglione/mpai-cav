@@ -939,6 +939,15 @@ public sealed class UserAgent
     }
 
     // Every AIM of the Module: status, why, and the reports of its last run.
+    // The state of the Module: Running, or Suspended between Pause and Resume.
+    public AifError MPAI_AIFU_MODULE_GetState(int moduleId, out ModuleState state)
+    {
+        state = ModuleState.Running;
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        state = module.Host.IsSuspended ? ModuleState.Suspended : ModuleState.Running;
+        return AifError.OK;
+    }
+
     public AifError MPAI_AIFU_MODULE_GetStatus(int moduleId, out IReadOnlyList<AimReport> aims)
     {
         aims = Array.Empty<AimReport>();

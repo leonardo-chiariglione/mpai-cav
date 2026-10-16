@@ -11,5 +11,8 @@
   "Controller API: Pause, Module not started": "NotStarted",
   "Controller API: Resume": "OK",
   "Controller API: a read after Resume": "OK 'p'",
-  "Controller API: a read with timeout 600 while paused": "Timeout"
+  "Controller API: a read with timeout 600 while paused": "Timeout",
+  "Controller API: the Module's state after Pause": "Suspended",
+  "Controller API: the Module's state after Resume": "Running",
+  "Controller API: the Module's state before Pause": "Running"
 }

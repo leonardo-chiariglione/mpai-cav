@@ -14,6 +14,15 @@ public enum AimStatus
 // in the Module's last run.
 public sealed record AimReport(string Aim, AimStatus Status, string Reason, IReadOnlyList<string> Reports);
 
+// The state of a running Module in the Basic API: Running, or Suspended after
+// MPAI_AIFU_MODULE_Pause and until MPAI_AIFU_MODULE_Resume. (A Module that has been
+// stopped is no longer there to be asked: its Status is NotStarted.)
+public enum ModuleState
+{
+    Running,
+    Suspended
+}
+
 // The four states of an AIM's lifecycle, as its host drives it.
 public enum AimState
 {

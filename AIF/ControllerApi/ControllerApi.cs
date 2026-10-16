@@ -113,6 +113,9 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         public bool Ok => Error == AifError.OK;
 
+        // The state of the Module: Running, or Suspended between Pause and Resume.
+        public ModuleState State { get; init; } = ModuleState.Running;
+
         // While the Module is recorded: per Port, what is recorded and what is not
         // (M3219 3.4).
         public IReadOnlyDictionary<BoundaryRecord.PortKey, (long Recorded, long NotRecorded)>? Record { get; init; }
@@ -303,7 +306,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         {
             if (!_running.TryGetValue(moduleName, out var started)) return new ModuleStatus(AifError.NotStarted, Array.Empty<AimReport>());
             var err = _ua.MPAI_AIFU_MODULE_GetStatus(started.Id, out var aims);
-            return new ModuleStatus(err, aims) { Record = _ua.RecordStatus(started.Id)?.Totals };
+            _ua.MPAI_AIFU_MODULE_GetState(started.Id, out var state);
+            return new ModuleStatus(err, aims) { State = state, Record = _ua.RecordStatus(started.Id)?.Totals };
         }
     }
 
