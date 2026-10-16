@@ -1,10 +1,10 @@
 { "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/MMC/V2.5/data/SpeechOverlap.json",
-  "title":                    "Speech Overlap V2.5",
+  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/SpeechOverlap.json",
+  "title":                    "Speech Overlap V1.5",
   "type":                     "object",
   "properties": {
 
-    "Header":                 { "type": "string", "const": "MMC-SOL-V2.5" },
+    "Header":                 { "type": "string", "const": "OSD-SOL-V1.5" },
     "MInstanceID":            { "type": "string" },
     "MEnvironmentID":         { "type": "string" },
     "SpeechOverlapID":        { "type": "string" },

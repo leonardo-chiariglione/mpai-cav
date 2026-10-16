@@ -1,0 +1,30 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "OSD-AUS-V1.5-I01", "AIMName": "1OSD-AUS-V1.5-I01"},
+  "Header":           "OSD-AUS-V1.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Audio Segmentation: receives speech - a Speech Object, or a Basic Speech Object - and returns the speakers' turns as a Speech Object whose Basic Speech Objects are the turns in order, the times at which a speaker begins to speak, and for each turn how likely it is that others speak at the same time (an estimate). Speech regions by voice activity, speakers by the ECAPA speaker embedding of short windows grouped by similarity; no speaker is identified.",
+
+  "InternalTypes":    [],
+
+  "ExternalPorts":    [{"Name": "SpeechFile",    "Direction": "Input",  "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechObject",  "Direction": "Output", "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeakerTime",   "Direction": "Output", "DataType": "OSD-STM-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechOverlap", "Direction": "Output", "DataType": "OSD-SOL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/AUS",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Osd.Aus",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.5",
+                        "Source":            "AIMStorage"}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.5 GB", "Request": "1 GB",   "Maximum": "2 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Medium", "Maximum": "High"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-osd/v1-5/"}]}

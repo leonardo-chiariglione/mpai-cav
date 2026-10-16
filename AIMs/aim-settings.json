@@ -141,6 +141,9 @@
                               "ScrfdModel":  "Models\\scrfd_10g_bnkps.onnx",
                               "ArcFaceModel":  "Models\\glintr100.onnx"
                           },
+    "1OSD-AUS-V1.5-I01":  {
+                              "EcapaModel":  "Models\\ecapa-tdnn.onnx"
+                          },
     "1MMC-SIR-V2.5-I01":  {
                               "EcapaModel":  "Models\\ecapa-tdnn.onnx"
                           },

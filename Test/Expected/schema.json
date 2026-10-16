@@ -102,6 +102,7 @@
   "NNW1/V2.0/AIMs/WatermarkedModule.json": "valid",
   "NNW1/V2.0/AIMs/WithInferenceRobustness.json": "valid",
   "NNW1/V2.0/AIMs/WithTrainingImperceptibility.json": "valid",
+  "OSD/V1.5/AIMs/AudioSegmentation.json": "valid",
   "OSD/V1.5/AIMs/AudioVisualAlignment.json": "valid",
   "OSD/V1.5/AIMs/BasicAudioSceneDescription.json": "valid",
   "OSD/V1.5/AIMs/BasicAudioVisualSceneDescription.json": "valid",
