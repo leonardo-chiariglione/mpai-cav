@@ -99,7 +99,7 @@ public sealed class ServiceFixture : IDisposable
         System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties()
               .GetActiveTcpListeners().Any(e => e.Port == port);
 
-    private static string Tail(string text, int lines) =>
+    public static string Tail(string text, int lines) =>
         string.Join("\n", text.Split('\n').TakeLast(lines));
 }
 
@@ -222,7 +222,7 @@ public class ServiceTests
             var clock = Stopwatch.StartNew();
             var r = client.Advance(module, inputs);
             times.Add(clock.Elapsed.TotalSeconds);
-            Assert.True(r.Ok, $"{module}: {r.Error}");
+            Assert.True(r.Ok, $"{module}: {r.Error}\nthe Service's log, last 400 lines:\n{ServiceFixture.Tail(service.Log, 400)}");
 
             // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
             // the language model unreachable, say - returns quickly with nothing to
