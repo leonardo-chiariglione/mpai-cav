@@ -157,3 +157,8 @@ rebuilt and published once, at the end of the day (the author, 2026/10/11).
 - A Speech Object is declared when speech starts (time declared, not redefined until over) with its Speech Qualifier TFA-SPQ-V1.5 (PCM; StreamFormat WebSocket) and a DataURI (a WebSocket address); the data goes out as it is captured; whoever has chosen to hear that User (the receiver decides: from A, not from C) opens the address and receives it from the start, played from the seat. The Secretary takes it when it is over. First sound about 0.1-0.3 s after the Speech Object began (localhost, warm).
 - Schema: "WebSocket" added to TFA/V1.5/formats/SpeechStreamFormats.json (the Speech Qualifier's stream formats) in D:\DI\schemas, to be published on schemas.mpai.community by the author.
 - Rebuild the MKG for: nothing new in the standards.
+## 2026-10-16 (XRV data types)
+- XRV1 data schemas corrected in D:\AI\schemas\XRV1\V1.0 (28 data schemas, 5 examples); list in Downloads\XRV-Data-Types-Corrections.docx. Brainwavefreq in Hz with band ranges; FieldOfView in degrees.
+- XRV Speaking Avatar (XRV-SAV, SpeakingAvatar.json) no longer exists: replaced by the PAF Portable Avatar in VE Performance Status and VE Participant Descriptors; schema deleted from D:\AI and D:\DI (uncommitted in D:\DI); web page moved to the WordPress trash, the Data Types table has 37 entries. Other specifications (PAF AIMs, MMC, CAV AIMs) still name XRV-SAV or the Speaking Avatar: not touched.
+- 28 XRV-LTP data type pages regenerated on the web from the schemas (Semantics tables).
+- Rebuild the MKG for: the XRV data types (no XRV-SAV; changed property names).
