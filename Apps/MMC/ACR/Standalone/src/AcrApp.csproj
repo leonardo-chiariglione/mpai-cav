@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\..\..\..\AIMs\Gallery\Mpai.Gallery.csproj" />
     <!-- The Human-CAV Interaction avatar surface (WebView renderer + present) -->
     <ProjectReference Include="..\..\..\..\..\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\..\UserAgent\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
     <!-- The HCI API -->
     <ProjectReference Include="..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <!-- Description AIMs (kept) -->

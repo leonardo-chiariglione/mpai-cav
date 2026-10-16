@@ -9,7 +9,7 @@ using AIF.Store;        // AmdStore (provider factory)
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 
 namespace HciMad;
 
@@ -133,7 +133,7 @@ public partial class MainWindow : Window
                 var reply = await Task.Run(() => RunTurn(speech));
                 if (reply is null) { SetTurn("(no reply)"); continue; }
 
-                await _avatar!.PresentAsync(new SpeakingAvatar(reply.Value.wav, reply.Value.fdo));
+                await _avatar!.PresentAsync(new AvatarUtterance(reply.Value.wav, reply.Value.fdo));
                 await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(reply.Value.wav) + 0.3));
                 SetTurn("your turn...");
             }
@@ -214,7 +214,7 @@ public partial class MainWindow : Window
         FaceDescriptorsObject? fdo = null;
         var fj = r.ByType(FDO);
         if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

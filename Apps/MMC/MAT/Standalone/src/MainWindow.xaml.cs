@@ -11,7 +11,7 @@ using AIF.Store;        // AmdStore (provider factory)
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 
 using Mpai.Providers;
 
@@ -167,7 +167,7 @@ public partial class MainWindow : Window
         if (reply is not null)
         {
             if (!string.IsNullOrWhiteSpace(reply.Value.text)) TranslationText.Text = reply.Value.text;
-            await _avatar!.PresentAsync(new SpeakingAvatar(reply.Value.wav, reply.Value.fdo));
+            await _avatar!.PresentAsync(new AvatarUtterance(reply.Value.wav, reply.Value.fdo));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(reply.Value.wav) + 0.3));
         }
         SetTurn("press Stop to continue.");
@@ -202,13 +202,6 @@ public partial class MainWindow : Window
 
         var r = _north.Advance(MatModule, inputs);
         if (!r.Ok) { Diag("MAT run err=" + r.Error); return null; }
-
-        // A SUSPENSION RETURNS OK. The Module has not failed - it is waiting for
-        // a boundary input that was never supplied, and the Port it waits for is
-        // the whole diagnosis. Reported here because a suspended run otherwise
-        // falls through and produces nothing, silently.
-        if (r.Suspended)
-            Diag("MAT suspended, waiting for " + (r.WaitingPort ?? "a Port the Controller did not name"));
 
         byte[] wav = Array.Empty<byte>();
         var sj = r.ByType(BSO);
@@ -296,7 +289,7 @@ public partial class MainWindow : Window
         FaceDescriptorsObject? fdo = null;
         var fj = r.ByType(FDO);
         if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

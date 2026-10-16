@@ -9,9 +9,9 @@ using AIF.Store;        // AmdStore (provider factory)
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
+using Mpai.PhysicalLayer;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 
 namespace AcrApp;
 
@@ -162,7 +162,7 @@ public partial class MainWindow : Window
             if (!string.IsNullOrWhiteSpace(fj)) avatarFace = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
 
             Diag("outputs: vocalWav=" + wav.Length + " avatarFdo=" + (avatarFace==null?"nil":"present"));
-            await _avatar!.PresentAsync(new SpeakingAvatar(wav, avatarFace));
+            await _avatar!.PresentAsync(new AvatarUtterance(wav, avatarFace));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.4));
             Diag("gallery entry expected under subject:" + userName);
             SetStatus($"registered: {userName}");
@@ -242,7 +242,7 @@ public partial class MainWindow : Window
         FaceDescriptorsObject? fdo = null;
         var fj = r.ByType("PAF-FDO-V1.6");
         if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

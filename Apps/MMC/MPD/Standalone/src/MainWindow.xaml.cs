@@ -8,9 +8,9 @@ using AIF.Store;        // AmdStore (provider factory)
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
+using Mpai.PhysicalLayer;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 
 namespace MpdApp;
 
@@ -121,7 +121,7 @@ public partial class MainWindow : Window
     // One dialogue turn, by data type: supply speech (+ time) + face; read the
     // machine's spoken reply (OSD-BSO) + avatar face (PAF-FDO). NLU/ESI/EFI/PSM
     // produce the Personal Status inside the Module; EDP replies with affect.
-    private SpeakingAvatar HandleTurn(BasicSpeechObject speech)
+    private AvatarUtterance HandleTurn(BasicSpeechObject speech)
     {
         try
         {
@@ -137,7 +137,7 @@ public partial class MainWindow : Window
             if (face is not null) inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
 
             var r = _north!.Advance(MpdModule, inputs);
-            if (!r.Ok) { Diag("turn err=" + r.Error); return new SpeakingAvatar(Array.Empty<byte>(), null); }
+            if (!r.Ok) { Diag("turn err=" + r.Error); return new AvatarUtterance(Array.Empty<byte>(), null); }
 
             byte[] wav = Array.Empty<byte>();
             var sj = r.ByType(BSO);
@@ -147,9 +147,9 @@ public partial class MainWindow : Window
             if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
 
             Diag("turn: speechBytes=" + (speech.Data?.Length ?? 0) + " face=" + (face is null ? "nil" : "yes") + " replyWav=" + wav.Length);
-            return new SpeakingAvatar(wav, fdo);
+            return new AvatarUtterance(wav, fdo);
         }
-        catch (Exception ex) { Diag("turn ex: " + ex.Message); return new SpeakingAvatar(Array.Empty<byte>(), null); }
+        catch (Exception ex) { Diag("turn ex: " + ex.Message); return new AvatarUtterance(Array.Empty<byte>(), null); }
     }
 
     // One-shot neutral spoken prompt via PAF-RSR (no PersonalStatus supplied).
@@ -169,7 +169,7 @@ public partial class MainWindow : Window
         FaceDescriptorsObject? fdo = null;
         var fj = r.ByType(FDO);
         if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

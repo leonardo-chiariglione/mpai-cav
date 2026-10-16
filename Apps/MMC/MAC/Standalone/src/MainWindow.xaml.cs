@@ -8,9 +8,9 @@ using AIF.Store;        // AmdStore (provider factory)
 
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Aims.Visual;   // WebcamVisualAcquisition, VisualAcquisitionRequest
+using Mpai.PhysicalLayer;   // WebcamVisualAcquisition, VisualAcquisitionRequest
 using Mpai.UaKit;         // AvatarUaHost
-using Mpai.Aif.Api;       // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 
 namespace HciMac;
 
@@ -157,7 +157,7 @@ public partial class MainWindow : Window
             var fj = result.ByType(FDO);
             if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
 
-            await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.4));
 
             // THE VERDICT IS READ, NOT INFERRED. This searched the avatar's own
@@ -236,7 +236,7 @@ public partial class MainWindow : Window
         var fj = r.ByType(FDO);
         if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
 
-        await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
 

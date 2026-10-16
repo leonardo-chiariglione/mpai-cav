@@ -11,7 +11,7 @@ using AIF.Store;        // AmdStore
 
 using Mpai.Core;
 using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
-using Mpai.Aif.Api;     // ControllerApi, SpeakingAvatar
+using Mpai.Aif.Api;     // ControllerApi, AvatarUtterance
 using Mpai.Mas.Client;
 
 namespace MmcAmq;
@@ -170,7 +170,7 @@ public partial class MainWindow : Window
         try { if (!string.IsNullOrWhiteSpace(fdoJson)) fdo = MpaiJson.FromJson<Mpai.Core.OSD.FaceDescriptorsObject>(fdoJson); } catch { }
         if (wav.Length > 0 || fdo is not null)
         {
-            await _avatar!.PresentAsync(new SpeakingAvatar(wav, fdo));
+            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
             await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
         }
     }

@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <!-- Avatar surface + Controller API -->
     <ProjectReference Include="..\..\..\..\..\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\..\UserAgent\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
     <ProjectReference Include="..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <!-- MMC-MPD affective front-end: NLU + ESI + EFI + PSM -->
     <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />

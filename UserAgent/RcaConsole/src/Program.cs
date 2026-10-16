@@ -79,7 +79,7 @@ internal static class Program
         var devices = new DeviceRegistry();
 
         // Text is typed. This is the one device a console genuinely has.
-        devices.RegisterAcquire("OSD-BTO-V1.5", _ =>
+        devices.RegisterAcquire("OSD-BTO-V1.5", (_, _) =>
         {
             Con.Write("  > ");
             var line = Con.ReadLine() ?? "";
@@ -88,18 +88,18 @@ internal static class Program
 
         // A time is asked of the clock, which a console has as surely as any
         // machine does. The only stand-in here is that nothing was captured.
-        devices.RegisterAcquire("OSD-STM-V1.5", _ =>
+        devices.RegisterAcquire("OSD-STM-V1.5", (_, _) =>
             Task.FromResult<string?>(MpaiJson.ToJson(Now())));
 
         // Speech and vision a console has not. Rather than invent an Object with
         // no Qualifier - the fault of every User Agent before this week - it
         // declines and says which device is missing.
-        devices.RegisterAcquire("OSD-BSO-V1.5", _ =>
+        devices.RegisterAcquire("OSD-BSO-V1.5", (_, _) =>
         {
             Con.WriteLine("  (no microphone in a console client)");
             return Task.FromResult<string?>(null);
         });
-        devices.RegisterAcquire("OSD-BVO-V1.5", _ =>
+        devices.RegisterAcquire("OSD-BVO-V1.5", (_, _) =>
         {
             Con.WriteLine("  (no camera in a console client)");
             return Task.FromResult<string?>(null);
