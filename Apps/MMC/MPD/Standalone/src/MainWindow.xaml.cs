@@ -28,6 +28,7 @@ public partial class MainWindow : Window
 {
     private const string MpdModule = "1MMC-MPD-V2.5-I01";
     private const string RsrModule = "1PAF-RSR-V1.6-I01";
+    private const string MachineName = "Thalia";  // the machine's ID: the Portable Avatar the Module gives is this machine's
 
     private const string BSO = "OSD-BSO-V1.5";   // speech object
     private const string STM = "OSD-STM-V1.5";   // acquisition time
@@ -136,15 +137,15 @@ public partial class MainWindow : Window
             var face = CaptureFace();
             if (face is not null) inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
 
+            inputs.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
+            inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
             var r = _north!.Advance(MpdModule, inputs);
             if (!r.Ok) { Diag("turn err=" + r.Error); return new AvatarUtterance(Array.Empty<byte>(), null); }
 
-            byte[] wav = Array.Empty<byte>();
-            var sj = r.ByType(BSO);
-            if (!string.IsNullOrWhiteSpace(sj)) wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? Array.Empty<byte>();
-            FaceDescriptorsObject? fdo = null;
-            var fj = r.ByType(FDO);
-            if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
+            // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
+            var pavUtterance = AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6"));
+            byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
+            FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
 
             Diag("turn: speechBytes=" + (speech.Data?.Length ?? 0) + " face=" + (face is null ? "nil" : "yes") + " replyWav=" + wav.Length);
             return new AvatarUtterance(wav, fdo);
@@ -161,14 +162,14 @@ public partial class MainWindow : Window
             // Generative Face Description, which turns the words into visemes.
             // Sending only #1 leaves the mouth with nothing to shape itself to.
             new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        inputs.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
+        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
-        byte[] wav = Array.Empty<byte>();
-        var sj = r.ByType(BSO);
-        if (!string.IsNullOrWhiteSpace(sj)) wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? Array.Empty<byte>();
-        FaceDescriptorsObject? fdo = null;
-        var fj = r.ByType(FDO);
-        if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
+        // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
+        var pavUtterance = AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6"));
+        byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
+        FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
         await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }

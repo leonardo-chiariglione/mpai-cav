@@ -139,6 +139,56 @@ public class AppModulesTests
         }
         finally { api.StopFlow(AMQ); api.StopFlow(rsr); }
     }
+    // THE STANDALONE PROGRAMS (Apps/MMC/*/Standalone) speak their guidance through Response and Scene Rendering, given the
+    // Controller their window holds - the one the provider of that App gives, and nothing else. For each App's provider: a
+    // prompt spoken as the program asks for it (the words twice, the avatar model, the machine's ID) comes back as a
+    // Portable Avatar that carries speech.
+    [SkippableTheory]
+    [InlineData("ACR")] [InlineData("MAC")] [InlineData("MAD")] [InlineData("MAT")] [InlineData("MPD")]
+    public void TheStandaloneProgramSpeaksItsPromptThroughRsr(string app)
+    {
+        RequireModels();
+        var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
+        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => app switch
+        {
+            "ACR" => new AcrProvider(store), "MAC" => new MacProvider(store), "MAD" => new MadProvider(store),
+            "MAT" => new MatProvider(store), _ => new MpdProvider(store)
+        });
+        const string rsr = "1PAF-RSR-V1.6-I01";
+        try
+        {
+            Assert.Equal(AifError.OK, api.StartFlow(rsr));
+            var said = api.Advance(rsr, new[] { Text(1, "Please look at the camera."), Text(2, "Please look at the camera."), Avatar, MachineId });
+            Assert.True(said.Ok, $"{app}: {rsr}: {said.Error}{Why(api, rsr)}");
+            Assert.True(Spoke(said), $"{app}: {rsr} gave no speech{Why(api, rsr)}");
+        }
+        finally { api.StopFlow(rsr); }
+    }
+
+    // The conversation turn of MAD, MAT and MPD as their standalone programs send it, through the provider of that App:
+    // speech and its time (MAT: and the languages), the avatar model, the machine's ID; the Portable Avatar read back.
+    [SkippableTheory]
+    [InlineData("MAD")] [InlineData("MAT")] [InlineData("MPD")]
+    public void TheStandaloneProgramTakesATurn(string app)
+    {
+        RequireModels();
+        var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
+        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => app switch
+        {
+            "MAD" => new MadProvider(store), "MAT" => new MatProvider(store), _ => new MpdProvider(store)
+        });
+        var module = $"1MMC-{app}-V2.5-I01";
+        var now = new ControllerApi.Datum("OSD-STM-V1.5", 1, MpaiJson.ToJson(SimpleTime.At(DateTimeOffset.UtcNow)));
+        var inputs = new List<ControllerApi.Datum> { Speech("question.wav"), now };
+        if (app == "MAT") inputs.Add(new("OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "fr"))));
+        inputs.Add(Avatar); inputs.Add(MachineId);
+        try
+        {
+            var r = Turn(api, module, inputs.ToArray());
+            Assert.True(Spoke(r), $"{module} gave no speech{Why(api, module)}");
+        }
+        finally { api.StopFlow(module); }
+    }
     [SkippableFact]
     public void MadAnswersATypedTurn()
     {

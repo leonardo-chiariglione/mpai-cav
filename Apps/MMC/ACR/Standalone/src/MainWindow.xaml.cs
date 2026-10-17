@@ -34,6 +34,7 @@ public partial class MainWindow : Window
 
     private const string AcrModule = "1MMC-ACR-V2.5-I01";
     private const string RsrModule = "1PAF-RSR-V1.6-I01";
+    private const string MachineName = "Thalia";  // the machine's ID: the Portable Avatar the Module gives is this machine's
 
     // data types the UA speaks at the boundary
     private const string BVO = "OSD-BVO-V1.5";   // visual object (face)
@@ -122,6 +123,8 @@ public partial class MainWindow : Window
             if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
             faceIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
             Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+BTO#2(name)");
+            faceIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
+            faceIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
             var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
             Diag("Advance(face) -> err=" + r1.Error);
             if (!r1.Ok) { SetStatus("run error"); return; }
@@ -144,6 +147,8 @@ public partial class MainWindow : Window
                 speechIn.Add(new ControllerApi.Datum(EPS, MpaiJson.ToJson(LightSmileStatus())));
                 speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
                 Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+EPS+BTO#2(name)");
+                speechIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
+                speechIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
                 Diag("Advance(speech) -> err=" + r2.Error);
                 if (!r2.Ok) { SetStatus("resume error"); return; }
@@ -154,12 +159,10 @@ public partial class MainWindow : Window
             // 4) EFD/ESD wrote the enrolment to Shared Storage via the Controller.
             //    Present the spoken confirmation (read by type).
             InstructionText.Text = "Registering...";
-            byte[] wav = Array.Empty<byte>();
-            var vj = result.ByType(BSO);
-            if (!string.IsNullOrWhiteSpace(vj)) wav = MpaiJson.FromJson<BasicSpeechObject>(vj)?.Data ?? Array.Empty<byte>();
-            FaceDescriptorsObject? avatarFace = null;
-            var fj = result.ByType("PAF-FDO-V1.6");
-            if (!string.IsNullOrWhiteSpace(fj)) avatarFace = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
+            // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
+            var pavUtterance = AvatarUtterance.FromPortableAvatar(result.ByType("PAF-PAV-V1.6"));
+            byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
+            FaceDescriptorsObject? avatarFace = pavUtterance?.FaceDescriptors;
 
             Diag("outputs: vocalWav=" + wav.Length + " avatarFdo=" + (avatarFace==null?"nil":"present"));
             await _avatar!.PresentAsync(new AvatarUtterance(wav, avatarFace));
@@ -234,14 +237,14 @@ public partial class MainWindow : Window
             new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
             new ControllerApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
         };
+        inputs.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
+        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) return;
-        byte[] wav = Array.Empty<byte>();
-        var sj = r.ByType(BSO);
-        if (!string.IsNullOrWhiteSpace(sj)) wav = MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? Array.Empty<byte>();
-        FaceDescriptorsObject? fdo = null;
-        var fj = r.ByType("PAF-FDO-V1.6");
-        if (!string.IsNullOrWhiteSpace(fj)) fdo = MpaiJson.FromJson<FaceDescriptorsObject>(fj);
+        // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
+        var pavUtterance = AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6"));
+        byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
+        FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
         await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
         await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
     }
