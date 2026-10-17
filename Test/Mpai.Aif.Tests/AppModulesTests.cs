@@ -113,6 +113,32 @@ public class AppModulesTests
         Assert.True(shown is not null && shown.Contains("red", StringComparison.OrdinalIgnoreCase),
             $"the avatar was given \"{shown}\" to a question about a red picture: " + string.Join(" / ", said));
     }
+    // THE STANDALONE AMQ PROGRAMS (Apps/MMC/AMQ/Standalone), what they do with the Controller their window holds -
+    // the one an AmqProvider gives, and nothing else: the Module is given the picture, the typed question and the
+    // machine's ID; the answer is read from the Portable Avatar's Text Object; the sentence made of it is spoken
+    // through Response and Scene Rendering, given the avatar model and the machine's ID, and comes back as a
+    // Portable Avatar that carries speech.
+    [SkippableFact]
+    public void TheStandaloneAmqProgramAnswersAndSpeaks()
+    {
+        RequireModels();
+        var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
+        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => new AmqProvider(store));
+        const string rsr = "1PAF-RSR-V1.6-I01";
+        try
+        {
+            var r = Turn(api, AMQ, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
+            var answer = AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "";
+            Assert.Contains("red", answer, StringComparison.OrdinalIgnoreCase);
+
+            var sentence = $"It is {answer.Trim().TrimEnd('.')}.";
+            Assert.Equal(AifError.OK, api.StartFlow(rsr));
+            var said = api.Advance(rsr, new[] { Text(1, sentence), Text(2, sentence), Avatar, MachineId });
+            Assert.True(said.Ok, $"{rsr}: {said.Error}{Why(api, rsr)}");
+            Assert.True(Spoke(said), $"{rsr} gave no speech{Why(api, rsr)}");
+        }
+        finally { api.StopFlow(AMQ); api.StopFlow(rsr); }
+    }
     [SkippableFact]
     public void MadAnswersATypedTurn()
     {

@@ -20,8 +20,8 @@ namespace MmcAmq;
 // MMC-AMQ User Agent - Answer to Multimodal Question, driven through the
 // type-addressed Controller API. The UA presents an image and a question (typed or
 // spoken); the Module answers. One run per question:
-//   supply OSD-BVO (image) + OSD-BTO (typed question) OR OSD-BSO (spoken);
-//   read OSD-BTO (answer text), OSD-BSO (spoken answer), OSD-BVO (image back).
+//   supply OSD-BVO (image) + OSD-BTO#1 (typed question) OR OSD-BSO#1 (spoken) + the machine's ID (string);
+//   read the Portable Avatar (PAF-PAV-V1.6), whose Text Object is the answer; it is spoken through PAF-RSR.
 // The answer is shown as text, spoken by the avatar, and the image is re-shown.
 // Acquisition/presentation are the UA's; the Module is ASR + TIQ + TTS.
 public partial class MainWindow : Window
@@ -30,7 +30,8 @@ public partial class MainWindow : Window
 
     private const string BVO = "OSD-BVO-V1.5";   // visual object (image)
     private const string BSO = "OSD-BSO-V1.5";   // speech object (spoken q / spoken answer)
-    private const string BTO = "OSD-BTO-V1.5";   // text object (typed q / answer text)
+    private const string BTO = "OSD-BTO-V1.5";   // text object (typed question)
+    private const string MachineName = "Thalia"; // the machine's ID: the Portable Avatar the Module gives is this machine's
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
@@ -144,23 +145,24 @@ public partial class MainWindow : Window
             Diag("StartFlow RSR -> " + s);
             _rsrStarted = (s == AifError.OK);
         }
-        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
-            // Generative Face Description, which turns the words into visemes.
-            // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))) };
+        // PAF-RSR renders a Text Object as the Portable Avatar of a machine: it declares TextObject TWICE (#1 feeds
+        // Text-To-Speech, #2 Generative Face Description, which turns the words into visemes - sending only #1
+        // leaves the mouth with nothing to shape itself to), and takes the Avatar Model this client draws and
+        // the machine's ID.
+        var inputs = new List<ControllerApi.Datum>
+        {
+            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+            new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
+            new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
+        };
         var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
         if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
-        byte[] wav = SpeechOf(r.ByType(BSO));
-        Diag("RSR spoke words=[" + (words.Length>40?words.Substring(0,40):words) + "] wavBytes=" + wav.Length);
-        var fdoJson = r.ByType("PAF-FDO-V1.6");
-        Mpai.Core.OSD.FaceDescriptorsObject? fdo = null;
-        try { if (!string.IsNullOrWhiteSpace(fdoJson)) fdo = MpaiJson.FromJson<Mpai.Core.OSD.FaceDescriptorsObject>(fdoJson); } catch { }
-        if (wav.Length > 0 || fdo is not null)
-        {
-            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
-        }
+        // The Portable Avatar: the speech, and the face and body that move with it.
+        if (AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not { } utterance) { Diag("RSR gave no speech"); return; }
+        Diag("RSR spoke words=[" + (words.Length > 40 ? words.Substring(0, 40) : words) + "] wavBytes=" + utterance.MachineSpeechWav.Length);
+        await _avatar!.PresentAsync(utterance);
+        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
     }
 
     private async Task SpeakWelcomeAsync()
@@ -222,6 +224,7 @@ public partial class MainWindow : Window
             inputs.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(spokenQuestion)));
         else if (typedQuestion is not null)
             inputs.Add(new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedQuestion))));
+        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName)));
 
         var started = await Task.Run(() => _north!.StartFlow(AmqModule));
         Diag("StartFlow AMQ -> " + started);
@@ -229,13 +232,13 @@ public partial class MainWindow : Window
 
         Diag("Advance AMQ: inputs=[" + string.Join(",", inputs.ConvertAll(d => d.DataType)) + "]" + (spokenQuestion!=null?(" speechBytes="+spokenQuestion.Data.Length):"") + (typedQuestion!=null?(" typed='"+typedQuestion+"'"):""));
         var r = await Task.Run(() => _north!.Advance(AmqModule, inputs));
-        Diag("Advance AMQ done ok=" + r.Ok + " err=" + r.Error + " BTO=[" + (r.ByType(BTO) ?? "nil")?.Substring(0, System.Math.Min(120,(r.ByType(BTO)??"").Length)) + "] BSObytes=" + SpeechOf(r.ByType(BSO)).Length);
+        Diag("Advance AMQ done ok=" + r.Ok + " err=" + r.Error + " PAV text=[" + (AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "nil") + "]");
         await Task.Run(() => _north!.StopFlow(AmqModule));
         if (!r.Ok) { Diag("AMQ err=" + r.Error); SetStatus("no answer: " + r.Error); return; }
 
-        var answer   = TextOf(r.ByType(BTO));
-        var replyWav = SpeechOf(r.ByType(BSO));
-        Diag("answer='" + (answer ?? "") + "' replyWav=" + replyWav.Length);
+        // The Module answers with a Portable Avatar that carries the answer as a Text Object.
+        var answer   = AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6"));
+        Diag("answer='" + (answer ?? "") + "'");
 
         var spoken = Phrase(_lastQuestion, answer);
         AnswerText.Text = spoken;
