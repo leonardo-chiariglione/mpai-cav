@@ -1,6 +1,6 @@
 using System.Drawing.Drawing2D;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 // THE EDITING SPACE: a view of the scene from above, as large as the window. The user starts at the origin, looking up the page; x is to the right and
 // y ahead, both in metres, numbered along the edges. A sound is a dot with its name; drag it to move it, drag the tip of its arrow to turn it. The user ("you")

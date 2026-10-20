@@ -1,8 +1,8 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 
 using Mpai.Core;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 // A ROOM: the box of a Closed Space (OSD-CSP) - one Right Parallelepiped - and how much its walls absorb. Height is the distance between floor and ceiling.
 public sealed record Room(double X0, double Y0, double X1, double Y1, double Height, double Absorption)

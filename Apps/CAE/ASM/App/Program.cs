@@ -1,6 +1,6 @@
 using Mpai.Core;
 using Mpai.Core.OSD;
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 internal static class Program
 {
@@ -17,7 +17,7 @@ internal static class Program
             list.CreateControl(); list.Display("Audio profile commands", CommandsPanel.Profile);
             using var bmp = new System.Drawing.Bitmap(list.Width, list.Height);
             list.DrawToBitmap(bmp, new System.Drawing.Rectangle(0, 0, list.Width, list.Height));
-            var folder = Path.Combine(Paths.Root, "Test", "Reports", "AsmStudio"); Directory.CreateDirectory(folder);
+            var folder = Paths.Reports; Directory.CreateDirectory(folder);
             bmp.Save(Path.Combine(folder, "commands.png")); return 0;
         }
         ApplicationConfiguration.Initialize();
@@ -26,8 +26,8 @@ internal static class Program
     }
 }
 
-// THE STUDIO WITHOUT ITS WINDOWS: the library, the commands, the undo, the saving and the rendering, in a workspace of its own - for finding what is wrong
-// without a person at the screen. Writes Test\Reports\AsmStudio\selftest.txt.
+// THE APP WITHOUT ITS WINDOWS: the library, the commands, the undo, the saving and the rendering, in a workspace of its own - for finding what is wrong
+// without a person at the screen. Writes selftest.txt to Downloads\ASM\self-test.
 internal static class SelfTest
 {
     public static async Task<int> Run(string[] args)
@@ -279,7 +279,7 @@ internal static class SelfTest
                 canvas.CreateControl();
                 using var bmp = new System.Drawing.Bitmap(canvas.Width, canvas.Height);
                 canvas.DrawToBitmap(bmp, new System.Drawing.Rectangle(0, 0, canvas.Width, canvas.Height));
-                var shot = Path.Combine(Paths.Root, "Test", "Reports", "AsmStudio"); Directory.CreateDirectory(shot);
+                var shot = Paths.Reports; Directory.CreateDirectory(shot);
                 bmp.Save(Path.Combine(shot, "editing-space.png"));
             });
             if (!drawing.Wait(TimeSpan.FromSeconds(60))) lines.Add("skip the editing space was not drawn - no interactive desktop answered within a minute");
@@ -294,7 +294,7 @@ internal static class SelfTest
         catch (Exception e) { Check("the self-test ran to its end", false, e.ToString()); }
         finally { try { Directory.Delete(folder, true); } catch { } }
 
-        var report = Path.Combine(Paths.Root, "Test", "Reports", "AsmStudio");
+        var report = Paths.Reports;
         Directory.CreateDirectory(report);
         File.WriteAllLines(Path.Combine(report, "selftest.txt"), lines.Append($"{lines.Count(l => l.StartsWith("ok"))} ok, {failed} failed"));
         return failed == 0 ? 0 : 1;
@@ -371,7 +371,7 @@ internal static class MouseTest
         }
         catch (Exception e) { Check("the mouse test ran to its end", false, e.ToString()); }
         finally { try { Directory.Delete(folder, true); } catch { } }
-        var report = Path.Combine(Paths.Root, "Test", "Reports", "AsmStudio"); Directory.CreateDirectory(report);
+        var report = Paths.Reports; Directory.CreateDirectory(report);
         File.WriteAllLines(Path.Combine(report, "mousetest.txt"), lines.Append($"{lines.Count(l => l.StartsWith("ok"))} ok, {failed} failed"));
         return failed == 0 ? 0 : 1;
     }

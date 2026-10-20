@@ -36,7 +36,11 @@ public sealed class ModuleHost : IDisposable
         }
     }
 
-    public static ModuleHost Start(string module, JsonObject? settings = null, Action<string>? say = null)
+    // The provider that builds the AIMs of the Usc Modules; another Module names its own (assembly file, type) in `providers`.
+    public static readonly (string Assembly, string Type)[] UscProviders = [("Mpai.Cae.Usc.dll", "Mpai.Cae.Usc.UscProvider")];
+
+    // providers: where the AIM host finds the AIMs of the Module (assembly in the folder of the App, type). storage: where the Controller keeps the Module's Shared Storage - the Controller's own business: the User Agent names no place.
+    public static ModuleHost Start(string module, JsonObject? settings = null, Action<string>? say = null, IReadOnlyList<(string Assembly, string Type)>? providers = null, string? storage = null)
     {
         var root = Root; say ??= _ => { };
         var work = Path.Combine(Path.GetTempPath(), "mpai-" + module + "-" + Guid.NewGuid().ToString("N")[..8]); Directory.CreateDirectory(work);
@@ -63,8 +67,9 @@ public sealed class ModuleHost : IDisposable
         foreach (var arg in new[]
         {
             Path.Combine(root, "AIF", "AimHost", "bin", "Debug", "net10.0", "AIF.AimHost.dll"), "--port", "0", "--key", key, "--amds", amds, "--settings", settingsPath,
-            "--storage", Path.Combine(work, "aimhost"), "--provider", Path.Combine(AppContext.BaseDirectory, "Mpai.Cae.Usc.dll") + ":Mpai.Cae.Usc.UscProvider"
+            "--storage", Path.Combine(work, "aimhost")
         }) info.ArgumentList.Add(arg);
+        foreach (var (assembly, type) in providers ?? UscProviders) { info.ArgumentList.Add("--provider"); info.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, assembly) + ":" + type); }
         var process = Process.Start(info) ?? throw new InvalidOperationException("The AIM host did not start.");
         try
         {
@@ -84,6 +89,12 @@ public sealed class ModuleHost : IDisposable
             var api = new ControllerApi(amds, settingsPath, _ => new CompositeProvider());
             api.Controller.AimHostKey = key;
             foreach (var aim in aims) api.Controller.AimHosts[aim] = address;
+            if (storage is not null)
+            {
+                Directory.CreateDirectory(storage);
+                var started = api.StartFlow(module); if (started != AifError.OK) throw new InvalidOperationException($"The Controller would not start {module}: {started}.");
+                var kept = api.SharedStorageInit(module, storage); if (kept != AifError.OK) throw new InvalidOperationException($"The Controller would not keep the storage of {module} in {storage}: {kept}.");
+            }
             return new ModuleHost(module, api, process, work);
         }
         catch { try { process.Kill(true); } catch { } throw; }

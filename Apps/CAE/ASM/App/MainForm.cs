@@ -4,10 +4,10 @@ using NAudio.Wave;
 
 using Mpai.Core;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
-// ASM STUDIO. The editing space fills the window; on the left, in one colour, the audio objects (named as in a directory), and at the bottom of that pane Thalia and the
-// small text window. Everything the user does to the scene is a User Command; Undo revokes the last. Thalia answers briefly: "Roger." where it is done.
+// AUDIO SCENE MANAGEMENT, the App. The editing space fills the window; on the left, in one colour, the audio objects (named as in a directory), and at the bottom of that pane the
+// small text window. Everything the user does to the scene is a User Command; Undo revokes the last. The App answers briefly: "Roger." where it is done.
 public sealed class MainForm : Form
 {
     private readonly Studio studio = new();
@@ -39,7 +39,7 @@ public sealed class MainForm : Form
 
         // at the bottom of the same pane, in the same colour: the text
         var lower = new Panel { Dock = DockStyle.Bottom, Height = 480, BackColor = Look.Pane };
-        lower.Controls.Add(dialogue); dialogue.Talk.Visible = false;   // no microphone: the vocal interface is not part of the Module now
+        lower.Controls.Add(dialogue);
         pane.Controls.Add(library); pane.Controls.Add(lower); pane.Controls.Add(title);
 
         tools.Items.AddRange([
@@ -126,7 +126,7 @@ public sealed class MainForm : Form
     // It is written. (The vocal interface is not part of the Module now: nothing is spoken.)
     private void Say(string text, string? spoken = null)
     {
-        dialogue.Add("Thalia", text, Color.FromArgb(40, 90, 160));
+        dialogue.Add("ASM", text, Color.FromArgb(40, 90, 160));
         messageLabel.Text = text;
     }
 

@@ -1,19 +1,18 @@
 # Audio Scene Management (ASM)
 
-ASM is run as its parts are: three programs that talk through APIs.
+ASM is a stand-alone App: you build an audio scene from sounds and speech, place them in a room, change them, and hear the scene.
 
-| Part | Program | What it holds |
+| Part | Where | What it holds |
 |---|---|---|
-| User Agent | ASM Studio (`AIF/UserAgent/Clients/AsmStudio`) | the window, the library of names, the workflow `ASM.orch`; it knows only the Controller API and where its Controller is (`MPAI_MAS_SERVER`, default https://localhost:5109/) |
-| Controller | `Server` (AsmServer) | the Controller; no AIM. It places the Module's AIMs on the AIM host named in its configuration and keeps the Module's Shared Storage where its configuration says |
-| Module | an AIM host (`AIF/AimHost`) run on the folder `Host` builds | the six AIMs of the Module `1CAE-ASM-V1.0-I01`: AOE, ASE, SOE, SSE, BME and MMC-TST |
+| The App | `App\` (`AsmApp`) | the window, the library of names, the grammar of the typed commands, the scene as drawn, the undo, the spatial rendering; it starts the Module and runs the User Agent |
+| User Agent | `AIF/UserAgent/Ua` (`Mpai.Ua`) | reads `ASM.orch` and talks to the Controller through the Controller API only: Data Types and Port Numbers; it knows no AIM and no use case |
+| Controller | in the App's process (`Apps/CAE/Support`, `ModuleHost`) | holds no AIM; keeps the Module's Shared Storage where the App says (`Downloads\ASM\module-storage`) |
+| Module | an AIM host (`AIF/AimHost`), a process of its own, started and ended by the App | the six AIMs of `1CAE-ASM-V1.0-I01`: AOE, ASE, SOE, SSE, BME and MMC-TST |
 
-`Start-Asm.ps1` starts the three (AllApps, 10), and ends the Controller and the AIM host when the Studio is closed. `-NoStudio` starts the AIM host and the Controller, checks that
-they run, and ends them.
+Nothing here uses MPAI-MAS. `Server\` (`AsmServer`) and `Host\` are the Controller and the folder of the AIMs for the case in which the App is remotised; the tests of that case (`AsmServerTests`) use them.
 
-The Module runs continuously (Execution Continuous in its L3), so the Controller's Input and Output routes relay `InputWrite` and `OutputRead` for it, and an Output read waits for
-the time the reader states (`?timeout=`, in milliseconds). The Objects, Scenes and User Commands cross as the JSON instances their schemas describe (`JsonObjectCodec`).
+The Module runs continuously (Execution Continuous in its L3). The Objects, Scenes and User Commands cross as the JSON instances their schemas describe.
 
-The Module has no vocal interface now (recognition, understanding, synthesis): that is an extension to be specified. The Studio understands typed words by its own grammar only.
+The App has no vocal interface: recognition, understanding and synthesis are not part of the Module (the author's decision of 2026-10-17). It understands typed words by its own grammar. A vocal interface would be another Module that the App runs beside this one; it is not built.
 
-Tests: `AsmOnAnAimHostTests` (the AIMs on an AIM host), `AsmServerTests` (User Agent, Controller and AIM host), `AsmStudioSelfTests` (the Studio's own self-test, 103 checks, against the deployed Module).
+Start it with `AllApps\10 ASM (audio scene management).bat`. Its library of sounds and scenes is in `Downloads\ASM`. Test: `AsmStudioSelfTests` runs the App's own self-test (103 checks, `AsmApp --selftest`); the report goes to `Downloads\ASM\self-test`.

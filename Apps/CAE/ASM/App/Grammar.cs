@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 // WHAT THE USER ASKS, WHEN IT IS PLAIN: place a sound, move it, take it out, turn it. These are done as asked, at once; only what is not plain goes to the
 // dialogue AIM. The numbers say where: "at 2 m x, 5 m y", "x 2 y 5", "2 m to the right and 5 m ahead", "at 2, 5". x is to the right and y ahead.

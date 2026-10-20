@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AUDIO SCENE MANAGEMENT, the App: a window in which the user builds an audio scene from sounds and speech, places them, changes them and hears the scene. It runs the User Agent (Mpai.Ua) on the Workflow
+       Description ASM.orch against the Controller of the Module (Mpai.Cae.Apps.ModuleHost), whose AIMs run on an AIM host of their own. The App holds the names the user gives, the grammar of the typed
+       commands, the scene as drawn, the undo and the spatial rendering; the User Agent knows only the Controller API. It is stand-alone: nothing here uses MPAI-MAS. -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>AsmApp</AssemblyName>
+    <RootNamespace>Mpai.Cae.AsmApp</RootNamespace>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\UaKit\SpatialAudio\Mpai.SpatialAudio.csproj" />
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+    <!-- the AIMs of the Module, which the AIM host loads from the folder of the App -->
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\AimHost\AIF.AimHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

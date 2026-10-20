@@ -6,14 +6,16 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.SpatialAudio;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 public static class Paths
 {
     public static readonly string Root = FindRoot();
     public static string Amds => Path.Combine(Root, "AIMs", "AMDs");
     public static string Settings => Path.Combine(Root, "AIMs", "aim-settings.json");
-    public static string Workspace { get; } = Environment.GetEnvironmentVariable("ASMSTUDIO_WORKSPACE") is { Length: > 0 } w ? w : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ASM Studio");
+    // Where the self-test leaves its report: in Downloads, the one place the user looks in.
+    public static string Reports { get; } = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE") ?? "", "Downloads", "ASM", "self-test");
+    public static string Workspace { get; } = Environment.GetEnvironmentVariable("ASMSTUDIO_WORKSPACE") is { Length: > 0 } w ? w : Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE") ?? "", "Downloads", "ASM");
 
     private static string FindRoot()
     {
@@ -109,7 +111,7 @@ public sealed class Studio : IDisposable
     public Room? Room { get; private set; }                  // the room the scene is in, if it has one
     public Listener Listener { get; private set; } = new(0, 0, 0, 0);   // where the scene is heard from (its User PoV): the origin, facing ahead, until it is moved
     public AcousticProfile? SceneProfile { get; private set; }   // the acoustics of the scene (the Scene part of the Acoustic Profile), if it has any
-    public Acoustics? Acoustics => Mpai.AsmStudio.Acoustics.From(SceneProfile, Room);   // what the scene does to sound: none, unless something says there is reverberation
+    public Acoustics? Acoustics => Mpai.Cae.AsmApp.Acoustics.From(SceneProfile, Room);   // what the scene does to sound: none, unless something says there is reverberation
     public string? SceneJson { get; private set; }
     public Item? CurrentScene { get; private set; }          // the scene item that is open, if it was opened or saved by name
     public static string LibraryFolder => Path.Combine(Paths.Workspace, "library");
@@ -122,7 +124,7 @@ public sealed class Studio : IDisposable
     {
         Directory.CreateDirectory(Paths.Workspace);
         Catalog = Catalog.Load();
-        link = ModuleLink.Remote();
+        link = ModuleLink.Local(Path.Combine(Paths.Workspace, "module-storage"));
         link.Start();      // the Controller keeps the Module's Shared Storage where its configuration says
     }
 

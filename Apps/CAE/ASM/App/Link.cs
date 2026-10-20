@@ -5,11 +5,10 @@ using System.Threading.Channels;
 using AIF.Controller;   // the codes of the Controller API (AifError)
 using Mpai.Aif.Api;
 using Mpai.Core;
-using Mpai.Rca;
 using Mpai.Ua;
 using Mpai.Wdl;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 // A DEVICE OF THE ASM USER AGENT BOUND TO ONE PORT OF THE MODULE. The workflow (Apps/ASM/ASM.orch) binds it for the life of the workflow: what the User Agent sends to it is
 // streamed to the Port it is streamed to; what the Port it is delivered to gives is delivered to it, and waits here until the User Agent takes it.
@@ -46,7 +45,7 @@ public sealed class DiscardDevice : IDevice
 // THE USER AGENT'S LINK TO THE MODULE. The ASM UA is a User Agent: it runs the Workflow Description of Audio Scene Management (Apps/ASM/ASM.orch) with the workflow
 // interpreter, which is the only thing that deals with the Controller - starts the Module, streams to the Ports and
 // delivers from them, stops it. The UA holds devices, one to a Port, and addresses them by Data Type and Port Number; it holds no AIM and does not read or write the
-// storage. It uses only the Controller API (and so may run remotely, through MPAI-MAS, as the other Apps do).
+// storage. It uses only the Controller API.
 public sealed class ModuleLink : IDisposable
 {
     public const string Module = "1CAE-ASM-V1.0-I01";
@@ -76,17 +75,15 @@ public sealed class ModuleLink : IDisposable
 
     public ModuleLink(IControllerApi api, IDisposable? owner = null) { this.api = api; this.owner = owner; }
 
-    // The Controller of the MPAI-MAS Service (this machine's, unless MPAI_MAS_SERVER says another), reached only through the Controller API: the Service holds the
-    // AIMs of this Module (Audio Scene Management's) and the User Agent holds none.
-    public static ModuleLink Remote()
+    // The Controller of this App and the Module's AIMs on an AIM host of their own (Mpai.Cae.Apps.ModuleHost). The Controller keeps the Module's Shared Storage in `storage`, its own business: the User Agent
+    // names no place. Everything the User Agent does with the Module goes through the Controller API.
+    public static ModuleLink Local(string storage, Action<string>? say = null)
     {
-        var url = Environment.GetEnvironmentVariable("MPAI_MAS_SERVER") is { Length: > 0 } s ? s : "https://localhost:5105/";
-        var token = Environment.GetEnvironmentVariable("MPAI_MAS_TOKEN");
-        var controller = new Mpai.Mas.Client.RemoteControllerApi(url, string.IsNullOrEmpty(token) ? null : token);
-        return new ModuleLink(controller, controller);
+        var host = Mpai.Cae.Apps.ModuleHost.Start(Module, null, say,
+            [("Mpai.Cae.Asm.dll", "Mpai.Cae.Asm.AsmProvider"), ("Mpai.Providers.dll", "Mpai.Providers.MatProvider")], storage);
+        return new ModuleLink(host.Api, host);
     }
-
-    // The workflow is run; it starts the Module (the Controller keeps its storage where its own configuration says).
+    // The workflow is run; it starts the Module (which the Controller already holds, with its storage where it keeps it).
     public void Start()
     {
         var devices = new DeviceRegistry();

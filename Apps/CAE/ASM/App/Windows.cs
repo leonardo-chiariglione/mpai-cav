@@ -1,13 +1,11 @@
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.WinForms;
 
 using NAudio.Wave;
 
-namespace Mpai.AsmStudio;
+namespace Mpai.Cae.AsmApp;
 
 public static class Look
 {
-    public static readonly Color Pane = Color.FromArgb(238, 241, 247);          // the colour of the left pane, the same for the list, Thalia and the text
+    public static readonly Color Pane = Color.FromArgb(238, 241, 247);          // the colour of the left pane, the same for the list and the text
     public static readonly Color PaneEdge = Color.FromArgb(215, 220, 230);
 }
 
@@ -33,79 +31,19 @@ public static class Player
     public static bool Playing { get { lock (Lock) return output is not null; } }
 }
 
-// THALIA, SPEAKING: her face in the left pane; her mouth follows the loudness of what she says, half as open as the loudness would make it.
-public sealed class ThaliaPanel : UserControl
-{
-    private readonly WebView2 web = new() { Dock = DockStyle.Fill };
-    private readonly Label note = new() { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.FromArgb(70, 80, 100), BackColor = Look.Pane, Padding = new Padding(12) };
-    private bool ready;
 
-    public ThaliaPanel()
-    {
-        BackColor = Look.Pane; Height = 230;
-        note.Text = "Thalia is waking up...";
-        Controls.Add(web); Controls.Add(note);
-    }
-
-    public async Task InitAsync()
-    {
-        try
-        {
-            var env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(Paths.Workspace, "webview"));
-            await web.EnsureCoreWebView2Async(env);
-            web.DefaultBackgroundColor = Look.Pane;
-            web.CoreWebView2.SetVirtualHostNameToFolderMapping("cavapp.local", Path.Combine(AppContext.BaseDirectory, "Assets"), CoreWebView2HostResourceAccessKind.Allow);
-            web.CoreWebView2.NavigationCompleted += (_, a) => { if (a.IsSuccess) { ready = true; note.Visible = false; } else note.Text = "Her face could not be loaded."; };
-            web.CoreWebView2.Navigate("https://cavapp.local/thalia.html");
-        }
-        catch (Exception e) { note.Text = "Her face needs the WebView2 runtime and an internet connection (it draws with three.js).\r\n\r\n" + e.Message; }
-    }
-
-    private static float[] Envelope(byte[] wav, double frame)
-    {
-        var (rate, bits, channels) = Studio.Format(wav);
-        if (bits != 16 || rate <= 0) return [];
-        var step = Math.Max(1, (int)(rate * frame)) * channels;
-        var list = new List<float>();
-        for (var at = 44; at + step * 2 <= wav.Length; at += step * 2)
-        {
-            double sum = 0;
-            for (var i = 0; i < step; i++) { var s = BitConverter.ToInt16(wav, at + i * 2) / 32768.0; sum += s * s; }
-            list.Add((float)Math.Min(1, Math.Sqrt(sum / step) * 5) * 0.5f);
-        }
-        return [.. list];
-    }
-
-    public async Task SpeakAsync(byte[] wav)
-    {
-        var envelope = Envelope(wav, 0.04);
-        var playing = Player.PlayAsync(wav);
-        var clock = System.Diagnostics.Stopwatch.StartNew();
-        while (!playing.IsCompleted)
-        {
-            var i = (int)(clock.Elapsed.TotalSeconds / 0.04);
-            if (ready && i < envelope.Length && IsHandleCreated)
-                try { await web.ExecuteScriptAsync($"window.thaliaMouth && window.thaliaMouth({envelope[i]:0.00})"); } catch { }
-            await Task.Delay(40);
-        }
-        if (ready) try { await web.ExecuteScriptAsync("window.thaliaMouth && window.thaliaMouth(0)"); } catch { }
-    }
-}
-
-// THE SMALL TEXT WINDOW, under her: what the user types, and what comes back; and the button that listens - press it to begin, press it again to end.
+// THE SMALL TEXT WINDOW, under the list: what the user types, and what comes back.
 public sealed class DialoguePanel : UserControl
 {
     private readonly RichTextBox log = new() { Dock = DockStyle.Fill, ReadOnly = true, BackColor = Look.Pane, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 9.5f) };
     private readonly TextBox input = new() { Dock = DockStyle.Bottom, Font = new Font("Segoe UI", 10f) };
-    public Button Talk { get; } = new() { Text = "Press to talk", Dock = DockStyle.Bottom, Height = 36, Font = new Font("Segoe UI", 10.5f, FontStyle.Bold), BackColor = Color.FromArgb(220, 230, 246), FlatStyle = FlatStyle.Flat };
     public event Action<string>? Submitted;
 
     public DialoguePanel()
     {
         BackColor = Look.Pane; Height = 240;
-        Controls.Add(log); Controls.Add(Talk); Controls.Add(input);
+        Controls.Add(log); Controls.Add(input);
         input.PlaceholderText = "type what you want, and press Enter";
-        Talk.FlatAppearance.BorderColor = Look.PaneEdge;
         input.KeyDown += (_, e) =>
         {
             if (e.KeyCode != Keys.Enter || string.IsNullOrWhiteSpace(input.Text)) return;
