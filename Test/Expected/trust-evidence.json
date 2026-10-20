@@ -11,6 +11,6 @@
   "approved: TST-RXL": "started; an exchange: OK",
   "its evidence": "AIF-EVID-CODE-HASH Mpai.Aif.Tests, AIF-EVID-CONFIG-HASH ModelPath=<model>",
   "not approved": "NOT_TRUSTED: 1TST-RXL-V1.0-I01 not started: 1TST-UPP-V1.0-I01 not trusted - the Store approved no fingerprint of Mpai.Aif.Tests.",
-  "one AIM approved with another fingerprint": "NOT_TRUSTED: 1TST-RXL-V1.0-I01 not started: 1TST-SLP-V1.0-I01 not trusted - Mpai.Aif.Tests is not the binary the Store approved (SHA-256 <as measured>, approved 0000000000000000...).",
+  "one AIM approved with another fingerprint": "NOT_TRUSTED: 1TST-RXL-V1.0-I01 not started: 1TST-SLP-V1.0-I01 not trusted - Mpai.Aif.Tests is not the binary the Store approved (SHA-256 <as measured>).",
   "without trust, not approved": "started; an exchange: OK"
 }

@@ -12,6 +12,8 @@
                        {"Name": "AudioScene", "Direction": "Input", "DataType": ["OSD-BAS-V1.5", "OSD-ASD-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "OutputAudio", "Direction": "Output", "DataType": ["OSD-BAO-V1.5", "OSD-AUO-V1.5"], "Technology": "Hardware", "Protocol": "", "IsRemote": ""}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Request": "/* GB */", "Maximum": "/* GB */"},

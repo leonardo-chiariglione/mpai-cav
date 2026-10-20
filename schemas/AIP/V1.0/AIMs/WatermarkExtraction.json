@@ -1,0 +1,34 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/AIP/V1.0/AIMs/WatermarkExtraction.json",
+  "title":                "Watermark Extraction V1.2",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-WEX-V1.2"},
+  "Header":               "NNW-WEX-V1.2",
+
+  "APIProfile":           "Basic",
+  "Description":          "Watermark Extraction: retrieves the payload inserted in a neural network model, which may have been modified after the insertion, and gives the retrieved payload.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "ModifiedModel",    "Direction": "Input",  "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "Locator",          "Direction": "Input",  "DataType": "NNW-WLC-V1.2", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "RetrievedPayload", "Direction": "Output", "DataType": "NNW-PLD-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+
+  "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
+  
+  "ResourcePolicies":     [{"Name": "Memory",               "Minimum": "/* GB */",              "Maximum": "/* GB */",              "Request": "/* GB */"},
+                           {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */",  "Maximum": "/* integer, 0=all */",  "Request": "/* integer */"},
+                           {"Name": "CPU:Class",            "Minimum": "/* string */",          "Maximum": "/* string */",          "Request": "/* string */"},
+                           {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */",   "Request": "/* integer */"},
+                           {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",          "Maximum": "/* string */",          "Request": "/* string */"},
+                           {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",              "Maximum": "/* GB */",              "Request": "/* GB */"},
+                           {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",            "Maximum": "/* GB/s */",            "Request": "/* GB/s */"}],
+  "DataXMData":           {},
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-nnw/nnt/v1-2/"}] }

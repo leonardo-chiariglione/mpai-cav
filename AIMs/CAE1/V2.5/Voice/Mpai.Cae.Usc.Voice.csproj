@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The voice of the Speech Model: the OpenVoice V2 tone-colour embedding as the Neural Network Speech Model (the trainer of Speech Model Creation) and the Text To Speech that speaks in it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Cae.Usc.Common.csproj" />
+    <ProjectReference Include="..\SMC\Mpai.Cae.Usc.Smc.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="openvoice_worker.py" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -58,6 +58,8 @@
                           {"Output": {"AIMName": "CAV-AMI-V2.0", "DataType": "CAV-WHC-V2.0"}, "Input": {"AIMName": "", "DataType": "CAV-WHC-V2.0"}},
                           {"Output": {"AIMName": "CAV-MRA-V2.0", "DataType": "CAV-AMM-V2.0"}, "Input": {"AIMName": "", "DataType": "CAV-AMM-V2.0"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [
     {"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}
   ],

@@ -1,0 +1,156 @@
+<#
+.SYNOPSIS
+  The test matrix of M3207: builds the entry projects, runs the tests, and reports
+  what blocks a step apart from what only informs.
+
+.DESCRIPTION
+  Blocking: the builds of the AIF and the tests, and every test with Blocks=Yes
+  (the Metadata, Loops, CAV status and Model hashes tests). If any of these fails,
+  the step may not be committed, and the script exits with 1.
+
+  Informative: the builds of MAS-App and every test with Blocks=No (the Workflows
+  test; with -Full, also the Service tests). Their results are reported and a
+  failure is recorded, but it does not stop the step (M3206 Section 2).
+
+.PARAMETER Quick
+  Only the Fast group: the Metadata, Loops, CAV status and Workflows tests, in
+  seconds. Leaves out the Model hashes (about 30 s) and the Service tests.
+
+.PARAMETER Full
+  Also the Service tests of MAS-App (a few minutes, mostly loading the models),
+  and the checklist of the Apps by voice. For the end of a phase.
+
+.PARAMETER Long
+  The tests marked Duration=Long - the CAV end to end with the detector, about half
+  an hour - whatever the step changed. Without it they run only where the step (the
+  files git sees changed) touches what they exercise; with -Full, always.
+#>
+param([switch]$Quick, [switch]$Full, [switch]$Long)
+
+$ErrorActionPreference = 'Stop'
+$root    = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$results = Join-Path $env:TEMP 'mpai-matrix'
+New-Item -ItemType Directory -Force $results | Out-Null
+
+$blockingBuilds = @(
+    'Test\Mpai.Aif.Tests\Mpai.Aif.Tests.csproj',
+    'Test\legacy\M3194Test\M3194Test.csproj'
+)
+$informativeBuilds = @(
+    'Apps\MAS\Service\src\MasService.csproj',
+    'AIF\UserAgent\Clients\Desktop\src\RcaApp.csproj',
+    'AIF\UserAgent\Clients\Browser\Host\RcaWeb.Host.csproj',
+    'Store\Service\StoreService.csproj',
+    'Store\App\StoreApp.csproj'
+)
+# The standalone programs (Apps\MMC\*\Standalone, and Test\legacy) are not built: MAS-App replaced them
+# (M3209). AIF\UserAgent\RcaConsole does not build (DeviceRegistry.Acquire changed under it).
+
+$blocking    = [System.Collections.Generic.List[string]]::new()
+$informative = [System.Collections.Generic.List[string]]::new()
+$failedBlocking = $false
+
+function Build([string]$project) {
+    # What a program writes to its error output is its output, not a failure of this
+    # script: under Stop, Windows PowerShell 5.1 turns each such line into a
+    # terminating error, and the run ended at the first failing test instead of
+    # reporting it.
+    $ErrorActionPreference = 'Continue'
+    $out = & dotnet build (Join-Path $root $project) -nologo -v q 2>&1
+    $errors = ($out | Select-String -Pattern '(\d+) Error\(s\)' | Select-Object -Last 1).Matches.Groups[1].Value
+    return ($LASTEXITCODE -eq 0 -and $errors -eq '0')
+}
+
+Write-Host "Building..." -ForegroundColor Cyan
+foreach ($p in $blockingBuilds) {
+    if (Build $p) { $blocking.Add("PASS  build  $p") } else { $blocking.Add("FAIL  build  $p"); $failedBlocking = $true }
+}
+foreach ($p in $informativeBuilds) {
+    if (Build $p) { $informative.Add("PASS  build  $p") } else { $informative.Add("FAIL  build  $p") }
+}
+
+# Runs the tests a filter selects and returns one line per test, from the .trx report.
+function RunTests([string]$filter, [string]$name) {
+    # What a program writes to its error output is its output, not a failure of this
+    # script: under Stop, Windows PowerShell 5.1 turns each such line into a
+    # terminating error, and the run ended at the first failing test instead of
+    # reporting it.
+    $ErrorActionPreference = 'Continue'
+    $trx = Join-Path $results "$name.trx"
+    if (Test-Path $trx) { Remove-Item $trx -Confirm:$false }
+    $project = Join-Path $root 'Test\Mpai.Aif.Tests\Mpai.Aif.Tests.csproj'
+    & dotnet test $project --no-build -nologo --filter $filter --logger "trx;LogFileName=$trx" 2>&1 | Out-Null
+    $lines = @()
+    if (-not (Test-Path $trx)) { return ,@("FAIL  tests  ($name) no results were produced") }
+    [xml]$x = Get-Content $trx -Raw
+    foreach ($r in $x.TestRun.Results.UnitTestResult) {
+        $outcome = switch ($r.outcome) { 'Passed' { 'PASS' } 'Failed' { 'FAIL' } 'NotExecuted' { 'SKIP' } default { $r.outcome } }
+        $test = $r.testName -replace '^Mpai\.Aif\.Tests\.', ''
+        $line = "{0}  test   {1}  ({2:N1} s)" -f $outcome, $test, ([TimeSpan]::Parse($r.duration).TotalSeconds)
+        $message = $r.Output.ErrorInfo.Message
+        if ($outcome -eq 'SKIP' -and $r.Output.StdOut) { $message = $r.Output.StdOut }
+        if ($message) { $line += "`n        " + (($message -split "`n" | Select-Object -First 12) -join "`n        ") }
+        $lines += $line
+    }
+    return ,$lines
+}
+
+# THE LONG TESTS (the author, 2026/09/28): the CAV end to end with the detector.
+# They run at a step only where it changed something they exercise - the AIF, the
+# CAV and OSD AIMs, those of HCI (MMC, CAE, CVE, PAF: the CAV as one Module, Phase
+# 11), their L3s and settings, the simulation, the models, the CAV, OSD and MMC
+# schemas, their own tests - and at the end of a phase (-Full) always. Every other
+# blocking test runs at every step.
+$exercised = @(
+    '^AIF/', '^AIMs/CAV/', '^AIMs/OSD/', '^AIMs/Core/', '^AIMs/(MMC|CAE3|CVE|PAF|HCI)/', '^AIMs/AMDs/1(CAV|OSD|MMC|CAE|CVE|PAF)-', '^AIMs/aim-settings\.json$',
+    '^CAV/', '^Models/', '^schemas/(CAV2|OSD|TFA|PAF|MMC)/',
+    '^Test/Mpai\.Aif\.Tests/(AmsStage1Tests|EssStage1Tests|MasEndToEndTests|MasStage1Tests|RemoteEndToEndTests|RemoteStage1Tests|CaoTests|HciSpeechTests|CavDialogueTests|TruthBed|DrivePorts|Expected|Timing)\.cs$',
+    '^Test/Mpai\.Aif\.Tests/Mpai\.Aif\.Tests\.csproj$', '^Test/Expected/(ams|ess|mas|remote)-stage1-end-to-end\.json$', '^Test/Expected/cav-stage1-(cao|cao-cases|two-caos)\.json$', '^Test/Run-Matrix\.ps1$'
+)
+$changed = @(& git -C $root status --porcelain --untracked-files=all 2>$null | ForEach-Object { ($_.Substring(3) -split ' -> ')[-1].Trim('"') })
+$touching = @($changed | Where-Object { $path = $_; $exercised | Where-Object { $path -match $_ } })
+$runLong = $Full -or $Long -or $touching.Count -gt 0
+$why = if ($Full) { 'the end of a phase (-Full)' } elseif ($Long) { 'asked for (-Long)' }
+       elseif ($runLong) { "the step changed $($touching.Count) file(s) they exercise, e.g. $($touching[0])" }
+       else { 'the step changed nothing they exercise' }
+
+Write-Host "Testing..." -ForegroundColor Cyan
+$blockingFilter    = if ($Quick) { 'Blocks=Yes&Group=Fast' } else { 'Blocks=Yes' }
+if (-not $runLong) { $blockingFilter += '&Duration!=Long' }
+$informativeFilter = if ($Full)  { 'Blocks=No' } else { 'Blocks=No&Group!=Service' }
+
+foreach ($l in (RunTests $blockingFilter 'blocking'))       { $blocking.Add($l);    if ($l.StartsWith('FAIL')) { $failedBlocking = $true } }
+foreach ($l in (RunTests $informativeFilter 'informative')) { $informative.Add($l) }
+
+Write-Host ""
+Write-Host "LONG TESTS: $(if ($runLong) { 'run' } else { 'not run' }) - $why" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "BLOCKING - the AIF and the CAV: these decide whether the step may be committed" -ForegroundColor Yellow
+$blocking    | ForEach-Object { Write-Host "  $_" -ForegroundColor ($(if ($_.StartsWith('FAIL')) { 'Red' } else { 'Gray' })) }
+Write-Host ""
+Write-Host "INFORMATIVE - MAS-App: reported and recorded, not a reason to stop" -ForegroundColor Yellow
+$informative | ForEach-Object { Write-Host "  $_" -ForegroundColor ($(if ($_.StartsWith('FAIL')) { 'DarkYellow' } else { 'Gray' })) }
+
+if ($Full) {
+    Write-Host ""
+    Write-Host "THE APPS BY VOICE (M3207 3.6) - to be checked by the author, in the browser and on the desktop:" -ForegroundColor Yellow
+    @(
+        'MPAI-MAS  welcome spoken; the list of Apps shown; an App chosen by voice starts it; Stop returns to the list;',
+        '          "another App?" answered "yes" shows the list again, "no" (spoken or typed) says goodbye and ends',
+        'MAD       two spoken turns, the second referring to the first; typing instead of speaking works',
+        'AMQ       "yes"; a picture chosen; a spoken question answered about it; "no" ends',
+        'MAT       a pair of languages chosen; a spoken sentence said in the other language, and shown',
+        'MPD       the camera allowed; a happy sentence answered with a smile',
+        'ACR       a name typed, the face and a sentence given; the registration confirmed, and its deletion at the close said',
+        'MAC       the face and a sentence of the person ACR registered: access granted by name; of another person: refused',
+        'Both      the same checks give the same result; Stop during any step returns to the list'
+    ) | ForEach-Object { Write-Host "  [ ] $_" }
+}
+
+Write-Host ""
+if ($failedBlocking) {
+    Write-Host "RESULT: a blocking build or test failed - the step may not be committed." -ForegroundColor Red
+    exit 1
+}
+Write-Host "RESULT: every blocking build and test passed." -ForegroundColor Green
+exit 0

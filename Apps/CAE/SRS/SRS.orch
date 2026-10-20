@@ -1,0 +1,35 @@
+# =============================================================================
+#  SRS.orch - Speech Restoration System (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes by exchange: the four inputs are given,
+#  then the Restored Segment is asked for. The User Agent gets each datum from where
+#  its App says (the labels are the App's to answer):
+#
+#    "Voice"       the Speech Segments for Modelling: speech of the speaker, to make the
+#                  model of the voice from
+#    "Texts"       the texts of the damaged sections, in order
+#    "Damaged"     the speech that is damaged
+#    "DamagedList" where it is damaged
+#
+#  and presents what the Module gives:
+#
+#    Restored      the Damaged Segment with the damaged sections replaced by speech
+#                  synthesised in the voice of the speaker
+# =============================================================================
+
+workflow SRS over 1CAE-SRS-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    offer   Voice       (OSD-BSO-V1.5:1) from device "Voice"
+    offer   Texts       (OSD-BTO-V1.5)   from device "Texts"
+    offer   Damaged     (OSD-BSO-V1.5:2) from device "Damaged"
+    offer   DamagedList (CAE-DLS-V2.5)   from device "DamagedList"
+    ask     Restored    (OSD-BSO-V1.5)
+    present Restored
+
+on Stop:
+    ask Controller to stop

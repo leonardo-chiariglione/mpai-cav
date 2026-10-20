@@ -1,0 +1,31 @@
+{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-CTS-V2.5"},
+  "Header":               "MMC-CTS-V2.5",
+
+  "APIProfile":           "Basic",
+  "Description":          "Column Text Selection. Receives the lines of a page as a Text Object (each line a Basic Text Object with its box, in the pixels of the page) and, when the person has pointed, the Point at the top of a column; produces the text of that column as a Basic Text Object: the lines under the point that overlap it horizontally, down to the column's end (a wide gap, a much taller line, or no line left), a word hyphenated across lines joined. With no Point, the first column under the headline.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "PageText",   "Direction": "Input",  "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Point",      "Direction": "Input",  "DataType": "OSD-PNT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ColumnText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */",
+                            "MASPort":          443,
+                            "BinaryName": "/* provided by implementer */",
+                            "Architecture": "/* x86-64 | ARM64 */",
+                            "OperatingSystem": "/* Windows | Linux | MacOS */",
+                            "Version": "/* implementer version */",
+                            "Source": "/* AIMStorage | MPAIStore */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "0.1 GB", "Request": "0.2 GB", "Maximum": "0.5 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Low",    "Maximum": "Medium"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/"}]}

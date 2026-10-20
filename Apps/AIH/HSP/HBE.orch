@@ -1,0 +1,73 @@
+# =============================================================================
+#  HBE.orch - Health Back End (AIH-HSP V1.1)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module (the Health Back End), which runs until Stop. The
+#  User Agent of the Back End binds a device to every Port of the Module's
+#  boundary, each to one Port, by Data Type and Port Number. What reaches the Back
+#  End comes from the Front Ends and the Third-Party Users (the Back End's clients;
+#  the Front Ends never speak to each other), and the Blockchain answers what the
+#  Module asks of it:
+#
+#    from the clients -
+#      RegisterIn      a registration              (End User or Third-Party User)
+#      RequestIn       a request to HDP            (an upload, a processing)
+#      DeIdIn          a request to De-Identify or Anonymise
+#      AuditIn         a request to audit
+#      AhdAuditIn, AhdDeIdIn, AhdProcIn   AIH Data, to Auditing, to De-Identification and
+#                      Anonymisation, and to AIH Data Processing (to be kept)
+#      LearnAnswerIn   the NN Model a Front End trained
+#    from the Blockchain -
+#      ContractIn      the Smart Contract of a Model Licence
+#      ConfirmIn       the confirmation of a licence, for HDP
+#      AuditConfirmIn  the same, for Auditing
+#
+#    to the clients -
+#      RegisterOut, ResponseOut, DeIdOut, AhdDeIdOut (the copy), AuditOut, LearnOut, ModelOut
+#    to the Blockchain -
+#      ContractOut, ConfirmOut, AuditConfirmOut
+#
+#  Where the Secure Storage is kept is the Back End's: the User Agent asks the
+#  Controller to keep the storage there. It names no AIM; AIH Data Processing keeps
+#  the AIH Data there through the storage API (there is no Storage AIM), and gives it
+#  back to the User Agent when it asks for it, which hands it to Auditing and to
+#  De-Identification and Anonymisation.
+# =============================================================================
+
+workflow HBE over 1AIH-HBE-V1.1-I01
+
+on Start:
+
+    type    Storage (OSD-BTO-V1.5)
+    ask Controller to start
+    ask Controller to keep storage in "{Storage}"
+
+    stream  RegisterIn        (AIH-REG-V1.1)   from device "RegisterIn"
+    stream  RequestIn         (AIH-AHP-V1.1:1) from device "RequestIn"
+    stream  DeIdIn            (AIH-DIA-V1.1)   from device "DeIdIn"
+    stream  AhdAuditIn        (AIH-AHD-V1.1:1) from device "AhdAuditIn"
+    stream  AhdDeIdIn         (AIH-AHD-V1.1:2) from device "AhdDeIdIn"
+    stream  AhdProcIn         (AIH-AHD-V1.1:3) from device "AhdProcIn"
+    stream  AuditIn           (AIH-ADT-V1.1)   from device "AuditIn"
+    stream  LearnAnswerIn     (AIH-FDL-V1.1)   from device "LearnAnswerIn"
+    stream  ContractIn        (AIH-BCL-V1.1)   from device "ContractIn"
+    stream  ConfirmIn         (AIH-LCF-V1.1:2) from device "ConfirmIn"
+    stream  AuditConfirmIn    (AIH-LCF-V1.1:1) from device "AuditConfirmIn"
+
+    deliver RegisterOut       (AIH-REG-V1.1)   to device "RegisterOut"
+    deliver ResponseOut       (AIH-AHP-V1.1:1) to device "ResponseOut"
+    deliver AraOut            (AIH-ARD-V1.1)   to device "AraOut"
+    deliver DeIdOut           (AIH-DIA-V1.1)   to device "DeIdOut"
+    deliver AhdDeIdOut        (AIH-AHD-V1.1:1) to device "AhdDeIdOut"
+    deliver AuditOut          (AIH-ADT-V1.1)   to device "AuditOut"
+    deliver LearnOut          (AIH-FDL-V1.1)   to device "LearnOut"
+    deliver ModelOut          (AIP-MLO-V1.0)   to device "ModelOut"
+    deliver ContractOut       (AIH-BCL-V1.1)   to device "ContractOut"
+    deliver ConfirmOut        (AIH-LCF-V1.1:2) to device "ConfirmOut"
+    deliver AuditConfirmOut   (AIH-LCF-V1.1:1) to device "AuditConfirmOut"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

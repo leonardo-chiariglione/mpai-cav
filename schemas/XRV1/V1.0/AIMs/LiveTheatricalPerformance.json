@@ -87,6 +87,8 @@
                            { "Output": { "AIMName": "XRV-REG-V1.0", "PortName": "REDataOut"                }, "Input": { "AIMName": "",             "PortName": "REDataOut"                } },
                            { "Output": { "AIMName": "XRV-VEG-V1.0", "PortName": "VEDataOut"                }, "Input": { "AIMName": "",             "PortName": "VEDataOut"                } }],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":      [{ "ImplementationURI": "/* absolute URI locating the Implementation */",
                              "BinaryName":        "/* provided by implementer */",
                              "Architecture":      "/* x86-64 | ARM64 */",

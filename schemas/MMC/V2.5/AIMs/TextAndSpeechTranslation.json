@@ -32,6 +32,8 @@
                           {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
                             "BinaryName":       "/* BinaryName */",
                             "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",

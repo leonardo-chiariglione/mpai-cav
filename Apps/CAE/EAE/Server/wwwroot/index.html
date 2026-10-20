@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enhanced Audioconference</title>
+<style>
+  :root { --bg:#10201a; --fg:#e8f1ec; --mute:#8fa89c; --acc:#f2c14e; --hot:#e4572e; --line:#2c4a3d; --panel:#16302a; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui,sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  h1 { font-size:20px; margin:0; } h1 small { color:var(--mute); font-weight:400; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  label { display:grid; gap:4px; margin-bottom:10px; color:var(--mute); font-size:13px; }
+  input, select { background:#0c1814; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:8px; font:inherit; }
+  button { background:var(--acc); color:#241c04; border:0; border-radius:6px; padding:9px 16px; font:inherit; font-weight:600; cursor:pointer; }
+  button.quiet { background:transparent; color:var(--fg); border:1px solid var(--line); }
+  #stage { display:none; } canvas { width:100%; max-width:520px; aspect-ratio:1; display:block; margin:0 auto; background:#0c1814; border-radius:50%; }
+  #status { color:var(--mute); font-size:13px; } #error { color:var(--hot); min-height:1.2em; }
+  ul { list-style:none; padding:0; margin:8px 0 0; display:flex; gap:10px; flex-wrap:wrap; }
+  li { border:1px solid var(--line); border-radius:16px; padding:3px 12px; color:var(--mute); } li.on { color:#241c04; background:var(--acc); border-color:var(--acc); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Enhanced Audioconference <small id="where"></small></h1>
+  <section class="panel" id="join">
+    <label>Your name<input id="name" maxlength="24" autocomplete="off"></label>
+    <label>You are<select id="role"><option value="listener">a listener: hear the room, its speakers placed where they are</option><option value="room">the room: capture its microphone array</option></select></label>
+    <label id="codeRow" hidden>Meeting code<input id="code" autocomplete="off"></label>
+    <button id="go">Join</button> <span id="error"></span>
+  </section>
+  <section class="panel" id="stage">
+    <canvas id="map" width="520" height="520"></canvas>
+    <ul id="speakers"></ul>
+    <p id="status"></p>
+    <button class="quiet" id="leave">Leave</button>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

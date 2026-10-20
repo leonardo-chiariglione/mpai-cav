@@ -27,11 +27,12 @@ public sealed class HostProcess : IDisposable
     // bin: where the host runs from; extra: more of its arguments; provider: what builds
     // its AIMs (assembly:Type), the test AIMs where not given.
     public HostProcess(string? amds = null, string? anchor = null, string? trust = null, string? bin = null, string[]? extra = null,
-                       string? provider = null)
+                       string? provider = null, string? workingDirectory = null)
     {
         bin ??= AppContext.BaseDirectory;
         var info = new ProcessStartInfo("dotnet")
         {
+            WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,   // the models' relative paths are resolved from here
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

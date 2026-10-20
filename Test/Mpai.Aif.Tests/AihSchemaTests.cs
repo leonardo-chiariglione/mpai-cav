@@ -82,6 +82,26 @@ public static class AihSamples
         })
     };
 
+    public static JsonObject ThirdPartyUserProfile(string id = "tpu-1") => new()
+    {
+        ["Header"] = "AIH-TPU-V1.1", ["ThirdPartyUserID"] = id, ["ThirdPartyUserProfileID"] = "tpup-1",
+        ["ThirdPartyUserProfileData"] = new JsonObject { ["CompanyName"] = "Cardio Research Ltd", ["RegistrationCode"] = "GB-0001", ["Country"] = "GB", ["Email"] = "data@cardio.example.org" },
+        ["Entitlements"] = new JsonObject
+        {
+            ["UserTypes"] = new JsonArray("Non-Profit Entity"), ["DataClasses"] = new JsonArray("AIH-ECO"), ["DataStatus"] = new JsonArray("Pseudonymised"),
+            ["ProcessTypes"] = new JsonArray("PhysiologicalRiskPrediction"), ["AnomalyTypes"] = new JsonArray("Point Anomaly"), ["UsageTypes"] = new JsonArray("Research")
+        }
+    };
+
+    public static JsonObject ThirdPartyRegisterRequest(string id = "tpu-1") => new()
+    {
+        ["Header"] = "AIH-REG-V1.1", ["RegisterID"] = "reg-2", ["RegisterTime"] = Time("reg-t"),
+        ["RegisterData"] = new JsonArray(new JsonObject
+        {
+            ["Request"] = new JsonObject { ["ThirdPartyUserProfile"] = ThirdPartyUserProfile(id), ["RequestedServices"] = new JsonArray(new JsonObject { ["Service"] = "AIHDataProcessing" }) }
+        })
+    };
+
     public static JsonObject RegisterResponse(string user = "user-1") => new()
     {
         ["Header"] = "AIH-REG-V1.1", ["RegisterID"] = "reg-1", ["RegisterTime"] = Time("reg-t"),
@@ -109,7 +129,7 @@ public static class AihSamples
     public static JsonObject LicenceConfirmRequest(string user = "user-1") => new()
     {
         ["Header"] = "AIH-LCF-V1.1", ["EndUserID"] = user, ["LicenceConfirmID"] = "lcf-1", ["LicenceConfirmTime"] = Time("lcf-t"),
-        ["LicenceConfirmData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["ProcessType"] = "Store", ["Time"] = Time("lcf-rt") } })
+        ["LicenceConfirmData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["ProcessType"] = "Store", ["RequesterID"] = "user-1", ["Time"] = Mpai.Aih.AihJson.SimpleTime() } })
     };
 
     public static JsonObject LicenceConfirmResponse(bool ok, string user = "user-1") => new()
@@ -141,14 +161,14 @@ public static class AihSamples
         ["Header"] = "AIH-DIA-V1.1", ["DeIDAndAnonymID"] = "dia-1", ["DeIDAndAnonymTime"] = Time("dia-t"), ["EndUserID"] = user,
         ["DeIDAndAnonymData"] = new JsonArray(new JsonObject
         {
-            ["Request"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["DeIDAndAnonymType"] = "Anonymise", ["DeIDAndAnonymAlgoID"] = "K-Anonymity" }
+            ["Request"] = new JsonObject { ["AIHDataID"] = "ahd-1", ["DeIDAndAnonymType"] = "Anonymise", ["DeIDAndAnonymAlgoID"] = "K-Anonymity", ["Tokens"] = Tokens(user) }
         })
     };
 
     public static JsonObject FederatedLearnRequest(string user = "user-1") => new()
     {
         ["Header"] = "AIH-FDL-V1.1", ["EndUserID"] = user, ["FederatedLearnID"] = "fdl-1", ["FederatedLearnTime"] = Time("fdl-t"),
-        ["FederatedLearnData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["HFEID"] = "hfe-1", ["PreLearnNNModelID"] = "model-0" } })
+        ["FederatedLearnData"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["HFEID"] = "hfe-1", ["PreLearnNNModelID"] = "model-0", ["PreLearnAIMID"] = "aim-nn-0" } })
     };
 
     public static JsonObject AuditRequest(string user = "user-1") => new()
@@ -158,7 +178,7 @@ public static class AihSamples
         {
             ["Request"] = new JsonObject
             {
-                ["AuditPeriod"] = Time("adt-p"),
+                ["Tokens"] = Tokens(user), ["AuditPeriod"] = Time("adt-p"),
                 ["ProcessingOperations"] = new JsonArray(new JsonObject { ["ProcessingOperation"] = "PhysiologicalRiskPrediction", ["DataClass"] = "AIH-ECO" })
             }
         }
@@ -225,12 +245,42 @@ public class AihSchemaTests
         Assert.StartsWith("not valid", Check("AIHDataProcess", service));
     }
 
-    // The Smart Contract's ID and the state of de-identification are required of AIH Data as the specification has it - which the Model Licensing
-    // AIM, that makes AIH Data from Health Data and a Model Licence, cannot give (the Back End makes the Smart Contract): recorded, to be asked.
+    // The Smart Contract's ID and the state of de-identification are optional in AIH Data (the author's decision): the Model Licensing AIM makes
+    // AIH Data from Health Data and a Model Licence, and the Back End makes the Smart Contract and the de-identified copy later.
     [Fact]
-    public void AihDataMadeByTheFrontEndLacksTheSmartContractAndIsNotValid()
+    public void AihDataMadeByTheFrontEndHasNoSmartContractYetAndIsValid()
     {
         var made = AihSamples.AihData(); made["AIHData"]!.AsObject().Remove("SmartContractID"); made["AIHData"]!.AsObject().Remove("DeIDAndAnonym");
-        Assert.StartsWith("not valid", Check("AIHData", made));
+        Assert.Equal("valid", Check("AIHData", made));
+    }
+
+    // THE THIRD-PARTY USER (AIH-TPU) is a class of user next to the End User, with a profile of its own: an organisation that states, in the
+    // terms of the Taxonomies, what it asks to be allowed to do. It registers with the same Register Data Type, carrying that profile in place of a
+    // User Profile - never both.
+    [Fact]
+    public void AThirdPartyUserRegistersWithItsOwnProfile()
+    {
+        Assert.Equal("valid", Check("ThirdPartyUserProfile", AihSamples.ThirdPartyUserProfile()));
+        Assert.Equal("valid", Check("Register", AihSamples.ThirdPartyRegisterRequest()));
+    }
+
+    [Fact]
+    public void ARegisterRequestCarriesOneProfileNotTwoNorNone()
+    {
+        var both = AihSamples.ThirdPartyRegisterRequest();
+        both["RegisterData"]![0]!["Request"]!.AsObject()["UserProfile"] = AihSamples.UserProfile();
+        Assert.StartsWith("not valid", Check("Register", both));
+        var none = AihSamples.ThirdPartyRegisterRequest();
+        none["RegisterData"]![0]!["Request"]!.AsObject().Remove("ThirdPartyUserProfile");
+        Assert.StartsWith("not valid", Check("Register", none));
+    }
+
+    [Fact]
+    public void AThirdPartyUserStatesWhatItAsksToDo()
+    {
+        var nothing = AihSamples.ThirdPartyUserProfile(); nothing.Remove("Entitlements");
+        Assert.StartsWith("not valid", Check("ThirdPartyUserProfile", nothing));
+        var odd = AihSamples.ThirdPartyUserProfile(); odd["Entitlements"]!["UserTypes"] = new JsonArray("Anybody");
+        Assert.StartsWith("not valid", Check("ThirdPartyUserProfile", odd));
     }
 }

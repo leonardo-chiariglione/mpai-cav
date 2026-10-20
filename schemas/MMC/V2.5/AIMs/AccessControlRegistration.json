@@ -29,6 +29,8 @@
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-B3O-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "string"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

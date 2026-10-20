@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The SubAIMs of Audio Recording Preservation (CAE-ARP) of CAE-USC V2.5: Tape Audio Restoration first; Audio Analysis, Video Analysis, Tape Irregularity Classification
+       and Packaging follow. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Cae.Usc.Common.csproj" />
+  </ItemGroup>
+</Project>

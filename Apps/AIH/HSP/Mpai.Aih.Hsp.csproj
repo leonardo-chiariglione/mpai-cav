@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- THE USER AGENTS OF AIH-HSP: the Health Front End's, which is the End User's, and the Health Back End's. Each runs the Workflow Description of its Module
+       (HFE.orch, HBE.orch) with the workflow interpreter, binds a device to every Port of the Module's boundary, and does what its owner does with them. They know the
+       Controller API and nothing of the AIMs; the Back End's also reaches the Blockchain. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Aih.Hsp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Demo\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\AIF\UserAgent\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\AIH\V1.1\Common\Mpai.Aih.Common.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
+    <ProjectReference Include="..\..\..\AIMs\AIH\V1.1\Nnm\Mpai.Aih.Nnm.csproj" />
+    <ProjectReference Include="..\..\..\AIF\Trust\AIF.Trust.csproj" />
+  </ItemGroup>
+
+</Project>

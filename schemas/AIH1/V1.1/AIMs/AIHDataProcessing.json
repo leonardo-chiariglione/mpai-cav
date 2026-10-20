@@ -21,11 +21,11 @@
                      {"Name": "BlockchainLicenceResponse", "Direction": "Input",  "DataType": "AIH-BCL-V1.1",                  "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FederatedLearnResponse",    "Direction": "Input",  "DataType": "AIH-FDL-V1.1",                  "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AIHDataProcessResponse",    "Direction": "Input",  "DataType": "AIH-AHP-V1.1", "PortNumber": 1, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AIHDataIn",                 "Direction": "Input",  "DataType": "AIH-AHD-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AIHDataProcessRequest",     "Direction": "Input",  "DataType": "AIH-AHP-V1.1", "PortNumber": 2,                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "RegisterRequest",           "Direction": "Input",  "DataType": "AIH-REG-V1.1", "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AIHDataIn",                 "Direction": "Input", "IsOptional": true,  "DataType": "AIH-AHD-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AIHDataProcessRequest",     "Direction": "Input", "IsOptional": true,  "DataType": "AIH-AHP-V1.1", "PortNumber": 2,                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "RegisterRequest",           "Direction": "Input", "IsOptional": true,  "DataType": "AIH-REG-V1.1", "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RegisterResponse",          "Direction": "Input",  "DataType": "AIH-REG-V1.1", "PortNumber": 2, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "ARAData",                   "Direction": "Input",  "DataType": "AIH-ARD-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "ARAData",                   "Direction": "Input", "IsOptional": true,  "DataType": "AIH-ARD-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "LicenceConfirmRequest",     "Direction": "Output", "DataType": "AIH-LCF-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "BlockchainLicenceRequest",  "Direction": "Output", "DataType": "AIH-BCL-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FederatedLearnRequest",     "Direction": "Output", "DataType": "AIH-FDL-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
@@ -34,6 +34,8 @@
                      {"Name": "AIHDataOut",                "Direction": "Output", "DataType": "AIH-AHD-V1.1",                                      "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RegisterRequest",           "Direction": "Output", "DataType": "AIH-REG-V1.1", "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RegisterResponse",          "Direction": "Output", "DataType": "AIH-REG-V1.1", "PortNumber": 2,                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

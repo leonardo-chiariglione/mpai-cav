@@ -1,0 +1,40 @@
+# =============================================================================
+#  EES.orch - Emotion Enhanced Speech (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes by exchange. Emotion is added to
+#  emotionless speech by one of two pathways, and the person chooses: with a MODEL
+#  UTTERANCE the speech takes its prosody (the prosodic pathway); without one it
+#  takes the speech features of an EMOTION, in a language (the neural pathway).
+#  The User Agent offers each datum to its Port, by Data Type and Port Number, from the
+#  device the App gave it; the pathway the App's person named is the one followed.
+# =============================================================================
+
+workflow EES over 1CAE-EES-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    acquire Pathway (OSD-BTO-V1.5)
+
+    branch on Pathway contains "prosodic" {
+        offer   ProsodicSelector (OSD-SEL-V1.5:1) from device "ProsodicSelector"
+        offer   Model            (OSD-BSO-V1.5:1) from device "Model"
+        offer   ProsodicSpeech   (OSD-BSO-V1.5:3) from device "ProsodicSpeech"
+
+        ask     Prosodic         (OSD-BSO-V1.5:1)
+        present Prosodic
+    } else {
+        offer   NeuralSelector   (OSD-SEL-V1.5:2) from device "NeuralSelector"
+        offer   Language         (OSD-SEL-V1.5:3) from device "Language"
+        offer   Emotion          (MMC-EEM-V2.5:1) from device "Emotion"
+        offer   FeaturesSpeech   (OSD-BSO-V1.5:2) from device "FeaturesSpeech"
+        offer   NeuralSpeech     (OSD-BSO-V1.5:4) from device "NeuralSpeech"
+
+        ask     Neural           (OSD-BSO-V1.5:2)
+        present Neural
+    }
+
+on Stop:
+    ask Controller to stop

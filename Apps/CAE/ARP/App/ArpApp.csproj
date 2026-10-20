@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Audio Recording Preservation, the App: it runs the User Agent (ARP.orch) on the Controller of the Module, whose AIMs run on an AIM host of their own. It takes the digitised tape
+       (and the film), and writes the Preservation Master and the Access Copy. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>ArpApp</AssemblyName>
+    <RootNamespace>Mpai.Cae.Arp</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+  </ItemGroup>
+
+</Project>

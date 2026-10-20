@@ -131,6 +131,10 @@ public sealed class UserAgent
     // elsewhere; this says where.
     public Dictionary<string, string> AimHosts { get; } = new(StringComparer.Ordinal);
 
+    // WHAT THIS CONTROLLER HANDS A HOST WHEN IT PLACES AN AIM there: the AIM's Metadata, the fingerprints the MPAI Store approved and the AIM Licence it holds for it (null for an AIM
+    // that has none to hand over). A host with a repository of its own takes the AIM in from it.
+    public Func<string, JsonObject?>? PackageForHost { get; set; }
+
     // TRUST (Phase 13, M3223 3.1): where the deployment has configured its Trust
     // Anchor, every AIM Instance started is a PTF Process Instance - its key, its
     // CII, the Instance Credential this Controller issues it, and a Process
@@ -157,7 +161,7 @@ public sealed class UserAgent
     private Attestation.Policy? HostAttestation => Manufacturer is { } manufacturer
         ? new Attestation.Policy(manufacturer, m => m.Register == Attestation.CodeRegister
             ? PartyCode.Approve(HostCode, m)
-            : ImplementationEvidence.Approve(_store.Fingerprints, m))
+            : ImplementationEvidence.Approve(_store.Verifier, m))
         : null;
 
     // Why the last Module refused was refused, where it was not trusted.
@@ -263,7 +267,7 @@ public sealed class UserAgent
                     $"{module}: {child.AIMName} runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.");
             }
         }
-        Walk(root, false, null);
+        Walk(root, false, AimHosts.GetValueOrDefault(root.AIMName));      // a host named for the Module itself holds all its AIMs that are not Internal
         return placed;
     }
 
@@ -591,8 +595,14 @@ public sealed class UserAgent
         {
             if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
             var client = HostAt(address);
-            var reply = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
+            var reply = client.PlaceAsync(hostModule, leaf.AIMName, PackageForHost?.Invoke(leaf.AIMName)).GetAwaiter().GetResult();
             placedIdentities[leaf.AIMName] = reply["CII"] as JsonObject;
+
+            // THE CONTROLLER VERIFIES, not the host: what the host measured of the files it obtained is put to the Store, which says whether it is what it approved.
+            if (reply["Measured"] is JsonObject measuredByHost)
+                foreach (var (file, fingerprint) in measuredByHost)
+                    if (_store.Verifier.Verify(leaf.AIMName, file, (string?)fingerprint ?? "") != VerifyResult.Same)
+                        throw new TrustRefusedException($"{name} not started: NOT_TRUSTED - {file} of {leaf.AIMName}, obtained on the AIM host at {address}, is not what the Store approved.");
 
             // What it runs there, measured by the host and signed by the key the AIM
             // holds there (M3223 3.2); verified with the rest once it is placed.
@@ -844,10 +854,9 @@ public sealed class UserAgent
         var allowed = PolicyOf(leaf);
         var policy = trust.BindPolicy(instance.Id, allowed);
         var binary = _store.BinaryNameOf(IdentifierOf(leaf));
-        var approved = binary is null ? null : _store.Fingerprints.Approved(leaf.AIMName, binary);
         var decision = trust.Verify(instance, new AIF.Trust.VerificationPipeline.Expectation(
             instance.Id, LifecycleState: "Created", EvidenceRequired: true,
-            CheckEvidence: items => ImplementationEvidence.Check(leaf.AIMName, items, binary, approved, settings),
+            CheckEvidence: items => ImplementationEvidence.Check(leaf.AIMName, items, binary, _store.Verifier, settings),
             Policy: policy,
             CheckPolicy: bound =>
             {

@@ -15,11 +15,9 @@ Test/Reports/
 *.bak
 .backups/
 
-# governed storage: biometrics / runtime data - NEVER commit. Anchored to the
-# root: AIF/Communication/SharedStorage is source, not data.
-/SharedStorage/
-# Access: the Controller's data, machine-local like Shared Storage.
-/Access/
+# governed storage: biometrics / runtime data - NEVER commit. Access holds the Controller's data and the data of
+# the Shared Storage (AIF/Communication/SharedStorage is source, not data); machine-local.
+/AIF/Access/
 TestData/
 
 # large model binaries - not source (kept locally; use Git LFS in the
@@ -38,7 +36,7 @@ MPAIApps/HCIApps/MatApp/src/*.langbak
 # transient
 mas-server*.json
 # ...except the Linux template, which holds no token.
-!MAS/Service/linux/mas-server.json
+!Apps/MAS/Service/linux/mas-server.json
 tree.txt
 _stale/
 *.bak
@@ -68,10 +66,27 @@ _removed/
 # backups made by the Apply/Prepare scripts
 _backup-*/
 
-# the public instance on Windows, published Release (MAS/Service/windows/publish.ps1)
-/deploy/
+# the public instance on Windows, published Release (Apps/MAS/Service/windows/publish.ps1)
+/Support/deploy/
 
 # the ABV demo server certificate (made on first run)
-ABV/Server/abv-cert.pfx
-ABV/Server/bin/
-ABV/Server/obj/
+Apps/ABV/AVS/Server/abv-cert.pfx
+Apps/ABV/AVS/Server/bin/
+Apps/ABV/AVS/Server/obj/
+
+# the logs of the AllApps launchers
+/AllApps/logs/
+
+# generated or machine-local, never source (2026-10-20): the CAV simulation recordings, the root deploy folder (the schema upload lists are in Support/deploy), certificates and keys, and what the runs of the CAE-USC Apps and the EAE demo leave in Test
+/Demos/
+/deploy/
+*.pfx
+/Test/EaeApp/
+/Test/EaeReal/
+/Test/SrsApp/
+/Test/EesApp/
+/Test/ArpApp/
+/Test/OpenVoice/
+/Test/eae-deck-png/
+/Test/eae-sep-png/
+/Test/*.pptx

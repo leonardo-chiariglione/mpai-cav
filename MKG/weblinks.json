@@ -12,6 +12,10 @@
      "name": "AIM Instance",
      "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aim-instance/"
     },
+    "aim-licence": {
+     "name": "AIM Licence",
+     "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aim-licence/"
+    },
     "aim-metadata": {
      "name": "AIM Metadata",
      "url": "https://mpai.community/standards/mpai-aif/v3-0/data-types/aim-metadata/"
@@ -246,113 +250,137 @@
    "ai-modules": {
     "audio-analysis-for-preservation": {
      "name": "Audio Analysis for Preservation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-analysis-for-preservation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-analysis-for-preservation/"
     },
     "audio-analysis-transform": {
      "name": "Audio Analysis Transform",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-analysis-transform/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-analysis-transform/"
+    },
+    "audio-description-packaging": {
+     "name": "Audio Descriptors Packaging",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-description-packaging/"
     },
     "audio-descriptors-multiplexing": {
      "name": "Audio Descriptors Multiplexing",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-descriptors-multiplexing/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-descriptors-multiplexing/"
     },
     "audio-object-identification": {
      "name": "Audio Object Identification",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-object-identification/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-object-identification/"
+    },
+    "audio-recording-preservation": {
+     "name": "Audio Recording Preservation",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-recording-preservation/"
     },
     "audio-scene-description": {
      "name": "Audio Scene Description",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-scene-description/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-scene-description/"
     },
     "audio-separation-and-enhancement": {
      "name": "Audio Separation and Enhancement",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-separation-and-enhancement/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-separation-and-enhancement/"
     },
     "audio-source-localisation": {
      "name": "Audio Source Localisation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-source-localisation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-source-localisation/"
     },
     "audio-synthesis-transform": {
      "name": "Audio Synthesis Transform",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/audio-synthesis-transform/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-synthesis-transform/"
+    },
+    "basic-audio-scene-description": {
+     "name": "Basic Audio Scene Description",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/basic-audio-scene-description/"
+    },
+    "emotion-enhanced-speech": {
+     "name": "Emotion Enhanced Speech",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/emotion-enhanced-speech/"
     },
     "emotion-feature-production": {
      "name": "Emotion Feature Production",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/emotion-feature-production/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/emotion-feature-production/"
+    },
+    "enhanced-audioconference-experience": {
+     "name": "Enhanced Audioconference Experience",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/enhanced-audioconference-experience/"
     },
     "neural-emotion-insertion": {
      "name": "Neural Emotion Insertion",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/neural-emotion-insertion/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/neural-emotion-insertion/"
     },
     "noise-cancellation-module": {
      "name": "Noise Cancellation Module",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/noise-cancellation-module/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/noise-cancellation-module/"
     },
     "packaging-for-audio-preservation": {
      "name": "Packaging for Audio Preservation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/packaging-for-audio-preservation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/packaging-for-audio-preservation/"
     },
     "prosodic-emotion-insertion": {
      "name": "Prosodic Emotion Insertion",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/prosodic-emotion-insertion/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/prosodic-emotion-insertion/"
+    },
+    "sound-field-description": {
+     "name": "Sound Field Description",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/sound-field-description/"
     },
     "speech-detection-and-separation": {
      "name": "Speech Detection and Separation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-detection-and-separation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-detection-and-separation/"
     },
     "speech-feature-analysis-1": {
      "name": "Speech Feature Analysis 1",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-feature-analysis-1/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-feature-analysis-1/"
     },
     "speech-feature-analysis-2": {
      "name": "Speech Feature Analysis 2",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-feature-analysis-2/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-feature-analysis-2/"
     },
     "speech-model-creation": {
      "name": "Speech Model Creation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-model-creation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-model-creation/"
     },
     "speech-restoration-assembly": {
      "name": "Speech Restoration Assembly",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/speech-restoration-assembly/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-restoration-assembly/"
+    },
+    "speech-restoration-system": {
+     "name": "Speech Restoration System",
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-restoration-system/"
     },
     "tape-audio-restoration": {
      "name": "Tape Audio Restoration",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/tape-audio-restoration/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/tape-audio-restoration/"
     },
     "tape-irregularity-classification": {
      "name": "Tape Irregularity Classification",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/tape-irregularity-classification/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/tape-irregularity-classification/"
     },
     "video-analysis-for-preservation": {
      "name": "Video Analysis for Preservation",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/ai-modules/video-analysis-for-preservation/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/video-analysis-for-preservation/"
     }
    },
-   "base": "https://mpai.community/standards/mpai-cae/usc/v2-4/",
+   "base": "https://mpai.community/standards/mpai-cae/usc/v2-5/",
    "data-types": {
-    "audio-source-model": {
-     "name": "Audio Source Model",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/audio-source-model/"
-    },
     "damaged-list": {
      "name": "Damaged List",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/damaged-list/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/data-types/damaged-list/"
     },
     "editing-list": {
      "name": "Editing List",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/editing-list/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/data-types/editing-list/"
     },
     "irregularity-file": {
      "name": "Irregularity File",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/irregularity-file/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/data-types/irregularity-file/"
     },
     "microphone-array-geometry": {
      "name": "Microphone Array Geometry",
-     "url": "https://mpai.community/standards/mpai-cae/usc/v2-4/data-types/microphone-array-geometry/"
+     "url": "https://mpai.community/standards/mpai-cae/usc/v2-5/data-types/microphone-array-geometry/"
     }
    },
-   "version": "V2.4"
+   "version": "V2.5"
   }
  },
  "CAV": {
@@ -1915,10 +1943,6 @@
  "PAF": {
   "": {
    "ai-modules": {
-    "audio-visual-scene-creation": {
-     "name": "Audio-Visual Scene Creation",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/audio-visual-scene-creation/"
-    },
     "audio-visual-scene-rendering": {
      "name": "Audio-Visual Scene Rendering",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/audio-visual-scene-rendering/"
@@ -1959,6 +1983,10 @@
      "name": "Portable Avatar Demultiplexing",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/portable-avatar-demultiplexing/"
     },
+    "portable-avatar-formation": {
+     "name": "Portable Avatar Formation",
+     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/portable-avatar-formation/"
+    },
     "portable-avatar-multiplexing": {
      "name": "Portable Avatar Multiplexing",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/portable-avatar-multiplexing/"
@@ -1975,21 +2003,9 @@
      "name": "Response and Scene Rendering",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/response-and-scene-rendering/"
     },
-    "scene-and-avatar-rendering": {
-     "name": "Scene and Avatar Rendering",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/scene-and-avatar-rendering/"
-    },
     "service-participant-authentication": {
      "name": "Service Participant Authentication",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/service-participant-authentication/"
-    },
-    "speaking-avatar-formation": {
-     "name": "Speaking Avatar Formation",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-formation/"
-    },
-    "speaking-avatar-synthesis": {
-     "name": "Speaking Avatar Synthesis",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/speaking-avatar-synthesis/"
     },
     "videoconference-client-receiver": {
      "name": "Videoconference Client Receiver",
@@ -2002,10 +2018,6 @@
     "virtual-meeting-secretary": {
      "name": "Virtual Meeting Secretary",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/virtual-meeting-secretary/"
-    },
-    "visual-scene-creation": {
-     "name": "Visual Scene Creation",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/visual-scene-creation/"
     }
    },
    "base": "https://mpai.community/standards/mpai-paf/v1-6/",
@@ -2017,10 +2029,6 @@
     "animation-object": {
      "name": "Animation Object",
      "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/animation-object/"
-    },
-    "avatar": {
-     "name": "Avatar",
-     "url": "https://mpai.community/standards/mpai-paf/v1-6/data-types/avatar/"
     },
     "body-descriptors-object": {
      "name": "Body Descriptors Object",
@@ -2105,6 +2113,10 @@
      "name": "CXC-AUS Interface",
      "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/cxc-aus-interface/"
     },
+    "deliberative-domain-service": {
+     "name": "Deliberative Domain Service",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/deliberative-domain-service/"
+    },
     "directed-audio-scene-description": {
      "name": "Directed Audio Scene Description",
      "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/directed-audio-scene-description/"
@@ -2128,6 +2140,10 @@
     "multimodal-input-harmonisation": {
      "name": "Multimodal Input Harmonisation",
      "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/multimodal-input-harmonisation/"
+    },
+    "perceptual-domain-service": {
+     "name": "Perceptual Domain Service",
+     "url": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/perceptual-domain-service/"
     },
     "personality-alignment": {
      "name": "Personality Alignment",
@@ -2576,13 +2592,37 @@
      "name": "Audio Behaviour",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/audio-behaviour/"
     },
+    "audio-console": {
+     "name": "Audio Console",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/audio-console/"
+    },
+    "biometric-synchrony": {
+     "name": "Biometric Synchrony",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/biometric-synchrony/"
+    },
     "control-object": {
      "name": "Control Object",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/control-object/"
     },
+    "cue-list": {
+     "name": "Cue List",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/cue-list/"
+    },
     "dance-object": {
      "name": "Dance Object",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/dance-object/"
+    },
+    "event": {
+     "name": "Event",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/event/"
+    },
+    "gesture-attributes": {
+     "name": "Gesture Attributes",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/gesture-attributes/"
+    },
+    "lighting-console": {
+     "name": "Lighting Console",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/lighting-console/"
     },
     "metaverse-object": {
      "name": "Metaverse Object",
@@ -2640,13 +2680,13 @@
      "name": "Seat Occupation",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/seat-occupation/"
     },
+    "show-console": {
+     "name": "Show Console",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/show-console/"
+    },
     "show-descriptors": {
      "name": "Show Descriptors",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/show-descriptors/"
-    },
-    "speaking-avatar": {
-     "name": "Speaking Avatar",
-     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/speaking-avatar/"
     },
     "ve-data-in": {
      "name": "VE Data In",
@@ -2683,6 +2723,10 @@
     "ve-venue-specification": {
      "name": "VE Venue Specification",
      "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/ve-venue-specification/"
+    },
+    "video-console": {
+     "name": "Video Console",
+     "url": "https://mpai.community/standards/mpai-xrv/ltp/v1-0/data-types/video-console/"
     },
     "visual-behaviour": {
      "name": "Visual Behaviour",

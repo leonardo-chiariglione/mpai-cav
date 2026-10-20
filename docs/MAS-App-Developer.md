@@ -10,15 +10,15 @@ using it, see the [User Guide](MAS-App-User.md); for an overview, see
 
 | Part | Project | Role |
 |---|---|---|
-| Service | `MAS/Service/src` | Hosts the Controller and the Modules; speaks MPAI-MAS over HTTPS; offers the Apps. |
-| Desktop client | `UserAgent/Clients/Desktop/src` | WPF. The User Agent: interprets workflows, captures, renders the avatar (WebView2). |
-| Browser client | `UserAgent/Clients/Browser/Client` | Blazor WebAssembly. The same User Agent, in a browser. |
-| Browser host | `UserAgent/Clients/Browser/Host` | Serves the browser client and the avatar page, and forwards `/MPAI/AIFU/...` to the Service, so the browser sees one origin. |
-| Apps | `Apps/MAD`, `AMQ`, `MAT`, `MPD` | Each: a workflow (`.orch`), `app.json`, an icon. |
-| MPAI-MAS | `UserAgent/Orchestration/MPAI-MAS.orch` | The client's own workflow: the container the Apps run in. Not an App. |
+| Service | `Apps/MAS/Service/src` | Hosts the Controller and the Modules; speaks MPAI-MAS over HTTPS; offers the Apps. |
+| Desktop client | `AIF/UserAgent/Clients/Desktop/src` | WPF. The User Agent: interprets workflows, captures, renders the avatar (WebView2). |
+| Browser client | `AIF/UserAgent/Clients/Browser/Client` | Blazor WebAssembly. The same User Agent, in a browser. |
+| Browser host | `AIF/UserAgent/Clients/Browser/Host` | Serves the browser client and the avatar page, and forwards `/MPAI/AIFU/...` to the Service, so the browser sees one origin. |
+| Apps | `Apps/MMC/MAD`, `AMQ`, `MAT`, `MPD` | Each: a workflow (`.orch`), `app.json`, an icon. |
+| MPAI-MAS | `AIF/UserAgent/Orchestration/MPAI-MAS.orch` | The client's own workflow: the container the Apps run in. Not an App. |
 
 Shared software: the Controller (`AIF/`), the AIMs and their L3s (`AIMs/`), the
-User Agent (`UserAgent/`: the WDL reader, the interpreter, the remote Controller API,
+User Agent (`AIF/UserAgent/`: the WDL reader, the interpreter, the remote Controller API,
 the desktop avatar library `UaKit` and the avatar assets), the schemas (`schemas/`).
 
 ## 2. How a turn travels
@@ -121,20 +121,20 @@ the desktop client sends the one in the environment variable `MPAI_MAS_TOKEN`.
 ## 6. The clients
 
 Both clients register **sources** (acquire) and **presenters** (present) with a
-`DeviceRegistry`, and run workflows with the one interpreter, `UserAgent/Rca`.
+`DeviceRegistry`, and run workflows with the one interpreter, `AIF/UserAgent/Rca`.
 Every call it makes on the Controller API is awaited (`IAsyncControllerApi`),
 because a browser never lets WebAssembly block.
 
 - **Desktop** (`RcaApp`): sources are the microphone with voice activity
-  detection (the Microphone Unit of `UserAgent/PhysicalLayer`, via UaKit), the text box, the App list, the language picker, a
-  file or the webcam; the avatar is `UserAgent/Assets/cav-webview.html` in WebView2.
+  detection (the Microphone Unit of `AIF/UserAgent/PhysicalLayer`, via UaKit), the text box, the App list, the language picker, a
+  file or the webcam; the avatar is `AIF/UserAgent/Assets/cav-webview.html` in WebView2.
   `MPAI_MAS_SERVER` sets the Service address (default `https://localhost:5005/`).
   It hands the interpreter `RemoteControllerApi` through `.Async()`, which makes
   each call on a thread of the pool, so the window is never blocked.
 - **Browser** (`RcaWeb/Client`): the same sources and presenters, with the
   capture in `wwwroot/js/rca.js` (the microphone runs from Start and keeps the
   last second heard; typing ends listening). It hands the interpreter
-  `RemoteControllerApiAsync` (`UserAgent/Remote`), which awaits the network.
+  `RemoteControllerApiAsync` (`AIF/UserAgent/Remote`), which awaits the network.
 - **Host** (`RcaWeb/Host`): serves the avatar page with its asset addresses and
   messaging adapted for a browser as it is sent, and forwards `/MPAI/AIFU/...`.
 
@@ -148,7 +148,7 @@ because a browser never lets WebAssembly block.
    in `AIF/PortData`, registered in `PortDataCodecs.Default()`.
 4. **The App:** a folder in `Apps/` with its workflow, `app.json` and `icon.svg`.
 5. **The Service:** add the App to `Apps` in the configuration, and its Module to
-   the preload list in `MAS/Service/src/Program.cs`.
+   the preload list in `Apps/MAS/Service/src/Program.cs`.
 6. **Test:** the `Test` program loads every composite L3 and reports which load;
    then run the App through both clients.
 
@@ -190,15 +190,15 @@ AIM itself.
 
 ### 10.1 The Store
 
-`MAS/Store/Service` is a separate program, a repository of approved L3s
-with a REST API (`MAS/Store/Service/README.md`). Run it once, and any
+`Store/Service` is a separate program, a repository of approved L3s
+with a REST API (`Store/Service/README.md`). Run it once, and any
 number of Services can point at it:
 
 ```powershell
 dotnet run --project D:\MPAI\MAS\Store\Service\StoreService.csproj -- --Urls https://localhost:5020 --Root D:\MPAI\Store --Packages D:\MPAI\Packages
 ```
 
-Submit L3s with `MAS/Store/Service/Submit-L3s.ps1` or the `StoreApp`
+Submit L3s with `Store/Service/Submit-L3s.ps1` or the `StoreApp`
 window; build packages with `AIMs/Build-Packages.ps1`.
 
 **A Service reachable from another machine cannot use HTTPS with the

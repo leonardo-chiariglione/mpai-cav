@@ -58,8 +58,9 @@ public class AsmVoiceThroughControllerTests
             .Select(e => e?["AudioObjectSpaceTime"]?["SpatialAttitude1"]?["Position"]?["CartPosition"]?[0] is { } x ? (double?)x.GetValue<double>() : null)
             .FirstOrDefault();
 
+    // SUSPENDED (the author, 2026-10-17): the ASM Module no longer has the vocal interface (ASR, EDP, TTS); it comes back as an extension of its own.
     // The Controller starts the Module with the voice AIMs in it: the Module is the L2, all of it.
-    [SkippableFact]
+    [SkippableFact(Skip = "The vocal interface is not part of the ASM Module now; it returns as an extension.")]
     public void TheControllerStartsTheModuleWithItsVoice()
     {
         var work = Path.Combine(Path.GetTempPath(), "asm-voice-start-" + Guid.NewGuid().ToString("N"));
@@ -78,7 +79,7 @@ public class AsmVoiceThroughControllerTests
         finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
     }
 
-    [SkippableFact]
+    [SkippableFact(Skip = "The vocal interface is not part of the ASM Module now; it returns as an extension.")]
     [Trait("Duration", "Long")]
     public void WhatThePersonSaysMovesTheObjectThroughTheController()
     {

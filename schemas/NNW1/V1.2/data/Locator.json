@@ -1,0 +1,24 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/NNW1/V1.2/data/Locator.json",
+  "title":                "Locator V1.2",
+  "description":          "Where a watermark sits in a neural network model, and by which method it was inserted. It is neither part of the model (AIP-MLO) nor of the Payload (NNW-PLD): an insertion AIM gives it, an extraction AIM may take it. An extraction AIM that is not given a Locator looks for the watermark where its own method would put it. It never carries a secret key, only a reference to one.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "LocatorID", "Method" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "NNW-WLC-V1.2" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "LocatorID":          { "type": "string", "minLength": 1 },
+    "LocatorTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Method":             { "type": "string", "minLength": 1,
+                            "description": "The watermarking method that inserted the watermark, named as its Implementer names it. An extraction AIM can retrieve the Payload only if its Implementation implements this method." },
+    "Targets":            { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 },
+                            "description": "The tensors of the model that carry the watermark, identified by the names used in the model file, whose format is stated by the ML Model Qualifier  (for example ONNX or PyTorch). If omitted, the method decides which tensors carry the watermark." },
+    "KeyReference":       { "type": "string", "minLength": 1,
+                            "description": "The identifier of the secret key the method uses. The key is obtained through the Security API, under a Grant of the Controller (in the Secure Profile, from Secure Storage); the Controller decides who may read it. The key is never carried." },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

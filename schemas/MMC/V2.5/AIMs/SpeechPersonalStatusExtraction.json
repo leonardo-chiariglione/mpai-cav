@@ -26,6 +26,8 @@
                           {"Output": {"AIMName": "", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SDO-V2.5"}},
                           {"Output": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SPS-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-SPS-V2.5"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [
    {
     "BinaryName": "/* provided by implementer */",

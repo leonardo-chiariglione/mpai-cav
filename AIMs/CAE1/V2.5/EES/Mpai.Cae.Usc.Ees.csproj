@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The SubAIMs of Emotion Enhanced Speech (CAE-EES) of CAE-USC V2.5: Speech Feature Analysis 1 and 2, Emotion Feature Production, Prosodic Emotion Insertion and Neural Emotion Insertion. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Cae.Usc.Common.csproj" />
+  </ItemGroup>
+</Project>

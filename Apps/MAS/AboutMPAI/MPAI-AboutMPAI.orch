@@ -1,0 +1,29 @@
+# =============================================================================
+#  MPAI-AboutMPAI.orch - About MPAI
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  An App that has no Module work to do: it shows a video. The video is a Basic
+#  AudioVisual Object (OSD-BMO-V1.5) that does not carry its data but designates
+#  it by a DataURI; the User Agent, which has the screen and the loudspeakers,
+#  plays what the URI designates, and the step ends when the video has played to
+#  its end or the person has closed it (or pressed Stop).
+#
+#  Nothing is said here after the video: the MAS launcher, which runs this App,
+#  asks "Do you want to try another App?" whenever an App ends.
+#
+#  The Module is named because a workflow begins "workflow <name> over <Module>";
+#  the Controller is not asked to start it, since nothing is asked of it.
+# =============================================================================
+
+workflow MPAI-AboutMPAI over 1MAS-APP-V1.0-I01
+
+on Start:
+
+    # --- the video: "In alcuni minuti potete avere un'idea chiara (ma senza dettagli) della proposta MPAI" ---
+
+    acquire Video (OSD-BMO-V1.5) = { "Header": "OSD-BMO-V1.5", "BasicAudioVisualObjectData": [ { "DataURI": "https://youtu.be/ITG6fff89yM" } ] }
+
+    present Video
+
+on Stop:
+

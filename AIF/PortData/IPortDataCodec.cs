@@ -59,6 +59,15 @@ public sealed class PortDataCodecs
             .Register(new EntityPersonalStatusCodec())
             .Register(new Basic3DModelObjectCodec())
             .Register(new PortableAvatarCodec())
+            .Register(new PointCodec())
+            // Audio Scene Management: the same JSON instance inside and on the wire.
+            .Register(new JsonObjectCodec("OSD-BAO-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BAS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BSS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BMS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-AUO-V1.5"))
+            .Register(new JsonObjectCodec("OSD-OPV-V1.5"))
+            .Register(new JsonObjectCodec("CAE-UCM-V1.0"))
             .Register(new BooleanCodec())
             .Register(new StringCodec());
 

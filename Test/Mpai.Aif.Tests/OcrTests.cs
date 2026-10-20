@@ -86,7 +86,27 @@ public class OcrTests
             var line = e.BTObjectIDOrBTObject![0];
             return (Text: line.GetText(), X0: tl[0], Y0: tl[1], X1: br[0], Y1: br[1], Confidence: line.DataXMData?.Confidence);
         }).ToList();
-        var boxed = lines.All(l => l.X0 >= 0 && l.Y0 >= 0 && l.X1 <= page[0] && l.Y1 <= page[1] && l.X1 > l.X0 && l.Y1 > l.Y0
+        // THE PAGE IS READ IN BANDS (the AIM reads one band, about a Point, at the top of the page with none): the whole of it
+        // is read here by two more bands, so that the words of the truth can be judged; a line seen in two bands counts once.
+        var pointPort = ports.Input("OSD-PNT-V1.5");
+        foreach (var y in new[] { 2100.0, 3500.0 })
+        {
+            var message = With(BasicVisualObject.FromFile("npr-page.png", bytes));
+            message.Ports[pointPort] = $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":1200,\"Y\":{y}}}}}";
+            var more = MpaiJson.FromJson<TextObject>((await ocr.ProcessAsync(message)).Payload)!;
+            foreach (var e in more.BasicTextObjects)
+            {
+                var tl = e.BasicTextObjectSpaceTime!.SpatialAttitude1!.Position.CartPosition!;
+                var br = e.BasicTextObjectSpaceTime!.SpatialAttitude2!.Position.CartPosition!;
+                var line = e.BTObjectIDOrBTObject![0];
+                bool seen = lines.Any(l =>
+                {
+                    double w = Math.Min(l.X1, br[0]) - Math.Max(l.X0, tl[0]), h = Math.Min(l.Y1, br[1]) - Math.Max(l.Y0, tl[1]);
+                    return w > 0 && h > 0 && w * h > 0.5 * Math.Min((l.X1 - l.X0) * (l.Y1 - l.Y0), (br[0] - tl[0]) * (br[1] - tl[1]));
+                });
+                if (!seen) lines.Add((line.GetText(), tl[0], tl[1], br[0], br[1], line.DataXMData?.Confidence));
+            }
+        }        var boxed = lines.All(l => l.X0 >= 0 && l.Y0 >= 0 && l.X1 <= page[0] && l.Y1 <= page[1] && l.X1 > l.X0 && l.Y1 > l.Y0
                                    && l.Confidence is >= 0 and <= 1);
 
         var truthText = File.ReadAllLines(Truth);

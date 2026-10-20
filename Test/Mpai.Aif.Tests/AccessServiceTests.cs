@@ -27,7 +27,7 @@ public class AccessServiceTests
     public async Task Step3OfferedByTheService()
     {
         var root = Repository.Root;
-        var exe = Environment.GetEnvironmentVariable("MPAI_SERVICE_EXE") ?? Path.Combine(root, "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
+        var exe = Environment.GetEnvironmentVariable("MPAI_SERVICE_EXE") ?? Path.Combine(root, "Apps", "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
         Skip.IfNot(File.Exists(exe), "The Service is not built: " + exe);
         Skip.IfNot(File.Exists(Path.Combine(AccessTests.Images, "R.Reagan1.jpg")), $"The photographs of the tests are not in {AccessTests.Images}.");
         Skip.If(System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == 5109), "Port 5109 is in use.");

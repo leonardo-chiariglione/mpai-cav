@@ -32,7 +32,7 @@ public class TrustServiceTests(ITestOutputHelper output)
     public void MadWithEdpOnAnAttestedHost()
     {
         var root = Repository.Root;
-        var serviceBin = Path.Combine(root, "MAS", "Service", "src", "bin", "Debug", "net10.0");
+        var serviceBin = Path.Combine(root, "Apps", "MAS", "Service", "src", "bin", "Debug", "net10.0");
         var hostBin = Path.Combine(root, "AIF", "AimHost", "bin", "Debug", "net10.0");
         Skip.If(!Directory.Exists(Path.Combine(root, "Models")), "Models is absent: the model files are obtained separately.");
         Skip.If(!File.Exists(Path.Combine(serviceBin, "MasService.exe")), "The Service is not built.");

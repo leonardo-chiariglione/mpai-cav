@@ -28,6 +28,15 @@ public sealed record AvatarUtterance(
     // Question gives its answer - the machine's Portable Avatar, saying it in text. A client that cannot
     // play speech from it shows the words and has them spoken (it asks the Controller: it renders no
     // AIM's work itself). Null when the Portable Avatar holds no Text Object, or one with no words.
+    // The language (ISO 639-1) its Text Object says it is in, in its Text Qualifier; null when it says none.
+    public static string? LanguageOfPortableAvatar(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || JsonNode.Parse(json) is not JsonObject pav) return null;
+        if (pav["TextObject"] is not JsonObject text) return null;
+        try { return MpaiJson.FromJson<BasicTextObject>(text.ToJsonString())?.TextQualifier?.Attributes?.Language?.LanguageCode; }
+        catch { return null; }
+    }
+
     public static string? TextOfPortableAvatar(string? json)
     {
         if (string.IsNullOrWhiteSpace(json) || JsonNode.Parse(json) is not JsonObject pav) return null;

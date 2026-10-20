@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\BAS\Mpai.Osd.Bas.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />
@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\..\CVE\V1.0\VSI\Mpai.Cve.Vsi.csproj" />
     <ProjectReference Include="..\..\..\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />
     <ProjectReference Include="..\..\..\MMC\V2.5\SIR\Mpai.Mmc.Sir.csproj" />
-    <ProjectReference Include="..\..\..\HCI\IDR\Mpai.Hci.Idr.csproj" />
+    <ProjectReference Include="..\..\..\OSD\V1.5\IDR\Mpai.Osd.Idr.csproj" />
     <ProjectReference Include="..\..\..\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\..\..\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />
     <ProjectReference Include="..\..\..\MMC\V2.5\SPE\Mpai.Mmc.Spe.csproj" />

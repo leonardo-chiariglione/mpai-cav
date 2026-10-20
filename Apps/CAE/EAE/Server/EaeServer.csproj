@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- THE ENHANCED AUDIOCONFERENCE SERVER of the live demo (derived from the Avatar Videoconference Server of ABV, without its avatars, chat and minutes): a room whose microphone array is
+       captured, listeners who hear the speakers of the room separated and placed where they are. It serves the browser client, takes the room's multichannel audio, and runs the Module of the
+       Enhanced Audioconference Experience on it, by the same User Agent and Controller as the EAE App. See PROTOCOL.md. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Cae.Eae.Server</RootNamespace>
+    <AssemblyName>EaeServer</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+  </ItemGroup>
+
+</Project>

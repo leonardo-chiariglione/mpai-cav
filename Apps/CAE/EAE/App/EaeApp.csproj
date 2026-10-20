@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Enhanced Audioconference Experience, the App: it runs the User Agent (EAE.orch) on the Controller of the Module, whose AIMs run on an AIM host of their own. It takes the audio of a
+       microphone array and where the microphones are, and writes the speakers and the audio scene. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>EaeApp</AssemblyName>
+    <RootNamespace>Mpai.Cae.Eae</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+  </ItemGroup>
+
+</Project>

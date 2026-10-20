@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The SubAIMs of Enhanced Audioconference Experience (CAE-EAE) of CAE-USC V2.5: Audio Analysis Transform, Sound Field Description, Speech Detection and Separation, Noise
+       Cancellation Module, Audio Synthesis Transform and Audio Descriptors Multiplexing. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Cae.Usc.Common.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+{
+    "Name": "Audio Recording Preservation",
+    "Description": "Preserve the digitised audio of an open reel tape: find where the tape is irregular, restore the access copy where it needs it, and package the master.",
+    "Icon": "icon.svg",
+    "Version": "1.0",
+    "Standard": "MPAI-CAE V2.5",
+    "UseCase": "USC",
+    "Module": "1CAE-ARP-V2.5-I01",
+    "Keywords": ["tape", "preservation", "restoration", "archive"],
+    "Categories": ["Audio"],
+    "Languages": ["en"],
+    "Asks": ["the digitised audio of the tape", "the film of the playback head, if there is one"],
+    "Keeps": "Nothing: the preservation master and the access copy are written where the user says."
+}

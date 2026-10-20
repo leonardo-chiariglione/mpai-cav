@@ -55,27 +55,31 @@ public static class ImplementationEvidence
 
     // A measurement of an Implementation, judged against a Store's approvals: null
     // where the Store approved that binary for that AIM with that fingerprint.
-    public static string? Approve(ImplementationFingerprints approvals, Attestation.Measurement m)
+    public static string? Approve(IImplementationVerifier approvals, Attestation.Measurement m)
     {
         var parts = m.What.StartsWith(MeasurementPrefix, StringComparison.Ordinal) ? m.What[MeasurementPrefix.Length..].Split(' ') : [];
         if (parts.Length != 2) return $"{m.What} is not an Implementation";
-        return approvals.Approved(parts[0], parts[1]) is { } approved && string.Equals(approved, m.Sha256, StringComparison.OrdinalIgnoreCase)
+        return approvals.Verify(parts[0], parts[1], m.Sha256) == VerifyResult.Same
             ? null : $"{parts[1]} of {parts[0]} is not an Implementation the Store approved";
     }
 
     // What does not check, against the Store's approval and the settings; empty
     // when everything does.
-    public static List<string> Check(string aim, IReadOnlyList<PtfEvidence.Item> items, string? binaryName, string? approved,
+    public static List<string> Check(string aim, IReadOnlyList<PtfEvidence.Item> items, string? binaryName, IImplementationVerifier? store,
                                      IReadOnlyDictionary<string, string> settings)
     {
         var problems = new List<string>();
         var code = items.Where(i => i.Type == PtfEvidence.CodeHash).ToList();
         if (binaryName is null) problems.Add($"{aim}: its L3 names no binary");
-        else if (approved is null) problems.Add($"{aim}: the Store approved no fingerprint of {binaryName}");
         else if (code.Count == 0) problems.Add($"{aim}: what implements it could not be measured");
         else if (code[0].What != binaryName) problems.Add($"{aim}: implemented by {code[0].What}, its L3 names {binaryName}");
-        else if (!string.Equals(code[0].Hash, approved, StringComparison.OrdinalIgnoreCase))
-            problems.Add($"{aim}: {binaryName} is not the binary the Store approved (SHA-256 {code[0].Hash[..16]}..., approved {approved[..16]}...)");
+        else
+        {
+            // The Controller measured; the Store says whether that is the fingerprint it approved (MPAI_AIFS_VerifyImplementation).
+            var answer = store?.Verify(aim, binaryName, code[0].Hash) ?? VerifyResult.NotRecorded;
+            if (answer == VerifyResult.NotRecorded) problems.Add($"{aim}: the Store approved no fingerprint of {binaryName}");
+            else if (answer == VerifyResult.Different) problems.Add($"{aim}: {binaryName} is not the binary the Store approved (SHA-256 {code[0].Hash[..16]}...)");
+        }
 
         foreach (var (key, declared) in settings.Where(s => s.Key.StartsWith("SHA256:", StringComparison.Ordinal)))
         {

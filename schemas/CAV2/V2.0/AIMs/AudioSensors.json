@@ -8,6 +8,8 @@
   "SubAIMs":          [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOA-V1.0", "Relation": ""}}],
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "CAE-AOA-V1.0", "DataType": "OSD-BAO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "CAE-AOA-V1.0", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}}],
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
                        {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},

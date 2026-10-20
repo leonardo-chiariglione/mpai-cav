@@ -1,0 +1,31 @@
+{
+    "Name": "Newspaper Reading",
+    "Description": "Choose the image of a newspaper page, click at the top of a column, and the avatar reads it aloud.",
+    "Icon": "icon.svg",
+    "Pane": "wide",
+    "Version": "1.0",
+    "Standard": "MPAI-MMC V2.5",
+    "UseCase": "NPR",
+    "Module": "1MMC-NPR-V2.5-I01",
+    "Keywords": [
+        "newspaper",
+        "page",
+        "column",
+        "read",
+        "article",
+        "ocr",
+        "text"
+    ],
+    "Categories": [
+        "Vision",
+        "Reading"
+    ],
+    "Languages": [
+        "en"
+    ],
+    "Asks": [
+        "a picture of a page",
+        "a click on the picture"
+    ],
+    "Keeps": "Nothing."
+}

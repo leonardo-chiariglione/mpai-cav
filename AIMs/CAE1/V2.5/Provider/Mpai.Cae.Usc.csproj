@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The AIMs of CAE-USC V2.5, as the Controller (or an AIM host) asks for them by their AIM Instance: Speech Model Creation, Speech Restoration Assembly and, for the
+       Speech Restoration System, the Text To Speech of MPAI-MMC (Piper) or a stand-in for it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Cae.Usc.Common.csproj" />
+    <ProjectReference Include="..\SMC\Mpai.Cae.Usc.Smc.csproj" />
+    <ProjectReference Include="..\SRA\Mpai.Cae.Usc.Sra.csproj" />
+    <ProjectReference Include="..\EES\Mpai.Cae.Usc.Ees.csproj" />
+    <ProjectReference Include="..\ARP\Mpai.Cae.Usc.Arp.csproj" />
+    <ProjectReference Include="..\EAE\Mpai.Cae.Usc.Eae.csproj" />
+    <ProjectReference Include="..\Voice\Mpai.Cae.Usc.Voice.csproj" />
+  </ItemGroup>
+</Project>

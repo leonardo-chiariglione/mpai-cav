@@ -1,0 +1,20 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/NNW1/V1.2/data/Dataset.json",
+  "title":                "Dataset V1.2",
+  "description":          "A dataset, for training or for testing a Module: the role is the port.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "DatasetID", "DatasetData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "NNW-DST-V1.2" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "DatasetID":          { "type": "string", "minLength": 1 },
+    "DatasetTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "DatasetData":        { "type": "string", "contentEncoding": "base64",
+                            "description": "The dataset, as bytes encoded in base64." },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

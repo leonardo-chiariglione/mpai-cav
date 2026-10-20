@@ -27,7 +27,7 @@ public sealed class RapidOcrAim : IOcrAim, IDisposable
             _ocr.InitModels();   // the PP-OCRv5 latin models the package carries
     }
 
-    public Task<TextObject> ProcessAsync(BasicVisualObject image)
+    public Task<TextObject> ProcessAsync(BasicVisualObject image, (double X, double Y)? around = null)
     {
         var page = Guid.NewGuid().ToString();
         using var bitmap = image.Data.Length > 0 ? SKBitmap.Decode(image.Data) : null;
@@ -38,17 +38,25 @@ public sealed class RapidOcrAim : IOcrAim, IDisposable
                 DescrMetadata = image.Data.Length > 0 ? "the image could not be decoded" : "no image"
             });
 
-        var result = _ocr.Detect(bitmap, RapidOcrOptions.Default);
+        // A BAND OF THE PAGE IS READ, not the whole of it. The detector gives nothing on a whole scan of a dense newspaper page
+        // (a six-column page of 2048 x 2830 px, with the noise of the scan, gave no line at all) and gives its lines when it is
+        // shown a band in the full width of the page; and the person reads one column, of which some twenty to fifty lines are
+        // enough. The band is about the point (or at the top of the page, given none): Band px tall, the page's whole width.
+        const int Band = 1400;
+        int height = Math.Min(Band, bitmap.Height);
+        int top = around is { } at ? (int)Math.Clamp(at.Y - height / 2.0, 0, bitmap.Height - height) : 0;
+        using var band = new SKBitmap(bitmap.Width, height);
+        bitmap.ExtractSubset(band, new SKRectI(0, top, bitmap.Width, top + height));
+        var result = _ocr.Detect(band, RapidOcrOptions.Default with { MaxSideLen = Math.Max(1024, Math.Max(band.Width, band.Height)) });
         var lines = new List<(int X0, int Y0, int X1, int Y1, string Text, double Confidence)>();
         foreach (var block in result?.TextBlocks ?? [])
         {
             if (string.IsNullOrWhiteSpace(block.Text)) continue;
             var xs = block.BoxPoints.Select(p => (int)Math.Round((double)p.X)).ToArray();
-            var ys = block.BoxPoints.Select(p => (int)Math.Round((double)p.Y)).ToArray();
+            var ys = block.BoxPoints.Select(p => (int)Math.Round((double)p.Y) + top).ToArray();   // in the pixels of the whole page
             var confidence = block.CharScores is { Length: > 0 } scores ? scores.Average() : 0.0;
             lines.Add((xs.Min(), ys.Min(), xs.Max(), ys.Max(), block.Text.Trim(), confidence));
         }
-
         // Reading order: down the page, then left to right.
         var entries = lines.OrderBy(l => l.Y0).ThenBy(l => l.X0).Select(l =>
         {

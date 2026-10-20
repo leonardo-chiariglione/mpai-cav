@@ -12,9 +12,11 @@
   "InternalTypes":  [{"Name": "FederatedLearn", "DataType": "AIH-FDL-V1.1"},
                      {"Name": "NNModel",        "DataType": "AIP-MLO-V1.0"}],
 
-  "ExternalPorts":  [{"Name": "FederatedLearnResponse", "Direction": "Input",  "DataType": "AIH-FDL-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":  [{"Name": "FederatedLearnResponse", "Direction": "Input", "IsOptional": true,  "DataType": "AIH-FDL-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "NNModel",                "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FederatedLearnRequest",  "Direction": "Output", "DataType": "AIH-FDL-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

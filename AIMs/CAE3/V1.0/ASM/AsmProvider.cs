@@ -26,6 +26,9 @@ public sealed class AsmProvider : IAimProvider
 
     public AsmProvider(string amds) => _amds = new AmdStoreHolder(amds);
 
+    // The way an AIM host builds a provider: it hands over the AIM Metadata it holds (AIF.AimHost --provider <assembly>:<Type>).
+    public AsmProvider(AIF.Store.AmdStore store) => _amds = new AmdStoreHolder(store);
+
     public bool CanCreate(string aimName) => aimName is Aoe or Ase or Soe or Sse or Bme;
 
     public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(AsmProvider).Assembly.Location : null;
@@ -51,9 +54,12 @@ public sealed class AsmProvider : IAimProvider
     }
 
     // The AIM Metadata, scanned once.
-    private sealed class AmdStoreHolder(string amds)
+    private sealed class AmdStoreHolder
     {
+        private readonly string? _amds;
         private AIF.Store.AmdStore? _store;
-        public AIF.Store.AmdStore Store { get { if (_store is null) { _store = new AIF.Store.AmdStore(amds); _store.Scan(); } return _store; } }
+        public AmdStoreHolder(string amds) => _amds = amds;
+        public AmdStoreHolder(AIF.Store.AmdStore store) => _store = store;
+        public AIF.Store.AmdStore Store { get { if (_store is null) { _store = new AIF.Store.AmdStore(_amds!); _store.Scan(); } return _store; } }
     }
 }

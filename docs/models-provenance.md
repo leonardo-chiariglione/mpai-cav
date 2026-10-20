@@ -96,4 +96,4 @@ Each voice also needs its companion `.onnx.json` config from the same folder.
 | `SteamAudio/windows-x64/phonon.dll` | 53 MB | Steam Audio 4.8.1 native library, Windows x64 | Valve - `steamaudio_4.8.1.zip`, github.com/ValveSoftware/steam-audio/releases/tag/v4.8.1 (2026-02-11), `steamaudio/lib/windows-x64/phonon.dll` | Apache-2.0 |
 | `SteamAudio/linux-x64/libphonon.so` | 40 MB | Steam Audio 4.8.1 native library, Linux x64 | The same archive, `steamaudio/lib/linux-x64/libphonon.so` | Apache-2.0 |
 
-SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.
+SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `AIF/UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.

@@ -14,7 +14,7 @@
   <ItemGroup>
     <!-- Framework + Controller API -->
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
@@ -33,7 +33,7 @@
     <!-- Recognisers -->
     <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SIR\Mpai.Mmc.Sir.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\HCI\IDR\Mpai.Hci.Idr.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\IDR\Mpai.Osd.Idr.csproj" />
     <!-- Dialogue + rendering -->
     <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
     <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />

@@ -6,6 +6,7 @@
 
   "ExternalPorts":    [{"Name": "InputText",            "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeechPersonalStatus", "Direction": "Input",  "DataType": "MMC-SPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechModel",          "Direction": "Input",  "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "OutputSpeech",         "Direction": "Output", "DataType": "OSD-BSO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],

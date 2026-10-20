@@ -12,7 +12,7 @@ the CAV's way, and the CAV is to understand that it turns, and slow, instead of 
 
 ## What was built
 
-* `CAV/Recordings/HighwayJunction.cs`, `Highway.cs`: the junction (`Junction`), paths made of lines and arcs (`HighwayPath`), a staged vehicle that
+* `Test/CAV/HighwayJunction.cs`, `Highway.cs`: the junction (`Junction`), paths made of lines and arcs (`HighwayPath`), a staged vehicle that
   follows one at the speed of a profile (`HighwayWorld.Scripted`), its indicator (blinking 1.5 Hz from 40 m before the turn), oriented-box
   collision detection for such vehicles, the map with the junction (`HighwaySimulation.HighwayMap`).
 * `AIMs/CAV/V2.0/Ams/FullEnvironmentDescription.cs`: the Sender Info message gives the entry of the Remote CAV its `PredictedPath`; an object whose

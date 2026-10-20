@@ -47,6 +47,8 @@
                           {"Output": {"AIMName": "PAF-BPE-V1.6", "DataType": "MMC-BPS-V2.5"}, "Input": {"AIMName": "MMC-PMX-V2.5", "DataType": "MMC-BPS-V2.5"}},
                           {"Output": {"AIMName": "MMC-PMX-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-EPS-V2.5"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

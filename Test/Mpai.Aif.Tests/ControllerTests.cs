@@ -149,9 +149,9 @@ public class ControllerTests
         {
             using var api = Api();
             var said = new List<string>();
-            var devices = new Mpai.Rca.DeviceRegistry()
+            var devices = new Mpai.Ua.DeviceRegistry()
                 .RegisterAcquire(Text, (vad, wanted) => Task.FromResult<string?>("x"));
-            var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, said.Add);
+            var interpreter = new Mpai.Ua.WorkflowInterpreter(api.Async(), devices, said.Add);
 
             var workflow = new Mpai.Wdl.WorkflowReader().Read($$"""
                 workflow TST over 1TST-DGR-V1.0-I01

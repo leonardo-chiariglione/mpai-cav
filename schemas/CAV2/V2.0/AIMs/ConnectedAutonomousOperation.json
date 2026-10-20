@@ -80,6 +80,8 @@
                           {"Output": {"AIMName": "CAV-HCI-V2.0", "DataType": "CAV-ERH-V2.0"}, "Input": {"AIMName": "", "DataType": "CAV-ERH-V2.0"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "CAV-HCI-V2.0", "DataType": "OSD-B3O-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "CAV-HCI-V2.0", "DataType": "string"}}],
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations": [{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* String */"}],
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"}, {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */"}],
   "DataXMData": {},

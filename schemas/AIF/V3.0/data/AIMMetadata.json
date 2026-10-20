@@ -40,6 +40,11 @@
     "Deadline":           { "description": "The time, in milliseconds, within which a run of this AIM completes. A missed Deadline is counted and reported; one missed on three consecutive runs makes the AIM DEGRADED. Omitted where the AIM has no Deadline.",
                             "anyOf": [ { "type": "number", "exclusiveMinimum": 0 }, { "$dynamicRef": "#placeholder" } ] },
 
+    "AIMLicence":         { "anyOf": [ { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMLicence.json",
+                                         "not": { "anyOf": [ { "required": [ "Licensee" ] }, { "required": [ "ParentLicence" ] }, { "required": [ "Signature" ] } ] } },
+                                       { "$dynamicRef": "#placeholder" } ],
+                            "description": "The licence the Implementer offers for this AIM, as an AIM Licence (AIF-LIC): Licensor, Grant, Term (Duration), Updates, the price (Payment.Value) and TermsURI, where its terms are published in the MPAI Store. An offer has no Licensee and no Signature: this Metadata is published once, for everybody, and never overwritten. The AIM Licence a Controller obtains with the AIM is this offer completed for it, signed by the MPAI Store, and kept in its AIM repository. Omitted means the AIM needs no AIM Licence. In an L2 it is a /* ... */ placeholder: the Implementer fills it, or removes it. A Composite AIM's AIM Licence covers its Sub-AIMs only if Grant.SubAIMs names them." },
+
     "InternalTypes":      { "type": "array", "description": "The Data Types used inside a Composite AIM by its SubAIMs, as distinct from those crossing the ExternalPorts.",
                             "items": { "type": "object", "additionalProperties": false,
                             "required": [ "DataType" ], "properties": {

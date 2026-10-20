@@ -62,6 +62,8 @@
     { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "FullEnvironmentDescriptorsTOut", "DataType": "CAV-FED-V1.1" }, "Input": { "AIMName": ""            , "PortName": "FullEnvironmentDescriptorsOut" } }
   ],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [
    {
     "ImplementationURI": "/* URI storing Implementation */",

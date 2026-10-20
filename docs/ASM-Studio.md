@@ -1,6 +1,6 @@
-﻿# ASM Studio
+# ASM Studio
 
-The application of Audio Scene Management, on the current AIMs: `UserAgent/Clients/AsmStudio` (start it with `Run-AsmStudio.bat`). It is a User Agent: Audio Object Editing and Audio Scene Editing do the editing, one User Command at a time; the Command to revoke is a User Command too, so **Undo** (Ctrl+Z, or "undo") revokes the last. Every version is kept in Shared Storage (`Documents\ASM Studio\storage`).
+The application of Audio Scene Management, on the current AIMs: `AIF/UserAgent/Clients/AsmStudio` (start it with `Run-AsmStudio.bat`). It is a User Agent: Audio Object Editing and Audio Scene Editing do the editing, one User Command at a time; the Command to revoke is a User Command too, so **Undo** (Ctrl+Z, or "undo") revokes the last. Every version is kept in Shared Storage (`Documents\ASM Studio\storage`).
 
 - **The editing space** fills the window: a view from above, you at the origin facing up the page, **x** (right) and **y** (ahead) numbered in metres along the edges. Drag a sound to move it; drag the empty space to pan; the wheel zooms; right-click a sound for its properties (x, y, z, yaw), to rename it or take it out.
 - **Names.** A thing has the name the user gives it and its kind as an extension, as in a directory: `violin.auo` (an audio object), `welcome.bso` (speech), `concert.asd` (a saved scene). The identifiers of the AIMs (BAO000001) are not shown. F2 renames.

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- AIH-NNM-V1.1: the AIM that wraps a Neural Network Model, and the way the Back End puts it in the MPAI Store and a Front End takes it from there. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\Common\Mpai.Aih.Common.csproj" />
+    <ProjectReference Include="..\ARA\Mpai.Aih.Ara.csproj" />
+  </ItemGroup>
+</Project>

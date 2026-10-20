@@ -255,6 +255,8 @@
       }
     }
   ],
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations": [
     {
       "ImplementationURI": "/* absolute URI locating the Implementation */",

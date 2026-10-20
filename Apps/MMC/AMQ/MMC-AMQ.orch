@@ -1,0 +1,80 @@
+# =============================================================================
+#  MMC-AMQ.orch - MPAI Picture Question Answering Service
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module. The User Agent offers the Controller data
+#  identified by Data Type and Port Number, and asks for data identified the
+#  same way. It names no AIM.
+#
+#  The Module is Answer to Multimodal Question (MMC-AMQ): it takes a picture,
+#  a question about it - spoken, or typed - and the ID of the machine that
+#  answers, and gives the answer as that machine's Portable Avatar, which carries
+#  the answer as a Text Object. The client shows the words and has them spoken.
+#
+#  There is no welcome here: this App runs under the MAS launcher, which welcomes
+#  the person and offers the Apps (MPAI-MAS.orch). The person chooses a picture,
+#  asks, hears the answer, and goes on with another picture until Stop.
+#
+#  A step completes before the next begins.
+# =============================================================================
+
+workflow MMC-AMQ over 1MMC-AMQ-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    # --- first she asks whether the person wants to ask about a picture (the answer is spoken or typed) ---
+
+    prompt "Do you want to ask a question about a picture?"
+    acquire Wanted (OSD-BTO-V1.5) = { "Attributes": { "TextRole": "YesNo" } }
+
+    branch on Wanted contains "yes" {
+
+        loop until Stop:
+
+            # --- the picture the person chooses: the image folder opens, and the picture is shown on the stage ---
+
+            prompt "Please select a picture."
+            acquire Picture (OSD-BVO-V1.5) = { "Formats": { "Content": { "2D": { "Static": "JPEG" } } } }
+            present Picture
+
+            # --- the question, spoken or typed, whichever comes first ---
+
+            acquire UserQuestion (OSD-BSO-V1.5) via VAD
+                 or TypedQuestion (OSD-BTO-V1.5)
+
+            # --- the Module is given the picture, the question and the machine's ID ---
+
+            offer Picture (OSD-BVO-V1.5)
+            branch on TypedQuestion {
+                offer TypedQuestion (OSD-BTO-V1.5:1)
+            } else {
+                offer UserQuestion (OSD-BSO-V1.5:1)
+            }
+            offer MachineID (string:1) = "Thalia"
+
+            # --- and gives the answer, as the machine's Portable Avatar; she says what it is ---
+
+            ask   MachinePortableAvatar (PAF-PAV-V1.6)
+            prompt "The answer is {MachinePortableAvatar}."
+
+            # --- another picture? yes: she asks to select it; else she says so and the App ends ---
+
+            prompt "Do you want to ask a question about another picture?"
+            acquire Another (OSD-BTO-V1.5) = { "Attributes": { "TextRole": "YesNo" } }
+
+            branch on Another contains "yes" {
+                wait 1s
+            } else {
+                prompt "Maybe another time."
+                end
+            }
+
+    } else {
+
+        prompt "Maybe another time."
+
+    }
+on Stop:
+    ask Controller to stop

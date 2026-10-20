@@ -1,0 +1,46 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/SpeechRestorationSystem.json",
+  "title":                "Speech Restoration System V2.5",
+  "Header":               "CAE-SRS-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SRS-V2.5"},
+
+  "APIProfile":           "Basic",
+  "Execution":            "Exchange",
+  "Description":          "Restores a Damaged Segment of an audio recording of speech: a neural network model of the speaker's voice is created (Speech Model Creation), the text of the damaged segment is synthesised with it (Text To Speech, of MPAI-MMC) and the Speech Restoration Assembly replaces the damaged segment with the synthesised speech.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "SpeechSegmentsForModelling", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TextList", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "DamagedSegment", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "DamagedList", "Direction": "Input", "DataType": "CAE-DLS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "RestoredSpeechSegment", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SMC-V2.5", "Relation": "Internal"}},
+                           {"Identifier": {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": "Internal"}},
+                           {"Identifier": {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SRA-V2.5", "Relation": "Internal"}}],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "CAE-SMC-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
+                           {"Output": {"AIMName": "CAE-SMC-V2.5", "DataType": "AIP-MLO-V1.0"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "AIP-MLO-V1.0"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "CAE-SRA-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
+                           {"Output": {"AIMName": "", "DataType": "CAE-DLS-V2.5"}, "Input": {"AIMName": "CAE-SRA-V2.5", "DataType": "CAE-DLS-V2.5"}},
+                           {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "CAE-SRA-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}},
+                           {"Output": {"AIMName": "CAE-SRA-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-restoration-system/"}]}

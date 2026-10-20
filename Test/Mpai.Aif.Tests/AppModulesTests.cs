@@ -77,7 +77,7 @@ public class AppModulesTests
         finally { api.StopFlow(AMQ); }
     }
 
-    // THE APP, NOT ONLY THE MODULE: the workflow of the App (Apps/AMQ/MMC-AMQ.orch) run by the User Agent's
+    // THE APP, NOT ONLY THE MODULE: the workflow of the App (Apps/MMC/AMQ/MMC-AMQ.orch) run by the User Agent's
     // interpreter, with simulated devices instead of a person - a picture chosen (red.jpg), a question typed
     // (the microphone never hears anything), a stage and an avatar that record what they are given. The
     // answer reaches the avatar as the machine's Portable Avatar carrying the answer as a Text Object.
@@ -87,31 +87,33 @@ public class AppModulesTests
         RequireModels();
         using var api = Controller();
         using var done = new CancellationTokenSource(TimeSpan.FromMinutes(3));
-        string? shown = null, staged = null;
+        string? staged = null; var prompts = new List<string>(); var yesNo = 0;
 
-        var devices = new Mpai.Rca.DeviceRegistry()
+        var devices = new Mpai.Ua.DeviceRegistry()
             .RegisterAcquire("OSD-BVO-V1.5", (_, _) => Task.FromResult<string?>(Picture("red.jpg").Json))
-            .RegisterAcquire("OSD-BTO-V1.5", (_, _) => Task.FromResult<string?>(Text(1, "What color is the picture?").Json))
+            .RegisterAcquire("OSD-BTO-V1.5", (_, wanted) => Task.FromResult<string?>(Text(1, (wanted ?? "").Contains("YesNo") ? (yesNo++ == 0 ? "yes, please" : "no, thank you") : "What color is the picture?").Json))
             .RegisterAcquire("OSD-BSO-V1.5", async (_, _, abandon) => { try { await Task.Delay(Timeout.Infinite, abandon); } catch (OperationCanceledException) { } return null; })
             .RegisterPresent("stage", data => { if (data.TryGetValue("OSD-BVO-V1.5", out var v)) staged = v; return Task.CompletedTask; })
-            .RegisterPresent("avatar", data =>
+            .RegisterPresent("screen", data =>
             {
-                if (data.TryGetValue("PAF-PAV-V1.6", out var pav) && AvatarUtterance.TextOfPortableAvatar(pav) is { } words)
-                {
-                    shown = words;
-                    done.Cancel();                           // one answer is enough: the person leaves (Stop)
-                }
+                if (data.TryGetValue("Prompt", out var said1)) lock (prompts) prompts.Add(said1);
                 return Task.CompletedTask;
             });
-
         var said = new List<string>();
-        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "AMQ", "MMC-AMQ.orch")));
-        var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, line => { lock (said) said.Add(line); });
+        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "MMC", "AMQ", "MMC-AMQ.orch")));
+        var interpreter = new Mpai.Ua.WorkflowInterpreter(api.Async(), devices, line => { lock (said) said.Add(line); });
         try { await interpreter.RunAsync(workflow, done.Token); } catch (OperationCanceledException) { }
 
         Assert.True(staged is not null, "the picture was never put on the stage: " + string.Join(" / ", said));
-        Assert.True(shown is not null && shown.Contains("red", StringComparison.OrdinalIgnoreCase),
-            $"the avatar was given \"{shown}\" to a question about a red picture: " + string.Join(" / ", said));
+        // She asks whether the person wants to ask about a picture and, told yes, asks to select one; she says what the answer is, asks about
+        // another picture and, told no, says maybe another time, and the App ends.
+        Assert.True(prompts.Count >= 5, "what she said: " + string.Join(" / ", prompts) + " :: " + string.Join(" / ", said));
+        Assert.Equal("Do you want to ask a question about a picture?", prompts[0]);
+        Assert.Equal("Please select a picture.", prompts[1]);
+        Assert.StartsWith("The answer is ", prompts[2]);
+        Assert.Contains("red", prompts[2], StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Do you want to ask a question about another picture?", prompts[3]);
+        Assert.Equal("Maybe another time.", prompts[4]);
     }
     // THE STANDALONE AMQ PROGRAMS (Apps/MMC/AMQ/Standalone), what they do with the Controller their window holds -
     // the one an AmqProvider gives, and nothing else: the Module is given the picture, the typed question and the

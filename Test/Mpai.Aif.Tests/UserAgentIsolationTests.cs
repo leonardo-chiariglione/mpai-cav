@@ -6,7 +6,7 @@ namespace Mpai.Aif.Tests;
 // infrastructure on which the MPAI building is placed"). A User Agent reaches the real
 // world only through the Units of its Physical Layer and a Module only through the
 // Controller API: linking AIM code, or the Controller's internals, into it breaks zero
-// trust. Judged on every project under UserAgent/: what it references - only other
+// trust. Judged on every project under AIF/UserAgent/: what it references - only other
 // User Agent projects, the Data Type classes (AIMs/Core) and the Controller API side
 // (AIF/ControllerApi, AIF/PortData) - and that no source file constructs or runs an AIM.
 [Trait("Group", "Fast")]
@@ -15,14 +15,14 @@ public class UserAgentIsolationTests
 {
     private static readonly string[] Allowed =
     [
-        "UserAgent/",
+        "AIF/UserAgent/",
         "AIMs/Core/Mpai.Core.csproj",
         "AIF/ControllerApi/",
         "AIF/PortData/"
     ];
 
     private static IEnumerable<string> Files(string pattern) =>
-        Directory.EnumerateFiles(Path.Combine(Repository.Root, "UserAgent"), pattern, SearchOption.AllDirectories)
+        Directory.EnumerateFiles(Path.Combine(Repository.Root, "AIF", "UserAgent"), pattern, SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
                      && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"));
 

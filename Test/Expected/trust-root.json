@@ -5,7 +5,7 @@
   "a secret sealed, unsealed while the registers hold": "a secret of this party",
   "booted again: its identity key": "the same",
   "booted again: its log": "0 measurements",
-  "its code measured": "9 files into register 10",
+  "its code measured": "10 files into register 10",
   "its private key, as PKCS#8": "refused: The private key is held by the TPM, which does not release it.",
   "its private key, duplicated out of the TPM": "refused by the TPM: AuthType (the key is FixedTPM, and has no policy that would let it be duplicated)",
   "its private key, exported": "refused: The private key is held by the TPM, which does not release it.",

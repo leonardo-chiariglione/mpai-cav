@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A User Agent kit: it reaches the real world through the Physical Layer's Units
+       and a Module through the Controller API only - no AIM, no Controller internals
+       (MPAI-AIF V3.0; enforced by UserAgentIsolationTests). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Mpai.UaKit</AssemblyName>
+    <RootNamespace>Mpai.UaKit</RootNamespace>
+    <DefineConstants>$(DefineConstants);WINDOWS_DEVICES</DefineConstants>
+  </PropertyGroup>
+  <!-- Spatial audio is a project of its own, in the folder beside the host. -->
+  <ItemGroup>
+    <Compile Remove="SpatialAudio\**" />
+    <None Remove="SpatialAudio\**" />
+    <Page Remove="SpatialAudio\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
+  </ItemGroup>
+</Project>

@@ -36,7 +36,6 @@
         "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } },
 
     "VCameraData":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
-
         "VEVisualObject":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
         "FieldOfView":            { "type": "number", "minimum": 0, "maximum": 180, "description": "Field of view, in degrees." },
         "VEAudioObject":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json" },

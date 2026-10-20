@@ -1,0 +1,53 @@
+# =============================================================================
+#  ASM.orch - Audio Scene Management
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which runs continuously: Text and Speech
+#  Translation feeds back into Speech Object Editing, so the Module is not run an
+#  exchange at a time. The User Agent binds devices to its boundary for the life of
+#  the workflow, each to one Port, by Data Type and Port Number:
+#
+#    what the User gives the Module -
+#      ObjectIn, AudioObjectIn       a sound the User captured or read, an Audio
+#                                    Object the User read from outside
+#      ObjectCommand, SceneCommand   the commands of the editing of an Object and of
+#                                    the Scene; SceneIn the Scene
+#
+#    what the Module gives the User -
+#      ObjectOut, AudioObjectOut, Scene, the Objects and the Scene as edited, and the
+#      ObjectReport, SceneReport     reports of how each command was executed
+#      Unused                        what the User Agent has no use for
+#
+#  Where the Module keeps the Objects and the Scenes is the Controller's (its configuration):
+#  the User Agent names no place, and no AIM.
+# =============================================================================
+
+workflow ASM over 1CAE-ASM-V1.0-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  ObjectIn       (OSD-BAO-V1.5)   from device "ObjectIn"
+    stream  AudioObjectIn  (OSD-AUO-V1.5)   from device "AudioObjectIn"
+    stream  ObjectCommand  (CAE-UCM-V1.0:1) from device "ObjectCommand"
+    stream  SceneIn        (OSD-BAS-V1.5:1) from device "SceneIn"
+    stream  SceneCommand   (CAE-UCM-V1.0:2) from device "SceneCommand"
+
+    deliver ObjectOut      (OSD-BAO-V1.5)   to device "ObjectOut"
+    deliver AudioObjectOut (OSD-AUO-V1.5)   to device "AudioObjectOut"
+    deliver ObjectReport   (CAE-UCM-V1.0:1) to device "ObjectReport"
+    deliver Scene          (OSD-BAS-V1.5)   to device "Scene"
+    deliver SceneReport    (CAE-UCM-V1.0:2) to device "SceneReport"
+    deliver SpeechOut      (OSD-BSO-V1.5:1) to device "Unused"
+    deliver SpeechSceneOut (OSD-BSS-V1.5)   to device "Unused"
+    deliver MultimodalOut  (OSD-BMS-V1.5)   to device "Unused"
+    deliver SpeechReport   (CAE-UCM-V1.0:3) to device "Unused"
+    deliver SpeechSceneRep (CAE-UCM-V1.0:4) to device "Unused"
+    deliver MultimodalRep  (CAE-UCM-V1.0:5) to device "Unused"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

@@ -69,6 +69,8 @@
                           {"Output": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-AMD-V2.0"}},
                           {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-FED-V2.0"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [
    {
     "ImplementationURI": "/* URI storing Implementation */",

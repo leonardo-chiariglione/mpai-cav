@@ -56,6 +56,6 @@ public sealed class HighwayRecording
     {
         File.WriteAllText(Path.Combine(folder, "data.js"),
             "window.REPLAY = { label: " + System.Text.Json.JsonSerializer.Serialize(label) + ", states: [\n" + string.Join(",\n", states) + "\n] };\n");
-        File.Copy(Path.Combine(Repository.Root, "CAV", "Viewer", "highway.html"), Path.Combine(folder, "index.html"), overwrite: true);
+        File.Copy(Path.Combine(Repository.Root, "Apps", "CAV", "CAVViewer", "highway.html"), Path.Combine(folder, "index.html"), overwrite: true);
     }
 }

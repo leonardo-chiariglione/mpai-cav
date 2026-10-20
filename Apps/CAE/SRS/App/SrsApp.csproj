@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Speech Restoration System, the App: it runs the User Agent (SRS.orch) on the Controller of the Module, whose AIMs run on an AIM host of their own. It takes speech and words,
+       and writes the restored speech. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SrsApp</AssemblyName>
+    <RootNamespace>Mpai.Cae.Srs</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+  </ItemGroup>
+
+</Project>

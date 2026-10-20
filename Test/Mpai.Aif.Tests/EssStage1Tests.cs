@@ -398,7 +398,7 @@ public class EssStage1Tests
     // The status is read at 19 s of the drive, while it plays: the camera Blocks, so a
     // frame of the drive may be given seconds after its time, and a camera stopped at
     // 10 s has certainly been silent longer than its MaxAge (2 s) by then.
-    private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Rca.WorkflowInterpreter.PlaybackReport Played)> RunEss(
+    private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Ua.WorkflowInterpreter.PlaybackReport Played)> RunEss(
         SyntheticDrive drive, IReadOnlyList<DriveMessage> messages)
     {
         const string ess = "1CAV-ESS-V2.0-I01";
@@ -411,8 +411,8 @@ public class EssStage1Tests
         api.SharedStorageInit(ess, location);
         Assert.Equal(AifError.OK, api.RecordStart(ess, out var recordId));
 
-        var devices = new Mpai.Rca.DeviceRegistry().RegisterRecord("drive", new Mpai.Rca.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
-        var interpreter = new Mpai.Rca.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
+        var devices = new Mpai.Ua.DeviceRegistry().RegisterRecord("drive", new Mpai.Ua.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
+        var interpreter = new Mpai.Ua.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
         var run = interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
             workflow DRIVE over {{ess}}
             on Start:

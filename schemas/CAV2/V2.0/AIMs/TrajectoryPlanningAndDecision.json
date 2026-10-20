@@ -60,6 +60,8 @@
                           {"Output": {"AIMName": "CAV-TOA-V2.0", "DataType": "CAV-INT-V2.0"}, "Input": {"AIMName": "CAV-MSP-V2.0", "DataType": "CAV-INT-V2.0", "PortNumber": 2}},
                           {"Output": {"AIMName": "CAV-TOA-V2.0", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "", "DataType": "CAV-FED-V2.0"}}],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [
    {
     "ImplementationURI": "/* URI storing Implementation */",

@@ -12,10 +12,12 @@
   "InternalTypes":  [{"Name": "DeIDAndAnonym", "DataType": "AIH-DIA-V1.1"},
                      {"Name": "AIHData",       "DataType": "AIH-AHD-V1.1"}],
 
-  "ExternalPorts":  [{"Name": "DeIDAndAnonymRequest",  "Direction": "Input",  "DataType": "AIH-DIA-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AIHDataIn",             "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":  [{"Name": "DeIDAndAnonymRequest",  "Direction": "Input", "IsOptional": true,  "DataType": "AIH-DIA-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AIHDataIn",             "Direction": "Input", "IsOptional": true,  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "DeIDAndAnonymResponse", "Direction": "Output", "DataType": "AIH-DIA-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AIHDataOut",            "Direction": "Output", "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

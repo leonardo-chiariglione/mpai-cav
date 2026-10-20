@@ -30,9 +30,11 @@
       "TimeUnit":               { "type": "string", "enum": ["00", "01", "10", "11"], "description": "From FlagsByte bits1..2: 00=sec, 01=ms, 10=us, 11=ns." },
       "Reserved":               { "type": "integer", "minimum": 0, "maximum": 31, "description": "From FlagsByte bits3..7 (5 bits)." } },
 
-      "allOf":                  [ { "if": { "properties": { "AccuracyMode": { "const": "single" } } },
+      "allOf":                  [ { "if": { "required": [ "AccuracyMode" ], "properties": { "AccuracyMode": { "const": "single" } } },
                                     "then": { "required": [ "AccuracyPlusMinus" ] } },
-                                  { "if": { "properties": { "AccuracyMode": { "const": "separate" } } },
-                                    "then": { "required": [ "AccuracyStartPlusMinus", "AccuracyEndPlusMinus" ] } } ] } },
+                                  { "if": { "required": [ "AccuracyMode" ], "properties": { "AccuracyMode": { "const": "separate" } } },
+                                    "then": { "required": [ "AccuracyStartPlusMinus", "AccuracyEndPlusMinus" ] } },
+                                  { "if": { "not": { "required": [ "AccuracyMode" ] } },
+                                    "then": { "required": [ "AccuracyPlusMinus" ] } } ] } },
 
     "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

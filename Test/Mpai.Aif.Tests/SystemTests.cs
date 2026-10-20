@@ -190,7 +190,7 @@ public class SystemTests
         public CodeIndex(string root)
         {
             var sep = Path.DirectorySeparatorChar;
-            foreach (var dir in new[] { "AIMs", Path.Combine("Apps", "CAV", "HCIApps"), "CAV" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
+            foreach (var dir in new[] { "AIMs", Path.Combine("Apps", "CAV", "HCIApps"), Path.Combine("Test", "CAV") }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
                 foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories)
                                            .Where(f => !f.Contains($"{sep}obj{sep}") && !f.Contains($"{sep}bin{sep}")))
                     text[f] = File.ReadAllText(f);
@@ -349,7 +349,7 @@ public class WorkflowTests
     public void Workflows()
     {
         var files = Directory.EnumerateFiles(Path.Combine(Repository.Root, "Apps"), "*.orch", SearchOption.AllDirectories)
-                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "UserAgent", "Orchestration"), "MPAI-MAS.orch"))
+                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "AIF", "UserAgent", "Orchestration"), "MPAI-MAS.orch"))
                              .OrderBy(f => f, StringComparer.Ordinal);
 
         var result = new Dictionary<string, string>();

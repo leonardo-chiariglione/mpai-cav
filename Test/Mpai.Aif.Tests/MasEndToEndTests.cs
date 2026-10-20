@@ -9,6 +9,7 @@ using Mpai.Cav.Map;
 using Mpai.Cav.Mas;
 using Mpai.Cav.Recordings;
 using Mpai.Rca;
+using Mpai.Ua;
 using Mpai.Wdl;
 
 namespace Mpai.Aif.Tests;

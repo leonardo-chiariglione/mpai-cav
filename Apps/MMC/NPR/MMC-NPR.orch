@@ -1,0 +1,51 @@
+# =============================================================================
+#  MMC-NPR.orch - MPAI Newspaper Reading Service
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module. The person chooses the image of a newspaper
+#  page; it is shown. The person clicks at the top of a column, and the Module -
+#  Newspaper Reading, MMC-NPR - gives the text of that column as the machine's
+#  Portable Avatar, which carries it as a Text Object. The client shows the
+#  words and has them spoken. Then the person may click another column, until
+#  Stop.
+#
+#  There is no welcome here: this App runs under the MAS launcher, which
+#  welcomes the person and offers the Apps (MPAI-MAS.orch).
+#
+#  A step completes before the next begins.
+# =============================================================================
+
+workflow MMC-NPR over 1MMC-NPR-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    # --- the page the person chooses, shown on the stage ---
+
+    acquire Page (OSD-BVO-V1.5)
+    present Page
+
+    prompt "Click on a column and I will read it."
+
+    loop until Stop:
+
+        # --- the point the person clicks, anywhere in a column ---
+
+        acquire Column (OSD-PNT-V1.5)
+
+        # --- the Module is given the page, the point and the machine's ID ---
+
+        offer Page (OSD-BVO-V1.5)
+        offer Column (OSD-PNT-V1.5)
+        offer MachineID (string:1) = "Thalia"
+
+        # --- and gives the text of the column, as the machine's Portable Avatar ---
+
+        ask   MachinePortableAvatar (PAF-PAV-V1.6)
+        present MachinePortableAvatar
+
+        wait 1s
+
+on Stop:
+    ask Controller to stop

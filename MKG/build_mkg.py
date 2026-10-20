@@ -378,7 +378,7 @@ def code_pointers(g, stats, node):
     AIMs: the folder AIMs/<Standard>/V<x.y>/<ACR>/ (the *AimProcessor.cs is the entry point), or the Provider
     that registers an L3 by its name and builds its processor ("1MMC-ASR-V2.5-I01" => new AsrAimProcessor(...)).
     Data Types: the C# class whose Header is the Data Type's, or that says it mirrors the schema file.
-    Units: the classes of UserAgent/PhysicalLayer/Units.cs.
+    Units: the classes of AIF/UserAgent/PhysicalLayer/Units.cs.
     """
     aims_dir = os.path.join(DI, 'AIMs')
 
@@ -443,9 +443,9 @@ def code_pointers(g, stats, node):
 
     # User Agent
     ua = KIND_NS['UserAgent']['User_Agent']
-    if os.path.isdir(os.path.join(DI, 'UserAgent')):
-        g.add((ua, MKG.codePath, Literal('UserAgent')))
-        g.add((ua, MKG.code, URIRef(GITHUB + 'UserAgent')))
+    if os.path.isdir(os.path.join(DI, 'AIF', 'UserAgent')):
+        g.add((ua, MKG.codePath, Literal('AIF/UserAgent')))
+        g.add((ua, MKG.code, URIRef(GITHUB + 'AIF/UserAgent')))
 
 
 def units_and_software(g, stats, node):

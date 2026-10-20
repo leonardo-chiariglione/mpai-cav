@@ -50,7 +50,7 @@ dotnet dev-certs https --trust
 ```
 
 **Write the Service's configuration.** Create a file, for example
-`MAS\Service\mas-server-MAS.json`, replacing `D:\\MPAI` with the
+`Apps\MAS\Service\mas-server-MAS.json`, replacing `D:\\MPAI` with the
 folder where you put the software:
 ```json
 {

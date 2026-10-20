@@ -5,10 +5,13 @@
 
   "APIProfile":       "Basic",
 
-  "Description":      "This AIM receives the image of a page as a Basic Visual Object and produces a Text Object: the lines of text found on the page, in reading order, each a Basic Text Object with its box on the page and its confidence. The box of a line is the Space-Time of the line in the Text Object: SpatialAttitude1 is its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down). The confidence of a line is in its Data Exchange Metadata.",
+  "Description":      "This AIM receives the image of a page as a Basic Visual Object and, optionally, a Point on it (OSD-PNT-V1.5), and produces a Text Object: the lines of text found on a band of the page about the Point (at the top of the page with no Point), in the full width of the page, in reading order, each a Basic Text Object with its box on the page and its confidence. The box of a line is the Space-Time of the line in the Text Object: SpatialAttitude1 is its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down). The confidence of a line is in its Data Exchange Metadata.",
 
   "ExternalPorts":    [{"Name": "PageImage", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "PagePoint", "Direction": "Input", "DataType": "OSD-PNT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "PageText", "Direction": "Output", "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 

@@ -1,0 +1,107 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIF/V3.0/data/AIMLicence.json",
+  "title":                "AIM Licence V3.0",
+  "description":          "The licence of an AIM, in two states of one Data Type. As an OFFER - the AIMLicence field of AIM Metadata, which the Implementer fills and the MPAI Store publishes once, for everybody - it states Grant, the Term it grants for, Updates, the price (Payment, a Service Pricing Model) and where its terms are (TermsURI); it has no Licensee and no Signature. As an ISSUED AIM Licence - what the MPAI Store gives a Controller that obtains the AIM - it is the offer completed for that licensee: AIMLicenceID, AIMLicenceTime, AIM (the files covered, with the fingerprints the MPAI Store approved), Licensor (the MPAI Store), Licensee, a Term with its NotBefore, Status (where revocation is asked), Payment as a Final Service Pricing Model with its Settlement (proof of acquisition), and the Signature of the MPAI Store. A Controller keeps the issued AIM Licence with the AIM in its AIM repository and checks it before it builds the AIM: the signature is the MPAI Store's, it names this Controller, its fingerprints are those of what is built, its Term has not ended, its Grant covers the use and, when the MPAI Store can be reached, it is not revoked. An AIM whose Metadata has no AIMLicence needs no AIM Licence. THE TWO LICENCES: the offer is the Implementer's licence to the MPAI Store, which states what the MPAI Store may grant (Grant, Term, Updates, the Implementer's proposed price in Payment) and, in Sublicensing, that it may sublicense; the issued AIM Licence is the MPAI Store's sublicence to the Entity that runs Controllers (the holder of a PTF Trust Anchor: an organisation, one owner, the operator of a MAS service), within the offer, at the price proposed by the Implementer with the MPAI Store's mark-up applied, and names the offer it is under in ParentLicence.",
+  "type":                 "object",
+  "required":             [ "Header", "Grant" ],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "AIF-LIC-V3.0" },
+    "MInstance":          { "type": "string" },
+    "UEnvironment":       { "type": "string" },
+    "AIMLicenceID":       { "type": "string", "minLength": 1, "description": "Unique identifier of this AIM Licence, given by the MPAI Store. Issued only." },
+    "AIMLicenceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "When the MPAI Store issued it. Issued only." },
+
+    "TermsURI":           { "type": "string", "format": "uri", "description": "Where the terms of the AIM Licence are published in the MPAI Store. Required in an offer." },
+
+    "AIM":                { "type": "object", "required": [ "AIMName", "Implementations" ], "additionalProperties": false,
+                            "description": "What an issued AIM Licence is for: the right is to these Implementations and models, as the MPAI Store approved them. Issued only (an offer is in the Metadata of the AIM it is for).",
+                            "properties": {
+      "AIMName":          { "type": "string", "minLength": 1, "description": "The AIM Instance identifier (e.g. 1AIH-NNM-V1.1-I02)." },
+      "Versions":         { "type": "object", "additionalProperties": false, "description": "The versions of the AIM, as the MPAI Store numbers them, that the AIM Licence covers. Omitted: the version it was issued for.",
+                            "properties": {
+        "From":           { "type": "string", "minLength": 1 },
+        "To":             { "type": "string", "minLength": 1, "description": "Omitted: no later version is excluded (see Updates)." } } },
+      "Implementations":  { "type": "array", "minItems": 1, "description": "The files covered - each Implementation and each model - with the fingerprint the MPAI Store approved.",
+                            "items": { "type": "object", "required": [ "BinaryName", "HashAlgorithm", "Hash" ], "additionalProperties": false, "properties": {
+        "BinaryName":     { "type": "string", "minLength": 1 },
+        "HashAlgorithm":  { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" },
+        "Hash":           { "type": "string", "pattern": "^([0-9A-F]{2})+$" } } } } } },
+
+    "Licensor":           { "type": "object", "required": [ "LicensorID" ], "additionalProperties": false,
+                            "description": "Who grants: the MPAI Store that issues the AIM Licence and signs it. The relationship between the Implementer and the MPAI Store is outside the AIM Licence. Issued only.",
+                            "properties": {
+      "LicensorID":       { "type": "string", "minLength": 1, "description": "The identifier of the MPAI Store." } } },
+
+    "Licensee":           { "type": "object", "required": [ "TrustAnchorID" ], "additionalProperties": false,
+                            "description": "To whom: the holder of a PTF Trust Anchor - an organisation, or one owner. Every Controller whose Instance Credential is issued under that Trust Anchor is covered; a Controller created or destroyed later needs no new AIM Licence. A Controller proves it with its credential chain (MPAI-PTF). The AIM Licence is not usable by a Controller that is not under the Trust Anchor. Issued only.",
+                            "properties": {
+      "TrustAnchorID":    { "type": "string", "minLength": 1, "description": "The AnchorID of the PTF Trust Anchor (PTF-TRA) of the licensee." },
+      "ControllerID":     { "type": "string", "minLength": 1, "description": "Where present, only the Controller with this identity (as in its Instance Credential) is covered." } } },
+
+    "Sublicensing":       { "type": "object", "required": [ "Allowed" ], "additionalProperties": false,
+                            "description": "In the offer (the Implementer's licence to the MPAI Store): whether the MPAI Store may sublicense the AIM, within the Grant, the Term, the Updates and the Payment of the offer. An AIM whose offer does not allow it is not issued to anyone.",
+                            "properties": {
+      "Allowed":          { "type": "boolean" } } },
+
+    "ParentLicence":      { "type": "object", "required": [ "ImplementerID", "HashAlgorithm", "OfferHash" ], "additionalProperties": false,
+                            "description": "In the issued AIM Licence (the MPAI Store's sublicence): the Implementer's offer it is under - the Implementer, and the hash of the offer in the AIM Metadata the MPAI Store published (PTF-JSON-CANON-V1 form of the AIMLicence field). A Controller that holds the AIM Metadata checks it. Issued only.",
+                            "properties": {
+      "ImplementerID":    { "type": "string", "minLength": 1 },
+      "HashAlgorithm":    { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/SecurityAlgorithmTaxonomy.json#/properties/Hash" },
+      "OfferHash":        { "type": "string", "pattern": "^([0-9A-F]{2})+$" } } },
+
+    "Grant":              { "type": "object", "required": [ "Rights" ], "additionalProperties": false,
+                            "description": "What may be done with the AIM.",
+                            "properties": {
+      "Rights":           { "type": "array", "minItems": 1, "uniqueItems": true, "contains": { "const": "Run" },
+                            "description": "Run - the AIM executes under the control of the licensee: of a Controller under its Trust Anchor, wherever the AIM executes; Keep - keep copies in an AIM repository; RunUnderOtherControl - the AIM executes under the control of another party, a Controller not under the licensee's Trust Anchor; ProvideService - use it to give a service to third parties (as a MAS service does).",
+                            "items": { "enum": [ "Run", "Keep", "RunUnderOtherControl", "ProvideService" ] } },
+      "MaxControllers":   { "type": "integer", "minimum": 1, "description": "Omitted: no limit." },
+      "MaxConcurrentModules": { "type": "integer", "minimum": 1, "description": "Omitted: no limit." },
+      "ExcludedPurposes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Purposes, or fields of use, for which the AIM may not be used." } } },
+
+    "Term":               { "type": "object", "additionalProperties": false,
+                            "description": "How long the AIM Licence lasts. In an offer, Duration is what it grants for; in an issued AIM Licence, NotBefore is required and NotAfter (omitted: it does not end) is the end.",
+                            "properties": {
+      "Duration":         { "type": "string", "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$", "description": "An ISO 8601 duration. Omitted in an offer: it does not end." },
+      "NotBefore":        { "type": "string", "format": "date-time" },
+      "NotAfter":         { "type": "string", "format": "date-time" } } },
+
+    "Updates":            { "type": "object", "required": [ "Included" ], "additionalProperties": false,
+                            "description": "Whether newer versions of the AIM than those of AIM.Versions are covered: a Controller follows a newer version without a new AIM Licence only if they are.",
+                            "properties": {
+      "Included":         { "type": "boolean" },
+      "Until":            { "type": "string", "format": "date-time", "description": "Omitted: for as long as the Term lasts." } } },
+
+    "Payment":            { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ServicePricingModel.json",
+                            "description": "The price and the payment, as an MPAI-MMM Service Pricing Model (MMM-SPM): in an offer, the pricing model(s) offered (SPMStatus Model: ModelType and what it requires - OneTime, Subscription, PayPerUse, ...); in an issued AIM Licence, the one chosen and the proof of payment (SPMStatus Final, with Chosen and Settlement, whose Transaction is the proof that the AIM was acquired). Omitted for an AIM that costs nothing. It is not a payment mechanism." },
+
+    "Obligations":        { "type": "object", "additionalProperties": false,
+                            "properties": {
+      "UsageReporting":   { "type": "boolean", "description": "A term of the AIM Licence: the Controller reports its use of the AIM to the MPAI Store, at ReportTo." },
+      "ReportTo":         { "type": "string", "format": "uri" },
+      "Attestation":      { "type": "boolean", "description": "The Controller attests what it runs (MPAI-PTF) when the MPAI Store asks." } },
+                            "dependentRequired": { "UsageReporting": [ "ReportTo" ] } },
+
+    "Status":             { "type": "object", "required": [ "StatusURI" ], "additionalProperties": false,
+                            "description": "Where its validity, and whether it was revoked, can be asked of the MPAI Store. Issued only.",
+                            "properties": {
+      "StatusURI":        { "type": "string", "format": "uri" },
+      "MaxAge":           { "type": "string", "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$",
+                            "description": "An ISO 8601 duration: how long after the last time the MPAI Store confirmed that the AIM Licence is not revoked (the time it was issued, the first time) a Controller may go on using the AIM without asking again. After it the Controller asks, or does not use the AIM. Omitted: no limit." } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 },
+    "Signature":          { "type": "string", "pattern": "^([0-9A-F]{2})+$",
+                            "description": "Hexadecimal signature over the canonical form (PTF-JSON-CANON-V1) of the AIM Licence without its Signature, by the key KeyID names: the MPAI Store's. Issued only." },
+    "KeyID":              { "type": "string", "minLength": 1 } },
+
+  "$comment":             "An AIM Licence is issued (it has a Signature) or an offer (it has none). What only an issued one has comes with the Signature and nothing else does; an offer says where its terms are.",
+  "allOf":                [ { "if":   { "required": [ "Signature" ] },
+                              "then": { "required": [ "AIMLicenceID", "AIMLicenceTime", "AIM", "Licensor", "Licensee", "ParentLicence", "Term", "Status", "KeyID" ],
+                                        "properties": { "Term": { "required": [ "NotBefore" ] }, "Payment": { "required": [ "SPMStatus", "Chosen", "Settlement" ], "properties": { "SPMStatus": { "const": "Final" } } } } },
+                              "else": { "required": [ "TermsURI", "Sublicensing" ] } },
+                            { "if":   { "anyOf": [ { "required": [ "AIMLicenceID" ] }, { "required": [ "AIMLicenceTime" ] }, { "required": [ "AIM" ] }, { "required": [ "Licensor" ] }, { "required": [ "Licensee" ] }, { "required": [ "ParentLicence" ] }, { "required": [ "Status" ] }, { "required": [ "KeyID" ] } ] },
+                              "then": { "required": [ "Signature" ] } } ] }

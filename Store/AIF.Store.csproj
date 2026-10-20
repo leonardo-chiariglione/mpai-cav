@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The Store service and the Store app are projects of their own, in the folders beside the core. -->
+  <ItemGroup>
+    <Compile Remove="Service\**;App\**" />
+    <None Remove="Service\**;App\**" />
+    <EmbeddedResource Remove="Service\**;App\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIF\Trust\AIF.Trust.csproj" />
+  </ItemGroup>
+
+</Project>

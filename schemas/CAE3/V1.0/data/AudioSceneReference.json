@@ -1,0 +1,24 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/CAE3/V1.0/data/AudioSceneReference.json",
+  "title":                  "Audio Scene Reference V1.0",
+  "description":            "Polynomial as an array of terms for Model.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               ["Header", "Polynomial"],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "CAE-ASR-V1.0" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "AudioSceneReferenceID":   { "type": "string" },
+    "AudioSceneReferenceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "PolynomialVariable":   { "type": "string", "enum": [ "AngleSine", "AngleCosine" ] },
+
+    "Polynomial":           { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "properties": {
+      "Coefficient":        { "type": "number", "description": "The numeric coefficient of the term." },
+      "Exponent":           { "type": "integer", "minimum": 0, "description": "The exponent of the variable in the Term." } } } },
+
+
+    "DataXMData":           {"$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

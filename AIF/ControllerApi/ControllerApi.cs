@@ -46,6 +46,19 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     private readonly UserAgent    _ua;
     private readonly IAimProvider _provider;
     private readonly AimSettings  _settings;
+    private readonly AmdStore     _amds;
+
+    // THE CONTROLLER'S REPOSITORY OF AIMs (see AimRepository): its folder is the AIM Metadata folder this Controller reads. With it and a Source (the MPAI Store) the Controller,
+    // when it starts a Module, obtains the AIMs of the Module it does not hold - and only those - and, if FollowNewerVersions, the newer version of one the Store has.
+    public AimRepository? Repository { get; set; }
+    // The Source is also who verifies: the Controller measures what it runs and asks the Store (MPAI_AIFS_VerifyImplementation); it never reads the fingerprint itself.
+    private IAimSource? _source;
+    public IAimSource? Source { get => _source; set { _source = value; if (value is not null) _amds.Verifier = value; } }
+    public bool FollowNewerVersions { get; set; }
+
+    // Whether this Controller obtains the Implementations and models of the AIMs it obtains. A Controller whose AIMs all run on AIM hosts does not: the hosts do, from the places the
+    // Metadata gives, and the Controller hands them the Metadata, the fingerprints and the AIM Licence (UserAgent.PackageForHost).
+    public bool FetchImplementations { get; set; } = true;
 
     // A Service calls this from many requests at once, for different Modules.
     // The table is touched only under _tables; a run itself happens outside it,
@@ -74,10 +87,11 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         _settings = AimSettings.Load(settingsPath);
         _provider = provider;
-        var store = new AmdStore(amdDir); store.Scan();
+        var store = new AmdStore(amdDir); store.Scan(); _amds = store;
         _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
         _ua.Access = new AccessStore(Mpai.Core.MpaiPaths.Access);
+        _ua.PackageForHost = aim => Repository?.PackageForHost(aim);
         OfferPayloads();
     }
 
@@ -86,11 +100,12 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     public ControllerApi(string amdDir, string settingsPath, Func<AmdStore, IAimProvider> providerFactory)
     {
         _settings = AimSettings.Load(settingsPath);
-        var store = new AmdStore(amdDir); store.Scan();
+        var store = new AmdStore(amdDir); store.Scan(); _amds = store;
         _provider = providerFactory(store);
         _ua = new UserAgent(store, Mpai.Core.MpaiPaths.SharedStorage);
         _ua.MPAI_AIFU_Controller_Initialize();
         _ua.Access = new AccessStore(Mpai.Core.MpaiPaths.Access);
+        _ua.PackageForHost = aim => Repository?.PackageForHost(aim);
         OfferPayloads();
     }
 
@@ -137,12 +152,45 @@ public sealed class ControllerApi : IControllerApi, IDisposable
                 _ua.MPAI_AIFU_MODULE_Stop(already.Id);
                 _running.Remove(moduleName);
             }
+            var prepared = PrepareAims(moduleName);
+            if (prepared != AifError.OK) return prepared;
             var err = _ua.MPAI_AIFU_MODULE_Start(moduleName, _provider, _settings, out var id);
             if (err == AifError.OK) _running[moduleName] = new Started { Id = id };
             return err;
         }
     }
 
+
+    // OBTAINS THE AIMs OF A MODULE from the Store when the repository does not hold them (or holds an older version and the Controller follows the Store), and reads the
+    // Metadata again. What it holds is not obtained again: it was paid for.
+    private AifError PrepareAims(string moduleName)
+    {
+        if (Repository is null || Source is null) return AifError.OK;
+        var changed = false;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        void Resolve(string aim)
+        {
+            if (!seen.Add(aim)) return;
+            if (Repository.VersionOf(aim) is null)
+            { if (Source.CurrentVersion(aim) is not null) { Repository.Obtain(aim, Source, FetchImplementations); changed = true; } }
+            else if (FollowNewerVersions && Repository.NewerVersion(aim, Source) is not null) { Repository.Update(aim, Source, FetchImplementations); changed = true; }
+            var path = System.IO.Path.Combine(Repository.Folder, aim + ".json");
+            if (!System.IO.File.Exists(path)) return;
+            using var document = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));
+            if (document.RootElement.TryGetProperty("SubAIMs", out var subs) && subs.ValueKind == System.Text.Json.JsonValueKind.Array)
+                foreach (var sub in subs.EnumerateArray())
+                    if (sub.TryGetProperty("Identifier", out var i) && i.TryGetProperty("AIMName", out var n) && n.GetString() is { Length: > 0 } name) Resolve(name);
+        }
+        try
+        {
+            Resolve(moduleName);
+            if (changed) _amds.Scan();
+            // The AIM Licence of every AIM of the Module that has one: good, and - the Store being asked - not revoked.
+            foreach (var aim in seen) Repository.CheckLicence(aim, Source);
+        }
+        catch (InvalidOperationException) { return AifError.NotTrusted; }         // NOT_TRUSTED, or NOT_LICENSED
+        return AifError.OK;
+    }
     public void StopFlow(string moduleName)
     {
         List<AIF.Channels.ExternalHub>? hubs;

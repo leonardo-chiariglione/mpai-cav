@@ -1,0 +1,40 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/PackagingForAudioPreservation.json",
+  "title":                "Packaging for Audio Preservation V2.5",
+  "Header":               "CAE-PAP-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-PAP-V2.5"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Packaging for Audio Preservation (CAE-PAP) of CAE-USC V2.5: receives PreservationAudioFile, RestoredAudioFiles, EditingList, IrregularityFile, IrregularityImages, PreservationAudioVisualFile and produces AccessCopyFiles, PreservationMasterFiles.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "PreservationAudioFile", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "RestoredAudioFiles", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EditingList", "Direction": "Input", "DataType": "CAE-ELS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "IrregularityFile", "Direction": "Input", "DataType": "CAE-IRR-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "IrregularityImages", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PreservationAudioVisualFile", "Direction": "Input", "DataType": "OSD-BMO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AccessCopyFiles", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PreservationMasterFiles", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [ ],
+  "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/packaging-for-audio-preservation/"}]}

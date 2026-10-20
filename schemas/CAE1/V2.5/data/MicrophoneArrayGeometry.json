@@ -22,7 +22,7 @@
       "BlockSize":                  { "type": "integer", "minimum": 1 },
       "NumberofMicrophones":        { "type": "integer", "minimum": 1 } } },
 
-    "MicrophoneAttributes":         { "description": "PerÃ¢â‚¬â€˜microphone configuration entries.", "type": "array", "minItems": 1, "items": { "type": "object",
+    "MicrophoneAttributes":         { "description": "Per-microphone configuration entries.", "type": "array", "minItems": 1, "items": { "type": "object",
                                       "additionalProperties": false, "required": ["MicrophoneID", "MicrophonePointOfView", "MicrophoneDirectivityFormat"],
                                       "properties": {
       "MicrophoneID":               { "type": "integer", "minimum": 0 },

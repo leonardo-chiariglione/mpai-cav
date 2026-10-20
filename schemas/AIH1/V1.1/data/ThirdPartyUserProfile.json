@@ -1,0 +1,42 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/AIH1/V1.1/data/ThirdPartyUserProfile.json",
+  "title":                "Third-Party User Profile V1.1",
+  "description":          "Profile of a Third-Party User (AIH-TPU): an entity, not an End User, that registers with the Health Back End to process AIH Data under the terms of the Smart Contracts. Besides who it is, it states what it asks to be allowed to do, in the terms of the AIH Taxonomies and of the Model Licence, so that the Back End can compare it with a licence.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "ThirdPartyUserID", "ThirdPartyUserProfileID", "ThirdPartyUserProfileData", "Entitlements" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "AIH-TPU-V1.1" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "ThirdPartyUserID":   { "type": "string", "description": "Unique identifier of the Third-Party User." },
+    "ThirdPartyUserProfileID": { "type": "string", "description": "Unique identifier of the profile record." },
+    "ThirdPartyUserProfileTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "ThirdPartyUserProfileData": { "type": "object", "description": "Who the Third-Party User is. It is always an organisation.",
+                            "required": [ "CompanyName" ], "additionalProperties": false, "properties": {
+      "CompanyName":      { "type": "string" },
+      "RegistrationCode": { "type": "string", "description": "Registration code issued by the country of the company." },
+      "Address":          { "type": "string" },
+      "Country":          { "type": "string", "description": "Country of registration." },
+      "Email":            { "type": "string", "format": "email" } } },
+
+    "Entitlements":       { "type": "object", "description": "What the Third-Party User asks to be able to do. A licence (ThirdPartyUserLicence of the Model Licence) must be inside it for the Back End to allow an operation.",
+                            "required": [ "UserTypes", "DataClasses", "DataStatus", "ProcessTypes", "UsageTypes" ],
+                            "additionalProperties": false, "properties": {
+      "UserTypes":        { "type": "array", "minItems": 1, "description": "Which kind of entity it is, by the Taxonomy.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUser" } },
+      "DataClasses":      { "type": "array", "minItems": 1, "description": "The classes of AIH Data it wants to process.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataClass" } },
+      "DataStatus":       { "type": "array", "minItems": 1, "description": "The status in which it is to receive the data: anonymised, pseudonymised or identified.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataStatus" } },
+      "ProcessTypes":     { "type": "array", "minItems": 1, "description": "The processing it will ask for, by the AIH Data Processing Type.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHDataProcessingType.json" } },
+      "AnomalyTypes":     { "type": "array", "description": "The kinds of anomaly it is to look for.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataAnomaly" } },
+      "UsageTypes":       { "type": "array", "minItems": 1, "description": "The usage it states for the results.",
+                            "items": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUsage" } } } },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

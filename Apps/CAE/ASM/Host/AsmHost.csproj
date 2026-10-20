@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- THE FOLDER THE AIM HOST RUNS THE MODULE'S AIMs FROM. Nothing is compiled here: building this project puts into one folder the AIMs of Audio Scene Management
+       (Mpai.Cae.Asm, the provider of AOE, ASE, SOE, SSE and BME) and those of Text and Speech Translation (Mpai.Providers), with everything they call, native
+       libraries included. AIF.AimHost is started on that folder (its provider option names <folder>\Mpai.Cae.Asm.dll:Mpai.Cae.Asm.AsmProvider and the like); see Start-Asm.ps1. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+  </ItemGroup>
+
+</Project>

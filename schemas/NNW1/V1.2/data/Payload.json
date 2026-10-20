@@ -1,0 +1,20 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/NNW1/V1.2/data/Payload.json",
+  "title":                "Payload V1.2",
+  "description":          "The Symbols carried by a watermark. They are injected (original payload) and may be altered during delivery.",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "PayloadID", "PayloadData" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "NNW-PLD-V1.2" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "PayloadID":          { "type": "string", "minLength": 1 },
+    "PayloadTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "PayloadData":        { "type": "array", "minItems": 1, "items": { "type": ["integer", "number", "string"] },
+                            "description": "The Symbols of the payload: each is a binary, numerical or string element." },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }

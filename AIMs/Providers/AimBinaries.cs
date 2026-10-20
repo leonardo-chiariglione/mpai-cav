@@ -45,6 +45,8 @@ public static class AimBinaries
         ["1PAF-PMX-V1.6-I01"] = typeof(Mpai.Paf.Pmx.PmxAimProcessor),
         ["1PAF-PMX-V1.6-I02"] = typeof(Mpai.Paf.Pmx.ContinuousPmx),
         ["1MMC-ESD-V2.5-I01"] = typeof(Mpai.Mmc.Esd.EsdAimProcessor),
+        ["1MMC-OCR-V2.5-I01"] = typeof(Mpai.Aims.Ocr.OcrAimProcessor),
+        ["1MMC-CTS-V2.5-I01"] = typeof(Mpai.Mmc.Cts.CtsAimProcessor),
     };
 
     public static string? Of(string aimName) => Processors.TryGetValue(aimName, out var type) ? type.Assembly.Location : null;

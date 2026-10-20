@@ -3,7 +3,7 @@
   "APIProfile":       "Basic",
   "Description":      "This AIM requests trained NN Models and produces a new NN Model that integrates the knowledge acquired by the trained NNs.",
   "InternalTypes":    [{"Name": "FederatedLearn", "DataType": "AIH-FDL-V1.1"}, {"Name": "NNModel", "DataType": "AIP-MLO-V1.0"}],
-  "ExternalPorts":    [{"Name": "FederatedLearnResponse", "Direction": "Input", "DataType": "AIH-FDL-V1.1", "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "FederatedLearnResponse", "Direction": "Input", "IsOptional": true, "DataType": "AIH-FDL-V1.1", "Depth": 8, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "NNModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FederatedLearnRequest", "Direction": "Output", "DataType": "AIH-FDL-V1.1", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],

@@ -1,0 +1,6 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/CAE1/V2.5/formats/NeuralSpeechFeatures.json",
+  "title":                  "Neural Speech Features V2.5",
+  "description":            "The format of the Data of a Speech Descriptors Object (MMC-SDO-V2.5): the JSON text of its inline Data, or of what its DataURI gives, with no Qualifier that carries the speech features of the emotion that Emotion Feature Production (CAE-EFP) produces for Neural Emotion Insertion (CAE-NEI). It replaces NeuralSpeechFeatures of CAE V2.1.",
+  "type":                   "array",
+  "items":                  { "type": "number" } }

@@ -1,0 +1,57 @@
+# =============================================================================
+#  HFE.orch - Health Front End (AIH-HSP V1.1)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module (the Health Front End of one End User), which runs
+#  until Stop. The User Agent of the Front End binds a device to every Port of the
+#  Module's boundary, each to one Port, by Data Type and Port Number:
+#
+#    what the End User gives the Front End -
+#      RegisterIn      the request to register with the Back End
+#      RequestIn       a request to be sent to the Back End (an upload, a processing)
+#      HealthIn        the Health Data the End User acquired
+#      LicenceIn       the Model Licence the End User provides for it
+#
+#    what the Back End gives the Front End -
+#      RegisterAnswerIn  the answer to the registration
+#      ResponseIn        the answer to a request
+#      LearnIn           a request for the NN Model the Front End trained
+#
+#    what the Front End gives -
+#      RegisterOut, RequestOut, LearnOut   to the Back End
+#      ResponseOut     to the End User: the answer to a request (the AIH Data of the Vault, when asked for it)
+#      AraOut          to the End User: the ARA Data - the alert is the ARA Data, which carries the risk
+#
+#  Where the AIH Data is kept (the Secure Data Vault) is the End User's: the User
+#  Agent asks the Controller to keep the storage there. It names no AIM; AIH Data
+#  Processing keeps the AIH Data there through the storage API (there is no Storage AIM).
+#  The Front End talks to the Back End only: never to another Front End.
+# =============================================================================
+
+workflow HFE over 1AIH-HFE-V1.1-I01
+
+on Start:
+
+    type    Vault (OSD-BTO-V1.5)
+    ask Controller to start
+    ask Controller to keep storage in "{Vault}"
+
+    stream  RegisterIn        (AIH-REG-V1.1:1) from device "RegisterIn"
+    stream  RegisterAnswerIn  (AIH-REG-V1.1:2) from device "RegisterAnswerIn"
+    stream  LearnIn           (AIH-FDL-V1.1)   from device "LearnIn"
+    stream  RequestIn         (AIH-AHP-V1.1:1) from device "RequestIn"
+    stream  ResponseIn        (AIH-AHP-V1.1:2) from device "ResponseIn"
+    stream  HealthIn          (AIH-HLD-V1.1)   from device "HealthIn"
+    stream  LicenceIn         (AIH-MDL-V1.1)   from device "LicenceIn"
+
+    deliver RegisterOut       (AIH-REG-V1.1)   to device "RegisterOut"
+    deliver LearnOut          (AIH-FDL-V1.1)   to device "LearnOut"
+    deliver RequestOut        (AIH-AHP-V1.1:1) to device "RequestOut"
+    deliver ResponseOut       (AIH-AHP-V1.1:2) to device "ResponseOut"
+    deliver AraOut            (AIH-ARD-V1.1)   to device "AraOut"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

@@ -1,0 +1,29 @@
+{ "$schema":          "https://json-schema.org/draft/2020-12/schema",
+  "$comment":         "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":              "https://schemas.mpai.community/AIH1/V1.1/AIMs/NeuralNetworkModel.json",
+  "title":            "Neural Network Model V1.1",
+
+  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "AIH-NNM-V1.1-I01", "AIMName": "AIH-NNM-V1.1"},
+  "Header":           "AIH-NNM-V1.1",
+
+  "APIProfile":       "Basic",
+  "Description":      "This AIM wraps a Neural Network Model: the Health Back End uploads it to the MPAI Store and the Health Front Ends download it. It takes AIH Data and gives ARA Data.",
+
+  "InternalTypes":  [{"Name": "AIHData", "DataType": "AIH-AHD-V1.1"},
+                     {"Name": "ARAData", "DataType": "AIH-ARD-V1.1"}],
+
+  "ExternalPorts":  [{"Name": "AIHData", "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "ARAData", "Direction": "Output", "DataType": "AIH-ARD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",                                                                                                                 "Maximum": "/* GB */",                                                                                                                 "Request": "/* GB */"},
+                     {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */",                                                                                                     "Maximum": "/* integer, 0=all */",                                                                                                     "Request": "/* integer, 0=all */"},
+                     {"Name": "CPU:Class",            "Minimum": "/* Low | Medium | High */",                                                                                                "Maximum": "/* Low | Medium | High */",                                                                                                "Request": "/* Low | Medium | High */"},
+                     {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */",                                                                                                     "Maximum": "/* integer, 0=all */",                                                                                                     "Request": "/* integer, 0=all */"}],
+
+  "DataXMData":       {},
+
+  "Documentation":  [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-aih/hsp/v1-1/"}]}

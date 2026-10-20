@@ -1,0 +1,14 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/CAE1/V2.5/formats/ProsodicSpeechFeatures.json",
+  "title":                  "Prosodic Speech Features V2.5",
+  "description":            "The format of the Data of a Speech Descriptors Object (MMC-SDO-V2.5): the JSON text of its inline Data, or of what its DataURI gives, with no Qualifier that carries the prosodic features of a speech segment: what Speech Feature Analysis 1 (CAE-SFA) gives Prosodic Emotion Insertion (CAE-PEI). It replaces SpeechDescriptors1 and ProsodicSpeechDescriptors of CAE V2.1, which were the same schema.",
+  "type":                   "object",
+  "required":               [ "intonations", "unit" ],
+  "properties":             {
+
+    "intonations":          { "type": "array", "items": { "type": "object", "required": [ "pitch", "intensity", "duration" ], "properties": {
+      "pitch":              { "type": "number" },
+      "intensity":          { "type": "number" },
+      "duration":           { "type": "number" } } } },
+
+    "unit":                 { "type": "string" } } }

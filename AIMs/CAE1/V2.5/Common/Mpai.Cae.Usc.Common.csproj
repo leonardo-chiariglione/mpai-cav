@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- What the AIMs of CAE-USC V2.5 share: the Basic Speech Object (OSD-BSO-V1.5) as a carrier of 16-bit PCM WAV audio, and WAV reading and writing. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

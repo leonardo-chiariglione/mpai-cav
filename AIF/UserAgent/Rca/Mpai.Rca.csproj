@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mpai.Rca - what a Remote Client Application adds to the User Agent (Mpai.Ua): the directory of the Apps a Service offers, its certificates, and the devices of a meeting.
+       The interpreter and the table of devices are the User Agent's, in Mpai.Ua. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Mpai.Rca</AssemblyName>
+    <RootNamespace>Mpai.Rca</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\ControllerApi\Mpai.Aif.Api.csproj" />
+  </ItemGroup>
+
+</Project>

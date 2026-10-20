@@ -26,11 +26,11 @@
     <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\AIF\Metadata\AIF.Metadata.csproj" />
     <ProjectReference Include="..\..\AIF\Trust\AIF.Trust.csproj" />
-    <ProjectReference Include="..\..\UserAgent\Wdl\Mpai.Wdl.csproj" />
-    <ProjectReference Include="..\..\UserAgent\Rca\Mpai.Rca.csproj" />
-    <ProjectReference Include="..\..\UserAgent\Remote\Mpai.Mas.Client.csproj" />
+    <ProjectReference Include="..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\AIF\UserAgent\Rca\Mpai.Rca.csproj" />
+    <ProjectReference Include="..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\CAV\Recordings\Mpai.Cav.Recordings.csproj" />
+    <ProjectReference Include="..\CAV\Mpai.Cav.Recordings.csproj" />
     <ProjectReference Include="..\..\AIMs\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ess\Mpai.Cav.Ess.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ams\Mpai.Cav.Ams.csproj" />
@@ -46,9 +46,25 @@
     <ProjectReference Include="..\..\AIMs\OSD\V1.5\AUS\Mpai.Osd.Aus.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOE\Mpai.Cae.Aoe.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASE\Mpai.Cae.Ase.csproj" />
-    <ProjectReference Include="..\..\UserAgent\SpatialAudio\Mpai.SpatialAudio.csproj" />
-    <ProjectReference Include="..\..\UserAgent\PhysicalLayer\Devices\Mpai.PhysicalLayer.Devices.csproj" />
+    <ProjectReference Include="..\..\AIF\UserAgent\UaKit\SpatialAudio\Mpai.SpatialAudio.csproj" />
+    <ProjectReference Include="..\..\AIF\UserAgent\PhysicalLayer\Devices\Mpai.PhysicalLayer.Devices.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
+    <ProjectReference Include="..\..\AIMs\AIH\V1.1\Provider\Mpai.Aih.csproj" />
+    <ProjectReference Include="..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
+    <ProjectReference Include="..\..\Apps\AIH\HSP\Mpai.Aih.Hsp.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Common\Mpai.Cae.Usc.Common.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\SMC\Mpai.Cae.Usc.Smc.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\SRA\Mpai.Cae.Usc.Sra.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\EES\Mpai.Cae.Usc.Ees.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\ARP\Mpai.Cae.Usc.Arp.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Voice\Mpai.Cae.Usc.Voice.csproj" />
+    <!-- the four Apps of CAE-USC, run as programs by CaeUscV25AppTests: built with the tests, their output not referenced -->
+    <ProjectReference Include="..\..\Apps\CAE\SRS\App\SrsApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CAE\EES\App\EesApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CAE\ARP\App\ArpApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CAE\EAE\App\EaeApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\EAE\Mpai.Cae.Usc.Eae.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Provider\Mpai.Cae.Usc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

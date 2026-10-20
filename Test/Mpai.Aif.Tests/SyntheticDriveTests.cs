@@ -7,6 +7,7 @@ using AIF.SharedStorage;
 using Mpai.Aif.PortData;
 using Mpai.Cav.Recordings;
 using Mpai.Rca;
+using Mpai.Ua;
 
 namespace Mpai.Aif.Tests;
 

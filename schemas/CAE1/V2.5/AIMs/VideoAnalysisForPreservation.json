@@ -1,0 +1,36 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/VideoAnalysisForPreservation.json",
+  "title":                "Video Analysis for Preservation V2.5",
+  "Header":               "CAE-VAP-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-VAP-V2.5"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Video Analysis for Preservation (CAE-VAP) of CAE-USC V2.5: receives PreservationAudioVisualFile, AudioIrregularityFile and produces VideoIrregularityFile, IrregularityImages.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "PreservationAudioVisualFile", "Direction": "Input", "DataType": "OSD-BMO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioIrregularityFile", "Direction": "Input", "DataType": "CAE-IRR-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VideoIrregularityFile", "Direction": "Output", "DataType": "CAE-IRR-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "IrregularityImages", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [ ],
+  "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/video-analysis-for-preservation/"}]}

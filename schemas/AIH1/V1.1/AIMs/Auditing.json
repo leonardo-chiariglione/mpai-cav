@@ -13,11 +13,13 @@
                      {"Name": "AIHData",        "DataType": "AIH-AHD-V1.1"},
                      {"Name": "LicenceConfirm", "DataType": "AIH-LCF-V1.1"}],
 
-  "ExternalPorts":  [{"Name": "AuditRequest",           "Direction": "Input",  "DataType": "AIH-ADT-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AIHData",                "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "LicenceConfirmResponse", "Direction": "Input",  "DataType": "AIH-LCF-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+  "ExternalPorts":  [{"Name": "AuditRequest",           "Direction": "Input", "IsOptional": true,  "DataType": "AIH-ADT-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "AIHData",                "Direction": "Input", "IsOptional": true,  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "LicenceConfirmResponse", "Direction": "Input", "IsOptional": true,  "DataType": "AIH-LCF-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "AuditResponse",          "Direction": "Output", "DataType": "AIH-ADT-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "LicenceConfirmRequest",  "Direction": "Output", "DataType": "AIH-LCF-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

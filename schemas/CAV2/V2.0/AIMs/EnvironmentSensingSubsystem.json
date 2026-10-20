@@ -82,6 +82,8 @@
                           {"Output": {"AIMName": "", "DataType": "CAV-WDT-V2.0"}, "Input": {"AIMName": "CAV-BED-V2.0", "DataType": "CAV-WDT-V2.0"}},
                           {"Output": {"AIMName": "", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "CAV-BED-V2.0", "DataType": "CAV-FED-V2.0"}},
                           {"Output": {"AIMName": "CAV-BED-V2.0", "DataType": "CAV-BED-V2.0"}, "Input": {"AIMName": "", "DataType": "CAV-BED-V2.0"}}],
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":  [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
                        {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},

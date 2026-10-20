@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- THE USER AGENT: the part of an App that runs the Workflow Description of a Module against its Controller. It reads the workflow, interprets it (which starts the Module
+       and binds a device to every Port of the Module's boundary, each to one Port by Data Type and Port Number), and lets the App send to the devices that stream to the Module and
+       take from those the Module delivers to. It knows the Controller API and nothing else: no AIM, no use case, no window. The App is what runs it. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Ua</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\Wdl\Mpai.Wdl.csproj" />
+  </ItemGroup>
+
+</Project>

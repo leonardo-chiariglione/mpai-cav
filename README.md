@@ -65,7 +65,7 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 - A **provider** (a small switch class per app) constructs the leaf AIMs named by
   the Module's L3.
 - The UA's behaviour is described by a **WDL** guidebook, the `.orch` file under
-  `UserAgent/Orchestration/`, which the UA code realises.
+  `AIF/UserAgent/Orchestration/`, which the UA code realises.
 
 ### How the three apps are composed
 
@@ -87,7 +87,7 @@ page draws, and the Multimodal Scene (`OSD-BMS`) of the audio, the speech and th
 its setting `SceneOutputs` at `2D` (or `Both`), the Audio Scene (`OSD-BAS`) with the avatar's speech and the
 Visual Scene (`OSD-BVS`) of an MP4 of the whole view, drawn off screen with that page in Edge or Chromium
 and encoded by ffmpeg. Capture and delivery are the User Agent's, never an AIM's: the
-Units of its Physical Layer (`UserAgent/PhysicalLayer`) - microphone with voice activity
+Units of its Physical Layer (`AIF/UserAgent/PhysicalLayer`) - microphone with voice activity
 detection, camera (Windows Media Capture), loudspeaker, the avatar page - and a test
 (`UserAgentIsolationTests`) keeps every User Agent project free of AIM code.
 
@@ -96,25 +96,25 @@ detection, camera (Windows Media Capture), loudspeaker, the avatar page - and a 
 ## Repository layout
 
 ```
-AIF/            AI Framework runtime (Controller, Store, Communication/{Shared,Global}Storage)
-  ControllerApi/  the Controller API (formerly the North API) and the Portable Avatar type
-  PortData/     the wire form of each Data Type
-AIMs/           AI Modules
-  AMDs/         L3 Module descriptors (JSON)
-  Core/         shared types (data objects, qualifiers, JSON, paths)
-  <family>/     the AIMs (MMC, PAF, OSD, CAE3, CVE ...)
-MAS/            MPAI-MAS: Server, the Service (MasService) and the Store (Service, App)
-UserAgent/      the User Agent
-  Wdl/          the WDL reader
-  Rca/          the workflow interpreter
-  Remote/       the Controller API across MPAI-MAS (the UA, or a Controller, reaching a remote Controller)
-  PhysicalLayer/  the Units: microphone, camera, loudspeaker, avatar (not AIMs)
-  UaKit/        Speaking-Avatar host, on the Units
-  Orchestration/  the WDL .orch guidebooks (HCI-MAC/ACR/MAD, MPAI-MAS)
-  Assets/       avatar assets (glb, viewer HTML)
-  Clients/      the MAS-App clients: Desktop (WPF) and Browser (Blazor Client and its Host)
-MPAIApps/HCIApps/{MacApp,AcrApp,MadApp,MatApp}/   the applications (src + docs + build)
-schemas/        JSON schemas of the AIF data types
+AIF/              the AI Framework
+  AimHost/ Communication/{Channels,GlobalStorage,SharedStorage}/ Controller/ ControllerApi/
+  Metadata/ PortData/ Trust/ RootOfTrust/
+  UserAgent/      the User Agent: Assets, Clients (AsmStudio, Browser, Desktop), Orchestration, Rca, RcaConsole,
+                  Remote, Wdl, PhysicalLayer, UaKit (with SpatialAudio)
+  Access/         local data of the access service (not published)
+AIMs/             the AIMs: AMDs, Core, Providers, Onnx, AIH/V1.1, CAE3/V1.0, CAV/V2.0, CVE/V1.0, MMC/V2.5, OSD/V1.5, PAF/V1.6,
+                  aim-settings.json, Build-Packages.ps1
+Apps/             the applications, one folder per standard: ABV (VCT, AVS, VCR, VMS), AIH (HSP: the Health Front End and Back End), CAE (ASM), CAV (CAO, CAVViewer,
+                  HCIApps), MAS (Server, Service, the launcher, MAS-App, Language), MMC (ACR, AMQ, MAC, MAD, MAT, MPD, NPR)
+Demos/            recordings of the CAV simulation
+docs/             the documents of the software
+MKG/              the MPAI Knowledge Graph
+MMM/              the Metaverse Meeting software: Api, Client, Instance, Server, Viewer
+Models/           the AI models (local, not published)
+schemas/          the JSON schemas of the standards
+Store/            the MPAI Store: the core, Service, App
+Support/          local files that are not source (deploy)
+Test/             the tests: AsmApp, AsmVoice, CAV (recordings code), Data, Expected, legacy, Mpai.Aif.Tests, Reports, Results
 ```
 
 ---
@@ -137,12 +137,12 @@ schemas/        JSON schemas of the AIF data types
 Each application has a build script that produces a single-file executable:
 
 ```
-MPAIApps\HCIApps\MacApp\MacAppBuild.bat     ->  MacApp.exe
-MPAIApps\HCIApps\AcrApp\AcrAppBuild.bat     ->  AcrApp.exe
-MPAIApps\HCIApps\MadApp\MadAppBuild.bat     ->  MadApp.exe
+Apps\MMC\MAC\Standalone\MacAppBuild.bat     ->  MacApp.exe
+Apps\MMC\ACR\Standalone\AcrAppBuild.bat     ->  AcrApp.exe
+Apps\MMC\MAD\Standalone\App\MadAppBuild.bat ->  MadApp.exe
 ```
 
-An application resolves its root (to find `AIMs/`, `Models/`, `UserAgent/`,
+An application resolves its root (to find `AIMs/`, `Models/`, `AIF/UserAgent/`,
 `SharedStorage/`) from the executable's location. For the full per-application
 build closure (which projects, L3s, schemas and models are required), see that
 application's **Developer** guide. MAD additionally requires Ollama running with

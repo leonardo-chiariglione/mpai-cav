@@ -14,7 +14,7 @@
     "AIHDataTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
 
     "AIHData":                { "type": "object", "additionalProperties": false,
-                                "required": [ "HealthData", "ModelLicence", "SmartContractID", "DeIDAndAnonym" ], "properties": {
+                                "required": [ "HealthData", "ModelLicence" ], "properties": {
         "HealthData":         { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/HealthData.json" },
         "ModelLicence":       { "oneOf": [
                               { "type": "string" },

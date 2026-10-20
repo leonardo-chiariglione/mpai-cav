@@ -14,9 +14,9 @@
     "SeatOccupationID":         { "type": "string" },
     "SeatOccupationTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "SeatOccupation":           { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["Sector"], "properties": {
+    "SeatOccupation":           { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["Sectors"], "properties": {
 
-      "Sector":                 { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "required": ["SectorID", "Rows"], "properties": {
+      "Sectors":                { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["SectorID", "Rows"], "properties": {
 
         "SectorID":             { "type": "string" },
 
@@ -41,8 +41,7 @@
               "VisualBehaviour":{ "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" } } },
 
             "ParticipantID":    { "type": "string" },
-            "PointOfView":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } } } } } } } } } } },
-
+            "PointOfView":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" } } } } } } } } } } } } },
 
     "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stage video</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0A0D11; }
+  #p, video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #0A0D11; }
+</style>
+</head>
+<body>
+<div id="p"></div>
+<script>
+// THE VIDEO ON THE STAGE. Played by the YouTube player (its IFrame API) when the link is a YouTube one, else by a video element.
+// It tells whoever shows it - the desktop client through WebView2's postMessage, the browser client through the parent window - how it
+// ended: 'ended' (played to its end), 'error:<code>' (could not be played). A person who closes it, or Stop, is the client's own matter.
+(function () {
+  var q = new URLSearchParams(location.search);
+  var yt = q.get('yt'), src = q.get('src');
+  function tell(m) {
+    try { if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(m); } catch (e) {}
+    try { if (window.parent !== window) window.parent.postMessage({ Kind: 'stage-video', State: m }, '*'); } catch (e) {}
+  }
+  if (yt) {
+    window.onYouTubeIframeAPIReady = function () {
+      new YT.Player('p', {
+        width: '100%', height: '100%', videoId: yt,
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, origin: location.origin },
+        events: {
+          onReady: function (e) { e.target.playVideo(); },
+          onStateChange: function (e) { if (e.data === 0) tell('ended'); },
+          onError: function (e) { tell('error:' + e.data); }
+        }
+      });
+    };
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = function () { tell('error:script'); };
+    document.head.appendChild(s);
+  } else if (src) {
+    var v = document.createElement('video');
+    v.controls = true; v.autoplay = true; v.src = src;
+    v.onended = function () { tell('ended'); };
+    v.onerror = function () { tell('error:media'); };
+    document.body.appendChild(v);
+  } else tell('error:nothing');
+})();
+</script>
+</body>
+</html>
