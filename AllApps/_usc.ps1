@@ -22,7 +22,7 @@ $names = @{ SRS = 'Speech Restoration System'; EES = 'Emotion Enhanced Speech'; 
 $title = $names[$App]
 $project = Join-Path $root "Apps\CAE\$App\App\$((Get-Culture).TextInfo.ToTitleCase($App.ToLower()))App.csproj"
 $exe = Join-Path $root "Apps\CAE\$App\App\bin\Debug\net10.0\$((Get-Culture).TextInfo.ToTitleCase($App.ToLower()))App.exe"
-$out = Join-Path ([Environment]::GetFolderPath('MyDocuments')) "MPAI USC\$App\$(Get-Date -Format 'yyyy-MM-dd HH.mm.ss')"
+$out = Join-Path (Join-Path $env:USERPROFILE 'Downloads') "MPAI USC\$App\$(Get-Date -Format 'yyyy-MM-dd HH.mm.ss')"
 New-Item -ItemType Directory -Force $out | Out-Null
 $wav = 'WAV files (*.wav)|*.wav|All files (*.*)|*.*'
 

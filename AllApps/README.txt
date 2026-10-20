@@ -12,7 +12,7 @@ Thalia (the MAS launcher; you choose an App in its window):
 Other programs:
   10  ASM Studio (starts its Controller and its Module too)          11  CAV        12/13  ABV server        14  MMM demo
   15  EAE server (a virtual room of real speech; open http://localhost:5190/ with headphones)
-  16-19  the Apps of CAE-USC, with dialogs to pick the files: 16 EAE, 17 SRS, 18 EES, 19 ARP (results in Documents\MPAI USC)
+  16-19  the Apps of CAE-USC, with dialogs to pick the files: 16 EAE, 17 SRS, 18 EES, 19 ARP (results in Downloads\MPAI USC)
   20-26  the standalone programs (ACR, MAC, MAD, MAT, MPD, AMQ, HCI)
   30  Store service       31  Store app       40  AIH-HSP demo (the first slice, narrated)
   41  SRS demo in one click: a real recording damaged in two places is restored with the voice of another speaker; it plays original, damaged, restored
