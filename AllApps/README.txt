@@ -15,6 +15,7 @@ Other programs:
   16-19  the Apps of CAE-USC, with dialogs to pick the files: 16 EAE, 17 SRS, 18 EES, 19 ARP (results in Documents\MPAI USC)
   20-26  the standalone programs (ACR, MAC, MAD, MAT, MPD, AMQ, HCI)
   30  Store service       31  Store app       40  AIH-HSP demo (the first slice, narrated)
+  41  SRS demo in one click: a real recording damaged in two places is restored with the voice of another speaker; it plays original, damaged, restored
 
 This folder is part of the software tree: the software is the folder above it. The address of the Service is in _settings.bat.
 The first start of a program builds it, which takes a little longer.

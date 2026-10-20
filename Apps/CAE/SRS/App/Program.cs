@@ -20,6 +20,8 @@ namespace Mpai.Cae.Srs;
 // --say       what was said in each damaged section, in order (one --say for each section)
 // --out       the restored speech
 // --stand-in  speak with the stand-in tone and not in the voice of the speaker (no voice engine needed)
+//
+//   SrsApp --demo <folder> --original clip.wav [--sections 1.0-1.8,3.0-3.6]      for a demonstration: writes original.wav and damaged.wav (the sections made silent) to restore
 internal static class Program
 {
     private const string Module = "1CAE-SRS-V2.5-I01";
@@ -28,7 +30,7 @@ internal static class Program
     {
         try
         {
-            var voice = new List<string>(); var say = new List<string>(); string? damaged = null, sections = null, output = null; var standIn = false;
+            var voice = new List<string>(); var say = new List<string>(); string? damaged = null, sections = null, output = null, demo = null, original = null; var standIn = false;
             for (var i = 0; i < args.Length; i++)
                 switch (args[i])
                 {
@@ -38,8 +40,11 @@ internal static class Program
                     case "--say": say.Add(args[++i]); break;
                     case "--out": output = args[++i]; break;
                     case "--stand-in": standIn = true; break;
+                    case "--demo": demo = args[++i]; break;
+                    case "--original": original = args[++i]; break;
                     default: throw new ArgumentException($"I do not know {args[i]}. See the top of Program.cs, or the README.");
                 }
+            if (demo is not null) return Demo(demo, original ?? throw new ArgumentException("--demo needs --original."), sections ?? "1.0-1.8,3.0-3.6");
             if (voice.Count == 0 || damaged is null || sections is null || say.Count == 0 || output is null)
                 throw new ArgumentException("It needs --voice, --damaged, --sections, --say and --out.");
             var damagedSections = Inputs.Sections(sections);
@@ -70,5 +75,18 @@ internal static class Program
             Console.Error.WriteLine(ex.Message);
             return 1;
         }
+    }
+
+    // A recording and where it is to be damaged: the original is copied and the sections are made silent, so that the Module has something to restore and the result can be heard against the original.
+    private static int Demo(string folder, string original, string sections)
+    {
+        Directory.CreateDirectory(folder);
+        var audio = Inputs.Speech(original); var samples = (short[])audio.Samples.Clone();
+        foreach (var (start, end) in Inputs.Sections(sections))
+            for (var i = (int)(start * audio.Rate); i < Math.Min(samples.Length, (int)(end * audio.Rate)); i++) samples[i] = 0;
+        File.WriteAllBytes(Path.Combine(folder, "original.wav"), audio.ToWav());
+        File.WriteAllBytes(Path.Combine(folder, "damaged.wav"), new Mpai.Cae.Usc.Audio(samples, audio.Rate).ToWav());
+        Console.WriteLine($"Written original.wav ({audio.Seconds:0.0} s) and damaged.wav (silent at {sections} s) in {folder}");
+        return 0;
     }
 }
