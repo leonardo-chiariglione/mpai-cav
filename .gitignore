@@ -96,3 +96,9 @@ MMM/Viewer/personae/catalogue/*.glb
 MMM/tools/cloudflared.exe
 MMM/tools/FBX2glTF-windows-x86_64/
 MMM/tools/Microsoft-Rocketbox/
+
+# machine-local data too large for the repository (voice engine, datasets, photographs): see MpaiPaths.Data
+Data/
+
+# the Knowledge Graph is not published on GitHub; it stays on this PC
+/MKG/
