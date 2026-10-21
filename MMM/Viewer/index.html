@@ -148,6 +148,7 @@ if (W) {
 // An M-Location: a pad on the ground, its name and owner above it. A Location placed
 // at another: a room - floor, glass walls - drawn only when perceptible.
 const drawn = new Map();   // ID -> { object, kind, ... }
+const loading = new Set();   // the IDs whose model is being loaded
 
 function pad(t) {
   const g = new THREE.Group();
@@ -197,19 +198,25 @@ async function persona(t) {
   box.setFromObject(root, true); root.position.y -= box.min.y;
   const g = new THREE.Group(); g.add(root);
   const bone = re => { let b = null; root.traverse(o => { if (o.isBone && re.test(o.name)) b = o; }); return b; };
-  g.userData.legs = { lt: bone(/L.?Thigh$/i), rt: bone(/R.?Thigh$/i), lc: bone(/L.?Calf$/i), rc: bone(/R.?Calf$/i) };
+  g.userData.legs = { lt: bone(/L.?Thigh$/i), rt: bone(/R.?Thigh$/i), lc: bone(/L.?Calf$/i), rc: bone(/R.?Calf$/i), lf: bone(/L.?Foot$/i), rf: bone(/R.?Foot$/i) };
   const l = label(t.ID); l.position.set(0, 1.95, 0); g.add(l); g.userData.label = l;
   return g;
 }
 
-// A Persona at a seat of the meeting room sits: the thighs forward, the shins down, the body lowered onto the chair.
+// A Persona at a seat of the meeting room sits: the thighs forward, the shins down, the body lowered onto the chair. The way a bone turns depends on how the model was made,
+// so each leg is turned and then looked at: the knee must be in front of the hip (the model faces +z), the foot below the knee; if not, the leg is turned the other way.
 const SIT_DROP = 0.45;
 function sitPose(g, on) {
   const L = g.userData.legs; if (!L || !!g.userData.sitting === on) return; g.userData.sitting = on;
-  for (const [k, turn] of [['lt', -1], ['rt', -1], ['lc', 1], ['rc', 1]]) {
-    const b = L[k]; if (!b) continue;
-    b.quaternion.copy(b.userData.base ??= b.quaternion.clone());
-    if (on) b.rotateZ(turn * Math.PI / 2);
+  for (const k of ['lt', 'rt', 'lc', 'rc']) { const b = L[k]; if (b) b.quaternion.copy(b.userData.base ??= b.quaternion.clone()); }
+  if (!on) return;
+  const here = bone => g.worldToLocal(bone.getWorldPosition(new THREE.Vector3()));
+  for (const [t, c, f] of [[L.lt, L.lc, L.lf], [L.rt, L.rc, L.rf]]) {
+    if (!t || !c) continue;
+    t.rotateZ(-Math.PI / 2); g.updateMatrixWorld(true);
+    if (here(c).z - here(t).z < 0.1) { t.rotateZ(Math.PI); g.updateMatrixWorld(true); }                  // the knee in front of the hip
+    c.rotateZ(Math.PI / 2); g.updateMatrixWorld(true);
+    if (f && here(f).y > here(c).y - 0.15) { c.rotateZ(-Math.PI); g.updateMatrixWorld(true); }            // the foot below the knee
   }
 }
 
@@ -859,9 +866,13 @@ async function refresh() {
     let d = drawn.get(t.ID);
     if (d && d.shape !== shape) { scene.remove(d.object); d.object.userData.label?.element.remove(); drawn.delete(t.ID); d = null; }
     if (!d) {
-      const object = shape === 'persona' ? await persona(t) : shape === 'room' ? room(t) : pad(t);
-      object.position.set(t.X, t.Z ?? 0, -t.Y); scene.add(object);          // the axes of space - X east, Y north, Z up - to those of three.js: x east, y up, z towards the viewer (south)
-      d = { object, shape, target: new THREE.Vector3(t.X, t.Z ?? 0, -t.Y) }; drawn.set(t.ID, d);
+      if (loading.has(t.ID)) continue;                                        // its model is still coming: a second refresh must not draw it again (a ghost left standing, with a label of its own)
+      loading.add(t.ID);
+      try {
+        const object = shape === 'persona' ? await persona(t) : shape === 'room' ? room(t) : pad(t);
+        object.position.set(t.X, t.Z ?? 0, -t.Y); scene.add(object);          // the axes of space - X east, Y north, Z up - to those of three.js: x east, y up, z towards the viewer (south)
+        d = { object, shape, target: new THREE.Vector3(t.X, t.Z ?? 0, -t.Y) }; drawn.set(t.ID, d);
+      } finally { loading.delete(t.ID); }
     }
     d.target.set(t.X, (t.Z ?? 0) + (isRoom ? 0.06 : 0), -t.Y);
     d.yaw = t.Yaw ?? null;
@@ -875,7 +886,7 @@ async function refresh() {
     // a place of its own or has been placed (a Room on its Parcel).
     d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID) && !(client && t.ID === client.persona);   // you do not see your own Persona from inside it
     const l = d.object.userData.label;
-    if (l) l.visible = d.object.visible;
+    if (l) l.visible = d.object.visible && (!W || !client || t.Kind !== 'Persona' || !t.At || t.At.replace(/-S\d+$/, '') === client.at);   // in the world, the name of a Persona is shown only in the place you are in, not through the walls
     if (l) l.element.textContent = t.Kind === 'Persona' ? `${W ? (t.Owner ?? t.ID) : t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
   }
   for (const [id, d] of drawn) if (!seen.has(id)) { d.object.visible = false; if (d.object.userData.label) d.object.userData.label.visible = false; }
