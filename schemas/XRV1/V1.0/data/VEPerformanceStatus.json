@@ -64,7 +64,8 @@
         "Objects":                    { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "VEObjectID" ], "properties": {
             "VEObjectID":             { "type": "string" },
             "VEObject":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
-            "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } },
+            "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+            "ControlObject":          { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
 
         "VCameraData":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
             "VEVisualObject":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },

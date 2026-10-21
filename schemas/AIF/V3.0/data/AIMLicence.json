@@ -15,12 +15,11 @@
 
     "TermsURI":           { "type": "string", "format": "uri", "description": "Where the terms of the AIM Licence are published in the MPAI Store. Required in an offer." },
 
-    "AIM":                { "type": "object", "required": [ "AIMName", "Implementations" ], "additionalProperties": false,
-                            "description": "What an issued AIM Licence is for: the right is to these Implementations and models, as the MPAI Store approved them. Issued only (an offer is in the Metadata of the AIM it is for).",
-                            "properties": {
+    "AIM":                { "description": "What an issued AIM Licence is for: the right is to these Implementations and models, as the MPAI Store approved them. Issued only (an offer is in the Metadata of the AIM it is for).",
+                            "type": "object", "required": [ "AIMName", "Implementations" ], "additionalProperties": false, "properties": {
       "AIMName":          { "type": "string", "minLength": 1, "description": "The AIM Instance identifier (e.g. 1AIH-NNM-V1.1-I02)." },
-      "Versions":         { "type": "object", "additionalProperties": false, "description": "The versions of the AIM, as the MPAI Store numbers them, that the AIM Licence covers. Omitted: the version it was issued for.",
-                            "properties": {
+      "Versions":         { "description": "The versions of the AIM, as the MPAI Store numbers them, that the AIM Licence covers. Omitted: the version it was issued for.",
+                            "type": "object", "additionalProperties": false, "properties": {
         "From":           { "type": "string", "minLength": 1 },
         "To":             { "type": "string", "minLength": 1, "description": "Omitted: no later version is excluded (see Updates)." } } },
       "Implementations":  { "type": "array", "minItems": 1, "description": "The files covered - each Implementation and each model - with the fingerprint the MPAI Store approved.",

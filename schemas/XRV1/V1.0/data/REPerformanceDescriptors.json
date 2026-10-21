@@ -26,19 +26,18 @@
         "theta":                    { "type": "number", "minimum": 4, "maximum": 8, "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
         "delta":                    { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
         "beta":                     { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
-        "gamma":                    { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
-      "ControllerData":             { "type": "string" } } } },
+        "gamma":                    { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } } } } },
 
     "REObjectDescriptors":          { "type": "array", "minItems": 0, "items": { "type": "object", "required": ["REObjectID"], "additionalProperties": false, "properties": {
       "REObjectID":                 { "type": "string" },
       "SpatialAttitude":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
       "ControlObject":              { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
 
-      "RCameraData":                { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
-        "REVisualObject":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
-        "FieldOfView":              { "type": "number", "minimum": 0, "maximum": 180, "description": "Field of view, in degrees." },
-        "REAudioObject":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json" },
-        "SpatialAttitude":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } },      
+    "RCameraData":                  { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
+      "REVisualObject":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
+      "FieldOfView":                { "type": "number", "minimum": 0, "maximum": 180, "description": "Field of view, in degrees." },
+      "REAudioObject":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json" },
+      "SpatialAttitude":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } },      
 
     "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

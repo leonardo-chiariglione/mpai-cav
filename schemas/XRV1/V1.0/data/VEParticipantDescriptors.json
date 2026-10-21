@@ -29,9 +29,9 @@
         "delta":                    { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
         "beta":                     { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
         "gamma":                    { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
-      "ControllerData":             { "type": "string" },
+      "ControlObject":              { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" },
 
-        "AvatarOrAvatarID":         { "type": "array", "items": { "oneOf": [
+      "AvatarOrAvatarID":           { "type": "array", "items": { "oneOf": [
                                     { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json" },
                                     { "type": "string" } ] }, "description": "Array of Portable Avatars (objects) or Portable Avatar IDs (string)." } } } },
 

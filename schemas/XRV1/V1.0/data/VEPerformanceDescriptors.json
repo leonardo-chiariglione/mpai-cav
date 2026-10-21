@@ -26,14 +26,14 @@
           "theta":                { "type": "number", "minimum": 4, "maximum": 8, "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
           "delta":                { "type": "number", "minimum": 0.5, "maximum": 4, "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
           "beta":                 { "type": "number", "minimum": 13, "maximum": 30, "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
-          "gamma":                { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
-        "ControllerData":         { "type": "string" } } } },
+          "gamma":                { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } } } } },
 
     "VEObjectDescriptors":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "VEObjectID", "VEObject" ], "properties": {
 
         "VEObjectID":             { "type": "string" },
         "VEObject":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
-        "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } },
+        "SpatialAttitude":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+        "ControlObject":              { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
 
     "VCameraData":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
         "VEVisualObject":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },

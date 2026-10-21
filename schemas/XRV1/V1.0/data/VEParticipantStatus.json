@@ -34,7 +34,7 @@
           "gamma":                { "type": "number", "minimum": 30, "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." } } },
 
         "BiometricData":          { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
-        "ControllerData":         { "type": "string" } } } },
+        "ControlObject":          { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
 
       "CollectiveStatuses":       { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "GroupID" ], "properties": {
 
