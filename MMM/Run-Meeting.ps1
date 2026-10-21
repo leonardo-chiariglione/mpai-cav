@@ -9,10 +9,11 @@
 # You, on this PC: the address http://127.0.0.1:7099 - you are the chair. Close the server window when the meeting is over (the address goes with it).
 # A GROUP'S MEETING: -Group MMM -When "Thursday 22 October, 17:00 CEST" takes the people of the group from MMM\Registry\people.json (see Registry\README.md): the chair is the one who chairs the group, the others
 # are the guests, each is sent an email with the personal link, composed through Outlook. -Mail ask (default): the recipients are shown and you are asked to confirm before anything is sent;
-# draft: the emails are saved as Outlook drafts, nothing is sent; none: no emails.
+# draft: the emails are saved as Outlook drafts, nothing is sent; send: they are sent without asking (only when you have said so); none: no emails.
+# -Stay: the script does not wait for Enter at the end and leaves the server and the tunnel running (to be started a day before the meeting); close the server window and end cloudflared when it is over.
 # -Officers A,B: the people, besides the chair, who may register with the MPAI Officer Account Level (the Rights to every place of the building).
 param([string]$Chair = '', [string]$Guests = '', [string]$Until = '', [double]$Hours = 3, [int]$Port = 7099, [ValidateSet('funnel', 'cloudflare')][string]$Via = 'cloudflare', [switch]$Visitors,
-      [string]$Group = '', [string]$When = '', [string]$Officers = '', [string]$HostName = '', [ValidateSet('ask', 'draft', 'none')][string]$Mail = 'ask', [switch]$Preview)
+      [string]$Group = '', [string]$When = '', [string]$Officers = '', [string]$HostName = '', [ValidateSet('ask', 'draft', 'send', 'none')][string]$Mail = 'ask', [switch]$Preview, [switch]$Stay)
 
 $here = $PSScriptRoot
 $local = "http://127.0.0.1:$Port"
@@ -49,7 +50,9 @@ if ($names.Count -lt 1) { Write-Host 'No guests.'; exit 1 }
 # A personal token for each guest: 18 hexadecimal characters, from the system's random numbers.
 $tokens = @{}
 foreach ($n in $names) { $b = New-Object byte[] 9; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $tokens[$n] = ([BitConverter]::ToString($b) -replace '-', '').ToLower() }
-$invites = ($names | ForEach-Object { "$_=$($tokens[$_])" }) -join ','
+# the host has a link of its own too, for another device (a laptop away from this PC); on this PC it needs none
+$b = New-Object byte[] 9; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $hostToken = ([BitConverter]::ToString($b) -replace '-', '').ToLower()
+$invites = (($names | ForEach-Object { "$_=$($tokens[$_])" }) + "$HostName=$hostToken") -join ','
 
 function Get-Mails($base) {
     $subject = "MPAI $($grp.Id) meeting" + $(if ($When) { " - $When" } else { '' })
@@ -130,8 +133,9 @@ Write-Host "    the meeting ends: $(if ($Until) { 'at ' + $Until } else { 'in ' 
 Write-Host ''
 Write-Host '  For you, on this PC:' -ForegroundColor Green
 Write-Host "    $local/viewer/?world=1&mic=1"
+Write-Host "  For you, on another device (the same person - use it on one device or the other, not both at once): $base/viewer/?world=1&mic=1&invite=$hostToken" -ForegroundColor Yellow
 Write-Host ''
-Write-Host '  The first time, each chooses a Persona. Walk (W/S, A/D) to the MPAI doors, across the atrium to the south wing: the MMM meeting room is the first on the right. Q stands up, E sits.'
+Write-Host '  The first time, each chooses a Persona. Click the point to walk to - the MPAI doors, across the atrium to the south wing: the MMM meeting room is the first on the right. The wheel turns you, Ctrl + wheel zooms. Q stands up, E sits.'
 # THE EMAILS: one for each guest of the group, with the personal link, through Outlook (the account of this PC): shown first, sent only if you confirm - or saved as drafts.
 if ($Group -and $Mail -ne 'none') {
     $mails = Get-Mails $base
@@ -155,6 +159,7 @@ if ($Group -and $Mail -ne 'none') {
         catch { Write-Host "  Outlook could not make the emails: $($_.Exception.Message)`n  The links above are what each guest needs." }
     }
 }
+if ($Stay) { Write-Host '  The server and the tunnel stay up (-Stay).'; exit 0 }
 Start-Process "$local/viewer/?world=1&mic=1"
 Read-Host 'Enter to take the meeting off the internet (the server has its own window)' | Out-Null
 if ($Via -eq 'funnel') { & $ts funnel reset | Out-Null } else { Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force }
