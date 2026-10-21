@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M-Instance viewer</title>
+<title>M-Instance viewer (arms 4)</title>
 <!--
   THE M-ENVIRONMENT OF AN M-INSTANCE, AS IT CAN BE SEEN (MMM-TEC V2.2). The page reads
   the M-Instance's snapshot (./state) twice a second and draws it: its M-Locations as
@@ -178,6 +178,104 @@ function room(t) {
 // transparent; measured as their skeleton poses them; arms brought down from the
 // T-pose they come in.
 const loader = new GLTFLoader(); const models = new Map();
+
+// THE ARMS. The models come in a T-pose. Standing, the arms hang straight down, along the body; seated, the hands rest on the table. The way a bone turns depends on how the model was
+// made, so nothing is assumed: an arm is turned about an axis of the Persona (a swing, in the frame of the bone's parent) and the angle that gives the wanted place is looked for.
+const boneOf = (root, re) => { let b = null; root.traverse(o => { if (o.isBone && re.test(o.name)) b = o; }); return b; };
+const armBones = root => ({ lu: boneOf(root, /L.?UpperArm$/i), lf: boneOf(root, /L.?Forearm$/i), lh: boneOf(root, /L.?Hand$/i), ru: boneOf(root, /R.?UpperArm$/i), rf: boneOf(root, /R.?Forearm$/i), rh: boneOf(root, /R.?Hand$/i),
+  lt: boneOf(root, /L.?Finger0$/i), lm: boneOf(root, /L.?Finger2$/i), lp: boneOf(root, /L.?Finger4$/i), rt: boneOf(root, /R.?Finger0$/i), rm: boneOf(root, /R.?Finger2$/i), rp: boneOf(root, /R.?Finger4$/i) });
+const placeOf = (frame, bone) => frame.worldToLocal(bone.getWorldPosition(new THREE.Vector3()));      // where a bone is, in the Persona's own frame (x its left, y up, z the way it looks)
+const axisOf = (frame, x, y, z) => new THREE.Vector3(x, y, z).transformDirection(frame.matrixWorld);   // an axis of the Persona, in the world
+function swing(bone, worldAxis, degrees) {                                                          // turn a bone about a world axis (three.js does not allow for a turned parent)
+  const parent = new THREE.Quaternion(); bone.parent.getWorldQuaternion(parent);
+  bone.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(worldAxis.clone().applyQuaternion(parent.invert()), THREE.MathUtils.degToRad(degrees)));
+}
+function armsDown(frame) {
+  frame.updateMatrixWorld(true);
+  const A = armBones(frame);
+  for (const [u, f] of [[A.lu, A.lf], [A.ru, A.rf]]) {
+    if (!u || !f) continue;
+    const rest = u.userData.armRest ??= u.quaternion.clone();                                        // as the model came
+    u.quaternion.copy(rest); u.updateMatrixWorld(true);
+    const out = Math.sign(placeOf(frame, f).x - placeOf(frame, u).x) || 1, z = axisOf(frame, 0, 0, 1);   // out: the way the arm points in the T-pose
+    let best = { cost: 1e9, a: 0 };
+    for (let a = -150; a <= 150; a += 3) {
+      u.quaternion.copy(rest); swing(u, z, a); u.updateMatrixWorld(true);
+      const s = placeOf(frame, u), e = placeOf(frame, f), len = e.distanceTo(s) || 1;
+      const cost = Math.abs((e.x - s.x) * out / len - 0.04) + ((s.y - e.y) / len < 0.8 ? 5 : 0);       // straight down, a hair away from the body
+      if (cost < best.cost) best = { cost, a };
+    }
+    u.quaternion.copy(rest); swing(u, z, best.a); u.userData.armDown = u.quaternion.clone();
+  }
+  frame.updateMatrixWorld(true);
+}
+// The vertices of the skin that follow a hand (a hand bone or a finger bone has most of their weight): what touches the table is the skin, not the bones.
+function handVertices(frame, side) {
+  const list = [], re = new RegExp(side + '.?(Hand|Finger)', 'i');
+  frame.traverse(o => {
+    if (!o.isSkinnedMesh || !o.geometry.attributes.skinIndex) return;
+    const mine = new Set(); o.skeleton.bones.forEach((b, i) => { if (re.test(b.name)) mine.add(i); });
+    const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, keep = [];
+    for (let i = 0; i < si.count; i++) { let w = 0; for (let k = 0; k < 4; k++) if (mine.has(si.getComponent(i, k))) w += sw.getComponent(i, k); if (w > 0.6) keep.push(i); }
+    if (keep.length) list.push({ mesh: o, keep });
+  });
+  return list;
+}
+function skinHeights(frame, list) {                                                                  // the heights of those vertices, in the Persona's frame, as the bones pose them now
+  const v = new THREE.Vector3(), ys = [];
+  for (const { mesh, keep } of list) { mesh.skeleton.update(); for (const i of keep) { mesh.getVertexPosition(i, v); v.applyMatrix4(mesh.matrixWorld); ys.push(frame.worldToLocal(v).y); } }
+  return ys;
+}
+// Seated: the upper arm forward and the forearm bent so that the hand rests on the table - reach metres in front of the body, the table top at top metres above the floor of the
+// Persona's frame. The wrist is put where it should be, the forearm twisted so that the palm is down, the hand bent so that the fingers lie along the table; then the lowest point of the
+// hand is looked at, and the wrist raised or lowered by what is missing, until the hand lies on the table, not above it or in it (models differ in the length of arms and size of hands).
+function armsOnTable(frame, reach, top) {
+  frame.updateMatrixWorld(true);
+  const A = armBones(frame), x = axisOf(frame, 1, 0, 0);
+  const wp = bone => bone.getWorldPosition(new THREE.Vector3());
+  for (const [u, f, h, thumb, middle, pinky, side] of [[A.lu, A.lf, A.lh, A.lt, A.lm, A.lp, 'L'], [A.ru, A.rf, A.rh, A.rt, A.rm, A.rp, 'R']]) {
+    if (!u || !f || !h || !u.userData.armDown) continue;
+    const forearm = f.userData.armRest ??= f.quaternion.clone(), flat = h.userData.handRest ??= h.quaternion.clone(), skin = handVertices(frame, side);
+    u.quaternion.copy(u.userData.armDown); f.quaternion.copy(forearm); h.quaternion.copy(flat); u.updateMatrixWorld(true);
+    const s = placeOf(frame, u), inside = Math.sign(s.x) || 1;
+    const pose = height => {
+      let best = { cost: 1e9, a: 0, b: 0 };
+      const spot = (a, b) => { u.quaternion.copy(u.userData.armDown); swing(u, x, a); f.quaternion.copy(forearm); swing(f, x, b); h.quaternion.copy(flat); u.updateMatrixWorld(true); const p = placeOf(frame, h); return Math.hypot(p.z - reach, p.y - height, (p.x - s.x) * 0.5); };
+      for (let a = -120; a <= 60; a += 6) for (let b = -140; b <= 20; b += 6) { const cost = spot(a, b); if (cost < best.cost) best = { cost, a, b }; }
+      for (let a = best.a - 6; a <= best.a + 6; a++) for (let b = best.b - 6; b <= best.b + 6; b++) { const cost = spot(a, b); if (cost < best.cost) best = { cost, a, b }; }   // a finer look round the best
+      spot(best.a, best.b);
+      if (!thumb || !middle || !pinky) return;
+      const axis = wp(h).sub(wp(f)).normalize(), turned = f.quaternion.clone(); let tw = { cost: 1e9, t: 0 };                      // the palm down: the line from the little finger to the thumb level, the thumb on the inside
+      for (let t = -180; t < 180; t += 10) {
+        f.quaternion.copy(turned); swing(f, axis, t); u.updateMatrixWorld(true);
+        const th = placeOf(frame, thumb), pk = placeOf(frame, pinky), cost = Math.abs(th.y - pk.y) * 3 + ((th.x - pk.x) * inside > 0 ? 1 : 0);
+        if (cost < tw.cost) tw = { cost, t };
+      }
+      f.quaternion.copy(turned); swing(f, axis, tw.t); u.updateMatrixWorld(true);
+      const hq = h.quaternion.clone(); let hb = { cost: 1e9, a: 0 };                                                              // the hand flat: its lowest and its average height as near as may be
+      for (let a = -90; a <= 90; a += 5) {
+        h.quaternion.copy(hq); swing(h, x, a); u.updateMatrixWorld(true);
+        const m = placeOf(frame, middle), p0 = placeOf(frame, h), ys = skinHeights(frame, skin), cost = (ys.reduce((q, y) => q + y, 0) / ys.length - Math.min(...ys)) + (m.z - p0.z < 0.02 ? 1 : 0);
+        if (cost < hb.cost) hb = { cost, a };
+      }
+      h.quaternion.copy(hq); swing(h, x, hb.a); u.updateMatrixWorld(true);
+    };
+    let height = top + 0.03;
+    for (let round = 0; round < 4; round++) {
+      pose(height);
+      const gap = Math.min(...skinHeights(frame, skin)) - (top - HAND_SINK);                                    // how far the lowest point of the hand is above the table (below it, if negative)
+      if (Math.abs(gap) < 0.003) break;
+      height -= gap;
+    }
+  }
+  frame.updateMatrixWorld(true);
+}
+function armsAtRest(frame) {
+  for (const [u, f, h] of [[boneOf(frame, /L.?UpperArm$/i), boneOf(frame, /L.?Forearm$/i), boneOf(frame, /L.?Hand$/i)], [boneOf(frame, /R.?UpperArm$/i), boneOf(frame, /R.?Forearm$/i), boneOf(frame, /R.?Hand$/i)]]) {
+    if (u?.userData.armDown) u.quaternion.copy(u.userData.armDown); if (f?.userData.armRest) f.quaternion.copy(f.userData.armRest); if (h?.userData.handRest) h.quaternion.copy(h.userData.handRest);
+  }
+  frame.updateMatrixWorld(true);
+}
 async function persona(t) {
   const file = t.Model ?? 'Persona1.glb';
   if (!models.has(file)) models.set(file, loader.loadAsync('personae/' + file));
@@ -188,11 +286,9 @@ async function persona(t) {
       o.castShadow = true; o.frustumCulled = false;
       for (const m of [].concat(o.material)) if (/opacity/i.test(m.name)) { m.transparent = true; m.alphaTest = 0.35; m.side = THREE.DoubleSide; }
     }
-    // Biped upper arms (Bip01 L/R UpperArm): about their local X, down to the sides.
-    if (o.isBone && /L.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(78));
-    if (o.isBone && /R.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(-78));
   });
   root.updateMatrixWorld(true);
+  try { armsDown(root); } catch (e) { console.warn('arms', e); }          // a pose that cannot be made leaves the model as it came; it is still drawn
   const box = new THREE.Box3().setFromObject(root, true); const h = box.max.y - box.min.y;
   root.scale.setScalar(1.7 / h); root.updateMatrixWorld(true);
   box.setFromObject(root, true); root.position.y -= box.min.y;
@@ -206,9 +302,12 @@ async function persona(t) {
 // A Persona at a seat of the meeting room sits: the thighs forward, the shins down, the body lowered onto the chair. The way a bone turns depends on how the model was made,
 // so each leg is turned and then looked at: the knee must be in front of the hip (the model faces +z), the foot below the knee; if not, the leg is turned the other way.
 const SIT_DROP = 0.45;
+const HAND_SINK = 0.01;   // the lowest point of a hand on the table is this far (m) below its top, so that from a low eye it can never look as if it hovered
+const TABLE_REACH = 0.58;   // from the Persona's seat to where its wrists rest: the table's edge is 0.5 m ahead, the palms lie beyond it (SEAT_R - TABLE_R in MMM/World/make_world.py)
 function sitPose(g, on) {
   const L = g.userData.legs; if (!L || !!g.userData.sitting === on) return; g.userData.sitting = on;
   for (const k of ['lt', 'rt', 'lc', 'rc']) { const b = L[k]; if (b) b.quaternion.copy(b.userData.base ??= b.quaternion.clone()); }
+  try { armsAtRest(g); } catch (e) { console.warn('arms', e); }
   if (!on) return;
   const here = bone => g.worldToLocal(bone.getWorldPosition(new THREE.Vector3()));
   for (const [t, c, f] of [[L.lt, L.lc, L.lf], [L.rt, L.rc, L.rf]]) {
@@ -218,6 +317,7 @@ function sitPose(g, on) {
     c.rotateZ(Math.PI / 2); g.updateMatrixWorld(true);
     if (f && here(f).y > here(c).y - 0.15) { c.rotateZ(-Math.PI); g.updateMatrixWorld(true); }            // the foot below the knee
   }
+  try { armsOnTable(g, TABLE_REACH, 0.78 - (0.05 - SIT_DROP)); } catch (e) { console.warn('arms', e); }                                         // the hands on the table (its top 0.78 m high; the Persona is lowered by SIT_DROP)
 }
 
 // ---------------------------------------------------------------- the presenter
@@ -336,10 +436,9 @@ async function choosePersona() {
     shown = cloneSkinned(g.scene);
     shown.traverse(o => {
       if (o.isMesh) for (const m of [].concat(o.material)) if (/opacity/i.test(m.name)) { m.transparent = true; m.alphaTest = 0.35; m.side = THREE.DoubleSide; }
-      if (o.isBone && /L.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(78));
-      if (o.isBone && /R.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(-78));
     });
     shown.updateMatrixWorld(true);
+    try { armsDown(shown); } catch (e) { console.warn('arms', e); }
     const b = new THREE.Box3().setFromObject(shown, true); shown.scale.setScalar(1.7 / Math.max(b.max.y - b.min.y, 0.1)); shown.updateMatrixWorld(true);
     b.setFromObject(shown, true); shown.position.y -= b.min.y;
     const turner = new THREE.Group(); turner.add(shown); ps.add(turner); shown = turner;
