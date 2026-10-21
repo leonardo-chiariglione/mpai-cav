@@ -9,14 +9,14 @@ using Mpai.Providers;
 namespace Mpai.Aif.Tests;
 
 // NEWSPAPER READING (MMC-NPR-V2.5) through the Controller, as a User Agent drives it: the image of the author's
-// page (D:\Images\NPR, kept outside the repository) and a Point at the top of a column; the Portable Avatar
+// page (Data\Images\NPR, kept outside the repository) and a Point at the top of a column; the Portable Avatar
 // that comes back carries the text of that column. Judged against the column text the author typed
 // (npr-page-truth.txt): the words of the answer against the true words, and where the column ends.
 [Trait("Group", "Models")]
 public class NprModuleTests
 {
     private const string NPR = "1MMC-NPR-V2.5-I01";
-    private const string Folder = @"D:\Images\NPR";
+    private static readonly string Folder = Path.Combine(AccessTests.Images, "NPR");
 
     private static ControllerApi Controller()
     {

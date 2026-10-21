@@ -6,9 +6,9 @@ using Mpai.Core;
 
 namespace Mpai.Aif.Tests;
 
-// NPR STEP 1 (M3246 3.1, 3.8): OPTICAL CHARACTER RECOGNITION IN D:\DI. MMC-OCR-V2.5
+// NPR STEP 1 (M3246 3.1, 3.8): OPTICAL CHARACTER RECOGNITION. MMC-OCR-V2.5
 // reads the author's page - an image of a headline and columns, kept outside the
-// repository as the photographs are (D:\Images\NPR, or MPAI_TEST_IMAGES) with the true
+// repository as the photographs are (Data\Images\NPR, or MPAI_TEST_IMAGES) with the true
 // text of each part - and gives its lines as a Text Object. Judged: the Text Object
 // valid against OSD-TXO-V1.5; every line a box within the page and a confidence; the
 // words of the truth read (at least 95% of them, in any order: the lines are in the

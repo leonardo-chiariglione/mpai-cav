@@ -12,6 +12,6 @@ public sealed class VsiPlugin : IAimPlugin
     private ScrfdFaceDetector? _dep;
     public string AimName => "CVE-VSI-V1.0";
     public IAimProcessor Create(AimPortReader ports, IReadOnlyDictionary<string, string> settings)
-        => new CveVsiAimProcessor(AimName, _dep ??= new ScrfdFaceDetector(Get(settings,"ScrfdModel",@"D:\AI\Models\scrfd_10g_bnkps.onnx")), ports);
+        => new CveVsiAimProcessor(AimName, _dep ??= new ScrfdFaceDetector(Get(settings,"ScrfdModel",Mpai.Core.MpaiPaths.Model("scrfd_10g_bnkps.onnx"))), ports);
     private static string Get(IReadOnlyDictionary<string,string> s, string k, string d) => s.TryGetValue(k, out var v) && !string.IsNullOrWhiteSpace(v) ? v : d;
 }

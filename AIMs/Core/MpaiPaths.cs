@@ -63,6 +63,25 @@ public static class MpaiPaths
         string.IsNullOrWhiteSpace(path) ? "" :
         System.IO.Path.IsPathRooted(path) ? path :
         System.IO.Path.Combine(Root, path);
+    // Machine-local data that is too large to keep in the repository (the voice engine with its Python environment, the LibriSpeech clips):
+    // the folder named by MPAI_DATA, or Data\ beside the application. Nothing is looked for outside the tree unless MPAI_DATA says so.
+    public static string Data => System.Environment.GetEnvironmentVariable("MPAI_DATA") is { Length: > 0 } d ? d : System.IO.Path.Combine(Root, "Data");
+    public static string OpenVoiceHome => System.IO.Path.Combine(Data, "openvoice");
+    public static string Clips => System.IO.Path.Combine(Data, "Datasets", "libri_wav");
+    // The Python that has torch: MPAI_PYTHON, else the virtual environment Data\pyannote-venv, else the python of the PATH.
+    public static string Python
+    {
+        get
+        {
+            if (System.Environment.GetEnvironmentVariable("MPAI_PYTHON") is { Length: > 0 } p) return p;
+            foreach (var rel in new[] { System.IO.Path.Combine("Scripts", "python.exe"), System.IO.Path.Combine("bin", "python") })
+            {
+                var venv = System.IO.Path.Combine(Data, "pyannote-venv", rel);
+                if (System.IO.File.Exists(venv)) return venv;
+            }
+            return "python";
+        }
+    }
     public static string Gallery       => System.IO.Path.Combine(Root, "TestData", "gallery.json");
     public static string Amds          => System.IO.Path.Combine(Root, "AIMs", "AMDs");
     public static string Settings      => System.IO.Path.Combine(Root, "AIMs", "aim-settings.json");

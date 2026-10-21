@@ -21,7 +21,7 @@ public static class Paths
     {
         for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
             if (File.Exists(Path.Combine(d.FullName, "AIMs", "aim-settings.json"))) return d.FullName;
-        return @"D:\DI";
+        return AppContext.BaseDirectory;
     }
 
     // The settings of one AIM, from the settings file of the repository: a file named is given by its full path.

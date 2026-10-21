@@ -35,8 +35,8 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        string wavPath = args.Length > 0 ? args[0] : @"D:\AI\MPAIApps\AudioIn\question-spoken.wav";
-        string jpgPath = args.Length > 1 ? args[1] : @"D:\AI\TestData\Images\leonardo.jpg";
+        string wavPath = args.Length > 0 ? args[0] : Path.Combine(Mpai.Core.MpaiPaths.Data, "MPAIApps", "AudioIn", "question-spoken.wav");
+        string jpgPath = args.Length > 1 ? args[1] : Path.Combine(Mpai.Core.MpaiPaths.Data, "TestData", "Images", "leonardo.jpg");
 
         Console.WriteLine("=== HCI scene-chain bring-up test ===");
         Console.WriteLine($"AmdDir   : {AmdDir}");

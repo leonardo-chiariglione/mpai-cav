@@ -18,4 +18,4 @@ SrsApp --voice a.wav [b.wav ...] --damaged d.wav --sections 0.5-1.0,2.0-2.5 --sa
 ```
 `--stand-in` speaks with a tone and needs no voice engine. Files are 16-bit PCM WAV; another rate is brought to 16 kHz.
 
-Needs, for the real voice, `D:\AI\openvoice` and `D:\AI\pyannote-venv` (see `AIMs/CAE1/V2.5/Voice`). It changes the timbre only: prosody and language are Piper's.
+Needs, for the real voice, `Data\openvoice` and `Data\pyannote-venv` (the folder Data of the tree, or the one named by MPAI_DATA; MPAI_PYTHON names another Python) (see `AIMs/CAE1/V2.5/Voice`). It changes the timbre only: prosody and language are Piper's.

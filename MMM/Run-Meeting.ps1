@@ -108,9 +108,9 @@ if ($Via -eq 'funnel') {
     $base = "https://$dns"
 }
 else {
-    $cf = @("$here\tools\cloudflared.exe", "$here\..\Apps\ABV\AVS\tools\cloudflared.exe", 'D:\DI\ABV\tools\cloudflared.exe') | Where-Object { Test-Path $_ } | Select-Object -First 1
+    $cf = @("$here\tools\cloudflared.exe", "$here\..\Apps\ABV\AVS\tools\cloudflared.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
     if (-not $cf) { $cf = (Get-Command cloudflared -ErrorAction SilentlyContinue).Source }
-    if (-not $cf) { Write-Host 'cloudflared.exe is not found (MMM\tools\, Apps\ABV\AVS\tools\, D:\DI\ABV\tools\).'; exit 1 }
+    if (-not $cf) { Write-Host 'cloudflared.exe is not found (MMM\tools\, Apps\ABV\AVS\tools\).'; exit 1 }
     $log = Join-Path $env:TEMP 'mmm-tunnel.log'
     Remove-Item $log -ErrorAction SilentlyContinue
     Start-Process -FilePath $cf -ArgumentList 'tunnel', '--no-autoupdate', '--url', $local -RedirectStandardError $log -WindowStyle Minimized

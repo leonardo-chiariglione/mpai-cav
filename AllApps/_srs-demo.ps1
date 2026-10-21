@@ -5,8 +5,9 @@
 param([switch]$NoPlay)
 $ErrorActionPreference = 'Stop'
 $root = $env:MPAI_ROOT; if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
-$voice = 'D:\AI\Datasets\libri_wav\1272\clip.wav'; $original = 'D:\AI\Datasets\libri_wav\1462\clip.wav'
-foreach ($f in $voice, $original) { if (-not (Test-Path $f)) { Write-Host "The recording $f is not on this PC: the demonstration needs the two LibriSpeech clips of D:\AI\Datasets\libri_wav." -ForegroundColor Red; exit 1 } }
+$data = if ($env:MPAI_DATA) { $env:MPAI_DATA } else { Join-Path $root 'Data' }; $clips = Join-Path $data 'Datasets\libri_wav'
+$voice = Join-Path $clips '1272\clip.wav'; $original = Join-Path $clips '1462\clip.wav'
+foreach ($f in $voice, $original) { if (-not (Test-Path $f)) { Write-Host "The recording $f is not on this PC: the demonstration needs the two LibriSpeech clips of $clips (the folder Data of the tree, or MPAI_DATA)." -ForegroundColor Red; exit 1 } }
 $project = Join-Path $root 'Apps\CAE\SRS\App\SrsApp.csproj'; $exe = Join-Path $root 'Apps\CAE\SRS\App\bin\Debug\net10.0\SrsApp.exe'
 $out = Join-Path (Join-Path $env:USERPROFILE 'Downloads') "MPAI USC\SRS demo\$(Get-Date -Format 'yyyy-MM-dd HH.mm.ss')"
 Write-Host 'Building the Speech Restoration System (a first build takes a while)...' -ForegroundColor Cyan

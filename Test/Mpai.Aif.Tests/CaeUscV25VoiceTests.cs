@@ -7,19 +7,19 @@ using Mpai.Cae.Usc.Voice;
 namespace Mpai.Aif.Tests;
 
 // CAE-USC V2.5, the REAL Speech Model: Speech Model Creation makes the tone-colour embedding of a voice from its Speech Segments (OpenVoice V2) and the Text To Speech that uses it gives speech
-// in that voice. Needs the voice engine (Python with torch, D:\AI\openvoice): a few seconds for each call on a CPU, so it is Slow. The speech of two speakers of the LibriSpeech clips
-// (D:\AI\Datasets\libri_wav) is used: speaker 1272 is the voice to model, speaker 1462 says what is to be said.
+// in that voice. Needs the voice engine (Python with torch, Data\openvoice, see MpaiPaths): a few seconds for each call on a CPU, so it is Slow. The speech of two speakers of the LibriSpeech clips
+// (Data\Datasets\libri_wav) is used: speaker 1272 is the voice to model, speaker 1462 says what is to be said.
 [Trait("Group", "Slow")]
 public class CaeUscV25VoiceTests
 {
-    private const string Clips = @"D:\AI\Datasets\libri_wav";
+    private static readonly string Clips = Mpai.Core.MpaiPaths.Clips;
     private static Audio Clip(string speaker) => Audio.FromWav(File.ReadAllBytes(Path.Combine(Clips, speaker, "clip.wav")));
     private static double Distance(float[] a, float[] b) => Math.Sqrt(a.Zip(b, (x, y) => (double)(x - y) * (x - y)).Sum());
 
     [SkippableFact]
     public async Task TheSpeechModelIsTheEmbeddingOfTheVoiceAndTheSpeechThatUsesItSoundsLikeIt()
     {
-        Skip.IfNot(Directory.Exists(@"D:\AI\openvoice\converter") && File.Exists(@"D:\AI\pyannote-venv\Scripts\python.exe"), "the voice engine is not installed");
+        Skip.IfNot(Directory.Exists(Path.Combine(Mpai.Core.MpaiPaths.OpenVoiceHome, "converter")) && Mpai.Core.MpaiPaths.Python != "python", "the voice engine is not installed");
         var worker = new OpenVoiceWorker();
         var target = Clip("1272"); var other = Clip("1462");
 

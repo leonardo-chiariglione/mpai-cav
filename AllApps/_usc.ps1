@@ -58,8 +58,9 @@ try {
             }
         }
         'EAE' {
-            if (Yes "Make a demonstration capture first?`n`nYes: two real voices in a noisy simulated room (LibriSpeech clips on D:\AI).`nNo: you pick your own capture and array." $title) {
-                $clips = 'D:\AI\Datasets\libri_wav\1272\clip.wav', 'D:\AI\Datasets\libri_wav\1462\clip.wav'
+            if (Yes "Make a demonstration capture first?`n`nYes: two real voices in a noisy simulated room (LibriSpeech clips in the folder Data of the tree, or MPAI_DATA).`nNo: you pick your own capture and array." $title) {
+                $libri = Join-Path $(if ($env:MPAI_DATA) { $env:MPAI_DATA } else { Join-Path $root 'Data' }) 'Datasets\libri_wav'
+                $clips = (Join-Path $libri '1272\clip.wav'), (Join-Path $libri '1462\clip.wav')
                 & $exe --demo $out --speech $clips[0] $clips[1]
                 $capture = Join-Path $out 'room.wav'; $array = Join-Path $out 'array.json'
             } else {

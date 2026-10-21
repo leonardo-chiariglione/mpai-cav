@@ -1,6 +1,6 @@
 # THE NIGHT RUN: the long tests, in the order of what matters most, each with its own log.
 # Run it when nobody is working: it keeps the processor busy for about an hour and a half.
-#   powershell -ExecutionPolicy Bypass -File D:\DI\Test\Results\Run-Night.ps1
+#   powershell -ExecutionPolicy Bypass -File Test\Results\Run-Night.ps1
 # Logs and a summary go to Test\Reports\Night\<date>\ (git-ignored).
 $ErrorActionPreference = 'Continue'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)

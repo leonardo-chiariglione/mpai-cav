@@ -21,7 +21,7 @@ namespace Mpai.Aif.Tests;
 // the voice of the other; every Response a text, every Identification a boolean.
 // Reported: what MAC said, the time of a registration and of a check.
 //
-// The photographs are the author's (D:\Images, or MPAI_TEST_IMAGES), outside the
+// The photographs are the author's (Data\Images, or MPAI_TEST_IMAGES), outside the
 // repository: no photograph of a person is kept in it.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
@@ -29,7 +29,7 @@ namespace Mpai.Aif.Tests;
 public class AccessTests
 {
     private const string Acr = "1MMC-ACR-V2.5-I01", Mac = "1MMC-MAC-V2.5-I01";
-    internal static readonly string Images = Environment.GetEnvironmentVariable("MPAI_TEST_IMAGES") ?? @"D:\Images";
+    internal static readonly string Images = Environment.GetEnvironmentVariable("MPAI_TEST_IMAGES") ?? Path.Combine(Mpai.Core.MpaiPaths.Data, "Images");
 
     internal static string Face(string file) =>
         MpaiJson.ToJson(BasicVisualObject.FromFile(file, File.ReadAllBytes(Path.Combine(Images, file)), "Face"));

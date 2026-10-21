@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Publishes MAS-App for the public instance on Windows (M3248 3.2): the MAS Service
-  and the browser client's host, Release, into D:\DI\deploy - not the build folders,
+  and the browser client's host, Release, into Support\deploy of the tree - not the build folders,
   which stay for development.
 
 .DESCRIPTION
@@ -21,7 +21,7 @@
 .EXAMPLE
   powershell -File Apps\MAS\Service\windows\publish.ps1
 #>
-param([string]$Config = 'Apps\MAS\Service\mas-server-DI.json',
+param([string]$Config = 'Apps\MAS\Service\mas-server-EI.json',
       [string]$ServiceUrl = 'https://localhost:5105/',
       [string]$Urls = 'https://localhost:5010')
 

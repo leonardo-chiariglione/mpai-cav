@@ -6,7 +6,7 @@
 
 Only torch, numpy, scipy and soundfile are needed: the OpenVoice package asks for librosa and wavmark (the latter only for its watermark) and for old versions of both, which this does
 not use; the two are replaced here by a stub (librosa.filters, which the spectrogram does not call) and by scipy (resampling).
-Environment: OPENVOICE_HOME, the folder with src/OpenVoice-main and converter/{config.json,checkpoint.pth} (default D:\\AI\\openvoice).
+Environment: OPENVOICE_HOME, the folder with src/OpenVoice-main and converter/{config.json,checkpoint.pth} (default MPAI_DATA/openvoice, else Data/openvoice at the root of the repository).
 """
 import argparse, json, os, sys, types
 import numpy as np
@@ -15,7 +15,7 @@ import torch
 from scipy.signal import resample_poly
 from math import gcd
 
-HOME = os.environ.get("OPENVOICE_HOME", r"D:\AI\openvoice")
+HOME = os.environ.get("OPENVOICE_HOME") or os.path.join(os.environ.get("MPAI_DATA") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "Data")), "openvoice")
 sys.path.insert(0, os.path.join(HOME, "src", "OpenVoice-main"))
 for name in ("librosa", "librosa.filters"):          # mel_processing imports a function it never calls for the spectrogram
     sys.modules.setdefault(name, types.ModuleType(name))

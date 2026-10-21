@@ -7,13 +7,13 @@ using System.Text.Json.Nodes;
 
 namespace Mpai.Cae.Usc.Voice;
 
-// The voice engine as a process: openvoice_worker.py (OpenVoice V2, MIT) in a Python that has torch. Settings of the AIM Instance: "OpenVoicePython" (default the venv of D:\AI\pyannote-venv),
-// "OpenVoiceHome" (the folder with the source and the converter checkpoint, default D:\AI\openvoice), "OpenVoiceScript" (default the worker next to this assembly). The model is loaded at every
+// The voice engine as a process: openvoice_worker.py (OpenVoice V2, MIT) in a Python that has torch. Settings of the AIM Instance: "OpenVoicePython" (default MPAI_PYTHON, else the venv Data\pyannote-venv, else python),
+// "OpenVoiceHome" (the folder with the source and the converter checkpoint, default Data\openvoice, Data being MPAI_DATA or the folder beside the application), "OpenVoiceScript" (default the worker next to this assembly). The model is loaded at every
 // call (some seconds on a CPU): it is the reference Implementation, not a service.
 public sealed class OpenVoiceWorker(IReadOnlyDictionary<string, string>? settings = null)
 {
-    private readonly string _python = Setting(settings, "OpenVoicePython", @"D:\AI\pyannote-venv\Scripts\python.exe");
-    private readonly string _home = Setting(settings, "OpenVoiceHome", @"D:\AI\openvoice");
+    private readonly string _python = Setting(settings, "OpenVoicePython", Mpai.Core.MpaiPaths.Python);
+    private readonly string _home = Setting(settings, "OpenVoiceHome", Mpai.Core.MpaiPaths.OpenVoiceHome);
     private readonly string _script = Setting(settings, "OpenVoiceScript", Path.Combine(Path.GetDirectoryName(typeof(OpenVoiceWorker).Assembly.Location) ?? AppContext.BaseDirectory, "openvoice_worker.py"));
 
     private static string Setting(IReadOnlyDictionary<string, string>? s, string key, string fallback) => s is not null && s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;

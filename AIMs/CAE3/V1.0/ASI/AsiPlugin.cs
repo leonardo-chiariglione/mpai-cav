@@ -11,6 +11,6 @@ public sealed class AsiPlugin : IAimPlugin
     private SoundClassifier? _dep;
     public string AimName => "CAE-ASI-V2.5";
     public IAimProcessor Create(AimPortReader ports, IReadOnlyDictionary<string, string> settings)
-        => new CaeAsiAimProcessor(AimName, _dep ??= new SoundClassifier(Get(settings,"YamnetModel",@"D:\AI\Models\yamnet.onnx"), Get(settings,"YamnetClassMap",@"D:\AI\Models\yamnet_class_map.csv")), ports);
+        => new CaeAsiAimProcessor(AimName, _dep ??= new SoundClassifier(Get(settings,"YamnetModel",Mpai.Core.MpaiPaths.Model("yamnet.onnx")), Get(settings,"YamnetClassMap",Mpai.Core.MpaiPaths.Model("yamnet_class_map.csv"))), ports);
     private static string Get(IReadOnlyDictionary<string,string> s, string k, string d) => s.TryGetValue(k, out var v) && !string.IsNullOrWhiteSpace(v) ? v : d;
 }

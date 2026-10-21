@@ -1,7 +1,7 @@
 # Re-records the four older CAV use cases with the current CAV, started by the Windows task "MPAI CAV recordings 2026-10-16" at 03:00.
-# Each goes into D:\DI\Demos\<name> (the old one is replaced; the 8 October recordings stay in Downloads\highway-demo) and a copy to Downloads\highway-demo\<name>-2026-10-16.
-$demos = 'D:\DI\Demos'; $down = 'C:\Users\Thor\Downloads\highway-demo'; $log = 'D:\DI\Test\Results\cav-recordings.txt'
-Set-Location 'D:\DI\Test\Mpai.Aif.Tests'
+# Each goes into Demos\<name> of the tree (the old one is replaced; the 8 October recordings stay in Downloads\highway-demo) and a copy to Downloads\highway-demo\<name>-2026-10-16.
+$tree = Split-Path -Parent (Split-Path -Parent $PSScriptRoot); $demos = Join-Path $tree 'Demos'; $down = Join-Path $env:USERPROFILE 'Downloads\highway-demo'; $log = Join-Path $PSScriptRoot 'cav-recordings.txt'
+Set-Location (Join-Path $tree 'Test\Mpai.Aif.Tests')
 $runs = @( @('traffic','1',90), @('truck','slow',90), @('behind','behind',90), @('overtake','overtake',100) )
 foreach ($r in $runs) {
     $name = $r[0]; $dest = Join-Path $demos $name

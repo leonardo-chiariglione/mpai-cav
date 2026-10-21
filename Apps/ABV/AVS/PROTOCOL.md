@@ -1,6 +1,6 @@
 # ABV live demo — protocol between the browser client and the server (AVS)
 
-Server: `D:\DI\Apps\ABV\AVS\Server` (ASP.NET, Kestrel). It serves `D:\DI\Apps\ABV\AVS\Server\wwwroot` as static files at `/`, the avatar files at `/avatars/<file>.glb`, `GET /api/avatars`, and a WebSocket at `/ws` (same origin). Text frames are JSON; binary frames are audio.
+Server: `Apps\ABV\AVS\Server` (ASP.NET, Kestrel). It serves `Apps\ABV\AVS\Server\wwwroot` as static files at `/`, the avatar files at `/avatars/<file>.glb`, `GET /api/avatars`, and a WebSocket at `/ws` (same origin). Text frames are JSON; binary frames are audio.
 
 ## The room (metres; x east, y north, z up; yaw in radians, 0 = facing +x, counter-clockwise positive)
 A round table of radius 0.9 at the origin; 5 seats on a circle of radius 1.5, seat k at angle `k * 72°` (x = 1.5 cos, y = 1.5 sin); an avatar at a seat faces the origin (yaw = angle + π). The server assigns the seat; the client never computes seats. Avatars are modelled standing (Rocketbox T-pose → arms-down rest pose as in `AIF/UserAgent/Assets/cav-webview.html`, 1.7 m tall).
@@ -28,6 +28,6 @@ A round table of radius 0.9 at the origin; 5 seats on a circle of radius 1.5, se
 4. Audio: capture the microphone (getUserMedia, echoCancellation on), resample to 16 kHz mono Int16 with an AudioWorklet (or ScriptProcessor fallback), send ~100 ms chunks as binary frames type 0x01. A mute button. Play each incoming type-0x02 chunk through a Web Audio graph with a PannerNode (HRTF) at the speaker's position, the listener at the own seat facing the own yaw; schedule chunks back to back with ~120 ms of jitter buffer per speaker.
 5. A side panel: roster, the minutes (`minutes.text`, preformatted), a chat box.
 6. Test aids: `?bot=NAME&avatar=ID` joins at once without microphone and sends a synthetic speech-like signal (bursts of band-limited noise, ~1 s on, ~2 s off); `?autojoin=NAME&avatar=ID` joins at once with the microphone.
-7. No external network resources: three.js from `/lib/three/...` (copy `D:\DI\MMM\Viewer\lib\three` into `wwwroot/lib/three`); glTFLoader and SkeletonUtils from its `addons`.
+7. No external network resources: three.js from `/lib/three/...` (copy `MMM\Viewer\lib\three` into `wwwroot/lib/three`); glTFLoader and SkeletonUtils from its `addons`.
 
-The client is one `index.html` (module script inline or `app.js`) in `D:\DI\Apps\ABV\AVS\Server\wwwroot`. Nothing in it depends on how the server computes the scene.
+The client is one `index.html` (module script inline or `app.js`) in `Apps\ABV\AVS\Server\wwwroot`. Nothing in it depends on how the server computes the scene.
