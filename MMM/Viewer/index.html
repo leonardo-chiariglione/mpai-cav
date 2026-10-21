@@ -127,11 +127,11 @@ if (W) {
     for (const r of b.rooms) origin[r.id] = [b.x + r.x, b.y + r.y];
     for (const r of b.solids) solids.push(r);
     wl.load(b.model, g => { g.scene.position.set(b.x, 0, -b.y); scene.add(g.scene); });
-    if (b.sign) {      // a sign on top of the building: a board with its picture (the logo and the name), facing the way world.json says
-      new THREE.TextureLoader().load(b.sign.image, tex => {
+    for (const sg of [b.sign, ...(b.signs ?? [])].filter(Boolean)) {      // a sign: a board with its picture (the logo and the name) on the roof or on a wall, facing the way world.json says
+      new THREE.TextureLoader().load(sg.image, tex => {
         tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-        const board = new THREE.Mesh(new THREE.PlaneGeometry(b.sign.width, b.sign.height), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
-        board.position.set(b.sign.x, b.sign.z + b.sign.height / 2, -b.sign.y); board.rotation.y = b.sign.facing === 'west' ? -Math.PI / 2 : 0; scene.add(board);
+        const board = new THREE.Mesh(new THREE.PlaneGeometry(sg.width, sg.height), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+        board.position.set(sg.x, sg.z + sg.height / 2, -sg.y); board.rotation.y = sg.facing === 'west' ? -Math.PI / 2 : 0; scene.add(board);
       });
     }
     const l = label(b.name); l.position.set(b.x, b.height + 0.8, -b.y); scene.add(l); buildingLabels.push(l);
@@ -196,8 +196,21 @@ async function persona(t) {
   root.scale.setScalar(1.7 / h); root.updateMatrixWorld(true);
   box.setFromObject(root, true); root.position.y -= box.min.y;
   const g = new THREE.Group(); g.add(root);
+  const bone = re => { let b = null; root.traverse(o => { if (o.isBone && re.test(o.name)) b = o; }); return b; };
+  g.userData.legs = { lt: bone(/L.?Thigh$/i), rt: bone(/R.?Thigh$/i), lc: bone(/L.?Calf$/i), rc: bone(/R.?Calf$/i) };
   const l = label(t.ID); l.position.set(0, 1.95, 0); g.add(l); g.userData.label = l;
   return g;
+}
+
+// A Persona at a seat of the meeting room sits: the thighs forward, the shins down, the body lowered onto the chair.
+const SIT_DROP = 0.45;
+function sitPose(g, on) {
+  const L = g.userData.legs; if (!L || !!g.userData.sitting === on) return; g.userData.sitting = on;
+  for (const [k, turn] of [['lt', -1], ['rt', -1], ['lc', 1], ['rc', 1]]) {
+    const b = L[k]; if (!b) continue;
+    b.quaternion.copy(b.userData.base ??= b.quaternion.clone());
+    if (on) b.rotateZ(turn * Math.PI / 2);
+  }
 }
 
 // ---------------------------------------------------------------- the presenter
@@ -249,7 +262,7 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 const me = await fetch('whoami', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
 const userName = me?.name ?? new URLSearchParams(location.search).get('user');
 const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
-window.mmmClient = client; window.mmmCamera = camera;   // for the tests: they drive the keys of a client from outside
+window.mmmClient = client; window.mmmCamera = camera; window.mmmDrawn = drawn;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -853,7 +866,9 @@ async function refresh() {
     d.yaw = t.Yaw ?? null;
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
-      d.target.y = W ? 0.05 : (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
+      const sits = W && /-S\d+$/.test(t.At);                       // at a seat of a meeting room
+      d.target.y = W ? (sits ? 0.05 - SIT_DROP : 0.05) : (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad; sitting, lowered onto the chair
+      sitPose(d.object, sits);
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).

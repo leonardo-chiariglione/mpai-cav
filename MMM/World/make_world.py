@@ -8,7 +8,7 @@ have door and window openings, a floor, a ceiling, a table and chairs, and the R
 Axes: space - x east, y north, z up, metres (MMM/AXES.md). glTF is Y-up, so a point (x, y, z) of space is written as (x, z, -y).
 The MPAI building's glTF has its origin at the centre of its atrium; a small building's at the centre of its one room: the building is placed in the world by the Location it is.
 """
-import json, math, os, struct
+import json, math, os, shutil, struct
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'Viewer', 'world')
 os.makedirs(OUT, exist_ok=True)
@@ -35,6 +35,19 @@ class Mesh:
         for n, vs in faces:
             b = len(pos)
             pos.extend(vs); nor.extend([n] * 4); idx.extend([b, b + 1, b + 2, b, b + 2, b + 3])
+
+    def prism(self, mat, pts, z0, z1):
+        """A vertical prism on a convex polygon pts = [(x, y), ...] (counter-clockwise seen from above), from z0 to z1: a round table, a chair turned any way."""
+        if z1 - z0 <= 1e-6 or len(pts) < 3: return
+        pos, nor, idx = self.prims.setdefault(mat, ([], [], []))
+        tr = lambda x, y, z: (x, z, -y)                                  # to glTF: (x, z, -y)
+        def face(n, vs):
+            b = len(pos); pos.extend(tr(*v) for v in vs); nor.extend([tr(*n)] * len(vs))
+            idx.extend(i for k in range(1, len(vs) - 1) for i in (b, b + k, b + k + 1))
+        face((0, 0, 1), [(x, y, z1) for x, y in pts]); face((0, 0, -1), [(x, y, z0) for x, y in reversed(pts)])
+        for k, (a, b) in enumerate(zip(pts, pts[1:] + pts[:1])):
+            dx, dy = b[0] - a[0], b[1] - a[1]; ln = math.hypot(dx, dy) or 1.0
+            face((dy / ln, -dx / ln, 0), [(a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], z1), (a[0], a[1], z1)])
 
     def glb(self, path):
         bin_ = bytearray(); views, accs, prims, mats = [], [], [], []
@@ -103,12 +116,25 @@ def building(name, x0, y0, x1, y1, h, outer_openings, inner=None, furnish=None, 
 
 
 def chair(m, cx, cy, yaw_deg):
-    """The back of a chair behind the Persona, away from the table: the seat of the Persona is at (cx, cy) and it looks the way yaw says (0 looks north, positive turns west)."""
+    """The back of a chair behind the Persona, away from the table: the seat of the Persona is at (cx, cy) and it looks the way yaw says (0 looks north, positive turns west).
+    The back is 0.5 m wide and turned to match, so a chair stands at any place round a table."""
     r = math.radians(yaw_deg)
     dx, dy = -math.sin(r), math.cos(r)                                              # the way the Persona looks
     px, py = cx - dx * 0.42, cy - dy * 0.42
-    if abs(dx) < 0.5: m.box('chair', px - 0.25, py - 0.04, 0.0, px + 0.25, py + 0.04, 1.0)
-    else: m.box('chair', px - 0.04, py - 0.25, 0.0, px + 0.04, py + 0.25, 1.0)
+    ux, uy = -dy, dx                                                                # along the back, to the Persona's left
+    pts = [(px + ux * a + dx * b, py + uy * a + dy * b) for a, b in ((-0.25, -0.04), (0.25, -0.04), (0.25, 0.04), (-0.25, 0.04))]
+    m.prism('chair', pts, 0.0, 1.0)
+    sx, sy = cx - dx * 0.08, cy - dy * 0.08                                         # the seat: under the Persona, from the back forward
+    m.prism('chair', [(sx + ux * a + dx * b, sy + uy * a + dy * b) for a, b in ((-0.25, -0.25), (0.25, -0.25), (0.25, 0.25), (-0.25, 0.25))], 0.40, 0.45)
+    m.prism('chair', [(cx - dx * 0.1 + ux * a + dx * b, cy - dy * 0.1 + uy * a + dy * b) for a, b in ((-0.04, -0.04), (0.04, -0.04), (0.04, 0.04), (-0.04, 0.04))], 0.0, 0.40)   # the leg
+
+
+def round_table(m, cx, cy, radius, sides=24):
+    """A round table: a top 0.06 m thick at 0.72 m, on a pedestal."""
+    ring = lambda r: [(cx + r * math.cos(2 * math.pi * k / sides), cy + r * math.sin(2 * math.pi * k / sides)) for k in range(sides)]
+    m.prism('table', ring(radius), 0.72, 0.78)
+    m.prism('table', ring(0.28), 0.0, 0.72)
+    m.prism('table', ring(0.6), 0.0, 0.04)
 
 
 # ------------------------------------------------------------------ the MPAI building: an atrium (public) and three wings
@@ -165,9 +191,13 @@ wing('MembersWing', "Members' wing", (0, 9), 'y', (0, 1), MEMBER_ROOMS, 'member'
 wing('OfficesWing', 'Offices of MPAI', (12, 0), 'x', (1, 0), OFFICES, 'office')
 wing('MeetingsWing', 'Meeting rooms', (0, -9), 'y', (0, -1), MEETING_ROOMS, 'meeting')
 
-SEATS = []                                           # (id suffix, x, y, yaw), around the table, relative to the centre of the room
-for i, (sx, sy) in enumerate([(-1.3, 1.7), (0, 1.7), (1.3, 1.7), (-1.3, -1.7), (0, -1.7), (1.3, -1.7), (-3.0, 0), (3.0, 0)], start=1):
-    SEATS.append((f'S{i}', sx, sy, round(math.degrees(math.atan2(sx, -sy)) % 360, 1)))
+MMM_SIGN = dict(w=2.4, h=1.644, z=1.0, dx=-2.0)    # the logo of MPAI-MMM on the north wall of the MMM meeting room: size in metres, height above the floor, place along the wall from its centre
+TABLE_R, SEAT_R = 1.4, 2.3                           # the round table of a meeting room, and the circle of the seats round it (0.9 m from the edge of the table)
+SEATS = []                                           # (id suffix, x, y, yaw), around the table, relative to the centre of the room: eight, every 45 degrees, each looking at the centre
+for i in range(8):
+    a = math.radians(-90 + 45 * i)                   # S1 is south of the table, the others follow counter-clockwise
+    sx, sy = SEAT_R * math.cos(a), SEAT_R * math.sin(a)
+    SEATS.append((f'S{i + 1}', round(sx, 3), round(sy, 3), round(math.degrees(math.atan2(sx, -sy)) % 360, 1)))
 
 RECEPTION = dict(cx=5.0, persona='Reception-Persona', x=6.2, y=0.0, yaw=90, model='catalogue/Business_Female_01.glb')   # the lady at the counter: the Multimodal Conversation Avatar
 
@@ -186,11 +216,12 @@ def furnish_room(m, id, c):
     cx, cy = (c['x0'] + c['x1']) / 2, (c['y0'] + c['y1']) / 2
     m.box('carpet', c['x0'] + 0.2, c['y0'] + 0.2, FLOOR * 0.5, c['x1'] - 0.2, c['y1'] - 0.2, FLOOR * 0.5 + 0.01)
     if c['kind'] == 'meeting':
-        m.box('table', cx - 2.2, cy - 0.8, 0.72, cx + 2.2, cy + 0.8, 0.78)
-        for tx in (-1.9, 1.9):
-            for ty in (-0.55, 0.55): m.box('table', cx + tx - 0.06, cy + ty - 0.06, 0, cx + tx + 0.06, cy + ty + 0.06, 0.72)
+        round_table(m, cx, cy, TABLE_R)
         for (_, sx, sy, yaw) in SEATS: chair(m, cx + sx, cy + sy, yaw)
-        m.box('screen', cx - 3.0, c['y1'] - 0.14, 1.1, cx + 3.0, c['y1'] - 0.06, 2.7)           # a screen on the north wall
+        m.box('screen', cx + 0.3, c['y1'] - 0.14, 1.0, cx + 3.5, c['y1'] - 0.06, 2.5)           # a screen on the north wall, to the right of the sign
+        if id == 'MeetingRoom':                                                                  # the sign of MMM on the wall behind the table: a frame, the picture goes in front of it
+            x0, x1 = cx + MMM_SIGN['dx'] - MMM_SIGN['w'] / 2 - 0.06, cx + MMM_SIGN['dx'] + MMM_SIGN['w'] / 2 + 0.06
+            m.box('trim', x0, c['y1'] - 0.145, MMM_SIGN['z'] - 0.06, x1, c['y1'] - 0.1, MMM_SIGN['z'] + MMM_SIGN['h'] + 0.06)
     elif c['kind'] == 'member':
         m.box('table', cx - 1.5, cy - 0.7, 0.72, cx + 1.5, cy + 0.7, 0.78)
         for sx, sy, yaw in [(-1.0, 1.0, 180), (1.0, 1.0, 180), (-1.0, -1.0, 0), (1.0, -1.0, 0)]: chair(m, cx + sx, cy + sy, yaw)
@@ -270,6 +301,7 @@ def make_sign(path):
 
 
 make_sign(os.path.join(OUT, 'mpai-sign.png'))
+shutil.copyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'MMM-logo.png'), os.path.join(OUT, 'mmm-sign.png'))   # the logo of MPAI-MMM, as in the slides of the MPAI logos
 
 mpai, mpai_solids = make_building()
 
@@ -327,6 +359,7 @@ world = {
         {'id': 'MPAI', 'name': 'MPAI', 'model': 'world/mpai.glb', 'x': BUILDING_AT[0], 'y': BUILDING_AT[1], 'yaw': 0, 'height': 5.0,
                   'footprint': [min(xs), min(ys), max(xs), max(ys)],
          'sign': {'image': 'world/mpai-sign.png', 'x': BUILDING_AT[0] + SIGN['x'] - 0.01, 'y': BUILDING_AT[1], 'z': SIGN['z'], 'width': SIGN['w'], 'height': SIGN['h'], 'facing': 'west'},
+         'signs': [{'image': 'world/mmm-sign.png', 'x': BUILDING_AT[0] + (cells['MeetingRoom']['x0'] + cells['MeetingRoom']['x1']) / 2 + MMM_SIGN['dx'], 'y': BUILDING_AT[1] + cells['MeetingRoom']['y1'] - 0.15, 'z': MMM_SIGN['z'], 'width': MMM_SIGN['w'], 'height': MMM_SIGN['h'], 'facing': 'south'}],
          'solids': at(*BUILDING_AT, mpai_solids),
          'reception': dict(RECEPTION, x=RECEPTION['x'], y=RECEPTION['y']),
          'doors': [],

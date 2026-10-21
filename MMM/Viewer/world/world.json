@@ -46,6 +46,17 @@
     "height": 1.425,
     "facing": "west"
    },
+   "signs": [
+    {
+     "image": "world/mmm-sign.png",
+     "x": 20.5,
+     "y": -9.15,
+     "z": 1.0,
+     "width": 2.4,
+     "height": 1.644,
+     "facing": "south"
+    }
+   ],
    "solids": [
     [
      16.0,
@@ -2337,51 +2348,51 @@
      "seats": [
       {
        "id": "MeetingRoom-S1",
-       "x": -1.3,
-       "y": 1.7,
-       "yaw": 217.4
-      },
-      {
-       "id": "MeetingRoom-S2",
-       "x": 0,
-       "y": 1.7,
-       "yaw": 180.0
-      },
-      {
-       "id": "MeetingRoom-S3",
-       "x": 1.3,
-       "y": 1.7,
-       "yaw": 142.6
-      },
-      {
-       "id": "MeetingRoom-S4",
-       "x": -1.3,
-       "y": -1.7,
-       "yaw": 322.6
-      },
-      {
-       "id": "MeetingRoom-S5",
-       "x": 0,
-       "y": -1.7,
+       "x": 0.0,
+       "y": -2.3,
        "yaw": 0.0
       },
       {
+       "id": "MeetingRoom-S2",
+       "x": 1.626,
+       "y": -1.626,
+       "yaw": 45.0
+      },
+      {
+       "id": "MeetingRoom-S3",
+       "x": 2.3,
+       "y": 0.0,
+       "yaw": 90.0
+      },
+      {
+       "id": "MeetingRoom-S4",
+       "x": 1.626,
+       "y": 1.626,
+       "yaw": 135.0
+      },
+      {
+       "id": "MeetingRoom-S5",
+       "x": 0.0,
+       "y": 2.3,
+       "yaw": 180.0
+      },
+      {
        "id": "MeetingRoom-S6",
-       "x": 1.3,
-       "y": -1.7,
-       "yaw": 37.4
+       "x": -1.626,
+       "y": 1.626,
+       "yaw": 225.0
       },
       {
        "id": "MeetingRoom-S7",
-       "x": -3.0,
-       "y": 0,
+       "x": -2.3,
+       "y": 0.0,
        "yaw": 270.0
       },
       {
        "id": "MeetingRoom-S8",
-       "x": 3.0,
-       "y": 0,
-       "yaw": 90.0
+       "x": -1.626,
+       "y": -1.626,
+       "yaw": 315.0
       }
      ]
     },
