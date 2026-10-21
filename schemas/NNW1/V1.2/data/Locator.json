@@ -1,7 +1,7 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$id":                  "https://schemas.mpai.community/NNW1/V1.2/data/Locator.json",
   "title":                "Locator V1.2",
-  "description":          "Where a watermark sits in a neural network model, and by which method it was inserted. It is neither part of the model (AIP-MLO) nor of the Payload (NNW-PLD): an insertion AIM gives it, an extraction AIM may take it. An extraction AIM that is not given a Locator looks for the watermark where its own method would put it. It never carries a secret key, only a reference to one.",
+  "description":          "Where a watermark sits in a neural network model, and by which method it was inserted. It is neither part of the model (AIP-MLO) nor of the Payload (NNW-PLD): an insertion AIM and an extraction AIM may take it, and neither gives it: it stays with the party that decides where the watermark is placed. An insertion AIM that is not given a Locator places the watermark where its own method puts it, and an extraction AIM that is not given one looks for it there. It never carries a secret key, only a reference to one.",
   "type":                 "object",
   "additionalProperties": false,
   "required":             [ "Header", "LocatorID", "Method" ],

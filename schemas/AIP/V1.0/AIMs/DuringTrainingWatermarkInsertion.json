@@ -7,15 +7,15 @@
   "Header":               "NNW-DWI-V1.2",
 
   "APIProfile":           "Basic",
-  "Description":          "During-Training Watermark Insertion: inserts the payload in a neural network model while it trains it with a training dataset, and gives the watermarked model.",
+  "Description":          "During-Training Watermark Insertion: inserts the payload in a neural network model while it trains it with a training dataset, and gives the watermarked model. Where a Locator is given, it tells the AIM where the watermark is to be placed and by which method; the AIM does not give it back. Where the watermark cannot be placed there, it gives no model and reports why.",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "UntrainedModel",   "Direction": "Input",  "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TrainingDataset",  "Direction": "Input",  "DataType": "NNW-DST-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "Payload",          "Direction": "Input",  "DataType": "NNW-PLD-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "WatermarkedModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "Locator",          "Direction": "Output", "DataType": "NNW-WLC-V1.2", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                          {"Name": "Locator",          "Direction": "Input",  "DataType": "NNW-WLC-V1.2", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "WatermarkedModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
 

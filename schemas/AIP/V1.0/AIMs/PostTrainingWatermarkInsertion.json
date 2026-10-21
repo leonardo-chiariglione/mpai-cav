@@ -7,14 +7,14 @@
   "Header":               "NNW-PWI-V1.2",
 
   "APIProfile":           "/* Basic | Secure: Secure where the method uses a secret key (Security API) */",
-  "Description":          "Post-Training Watermark Insertion: inserts the payload in an already trained neural network model, without training it again. It gives the watermarked model, a new ML Model Object of the same format and Qualifier as the model it was given, and the Locator. Where the payload does not fit, or the format of the model is not one it supports, it gives neither and reports why.",
+  "Description":          "Post-Training Watermark Insertion: inserts the payload in an already trained neural network model, without training it again. It gives the watermarked model, a new ML Model Object of the same format and Qualifier as the model it was given. Where a Locator is given, the payload is inserted where it says and by the method it names; the AIM does not give the Locator back. Where the payload does not fit there, or the format of the model is not one it supports, it gives no model and reports why.",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "UnwatermarkedModel", "Direction": "Input",  "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "Payload",            "Direction": "Input",  "DataType": "NNW-PLD-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "WatermarkedModel",   "Direction": "Output", "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "Locator",            "Direction": "Output", "DataType": "NNW-WLC-V1.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "Locator",            "Direction": "Input",  "DataType": "NNW-WLC-V1.2", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "WatermarkedModel",   "Direction": "Output", "DataType": "AIP-MLO-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
 
