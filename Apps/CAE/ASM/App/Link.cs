@@ -80,7 +80,7 @@ public sealed class ModuleLink : IDisposable
     public static ModuleLink Local(string storage, Action<string>? say = null)
     {
         var host = Mpai.Cae.Apps.ModuleHost.Start(Module, null, say,
-            [("Mpai.Cae.Asm.dll", "Mpai.Cae.Asm.AsmProvider"), ("Mpai.Providers.dll", "Mpai.Providers.MatProvider")], storage);
+            [("Mpai.Cae.Asm.dll", "Mpai.Cae.Asm.AsmProvider"), ("Mpai.Providers.dll", "Mpai.Providers.LeafAimsProvider")], storage);
         return new ModuleLink(host.Api, host);
     }
     // The workflow is run; it starts the Module (which the Controller already holds, with its storage where it keeps it).

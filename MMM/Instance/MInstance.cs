@@ -126,6 +126,12 @@ public sealed class MInstance
     private readonly Dictionary<string, string> models = new(StringComparer.Ordinal);
     // The 3D Models (GLB files) given in turn to the Personae of the Users that register without one of their own.
     public IReadOnlyList<string> DefaultModels { get; set; } = [];
+    // The catalogue of Personae the M-Instance offers a registering human (Rocketbox avatars, MMM/Viewer/personae/catalogue): the human chooses one, it does not bring its own.
+    // A choice is the name of an entry (PersonaChoice in the Personal Profile); one that is not in the catalogue is refused (422).
+    public IReadOnlySet<string> Catalogue { get; set; } = new HashSet<string>(StringComparer.Ordinal);
+    // What the M-Instance shows a human that is about to register: the entries of the catalogue (Name, Group, Gender). It is the M-Instance's to offer; the human is not yet in it.
+    public JsonArray CatalogueEntries { get; set; } = [];
+    public static string CatalogueModel(string name) => $"catalogue/{name}.glb";
     private int registered;
     public void SetModel(string itemId, string model)
     {
@@ -138,6 +144,26 @@ public sealed class MInstance
         {
             processes[id] = new Process { ID = id, Kind = "User", HumanID = humanId, Token = NewToken() };
             foreach (var i in owns ?? []) if (items.TryGetValue(i, out var it)) it.Owner = id;
+        }
+    }
+
+    // A User that comes back (its browser was closed, refreshed): it is the same person - the transport says so - so its Process is given a new token, and told where its Persona
+    // stands. The old token is no longer valid. null: no such User.
+    public (string Token, JsonObject Info)? Resume(string user)
+    {
+        lock (gate)
+        {
+            if (!processes.TryGetValue(user, out var p) || p.Kind != "User") return null;
+            p.Token = NewToken();
+            var persona = items.Values.FirstOrDefault(i => i.Owner == user && i.DataType == "OSD-3DO-V1.5");
+            var info = new JsonObject { ["User"] = user };
+            if (persona is not null)
+            {
+                info["Persona"] = persona.ID; info["Model"] = persona.Model; info["Location"] = persona.Location;
+                if (persona.SpatialAttitude?["Position"]?["CartPosition"] is JsonArray a && a.Count >= 2) { info["X"] = a[0]?.GetValue<double>(); info["Y"] = a[1]?.GetValue<double>(); }
+                info["Yaw"] = YawOf(persona);
+            }
+            return (p.Token!, info);
         }
     }
 
@@ -181,7 +207,7 @@ public sealed class MInstance
         lock (gate)
         {
             if (!items.TryGetValue(itemId, out var it)) return false;
-            return it.Owner == process || it.Public || HeardBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
+            return it.Owner == process || it.Public || HeardBy(process, it) || SeenBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
                    || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId)
                    // ...a Right that allows something on it: not one that withdraws a Right (May Not), and not one whose period is over
                    || Live(process).Any(b => Entries(b).Where(e => e.Verb != "May Not").SelectMany(e => e.PAs).Select(Template).OfType<PA>()
@@ -218,6 +244,29 @@ public sealed class MInstance
     }
 
     public bool IsStream(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Streaming; }
+
+    // ---------------------------------------------------------------- the screen shared in a room
+    // A SHARED SCREEN is a Visual Object (OSD-BVO) that is a stream: its User - the one with the Right to place it in the room - declares it with the address its frames are delivered
+    // from, and feeds it as it captures (a WebSocket, /ws/v2.2/screen/{id}); whoever has an Item in the room sees it, as it goes on. It has no data kept: when the stream is over the Item is gone.
+    public const string ScreenHeader = "OSD-BVO-V1.5";
+    public long? ScreenToFeed(string process, string id)
+    {
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == ScreenHeader && it.Owner == process && it.Streaming ? 1 : null;
+    }
+    public void ScreenEnded(string id) { lock (gate) items.Remove(id); }
+    public void StopScreens() { lock (gate) foreach (var id in items.Values.Where(i => i.DataType == ScreenHeader && i.Streaming).Select(i => i.ID).ToList()) items.Remove(id); }
+    public bool ScreenLive(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == ScreenHeader && it.Streaming; }
+
+    // A shared screen is seen by whoever has an Item in the room it was placed at, unless a Right bars it from the places in it (May Not: it was taken out of the meeting).
+    private bool SeenBy(string process, Item screen)
+    {
+        if (screen.DataType != ScreenHeader || screen.Location is null) return false;
+        var room = screen.Location;
+        bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
+        if (!items.Values.Any(i => i.Owner == process && i.DataType != ScreenHeader && InRoom(i.Location))) return false;
+        return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                         .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
+    }
 
     // A Speech Object is heard by whoever has an Item in the Room around the seat it was placed at - its User's Persona seated in it - unless a Right bars it from the
     // places in it (May Not: it was taken out of the meeting).
@@ -271,7 +320,7 @@ public sealed class MInstance
                                                   (i.Location is not null && items.TryGetValue(i.Location, out var at) && at.DataType == "MMM-LOC"))
                                       .OrderBy(i => i.ID, StringComparer.Ordinal).ToList();
             // Items at the same Location stand side by side.
-            var side = located.Where(i => i.DataType != "MMM-LOC" && i.DataType != "OSD-BSO-V1.5").GroupBy(i => i.Location!)
+            var side = located.Where(i => i.DataType != "MMM-LOC" && i.DataType != "OSD-BSO-V1.5" && i.DataType != ScreenHeader).GroupBy(i => i.Location!)
                               .SelectMany(g => g.Select((it, k) => (it.ID, Offset: (k - (g.Count() - 1) / 2.0) * 0.9)))
                               .ToDictionary(x => x.ID, x => x.Offset);
             return new JsonObject
@@ -289,7 +338,7 @@ public sealed class MInstance
                     var w = Where(i);
                     var o = new JsonObject
                     {
-                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : i.DataType == "OSD-BSO-V1.5" ? "Speech" : "Item",
+                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : i.DataType == "OSD-BSO-V1.5" ? "Speech" : i.DataType == ScreenHeader ? "Screen" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
                         ["Yaw"] = YawOf(i), ["Depth"] = DepthOf(i),
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
@@ -297,6 +346,7 @@ public sealed class MInstance
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
                     if (i.Model is not null) o["Model"] = i.Model;
                     if (i.Animation is not null) o["Animation"] = i.Animation;
+                    if (i.DataType == ScreenHeader) o["Streaming"] = i.Streaming;
                     // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
                     if (i.DataType == "OSD-BSO-V1.5" && i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0] is JsonNode st)
                     { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming; }
@@ -391,6 +441,11 @@ public sealed class MInstance
         if (profile is null || human is null) return Fail(422, service, "FaultyPA", "Register takes a Personal Profile with its humanID");
         if (processes.ContainsKey(human)) return Fail(409, service, "Clash", $"{human} is registered already");
 
+        foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
+            foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
+                if (e?["PersonaChoice"]?.GetValue<string>() is { } pick && !Catalogue.Contains(pick))
+                    return Fail(422, service, "FaultyPA", $"{pick} is not in the catalogue of Personae: a Persona is chosen from it, not brought");
+
         processes[human] = new Process { ID = human, Kind = "Human" };
         var account = $"Account-{human}";
         var users = new List<string>();
@@ -399,13 +454,19 @@ public sealed class MInstance
         {
             var ids = Ids(p?["ProcessIDOrProcess"], "ProcessID");
             var personae = Ids(p?["PersonaIDOrPersona"], "PersonaID");
+            var chosen = new Dictionary<string, string>();       // PersonaID -> the entry of the catalogue the human chose for it
+            foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
+                if (e?["PersonaChoice"]?.GetValue<string>() is { } choice && e["PersonaID"]?.GetValue<string>() is { } cid)
+                {
+                    chosen[cid] = CatalogueModel(choice);
+                }
             foreach (var u in ids)
             {
                 if (processes.ContainsKey(u)) return Fail(409, service, "Clash", $"Process {u} exists already");
                 var proc = new Process { ID = u, Kind = "User", HumanID = human, Token = NewToken() };
                 processes[u] = proc; tokens[u] = proc.Token!; users.Add(u);
                 foreach (var pid in personae)
-                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
+                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = chosen.GetValueOrDefault(pid) ?? models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
             }
         }
         items[profile["PersonalProfileID"]?.GetValue<string>() ?? $"Profile-{human}"] =
@@ -459,6 +520,16 @@ public sealed class MInstance
             // A Speech Object declared with a DataURI and no data is a stream: its data arrives, as it is captured, until its time is over or its User ends it.
             var first = speech["BasicSpeechObjectData"]?[0];
             items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source, Streaming = first?["DataURI"] is not null && first["Data"] is null };
+            created = true;
+        }
+        // A shared screen: a Visual Object declared with an address its frames come from and no data, a stream. One at a time in a place: a second is refused (409), unless it is the same User's.
+        if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == ScreenHeader && (string?)i["BasicVisualObjectID"] == c.Nil) is { } screen
+            && screen["BasicVisualObjectData"]?[0] is JsonObject frames && frames["DataURI"] is not null && frames["Data"] is null)
+        {
+            if (c.At is not null && items.Values.FirstOrDefault(i => i.DataType == ScreenHeader && i.Streaming && i.Location == c.At && i.Owner != source) is { } other)
+                return Fail(409, service, "Busy", $"{other.Owner} is sharing a screen here");
+            foreach (var old in items.Values.Where(i => i.DataType == ScreenHeader && i.Owner == source && i.Streaming).Select(i => i.ID).ToList()) items.Remove(old);   // its own, earlier
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = ScreenHeader, Body = screen, Owner = source, Streaming = true };
             created = true;
         }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");

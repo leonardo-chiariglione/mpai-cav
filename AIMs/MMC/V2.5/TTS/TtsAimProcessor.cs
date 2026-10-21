@@ -9,7 +9,7 @@ namespace Mpai.Aims.Tts;
 //
 // When a Speech Personal Status (MMC-SPS) is supplied, its emotion shapes the
 // Piper prosody (speaking rate + variation) so the voice carries the feeling.
-// The port is optional: absent => neutral synthesis (MAD/MAT/MAC unchanged).
+// The port is optional: absent => neutral synthesis (the Apps that give no Personal Status unchanged).
 public sealed class TtsAimProcessor : IAimProcessor
 {
     private readonly string      _inputPort;

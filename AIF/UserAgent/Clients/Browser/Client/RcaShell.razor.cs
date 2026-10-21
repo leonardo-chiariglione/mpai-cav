@@ -27,7 +27,7 @@ public partial class RcaShell : ComponentBase
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
     // WHICH COLLECTION, AND WHICH APP, THE ADDRESS NAMES: .../c/Language uses the
-    // Language collection; .../app/MAT opens MAT directly, without MPAI-MAS.
+    // Language collection; .../app/AMQ opens AMQ directly, without MPAI-MAS.
     private string? collection, directApp;
     private WebAppDirectory Directory() => new(Http, collection);
 

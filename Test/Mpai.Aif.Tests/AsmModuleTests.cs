@@ -67,7 +67,7 @@ public class AsmModuleTests
         File.WriteAllText(settings, all.ToJsonString());
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();

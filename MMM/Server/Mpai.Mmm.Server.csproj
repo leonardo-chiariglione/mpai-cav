@@ -11,6 +11,8 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Mpai.Mmm.Server</RootNamespace>
     <AssemblyName>Mpai.Mmm.Server</AssemblyName>
+    <!-- No .exe: an unsigned program the antivirus (AVG: IDP.Generic) may quarantine just before a meeting; run as `dotnet Mpai.Mmm.Server.dll` (dotnet run does) -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>

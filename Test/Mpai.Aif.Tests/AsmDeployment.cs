@@ -37,7 +37,7 @@ public sealed class AsmDeployment : IDisposable
         var root = Repository.Root;
         var bin = AppContext.BaseDirectory;
         Host = new HostProcess(amds: Repository.Amds, provider: Path.Combine(bin, "Mpai.Cae.Asm.dll") + ":Mpai.Cae.Asm.AsmProvider",
-            extra: ["--provider", Path.Combine(bin, "Mpai.Providers.dll") + ":Mpai.Providers.MatProvider",
+            extra: ["--provider", Path.Combine(bin, "Mpai.Providers.dll") + ":Mpai.Providers.LeafAimsProvider",
                     "--settings", Path.Combine(root, "AIMs", "aim-settings.json")],
             workingDirectory: root);
 

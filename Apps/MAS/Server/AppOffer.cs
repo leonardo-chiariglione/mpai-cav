@@ -14,7 +14,7 @@ namespace Mpai.Mas.Server;
 // in the App repository listing some of the Apps - usually not all:
 //
 //     Apps/
-//       Language/app.json   { "Name": ..., "Description": ..., "Apps": [ "MAT" ] }
+//       Language/app.json   { "Name": ..., "Description": ..., "Apps": [ "AMQ" ] }
 //
 // A Service serves several collections at once, each at its own address
 // (/MPAI/AIFU/c/{collection}/...), and a default collection for an address that

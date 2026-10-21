@@ -19,7 +19,7 @@ namespace Mpai.Aif.Tests;
 public class MasCodecsTests
 {
     private static readonly string[] Modules =
-        ["1MMC-MAD-V2.5-I01", "1MMC-AMQ-V2.5-I01", "1MMC-MAT-V2.5-I01", "1MMC-MPD-V2.5-I01", "1MMC-MAC-V2.5-I01", "1MMC-ACR-V2.5-I01"];
+        ["1MMC-AMQ-V2.5-I01", "1MMC-MAC-V2.5-I01", "1MMC-ACR-V2.5-I01"];
 
     [Fact]
     public void EveryBoundaryPortCrosses()

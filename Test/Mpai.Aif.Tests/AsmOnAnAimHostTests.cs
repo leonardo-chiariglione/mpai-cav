@@ -59,7 +59,7 @@ public class AsmOnAnAimHostTests
 
         var bin = AppContext.BaseDirectory;
         using var host = new HostProcess(amds: amds, provider: Path.Combine(bin, "Mpai.Cae.Asm.dll") + ":Mpai.Cae.Asm.AsmProvider",
-            extra: ["--provider", Path.Combine(bin, "Mpai.Providers.dll") + ":Mpai.Providers.MatProvider",
+            extra: ["--provider", Path.Combine(bin, "Mpai.Providers.dll") + ":Mpai.Providers.LeafAimsProvider",
                     "--settings", settings],
             workingDirectory: Repository.Root);
         // The Controller holds no provider at all: every AIM of the Module is placed, so it could build none of them.

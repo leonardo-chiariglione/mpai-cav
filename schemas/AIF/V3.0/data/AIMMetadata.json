@@ -15,7 +15,7 @@
     "title":              { "type": "string" },
 
     "Header":             { "$ref": "#/$defs/MPAIIdentifier",
-                            "description": "The AIM Type this Metadata describes, in STANDARD-TYPE-Vn.m form, e.g. MMC-MAD-V2.5. In an L2 it is the L2's own AIM Type; in an L3 it is the AIM Type of the L2 the L3 implements, and names the L2 the L3 is checked against." },
+                            "description": "The AIM Type this Metadata describes, in STANDARD-TYPE-Vn.m form, e.g. MMC-AMQ-V2.5. In an L2 it is the L2's own AIM Type; in an L3 it is the AIM Type of the L2 the L3 implements, and names the L2 the L3 is checked against." },
 
     "Identifier":         { "$ref": "#/$defs/Identifier" },
 
@@ -136,7 +136,7 @@
                             "required": [ "ImplementerID", "ImplementationID", "AIMName" ], "properties": {
       "ImplementerID":    { "type": "string", "description": "String assigned by IIDRA" },
       "ImplementationID": { "type": "string", "description": "String assigned by Implementer" },
-      "AIMName":          { "description": "An AIM Instance (AIF-AMI): in an L2 its AIM Type (MMC-MAD-V2.5), in an L3 its AIM Instance identifier (1MMC-MAD-V2.5-I01).",
+      "AIMName":          { "description": "An AIM Instance (AIF-AMI): in an L2 its AIM Type (MMC-AMQ-V2.5), in an L3 its AIM Instance identifier (1MMC-AMQ-V2.5-I01).",
                             "anyOf": [ { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMType" },
                                        { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMInstanceIdentifier" } ] },
       "Relation":         { "description": "How the SubAIM is deployed relative to the machine provisioned for the AIM Instance described by THIS AIM Metadata schema instance. Empty in an L2 instance means the default Internal, to be fixed at L3. See $defs/Relation for the individual definitions.",

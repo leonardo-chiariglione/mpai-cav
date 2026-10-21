@@ -24,7 +24,7 @@ namespace HciApp;
 //
 // Flow: Start -> "ride?" -> front-end runs (audio+face) until a face AND a speech
 // are captured -> yes: identify (MAC pipeline); no: "another occasion" -> stop.
-// Identify ok -> converse (MPD). "stop" -> pause. Start -> resume.
+// Identify ok -> converse. "stop" -> pause. Start -> resume.
 public partial class MainWindow : Window
 {
     private const string HciModule = "CAV-HCI-V2.0";

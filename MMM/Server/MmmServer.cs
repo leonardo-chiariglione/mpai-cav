@@ -26,12 +26,42 @@ public static class MmmServer
     // of the M-Instance as it is now (a step already performed, shown again).
     public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null,
                                        Action? onBack = null, Func<System.Text.Json.Nodes.JsonObject>? state = null,
-                                       string? code = null, string? avatars = null, string? internalKey = null)
+                                       string? code = null, string? avatars = null, string? internalKey = null, Identity? identity = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls(url);
         var app = builder.Build();
+        // WHO IS ASKING (identity): an invitation link (?invite=) is turned into its guest's name and kept in a cookie; the chair is whoever browses on this machine; a visitor, if the chair
+        // allows them, is named at random. Nobody else is answered. The services of the M-Instance carry the internal key. What a person may do is the M-Instance's: the Rights the chair has given.
+        if (identity is not null)
+            app.Use(async (ctx, next) =>
+            {
+                if (internalKey is not null && ctx.Request.Headers["X-Mmm-Internal"] == internalKey) { await next(); return; }
+                var secure = ctx.Request.IsHttps || ctx.Request.Headers["X-Forwarded-Proto"] == "https";
+                if (identity.NameOfInvitation(ctx.Request.Query["invite"]) is not null)
+                {
+                    ctx.Response.Cookies.Append(Identity.Cookie, ctx.Request.Query["invite"].ToString(), new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, Secure = secure, MaxAge = TimeSpan.FromHours(12) });
+                    var back = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(ctx.Request.Path, ctx.Request.Query.Where(q => q.Key != "invite").ToDictionary(q => q.Key, q => (string?)q.Value.ToString()));
+                    ctx.Response.Redirect(back);
+                    return;
+                }
+                var who = identity.Of(ctx);
+                if (who is null && identity.Visitors && !ctx.Request.Headers.ContainsKey("Tailscale-User-Login"))          // a visitor, the first time: named at random, kept in a cookie
+                {
+                    var v = Identity.NewToken();
+                    ctx.Response.Cookies.Append(Identity.VisitorCookie, v, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, Secure = secure, MaxAge = TimeSpan.FromHours(12) });
+                    who = new Identity.Who("Visitor-" + v[..6], "visitor", "");
+                }
+                if (who is null)
+                {
+                    ctx.Response.StatusCode = 401; ctx.Response.ContentType = "text/html; charset=utf-8";
+                    await ctx.Response.WriteAsync("<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>MMM</title><body style='font:18px system-ui;background:#1d2128;color:#e6e8eb;display:flex;height:90vh;align-items:center;justify-content:center;text-align:center'><div><h2>By invitation</h2><p>Open the personal link the chair sent you.</p></div>");
+                    return;
+                }
+                ctx.Items["who"] = who;
+                await next();
+            });
         // A MEETING CODE (code): nobody gets anything from this server - the viewer, the API, the speech sockets - without it. It is given once, in the address (?code=), and the
         // browser then keeps it in a cookie of this site, which every later request, WebSockets included, carries. Without it a page asks for it and the rest is refused (401).
         if (code is not null)
@@ -62,6 +92,7 @@ public static class MmmServer
             });
         app.UseWebSockets();
         var streams = new SpeechStreams();
+        var screens = new ScreenStreams();
         var replies = new ConcurrentDictionary<string, (int Http, string Body, string? Tokens)>();
 
         string? Caller(HttpContext ctx) =>
@@ -84,15 +115,25 @@ public static class MmmServer
                 if (rq is null) return Results.BadRequest("no Request");
                 if (rq.Action.Length == 0) rq.Action = action;
                 if (rq.Action != action) return Results.BadRequest($"{path} performs {action}, the Request asks {rq.Action}");
+                // A person registers as who Tailscale says it is, and only as that: its human, its User.
+                if (identity is not null && action == "Register" && ctx.Items["who"] is Identity.Who me)
+                {
+                    var users = (rq.Complements?.With ?? []).SelectMany(w => w?["PersonalProfile"]?["Processes"]?.AsArray() ?? []).SelectMany(p => p?["ProcessIDOrProcess"]?.AsArray() ?? [])
+                                .Select(p => p?["ProcessID"]?.GetValue<string>());
+                    if (rq.SourceProcessID != me.Name + "-human" || users.Any(u => u != me.Name))
+                        return Results.Json(new { paStatus = new { code = "InsRights", detail = $"{me.Login}{(me.Login.Length > 0 ? " is" : "")} {me.Name}: it registers only as that" } }, statusCode: 403);
+                }
 
                 var outcome = m.Perform(caller, rq);
                 var reply = (outcome.Http, JsonSerializer.Serialize(outcome.Response, Wire.Json),
-                             outcome.Tokens.Count == 0 ? null : string.Join(",", outcome.Tokens.Select(t => $"{t.Key}={t.Value}")));
+                             outcome.Tokens.Count == 0 ? null : string.Join(",", outcome.Tokens.Select(t => $"{Uri.EscapeDataString(t.Key)}={t.Value}")));   // a header is ASCII: a name with an accent (Gérard) goes percent-encoded
                 replies.TryAdd(memo, reply);
                 return Reply(ctx, reply);
             });
         }
 
+        // What a human that has not registered yet is shown: the Personae the M-Instance offers (Register takes the choice). No token: there is no User yet.
+        app.MapGet("/api/v2.2/register/personae", () => Results.Json(m.CatalogueEntries));
         app.MapGet("/api/v2.2/items", (HttpContext ctx, string? dataType) => Caller(ctx) is { } p
             ? Results.Json(m.List(dataType).Where(i => m.MayRead(p, i.ID)).Select(i => new { itemID = i.ID, dataType = i.DataType }))
             : Results.Unauthorized());
@@ -125,6 +166,26 @@ public static class MmmServer
             using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
             await streams.FeedAsync(socket, itemID, end, m, ctx.RequestAborted);
         });
+        // A shared screen: the sharer's feed (its own Visual Object, a stream: only the User with the Right to share has placed one), and whoever may see it, in the room, watches.
+        app.Map("/ws/v2.2/screen/{itemID}", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (m.ScreenToFeed(p, itemID) is null) { ctx.Response.StatusCode = 403; return; }
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            await screens.FeedAsync(socket, itemID, m, ctx.RequestAborted);
+        });
+        app.Map("/ws/v2.2/screen/{itemID}/watch", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (!m.ScreenLive(itemID)) { ctx.Response.StatusCode = 404; return; }
+            if (!m.MayRead(p, itemID)) { ctx.Response.StatusCode = 403; return; }
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            await screens.WatchAsync(socket, itemID, () => m.MayRead(p, itemID), m, ctx.RequestAborted);
+        });
         // Whoever hears a Speech Object chooses to: its User's client opens the Speech Object's address, a WebSocket (the stream format its Speech Qualifier declares), and receives
         // the PCM from the start of the Speech Object and as it goes on, then the end. Receiving is the receiver's decision (from this User, not from that one); the M-Instance
         // only refuses whoever may not hear: outside the room, or taken out of the meeting.
@@ -150,6 +211,9 @@ public static class MmmServer
         {
             var root = Path.GetFullPath(viewer);
             app.MapGet("/viewer/state", () => Results.Json(state?.Invoke() ?? m.Snapshot()));
+            // Who the person is, through Tailscale; and if it registered before (its browser was closed), its Process is given a new token and told where its Persona stands.
+            app.MapGet("/viewer/whoami", (HttpContext ctx) => ctx.Items["who"] is not Identity.Who w ? Results.NotFound()
+                : Results.Json(new { name = w.Name, kind = w.Kind, resume = m.Resume(w.Name) is { } r ? new { token = r.Token, persona = r.Info } : null }));
             app.MapPost("/viewer/next", () => { onNext?.Invoke(); return Results.Ok(); });
             app.MapPost("/viewer/back", () => { onBack?.Invoke(); return Results.Ok(); });
             app.MapGet("/viewer/{**path}", (HttpContext ctx, string? path) =>

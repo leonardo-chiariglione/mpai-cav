@@ -30,7 +30,7 @@ public sealed class MmmClient(HttpClient http, string processId, string? token =
         using var rs = await http.SendAsync(msg);
         var body = await rs.Content.ReadFromJsonAsync<ProcessActionResponse>(Wire.Json) ?? new ProcessActionResponse();
         var tokens = rs.Headers.TryGetValues("MMM-Tokens", out var t)
-            ? string.Join(",", t).Split(',').Select(p => p.Split('=', 2)).Where(p => p.Length == 2).ToDictionary(p => p[0], p => p[1])
+            ? string.Join(",", t).Split(',').Select(p => p.Split('=', 2)).Where(p => p.Length == 2).ToDictionary(p => Uri.UnescapeDataString(p[0]), p => p[1])
             : new Dictionary<string, string>();
         return new Result((int)rs.StatusCode, body, tokens);
     }

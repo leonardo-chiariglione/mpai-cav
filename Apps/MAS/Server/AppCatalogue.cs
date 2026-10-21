@@ -165,7 +165,7 @@ public sealed class AppCatalogue
 
     public Entry? Find(string id) => byId.TryGetValue(id, out var e) ? e : null;
 
-    // "workflow MMC-MAT over 1MMC-MAT-V2.5-I01" names the Module.
+    // "workflow MMC-AMQ over 1MMC-AMQ-V2.5-I01" names the Module.
     private static string? ModuleOf(string orch)
     {
         try

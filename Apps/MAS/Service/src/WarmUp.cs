@@ -56,28 +56,9 @@ internal static class WarmUp
         // MAS-App: the Welcome every client hears first, before choosing an App.
         Turn(runner, say, "MAS-App welcome", Program.MasModule, Text(1, "Welcome."), avt);
 
-        // MAD: typed - Ollama loaded, the system prompt read; RSR's English voice.
-        Turn(runner, say, "MAD typed", Program.MadModule, Text(2, "Hello."), avt);
-        if (speech is not null)
-            Turn(runner, say, "MAD spoken", Program.MadModule, ("OSD-BSO-V1.5#1", speech), avt);
-
         // AMQ: the picture model.
         if (picture is not null)
             Turn(runner, say, "AMQ", Program.AmqModule, ("OSD-BVO-V1.5#1", picture), Text(2, "What color is the picture?"), avt);
-
-        // MAT: the translation model, and every other voice a translation can speak.
-        foreach (var language in Languages(settingsPath).Where(l => l != "en"))
-            Turn(runner, say, $"MAT en->{language}", Program.MatModule,
-                 ("OSD-SEL-V1.5#1", MpaiJson.ToJson(BasicSelectorObject.Languages("en", language))), Text(2, "Hello."), avt);
-
-        // MPD: the voice and face emotion models with the dialogue.
-        if (speech is not null)
-        {
-            var mpd = new List<(string, string)> { ("OSD-BSO-V1.5#1", speech), avt };
-            if (picture is not null) mpd.Add(("OSD-BVO-V1.5#1", picture));
-            Turn(runner, say, "MPD", Program.MpdModule, mpd.ToArray());
-        }
-        else Turn(runner, say, "MPD typed", Program.MpdModule, Text(2, "Hello."), avt);
 
         runner.SessionEnded(Session);
         say($"Warm-up done in {clock.Elapsed.TotalSeconds:F1} s.");

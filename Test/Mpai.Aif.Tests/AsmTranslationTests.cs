@@ -41,7 +41,7 @@ public class AsmTranslationTests
         var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();
@@ -122,7 +122,7 @@ public class AsmTranslationTests
             File.Exists(Path.Combine(Repository.Root, (string)p.Value!)) ? Path.Combine(Repository.Root, (string)p.Value!) : (string)p.Value!);
         var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
 
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
         try
         {
             Assert.Equal(AifError.OK, api.StartFlow(Asm));

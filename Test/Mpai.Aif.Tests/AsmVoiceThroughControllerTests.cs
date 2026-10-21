@@ -26,7 +26,7 @@ public class AsmVoiceThroughControllerTests
     {
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         return new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
-            s => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(s)));
+            s => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(s)));
     }
 
     private static bool Ollama()

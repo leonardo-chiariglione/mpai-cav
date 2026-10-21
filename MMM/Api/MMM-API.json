@@ -3555,12 +3555,12 @@
    "AIF_V30_AIMInstance__AIMType": {
     "type": "string",
     "pattern": "^[A-Z]{3}-[A-Z]{3}-V[0-9]{1,2}[.][0-9]{1,2}$",
-    "description": "The AIM Type as a Standard names it, e.g. MMC-MAD-V2.5."
+    "description": "The AIM Type as a Standard names it, e.g. MMC-AMQ-V2.5."
    },
    "AIF_V30_AIMInstance__AIMType_InDEM": {
     "type": "string",
     "pattern": "^[A-Z]{3}-[A-Z]{3}-V[0-9]{1,2}[.][0-9]{1,2}$",
-    "description": "The AIM Type as a Standard names it, e.g. MMC-MAD-V2.5."
+    "description": "The AIM Type as a Standard names it, e.g. MMC-AMQ-V2.5."
    },
    "AIF_V30_Trace": {
     "title": "Trace V3.0",

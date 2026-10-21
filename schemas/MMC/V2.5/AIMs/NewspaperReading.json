@@ -3,7 +3,7 @@
 
   "APIProfile":           "Basic",
   "OnDegraded":           "Continue",
-  "Description":          "Newspaper Reading: receives the image of a newspaper page and, when the person has pointed at the top of a column, the Point; returns the text of that column as a Portable Avatar, which reads it. Optical Character Recognition finds the lines of a band of the page about the Point; Column Text Selection takes the text of the column; Portable Avatar Multiplexing puts it in the Portable Avatar.",
+  "Description":          "Newspaper Reader: receives the image of a newspaper page and, when the person has pointed at the top of a column, the Point; returns the text of that column as a Portable Avatar, which reads it. Optical Character Recognition finds the lines of a band of the page about the Point; Column Text Selection takes the text of the column; Portable Avatar Multiplexing puts it in the Portable Avatar.",
 
   "InternalTypes":        [],
 

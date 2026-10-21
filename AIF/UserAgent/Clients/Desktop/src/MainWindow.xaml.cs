@@ -154,7 +154,7 @@ public partial class MainWindow : Window
             // person, offers what the Service has, runs what they choose and asks
             // whether they want another - and all of that is in its Workflow
             // Description, not in this executable.
-            // AN APP OPENED DIRECTLY: "--app MAT" runs that App, not MPAI-MAS.
+            // AN APP OPENED DIRECTLY: "--app AMQ" runs that App, not MPAI-MAS.
             var direct = Array.IndexOf(args, "--app") is var at and >= 0 && at + 1 < args.Length ? args[at + 1] : null;
 
             _stopping = new CancellationTokenSource();
@@ -1195,7 +1195,7 @@ public partial class MainWindow : Window
         ("fr", "Francais"), ("de", "Deutsch"),  ("ja", "Nihongo"), ("zh", "Zhongwen")
     };
 
-    // A small window with the two languages, as the standalone MAT offers them.
+    // A small window with the two languages, as a translation App offers them.
     // The previous choice is offered again.
     private (string From, string To)? ChooseLanguages()
     {
@@ -1237,7 +1237,7 @@ public partial class MainWindow : Window
 
     // STATE THE LANGUAGE, CARRY EVERYTHING ELSE. Speech Object Acquisition
     // recorded the sampling frequency and the precision; the language is added to
-    // the Qualifier that came with the capture, as the standalone MAT does.
+    // the Qualifier that came with the capture, as a translation App does.
     private static BasicSpeechObject WithLanguage(BasicSpeechObject speech, string language)
     {
         var captured = speech.SpeechQualifier;

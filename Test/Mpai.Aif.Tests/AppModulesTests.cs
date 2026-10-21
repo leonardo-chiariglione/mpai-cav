@@ -19,13 +19,13 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class AppModulesTests
 {
-    private const string MAD = "1MMC-MAD-V2.5-I01", AMQ = "1MMC-AMQ-V2.5-I01", MAT = "1MMC-MAT-V2.5-I01", MPD = "1MMC-MPD-V2.5-I01";
+    private const string AMQ = "1MMC-AMQ-V2.5-I01";
 
     private static ControllerApi Controller()
     {
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         return new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
-            _ => new CompositeProvider(new AmqProvider(store), new MadProvider(store), new MatProvider(store), new MpdProvider(store)));
+            _ => new AmqProvider(store));
     }
 
     private static bool Ollama()
@@ -146,15 +146,14 @@ public class AppModulesTests
     // prompt spoken as the program asks for it (the words twice, the avatar model, the machine's ID) comes back as a
     // Portable Avatar that carries speech.
     [SkippableTheory]
-    [InlineData("ACR")] [InlineData("MAC")] [InlineData("MAD")] [InlineData("MAT")] [InlineData("MPD")]
+    [InlineData("ACR")] [InlineData("MAC")]
     public void TheStandaloneProgramSpeaksItsPromptThroughRsr(string app)
     {
         RequireModels();
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => app switch
         {
-            "ACR" => new AcrProvider(store), "MAC" => new MacProvider(store), "MAD" => new MadProvider(store),
-            "MAT" => new MatProvider(store), _ => new MpdProvider(store)
+            "ACR" => new AcrProvider(store), _ => new MacProvider(store)
         });
         const string rsr = "1PAF-RSR-V1.6-I01";
         try
@@ -165,82 +164,6 @@ public class AppModulesTests
             Assert.True(Spoke(said), $"{app}: {rsr} gave no speech{Why(api, rsr)}");
         }
         finally { api.StopFlow(rsr); }
-    }
-
-    // The conversation turn of MAD, MAT and MPD as their standalone programs send it, through the provider of that App:
-    // speech and its time (MAT: and the languages), the avatar model, the machine's ID; the Portable Avatar read back.
-    [SkippableTheory]
-    [InlineData("MAD")] [InlineData("MAT")] [InlineData("MPD")]
-    public void TheStandaloneProgramTakesATurn(string app)
-    {
-        RequireModels();
-        var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
-        using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => app switch
-        {
-            "MAD" => new MadProvider(store), "MAT" => new MatProvider(store), _ => new MpdProvider(store)
-        });
-        var module = $"1MMC-{app}-V2.5-I01";
-        var now = new ControllerApi.Datum("OSD-STM-V1.5", 1, MpaiJson.ToJson(SimpleTime.At(DateTimeOffset.UtcNow)));
-        var inputs = new List<ControllerApi.Datum> { Speech("question.wav"), now };
-        if (app == "MAT") inputs.Add(new("OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "fr"))));
-        inputs.Add(Avatar); inputs.Add(MachineId);
-        try
-        {
-            var r = Turn(api, module, inputs.ToArray());
-            Assert.True(Spoke(r), $"{module} gave no speech{Why(api, module)}");
-        }
-        finally { api.StopFlow(module); }
-    }
-    [SkippableFact]
-    public void MadAnswersATypedTurn()
-    {
-        RequireModels();
-        using var api = Controller();
-        try
-        {
-            var r = Turn(api, MAD, Text(2, "Name one fruit. Answer in five words."), Avatar);
-            Assert.True(Spoke(r), $"{MAD} gave no speech{Why(api, MAD)}");
-        }
-        finally { api.StopFlow(MAD); }
-    }
-
-    [SkippableFact]
-    public void MadAnswersASpokenTurn()
-    {
-        RequireModels();
-        using var api = Controller();
-        try
-        {
-            var r = Turn(api, MAD, Speech("question.wav"), Avatar);
-            Assert.True(Spoke(r), $"{MAD} gave no speech{Why(api, MAD)}");
-        }
-        finally { api.StopFlow(MAD); }
-    }
-
-    [SkippableFact]
-    public void MatTranslatesATypedTurn()
-    {
-        RequireModels();
-        using var api = Controller();
-        try
-        {
-            var r = Turn(api, MAT, new("OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "fr"))), Text(1, "Good morning, how are you?"), Avatar);
-            Assert.True(Spoke(r), $"{MAT} gave no speech{Why(api, MAT)}");
-        }
-        finally { api.StopFlow(MAT); }
-    }
-
-    [SkippableFact]
-    public void MpdAnswersASpokenTurn()
-    {
-        RequireModels();
-        using var api = Controller();
-        try
-        {
-            var r = Turn(api, MPD, Speech("question.wav"), Avatar);
-            Assert.True(Spoke(r), $"{MPD} gave no speech{Why(api, MPD)}");
-        }
-        finally { api.StopFlow(MPD); }
     }
 
     // ---- the simulated inputs (the same Data Types and Ports a User Agent writes) ----

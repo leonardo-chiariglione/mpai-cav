@@ -26,6 +26,14 @@
   #captionNote:empty { display: none; }
   #notice { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--panel); border-radius: 8px; padding: 8px 18px; font-size: 16px; max-width: calc(100vw - 40px); text-align: center; z-index: 15; }
   #notice:empty { display: none; }
+  /* A SHARED SCREEN: it fills the window, and the room - the stage - is reduced to a stamp at the bottom right; a click on the stamp changes them over. */
+  #screenView { position: fixed; inset: 0; z-index: 5; background: #000; display: none; align-items: center; justify-content: center; }
+  #screenView img { max-width: 100%; max-height: 100%; }
+  body.screening #screenView { display: flex; }
+  body.screening:not(.swapped) #stage { position: fixed !important; inset: auto 12px 12px auto !important; width: 280px !important; height: auto !important; z-index: 12; border: 2px solid #fff; border-radius: 6px; cursor: pointer; }
+  body.screening:not(.swapped) #labels { display: none; }
+  body.screening.swapped #screenView { inset: auto 12px 12px auto; width: 280px; height: 158px; z-index: 12; border: 2px solid #fff; border-radius: 6px; cursor: pointer; }
+  body.screening.swapped #stage { z-index: 6; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 </style>
 <script type="importmap">
@@ -39,6 +47,7 @@
 <div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
 <button id="voiceBtn" style="position:fixed;top:10px;right:10px;z-index:20;background:var(--panel);color:inherit;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:14px;cursor:pointer">Voice: on</button>
 <div id="notice"></div>
+<div id="screenView"><img id="screenImg" alt="shared screen"></div>
 <div id="caption" hidden><span id="captionText"></span><div id="captionNote"></div><small id="captionHint"></small></div>
 <script type="module">
 import * as THREE from 'three';
@@ -53,9 +62,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
+renderer.domElement.id = 'stage';
 document.body.appendChild(renderer.domElement);
 const labels = new CSS2DRenderer(); labels.setSize(innerWidth, innerHeight);
 Object.assign(labels.domElement.style, { position: 'absolute', top: '0', pointerEvents: 'none' });
+labels.domElement.id = 'labels';
 document.body.appendChild(labels.domElement);
 
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2a3038);
@@ -121,6 +132,7 @@ if (W) {
       d.rect = d.axis === 'x' ? [d.x - 0.1, d.y - d.width / 2, d.x + 0.1, d.y + d.width / 2] : [d.x - d.width / 2, d.y - 0.1, d.x + d.width / 2, d.y + 0.1];
       const leaf = new THREE.Mesh(new THREE.BoxGeometry(d.axis === 'x' ? 0.08 : d.width, 2.2, d.axis === 'x' ? d.width : 0.08), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }));
       leaf.position.set(d.x, 1.1, -d.y); scene.add(leaf); d.leaf = leaf; d.open = false; doors.push(d);
+      if (d.id !== 'MPAI-main') { const dl = label(d.name.replace(/ door$/, '')); dl.position.set(d.x, 2.6, -d.y); scene.add(dl); d.label = dl; }   // the name of the room, over its door
     }
   }
 }
@@ -226,7 +238,9 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 // The human's side of a User: it drives the devices - the keys and the screen here - and renders; the logic is the M-Instance's. It performs Process
 // Actions on the MMM-API as its User: Register (once), MM-Add (its Persona at the Metaverse Square), MM-Capture (what it sees there, from its Point of View,
 // five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
-const userName = new URLSearchParams(location.search).get('user');
+// Through Tailscale the person is whoever Tailscale says - the server tells (./whoami) - and nothing is typed; otherwise the name is in the address (?user=).
+const me = await fetch('whoami', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+const userName = me?.name ?? new URLSearchParams(location.search).get('user');
 const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
 window.mmmClient = client;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
@@ -238,12 +252,70 @@ async function act(path, source, complements) {
     body: JSON.stringify({ SourceProcessID: source, Action: '', Complements: complements }) });
   return { http: rs.status, tokens: rs.headers.get('MMM-Tokens'), body: await rs.json().catch(() => null) };
 }
+// REGISTERING WITH THE M-INSTANCE (Register). A human does not bring a Persona: the M-Instance offers a catalogue of them (Rocketbox avatars, personae/catalogue) and the human
+// chooses one - this is the Persona its User will bring into the world. A human that registered before (it closed its browser) is not asked again: its User is given a new token,
+// and its Persona is where it stood.
+async function choosePersona() {
+  if (new URLSearchParams(location.search).has('persona') || new URLSearchParams(location.search).has('nochoice')) return null;
+  const list = await fetch('/api/v2.2/register/personae', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
+  if (!list.length) return null;
+  const box = document.createElement('div');
+  Object.assign(box.style, { position: 'fixed', inset: '0', zIndex: 40, background: 'rgba(15,18,24,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' });
+  box.innerHTML = `<h2 style="margin:0">Register with this M-Instance</h2><div style="max-width:560px;text-align:center;color:var(--muted)">Welcome${userName ? ', ' + userName : ''}. You are not in the M-Instance yet. Registering gives you a User, and the M-Instance offers the Personae below: choose the one your User will bring into the world.</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+    <div id="pcList" style="width:260px;height:420px;overflow:auto;background:#252b34;border-radius:8px;padding:4px"></div><div id="pcView" style="width:280px;height:420px;background:#2c333d;border-radius:8px"></div></div>
+    <button id="pcGo" style="font-size:20px;padding:8px 28px;border-radius:8px;cursor:pointer" disabled>Register</button>`;
+  document.body.appendChild(box);
+  const view = box.querySelector('#pcView'), listEl = box.querySelector('#pcList'), go = box.querySelector('#pcGo');
+  const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pr.setSize(280, 420); view.appendChild(pr.domElement);
+  pr.outputColorSpace = THREE.SRGBColorSpace;
+  const ps = new THREE.Scene(); ps.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.4)); const pl = new THREE.DirectionalLight(0xffffff, 1.5); pl.position.set(2, 4, 5); ps.add(pl);
+  const pc = new THREE.PerspectiveCamera(30, 280 / 420, 0.1, 50); let current = null, shown = null, turn = 0;
+  const gl = new GLTFLoader(), cache = new Map();
+  const show = async name => {
+    current = name; go.disabled = false;
+    for (const el of listEl.children) el.style.background = el.dataset.name === name ? '#3d6a99' : 'transparent';
+    if (shown) { ps.remove(shown); shown = null; }
+    if (!cache.has(name)) cache.set(name, gl.loadAsync('personae/catalogue/' + name + '.glb'));
+    const g = await cache.get(name); if (current !== name) return;
+    shown = cloneSkinned(g.scene);
+    shown.traverse(o => {
+      if (o.isMesh) for (const m of [].concat(o.material)) if (/opacity/i.test(m.name)) { m.transparent = true; m.alphaTest = 0.35; m.side = THREE.DoubleSide; }
+      if (o.isBone && /L.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(78));
+      if (o.isBone && /R.?UpperArm$/i.test(o.name)) o.rotateX(THREE.MathUtils.degToRad(-78));
+    });
+    shown.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(shown, true); shown.scale.setScalar(1.7 / Math.max(b.max.y - b.min.y, 0.1)); shown.updateMatrixWorld(true);
+    b.setFromObject(shown, true); shown.position.y -= b.min.y;
+    const turner = new THREE.Group(); turner.add(shown); ps.add(turner); shown = turner;
+    pc.position.set(0, 1.0, 4.6); pc.lookAt(0, 0.9, 0);
+  };
+  for (const e of list) { const d = document.createElement('div'); d.dataset.name = e.Name; d.textContent = e.Name.replaceAll('_', ' '); Object.assign(d.style, { padding: '4px 8px', cursor: 'pointer', borderRadius: '4px' }); d.onclick = () => show(e.Name); listEl.appendChild(d); }
+  const spin = () => { if (!box.isConnected) return; if (shown) shown.rotation.y = (turn += 0.01); pr.render(ps, pc); requestAnimationFrame(spin); };
+  spin(); show(list[0].Name);
+  return await new Promise(res => { go.onclick = () => { box.remove(); pr.dispose(); res(current); }; });
+}
+async function resume() {
+  const p = me.resume.persona; client.token = me.resume.token; client.persona = p.Persona ?? client.persona;
+  const seat = W?.buildings.flatMap(b => b.rooms.flatMap(r => (r.seats ?? []).map(s => ({ s, b, r })))).find(x => x.s.id === p.Location);
+  if (seat) {
+    const wx = seat.b.x + seat.r.x + seat.s.x, wy = seat.b.y + seat.r.y + seat.s.y;
+    Object.assign(client, { loc: seat.s.id, at: seat.r.id, ox: wx, oy: wy, x: wx, y: wy, yaw: seat.s.yaw, seated: true, sent: '' });
+  } else {
+    const loc = p.Location ?? 'MVS', o = origin[loc] ?? [0, 0];
+    Object.assign(client, { loc, at: loc, ox: o[0], oy: o[1], x: o[0] + (p.X ?? 0), y: o[1] + (p.Y ?? 0), yaw: p.Yaw ?? 0, sent: '' });
+  }
+  client.status = `${client.name}: back in ${client.loc}`;
+  if (W) prepareSeat();
+  capture(); setInterval(capture, 200); setInterval(sendPose, 150);
+}
 async function join() {
+  if (me?.resume) return resume();
+  const choice = await choosePersona();
   const profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
-    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p })) }] } };   // a User has its own Personae: the ones it registers with
+    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p, ...(choice && p === userName + '-Persona' ? { PersonaChoice: choice } : {}) })) }] } };   // a User has its own Personae: the ones it registers with
   const reg = await act('identity/register', client.human, { With: [profile] });
   if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
-  client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => p[0] === client.name)?.[1];
+  client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => decodeURIComponent(p[0]) === client.name)?.[1];
   let h = 0; for (const c of client.name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   client.x = (W ? W.spawn.x : 0) + Math.cos(h % 628 / 100) * (W ? W.spawn.radius : 2.5); client.y = (W ? W.spawn.y : 0) + Math.sin(h % 628 / 100) * (W ? W.spawn.radius : 2.5); client.yaw = Number(new URLSearchParams(location.search).get('yaw') ?? (W ? W.spawn.yaw : 0));
   const add = await act('locate/mm-add', client.name, { Nil: client.persona, At: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
@@ -297,8 +369,8 @@ async function takeSeat(seat) {   // MM-Move of the Persona to its seat, from wh
 function prepareSeat() {
   askSeat().then(seat => {
     if (!seat) return;
-    client.seatInfo = seat; client.notice = 'You are invited: walk to the Town Hall.';
-    if (seat.convener === '1') endButton();
+    client.seatInfo = seat; client.notice = 'You are invited: walk to the MPAI doors.';
+    if (seat.convener === '1') { endButton(); shareButton(); }
     if (client.loc === seat.room) takeSeat(seat);
   });
 }
@@ -316,15 +388,105 @@ function endButton() {
   };
   document.body.appendChild(b);
 }
+// THE SHARED SCREEN. The convener has the Right to share one in the room (the AVS Service gave it with the seat); the others only see it. The sharer's browser captures its screen
+// (getDisplayMedia), declares a Visual Object that is a stream at the room (MM-Add) and sends its frames as JPEG over a WebSocket - only when the picture changes, so a slide costs
+// nothing while it stays. Whoever is in the room finds the Visual Object in what MM-Capture returns and opens the same kind of WebSocket to watch: the screen fills the window and the
+// room is reduced to a stamp at the bottom right; a click on the stamp changes them over.
+let sharing = null, watching = null;
+function shareButton() {
+  const b = document.createElement('button'); b.id = 'shareBtn'; b.textContent = 'Share my screen';
+  Object.assign(b.style, { position: 'fixed', left: '12px', bottom: '56px', zIndex: 20, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '8px 14px', fontSize: '14px', cursor: 'pointer' });
+  b.onclick = () => sharing ? stopShare() : startShare();
+  document.body.appendChild(b);
+}
+async function startShare() {
+  const b = document.getElementById('shareBtn');
+  let stream;
+  try { stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 5 }, audio: true }); } catch (e) { client.notice = 'Screen sharing was not allowed by the browser.'; return; }
+  const id = `Screen-${client.name}-${Date.now()}`, proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const so = { Header: 'OSD-BVO-V1.5', MInstanceID: 'MI1', BasicVisualObjectID: id,
+    BasicVisualObjectData: [{ DataURI: `${proto}://${location.host}/ws/v2.2/screen/${id}/watch` }],
+    VisualQualifier: { Header: 'TFA-VIQ-V1.5', MInstanceID: 'MI1', VisualQualifierID: id + '-Q', SubTypes: {}, Formats: {}, Attributes: { Source: { Real: 'Raster' } } } };
+  const r = await act('locate/mm-add', client.name, { Nil: id, At: client.at, With: [so] });
+  if (r.http !== 200) { stream.getTracks().forEach(t => t.stop()); client.notice = r.http === 403 ? 'You have no Right to share a screen here.' : r.http === 409 ? 'Somebody is sharing a screen already.' : `Cannot share the screen (${r.http}${r.body?.paStatus?.detail ? ': ' + r.body.paStatus.detail : ''}).`; return; }
+  const ws = new WebSocket(`${proto}://${location.host}/ws/v2.2/screen/${id}?token=${encodeURIComponent(client.token)}`); ws.binaryType = 'arraybuffer';
+  const video = document.createElement('video'); video.srcObject = stream; video.muted = true; await video.play().catch(() => {});
+  const canvas = document.createElement('canvas'), thumb = document.createElement('canvas'); thumb.width = 48; thumb.height = 27;
+  const g = canvas.getContext('2d'), tg = thumb.getContext('2d', { willReadFrequently: true });
+  let previous = null, lastSent = 0, busy = false;
+  const timer = setInterval(() => {
+    if (ws.readyState !== 1 || !video.videoWidth || busy || ws.bufferedAmount > 1.5e6) return;
+    const w = Math.min(1280, video.videoWidth), h = Math.round(video.videoHeight * w / video.videoWidth);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    g.drawImage(video, 0, 0, w, h); tg.drawImage(canvas, 0, 0, 48, 27);
+    const now = tg.getImageData(0, 0, 48, 27).data; let diff = 0;
+    if (previous) for (let i = 0; i < now.length; i += 4) diff += Math.abs(now[i] - previous[i]) + Math.abs(now[i + 1] - previous[i + 1]) + Math.abs(now[i + 2] - previous[i + 2]);
+    previous = now;
+    if (diff / (48 * 27) < 1.5 && Date.now() - lastSent < 2500) return;     // nothing changed: nothing is sent (a frame now and then, for who comes in)
+    busy = true; lastSent = Date.now();
+    canvas.toBlob(async blob => { try { if (blob && ws.readyState === 1) { const jpeg = new Uint8Array(await blob.arrayBuffer()), m = new Uint8Array(jpeg.length + 1); m[0] = 1; m.set(jpeg, 1); ws.send(m); } } finally { busy = false; } }, 'image/jpeg', 0.62);   // a message: 1, then a frame
+  }, 330);
+  // THE SOUND of what is shared (the browser gives it if the chair ticks "share tab audio" / "share system audio"): 24 kHz mono PCM, a message: 2, then the samples. It is not played here.
+  let sound = null;
+  if (stream.getAudioTracks().length) {
+    const ac = new AudioContext({ sampleRate: 24000 }), src = ac.createMediaStreamSource(new MediaStream(stream.getAudioTracks())), proc = ac.createScriptProcessor(2048, 1, 1);
+    proc.onaudioprocess = e => {
+      if (ws.readyState !== 1 || ws.bufferedAmount > 1e6) return;
+      const f = e.inputBuffer.getChannelData(0), m = new Uint8Array(1 + f.length * 2), dv = new DataView(m.buffer); m[0] = 2;
+      for (let i = 0; i < f.length; i++) dv.setInt16(1 + 2 * i, Math.max(-1, Math.min(1, f[i])) * 32767, true);
+      ws.send(m);
+    };
+    src.connect(proc); proc.connect(ac.destination); sound = ac;
+  }
+  sharing = { id, ws, stream, timer, sound };
+  b.textContent = 'Stop sharing'; b.style.borderColor = '#e55';
+  client.notice = sound ? 'You are sharing your screen, with its sound.' : 'You are sharing your screen, without sound (to share the sound, tick "share tab audio" / "share system audio" when the browser asks).';
+  stream.getVideoTracks()[0].onended = () => stopShare();
+  ws.onclose = () => { if (sharing?.id === id) stopShare(); };
+}
+function stopShare() {
+  if (!sharing) return;
+  clearInterval(sharing.timer); try { sharing.ws.close(); } catch { } sharing.stream.getTracks().forEach(t => t.stop()); try { sharing.sound?.close(); } catch { } sharing = null;
+  const b = document.getElementById('shareBtn'); if (b) { b.textContent = 'Share my screen'; b.style.borderColor = '#5a8'; }
+  client.notice = 'You stopped sharing your screen.';
+}
+function watchScreen(id) {          // the shared screen of the room, if there is one that this User does not share itself
+  if ((watching?.id ?? null) === id) return;
+  if (watching) { try { watching.ws.close(); } catch { } watching = null; }
+  const img = document.getElementById('screenImg');
+  if (!id) { document.body.classList.remove('screening', 'swapped'); img.removeAttribute('src'); return; }
+  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/screen/${id}/watch?token=${encodeURIComponent(client.token)}`); ws.binaryType = 'arraybuffer';
+  watching = { id, ws, url: null };
+  let next = 0, gain = null;
+  ws.onmessage = e => {
+    const b = new Uint8Array(e.data);
+    if (b[0] === 2 && b.length > 2) {          // the sound of the shared screen: 24 kHz mono PCM, played as it arrives, a little behind
+      const ctx = ears(), n = (b.length - 1) >> 1, buf = ctx.createBuffer(1, n, 24000), ch = buf.getChannelData(0), dv = new DataView(b.buffer, b.byteOffset + 1);
+      for (let i = 0; i < n; i++) ch[i] = dv.getInt16(2 * i, true) / 32768;
+      if (!gain) { gain = ctx.createGain(); gain.gain.value = 0.9; gain.connect(ctx.destination); }
+      const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain);
+      const at = Math.max(next, ctx.currentTime + 0.2); src.start(at); next = at + n / 24000;
+      return;
+    }
+    if (b[0] !== 1) return;
+    const url = URL.createObjectURL(new Blob([b.subarray(1)], { type: 'image/jpeg' }));
+    img.onload = () => { if (watching?.url && watching.url !== url) URL.revokeObjectURL(watching.url); if (watching) watching.url = url; };
+    img.src = url; document.body.classList.add('screening');
+  };
+  ws.onclose = () => { if (watching?.id === id) { watching = null; document.body.classList.remove('screening', 'swapped'); } };
+}
+for (const el of ['stage', 'screenView']) document.getElementById(el).addEventListener('click', () => { if (document.body.classList.contains('screening')) document.body.classList.toggle('swapped'); });
+
 async function meetingOver() {
   if (client.leaving) return; client.leaving = true;
+  stopShare(); watchScreen(null);
   const x = 13.5, y = 0;
   const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: 'MVS', With: [spatial('SA-' + client.name + '-Out', x, y, 270)] });
   client.leaving = false;
   if (mv.http !== 200) return;
   Object.assign(client, { loc: 'MVS', at: 'MVS', ox: 0, oy: 0, x, y, yaw: 270, seated: false, seatInfo: null, sent: '' });
   for (const d of doors) { d.open = false; d.leaf.visible = true; }
-  client.notice = 'The meeting is over: your rights to the Town Hall are withdrawn.';
+  client.notice = 'The meeting is over: your rights to the MPAI building are withdrawn.';
 }
 async function standUp() {
   const room = origin[client.at], at = client.at;
@@ -435,7 +597,7 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
   const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
-  if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); }
+  if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); watchScreen(scene.Things.find(t => t.Kind === 'Screen' && t.Owner !== client.name && t.Streaming)?.ID ?? null); }
   else if (W && r.http === 403 && client.loc !== 'MVS') meetingOver();   // the rights of the meeting are gone
 }
 
@@ -574,7 +736,8 @@ renderer.setAnimationLoop(() => {
     }
     if (d.yaw != null) d.object.rotation.y = Math.PI + d.yaw * Math.PI / 180;   // a Persona looks where its yaw says (the model faces +z at rest; yaw 0 is north, -z)
   }
-  if (W && client) for (const l of buildingLabels) l.visible = client.loc === 'MVS';   // the names of the buildings are for whoever is outside
+  if (W && client) for (const l of buildingLabels) l.visible = client.loc === 'MVS';
+  if (W && client) for (const d of doors) if (d.label) d.label.visible = (d.from === client.at && client.at !== 'MVS' || d.to === client.at && d.from !== 'MVS') && Math.hypot(client.x - d.x, client.y - d.y) < 13;   // the doors of the place it is in   // the names of the buildings are for whoever is outside
   if (client) drive(dt); else controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });
 await refresh(); setInterval(refresh, 500);

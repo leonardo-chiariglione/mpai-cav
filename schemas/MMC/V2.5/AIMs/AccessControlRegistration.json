@@ -2,7 +2,7 @@
   "Header":            "MMC-ACR-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "MMC Access Control Registration (ACR) Module. Enrols a User: from the captured Face Object and Speech Object it produces the Face Descriptors (Entity Face Description) and Speech Descriptors (Entity Speech Description), which the descriptor AIMs write to the Shared Storage gallery under the User Name - the same gallery MMC-MAC reads to recognise. Response and Scene Rendering speaks the confirmation. The User Name is the User Agent's own datum (typed). Acquisition and delivery are the User Agent, not sub-AIMs. Where a data type occurs more than once at the boundary it carries a Port Number (OSD-STM: FaceTime 1 / SpeechTime 2; OSD-BTO: Response 1 / UserName 2).",
+  "Description":      "Access Control Registration: Enrols a User: from the captured Face Object and Speech Object it produces the Face Descriptors (Entity Face Description) and Speech Descriptors (Entity Speech Description), which the descriptor AIMs write to the Shared Storage gallery under the User Name - the same gallery MMC-MAC reads to recognise. Response and Scene Rendering speaks the confirmation. The User Name is the User Agent's own datum (typed). Acquisition and delivery are the User Agent, not sub-AIMs. Where a data type occurs more than once at the boundary it carries a Port Number (OSD-STM: FaceTime 1 / SpeechTime 2; OSD-BTO: Response 1 / UserName 2).",
 
   "InternalTypes":   [ ],
 

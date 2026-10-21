@@ -1,0 +1,793 @@
+[
+ {
+  "Name": "Female_Adult_01",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_01.glb",
+  "Bytes": 7655588
+ },
+ {
+  "Name": "Female_Adult_02",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_02.glb",
+  "Bytes": 7059928
+ },
+ {
+  "Name": "Female_Adult_03",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_03.glb",
+  "Bytes": 7871688
+ },
+ {
+  "Name": "Female_Adult_04",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_04.glb",
+  "Bytes": 8321820
+ },
+ {
+  "Name": "Female_Adult_05",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_05.glb",
+  "Bytes": 7803240
+ },
+ {
+  "Name": "Female_Adult_06",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_06.glb",
+  "Bytes": 6227576
+ },
+ {
+  "Name": "Female_Adult_07",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_07.glb",
+  "Bytes": 7177408
+ },
+ {
+  "Name": "Female_Adult_08",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_08.glb",
+  "Bytes": 7332312
+ },
+ {
+  "Name": "Female_Adult_09",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_09.glb",
+  "Bytes": 7199568
+ },
+ {
+  "Name": "Female_Adult_10",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_10.glb",
+  "Bytes": 4955800
+ },
+ {
+  "Name": "Female_Adult_11",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_11.glb",
+  "Bytes": 7209352
+ },
+ {
+  "Name": "Female_Adult_12",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_12.glb",
+  "Bytes": 7290164
+ },
+ {
+  "Name": "Female_Adult_13",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_13.glb",
+  "Bytes": 7831844
+ },
+ {
+  "Name": "Female_Adult_14",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_14.glb",
+  "Bytes": 8026532
+ },
+ {
+  "Name": "Female_Adult_15",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_15.glb",
+  "Bytes": 7534632
+ },
+ {
+  "Name": "Female_Adult_16",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_16.glb",
+  "Bytes": 2512192
+ },
+ {
+  "Name": "Female_Adult_17",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Adult_17.glb",
+  "Bytes": 7615380
+ },
+ {
+  "Name": "Female_Party_01",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Party_01.glb",
+  "Bytes": 10594808
+ },
+ {
+  "Name": "Female_Party_02",
+  "Group": "Adults",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Party_02.glb",
+  "Bytes": 9655468
+ },
+ {
+  "Name": "Male_Adult_01",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_01.glb",
+  "Bytes": 6955148
+ },
+ {
+  "Name": "Male_Adult_02",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_02.glb",
+  "Bytes": 6751056
+ },
+ {
+  "Name": "Male_Adult_03",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_03.glb",
+  "Bytes": 7162072
+ },
+ {
+  "Name": "Male_Adult_04",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_04.glb",
+  "Bytes": 7895760
+ },
+ {
+  "Name": "Male_Adult_05",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_05.glb",
+  "Bytes": 7317580
+ },
+ {
+  "Name": "Male_Adult_06",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_06.glb",
+  "Bytes": 7628732
+ },
+ {
+  "Name": "Male_Adult_07",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_07.glb",
+  "Bytes": 6219816
+ },
+ {
+  "Name": "Male_Adult_08",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_08.glb",
+  "Bytes": 6713104
+ },
+ {
+  "Name": "Male_Adult_09",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_09.glb",
+  "Bytes": 6645460
+ },
+ {
+  "Name": "Male_Adult_10",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_10.glb",
+  "Bytes": 6360560
+ },
+ {
+  "Name": "Male_Adult_11",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_11.glb",
+  "Bytes": 4816868
+ },
+ {
+  "Name": "Male_Adult_12",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_12.glb",
+  "Bytes": 4973640
+ },
+ {
+  "Name": "Male_Adult_13",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_13.glb",
+  "Bytes": 4853876
+ },
+ {
+  "Name": "Male_Adult_14",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_14.glb",
+  "Bytes": 4906384
+ },
+ {
+  "Name": "Male_Adult_15",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_15.glb",
+  "Bytes": 5196072
+ },
+ {
+  "Name": "Male_Adult_16",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_16.glb",
+  "Bytes": 5057972
+ },
+ {
+  "Name": "Male_Adult_17",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_17.glb",
+  "Bytes": 5383968
+ },
+ {
+  "Name": "Male_Adult_18",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_18.glb",
+  "Bytes": 4404920
+ },
+ {
+  "Name": "Male_Adult_19",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_19.glb",
+  "Bytes": 5171772
+ },
+ {
+  "Name": "Male_Adult_20",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_20.glb",
+  "Bytes": 5111036
+ },
+ {
+  "Name": "Male_Adult_21",
+  "Group": "Adults",
+  "Gender": "Male",
+  "File": "personae/catalogue/Male_Adult_21.glb",
+  "Bytes": 5151112
+ },
+ {
+  "Name": "Business_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Female_01.glb",
+  "Bytes": 7665396
+ },
+ {
+  "Name": "Business_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Female_02.glb",
+  "Bytes": 8805580
+ },
+ {
+  "Name": "Business_Female_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Female_03.glb",
+  "Bytes": 6967072
+ },
+ {
+  "Name": "Business_Female_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Female_04.glb",
+  "Bytes": 6761792
+ },
+ {
+  "Name": "Business_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_01.glb",
+  "Bytes": 7332384
+ },
+ {
+  "Name": "Business_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_02.glb",
+  "Bytes": 6339876
+ },
+ {
+  "Name": "Business_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_03.glb",
+  "Bytes": 6754916
+ },
+ {
+  "Name": "Business_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_04.glb",
+  "Bytes": 4970740
+ },
+ {
+  "Name": "Business_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_05.glb",
+  "Bytes": 4974188
+ },
+ {
+  "Name": "Business_Male_06",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_06.glb",
+  "Bytes": 5000132
+ },
+ {
+  "Name": "Business_Male_07",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Business_Male_07.glb",
+  "Bytes": 4765108
+ },
+ {
+  "Name": "Chef_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Chef_Female_01.glb",
+  "Bytes": 5341796
+ },
+ {
+  "Name": "Construction_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Female_01.glb",
+  "Bytes": 6392364
+ },
+ {
+  "Name": "Construction_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_01.glb",
+  "Bytes": 9197848
+ },
+ {
+  "Name": "Construction_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_02.glb",
+  "Bytes": 5968948
+ },
+ {
+  "Name": "Construction_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_03.glb",
+  "Bytes": 6616724
+ },
+ {
+  "Name": "Construction_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_04.glb",
+  "Bytes": 6702136
+ },
+ {
+  "Name": "Construction_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_05.glb",
+  "Bytes": 5918904
+ },
+ {
+  "Name": "Construction_Male_06",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_06.glb",
+  "Bytes": 6514692
+ },
+ {
+  "Name": "Construction_Male_07",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_07.glb",
+  "Bytes": 6025520
+ },
+ {
+  "Name": "Construction_Male_08",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Construction_Male_08.glb",
+  "Bytes": 6325312
+ },
+ {
+  "Name": "Delivery_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Delivery_Male_01.glb",
+  "Bytes": 5209424
+ },
+ {
+  "Name": "Female_Party_01",
+  "Group": "Professions",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Party_01.glb",
+  "Bytes": 10594808
+ },
+ {
+  "Name": "Female_Party_02",
+  "Group": "Professions",
+  "Gender": "Female",
+  "File": "personae/catalogue/Female_Party_02.glb",
+  "Bytes": 9655468
+ },
+ {
+  "Name": "Fire_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Female_01.glb",
+  "Bytes": 11867064
+ },
+ {
+  "Name": "Fire_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Female_02.glb",
+  "Bytes": 11230896
+ },
+ {
+  "Name": "Fire_Female_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Female_03.glb",
+  "Bytes": 12631752
+ },
+ {
+  "Name": "Fire_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_01.glb",
+  "Bytes": 7600600
+ },
+ {
+  "Name": "Fire_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_02.glb",
+  "Bytes": 7066220
+ },
+ {
+  "Name": "Fire_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_03.glb",
+  "Bytes": 7377592
+ },
+ {
+  "Name": "Fire_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_04.glb",
+  "Bytes": 12572956
+ },
+ {
+  "Name": "Fire_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_05.glb",
+  "Bytes": 7085892
+ },
+ {
+  "Name": "Fire_Male_06",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_06.glb",
+  "Bytes": 6313412
+ },
+ {
+  "Name": "Fire_Male_07",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Fire_Male_07.glb",
+  "Bytes": 12869368
+ },
+ {
+  "Name": "Gardener_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Gardener_Male_01.glb",
+  "Bytes": 7182648
+ },
+ {
+  "Name": "Medical_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Female_01.glb",
+  "Bytes": 7232268
+ },
+ {
+  "Name": "Medical_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Female_02.glb",
+  "Bytes": 7092816
+ },
+ {
+  "Name": "Medical_Female_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Female_03.glb",
+  "Bytes": 6998808
+ },
+ {
+  "Name": "Medical_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Male_01.glb",
+  "Bytes": 7433780
+ },
+ {
+  "Name": "Medical_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Male_02.glb",
+  "Bytes": 7638860
+ },
+ {
+  "Name": "Medical_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Male_03.glb",
+  "Bytes": 5478604
+ },
+ {
+  "Name": "Medical_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Male_04.glb",
+  "Bytes": 6442776
+ },
+ {
+  "Name": "Medical_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Medical_Male_05.glb",
+  "Bytes": 6893956
+ },
+ {
+  "Name": "Military_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Female_01.glb",
+  "Bytes": 9119196
+ },
+ {
+  "Name": "Military_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Female_02.glb",
+  "Bytes": 9138384
+ },
+ {
+  "Name": "Military_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_01.glb",
+  "Bytes": 12929408
+ },
+ {
+  "Name": "Military_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_02.glb",
+  "Bytes": 6002848
+ },
+ {
+  "Name": "Military_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_03.glb",
+  "Bytes": 11110120
+ },
+ {
+  "Name": "Military_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_04.glb",
+  "Bytes": 11940204
+ },
+ {
+  "Name": "Military_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_05.glb",
+  "Bytes": 5697236
+ },
+ {
+  "Name": "Military_Male_06",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Military_Male_06.glb",
+  "Bytes": 5709420
+ },
+ {
+  "Name": "Pilot_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Pilot_Female_01.glb",
+  "Bytes": 6242280
+ },
+ {
+  "Name": "Pilot_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Pilot_Female_02.glb",
+  "Bytes": 6420484
+ },
+ {
+  "Name": "Pilot_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Pilot_Male_01.glb",
+  "Bytes": 5625860
+ },
+ {
+  "Name": "Pilot_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Pilot_Male_02.glb",
+  "Bytes": 5787952
+ },
+ {
+  "Name": "Pilot_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Pilot_Male_03.glb",
+  "Bytes": 5859400
+ },
+ {
+  "Name": "Police_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Female_01.glb",
+  "Bytes": 10636092
+ },
+ {
+  "Name": "Police_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_01.glb",
+  "Bytes": 5957336
+ },
+ {
+  "Name": "Police_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_02.glb",
+  "Bytes": 7765080
+ },
+ {
+  "Name": "Police_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_03.glb",
+  "Bytes": 6978564
+ },
+ {
+  "Name": "Police_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_04.glb",
+  "Bytes": 6889984
+ },
+ {
+  "Name": "Police_Male_05",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_05.glb",
+  "Bytes": 5705544
+ },
+ {
+  "Name": "Police_Male_06",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_06.glb",
+  "Bytes": 5053868
+ },
+ {
+  "Name": "Police_Male_07",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Police_Male_07.glb",
+  "Bytes": 5216012
+ },
+ {
+  "Name": "Security_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Security_Female_01.glb",
+  "Bytes": 6393108
+ },
+ {
+  "Name": "Security_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Security_Male_01.glb",
+  "Bytes": 6273692
+ },
+ {
+  "Name": "Sports_Female_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Female_01.glb",
+  "Bytes": 5312340
+ },
+ {
+  "Name": "Sports_Female_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Female_02.glb",
+  "Bytes": 7218196
+ },
+ {
+  "Name": "Sports_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Male_01.glb",
+  "Bytes": 4883988
+ },
+ {
+  "Name": "Sports_Male_02",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Male_02.glb",
+  "Bytes": 4929432
+ },
+ {
+  "Name": "Sports_Male_03",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Male_03.glb",
+  "Bytes": 8246156
+ },
+ {
+  "Name": "Sports_Male_04",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Sports_Male_04.glb",
+  "Bytes": 5092268
+ },
+ {
+  "Name": "Wood_Male_01",
+  "Group": "Professions",
+  "Gender": "Male",
+  "File": "personae/catalogue/Wood_Male_01.glb",
+  "Bytes": 5212572
+ }
+]

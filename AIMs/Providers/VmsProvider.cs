@@ -62,7 +62,7 @@ public sealed class VmsProvider : IAimProvider, IDisposable
     private static string Setting(IReadOnlyDictionary<string, string> s, string key, string fallback) =>
         s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
 
-    // One Ollama client, model from settings (default llama3.2:3b), as MadProvider.
+    // One Ollama client, model from settings (default llama3.2:3b), as LeafAimsProvider.
     private OllamaClient Llm(IReadOnlyDictionary<string, string> s)
     {
         if (_llm is not null) return _llm;

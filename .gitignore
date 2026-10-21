@@ -90,3 +90,9 @@ Apps/ABV/AVS/Server/obj/
 /Test/eae-deck-png/
 /Test/eae-sep-png/
 /Test/*.pptx
+
+# The Persona catalogue (113 Rocketbox avatars, 629 MB): made by MMM/World/make_catalogue.py, not kept in git
+MMM/Viewer/personae/catalogue/*.glb
+MMM/tools/cloudflared.exe
+MMM/tools/FBX2glTF-windows-x86_64/
+MMM/tools/Microsoft-Rocketbox/

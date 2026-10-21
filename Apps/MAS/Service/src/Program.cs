@@ -35,10 +35,7 @@ internal static class Program
     private const string AcrModule = "1MMC-ACR-V2.5-I01";
     internal const string AmqModule = "1MMC-AMQ-V2.5-I01";
     private const string MacModule = "1MMC-MAC-V2.5-I01";
-    internal const string MadModule = "1MMC-MAD-V2.5-I01";
     internal const string MasModule = "1MAS-APP-V1.0-I01";
-    internal const string MatModule = "1MMC-MAT-V2.5-I01";
-    internal const string MpdModule = "1MMC-MPD-V2.5-I01";
 
     private static async Task<int> Main(string[] args)
     {
@@ -84,7 +81,7 @@ internal static class Program
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "L3");
             Console.WriteLine($"  L3s:           from the Store at {config.StoreUrl}, kept in {amdDir}");
             var fetched = await StoreL3Source.FetchAsync(config.StoreUrl,
-                new[] { AmqModule, MadModule, MatModule, MpdModule, MasModule, MacModule, AcrModule }, amdDir, Console.WriteLine);
+                new[] { AmqModule, MasModule, MacModule, AcrModule }, amdDir, Console.WriteLine);
             Console.WriteLine($"  L3s:           {fetched.Fetched} from the Store, {fetched.FromCache} from the cache, " +
                               $"{fetched.Missing.Count} missing{(fetched.Missing.Count > 0 ? ": " + string.Join(", ", fetched.Missing) : "")}");
         }
@@ -235,7 +232,7 @@ internal static class Program
         if (approving)
         {
             var approvals = new AIF.Store.MpaiStore(amdDir);
-            var providers = new IAimProvider[] { new AmqProvider(store), new MadProvider(store), new MatProvider(store), new MpdProvider(store), new MacProvider(store), new AcrProvider(store), new NprProvider(store) };
+            var providers = new IAimProvider[] { new AmqProvider(store), new MacProvider(store), new AcrProvider(store), new NprProvider(store) };
             foreach (var aim in store.GetCatalog().Select(c => c.AIMName).Distinct().OrderBy(a => a, StringComparer.Ordinal))
             {
                 var file = providers.Select(p => p.ImplementationOf(aim)).FirstOrDefault(f => f is not null);
@@ -253,9 +250,6 @@ internal static class Program
             var providers = new List<IAimProvider>();
             if (fromPackages) providers.Add(new PackageAimProvider(s, packageCache, Console.WriteLine));
             providers.Add(new AmqProvider(s));
-            providers.Add(new MadProvider(s));
-            providers.Add(new MatProvider(s));
-            providers.Add(new MpdProvider(s));
             providers.Add(new MacProvider(s));
             providers.Add(new AcrProvider(s));
             providers.Add(new NprProvider(s));
@@ -306,7 +300,7 @@ internal static class Program
         // ONE CONTROLLER, ONE MODULE. PAF-RSR-V1.6 is an AIM of MMC-AMQ-V2.5 and
         // is built with it; starting it separately would put a second Module under
         // this Controller, which cannot be.
-        foreach (var module in new[] { AmqModule, MadModule, MatModule, MpdModule, MasModule, MacModule, AcrModule })
+        foreach (var module in new[] { AmqModule, MasModule, MacModule, AcrModule })
         {
             var failure = runner.Start(module);
             Console.WriteLine(failure is null

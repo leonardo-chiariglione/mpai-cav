@@ -1,0 +1,178 @@
+[
+ {
+  "Email": "leonardo@chiariglione.org",
+  "Name": "Leonardo",
+  "Id": "Leonardo",
+  "Groups": [
+   "AIF",
+   "AIH",
+   "AIP",
+   "CAE",
+   "EVC",
+   "ISAC",
+   "MMC",
+   "MMM",
+   "NNW",
+   "PAF",
+   "XRV"
+  ],
+  "Chair": [
+   "AIF",
+   "AIH",
+   "AIP",
+   "CAE",
+   "EVC",
+   "ISAC",
+   "MMC",
+   "MMM",
+   "NNW",
+   "PAF",
+   "XRV"
+  ]
+ },
+ {
+  "Email": "alberto.cannavo@polito.it",
+  "Name": "Alberto",
+  "Groups": [
+   "MMM"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "alessandra.mosca@sisveltech.com",
+  "Name": "Alessandra",
+  "Groups": [
+   "EVC"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "artusialessandro4@gmail.com",
+  "Name": "Alessandro",
+  "Groups": [
+   "EVC"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "ana.almeida@iscte-iul.pt",
+  "Name": "Ana",
+  "Groups": [
+   "AIH"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "carl.de-sousa-trias@telecom-sudparis.eu",
+  "Name": "Carl",
+  "Groups": [
+   "NNW"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "carlos.serrao@iscte-iul.pt",
+  "Name": "Carlos",
+  "Groups": [
+   "AIH"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "ed@vortexdomes.com",
+  "Name": "Ed",
+  "Groups": [
+   "XRV"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "guido.perboli@polito.it",
+  "Name": "Guido",
+  "Groups": [
+   "AIP"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "gerard.chollet@telecom-sudparis.eu",
+  "Name": "Gérard",
+  "Groups": [
+   "AIF",
+   "AIH",
+   "AIP",
+   "ISAC",
+   "MMC",
+   "MMM",
+   "NNW",
+   "PAF"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "husshho@gmail.com",
+  "Name": "Hüseyin",
+  "Groups": [
+   "CAE"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "ijm667@hotmail.com",
+  "Name": "Jamie",
+  "Groups": [
+   "AIF",
+   "MMM"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "mbosi@stanford.edu",
+  "Name": "Marina",
+  "Groups": [
+   "CAE"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "mark.seligman@spokentranslation.com",
+  "Name": "Mark",
+  "Groups": [
+   "MMC"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "mihai.mitrea@telecom-sudparis.eu",
+  "Name": "Mihai",
+  "Groups": [
+   "AIP",
+   "NNW"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "orhunolgun@gmail.com",
+  "Name": "Orhun",
+  "Groups": [
+   "CAE"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "panos.kudumakis@googlemail.com",
+  "Name": "Panos",
+  "Groups": [
+   "MMM"
+  ],
+  "Chair": []
+ },
+ {
+  "Email": "stephenddukes@gmail.com",
+  "Name": "Steve",
+  "Groups": [
+   "ISAC"
+  ],
+  "Chair": []
+ }
+]

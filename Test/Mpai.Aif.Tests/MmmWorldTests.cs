@@ -7,7 +7,7 @@ using Mpai.Mmm.Server;
 
 namespace Mpai.Aif.Tests;
 
-// THE WORLD OF THE MMM (MMM/World/world.json, the glTF buildings): the Metaverse Square, the Town Hall with its meeting room, a library and a cafe. A building is a Location,
+// THE WORLD OF THE MMM (MMM/World/world.json, the glTF buildings): the Metaverse Square, the MPAI building (a public atrium, and wings of rooms: the members', the offices of MPAI, the meeting rooms of the groups), a library and a cafe. A building is a Location,
 // its rooms are Locations in it, a door is a Right: the AVS Service gives it to the Users it invites, for the meeting - the rights carry the period of the meeting and are
 // withdrawn when it ends - and the others are refused (403). All through the MMM-API, as the browser client does it.
 [Trait("Group", "Fast")]
@@ -37,6 +37,8 @@ public class MmmWorldTests
         Assert.Equal(200, (await user.PerformAsync("MM-Add", Uc2.C($"{name}-Persona", at: "MVS", with: Uc2.SpatialAttitude($"SA-{name}", 3, 0)))).Http);
         return user;
     }
+
+    private const string Building = "Atrium", Wing = "MeetingsWing";     // the atrium is public; the wing and the room are the AVS Service's
 
     private static Task<MmmClient.Result> Go(MmmClient u, string from, string to, double x = 0, double y = 0) =>
         u.PerformAsync("MM-Move", Uc2.C($"{u.ProcessID}-Persona", from: from, to: to, with: Uc2.SpatialAttitude($"SA-{u.ProcessID}-{to}", x, y)));
@@ -115,7 +117,7 @@ public class MmmWorldTests
                     Assert.NotNull(m.Get((string)r["id"]!)!.Body);          // the room is a Location Object whose Attributes carry its Acoustic Profile
                     Assert.Equal("CAE-ACP-V1.0", (string?)m.Get((string)r["id"]!)!.Body!["LocationQualifier"]!["Attributes"]!["AcousticProfile"]!["Header"]);
                     var f = r["footprint"]!.AsArray().Select(v => (double)v!).ToArray();
-                    foreach (var s in r["seats"]!.AsArray().OfType<JsonObject>())
+                    foreach (var s in (r["seats"]?.AsArray() ?? []).OfType<JsonObject>())
                     {
                         Assert.NotNull(m.Get((string)s["id"]!));
                         Assert.InRange((double)s["x"]!, f[0], f[2]); Assert.InRange((double)s["y"]!, f[1], f[3]);
@@ -134,15 +136,18 @@ public class MmmWorldTests
         await w.StartAsync(DateTimeOffset.UtcNow.AddHours(2));
         var anna = await Arrive(w.Http, "Anna"); var bruno = await Arrive(w.Http, "Bruno"); var zed = await Arrive(w.Http, "Zed");
 
-        // Before anybody has been given anything, the door is shut to all: the Town Hall is the AVS Service's.
-        Assert.Equal(403, (await Go(anna, "MVS", Meeting.Parcel, 0, 0)).Http);
+        // The atrium is public: anybody goes in. The wing of the meeting rooms is the AVS Service's: before anybody has been given anything, its door is shut to all.
+        Assert.Equal(200, (await Go(zed, "MVS", Building, 0, 0)).Http);
+        Assert.Equal(200, (await Go(anna, "MVS", Building, 0, 0)).Http);
+        Assert.Equal(200, (await Go(bruno, "MVS", Building, 0, 0)).Http);
+        Assert.Equal(403, (await Go(anna, Building, Wing, 0, 0)).Http);
 
         // Invited, a User asks for its seat and is given it, with the right to the doors for the meeting; the one that is not invited is told so, and the doors stay shut to it.
         var a = await AskSeat(anna, w.Services); var b = await AskSeat(bruno, w.Services); var z = await AskSeat(zed, w.Services);
         Assert.Equal("1", a["convener"]); Assert.False(b.ContainsKey("convener"));
         Assert.Equal("none", z["seat"]);
-        Assert.Equal(403, (await Go(zed, "MVS", Meeting.Parcel)).Http);
-        Assert.Equal(403, (await Go(zed, "MVS", Meeting.Room)).Http);
+        Assert.Equal(403, (await Go(zed, Building, Wing)).Http);
+        Assert.Equal(403, (await Go(zed, Building, Meeting.Room)).Http);
 
         // The rights carry the period of the meeting.
         var held = w.M.RightsOf("Anna").Where(r => r["RightsTime"] is not null).ToList();
@@ -153,13 +158,13 @@ public class MmmWorldTests
             Assert.True((long)t["EndTime"]! > (long)t["StartTime"]!);
         }
 
-        // Anna walks through the main door, through the meeting room's, and sits: three Process Actions, each a Location behind a door or at the table.
-        Assert.Equal(200, (await Go(anna, "MVS", Meeting.Parcel)).Http);
-        Assert.Equal(200, (await Go(anna, Meeting.Parcel, Meeting.Room)).Http);
+        // Anna walks through the door of the wing, through the meeting room's, and sits: three Process Actions, each a Location behind a door or at the table.
+        Assert.Equal(200, (await Go(anna, Building, Wing)).Http);
+        Assert.Equal(200, (await Go(anna, Wing, Meeting.Room)).Http);
         Assert.Equal(200, (await anna.PerformAsync("MM-Move", Uc2.C("Anna-Persona", from: Meeting.Room, to: a["seat"],
             with: [MeetingServices.SeatedAt("SA-Anna-Seat", double.Parse(a["yaw"], System.Globalization.CultureInfo.InvariantCulture)), Meeting.SitPA("Anna-Persona", a["seat"]),
                    Uc2.Rights("Seat-Move-Anna-Persona", "May", "Acquired", Meeting.SitID("Anna-Persona"))]))).Http);
-        Assert.Equal(200, (await Go(bruno, "MVS", Meeting.Parcel)).Http);
+        Assert.Equal(200, (await Go(bruno, Building, Wing)).Http);
         Assert.Equal(200, (await Capture(anna, Meeting.Room)).Http);
 
         // The convener ends the meeting: every right of every participant is withdrawn.
@@ -168,9 +173,11 @@ public class MmmWorldTests
         Assert.True(w.Services.Ended);
         Assert.Equal(403, (await Capture(anna, Meeting.Room)).Http);                        // the room is not hers to see any more
         Assert.Equal(200, (await Go(anna, a["seat"], "MVS", 13.5, 0)).Http);               // she leaves: the Square is open to all
-        Assert.Equal(200, (await Go(bruno, Meeting.Parcel, "MVS", 13.5, 0)).Http);
-        Assert.Equal(403, (await Go(anna, "MVS", Meeting.Parcel)).Http);                    // and cannot come in again
-        Assert.Equal(403, (await Go(bruno, "MVS", Meeting.Parcel)).Http);
+        Assert.Equal(200, (await Go(bruno, Wing, "MVS", 13.5, 0)).Http);
+        Assert.Equal(200, (await Go(anna, "MVS", Building)).Http);                          // the atrium is still open to them
+        Assert.Equal(403, (await Go(anna, Building, Wing)).Http);                           // the wing is not: they cannot come in again
+        Assert.Equal(200, (await Go(bruno, "MVS", Building)).Http);
+        Assert.Equal(403, (await Go(bruno, Building, Wing)).Http);
         Assert.Equal("1", (await AskSeat(anna, w.Services)).GetValueOrDefault("over"));    // nor ask for a seat: the meeting is over
     }
 
@@ -186,12 +193,68 @@ public class MmmWorldTests
         await bruno.PerformAsync("MM-Send", Uc2.C("End-B", to: Meeting.Avs, with: Uc2.Message("End-B", "end")));
         await w.Services.PumpAsync();
         Assert.False(w.Services.Ended);                                     // Bruno is not the convener
-        Assert.Equal(200, (await Go(bruno, "MVS", Meeting.Parcel)).Http);
-        Assert.Equal(200, (await Go(bruno, Meeting.Parcel, "MVS", 13.5, 0)).Http);
+        Assert.Equal(200, (await Go(bruno, "MVS", Building)).Http);
+        Assert.Equal(200, (await Go(bruno, Building, Wing)).Http);
+        Assert.Equal(200, (await Go(bruno, Wing, "MVS", 13.5, 0)).Http);
 
         now = now.AddMinutes(61);                                           // the period is over: the M-Instance no longer holds the rights, even before the AVS Service withdraws them
-        Assert.Equal(403, (await Go(anna, "MVS", Meeting.Parcel)).Http);
+        Assert.Equal(200, (await Go(anna, "MVS", Building)).Http);
+        Assert.Equal(403, (await Go(anna, Building, Wing)).Http);
         await w.Services.PumpAsync();                                       // and the AVS Service ends the meeting at its time
         Assert.True(w.Services.Ended);
+    }
+
+    // A SHARED SCREEN: the convener alone has the Right to place one in the meeting room; whoever has an Item in the room sees it, as its frames come; whoever is not in the room does not;
+    // and it is over with the meeting.
+    [Fact]
+    public async Task OnlyTheConvenerSharesAScreenAndWhoIsInTheRoomSeesIt()
+    {
+        await using var w = new Running();
+        await w.StartAsync(DateTimeOffset.UtcNow.AddHours(2));
+        var anna = await Arrive(w.Http, "Anna"); var bruno = await Arrive(w.Http, "Bruno"); var zed = await Arrive(w.Http, "Zed");
+        await AskSeat(anna, w.Services); await AskSeat(bruno, w.Services);
+        foreach (var u in new[] { anna, bruno, zed }) Assert.Equal(200, (await Go(u, "MVS", Building)).Http);
+        foreach (var u in new[] { anna, bruno }) { Assert.Equal(200, (await Go(u, Building, Wing)).Http); Assert.Equal(200, (await Go(u, Wing, Meeting.Room)).Http); }
+
+        JsonObject Screen(string id) => new()
+        {
+            ["Header"] = "OSD-BVO-V1.5", ["MInstanceID"] = "MI1", ["BasicVisualObjectID"] = id,
+            ["BasicVisualObjectData"] = new JsonArray(new JsonObject { ["DataURI"] = "ws://x/watch" })
+        };
+        Task<MmmClient.Result> Share(MmmClient u, string id) => u.PerformAsync("MM-Add", Uc2.C(id, at: Meeting.Room, with: Screen(id)));
+        Assert.Equal(403, (await Share(bruno, "Screen-Bruno")).Http);                  // not the convener: no Right
+        Assert.Equal(200, (await Share(anna, "Screen-Anna")).Http);                    // the convener's
+        Assert.Equal(409, (await Share(bruno, "Screen-Bruno-2")).Http);              // one at a time in a room
+
+        var ws = w.App!.Urls.First().Replace("http", "ws");
+        using var feed = new System.Net.WebSockets.ClientWebSocket();
+        await feed.ConnectAsync(new Uri($"{ws}/ws/v2.2/screen/Screen-Anna?token={w.M.TokenOf("Anna")}"), CancellationToken.None);
+        using var watch = new System.Net.WebSockets.ClientWebSocket();
+        await watch.ConnectAsync(new Uri($"{ws}/ws/v2.2/screen/Screen-Anna/watch?token={w.M.TokenOf("Bruno")}"), CancellationToken.None);
+        using var outside = new System.Net.WebSockets.ClientWebSocket();
+        await Assert.ThrowsAnyAsync<Exception>(() => outside.ConnectAsync(new Uri($"{ws}/ws/v2.2/screen/Screen-Anna/watch?token={w.M.TokenOf("Zed")}"), CancellationToken.None));   // not in the room
+
+        // A message is one byte, which says what it is (1: a frame, 2: sound), and the data. The sound reaches whoever watches, in order, and so does the latest frame.
+        var frame = new byte[] { 1, 0xFF, 0xD8, 1, 2, 3, 0xFF, 0xD9 };
+        var sound1 = new byte[] { 2, 10, 0, 20, 0 }; var sound2 = new byte[] { 2, 30, 0, 40, 0 };
+        foreach (var m in new[] { sound1, sound2, frame }) await feed.SendAsync(m, System.Net.WebSockets.WebSocketMessageType.Binary, true, CancellationToken.None);
+        var received = new List<byte[]>();
+        using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (received.Count < 3)
+        {
+            var got = new byte[64];
+            var r = await watch.ReceiveAsync(got, limit.Token);
+            received.Add(got.Take(r.Count).ToArray());
+        }
+        Assert.Equal([sound1, sound2, frame], received);                              // the sound as it was said, and the frame
+
+        // In what MM-Capture returns, the screen is a Thing of Kind Screen, owned by Anna, streaming.
+        var scene = (await Capture(bruno, Meeting.Room)).Response.Complements?.With?[0]?["ItemValueOrRef"]?[0]?["Things"]?.AsArray() ?? [];
+        Assert.Contains(scene.OfType<JsonObject>(), t => (string?)t["Kind"] == "Screen" && (string?)t["Owner"] == "Anna" && (bool?)t["Streaming"] == true);
+
+        // The convener ends the meeting: the screen is over.
+        await anna.PerformAsync("MM-Send", Uc2.C("End-S", to: Meeting.Avs, with: Uc2.Message("End-S", "end")));
+        await w.Services.PumpAsync();
+        Assert.False(w.M.ScreenLive("Screen-Anna"));
     }
 }

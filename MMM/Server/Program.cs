@@ -23,15 +23,33 @@ while (repo is not null && !Directory.Exists(Path.Combine(repo, "MMM", "Viewer")
 if (repo is null) { Console.Error.WriteLine("The repository (MMM/Viewer, schemas) is not above this program."); return 1; }
 
 var m = new MInstance(Path.Combine(repo, "schemas"));
-// --world: the world of the MMM - the Metaverse Square, buildings with doors, the Town Hall with its meeting room - instead of Use Case 2 (MMM/World/world.json).
+// --world: the world of the MMM - the Metaverse Square, buildings with doors, the MPAI building with its meeting room - instead of Use Case 2 (MMM/World/world.json).
 // --code 123456 (or MMM_CODE): nobody gets anything from the server without the meeting code. --invite A,B,C: the Users that are invited from the start, the first the convener.
 var worldMode = args.Contains("--world");
 string? Arg(string name) { var i = Array.IndexOf(args, name); return i >= 0 && i + 1 < args.Length ? args[i + 1] : null; }
 var code = Arg("--code") ?? Environment.GetEnvironmentVariable("MMM_CODE");
 var invite = (Arg("--invite") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+// --identity: no meeting code; whoever asks is named (MMM/Server/Identity.cs). --chair Name (default: the first of --invite) is whoever browses on this machine. --invites Anna=token,Bruno=token: the
+// personal links of the guests the chair invited (?invite=token). --guests login=Name: the same for people who come through `tailscale serve`. --visitors: anybody else may come in as a visitor,
+// to the atrium, which is public, and no further; without it nobody else is answered.
+var chairName = Arg("--chair") ?? invite.FirstOrDefault() ?? "Chair";
+Dictionary<string, string> Pairs(string? list) => (list ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(p => p.Split('=', 2)).Where(p => p.Length == 2)
+    .ToDictionary(p => p[0].Trim(), p => p[1].Trim(), StringComparer.OrdinalIgnoreCase);
+var guests = Pairs(Arg("--guests"));                                                                           // login -> name
+var tokens = Pairs(Arg("--invites")).ToDictionary(p => p.Value, p => p.Key, StringComparer.Ordinal);            // token -> name
+Identity? identity = args.Contains("--identity") || args.Contains("--tailscale") ? new Identity(chairName, guests, tokens, args.Contains("--visitors")) : null;
+if (identity is not null) invite = [.. new[] { chairName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
 if (worldMode)
 {
     World.Setup(m, repo);
+    // The Personae a registering human chooses from (MMM/Viewer/personae/catalogue): the Rocketbox avatars.
+    var catalogue = Path.Combine(repo, "MMM", "Viewer", "personae", "catalogue", "catalogue.json");
+    if (File.Exists(catalogue))
+    {
+        var entries = JsonNode.Parse(File.ReadAllText(catalogue))!.AsArray();
+        m.Catalogue = entries.Select(e => (string)e!["Name"]!).ToHashSet(StringComparer.Ordinal);
+        m.CatalogueEntries = new JsonArray(entries.Select(e => (JsonNode)new JsonObject { ["Name"] = (string)e!["Name"]!, ["Group"] = (string)e["Group"]!, ["Gender"] = (string)e["Gender"]! }).ToArray());
+    }
     // Rocketbox avatars (MIT) of the ABV demo, in turn to the Users that register: five humans, and the Secretary has Persona2.
     m.DefaultModels = ["Persona1.glb", "Male03.glb", "Thalia.glb", "Male05.glb", "Male08.glb", "Persona2.glb"];
     // --models Anna=Thalia.glb,Bruno=Male03.glb: the avatar of each User's Persona (the files of Apps/ABV/AVS/Server/avatars); the others take the list above in turn.
@@ -102,7 +120,7 @@ void Next()
 
 var internalKey = Guid.NewGuid().ToString("N");        // how the services of the M-Instance (the AVS Service, the Secretary, the ASR Service) get past the meeting code: they are not guests
 var avatarFolder = Path.Combine(repo, "Apps", "ABV", "AVS", "Server", "avatars");
-var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey);
+var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey, identity);
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.

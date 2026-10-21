@@ -2,7 +2,7 @@
   "Header":            "MMC-AMQ-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "Answer to Multimodal Question (slide 3 of the MMC Reference Models): receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as a Portable Avatar, which utters it, and the Visual Object. Automatic Speech Recognition recognises the spoken question; Text and Image Query answers the question about the image; Portable Avatar Multiplexing puts the answer in the Portable Avatar.",
+  "Description":      "Answer to Multimodal Question: receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as a Portable Avatar, which utters it, and the Visual Object. Automatic Speech Recognition recognises the spoken question; Text and Image Query answers the question about the image; Portable Avatar Multiplexing puts the answer in the Portable Avatar.",
 
   "InternalTypes":        [],
 

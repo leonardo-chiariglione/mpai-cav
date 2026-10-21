@@ -1,9 +1,9 @@
 # A CONFERENCE IN THE MMM WORLD, with people who are not on this network:
 #   MMM\Run-Conference.bat                      asks for the names of the participants (the convener first)
 #   MMM\Run-Conference.ps1 -Names Leonardo,Anna,Bruno,Carla,Dario
-# It starts the M-Instance with its world (the Metaverse Square, the Town Hall with its meeting room, a library and a cafe), closed with a MEETING CODE, and a Cloudflare quick
+# It starts the M-Instance with its world (the Metaverse Square, the MPAI building with its meeting room, a library and a cafe), closed with a MEETING CODE, and a Cloudflare quick
 # tunnel that gives it a public https address (no account). The server stays closed to the network: only the tunnel leads to it, and nobody gets in without the code.
-# The guests open the address, type their name (as it is in the list) and the code, allow the microphone, and walk to the Town Hall (W/S walk, A/D turn). Close both windows when
+# The guests open the address, type their name (as it is in the list) and the code, allow the microphone, and walk to the MPAI Hall (W/S walk, A/D turn). Close both windows when
 # the meeting is over: the address dies with them.
 # The rights of the participants are for the meeting: -Until 19:00 (or -Hours 3, the default) is when it ends; they end with it, or when the convener ends it with the button.
 param([string]$Names = '', [string]$Models = '', [string]$Until = '', [double]$Hours = 3)
@@ -63,7 +63,7 @@ Write-Host '  For you, on this PC (your name is already in it):' -ForegroundColo
 Write-Host "    $local/viewer/?world=1&mic=1&user=$($list[0])&code=$code"
 Write-Host ''
 Write-Host '  Each guest: a PC with Chrome or Edge and a headset; type the name as listed, the code, allow the microphone;'
-Write-Host '  W/S walk, A/D turn, to the Town Hall on the right; the door to it opens by itself for the invited. In the meeting room you sit down; Q stands up, E sits.'
+Write-Host '  W/S walk, A/D turn, to the MPAI doors on the right; the door to it opens by itself for the invited. In the meeting room you sit down; Q stands up, E sits.'
 Start-Process "$local/viewer/?world=1&mic=1&user=$($list[0])&code=$code"
 Read-Host 'Enter to stop the tunnel (the server has its own window)' | Out-Null
 Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force

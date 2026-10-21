@@ -22,6 +22,6 @@
 
   "$defs":                {
     "AIMType":            { "type": "string", "pattern": "^[A-Z]{3}-[A-Z]{3}-V[0-9]{1,2}[.][0-9]{1,2}$",
-                            "description": "The AIM Type as a Standard names it, e.g. MMC-MAD-V2.5." },
+                            "description": "The AIM Type as a Standard names it, e.g. MMC-AMQ-V2.5." },
     "AIMInstanceIdentifier": { "type": "string", "pattern": "^[0-9A-Za-z]+[A-Z]{3}-[A-Z]{3}-V[0-9]{1,2}[.][0-9]{1,2}-I[0-9]+$",
-                            "description": "An AIM Instance identifier: the ImplementerID, the AIM Type and -I with the Instance number, e.g. 1MMC-MAD-V2.5-I01." } } }
+                            "description": "An AIM Instance identifier: the ImplementerID, the AIM Type and -I with the Instance number, e.g. 1MMC-AMQ-V2.5-I01." } } }

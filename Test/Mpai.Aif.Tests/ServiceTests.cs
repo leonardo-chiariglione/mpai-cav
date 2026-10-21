@@ -44,7 +44,7 @@ public sealed class ServiceFixture : IDisposable
         {
             ["ListenUrl"]    = Url,
             ["AppDirectory"] = Path.Combine(root, "Apps"),
-            ["Apps"]         = new JsonArray("MAD", "AMQ", "MAT", "MPD"),
+            ["Apps"]         = new JsonArray("AMQ"),
             ["AmdDirectory"] = Repository.Amds,
             ["SettingsPath"] = Path.Combine(root, "AIMs", "aim-settings.json"),
             // The tests time their own first turn apart (Median): no warm-up, so that
@@ -112,7 +112,7 @@ public sealed class ServiceCollection : ICollectionFixture<ServiceFixture> { }
 [Trait("Blocks", "No")]
 public class ServiceTests
 {
-    private const string MAD = "1MMC-MAD-V2.5-I01", AMQ = "1MMC-AMQ-V2.5-I01";
+    private const string AMQ = "1MMC-AMQ-V2.5-I01";
 
     private readonly ServiceFixture service;
     private readonly ITestOutputHelper output;
@@ -156,8 +156,8 @@ public class ServiceTests
         Assert.True(wrong.Count == 0, string.Join("\n", wrong));
     }
 
-    // One client stops MAD while the other's turn is running; the other's turn,
-    // and its next, must still answer with speech.
+    // One client stops AMQ while the other's question is being answered; the other's answer,
+    // and its next, must still come.
     [SkippableFact]
     public void TwoClientsStop()
     {
@@ -165,18 +165,18 @@ public class ServiceTests
 
         using var a = new RemoteControllerApi(ServiceFixture.Url);
         using var b = new RemoteControllerApi(ServiceFixture.Url);
-        Assert.Equal(AifError.OK, a.StartFlow(MAD));
-        Assert.Equal(AifError.OK, b.StartFlow(MAD));
+        Assert.Equal(AifError.OK, a.StartFlow(AMQ));
+        Assert.Equal(AifError.OK, b.StartFlow(AMQ));
 
-        var turn = Task.Run(() => b.Advance(MAD, new[] { Text(2, "Tell me a short story about a cat called Tom."), Avatar }));
-        Thread.Sleep(1500);
+        var turn = Task.Run(() => Answer(Ask(b, "blue.jpg")));
+        Thread.Sleep(500);
         var stillRunning = !turn.IsCompleted;
-        a.StopFlow(MAD);
-        output.WriteLine($"A stopped MAD while B's turn was {(stillRunning ? "running" : "already done")}");
+        a.StopFlow(AMQ);
+        output.WriteLine($"A stopped AMQ while B's question was {(stillRunning ? "being answered" : "already answered")}");
 
-        Assert.True(Spoke(turn.Result), "B's turn that was running when A stopped did not answer with speech");
-        Assert.True(Spoke(b.Advance(MAD, new[] { Text(2, "What was the cat called?"), Avatar })), "B's next turn did not answer with speech");
-        b.StopFlow(MAD);
+        Assert.False(string.IsNullOrEmpty(turn.Result), "B's question that was being answered when A stopped got no answer");
+        Assert.False(string.IsNullOrEmpty(Answer(Ask(b, "red.jpg"))), "B's next question got no answer");
+        b.StopFlow(AMQ);
     }
 
     // Six runs each, after one not counted, against the baseline in timing.json:
@@ -188,8 +188,6 @@ public class ServiceTests
 
         var measured = new Dictionary<string, double>
         {
-            ["typed MAD turn"]  = Median(MAD, new[] { Text(2, "Name one fruit. Answer in five words."), Avatar }),
-            ["spoken MAD turn"] = Median(MAD, new[] { Speech("question.wav"), Avatar }),
             ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId })
         };
 
