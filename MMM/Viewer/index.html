@@ -703,10 +703,12 @@ async function sendPose() {   // MM-Move: the Persona stands where its User put 
 }
 if (client) {
   controls.enabled = false; camera.fov = 70; camera.updateProjectionMatrix();   // a person's field of view, not the stage's
-  // THE WHEEL ZOOMS: forward enlarges what is seen (a narrower field of view), backward reduces it (a wider one); the key 0 puts it back to a person's.
+  // THE WHEEL TURNS YOU: forward turns you counter-clockwise, backward clockwise (about 10 degrees a notch). With Ctrl it zooms: forward enlarges what is seen (a narrower field of view), backward
+  // reduces it (a wider one); a pinch on a touchpad is a Ctrl + wheel. The key 0 puts the field of view back to a person's.
   renderer.domElement.addEventListener('wheel', e => {
     e.preventDefault();
-    camera.fov = Math.max(15, Math.min(100, camera.fov * (e.deltaY < 0 ? 0.9 : 1 / 0.9))); camera.updateProjectionMatrix();
+    if (e.ctrlKey) { camera.fov = Math.max(15, Math.min(100, camera.fov * (e.deltaY < 0 ? 0.9 : 1 / 0.9))); camera.updateProjectionMatrix(); }
+    else { client.yaw = (client.yaw + Math.max(-30, Math.min(30, -e.deltaY * 0.1)) + 360) % 360; if (client.path) { client.path = null; marker.visible = false; } }
   }, { passive: false });
   addEventListener('keydown', e => { if (e.key === '0' && !e.repeat && !/input|textarea/i.test(e.target.tagName)) { camera.fov = 70; camera.updateProjectionMatrix(); } });
   addEventListener('keydown', e => { client.keys.add(e.key.toLowerCase()); if (W && !e.repeat) { const k = e.key.toLowerCase(); if (k === 'q' && client.seated) standUp(); else if (k === 'e' && !client.seated && client.loc === client.at && client.seatInfo && client.at === client.seatInfo.room) takeSeat(client.seatInfo); } });

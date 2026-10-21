@@ -66,7 +66,9 @@ $(if ($n -eq $Chair) { 'You chair the meeting: you can share your screen, and en
 $link
 
 What you need: a PC with Chrome or Edge, and a headset (no loudspeakers: the room has its own echo). Open the link. The first time you register: keep the Account Level *Participant*, give your first name, last name and email, and choose your avatar. Allow the microphone when the browser asks.
-Walk with W and S, turn with A and D; go through the doors of the MPAI building to the meeting rooms, and into the MMM meeting room: you sit down by yourself. Q stands up, E sits again.
+You move by clicking the point you want to reach: your avatar walks there, through the doors of the MPAI building to the meeting rooms, and into the MMM meeting room, where you sit down by yourself.
+The mouse wheel turns you: wheel forward turns you counterclockwise, wheel backward clockwise. Ctrl + wheel forward zooms in, Ctrl + wheel backward zooms out.
+Q stands up, E sits again.
 The link works while the meeting is on; the address changes for each meeting.
 
 $($HostName)
