@@ -75,3 +75,5 @@ _backup-*/
 ABV/Server/abv-cert.pfx
 ABV/Server/bin/
 ABV/Server/obj/
+
+/MKG/
