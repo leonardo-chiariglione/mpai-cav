@@ -23,9 +23,27 @@ while (repo is not null && !Directory.Exists(Path.Combine(repo, "MMM", "Viewer")
 if (repo is null) { Console.Error.WriteLine("The repository (MMM/Viewer, schemas) is not above this program."); return 1; }
 
 var m = new MInstance(Path.Combine(repo, "schemas"));
-Uc2.Setup(m);
-m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
-Meeting.Setup(m);                                      // the meeting room, its seats, the AVS Service and the Secretary
+// --world: the world of the MMM - the Metaverse Square, buildings with doors, the Town Hall with its meeting room - instead of Use Case 2 (MMM/World/world.json).
+// --code 123456 (or MMM_CODE): nobody gets anything from the server without the meeting code. --invite A,B,C: the Users that are invited from the start, the first the convener.
+var worldMode = args.Contains("--world");
+string? Arg(string name) { var i = Array.IndexOf(args, name); return i >= 0 && i + 1 < args.Length ? args[i + 1] : null; }
+var code = Arg("--code") ?? Environment.GetEnvironmentVariable("MMM_CODE");
+var invite = (Arg("--invite") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+if (worldMode)
+{
+    World.Setup(m, repo);
+    // Rocketbox avatars (MIT) of the ABV demo, in turn to the Users that register: five humans, and the Secretary has Persona2.
+    m.DefaultModels = ["Persona1.glb", "Male03.glb", "Thalia.glb", "Male05.glb", "Male08.glb", "Persona2.glb"];
+    // --models Anna=Thalia.glb,Bruno=Male03.glb: the avatar of each User's Persona (the files of Apps/ABV/AVS/Server/avatars); the others take the list above in turn.
+    foreach (var pair in (Arg("--models") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(p => p.Split('=', 2)).Where(p => p.Length == 2))
+        m.SetModel($"{pair[0]}-Persona", pair[1]);
+}
+else
+{
+    Uc2.Setup(m);
+    m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
+    Meeting.Setup(m);                                      // the meeting room, its seats, the AVS Service and the Secretary
+}
 
 // What a step means, said under its caption - for the steps whose point is not seen on the stage.
 var notes = new Dictionary<int, string>
@@ -82,7 +100,9 @@ void Next()
     try { next.Release(); } catch (SemaphoreFullException) { }
 }
 
-var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null);
+var internalKey = Guid.NewGuid().ToString("N");        // how the services of the M-Instance (the AVS Service, the Secretary, the ASR Service) get past the meeting code: they are not guests
+var avatarFolder = Path.Combine(repo, "Apps", "ABV", "AVS", "Server", "avatars");
+var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey);
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.
@@ -94,8 +114,14 @@ else Console.WriteLine("Models\\Whisper is not there: the ASR Service finds no w
 // to show. The bots have no voices, so the ASR Service recognises the words of a script instead of Whisper.
 var meetingDemo = Array.IndexOf(args, "--meeting-demo");
 var meetingPause = meetingDemo >= 0 && meetingDemo + 1 < args.Length && double.TryParse(args[meetingDemo + 1], out var mp) ? mp : 5.0;
-var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
+var inside = new HttpClient { BaseAddress = new Uri(url) }; inside.DefaultRequestHeaders.Add("X-Mmm-Internal", internalKey);
+var meeting = new MeetingServices(inside, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
 await meeting.StartAsync();
+meeting.Preinvite(invite);
+// --until 19:00 (today, or tomorrow if it has passed) or --hours 2: when the meeting ends; its rights end with it. Without either, the convener ends it.
+if (Arg("--until") is { } until && TimeSpan.TryParse(until, out var clock)) { var at = DateTime.Today + clock; if (at < DateTime.Now) at = at.AddDays(1); meeting.EndsAt = new DateTimeOffset(at); }
+else if (Arg("--hours") is { } hours && double.TryParse(hours, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var h)) meeting.EndsAt = DateTimeOffset.UtcNow.AddHours(h);
+if (meeting.EndsAt is { } ends) Console.WriteLine($"The meeting ends at {ends.ToLocalTime():HH:mm}: its rights end with it.");                                      // the first of --invite is the convener, the others are invited
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 var minutesShown = 0;
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });

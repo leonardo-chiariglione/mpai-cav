@@ -9,6 +9,7 @@ namespace Mpai.Aif.Tests;
 // the room is not open (no meeting code): a User is seated only if it has been invited; the minutes are read by the participants only; a User the convener
 // takes out of the meeting can no longer enter, see the room, or be given the minutes.
 [Trait("Group", "Fast")]
+[Collection("MmmMeeting")]                       // they share the static state of the Meeting: one at a time
 [Trait("Blocks", "Yes")]
 public class MmmTrustTests
 {

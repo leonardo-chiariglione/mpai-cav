@@ -10,6 +10,7 @@ namespace Mpai.Aif.Tests;
 // ABV server. The AVS Service, a Process, assigns the seats and gives each User the right to move its Persona to its own; the Secretary, a machine
 // Process with a Persona, takes a seat like the others and takes the minutes of what it is told. All through the MMM-API.
 [Trait("Group", "Fast")]
+[Collection("MmmMeeting")]                       // they share the static state of the Meeting: one at a time
 [Trait("Blocks", "Yes")]
 public class MmmMeetingTests
 {

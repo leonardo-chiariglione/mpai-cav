@@ -11,6 +11,7 @@ namespace Mpai.Aif.Tests;
 // it before she has finished; Carla, outside the room, may not; and only Anna feeds it. When the stream is over its data is the Speech Object's, and the Secretary puts the
 // words in the minutes.
 [Trait("Group", "Fast")]
+[Collection("MmmMeeting")]                       // they share the static state of the Meeting: one at a time
 [Trait("Blocks", "Yes")]
 public class MmmStreamTests
 {

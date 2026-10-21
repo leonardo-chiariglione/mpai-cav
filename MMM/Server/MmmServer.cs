@@ -25,12 +25,41 @@ public static class MmmServer
     // step" (down arrow) do in a manual demonstration; state: what the viewer is shown instead
     // of the M-Instance as it is now (a step already performed, shown again).
     public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null,
-                                       Action? onBack = null, Func<System.Text.Json.Nodes.JsonObject>? state = null)
+                                       Action? onBack = null, Func<System.Text.Json.Nodes.JsonObject>? state = null,
+                                       string? code = null, string? avatars = null, string? internalKey = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls(url);
         var app = builder.Build();
+        // A MEETING CODE (code): nobody gets anything from this server - the viewer, the API, the speech sockets - without it. It is given once, in the address (?code=), and the
+        // browser then keeps it in a cookie of this site, which every later request, WebSockets included, carries. Without it a page asks for it and the rest is refused (401).
+        if (code is not null)
+            app.Use(async (ctx, next) =>
+            {
+                if (ctx.Request.Cookies["mmm"] == code || (internalKey is not null && ctx.Request.Headers["X-Mmm-Internal"] == internalKey)) { await next(); return; }   // the services of the M-Instance carry the internal key
+                if (ctx.Request.Query["code"] == code)
+                {
+                    ctx.Response.Cookies.Append("mmm", code, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Lax, Secure = ctx.Request.IsHttps, MaxAge = TimeSpan.FromHours(12) });
+                    var back = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(ctx.Request.Path, ctx.Request.Query.Where(q => q.Key != "code").ToDictionary(q => q.Key, q => (string?)q.Value.ToString()));
+                    ctx.Response.Redirect(back);
+                    return;
+                }
+                if (ctx.Request.Path.StartsWithSegments("/viewer") && ctx.Request.Method == "GET" && !ctx.Request.Path.Value!.Contains('.') && !ctx.Request.Path.Value.EndsWith("/state", StringComparison.Ordinal))
+                {
+                    ctx.Response.StatusCode = 401; ctx.Response.ContentType = "text/html; charset=utf-8";
+                    var name = Uri.EscapeDataString(ctx.Request.Query["user"].ToString());
+                    await ctx.Response.WriteAsync("<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>MMM</title><body style='font:18px system-ui;background:#1d2128;color:#e6e8eb;display:grid;place-items:center;height:100vh;margin:0'>"
+                        + "<form method=get style='text-align:center'><h2>The meeting</h2>"
+                        + (ctx.Request.Query.ContainsKey("user") ? "" : "<p><input name=user required placeholder='your name' autocomplete=off style='font-size:22px;padding:6px;text-align:center;width:9em'></p>")
+                        + (ctx.Request.Query.ContainsKey("world") ? "" : "<input type=hidden name=world value=1>") + (ctx.Request.Query.ContainsKey("mic") ? "" : "<input type=hidden name=mic value=1>")
+                        + "<p><input name=code required placeholder='meeting code' autocomplete=off style='font-size:22px;padding:6px;text-align:center;width:9em'></p> "
+                        + string.Concat(ctx.Request.Query.Where(q => q.Key != "code").Select(q => $"<input type=hidden name='{System.Net.WebUtility.HtmlEncode(q.Key)}' value='{System.Net.WebUtility.HtmlEncode(q.Value.ToString())}'>"))
+                        + "<button style='font-size:22px;padding:6px 16px'>Enter</button></form>");
+                    return;
+                }
+                ctx.Response.StatusCode = 401;
+            });
         app.UseWebSockets();
         var streams = new SpeechStreams();
         var replies = new ConcurrentDictionary<string, (int Http, string Body, string? Tokens)>();
@@ -127,7 +156,9 @@ public static class MmmServer
             {
                 ctx.Response.Headers.CacheControl = "no-store";   // a presenter must never see a stale page
                 var file = Path.GetFullPath(Path.Combine(root, string.IsNullOrEmpty(path) ? "index.html" : path));
-                if (!file.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(file)) return Results.NotFound();
+                if (!File.Exists(file) && avatars is not null && path is not null && path.StartsWith("personae/", StringComparison.Ordinal))
+                    file = Path.GetFullPath(Path.Combine(avatars, Path.GetFileName(path)));      // the avatars of the ABV demo (Rocketbox), without a second copy of each
+                if (!(file.StartsWith(root, StringComparison.OrdinalIgnoreCase) || (avatars is not null && file.StartsWith(Path.GetFullPath(avatars), StringComparison.OrdinalIgnoreCase))) || !File.Exists(file)) return Results.NotFound();
                 var type = Path.GetExtension(file).ToLowerInvariant() switch
                 {
                     ".html" => "text/html; charset=utf-8", ".js" => "text/javascript", ".glb" => "model/gltf-binary",

@@ -182,7 +182,10 @@ public sealed class MInstance
         {
             if (!items.TryGetValue(itemId, out var it)) return false;
             return it.Owner == process || it.Public || HeardBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
-                   || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId || Targets(items[r].Body!).Contains(itemId));
+                   || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId)
+                   // ...a Right that allows something on it: not one that withdraws a Right (May Not), and not one whose period is over
+                   || Live(process).Any(b => Entries(b).Where(e => e.Verb != "May Not").SelectMany(e => e.PAs).Select(Template).OfType<PA>()
+                                             .SelectMany(t => new[] { t.Target, t.Nil }).Contains(itemId));
         }
     }
 
@@ -224,7 +227,7 @@ public sealed class MInstance
         var room = seat.Location;
         bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
         if (!items.Values.Any(i => i.Owner == process && InRoom(i.Location))) return false;
-        return !(holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+        return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
                          .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
     }
 
@@ -498,7 +501,7 @@ public sealed class MInstance
         // A Process captures an M-Location it may read or enter, or one that one of its Items is in (its Persona seated in the Room).
         bool IsIn(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == c.At) return true; return false; }
         // ...unless a Right bars it from the places in it (May Not: the convener took it out of the meeting).
-        bool Barred() => (holdings.GetValueOrDefault(source) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+        bool Barred() => Live(source).SelectMany(Entries).Where(e => e.Verb == "May Not")
                              .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && IsIn(t.Target));
         if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!) && !(items.Values.Any(i => i.Owner == source && IsIn(i.Location)) && !Barred()))
             return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
@@ -677,7 +680,7 @@ public sealed class MInstance
     // Does a Right of the Process allow it? A May Not prevails.
     private bool Allowed(string process, string action, string? nil, string? target)
     {
-        var held = (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).ToList();
+        var held = Live(process).ToList();
         bool Any(string verb) => held.SelectMany(Entries).Where(e => e.Verb == verb)
                                      .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => Matches(t, action, nil, target));
         return !Any("May Not") && Any("May");
@@ -688,13 +691,28 @@ public sealed class MInstance
     private bool MayEnter(string process, string action, string item, string location)
     {
         if (Allowed(process, action, item, location)) return true;
-        var denied = (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).SelectMany(Entries)
+        var denied = Live(process).SelectMany(Entries)
                      .Where(e => e.Verb == "May Not").SelectMany(e => e.PAs).Select(Template).OfType<PA>()
                      .Any(t => Matches(t, action, item, location));
         if (denied) return false;
         for (var l = location; l is not null && items.TryGetValue(l, out var it); l = it.Location)
             if (it.Owner == process || it.Public) return true;
         return false;
+    }
+
+    // THE RIGHTS A PROCESS HOLDS NOW. A Rights Item may carry a RightsTime: a Simple Time whose Start and End differ is the period the Rights are valid for (the Rights of a meeting
+    // last as long as the meeting does); after its End they are not held. A Rights Item without one, or whose times are the same instant, does not expire.
+    private IEnumerable<JsonObject> Live(string process) =>
+        (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).Where(b => !Expired(b));
+
+    // The time the M-Instance goes by (a test moves it).
+    public Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
+
+    private bool Expired(JsonObject rights)
+    {
+        if (rights["RightsTime"]?["SimpleTimeData"]?[0] is not JsonObject t || t["StartTime"] is null || t["EndTime"] is null) return false;
+        var (start, end) = (t["StartTime"]!.GetValue<long>(), t["EndTime"]!.GetValue<long>());
+        return end > start && Clock().ToUnixTimeMilliseconds() > end;
     }
 
     // The Items a Rights Item concerns: the targets and Nils of its Process Actions.

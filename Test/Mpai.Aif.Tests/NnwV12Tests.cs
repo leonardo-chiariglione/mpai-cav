@@ -28,10 +28,10 @@ public class NnwV12Tests
     }
 
     [Fact]
-    public void TheInsertionAimsGiveTheLocatorAndTheExtractionAimMayTakeIt()
+    public void TheLocatorIsAnOptionalInputOfAllThreeAimsAndNobodyGivesItBack()
     {
         var folder = Path.Combine(Repository.Schemas, "NNW1", "V1.2", "AIMs");
-        (string File, string Direction, bool Optional)[] expected = [("PostTrainingWatermarkInsertion", "Output", false), ("DuringTrainingWatermarkInsertion", "Output", true), ("WatermarkExtraction", "Input", true)];     // Post-Training Watermark Insertion always gives it; the others are still to be reviewed
+        (string File, string Direction, bool Optional)[] expected = [("PostTrainingWatermarkInsertion", "Input", true), ("DuringTrainingWatermarkInsertion", "Input", true), ("WatermarkExtraction", "Input", true)];   // the party that decides where the watermark goes tells the AIM; it is never an output    // Post-Training Watermark Insertion always gives it; the others are still to be reviewed
         foreach (var (file, direction, optional) in expected)
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, file + ".json")));
@@ -48,8 +48,8 @@ public class NnwV12Tests
         var folder = Path.Combine(Repository.Schemas, "NNW1", "V1.2", "AIMs");
         var expected = new Dictionary<string, string[]>
         {
-            ["PostTrainingWatermarkInsertion"] = ["Input AIP-MLO-V1.0", "Input NNW-PLD-V1.2", "Output AIP-MLO-V1.0", "Output NNW-WLC-V1.2"],
-            ["DuringTrainingWatermarkInsertion"] = ["Input AIP-MLO-V1.0 optional", "Input NNW-DST-V1.2", "Input NNW-PLD-V1.2", "Output AIP-MLO-V1.0", "Output NNW-WLC-V1.2 optional"],
+            ["PostTrainingWatermarkInsertion"] = ["Input AIP-MLO-V1.0", "Input NNW-PLD-V1.2", "Input NNW-WLC-V1.2 optional", "Output AIP-MLO-V1.0"],
+            ["DuringTrainingWatermarkInsertion"] = ["Input AIP-MLO-V1.0 optional", "Input NNW-DST-V1.2", "Input NNW-PLD-V1.2", "Input NNW-WLC-V1.2 optional", "Output AIP-MLO-V1.0"],
             ["WatermarkExtraction"] = ["Input AIP-MLO-V1.0", "Input NNW-WLC-V1.2 optional", "Output NNW-PLD-V1.2"]
         };
         foreach (var (file, ports) in expected)

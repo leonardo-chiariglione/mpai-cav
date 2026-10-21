@@ -24,6 +24,8 @@
   #caption[hidden] { display: none; }
   #captionNote { margin-top: 6px; font-size: 15px; font-weight: 400; color: #f2c94c; max-width: 760px; }
   #captionNote:empty { display: none; }
+  #notice { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--panel); border-radius: 8px; padding: 8px 18px; font-size: 16px; max-width: calc(100vw - 40px); text-align: center; z-index: 15; }
+  #notice:empty { display: none; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 </style>
 <script type="importmap">
@@ -36,6 +38,7 @@
 <body>
 <div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
 <button id="voiceBtn" style="position:fixed;top:10px;right:10px;z-index:20;background:var(--panel);color:inherit;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:14px;cursor:pointer">Voice: on</button>
+<div id="notice"></div>
 <div id="caption" hidden><span id="captionText"></span><div id="captionNote"></div><small id="captionHint"></small></div>
 <script type="module">
 import * as THREE from 'three';
@@ -57,7 +60,7 @@ document.body.appendChild(labels.domElement);
 
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2a3038);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
-scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3a3a, 1.0));
+const hemi = new THREE.HemisphereLight(0xffffff, 0x3a3a3a, 1.0); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(8, 14, 10); sun.castShadow = true;
 Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20 }); sun.shadow.mapSize.set(2048, 2048);
 scene.add(sun);
@@ -69,12 +72,12 @@ const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 30
 const controls = new OrbitControls(camera, renderer.domElement);
 function frame() {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  const halfWidth = 16, hfov = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
+  const halfWidth = new URLSearchParams(location.search).has('world') ? 40 : 16, hfov = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
   const dist = Math.max(halfWidth / Math.tan(hfov / 2), 14);
   const dir = new THREE.Vector3(0, 0.55, 0.83).normalize();
   const look = new URLSearchParams(location.search).get('look');   // ?look=x,y: frame the place at x east, y north (a meeting room), closer
   const [lx, ly] = look ? look.split(',').map(Number) : [null, null];
-  if (look) controls.target.set(lx, 0.5, -ly); else controls.target.set(1, 0.5, 1);
+  if (look) controls.target.set(lx, 0.5, -ly); else if (new URLSearchParams(location.search).has('world')) controls.target.set(14, 0.5, 0); else controls.target.set(1, 0.5, 1);
   camera.position.copy(controls.target).addScaledVector(dir, look ? dist * 0.55 : dist); controls.update();
 }
 frame();
@@ -83,6 +86,43 @@ addEventListener('resize', () => { frame(); renderer.setSize(innerWidth, innerHe
 function label(text) {
   const d = document.createElement('div'); d.className = 'label'; d.textContent = text;
   return new CSS2DObject(d);
+}
+
+
+// ---------------------------------------------------------------- the world (?world): the Square, the buildings (glTF), their doors
+// MMM/World/world.json says where everything is: the Square, the buildings with their walls and doors, the rooms, the seats, the acoustics of the meeting room. The buildings are
+// 3D Locations, rendered by their glTF; a door is a Right - the client asks the M-Instance to move its Persona through it (MM-Move) and the M-Instance refuses (403) a User that
+// has no Right to the Location behind it. What stops a walker is the walls; the door is shut until the M-Instance has let the Persona through.
+const W = new URLSearchParams(location.search).has('world') ? await (await fetch('world/world.json', { cache: 'no-store' })).json() : null;
+const solids = [], doors = [], origin = {}, buildingLabels = [];
+const blocked = (x, y) => {
+  const R = 0.3;
+  for (const r of solids) if (x > r[0] - R && x < r[2] + R && y > r[1] - R && y < r[3] + R) return true;
+  for (const d of doors) if (!d.open) { const r = d.rect; if (x > r[0] - R && x < r[2] + R && y > r[1] - R && y < r[3] + R) return true; }
+  return false;
+};
+if (W) {
+  hemi.groundColor.set(0xc4c4c4);   // light from below too: the inside of a ceiling is not black
+  ground.scale.setScalar(W.ground.size / 80); ground.material.color.set(0x4f7a4f);
+  scene.background = new THREE.Color(0x9cc3e6);
+  const sq = W.square; origin[sq.id] = [sq.x, sq.y];
+  const pad = new THREE.Mesh(new THREE.BoxGeometry(sq.size, 0.04, sq.size), new THREE.MeshStandardMaterial({ color: 0x8a929c, roughness: 0.9 }));
+  pad.position.set(sq.x, 0.02, -sq.y); pad.receiveShadow = true; scene.add(pad);
+  const grid = new THREE.GridHelper(sq.size, sq.size / 2, 0x6b7380, 0x77808c); grid.position.set(sq.x, 0.045, -sq.y); scene.add(grid);
+  const sl = label(sq.name); sl.position.set(sq.x, 0.5, -sq.y - sq.size / 2 + 1); scene.add(sl); buildingLabels.push(sl);
+  const wl = new GLTFLoader();
+  for (const b of W.buildings) {
+    origin[b.id] = [b.x, b.y];
+    for (const r of b.rooms) origin[r.id] = [b.x + r.x, b.y + r.y];
+    for (const r of b.solids) solids.push(r);
+    wl.load(b.model, g => { g.scene.position.set(b.x, 0, -b.y); scene.add(g.scene); });
+    const l = label(b.name); l.position.set(b.x, b.height + 0.8, -b.y); scene.add(l); buildingLabels.push(l);
+    for (const d of [...b.doors, ...b.rooms.map(r => r.door).filter(Boolean)]) {
+      d.rect = d.axis === 'x' ? [d.x - 0.1, d.y - d.width / 2, d.x + 0.1, d.y + d.width / 2] : [d.x - d.width / 2, d.y - 0.1, d.x + d.width / 2, d.y + 0.1];
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(d.axis === 'x' ? 0.08 : d.width, 2.2, d.axis === 'x' ? d.width : 0.08), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }));
+      leaf.position.set(d.x, 1.1, -d.y); scene.add(leaf); d.leaf = leaf; d.open = false; doors.push(d);
+    }
+  }
 }
 
 // ---------------------------------------------------------------- Locations
@@ -188,6 +228,7 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 // five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
 const userName = new URLSearchParams(location.search).get('user');
 const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
+window.mmmClient = client;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -204,17 +245,17 @@ async function join() {
   if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
   client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => p[0] === client.name)?.[1];
   let h = 0; for (const c of client.name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  client.x = Math.cos(h % 628 / 100) * 2.5; client.y = Math.sin(h % 628 / 100) * 2.5; client.yaw = Number(new URLSearchParams(location.search).get('yaw') ?? 0);
+  client.x = (W ? W.spawn.x : 0) + Math.cos(h % 628 / 100) * (W ? W.spawn.radius : 2.5); client.y = (W ? W.spawn.y : 0) + Math.sin(h % 628 / 100) * (W ? W.spawn.radius : 2.5); client.yaw = Number(new URLSearchParams(location.search).get('yaw') ?? (W ? W.spawn.yaw : 0));
   const add = await act('locate/mm-add', client.name, { Nil: client.persona, At: client.at, With: [spatial('SA-' + client.name, client.x, client.y, client.yaw)] });
   client.status = add.http === 200 ? `${client.name}: in ${client.at}` : `cannot join: ${add.http}`;
-  if (add.http === 200 && new URLSearchParams(location.search).has('meet')) await sit();
+  if (add.http === 200 && W) prepareSeat(); else if (add.http === 200 && new URLSearchParams(location.search).has('meet')) await sit();
   if (add.http === 200) { capture(); setInterval(capture, 200); setInterval(sendPose, 150); }
 }
 // The meeting (&meet): the User asks the AVS Service for a seat (MM-Send), reads which it was given, and moves its Persona there (MM-Move) with the right
 // the AVS Service gave it. The AVS Service and the Secretary are Processes of the M-Instance; the client is only this User.
 const simpleTime = id => ({ Header: 'OSD-STM-V1.5', SimpleTimeID: id, SimpleTimeData: [{ FlagsByte: 3, StartTime: 1767254400000, EndTime: 1767254400000, AccuracyMode: 'single', AccuracyPlusMinus: 1 }] });
 const message = (id, text) => ({ Header: 'MMM-MSG-V2.2', MInstanceID: 'MI1', MessageID: id, MessageData: [{ MessageData: text }] });
-async function sit() {
+async function askSeat() {
   // Who is in the meeting is the convener's decision (&convene; &invite=Name,Name): the room is open only to the invited. Not invited, the User waits for the
   // invitation - a Message of the AVS Service - and asks again.
   const q = new URLSearchParams(location.search), tell = (id, text) => act('communicate/mm-send', client.name, { Nil: id, To: 'AVS', With: [message(id, text)] });
@@ -227,20 +268,113 @@ async function sit() {
     await tell(join, 'join;persona=' + client.persona);   // the Persona it brings to this meeting: one of its own
     told = null;
     for (let i = 0; i < 50 && !told; i++) { await pause(200); told = await read(`Seat-${join}`); }   // the AVS Service answers within a moment
+    if (told === 'the meeting is over') break;
     if (told === 'not invited') { client.status = `${client.name}: waiting for an invitation`; for (let i = 0; i < 20 && !(await read(`Invitation-${client.name}`)); i++) await pause(500); }
   }
   const seat = Object.fromEntries((told ?? '').split(';').map(p => p.split('=')));
-  if (!seat.seat) { client.status = `${client.name}: no seat (${told ?? 'no answer'})`; return; }
+  if (!seat.seat) { client.status = `${client.name}: no seat (${told ?? 'no answer'})`; if (told === 'the meeting is over') client.notice = 'The meeting is over.'; return null; }
+  return seat;
+}
+async function sit() { const seat = await askSeat(); if (seat) await takeSeat(seat); }
+async function takeSeat(seat) {   // MM-Move of the Persona to its seat, from where it is (the Square, or the meeting room) with the right the AVS Service gave
+  if (client.taking) return; client.taking = true;
   const pa = `PA-Sit-${client.persona}`;
   const sitPA = { Header: 'MMM-2MP-V2.2', MInstanceID: 'MI1', MMMovePAID: pa, Time: simpleTime(pa + '-T'),
     MMMovePARQ: { RQ1: { Complement: 'Nil', ItemID: client.persona }, RQ3: { Complement: 'To', PointOfView2: { Header: 'OSD-OPV-V1.5', PointOfViewID: seat.seat, CartPosition: [0, 0, 0], Orientation: [0, 0, 0] } } } };
   const right = { Header: 'MMM-RGT-V2.2', MInstanceID: 'MI1', RightsID: 'Seat-Move-' + client.persona, RightsData: [{ DeonticVerb: 'May', Level: 'Acquired', PAIDOrPA: [{ ProcessActionID: pa }] }] };
   const yaw = Number(seat.yaw);
-  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: 'MVS', To: seat.seat, With: [spatial('SA-' + client.name + '-Seat', 0, 0, yaw), sitPA, right] });
+  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: seat.seat, With: [spatial('SA-' + client.name + '-Seat', 0, 0, yaw), sitPA, right] });
+  client.taking = false;
   if (mv.http !== 200) { client.status = `${client.name}: cannot sit: ${mv.http}`; return; }
   Object.assign(client, { loc: seat.seat, at: seat.room, ox: Number(seat.x), oy: Number(seat.y), x: Number(seat.x), y: Number(seat.y), yaw, seated: true, sent: '' });
-  client.status = `${client.name}: seated at ${seat.seat}`;
-  if (new URLSearchParams(location.search).has('mic')) microphone();
+  client.status = `${client.name}: seated at ${seat.seat}`; client.notice = 'Seated. Q stands up.';
+  if (new URLSearchParams(location.search).has('mic') && !client.micOn) { client.micOn = true; microphone(); }
+}
+
+// THE WORLD, THE CLIENT'S PART. The User asks the AVS Service for its seat as soon as it is in the world: invited, it is given the right to the seat and to the doors of the Town
+// Hall (the AVS Service's Rights Change); not invited, it waits, and the doors stay shut to it (403). Walking to a door asks the M-Instance to move the Persona through it (MM-Move);
+// in the meeting room the Persona takes its seat. Q stands up, E sits again.
+function prepareSeat() {
+  askSeat().then(seat => {
+    if (!seat) return;
+    client.seatInfo = seat; client.notice = 'You are invited: walk to the Town Hall.';
+    if (seat.convener === '1') endButton();
+    if (client.loc === seat.room) takeSeat(seat);
+  });
+}
+// THE END OF THE MEETING. The rights of a meeting - the doors, the seat, the speech - are valid for the meeting, and the AVS Service withdraws them when it ends: at its time, or when its
+// convener ends it (the button). A User whose rights are gone is refused by the M-Instance (403): its client sees that, and the Persona leaves to the Square.
+function endButton() {
+  const b = document.createElement('button'); b.textContent = 'End the meeting for everyone';
+  Object.assign(b.style, { position: 'fixed', left: '12px', bottom: '12px', zIndex: 20, background: 'var(--panel)', color: 'inherit', border: '1px solid #a55', borderRadius: '8px', padding: '8px 14px', fontSize: '14px', cursor: 'pointer' });
+  let armed = false;
+  b.onclick = async () => {
+    if (!armed) { armed = true; b.textContent = 'Click again: the rights of all end'; setTimeout(() => { armed = false; b.textContent = 'End the meeting for everyone'; }, 4000); return; }
+    const id = `End-${client.name}-${Date.now()}`;
+    await act('communicate/mm-send', client.name, { Nil: id, To: 'AVS', With: [message(id, 'end')] });
+    b.remove(); client.notice = 'The meeting is ending.';
+  };
+  document.body.appendChild(b);
+}
+async function meetingOver() {
+  if (client.leaving) return; client.leaving = true;
+  const x = 13.5, y = 0;
+  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: 'MVS', With: [spatial('SA-' + client.name + '-Out', x, y, 270)] });
+  client.leaving = false;
+  if (mv.http !== 200) return;
+  Object.assign(client, { loc: 'MVS', at: 'MVS', ox: 0, oy: 0, x, y, yaw: 270, seated: false, seatInfo: null, sent: '' });
+  for (const d of doors) { d.open = false; d.leaf.visible = true; }
+  client.notice = 'The meeting is over: your rights to the Town Hall are withdrawn.';
+}
+async function standUp() {
+  const room = origin[client.at], at = client.at;
+  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: at, With: [spatial('SA-' + client.name + '-Up', client.x - room[0], client.y - room[1], client.yaw)] });
+  if (mv.http === 200) { Object.assign(client, { loc: at, ox: room[0], oy: room[1], seated: false, sent: '' }); client.notice = 'E sits again; walk to the door to leave.'; }
+}
+async function pass(d, target) {
+  if (client.moving || (d.tried && Date.now() - d.tried < 2500)) return;
+  d.tried = Date.now(); client.moving = true;
+  const [tx, ty] = origin[target];
+  const mv = await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: target, With: [spatial('SA-' + client.name + '-' + target, client.x - tx, client.y - ty, client.yaw)] });
+  client.moving = false;
+  if (mv.http === 200) {
+    Object.assign(client, { loc: target, at: target, ox: tx, oy: ty, sent: '' }); d.open = true; d.leaf.visible = false;
+    client.notice = target === 'MVS' ? 'Metaverse Square.' : `${d.name}: you are in ${target}.`;
+    if (target === 'MeetingRoom') { if (client.seatInfo) takeSeat(client.seatInfo); else client.notice = 'Meeting room: waiting for your seat...'; }
+  } else if (mv.http === 403) client.notice = `${d.name}: locked (403) - you have no Right to enter.`;
+  else client.notice = `${d.name}: ${mv.http}`;
+}
+function doorCheck(fwd, rad) {   // a door is gone through by walking at it: forward, facing it - standing near it is not asking
+  if (client.moving || client.seated || fwd <= 0) return;
+  for (const d of doors) {
+    const along = d.axis === 'x' ? client.x - d.x : client.y - d.y, lat = Math.abs(d.axis === 'x' ? client.y - d.y : client.x - d.x);
+    if (lat > d.width / 2 || Math.abs(along) > 1.1) continue;
+    const outside = along * d.outside > 0;       // on the side the door is entered from
+    const toward = d.axis === 'x' ? -Math.sign(along) * -Math.sin(rad) : -Math.sign(along) * Math.cos(rad);   // facing the door's plane: 1, away from it: -1
+    if (toward < 0.5) continue;
+    if (client.loc === d.from && outside) { pass(d, d.to); return; }
+    if (client.loc === d.to && !outside && Math.abs(along) < 0.9) { pass(d, d.from); return; }
+  }
+}
+// The acoustics of the meeting room - its Acoustic Profile (CAE3: reverberation by frequency, early reflections, absorption, diffusion) - are what the speech heard there goes
+// through: the voice at its seat, direct, and the same voice through the room, made from the RT60 of the profile: low and high frequencies decay as the profile says.
+let echo = null;
+function roomEcho(ctx, pan) {
+  if (!echo || echo.ctx !== ctx) {
+    const ac = W.buildings.flatMap(b => b.rooms).find(r => r.id === 'MeetingRoom')?.acoustics;
+    const plot = ac?.Reverberation?.[0]?.RT60?.Plot?.['2D'] ?? [[1000, 0.5]];
+    const rt = f => plot.reduce((best, q) => Math.abs(Math.log(q[0] / f)) < Math.abs(Math.log(best[0] / f)) ? q : best, plot[0])[1];
+    const rate = ctx.sampleRate, rtLow = rt(250), rtHigh = rt(4000), early = Math.floor(rate * (ac?.Reflectivity?.[0]?.EarlyReflectionTime ?? 0.01));
+    const len = Math.floor(rate * Math.min(1.5, Math.max(rtLow, rtHigh) * 1.1)), ir = ctx.createBuffer(2, len, rate);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c); let lp = 0;
+      for (let i = early; i < len; i++) { const n = Math.random() * 2 - 1; lp += 0.1 * (n - lp); const t = (i - early) / rate; d[i] = lp * Math.exp(-6.9 * t / rtLow) * 2.2 + (n - lp) * Math.exp(-6.9 * t / rtHigh) * 0.6; }
+    }
+    const conv = ctx.createConvolver(); conv.buffer = ir;
+    const wet = ctx.createGain(); wet.gain.value = 0.4 * (1 - (ac?.Absorption ?? 0.3)) + (ac?.Diffusion ?? 0) * 0.1;
+    conv.connect(wet); wet.connect(ctx.destination); echo = { ctx, conv };
+  }
+  pan.connect(ctx.destination); pan.connect(echo.conv);
 }
 
 // THE MICROPHONE (&mic): the client captures and streams. When the User starts to speak - a voice activity detection of the level - it declares a Speech Object at its seat at
@@ -249,10 +383,16 @@ async function sit() {
 // User is still speaking, the next Speech Object takes over; if it stops, the stream ends.
 async function microphone() {
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { client.status += ' (no microphone)'; return; }
+  const tone = new URLSearchParams(location.search).get('mic') === 'tone';   // &mic=tone: a test tone in bursts instead of a microphone (for trying the room without people)
+  if (!tone) {
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (e) { client.status += ' (no microphone)'; return; }
+  }
   const ctx = new AudioContext({ sampleRate: 16000 });
-  const src = ctx.createMediaStreamSource(stream), node = ctx.createScriptProcessor(1024, 1, 1);
+  let src;
+  if (tone) { src = ctx.createGain(); const o = ctx.createOscillator(); o.frequency.value = 220; const g = ctx.createGain(); o.connect(g); g.connect(src); o.start(); setInterval(() => { g.gain.value = (Date.now() / 1000 | 0) % 6 < 3 ? 0.3 : 0; }, 100); }
+  else src = ctx.createMediaStreamSource(stream);
+  const node = ctx.createScriptProcessor(1024, 1, 1);
   const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, PRE = 0.2 * RATE, DURATION = 3000;
   let pre = [], current = null, silent = 0, n = 0;
   const level = f => Math.sqrt(f.reduce((s, v) => s + v * v, 0) / f.length);
@@ -296,6 +436,7 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
   if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); }
+  else if (W && r.http === 403 && client.loc !== 'MVS') meetingOver();   // the rights of the meeting are gone
 }
 
 // HEARING: a Speech Object in the room is what somebody said, or is saying. Hearing is the receiver's decision - from Anna, not from Carla: the panel lists who is in the room
@@ -322,7 +463,7 @@ function hear(t) {
   const ctx = ears(), pan = ctx.createPanner(), ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${t.ID}/listen?token=${encodeURIComponent(client.token)}`);
   pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 1;
   pan.positionX.value = t.X; pan.positionY.value = 1.5; pan.positionZ.value = -t.Y;   // x east, y up, z towards the south: the axes of the viewer
-  pan.connect(ctx.destination); ws.binaryType = 'arraybuffer';
+  if (W) roomEcho(ctx, pan); else pan.connect(ctx.destination); ws.binaryType = 'arraybuffer';
   let carry = new Uint8Array(0), next = 0, first = true;
   ws.onmessage = e => {
     const value = new Uint8Array(e.data), bytes = new Uint8Array(carry.length + value.length); bytes.set(carry); bytes.set(value, carry.length);
@@ -340,8 +481,8 @@ async function sendPose() {   // MM-Move: the Persona stands where its User put 
   await act('locate/mm-move', client.name, { Nil: client.persona, From: client.loc, To: client.loc, With: [spatial('SA-' + client.name, client.x - client.ox, client.y - client.oy, client.yaw)] });
 }
 if (client) {
-  controls.enabled = false;
-  addEventListener('keydown', e => client.keys.add(e.key.toLowerCase()));
+  controls.enabled = false; camera.fov = 70; camera.updateProjectionMatrix();   // a person's field of view, not the stage's
+  addEventListener('keydown', e => { client.keys.add(e.key.toLowerCase()); if (W && !e.repeat) { const k = e.key.toLowerCase(); if (k === 'q' && client.seated) standUp(); else if (k === 'e' && !client.seated && client.loc === client.at && client.seatInfo && client.at === client.seatInfo.room) takeSeat(client.seatInfo); } });
   addEventListener('keyup', e => client.keys.delete(e.key.toLowerCase()));
   join();
 }
@@ -351,8 +492,13 @@ function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn;
   const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
   client.yaw = (client.yaw + turn * 90 * dt + 360) % 360;
   if (client.seated) fwd = 0;   // seated: it turns its head, it does not walk
-  client.x = client.seated ? client.x : Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
-  client.y = client.seated ? client.y : Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
+  if (W && !client.seated && !client.moving) {   // the walls stop it; the door is shut until the M-Instance lets it through
+    const nx = client.x - Math.sin(rad) * fwd * 2.2 * dt, ny = client.y + Math.cos(rad) * fwd * 2.2 * dt;
+    if (!blocked(nx, client.y)) client.x = nx; if (!blocked(client.x, ny)) client.y = ny;
+    client.x = Math.max(W.bounds[0], Math.min(W.bounds[2], client.x)); client.y = Math.max(W.bounds[1], Math.min(W.bounds[3], client.y)); doorCheck(fwd, rad);
+  }
+  client.x = W || client.seated ? client.x : Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
+  client.y = W || client.seated ? client.y : Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
   camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');
   const L = hearCtx?.listener;   // the ears are where the eyes are
   if (L?.positionX) { L.positionX.value = client.x; L.positionY.value = 1.6; L.positionZ.value = -client.y; L.forwardX.value = -Math.sin(rad); L.forwardY.value = 0; L.forwardZ.value = -Math.cos(rad); L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; }   // three.js looks along -z (north) at rotation 0
@@ -365,8 +511,9 @@ async function refresh() {
     state = { MInstanceID: 'MI1', Performed: 0, Recent: [], Things: client.things, Hidden: [] };
     document.getElementById('title').textContent = client.status;
     renderEars();
+    document.getElementById('notice').textContent = W ? (client.notice ?? '') : '';
     document.title = client.heard.length ? 'heard: ' + client.heard.join(', ') : 'M-Instance viewer';   // what the tab says: what this User has heard
-    document.getElementById('recent').textContent = 'W/S walk, A/D turn. You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.join(', ') : '');
+    document.getElementById('recent').textContent = (W ? 'W/S walk, A/D turn, Q stand up, E sit. ' : 'W/S walk, A/D turn. ') + 'You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.join(', ') : '');
   } else {
     try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
   }
@@ -388,7 +535,7 @@ async function refresh() {
   for (const t of state.Things) {
     seen.add(t.ID);
     const isRoom = t.Kind === 'Location' && t.At;
-    const shape = t.Kind === 'Persona' ? 'persona' : isRoom ? 'room' : t.Kind === 'Location' ? 'pad' : null;
+    const shape = t.Kind === 'Persona' ? 'persona' : W && t.Kind === 'Location' ? null : isRoom ? 'room' : t.Kind === 'Location' ? 'pad' : null;   // in the world the buildings are drawn from their glTF
     if (!shape) continue;
     let d = drawn.get(t.ID);
     if (d && d.shape !== shape) { scene.remove(d.object); d.object.userData.label?.element.remove(); drawn.delete(t.ID); d = null; }
@@ -401,14 +548,14 @@ async function refresh() {
     d.yaw = t.Yaw ?? null;
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
-      d.target.y = (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
+      d.target.y = W ? 0.05 : (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).
     d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID) && !(client && t.ID === client.persona);   // you do not see your own Persona from inside it
     const l = d.object.userData.label;
     if (l) l.visible = d.object.visible;
-    if (l) l.element.textContent = t.Kind === 'Persona' ? `${t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
+    if (l) l.element.textContent = t.Kind === 'Persona' ? `${W ? (t.Owner ?? t.ID) : t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
   }
   for (const [id, d] of drawn) if (!seen.has(id)) { d.object.visible = false; if (d.object.userData.label) d.object.userData.label.visible = false; }
 }
@@ -427,6 +574,7 @@ renderer.setAnimationLoop(() => {
     }
     if (d.yaw != null) d.object.rotation.y = Math.PI + d.yaw * Math.PI / 180;   // a Persona looks where its yaw says (the model faces +z at rest; yaw 0 is north, -z)
   }
+  if (W && client) for (const l of buildingLabels) l.visible = client.loc === 'MVS';   // the names of the buildings are for whoever is outside
   if (client) drive(dt); else controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });
 await refresh(); setInterval(refresh, 500);
