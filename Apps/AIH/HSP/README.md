@@ -11,15 +11,35 @@
 | `Demo` | `AihDemo`, the first slice narrated (AllApps, 40) |
 
 A User Agent reaches its Module through the Controller API only. In `AihFirstSliceTests` the Controller and the Module of each end run as different processes (the Module's AIMs on an AIM host).
-## On Linux
+## Building and running
+
+Both need the .NET 10 SDK (<https://dotnet.microsoft.com/download>). The demo is built from `Demo/AihDemo.csproj`, which pulls in the nine AIH AIMs, the Chain, the User Agents and what they rest on.
+
+### On Windows
+
+From the root of the tree (PowerShell or a Command Prompt):
 
 ```
-./build-aih.sh              # builds the demo and everything the AIH AIMs rest on (Debug; ./build-aih.sh Release)
+dotnet build Apps\AIH\HSP\Demo\AihDemo.csproj -c Debug -nologo -v q
+dotnet Apps\AIH\HSP\Demo\bin\Debug\net10.0\AihDemo.dll
+```
+
+or double-click `AllApps\40 AIH-HSP demo (first slice, narrated).bat`, which does the same. For Release, use `-c Release` and `bin\Release`.
+The AIH tests: `dotnet test Test\Mpai.Aif.Tests --filter FullyQualifiedName~Aih`.
+
+### On Linux
+
+```
+cd Apps/AIH/HSP
+./build-aih.sh              # Debug; ./build-aih.sh Release
 ./run-aih-demo.sh           # builds, then plays the first slice, narrated
-AIH_DEMO_TRACE=1 ./run-aih-demo.sh   # the stack of a failure
 ```
 
-They only wrap `dotnet build Demo/AihDemo.csproj` and `dotnet Demo/bin/<configuration>/net10.0/AihDemo.dll`, which is what `AllApps\40 AIH-HSP demo (first slice, narrated).bat` does on Windows.
+If the scripts are not executable, run `chmod +x *.sh` first. The AIH tests: `dotnet test Test/Mpai.Aif.Tests --filter FullyQualifiedName~Aih`, from the root of the tree.
+
+`AIH_DEMO_TRACE=1 ./run-aih-demo.sh` shows the stack of a failure. What was tried on Linux follows.
+
+The scripts only wrap `dotnet build Demo/AihDemo.csproj` and `dotnet Demo/bin/<configuration>/net10.0/AihDemo.dll`, which is what `AllApps\40 AIH-HSP demo (first slice, narrated).bat` does on Windows.
 Needs the .NET 10 SDK; without root, `dotnet-install.sh --channel 10.0` puts it in `~/.dotnet`. If the system has no ICU library (`apt install libicu-dev`), set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1`.
 
 Tried on Ubuntu 26.04 (WSL2), .NET 10.0.402, x86-64: it builds (about 10 s, from a clean copy of the tree), and the first slice runs to the end - the Controllers and their AIM hosts as separate processes,
