@@ -296,19 +296,19 @@ async function choosePersona() {
   const list = await fetch('/api/v2.2/register/personae', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
   if (!list.length) return null;
   const box = document.createElement('div');
-  Object.assign(box.style, { position: 'fixed', inset: '0', zIndex: 40, background: 'rgba(15,18,24,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' });
+  Object.assign(box.style, { position: 'fixed', inset: '0', zIndex: 40, background: 'rgba(15,18,24,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'safe center', gap: '10px', padding: '16px', overflow: 'auto', boxSizing: 'border-box' });
   box.innerHTML = `<h2 style="margin:0">3. Choose your Persona</h2><div style="max-width:560px;text-align:center;color:var(--muted)">These are the Personae your Account makes available. Choose the one your User will bring into the world.</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
-    <div id="pcList" style="width:260px;height:420px;overflow:auto;background:#252b34;border-radius:8px;padding:4px"></div><div id="pcView" style="width:280px;height:420px;background:#2c333d;border-radius:8px"></div></div>
-    <button id="pcGo" style="font-size:20px;padding:8px 28px;border-radius:8px;cursor:pointer" disabled>Register</button>`;
+    <div id="pcList" style="width:260px;height:min(420px,48vh);overflow:auto;background:#252b34;border-radius:8px;padding:4px"></div><div id="pcView" style="width:280px;height:min(420px,48vh);background:#2c333d;border-radius:8px;overflow:hidden"></div></div>
+    <div id="pcName" style="min-height:1.3em;color:var(--muted)"></div><button id="pcGo" style="font-size:20px;padding:8px 28px;border-radius:8px;cursor:pointer" disabled>Register</button>`;
   document.body.appendChild(box);
   const view = box.querySelector('#pcView'), listEl = box.querySelector('#pcList'), go = box.querySelector('#pcGo');
-  const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pr.setSize(280, 420); view.appendChild(pr.domElement);
+  const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pr.setSize(280, 420); view.appendChild(pr.domElement); pr.domElement.style.cssText = 'width:100%;height:100%;object-fit:contain';
   pr.outputColorSpace = THREE.SRGBColorSpace;
   const ps = new THREE.Scene(); ps.add(new THREE.HemisphereLight(0xffffff, 0x666666, 2.4)); const pl = new THREE.DirectionalLight(0xffffff, 1.5); pl.position.set(2, 4, 5); ps.add(pl);
   const pc = new THREE.PerspectiveCamera(30, 280 / 420, 0.1, 50); let current = null, shown = null, turn = 0;
   const gl = new GLTFLoader(), cache = new Map();
   const show = async name => {
-    current = name; go.disabled = false;
+    current = name; go.disabled = false; box.querySelector('#pcName').textContent = 'Your Persona: ' + name.replaceAll('_', ' ');
     for (const el of listEl.children) el.style.background = el.dataset.name === name ? '#3d6a99' : 'transparent';
     if (shown) { ps.remove(shown); shown = null; }
     if (!cache.has(name)) cache.set(name, gl.loadAsync('personae/catalogue/' + name + '.glb'));
@@ -325,7 +325,7 @@ async function choosePersona() {
     const turner = new THREE.Group(); turner.add(shown); ps.add(turner); shown = turner;
     pc.position.set(0, 1.0, 4.6); pc.lookAt(0, 0.9, 0);
   };
-  for (const e of list) { const d = document.createElement('div'); d.dataset.name = e.Name; d.textContent = e.Name.replaceAll('_', ' '); Object.assign(d.style, { padding: '4px 8px', cursor: 'pointer', borderRadius: '4px' }); d.onclick = () => show(e.Name); listEl.appendChild(d); }
+  for (const e of list) { const d = document.createElement('div'); d.dataset.name = e.Name; d.textContent = e.Name.replaceAll('_', ' '); Object.assign(d.style, { padding: '4px 8px', cursor: 'pointer', borderRadius: '4px' }); d.onclick = () => show(e.Name); d.ondblclick = () => { show(e.Name); go.click(); }; listEl.appendChild(d); }
   const spin = () => { if (!box.isConnected) return; if (shown) shown.rotation.y = (turn += 0.01); pr.render(ps, pc); requestAnimationFrame(spin); };
   spin(); show(list[0].Name);
   return await new Promise(res => { go.onclick = () => { box.remove(); pr.dispose(); res(current); }; });
