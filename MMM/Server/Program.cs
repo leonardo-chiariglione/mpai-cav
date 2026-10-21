@@ -40,7 +40,9 @@ var tokens = Pairs(Arg("--invites")).ToDictionary(p => p.Value, p => p.Key, Stri
 var officerNames = (Arg("--officers") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal);   // --officers A,B: who else may take the MPAI Officer Account Level (the chair always may)
 var hostName = Arg("--host") ?? chairName;                          // whoever browses on this machine (the President); --chair is who convenes the meeting
 Identity? identity = args.Contains("--identity") || args.Contains("--tailscale") ? new Identity(chairName, guests, tokens, args.Contains("--visitors"), hostName) : null;
-if (identity is not null) invite = [.. new[] { chairName, hostName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
+// THE ONE WHO INVITES IS INVITED: the chair (who convenes) and the host (who runs the meeting on this machine) are always the first of the invited, whether or not they are on the list.
+if (identity is not null || Arg("--chair") is not null || Arg("--host") is not null)
+    invite = [.. new[] { chairName, hostName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
 if (worldMode)
 {
     World.Setup(m, repo);
@@ -138,6 +140,7 @@ var inside = new HttpClient { BaseAddress = new Uri(url) }; inside.DefaultReques
 var meeting = new MeetingServices(inside, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
 await meeting.StartAsync();
 meeting.Preinvite(invite);
+if (invite.Length > 0) Console.WriteLine($"Invited from the start: {string.Join(", ", invite)} (the first convenes the meeting).");
 // --until 19:00 (today, or tomorrow if it has passed) or --hours 2: when the meeting ends; its rights end with it. Without either, the convener ends it.
 if (Arg("--until") is { } until && TimeSpan.TryParse(until, out var clock)) { var at = DateTime.Today + clock; if (at < DateTime.Now) at = at.AddDays(1); meeting.EndsAt = new DateTimeOffset(at); }
 else if (Arg("--hours") is { } hours && double.TryParse(hours, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var h)) meeting.EndsAt = DateTimeOffset.UtcNow.AddHours(h);
