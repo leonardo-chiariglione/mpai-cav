@@ -255,13 +255,42 @@ async function act(path, source, complements) {
 // REGISTERING WITH THE M-INSTANCE (Register). A human does not bring a Persona: the M-Instance offers a catalogue of them (Rocketbox avatars, personae/catalogue) and the human
 // chooses one - this is the Persona its User will bring into the world. A human that registered before (it closed its browser) is not asked again: its User is given a new token,
 // and its Persona is where it stood.
+// REGISTER, AS MMM-TEC V2.2 SAYS IT (Process Actions, Register): the human connects to the M-Instance page and selects Registration; the Register Service shows the Registration options; the human
+// selects an Account Level (none of ours is a pay service: there is no Service Pricing Model to pay); gives its Personal Data; and selects, among the Processes and Items that Account makes
+// available, the Persona its User will bring. The Request that follows is the last of these steps: the Personal Profile with the level, the data and the choice.
+async function registrationOptions() {
+  if (new URLSearchParams(location.search).has('persona') || new URLSearchParams(location.search).has('nochoice')) return null;
+  const levels = await fetch('/api/v2.2/register/options', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
+  if (!levels.length) return null;
+  const box = document.createElement('div');
+  Object.assign(box.style, { position: 'fixed', inset: '0', zIndex: 40, background: 'rgba(15,18,24,.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '16px', overflow: 'auto' });
+  const field = (id, label, value = '', type = 'text') => `<label style="display:block;text-align:left;margin:6px 0"><span style="display:block;font-size:13px;color:var(--muted)">${label}</span><input id="${id}" type="${type}" value="${value}" style="width:100%;box-sizing:border-box;font-size:17px;padding:6px 8px;border-radius:6px;border:1px solid #556;background:#252b34;color:inherit"></label>`;
+  const guess = (userName ?? '').replace(/^Visitor-.*/, '');
+  box.innerHTML = `<h2 style="margin:0">Register with this M-Instance</h2>
+    <div style="max-width:520px;text-align:center;color:var(--muted)">You are not in the M-Instance yet. Registration gives you an Account, with a User, and the Personae it makes available. Nothing is paid.</div>
+    <div style="width:min(520px,100%)"><div style="margin:6px 0;font-weight:600">1. Choose an Account Level</div>
+      ${levels.map((l, i) => `<label style="display:block;text-align:left;background:#252b34;border-radius:8px;padding:8px 10px;margin:6px 0;cursor:pointer"><input type="radio" name="lvl" value="${l.id}" ${i === levels.length - 1 ? 'checked' : ''}> <b>${l.name}</b><div style="font-size:13px;color:var(--muted);margin-left:22px">${l.description}</div></label>`).join('')}
+      <div style="margin:14px 0 2px;font-weight:600">2. Your data</div>
+      ${field('rgFirst', 'First name', guess)}${field('rgLast', 'Last name')}${field('rgMail', 'Email', '', 'email')}</div>
+    <div id="rgErr" style="color:#f2994a;min-height:1.2em"></div>
+    <button id="rgNext" style="font-size:20px;padding:8px 28px;border-radius:8px;cursor:pointer">Next: choose your Persona</button>`;
+  document.body.appendChild(box);
+  return await new Promise(res => {
+    box.querySelector('#rgNext').onclick = () => {
+      const v = id => box.querySelector('#' + id).value.trim();
+      if (!v('rgFirst') || !v('rgLast') || !/^\S+@\S+\.\S+$/.test(v('rgMail'))) { box.querySelector('#rgErr').textContent = 'The first name, the last name and an email address are needed.'; return; }
+      box.remove();
+      res({ level: box.querySelector('input[name=lvl]:checked').value, first: v('rgFirst'), last: v('rgLast'), email: v('rgMail') });
+    };
+  });
+}
 async function choosePersona() {
   if (new URLSearchParams(location.search).has('persona') || new URLSearchParams(location.search).has('nochoice')) return null;
   const list = await fetch('/api/v2.2/register/personae', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
   if (!list.length) return null;
   const box = document.createElement('div');
   Object.assign(box.style, { position: 'fixed', inset: '0', zIndex: 40, background: 'rgba(15,18,24,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' });
-  box.innerHTML = `<h2 style="margin:0">Register with this M-Instance</h2><div style="max-width:560px;text-align:center;color:var(--muted)">Welcome${userName ? ', ' + userName : ''}. You are not in the M-Instance yet. Registering gives you a User, and the M-Instance offers the Personae below: choose the one your User will bring into the world.</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+  box.innerHTML = `<h2 style="margin:0">3. Choose your Persona</h2><div style="max-width:560px;text-align:center;color:var(--muted)">These are the Personae your Account makes available. Choose the one your User will bring into the world.</div><div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
     <div id="pcList" style="width:260px;height:420px;overflow:auto;background:#252b34;border-radius:8px;padding:4px"></div><div id="pcView" style="width:280px;height:420px;background:#2c333d;border-radius:8px"></div></div>
     <button id="pcGo" style="font-size:20px;padding:8px 28px;border-radius:8px;cursor:pointer" disabled>Register</button>`;
   document.body.appendChild(box);
@@ -310,9 +339,10 @@ async function resume() {
 }
 async function join() {
   if (me?.resume) return resume();
+  const form = await registrationOptions();
   const choice = await choosePersona();
   const profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
-    PersonalProfile: { Data: [{ FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p, ...(choice && p === userName + '-Persona' ? { PersonaChoice: choice } : {}) })) }] } };   // a User has its own Personae: the ones it registers with
+    PersonalProfile: { ...(form ? { AccountLevel: form.level } : {}), Data: [form ? { FirstName: form.first, LastName: form.last, Email: form.email } : { FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p, ...(choice && p === userName + '-Persona' ? { PersonaChoice: choice } : {}) })) }] } };   // a User has its own Personae: the ones it registers with
   const reg = await act('identity/register', client.human, { With: [profile] });
   if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
   client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => decodeURIComponent(p[0]) === client.name)?.[1];
@@ -341,6 +371,7 @@ async function askSeat() {
     told = null;
     for (let i = 0; i < 50 && !told; i++) { await pause(200); told = await read(`Seat-${join}`); }   // the AVS Service answers within a moment
     if (told === 'the meeting is over') break;
+    if (told === 'visitor account') { client.status = `${client.name}: a Visitor Account`; client.notice = 'Your Account is a Visitor Account: you can visit the atrium. For the meeting, register again as a Participant.'; return null; }
     if (told === 'not invited') { client.status = `${client.name}: waiting for an invitation`; for (let i = 0; i < 20 && !(await read(`Invitation-${client.name}`)); i++) await pause(500); }
   }
   const seat = Object.fromEntries((told ?? '').split(';').map(p => p.split('=')));

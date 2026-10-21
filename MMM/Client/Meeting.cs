@@ -191,7 +191,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                 else if (text.StartsWith("join", StringComparison.Ordinal))
                 {
                     if (ended) { await Say(avs, $"Seat-{id}", from, "the meeting is over"); continue; }
-                    if (!invited.Contains(from)) { await Say(avs, $"Seat-{id}", from, "not invited"); continue; }   // the answer is to this request: a User asks again after it is invited
+                    if (!invited.Contains(from)) { await Say(avs, $"Seat-{id}", from, "not invited"); continue; }
+                    if (m.AccountLevelOf(from) is { } level && level != "Participant") { await Say(avs, $"Seat-{id}", from, "visitor account"); continue; }   // the meeting rooms are for a Participant Account   // the answer is to this request: a User asks again after it is invited
                     var persona = Meeting.ParseSeat(text.Replace("join;", "")).GetValueOrDefault("persona") ?? $"{from}-Persona";
                     await Seat(from, persona, $"Seat-{id}");
                     personaOf[from] = persona;

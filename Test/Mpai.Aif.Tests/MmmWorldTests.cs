@@ -257,4 +257,28 @@ public class MmmWorldTests
         await w.Services.PumpAsync();
         Assert.False(w.M.ScreenLive("Screen-Anna"));
     }
+
+    // REGISTER, with an Account Level: one of those the M-Instance offers (no other is accepted); a Visitor Account has no seat in a meeting - only a Participant Account is given the rights
+    // to the wing and the room, if the chair invited it - and the Account says its level and its Items (the Personae).
+    [Fact]
+    public async Task AnAccountLevelIsOneOfTheOfferedAndAVisitorAccountHasNoSeat()
+    {
+        await using var w = new Running();
+        await w.StartAsync(DateTimeOffset.UtcNow.AddHours(2));
+        Assert.Equal(["Visitor", "Participant"], w.M.AccountLevels.Select(l => l.Id).ToArray());
+        async Task<MmmClient.Result> Register(string name, string level)
+        {
+            var p = Profile(name); p["PersonalProfile"]!["AccountLevel"] = level;
+            p["PersonalProfile"]!["Data"] = new JsonArray(new JsonObject { ["FirstName"] = name, ["LastName"] = "Test", ["Email"] = $"{name.ToLowerInvariant()}@example.org" });
+            return await new MmmClient(w.Http, $"{name}-human").PerformAsync("Register", new Complements { With = [p] });
+        }
+        Assert.Equal(422, (await Register("Zed", "Platinum")).Http);                         // not one of the offered
+        Assert.Equal(201, (await Register("Zed", "Visitor")).Http);                          // a refusal did not register it
+        var bruno = await Register("Bruno", "Visitor"); var anna = await Register("Anna", "Participant");
+        Assert.Equal("Visitor", (string?)w.M.Get("Account-Bruno-human")!.Body!["AccountLevel"]);
+        Assert.Equal("Anna-Persona", (string?)w.M.Get("Account-Anna-human")!.Body!["Items"]![0]!["ItemID"]);
+        var b = new MmmClient(w.Http, "Bruno", bruno.Tokens["Bruno"]); var a = new MmmClient(w.Http, "Anna", anna.Tokens["Anna"]);
+        Assert.False((await AskSeat(b, w.Services)).ContainsKey("seat"));                    // invited by the chair, but its Account is a Visitor Account
+        Assert.True((await AskSeat(a, w.Services)).ContainsKey("seat"));
+    }
 }

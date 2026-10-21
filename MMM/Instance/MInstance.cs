@@ -131,6 +131,15 @@ public sealed class MInstance
     public IReadOnlySet<string> Catalogue { get; set; } = new HashSet<string>(StringComparer.Ordinal);
     // What the M-Instance shows a human that is about to register: the entries of the catalogue (Name, Group, Gender). It is the M-Instance's to offer; the human is not yet in it.
     public JsonArray CatalogueEntries { get; set; } = [];
+    // THE ACCOUNT LEVELS the Register Service offers (MMM-TEC Register, step 2): what a human is shown when it selects Registration. Both are free: there is no Service Pricing Model to pay.
+    // Visitor: the public places of the MPAI building. Participant: the meetings the chair invited it to (the AVS Service gives the Rights to those on the chair's list that hold a Participant Account).
+    public IReadOnlyList<(string Id, string Name, string Description)> AccountLevels { get; set; } =
+    [
+        ("Visitor", "Visitor", "The public places of the MPAI building: the atrium, where anybody may come in, look, talk and ask. Free."),
+        ("Participant", "Participant", "Meetings you have been invited to: the Rights to the meeting rooms, for the meeting, if you are on the chair's list. Free.")
+    ];
+    public string? AccountLevelOf(string user) { lock (gate) return accountLevels.GetValueOrDefault(user); }
+    private readonly Dictionary<string, string> accountLevels = new(StringComparer.Ordinal);
     public static string CatalogueModel(string name) => $"catalogue/{name}.glb";
     private int registered;
     public void SetModel(string itemId, string model)
@@ -441,6 +450,8 @@ public sealed class MInstance
         if (profile is null || human is null) return Fail(422, service, "FaultyPA", "Register takes a Personal Profile with its humanID");
         if (processes.ContainsKey(human)) return Fail(409, service, "Clash", $"{human} is registered already");
 
+        var level = profile["PersonalProfile"]?["AccountLevel"]?.GetValue<string>();
+        if (level is not null && !AccountLevels.Any(l => l.Id == level)) return Fail(422, service, "FaultyPA", $"{level} is not an Account Level of this M-Instance");
         foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
             foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
                 if (e?["PersonaChoice"]?.GetValue<string>() is { } pick && !Catalogue.Contains(pick))
@@ -449,6 +460,7 @@ public sealed class MInstance
         processes[human] = new Process { ID = human, Kind = "Human" };
         var account = $"Account-{human}";
         var users = new List<string>();
+        var createdItems = new List<string>();                  // the Personae of the Account: its Items
         var tokens = new Dictionary<string, string>();
         foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
         {
@@ -465,6 +477,8 @@ public sealed class MInstance
                 if (processes.ContainsKey(u)) return Fail(409, service, "Clash", $"Process {u} exists already");
                 var proc = new Process { ID = u, Kind = "User", HumanID = human, Token = NewToken() };
                 processes[u] = proc; tokens[u] = proc.Token!; users.Add(u);
+                if (level is not null) accountLevels[u] = level;
+                createdItems.AddRange(personae);
                 foreach (var pid in personae)
                     items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = chosen.GetValueOrDefault(pid) ?? models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
             }
@@ -476,8 +490,9 @@ public sealed class MInstance
             ID = account, DataType = "MMM-ACC-V2.2", Owner = human,
             Body = new JsonObject
             {
-                ["Header"] = "MMM-ACC-V2.2", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID, ["HumanID"] = human, ["AccountID"] = account,
-                ["Processes"] = new JsonArray(users.Select(u => (JsonNode)new JsonObject { ["ProcessID"] = u }).ToArray())
+                ["Header"] = "MMM-ACC-V2.2", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID, ["HumanID"] = human, ["AccountID"] = account, ["AccountLevel"] = level,
+                ["Processes"] = new JsonArray(users.Select(u => (JsonNode)new JsonObject { ["ProcessID"] = u }).ToArray()),
+                ["Items"] = new JsonArray(createdItems.Select(i => (JsonNode)new JsonObject { ["ItemID"] = i }).ToArray())
             }
         };
         return Ok(201, service, new Complements { With = [JsonValue.Create(account)] }) with { Tokens = tokens };

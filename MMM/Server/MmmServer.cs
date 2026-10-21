@@ -133,6 +133,8 @@ public static class MmmServer
         }
 
         // What a human that has not registered yet is shown: the Personae the M-Instance offers (Register takes the choice). No token: there is no User yet.
+        // Registration options: the Account Levels, then (for the one chosen) the Personae the M-Instance makes available. No token: there is no User yet.
+        app.MapGet("/api/v2.2/register/options", () => Results.Json(m.AccountLevels.Select(l => new { id = l.Id, name = l.Name, description = l.Description, price = 0 })));
         app.MapGet("/api/v2.2/register/personae", () => Results.Json(m.CatalogueEntries));
         app.MapGet("/api/v2.2/items", (HttpContext ctx, string? dataType) => Caller(ctx) is { } p
             ? Results.Json(m.List(dataType).Where(i => m.MayRead(p, i.ID)).Select(i => new { itemID = i.ID, dataType = i.DataType }))
