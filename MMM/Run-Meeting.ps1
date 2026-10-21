@@ -59,7 +59,7 @@ Your personal link (it is yours: please do not pass it on):
 
 $link
 
-What you need: a PC with Chrome or Edge, and a headset (no loudspeakers: the room has its own echo). Open the link, choose your avatar the first time, and allow the microphone when the browser asks.
+What you need: a PC with Chrome or Edge, and a headset (no loudspeakers: the room has its own echo). Open the link. The first time you register: keep the Account Level *Participant*, give your first name, last name and email, and choose your avatar. Allow the microphone when the browser asks.
 Walk with W and S, turn with A and D; go through the doors of the MPAI building to the meeting rooms, and into the MMM meeting room: you sit down by yourself. Q stands up, E sits again.
 The link works while the meeting is on; the address changes for each meeting.
 

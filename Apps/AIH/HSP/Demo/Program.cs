@@ -40,7 +40,7 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine(); Console.WriteLine("FAILED: " + ex.Message);
+            Console.WriteLine(); Console.WriteLine("FAILED: " + ex.Message); if (Environment.GetEnvironmentVariable("AIH_DEMO_TRACE") == "1") Console.WriteLine(ex.ToString());
             return 1;
         }
         finally
@@ -85,7 +85,7 @@ internal static class Program
 
         Step("user-2 acquires Health Data (120 beats a minute); the licence names no Third-Party User and states Identified for the Back End");
         var alert2 = two.Acquire(HealthData("user-2", 125), Licence("user-2", "ahd-2", licenseThirdParty: false, status: "Identified"));
-        Say("  ALERT to the End User: " + AihJson.ResponseOf(alert2 ?? throw new InvalidOperationException("no alert"))!["AIHDataOrAIHDataID"]![0]!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"] + " risk (Anomaly and Risk Alerting).");
+        Say("  ALERT to the End User: " + (alert2 ?? throw new InvalidOperationException("no alert"))["ARAData"]!["Risk"] + " risk (Anomaly and Risk Alerting).");
 
         Step("Both upload to the Back End: the Back End has the Smart Contract made, and keeps the AIH Data");
         Say($"  user-1: {Ok(one.Upload("ahd-1"))}, Smart Contract {chain.ContractOf("ahd-1")}");
