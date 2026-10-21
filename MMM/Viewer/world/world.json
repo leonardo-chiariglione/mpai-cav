@@ -2348,51 +2348,51 @@
      "seats": [
       {
        "id": "MeetingRoom-S1",
-       "x": 0.0,
-       "y": -2.3,
-       "yaw": 0.0
-      },
-      {
-       "id": "MeetingRoom-S2",
-       "x": 1.626,
-       "y": -1.626,
-       "yaw": 45.0
-      },
-      {
-       "id": "MeetingRoom-S3",
-       "x": 2.3,
+       "x": 1.5,
        "y": 0.0,
        "yaw": 90.0
       },
       {
-       "id": "MeetingRoom-S4",
-       "x": 1.626,
-       "y": 1.626,
-       "yaw": 135.0
+       "id": "MeetingRoom-S2",
+       "x": 0.0,
+       "y": -1.5,
+       "yaw": 0.0
       },
       {
-       "id": "MeetingRoom-S5",
+       "id": "MeetingRoom-S3",
        "x": 0.0,
-       "y": 2.3,
+       "y": 1.5,
        "yaw": 180.0
       },
       {
-       "id": "MeetingRoom-S6",
-       "x": -1.626,
-       "y": 1.626,
-       "yaw": 225.0
-      },
-      {
-       "id": "MeetingRoom-S7",
-       "x": -2.3,
+       "id": "MeetingRoom-S4",
+       "x": -1.5,
        "y": 0.0,
        "yaw": 270.0
       },
       {
-       "id": "MeetingRoom-S8",
-       "x": -1.626,
-       "y": -1.626,
+       "id": "MeetingRoom-S5",
+       "x": 1.061,
+       "y": -1.061,
+       "yaw": 45.0
+      },
+      {
+       "id": "MeetingRoom-S6",
+       "x": -1.061,
+       "y": 1.061,
+       "yaw": 225.0
+      },
+      {
+       "id": "MeetingRoom-S7",
+       "x": -1.061,
+       "y": -1.061,
        "yaw": 315.0
+      },
+      {
+       "id": "MeetingRoom-S8",
+       "x": 1.061,
+       "y": 1.061,
+       "yaw": 135.0
       }
      ]
     },

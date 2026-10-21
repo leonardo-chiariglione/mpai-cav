@@ -646,7 +646,7 @@ async function microphone() {
   client.status += ' - listening';
 }
 async function capture() {   // MM-Capture: the Things of the M-Location that this Point of View sees
-  const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, 1.6], Orientation: [client.yaw, 0, 0] };
+  const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, client.eye ?? 1.6], Orientation: [client.yaw, 0, 0] };
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
   if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); watchScreen(scene.Things.find(t => t.Kind === 'Screen' && t.Owner !== client.name && t.Streaming)?.ID ?? null); }
@@ -817,9 +817,10 @@ function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn;
   }
   client.x = W || client.seated ? client.x : Math.max(-HALF, Math.min(HALF, client.x - Math.sin(rad) * fwd * 2 * dt));   // yaw 0 looks north (+y); positive yaw turns to the west (-x)
   client.y = W || client.seated ? client.y : Math.max(-HALF, Math.min(HALF, client.y + Math.cos(rad) * fwd * 2 * dt));
-  camera.position.set(client.x, 1.6, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');
+  client.eye = (client.eye ?? 1.6) + ((client.seated ? 1.6 - SIT_DROP : 1.6) - (client.eye ?? 1.6)) * Math.min(1, dt * 6);   // the eyes sit lower when seated, easing down and up
+  camera.position.set(client.x, client.eye, -client.y); camera.rotation.set(0, rad, 0, 'YXZ');
   const L = hearCtx?.listener;   // the ears are where the eyes are
-  if (L?.positionX) { L.positionX.value = client.x; L.positionY.value = 1.6; L.positionZ.value = -client.y; L.forwardX.value = -Math.sin(rad); L.forwardY.value = 0; L.forwardZ.value = -Math.cos(rad); L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; }   // three.js looks along -z (north) at rotation 0
+  if (L?.positionX) { L.positionX.value = client.x; L.positionY.value = client.eye; L.positionZ.value = -client.y; L.forwardX.value = -Math.sin(rad); L.forwardY.value = 0; L.forwardZ.value = -Math.cos(rad); L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; }   // three.js looks along -z (north) at rotation 0
 }
 
 // ---------------------------------------------------------------- the M-Instance

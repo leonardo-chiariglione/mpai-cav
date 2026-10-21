@@ -192,12 +192,14 @@ wing('OfficesWing', 'Offices of MPAI', (12, 0), 'x', (1, 0), OFFICES, 'office')
 wing('MeetingsWing', 'Meeting rooms', (0, -9), 'y', (0, -1), MEETING_ROOMS, 'meeting')
 
 MMM_SIGN = dict(w=2.4, h=1.644, z=1.0, dx=-2.0)    # the logo of MPAI-MMM on the north wall of the MMM meeting room: size in metres, height above the floor, place along the wall from its centre
-TABLE_R, SEAT_R = 1.4, 2.3                           # the round table of a meeting room, and the circle of the seats round it (0.9 m from the edge of the table)
+TABLE_R, SEAT_R = 1.0, 1.5                             # the round table of a meeting room (2 m across: five or six people), and the circle of the seats round it (0.5 m from the edge of the table)
 SEATS = []                                           # (id suffix, x, y, yaw), around the table, relative to the centre of the room: eight, every 45 degrees, each looking at the centre
-for i in range(8):
-    a = math.radians(-90 + 45 * i)                   # S1 is south of the table, the others follow counter-clockwise
+# The AVS Service gives the first free seat of this list to whoever arrives: the Secretary (a machine of the room) the first, to the east; the convener the second, to the south, facing the sign
+# and the screen on the north wall; the next to arrive sits across from the convener, to the north; then to the west; then in between. Angles from south, counter-clockwise, in steps of 45 degrees.
+for i, k in enumerate([2, 0, 4, 6, 1, 5, 7, 3], start=1):
+    a = math.radians(-90 + 45 * k)
     sx, sy = SEAT_R * math.cos(a), SEAT_R * math.sin(a)
-    SEATS.append((f'S{i + 1}', round(sx, 3), round(sy, 3), round(math.degrees(math.atan2(sx, -sy)) % 360, 1)))
+    SEATS.append((f'S{i}', round(sx, 3), round(sy, 3), round(math.degrees(math.atan2(sx, -sy)) % 360, 1)))
 
 RECEPTION = dict(cx=5.0, persona='Reception-Persona', x=6.2, y=0.0, yaw=90, model='catalogue/Business_Female_01.glb')   # the lady at the counter: the Multimodal Conversation Avatar
 
