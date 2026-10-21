@@ -20,6 +20,8 @@ public static class Meeting
     // In the world of the MMM (World.Setup) the doors of the building are Rights: the AVS Service gives them to the Users it invites. Doors: the Locations behind them.
     public static bool DoorsNeedRights { get; set; }
     public static string[] Doors { get; set; } = [];
+    // Every place of the world that needs a Right (the wings and the rooms): an MPAI Officer's Account is given the Rights to all of them.
+    public static string[] AllPlaces { get; set; } = [];
     // The lady at the counter of the atrium: a machine Process of the M-Instance with a Persona of its own, which stands where the world says and answers visitors (the Multimodal Conversation
     // Avatar). Null: there is none.
     public static (string Persona, string Model, string At, double X, double Y, double Yaw)? Reception { get; set; }
@@ -33,7 +35,7 @@ public static class Meeting
     public static (string ID, double X, double Y, double Yaw)[] Seats { get; set; } = DefaultSeats;
 
     // What the world (World.Setup) changes - where the building is, the seats, the doors - is put back as it was: the meeting of the demonstrations and of the tests is the one above.
-    public static void Reset() { ParcelX = 12; ParcelY = 0; Seats = DefaultSeats; DoorsNeedRights = false; Doors = []; Reception = null; }
+    public static void Reset() { ParcelX = 12; ParcelY = 0; Seats = DefaultSeats; DoorsNeedRights = false; Doors = []; AllPlaces = []; Reception = null; }
 
     // What the M-Instance starts with: the Services, the Room and its Seats. The Parcel, the Room and the Seats are the AVS Service's: not public, so that
     // entering needs a Right, which the AVS Service gives.
@@ -190,9 +192,12 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                 }
                 else if (text.StartsWith("join", StringComparison.Ordinal))
                 {
-                    if (ended) { await Say(avs, $"Seat-{id}", from, "the meeting is over"); continue; }
-                    if (!invited.Contains(from)) { await Say(avs, $"Seat-{id}", from, "not invited"); continue; }
-                    if (m.AccountLevelOf(from) is { } level && level != "Participant") { await Say(avs, $"Seat-{id}", from, "visitor account"); continue; }   // the meeting rooms are for a Participant Account   // the answer is to this request: a User asks again after it is invited
+                    var level = m.AccountLevelOf(from);
+                    var officer = level == "Officer";
+                    if (officer) await Officer(from);                  // an MPAI Officer's Account holds the Rights to every place, whatever the meeting
+                    if (ended) { await Say(avs, $"Seat-{id}", from, officer ? "officer" : "the meeting is over"); continue; }
+                    if (!invited.Contains(from)) { await Say(avs, $"Seat-{id}", from, officer ? "officer" : "not invited"); continue; }   // the answer is to this request: a User asks again after it is invited
+                    if (level == "Visitor") { await Say(avs, $"Seat-{id}", from, "visitor account"); continue; }                         // the meeting rooms are for a Participant (or an Officer) Account
                     var persona = Meeting.ParseSeat(text.Replace("join;", "")).GetValueOrDefault("persona") ?? $"{from}-Persona";
                     await Seat(from, persona, $"Seat-{id}");
                     personaOf[from] = persona;
@@ -296,6 +301,20 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             with.Add(World.DoorPA(user, door));
             var right = Uc2.Rights($"Door-{(grant ? "Right" : "Revoke")}-{user}-{door}", grant ? "May" : "May Not", "Granted", World.DoorID(user, door));
             with.Add(grant ? Meant(right) : right);
+        }
+        await avs.PerformAsync("Rights Change", Uc2.C(user, with: with.ToArray()));
+    }
+
+    // THE RIGHTS OF AN MPAI OFFICER: the Right to move its Persona to every place that needs one. They do not end with a meeting; they are the Account's.
+    private readonly HashSet<string> officers = new();
+    private async Task Officer(string user)
+    {
+        if (!Meeting.DoorsNeedRights || !officers.Add(user)) return;
+        var with = new List<JsonNode>();
+        foreach (var place in Meeting.AllPlaces)
+        {
+            with.Add(World.DoorPA(user, place));
+            with.Add(Uc2.Rights($"Officer-Right-{user}-{place}", "May", "Granted", World.DoorID(user, place)));
         }
         await avs.PerformAsync("Rights Change", Uc2.C(user, with: with.ToArray()));
     }

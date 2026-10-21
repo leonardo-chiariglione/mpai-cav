@@ -136,7 +136,8 @@ public sealed class MInstance
     public IReadOnlyList<(string Id, string Name, string Description)> AccountLevels { get; set; } =
     [
         ("Visitor", "Visitor", "The public places of the MPAI building: the atrium, where anybody may come in, look, talk and ask. Free."),
-        ("Participant", "Participant", "Meetings you have been invited to: the Rights to the meeting rooms, for the meeting, if you are on the chair's list. Free.")
+        ("Participant", "Participant", "Meetings you have been invited to: the Rights to the meeting rooms, for the meeting, if you are on the chair's list. Free."),
+        ("Officer", "MPAI Officer", "All of MPAI: the Rights to every place of the building - the members' rooms, the offices of MPAI, all the meeting rooms. Offered only to the people the chair designates. Free.")
     ];
     public string? AccountLevelOf(string user) { lock (gate) return accountLevels.GetValueOrDefault(user); }
     private readonly Dictionary<string, string> accountLevels = new(StringComparer.Ordinal);

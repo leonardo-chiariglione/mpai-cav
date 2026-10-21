@@ -26,7 +26,7 @@ public static class MmmServer
     // of the M-Instance as it is now (a step already performed, shown again).
     public static WebApplication Build(MInstance m, string url, string? viewer = null, Action? onNext = null,
                                        Action? onBack = null, Func<System.Text.Json.Nodes.JsonObject>? state = null,
-                                       string? code = null, string? avatars = null, string? internalKey = null, Identity? identity = null)
+                                       string? code = null, string? avatars = null, string? internalKey = null, Identity? identity = null, ISet<string>? officers = null)
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
@@ -91,6 +91,8 @@ public static class MmmServer
                 ctx.Response.StatusCode = 401;
             });
         app.UseWebSockets();
+        // Who may be offered, and may take, the MPAI Officer Account Level: with no identity (a private visit) anybody; with identity, the chair and the people the chair designates.
+        bool MayBeOfficer(HttpContext ctx) => identity is null || (ctx.Items["who"] is Identity.Who w && (w.Kind == "host" || (officers?.Contains(w.Name) ?? false)));
         var streams = new SpeechStreams();
         var screens = new ScreenStreams();
         var replies = new ConcurrentDictionary<string, (int Http, string Body, string? Tokens)>();
@@ -124,6 +126,8 @@ public static class MmmServer
                         return Results.Json(new { paStatus = new { code = "InsRights", detail = $"{me.Login}{(me.Login.Length > 0 ? " is" : "")} {me.Name}: it registers only as that" } }, statusCode: 403);
                 }
 
+                if (action == "Register" && (rq.Complements?.With ?? []).Any(w => (string?)w?["PersonalProfile"]?["AccountLevel"] == "Officer") && !MayBeOfficer(ctx))
+                    return Results.Json(new { paStatus = new { code = "InsRights", detail = "The MPAI Officer Account Level is not offered to you" } }, statusCode: 403);
                 var outcome = m.Perform(caller, rq);
                 var reply = (outcome.Http, JsonSerializer.Serialize(outcome.Response, Wire.Json),
                              outcome.Tokens.Count == 0 ? null : string.Join(",", outcome.Tokens.Select(t => $"{Uri.EscapeDataString(t.Key)}={t.Value}")));   // a header is ASCII: a name with an accent (Gérard) goes percent-encoded
@@ -134,7 +138,7 @@ public static class MmmServer
 
         // What a human that has not registered yet is shown: the Personae the M-Instance offers (Register takes the choice). No token: there is no User yet.
         // Registration options: the Account Levels, then (for the one chosen) the Personae the M-Instance makes available. No token: there is no User yet.
-        app.MapGet("/api/v2.2/register/options", () => Results.Json(m.AccountLevels.Select(l => new { id = l.Id, name = l.Name, description = l.Description, price = 0 })));
+        app.MapGet("/api/v2.2/register/options", (HttpContext ctx) => Results.Json(m.AccountLevels.Where(l => l.Id != "Officer" || MayBeOfficer(ctx)).Select(l => new { id = l.Id, name = l.Name, description = l.Description, price = 0 })));
         app.MapGet("/api/v2.2/register/personae", () => Results.Json(m.CatalogueEntries));
         app.MapGet("/api/v2.2/items", (HttpContext ctx, string? dataType) => Caller(ctx) is { } p
             ? Results.Json(m.List(dataType).Where(i => m.MayRead(p, i.ID)).Select(i => new { itemID = i.ID, dataType = i.DataType }))

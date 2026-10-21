@@ -127,6 +127,13 @@ if (W) {
     for (const r of b.rooms) origin[r.id] = [b.x + r.x, b.y + r.y];
     for (const r of b.solids) solids.push(r);
     wl.load(b.model, g => { g.scene.position.set(b.x, 0, -b.y); scene.add(g.scene); });
+    if (b.sign) {      // a sign on top of the building: a board with its picture (the logo and the name), facing the way world.json says
+      new THREE.TextureLoader().load(b.sign.image, tex => {
+        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+        const board = new THREE.Mesh(new THREE.PlaneGeometry(b.sign.width, b.sign.height), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+        board.position.set(b.sign.x, b.sign.z + b.sign.height / 2, -b.sign.y); board.rotation.y = b.sign.facing === 'west' ? -Math.PI / 2 : 0; scene.add(board);
+      });
+    }
     const l = label(b.name); l.position.set(b.x, b.height + 0.8, -b.y); scene.add(l); buildingLabels.push(l);
     for (const d of [...b.doors, ...b.rooms.map(r => r.door).filter(Boolean)]) {
       d.rect = d.axis === 'x' ? [d.x - 0.1, d.y - d.width / 2, d.x + 0.1, d.y + d.width / 2] : [d.x - d.width / 2, d.y - 0.1, d.x + d.width / 2, d.y + 0.1];
@@ -242,7 +249,7 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 const me = await fetch('whoami', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
 const userName = me?.name ?? new URLSearchParams(location.search).get('user');
 const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
-window.mmmClient = client;   // for the tests: they drive the keys of a client from outside
+window.mmmClient = client; window.mmmCamera = camera;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -371,6 +378,7 @@ async function askSeat() {
     told = null;
     for (let i = 0; i < 50 && !told; i++) { await pause(200); told = await read(`Seat-${join}`); }   // the AVS Service answers within a moment
     if (told === 'the meeting is over') break;
+    if (told === 'officer') { client.status = `${client.name}: MPAI Officer`; client.notice = 'MPAI Officer: the Rights to every place of the building are yours.'; return null; }
     if (told === 'visitor account') { client.status = `${client.name}: a Visitor Account`; client.notice = 'Your Account is a Visitor Account: you can visit the atrium. For the meeting, register again as a Participant.'; return null; }
     if (told === 'not invited') { client.status = `${client.name}: waiting for an invitation`; for (let i = 0; i < 20 && !(await read(`Invitation-${client.name}`)); i++) await pause(500); }
   }
@@ -534,7 +542,7 @@ async function pass(d, target) {
     Object.assign(client, { loc: target, at: target, ox: tx, oy: ty, sent: '' }); d.open = true; d.leaf.visible = false;
     client.notice = target === 'MVS' ? 'Metaverse Square.' : `${d.name}: you are in ${target}.`;
     if (target === 'MeetingRoom') { if (client.seatInfo) takeSeat(client.seatInfo); else client.notice = 'Meeting room: waiting for your seat...'; }
-  } else if (mv.http === 403) client.notice = `${d.name}: locked (403) - you have no Right to enter.`;
+  } else if (mv.http === 403) { client.notice = `${d.name}: locked (403) - you have no Right to enter.`; client.path = null; marker.visible = false; }
   else client.notice = `${d.name}: ${mv.http}`;
 }
 function doorCheck(fwd, rad) {   // a door is gone through by walking at it: forward, facing it - standing near it is not asking
@@ -675,16 +683,120 @@ async function sendPose() {   // MM-Move: the Persona stands where its User put 
 }
 if (client) {
   controls.enabled = false; camera.fov = 70; camera.updateProjectionMatrix();   // a person's field of view, not the stage's
+  // THE WHEEL ZOOMS: forward enlarges what is seen (a narrower field of view), backward reduces it (a wider one); the key 0 puts it back to a person's.
+  renderer.domElement.addEventListener('wheel', e => {
+    e.preventDefault();
+    camera.fov = Math.max(15, Math.min(100, camera.fov * (e.deltaY < 0 ? 0.9 : 1 / 0.9))); camera.updateProjectionMatrix();
+  }, { passive: false });
+  addEventListener('keydown', e => { if (e.key === '0' && !e.repeat && !/input|textarea/i.test(e.target.tagName)) { camera.fov = 70; camera.updateProjectionMatrix(); } });
   addEventListener('keydown', e => { client.keys.add(e.key.toLowerCase()); if (W && !e.repeat) { const k = e.key.toLowerCase(); if (k === 'q' && client.seated) standUp(); else if (k === 'e' && !client.seated && client.loc === client.at && client.seatInfo && client.at === client.seatInfo.room) takeSeat(client.seatInfo); } });
   addEventListener('keyup', e => client.keys.delete(e.key.toLowerCase()));
   join();
 }
+// CLICK TO GO THERE. A click on the floor - or on a wall (to the floor before it) or a door (through it) - walks the Persona to that point, round the walls, through the doors; a drag turns the
+// head; the keys still work, and take over. The path is planned on a grid of the walls (A*), and followed by turning to the next point and walking; a door is gone through as it is by the keys.
+const CELL = 0.5;
+let grid = null;
+function buildGrid() {       // the cells a Persona cannot stand in: the walls and a margin; the doors are gaps in them
+  const [x0, y0, x1, y1] = W.bounds, nx = Math.ceil((x1 - x0) / CELL), ny = Math.ceil((y1 - y0) / CELL), cells = new Uint8Array(nx * ny), R = 0.4;
+  for (const r of solids) {
+    const i0 = Math.max(0, Math.floor((r[0] - R - x0) / CELL)), i1 = Math.min(nx - 1, Math.floor((r[2] + R - x0) / CELL));
+    const j0 = Math.max(0, Math.floor((r[1] - R - y0) / CELL)), j1 = Math.min(ny - 1, Math.floor((r[3] + R - y0) / CELL));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) cells[j * nx + i] = 1;
+  }
+  return { x0, y0, nx, ny, cells };
+}
+function planPath(sx, sy, gx, gy) {
+  grid ??= buildGrid(); const { x0, y0, nx, ny, cells } = grid;
+  const cell = (x, y) => [Math.min(nx - 1, Math.max(0, Math.floor((x - x0) / CELL))), Math.min(ny - 1, Math.max(0, Math.floor((y - y0) / CELL)))];
+  const free = (i, j) => i >= 0 && j >= 0 && i < nx && j < ny && !cells[j * nx + i];
+  const centre = (i, j) => [x0 + (i + 0.5) * CELL, y0 + (j + 0.5) * CELL];
+  let [si, sj] = cell(sx, sy), [gi, gj] = cell(gx, gy);
+  if (!free(gi, gj)) {          // the nearest free cell to the goal, within 3 m
+    let best = null;
+    for (let r = 1; r <= 6 && !best; r++) for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) if (Math.max(Math.abs(di), Math.abs(dj)) === r && free(gi + di, gj + dj) && (!best || di * di + dj * dj < best[2])) best = [gi + di, gj + dj, di * di + dj * dj];
+    if (!best) return null; [gi, gj] = best;
+  }
+  if (!free(si, sj)) { cells[sj * nx + si] = 0; }           // standing in a margin (at a door): it may leave it
+  const key = (i, j) => j * nx + i, g = new Map([[key(si, sj), 0]]), from = new Map(), open = [[0, si, sj]];
+  const h = (i, j) => Math.hypot(i - gi, j - gj);
+  while (open.length) {
+    open.sort((a, b) => a[0] - b[0]); const [, i, j] = open.shift();
+    if (i === gi && j === gj) {
+      const path = [[gx, gy]]; let k = key(i, j);
+      while (from.has(k)) { const p = from.get(k); k = p; const pj = Math.floor(k / nx), pi = k % nx; path.unshift(centre(pi, pj)); }
+      // string pulling: a straight line where the cells between are free
+      const clear = ([ax, ay], [bx, by]) => { const n = Math.ceil(Math.hypot(bx - ax, by - ay) / (CELL / 2)); for (let t = 0; t <= n; t++) { const [ci, cj] = cell(ax + (bx - ax) * t / n, ay + (by - ay) * t / n); if (!free(ci, cj)) return false; } return true; };
+      const out = []; let at = [sx, sy], idx = 0;
+      while (idx < path.length) { let far = idx; for (let q = path.length - 1; q > idx; q--) if (clear(at, path[q])) { far = q; break; } out.push(path[far]); at = path[far]; idx = far + 1; }
+      return out;
+    }
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const ni = i + di, nj = j + dj; if (!free(ni, nj) || (di && dj && (!free(i + di, j) || !free(i, j + dj)))) continue;
+      const cost = g.get(key(i, j)) + (di && dj ? 1.414 : 1);
+      if (cost < (g.get(key(ni, nj)) ?? Infinity)) { g.set(key(ni, nj), cost); from.set(key(ni, nj), key(i, j)); open.push([cost + h(ni, nj), ni, nj]); }
+    }
+  }
+  return null;
+}
+const marker = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.4, 24), new THREE.MeshBasicMaterial({ color: 0xf2c94c, side: THREE.DoubleSide }));
+marker.rotation.x = -Math.PI / 2; marker.position.y = 0.06; marker.visible = false; scene.add(marker);
+function goTo(x, y) {
+  if (!client || !W || client.seated) return;
+  const path = planPath(client.x, client.y, x, y);
+  if (!path) { client.notice = 'There is no way there.'; return; }
+  client.path = path; client.stuck = { t: 0, d: Infinity }; marker.position.set(path[path.length - 1][0], 0.06, -path[path.length - 1][1]); marker.visible = true;
+}
+function clickPoint(e) {         // where in the world a click on the picture is: the first thing the ray meets
+  const rect = renderer.domElement.getBoundingClientRect(), ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+  const ray = new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  const leaves = new Set(doors.map(d => d.leaf));
+  for (const hit of ray.intersectObjects(scene.children, true)) {
+    const o = hit.object;
+    if (o.isSkinnedMesh || o.isLine || o.isPoints || o.isSprite || o === marker || (o.material?.transparent && o.material.opacity < 0.6)) continue;
+    if (!hit.face) continue;
+    const n = hit.face.normal.clone().transformDirection(o.matrixWorld);
+    if (n.y < -0.5) continue;                               // a ceiling or a roof: not a place to go to
+    if (leaves.has(o)) { const d = doors.find(q => q.leaf === o), dir = Math.sign(n.x * (client.x - hit.point.x) + (-n.z) * (client.y + hit.point.z)) || 1; return { x: hit.point.x - n.x * dir * 1.6, y: -hit.point.z + n.z * dir * 1.6 }; }
+    if (Math.abs(n.y) < 0.5) return { x: hit.point.x + n.x * 0.9, y: -hit.point.z - n.z * 0.9 };      // a wall: the floor before it
+    return { x: hit.point.x, y: -hit.point.z };
+  }
+  return null;
+}
+{ let down = null;
+  renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, yaw: client?.yaw, moved: false }; });
+  addEventListener('pointermove', e => {
+    if (!down || !client || client.seated && false) return;
+    if (!down.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) { down.moved = true; client.path = null; marker.visible = false; }
+    if (down.moved) client.yaw = (down.yaw - (e.clientX - down.x) * 0.25 + 720) % 360;      // a drag turns the head
+  });
+  addEventListener('pointerup', e => {
+    if (!down) return; const d = down; down = null;
+    if (d.moved || !client || e.target !== renderer.domElement) return;
+    if (document.body.classList.contains('screening') && !document.body.classList.contains('swapped')) return;      // the room is a stamp: a click on it changes it over with the screen
+    const p = clickPoint(e); if (p) goTo(p.x, p.y);
+  });
+}
+
 function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn; the camera is the Persona's eyes
-  const k = client.keys, rad = client.yaw * Math.PI / 180;
+  const k = client.keys;
   let fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
   const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
   client.yaw = (client.yaw + turn * 90 * dt + 360) % 360;
+  if (client.path && (fwd || turn || client.seated)) { client.path = null; marker.visible = false; }          // the keys take over
+  if (client.path && !client.moving) {                                       // going to the point that was clicked: turn to the next point of the path, and walk
+    let [px, py] = client.path[0], dx = px - client.x, dy = py - client.y;
+    if (Math.hypot(dx, dy) < 0.3) { client.path.shift(); if (!client.path.length) { client.path = null; marker.visible = false; } }
+    else {
+      const want = (Math.atan2(-dx, dy) * 180 / Math.PI + 360) % 360, diff = ((want - client.yaw + 540) % 360) - 180, step = 300 * dt;
+      client.yaw = (client.yaw + Math.max(-step, Math.min(step, diff)) + 360) % 360;
+      if (Math.abs(diff) < 30) fwd = 1;
+      const st = client.stuck; st.t += dt; const dist = Math.hypot(dx, dy);
+      if (dist < st.d - 0.15) { st.d = dist; st.t = 0; } else if (st.t > 2.5 && !client.moving) { client.path = null; marker.visible = false; client.notice = 'Something is in the way.'; }
+    }
+  }
   if (client.seated) fwd = 0;   // seated: it turns its head, it does not walk
+  const rad = client.yaw * Math.PI / 180;
   if (W && !client.seated && !client.moving) {   // the walls stop it; the door is shut until the M-Instance lets it through
     const nx = client.x - Math.sin(rad) * fwd * 2.2 * dt, ny = client.y + Math.cos(rad) * fwd * 2.2 * dt;
     if (!blocked(nx, client.y)) client.x = nx; if (!blocked(client.x, ny)) client.y = ny;

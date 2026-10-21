@@ -37,8 +37,10 @@ Dictionary<string, string> Pairs(string? list) => (list ?? "").Split(',', String
     .ToDictionary(p => p[0].Trim(), p => p[1].Trim(), StringComparer.OrdinalIgnoreCase);
 var guests = Pairs(Arg("--guests"));                                                                           // login -> name
 var tokens = Pairs(Arg("--invites")).ToDictionary(p => p.Value, p => p.Key, StringComparer.Ordinal);            // token -> name
-Identity? identity = args.Contains("--identity") || args.Contains("--tailscale") ? new Identity(chairName, guests, tokens, args.Contains("--visitors")) : null;
-if (identity is not null) invite = [.. new[] { chairName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
+var officerNames = (Arg("--officers") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal);   // --officers A,B: who else may take the MPAI Officer Account Level (the chair always may)
+var hostName = Arg("--host") ?? chairName;                          // whoever browses on this machine (the President); --chair is who convenes the meeting
+Identity? identity = args.Contains("--identity") || args.Contains("--tailscale") ? new Identity(chairName, guests, tokens, args.Contains("--visitors"), hostName) : null;
+if (identity is not null) invite = [.. new[] { chairName, hostName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
 if (worldMode)
 {
     World.Setup(m, repo);
@@ -120,7 +122,7 @@ void Next()
 
 var internalKey = Guid.NewGuid().ToString("N");        // how the services of the M-Instance (the AVS Service, the Secretary, the ASR Service) get past the meeting code: they are not guests
 var avatarFolder = Path.Combine(repo, "Apps", "ABV", "AVS", "Server", "avatars");
-var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey, identity);
+var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey, identity, officerNames);
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.

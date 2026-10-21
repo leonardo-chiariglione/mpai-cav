@@ -43,6 +43,7 @@ public static class World
         }
         Meeting.DoorsNeedRights = true;
         Meeting.Doors = DoorsTo(world, Meeting.Room);
+        Meeting.AllPlaces = world["buildings"]!.AsArray().OfType<JsonObject>().SelectMany(b => b["rooms"]!.AsArray().OfType<JsonObject>()).Where(r => (bool?)r["public"] != true).Select(r => (string)r["id"]!).ToArray();
         m.AddService(Meeting.Avs);
         m.AddService(Meeting.Asr);
         m.AddService(Meeting.Secretary, Meeting.SecretaryPersona, "Persona2.glb");

@@ -218,17 +218,58 @@ def make_building():
                 on = (d['axis'] == 'x' and side in ('west', 'east') and abs(d['x'] - a[0]) < 1e-6 and c['y0'] < d['y'] < c['y1']) or \
                      (d['axis'] == 'y' and side in ('south', 'north') and abs(d['y'] - a[1]) < 1e-6 and c['x0'] < d['x'] < c['x1'])
                 if on: ops.append(((d['y'] if d['axis'] == 'x' else d['x']), DOOR_W, 0, 2.3, 'door'))
-            mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+            # REGULAR WINDOWS on the outer walls: evenly spaced along the wall, 1.4 m wide (the atrium's are tall), none where a door is or where the wall is another room's
+            horiz = side in ('south', 'north')
+            lo, hi = (a[0], b[0]) if horiz else (a[1], b[1])
+            length = hi - lo
+            k = max(0, int((length - 2.4 + 1.8) // 3.2))
             out = {'west': (-0.5, 0), 'east': (0.5, 0), 'south': (0, -0.5), 'north': (0, 0.5)}[side]
-            length = abs(b[0] - a[0]) + abs(b[1] - a[1])
-            if id == 'Atrium' and side == 'west':
-                ops += [(-5.0, 1.6, 0.9, 3.2, 'window'), (5.0, 1.6, 0.9, 3.2, 'window')]
-            elif not ops and not inside_other(id, mid[0] + out[0], mid[1] + out[1]) and length >= 4:
-                ops.append(((mid[1] if side in ('west', 'east') else mid[0]), 1.6, 0.9, 2.3, 'window'))
+            for i in range(k):
+                centre = lo + length * (i + 0.5) / k
+                if any(abs(centre - o[0]) < DOOR_W / 2 + 0.7 + 0.4 for o in ops): continue
+                px, py = (centre + out[0], a[1] + out[1]) if horiz else (a[0] + out[0], centre + out[1])
+                if inside_other(id, px, py): continue
+                ops.append((centre, 1.6 if h > 4 else 1.4, 0.9, 4.2 if h > 4 else 2.3, 'window'))
             wall(m, 'wall', a, b, h, ops, solids)
         furnish_room(m, id, c)
+    # the frame of the sign on the roof of the atrium: a backing board and fins behind it
+    x, z0, z1, half = SIGN['x'], SIGN['z'] - 0.1, SIGN['z'] + SIGN['h'] + 0.15, SIGN['w'] / 2 + 0.15
+    m.box('trim', x, -half, z0, x + 0.12, half, z1)                         # behind the picture (the picture is at x - 0.01, in front of it)
+    for fy in (-3.4, 0, 3.4): m.box('trim', x + 0.12, fy - 0.08, z0, x + 1.0, fy + 0.08, z0 + SIGN['h'] * 0.7)
     return m, solids
 
+
+
+# ------------------------------------------------------------------ the sign on top of the MPAI building: the logo and the name of MPAI on two lines
+SIGN = dict(w=9.0, h=1.425, z=5.2, x=-12.25, text_px=98)       # metres, in the building's frame: on the roof edge of the atrium, facing the Square (west)
+
+
+def make_sign(path):
+    from PIL import Image, ImageDraw, ImageFont
+    W, H = 2400, int(2400 * SIGN['h'] / SIGN['w'])
+    im = Image.new('RGB', (W, H), 'white'); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, W - 1, H - 1], outline=(51, 122, 168), width=16)                            # the blue of the logo
+    logo = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'MPAI-logo.png')).convert('RGBA')
+    lh = int(H * 0.86); lw = int(logo.width * lh / logo.height)
+    logo = logo.resize((lw, lh), Image.LANCZOS)
+    im.paste(logo, (70, (H - lh) // 2), logo)
+    fonts = ['C:/Windows/Fonts/arialbd.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf']
+    font_file = next((p for p in fonts if os.path.exists(p)), None)
+    lines = ['Moving Picture, Audio and Data', 'Coding by Artificial Intelligence']
+    x0 = 70 + lw + 90; room = W - x0 - 80
+    size = SIGN['text_px']                                       # the size of the text does not change with the height of the sign
+    while size > 20:
+        font = ImageFont.truetype(font_file, size) if font_file else ImageFont.load_default()
+        if max(d.textlength(t, font=font) for t in lines) <= room: break
+        size -= 2
+    gap = int(size * 0.35); total = 2 * size + gap
+    y = (H - total) // 2 - int(size * 0.12)
+    for t in lines:
+        d.text((x0, y), t, font=font, fill=(40, 52, 68)); y += size + gap
+    im.save(path)
+
+
+make_sign(os.path.join(OUT, 'mpai-sign.png'))
 
 mpai, mpai_solids = make_building()
 
@@ -285,6 +326,7 @@ world = {
     'buildings': [
         {'id': 'MPAI', 'name': 'MPAI', 'model': 'world/mpai.glb', 'x': BUILDING_AT[0], 'y': BUILDING_AT[1], 'yaw': 0, 'height': 5.0,
                   'footprint': [min(xs), min(ys), max(xs), max(ys)],
+         'sign': {'image': 'world/mpai-sign.png', 'x': BUILDING_AT[0] + SIGN['x'] - 0.01, 'y': BUILDING_AT[1], 'z': SIGN['z'], 'width': SIGN['w'], 'height': SIGN['h'], 'facing': 'west'},
          'solids': at(*BUILDING_AT, mpai_solids),
          'reception': dict(RECEPTION, x=RECEPTION['x'], y=RECEPTION['y']),
          'doors': [],

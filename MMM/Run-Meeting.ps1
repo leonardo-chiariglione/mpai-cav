@@ -10,8 +10,9 @@
 # A GROUP'S MEETING: -Group MMM -When "Thursday 22 October, 17:00 CEST" takes the people of the group from MMM\Registry\people.json (see Registry\README.md): the chair is the one who chairs the group, the others
 # are the guests, each is sent an email with the personal link, composed through Outlook. -Mail ask (default): the recipients are shown and you are asked to confirm before anything is sent;
 # draft: the emails are saved as Outlook drafts, nothing is sent; none: no emails.
+# -Officers A,B: the people, besides the chair, who may register with the MPAI Officer Account Level (the Rights to every place of the building).
 param([string]$Chair = '', [string]$Guests = '', [string]$Until = '', [double]$Hours = 3, [int]$Port = 7099, [ValidateSet('funnel', 'cloudflare')][string]$Via = 'cloudflare', [switch]$Visitors,
-      [string]$Group = '', [string]$When = '', [ValidateSet('ask', 'draft', 'none')][string]$Mail = 'ask', [switch]$Preview)
+      [string]$Group = '', [string]$When = '', [string]$Officers = '', [string]$HostName = '', [ValidateSet('ask', 'draft', 'none')][string]$Mail = 'ask', [switch]$Preview)
 
 $here = $PSScriptRoot
 $local = "http://127.0.0.1:$Port"
@@ -31,13 +32,18 @@ if ($Group) {
         $base = $id; $k = 2; while ($used.ContainsKey($id)) { $id = "$base$k"; $k++ }
         $used[$id] = $true; $people[$id] = $p
     }
-    $chairs = @($people.Keys | Where-Object { $people[$_].Chair -contains $Group })
-    if (-not $Chair) { $Chair = if ($chairs) { $chairs[0] } else { Read-Host "Nobody chairs $Group in the list. Your name in the meeting (the chair)" } }
-    if (-not $Guests) { $Guests = ($people.Keys | Where-Object { $_ -ne $Chair } | Sort-Object) -join ',' }
+    # THE HOST is whoever runs the meeting on this PC: the one with Role President in the list (the Officer of every place). THE CHAIR is who convenes this group's meeting: the one marked (C) in
+    # the list - a person with a link of their own, if it is not the host - or, if nobody is, the host.
+    if (-not $HostName) { $HostName = @($people.Keys | Where-Object { $people[$_].Role -eq 'President' })[0] }
+    if (-not $HostName) { $HostName = Read-Host 'Who is the host, on this PC (the President)? The name as in the list' }
+    $chairs = @($people.Keys | Where-Object { $people[$_].Chair -contains $Group -and $people[$_].Role -ne 'President' })
+    if (-not $Chair) { $Chair = if ($chairs) { $chairs[0] } else { $HostName } }
+    if (-not $Guests) { $Guests = ($people.Keys | Where-Object { $_ -ne $HostName } | Sort-Object) -join ',' }
 }
+if (-not $HostName) { $HostName = $Chair }
 if (-not $Chair) { $Chair = Read-Host 'Your name in the meeting (the chair)' }
 if (-not $Guests) { $Guests = Read-Host 'The guests, their names separated by commas (for example Anna,Bruno,Carla)' }
-$names = @($Guests -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $Chair })
+$names = @($Guests -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $HostName })
 if ($names.Count -lt 1) { Write-Host 'No guests.'; exit 1 }
 
 # A personal token for each guest: 18 hexadecimal characters, from the system's random numbers.
@@ -55,7 +61,7 @@ Dear $(($p.Name -split '\s+')[0]),
 
 you are invited to the $($grp.Name) meeting$(if ($When) { " on $When" }), in the MMM virtual world: the MPAI building, the meeting room of the group.
 
-Your personal link (it is yours: please do not pass it on):
+$(if ($n -eq $Chair) { 'You chair the meeting: you can share your screen, and end the meeting for everybody.' + [Environment]::NewLine + [Environment]::NewLine })Your personal link (it is yours: please do not pass it on):
 
 $link
 
@@ -63,7 +69,7 @@ What you need: a PC with Chrome or Edge, and a headset (no loudspeakers: the roo
 Walk with W and S, turn with A and D; go through the doors of the MPAI building to the meeting rooms, and into the MMM meeting room: you sit down by yourself. Q stands up, E sits again.
 The link works while the meeting is on; the address changes for each meeting.
 
-$($Chair)
+$($HostName)
 "@
         [pscustomobject]@{ To = $p.Email; Name = $n; Subject = $subject; Body = $body }
     })
@@ -80,7 +86,7 @@ if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyCon
 $dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue).Source
 if (-not $dotnet) { $dotnet = 'C:\Program Files\dotnet\dotnet.exe' }
 $when = if ($Until) { "--until $Until" } else { "--hours $Hours" }
-$arguments = "run --project `"$here\Server\Mpai.Mmm.Server.csproj`" -c Release -- $local --world --identity --chair $Chair --invites $invites --invite $((@($Chair) + $names) -join ',') $when" + $(if ($Visitors) { ' --visitors' } else { '' })
+$arguments = "run --project `"$here\Server\Mpai.Mmm.Server.csproj`" -c Release -- $local --world --identity --chair $Chair --host $HostName --invites $invites --invite $((@($Chair) + @($HostName) + $names | Select-Object -Unique) -join ',') $when" + $(if ($Visitors) { ' --visitors' } else { '' }) + $(if ($Officers) { " --officers $Officers" } else { '' })
 Start-Process -FilePath $dotnet -ArgumentList $arguments -WindowStyle Normal
 Write-Host 'The server starts (the first time it compiles, about a minute)...'
 $up = $false

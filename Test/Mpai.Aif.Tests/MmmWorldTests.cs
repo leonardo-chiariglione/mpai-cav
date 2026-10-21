@@ -265,7 +265,7 @@ public class MmmWorldTests
     {
         await using var w = new Running();
         await w.StartAsync(DateTimeOffset.UtcNow.AddHours(2));
-        Assert.Equal(["Visitor", "Participant"], w.M.AccountLevels.Select(l => l.Id).ToArray());
+        Assert.Equal(["Visitor", "Participant", "Officer"], w.M.AccountLevels.Select(l => l.Id).ToArray());
         async Task<MmmClient.Result> Register(string name, string level)
         {
             var p = Profile(name); p["PersonalProfile"]!["AccountLevel"] = level;
@@ -280,5 +280,42 @@ public class MmmWorldTests
         var b = new MmmClient(w.Http, "Bruno", bruno.Tokens["Bruno"]); var a = new MmmClient(w.Http, "Anna", anna.Tokens["Anna"]);
         Assert.False((await AskSeat(b, w.Services)).ContainsKey("seat"));                    // invited by the chair, but its Account is a Visitor Account
         Assert.True((await AskSeat(a, w.Services)).ContainsKey("seat"));
+    }
+
+    // AN MPAI OFFICER's Account holds the Rights to every place of the building - the offices, the members' rooms, all the meeting rooms - and does not need to be on the meeting's list;
+    // a Participant has the meeting's rights only, and the others stay locked (403) to it.
+    [Fact]
+    public async Task AnOfficerAccountHoldsTheRightsToEveryPlace()
+    {
+        await using var w = new Running();
+        await w.StartAsync(DateTimeOffset.UtcNow.AddHours(2));
+        Assert.Contains("Office-President", Meeting.AllPlaces); Assert.Contains("MemberRoom1", Meeting.AllPlaces); Assert.Contains("OfficesWing", Meeting.AllPlaces); Assert.DoesNotContain("Atrium", Meeting.AllPlaces);
+        async Task<MmmClient> Arrive(string name, string level)
+        {
+            var p = Profile(name); p["PersonalProfile"]!["AccountLevel"] = level;
+            var reg = await new MmmClient(w.Http, $"{name}-human").PerformAsync("Register", new Complements { With = [p] });
+            Assert.Equal(201, reg.Http);
+            var u = new MmmClient(w.Http, name, reg.Tokens[name]);
+            Assert.Equal(200, (await u.PerformAsync("MM-Add", Uc2.C($"{name}-Persona", at: "MVS", with: Uc2.SpatialAttitude($"SA-{name}", 3, 0)))).Http);
+            Assert.Equal(200, (await Go(u, "MVS", Building)).Http);
+            return u;
+        }
+        var anna = await Arrive("Anna", "Participant"); var zed = await Arrive("Zed", "Officer");        // Zed is not on the meeting's list; Anna is
+        await AskSeat(anna, w.Services);
+        var zedAnswer = await AskSeat(zed, w.Services);
+        Assert.False(zedAnswer.ContainsKey("seat"));                                                      // no seat: it is not in the meeting
+        Assert.Equal(200, (await Go(zed, Building, "MeetingsWing")).Http);                                // the meeting rooms' wing, though it is not in the meeting
+        Assert.Equal(200, (await Go(zed, "MeetingsWing", Building)).Http);
+        Assert.Equal(200, (await Go(zed, Building, "OfficesWing")).Http);
+        Assert.Equal(200, (await Go(zed, "OfficesWing", "Office-President")).Http);                       // the President's office
+        Assert.Equal(200, (await Go(zed, "Office-President", "OfficesWing")).Http);
+        Assert.Equal(200, (await Go(zed, "OfficesWing", Building)).Http);
+        Assert.Equal(200, (await Go(zed, Building, "MembersWing")).Http);
+        Assert.Equal(200, (await Go(zed, "MembersWing", "MemberRoom1")).Http);
+
+        Assert.Equal(200, (await Go(anna, Building, Wing)).Http);                                         // the meeting's: yes
+        Assert.Equal(200, (await Go(anna, Wing, Building)).Http);
+        Assert.Equal(403, (await Go(anna, Building, "OfficesWing")).Http);                                // the offices: no, for a Participant
+        Assert.Equal(403, (await Go(anna, Building, "MembersWing")).Http);
     }
 }

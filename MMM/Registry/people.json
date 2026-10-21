@@ -3,6 +3,7 @@
   "Email": "leonardo@chiariglione.org",
   "Name": "Leonardo",
   "Id": "Leonardo",
+  "Role": "President",
   "Groups": [
    "AIF",
    "AIH",
@@ -17,17 +18,11 @@
    "XRV"
   ],
   "Chair": [
-   "AIF",
-   "AIH",
-   "AIP",
-   "CAE",
    "EVC",
    "ISAC",
    "MMC",
    "MMM",
-   "NNW",
-   "PAF",
-   "XRV"
+   "PAF"
   ]
  },
  {
@@ -60,7 +55,9 @@
   "Groups": [
    "AIH"
   ],
-  "Chair": []
+  "Chair": [
+   "AIH"
+  ]
  },
  {
   "Email": "carl.de-sousa-trias@telecom-sudparis.eu",
@@ -84,7 +81,9 @@
   "Groups": [
    "XRV"
   ],
-  "Chair": []
+  "Chair": [
+   "XRV"
+  ]
  },
  {
   "Email": "guido.perboli@polito.it",
@@ -92,7 +91,9 @@
   "Groups": [
    "AIP"
   ],
-  "Chair": []
+  "Chair": [
+   "AIP"
+  ]
  },
  {
   "Email": "gerard.chollet@telecom-sudparis.eu",
@@ -124,7 +125,9 @@
    "AIF",
    "MMM"
   ],
-  "Chair": []
+  "Chair": [
+   "AIF"
+  ]
  },
  {
   "Email": "mbosi@stanford.edu",
@@ -132,7 +135,9 @@
   "Groups": [
    "CAE"
   ],
-  "Chair": []
+  "Chair": [
+   "CAE"
+  ]
  },
  {
   "Email": "mark.seligman@spokentranslation.com",
@@ -149,7 +154,9 @@
    "AIP",
    "NNW"
   ],
-  "Chair": []
+  "Chair": [
+   "NNW"
+  ]
  },
  {
   "Email": "orhunolgun@gmail.com",

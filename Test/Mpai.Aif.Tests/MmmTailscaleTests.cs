@@ -61,7 +61,7 @@ public class MmmTailscaleTests
         {
             using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
             Assert.Equal("Leonardo", (string?)(await WhoAmI(http, null))!["name"]);                         // this machine, no Tailscale in between: the chair
-            Assert.Equal("chair", (string?)(await WhoAmI(http, null))!["kind"]);
+            Assert.Equal("host", (string?)(await WhoAmI(http, null))!["kind"]);
             var anna = (await WhoAmI(http, "ANNA@example.com"))!;                                            // a guest the chair listed (the login is not case-sensitive)
             Assert.Equal("Anna", (string?)anna["name"]); Assert.Equal("guest", (string?)anna["kind"]); Assert.Null(anna["resume"]);
             var visitor = (await WhoAmI(http, "someone.else@example.org"))!;                                // any other login: a visitor
@@ -106,6 +106,43 @@ public class MmmTailscaleTests
         }
         finally { await app.DisposeAsync(); }
     }
+
+    // The MPAI Officer Account Level is offered to the chair, and to the people the chair designates (--officers); the others are not offered it, and are refused (403) if they ask.
+    [Fact]
+    public async Task TheOfficerLevelIsOfferedOnlyToTheChairAndTheDesignated()
+    {
+        var m = new MInstance(Repository.Schemas);
+        World.Setup(m, Repository.Root);
+        var identity = new Identity("Leonardo", new Dictionary<string, string>(), new Dictionary<string, string> { ["tok-anna"] = "Anna", ["tok-pres"] = "President" });
+        var app = MmmServer.Build(m, "http://127.0.0.1:0", Path.Combine(Repository.Root, "MMM", "Viewer"), identity: identity, officers: new HashSet<string> { "President" });
+        await app.StartAsync();
+        try
+        {
+            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { BaseAddress = new Uri(app.Urls.First()) };
+            async Task<string[]> Levels(string? cookie, bool proxied)
+            {
+                using var rq = new HttpRequestMessage(HttpMethod.Get, "/api/v2.2/register/options");
+                if (proxied) rq.Headers.Add("X-Forwarded-For", "203.0.113.9");
+                if (cookie is not null) rq.Headers.Add("Cookie", cookie);
+                return JsonNode.Parse(await (await http.SendAsync(rq)).Content.ReadAsStringAsync())!.AsArray().Select(l => (string)l!["id"]!).ToArray();
+            }
+            Assert.Equal(["Visitor", "Participant", "Officer"], await Levels(null, proxied: false));                // the chair, on this machine
+            Assert.Equal(["Visitor", "Participant"], await Levels("mmm-id=tok-anna", proxied: true));               // a guest
+            Assert.Equal(["Visitor", "Participant", "Officer"], await Levels("mmm-id=tok-pres", proxied: true));    // one the chair designated
+
+            async Task<int> Register(string name, string level, string cookie)
+            {
+                using var rq = new HttpRequestMessage(HttpMethod.Post, "/api/v2.2/identity/register");
+                rq.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString()); rq.Headers.Add("X-Forwarded-For", "203.0.113.9"); rq.Headers.Add("Cookie", cookie);
+                var p = Profile(name, null); p["PersonalProfile"]!["AccountLevel"] = level;
+                rq.Content = JsonContent.Create(new JsonObject { ["SourceProcessID"] = $"{name}-human", ["Action"] = "", ["Complements"] = new JsonObject { ["With"] = new JsonArray(p) } });
+                return (int)(await http.SendAsync(rq)).StatusCode;
+            }
+            Assert.Equal(403, await Register("Anna", "Officer", "mmm-id=tok-anna"));
+            Assert.Equal(201, await Register("President", "Officer", "mmm-id=tok-pres"));
+        }
+        finally { await app.DisposeAsync(); Meeting.Reset(); }
+    }
 }
 
 public class MmmInvitationTests
@@ -141,7 +178,7 @@ public class MmmInvitationTests
             var me = JsonNode.Parse(await (await http.SendAsync(Get("/viewer/whoami", "mmm-id=tok-anna"))).Content.ReadAsStringAsync())!;
             Assert.Equal("Anna", (string?)me["name"]); Assert.Equal("guest", (string?)me["kind"]);
             Assert.Equal("chair", (string?)JsonNode.Parse(await (await http.SendAsync(Get("/viewer/whoami", "mmm-id=tok-leo"))).Content.ReadAsStringAsync())!["kind"]);
-            Assert.Equal("chair", (string?)JsonNode.Parse(await (await http.SendAsync(Get("/viewer/whoami", proxied: false))).Content.ReadAsStringAsync())!["kind"]);   // this machine, directly
+            Assert.Equal("host", (string?)JsonNode.Parse(await (await http.SendAsync(Get("/viewer/whoami", proxied: false))).Content.ReadAsStringAsync())!["kind"]);   // this machine, directly: the host
             using var tunnel = Get("/viewer/whoami", proxied: false); tunnel.Headers.Host = "something.trycloudflare.com";                // a tunnel that passes no X-Forwarded-For: its Host is its public name
             Assert.Equal(System.Net.HttpStatusCode.Unauthorized, (await http.SendAsync(tunnel)).StatusCode);
         }

@@ -8,16 +8,17 @@ namespace Mpai.Mmm.Server;
 // WHO IS ASKING, without a meeting code. The server is put on the internet by Tailscale Funnel (or a tunnel) at an https address; nobody has to install anything. A person is named by:
 //  - an INVITATION: the chair gives each guest a personal link (?invite=<token>), the server turns it into the guest's name, once, and keeps it in a cookie of this site (12 hours); a guest is
 //    whoever holds its invitation, and only the invited names are given the Rights to the wing and the room - the chair's decision, made in the M-Instance, not here;
-//  - the chair's own browser: a request made on this machine directly (no proxy in between: no X-Forwarded-For, no Tailscale login) is the chair;
+//  - the host's own browser: a request made on this machine directly (no proxy in between: no X-Forwarded-For, no Tailscale login) is the host - the one who runs the meeting here (the President); the chair of a group may be somebody else, with a link;
 //  - Tailscale's headers (Tailscale-User-Login), when the person comes through `tailscale serve` on the tailnet: a login listed with --guests login=Name is that name;
 //  - nobody else, unless the chair allows visitors (--visitors): the atrium of the building is public, so a visitor - named at random, kept in a cookie - may come in, look, talk and ask, and
 //    no further. Without --visitors a request with no invitation is not answered (401).
-public sealed class Identity(string chair, IReadOnlyDictionary<string, string> loginGuests, IReadOnlyDictionary<string, string>? invites = null, bool visitors = false)
+public sealed class Identity(string chair, IReadOnlyDictionary<string, string> loginGuests, IReadOnlyDictionary<string, string>? invites = null, bool visitors = false, string? host = null)
 {
     public sealed record Who(string Name, string Kind, string Login);          // Kind: chair, guest, visitor
 
     public const string Cookie = "mmm-id", VisitorCookie = "mmm-visitor";
-    public string Chair { get; } = chair;
+    public string Chair { get; } = chair;                 // the one who convenes the meeting: it can end it and share a screen
+    public string Host { get; } = host ?? chair;          // whoever browses on this machine: the owner of it (the President); the chair, if the chair is the owner
     public bool Visitors { get; } = visitors;
     private readonly Dictionary<string, string> loginGuests = new(loginGuests, StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> invites = new(invites ?? new Dictionary<string, string>(), StringComparer.Ordinal);       // token -> name
@@ -42,7 +43,7 @@ public sealed class Identity(string chair, IReadOnlyDictionary<string, string> l
             var local = Regex.Replace(login.Split('@')[0], "[^A-Za-z0-9]", "");
             return new Who("Visitor-" + (local.Length > 0 ? local : "x"), "visitor", login);
         }
-        if (Direct(ctx)) return new Who(Chair, "chair", "");
+        if (Direct(ctx)) return new Who(Host, "host", "");
         if (NameOfInvitation(ctx.Request.Cookies[Cookie]) is { } invited) return new Who(invited, invited == Chair ? "chair" : "guest", "");
         if (Visitors && ctx.Request.Cookies[VisitorCookie] is { Length: >= 6 } v && Regex.IsMatch(v, "^[0-9a-f]+$")) return new Who("Visitor-" + v[..6], "visitor", "");
         return null;
