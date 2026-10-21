@@ -81,10 +81,12 @@ public sealed class ModelAimPublisher
             ["Identifier"] = new JsonObject { ["ImplementerID"] = implementerId, ["ImplementationID"] = implementation, ["AIMName"] = aim },
             ["Header"] = Type, ["APIProfile"] = "Basic",
             ["Description"] = $"This AIM wraps the Neural Network Model {model["MLModelObjectID"]}: AIH Data in, ARA Data out.",
-            ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "ARAData", ["DataType"] = AihJson.AraData }),
+            ["InternalTypes"] = new JsonArray(new JsonObject { ["Name"] = "AIHData", ["DataType"] = AihJson.AihData }, new JsonObject { ["Name"] = "ARAData", ["DataType"] = AihJson.AraData }, new JsonObject { ["Name"] = "NNModel", ["DataType"] = "AIP-MLO-V1.0" }),
             ["ExternalPorts"] = new JsonArray(
                 new JsonObject { ["Name"] = "AIHData", ["Direction"] = "Input", ["DataType"] = AihJson.AihData, ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
-                new JsonObject { ["Name"] = "ARAData", ["Direction"] = "Output", ["DataType"] = AihJson.AraData, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false }),
+                new JsonObject { ["Name"] = "ARAData", ["Direction"] = "Output", ["DataType"] = AihJson.AraData, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
+                new JsonObject { ["Name"] = "NNModelIn", ["Direction"] = "Input", ["IsOptional"] = true, ["DataType"] = "AIP-MLO-V1.0", ["Depth"] = 8, ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false },
+                new JsonObject { ["Name"] = "NNModelOut", ["Direction"] = "Output", ["DataType"] = "AIP-MLO-V1.0", ["Technology"] = "Software", ["Protocol"] = "", ["IsRemote"] = false }),
             ["SubAIMs"] = new JsonArray(), ["Topology"] = new JsonArray(),
             ["Implementations"] = new JsonArray(
                 new JsonObject { ["ImplementationURI"] = "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/AIH/V1.1/Nnm", ["MASPort"] = 443, ["BinaryName"] = "Mpai.Aih.Nnm", ["Architecture"] = "x86-64", ["OperatingSystem"] = "Windows", ["Version"] = "1.1", ["Source"] = "MPAIStore" },

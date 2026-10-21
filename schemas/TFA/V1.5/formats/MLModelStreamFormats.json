@@ -1,0 +1,5 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/MLModelStreamFormats.json",
+  "title":   "ML Model Stream Formats V1.5",
+  "description": "The protocol by which an ML Model is delivered as a stream.",
+  "type":    "string", "enum": [ "gRPC", "HTTPS", "MQTT", "QUIC", "WebSocket" ] }

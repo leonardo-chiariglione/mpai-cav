@@ -5,6 +5,7 @@
   "Apps/AIH/HSP/HFE.orch": "Module 1AIH-HFE-V1.1-I01: 7 offers, 5 asks; every Port declared",
   "Apps/CAE/ARP/ARP.orch": "Module 1CAE-ARP-V2.5-I01: 2 offers, 2 asks; every Port declared",
   "Apps/CAE/ASM/ASM.orch": "Module 1CAE-ASM-V1.0-I01: 5 offers, 11 asks; every Port declared",
+  "Apps/CAE/EAE/EAE-Conference.orch": "Module 1CAE-EAE-V2.5-I01: 3 offers, 1 asks; every Port declared",
   "Apps/CAE/EAE/EAE.orch": "Module 1CAE-EAE-V2.5-I01: 3 offers, 1 asks; every Port declared",
   "Apps/CAE/EES/EES.orch": "Module 1CAE-EES-V2.5-I01: 8 offers, 2 asks; every Port declared",
   "Apps/CAE/SRS/SRS.orch": "Module 1CAE-SRS-V2.5-I01: 4 offers, 1 asks; every Port declared",

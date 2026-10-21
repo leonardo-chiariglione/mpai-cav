@@ -1,5 +1,4 @@
 {
-  "AIF/UserAgent/Clients/AsmStudio/AsmStudio.csproj": "only the User Agent, Data Types and the Controller API",
   "AIF/UserAgent/Clients/Browser/Client/RcaWeb.Client.csproj": "only the User Agent, Data Types and the Controller API",
   "AIF/UserAgent/Clients/Browser/Host/RcaWeb.Host.csproj": "only the User Agent, Data Types and the Controller API",
   "AIF/UserAgent/Clients/Desktop/src/RcaApp.csproj": "only the User Agent, Data Types and the Controller API",

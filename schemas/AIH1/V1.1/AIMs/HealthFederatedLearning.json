@@ -13,6 +13,7 @@
                      {"Name": "NNModel",        "DataType": "AIP-MLO-V1.0"}],
 
   "ExternalPorts":  [{"Name": "FederatedLearnResponse", "Direction": "Input", "IsOptional": true,  "DataType": "AIH-FDL-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "NNModelIn",              "Direction": "Input",  "IsOptional": true,  "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "NNModel",                "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FederatedLearnRequest",  "Direction": "Output", "DataType": "AIH-FDL-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
 

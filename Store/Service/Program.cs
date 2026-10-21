@@ -54,6 +54,7 @@ var l2 = new L2Conformance(schemas, id =>
     repository.Text(id, null) is { } text ? JsonDocument.Parse(text).RootElement.Clone() : null);
 var packages = new PackageCheck(builder.Configuration["Packages"]);
 var licences = new AIF.Store.LicenceBook(Path.Combine(root, "licences"));
+var trustAnchors = new TrustAnchorRegistry(root);
 var markup = decimal.TryParse(builder.Configuration["MarkupPercent"], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var percent) ? percent : 0m;
 var licenceIssuer = new AIF.Store.AimLicences.Issuer(storeKey.Key, StoreIdentity.KeyId, builder.Configuration["StoreId"] ?? "mpai-store", builder.Configuration["StatusMaxAge"] ?? "P7D",
                                                      (builder.Configuration["PublicUrl"] ?? urls).TrimEnd('/') + "/MPAI/Store/Licence", markup);
@@ -259,7 +260,15 @@ app.MapPost("/MPAI/Store/L3/{id}/verify", async (HttpRequest request, string id)
         using var body = JsonDocument.Parse(await new StreamReader(request.Body).ReadToEndAsync());
         string S(string n) => body.RootElement.ValueKind == JsonValueKind.Object && body.RootElement.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
         if (S("BinaryName").Length == 0 || S("Fingerprint").Length == 0) return Results.BadRequest(new { refused = "BinaryName and Fingerprint are needed." });
-        return Results.Json(new { result = fingerprints.Verify(id, S("BinaryName"), S("Fingerprint")).ToString() });
+        // The answer is signed with the Store's key, over the question it answers (AIM, binary, the fingerprint measured, the caller's Nonce) and the Time: a Controller checks that it is
+        // the Store's answer to this question and not another's.
+        var answer = new JsonObject
+        {
+            ["AIMName"] = id, ["BinaryName"] = S("BinaryName"), ["Fingerprint"] = S("Fingerprint"), ["Nonce"] = S("Nonce"),
+            ["Result"] = fingerprints.Verify(id, S("BinaryName"), S("Fingerprint")).ToString(), ["Time"] = AIF.Trust.PtfIdentity.Time(DateTimeOffset.UtcNow)
+        };
+        AIF.Trust.PtfSignature.Sign(answer, storeKey.Key, StoreIdentity.KeyId);
+        return Results.Text(answer.ToJsonString(), "application/json");
     }
     catch (JsonException ex) { return Results.BadRequest(new { refused = "Not JSON: " + ex.Message }); }
 });
@@ -272,8 +281,10 @@ app.MapPost("/MPAI/Store/Licence", async (HttpRequest request) =>
     {
         using var body = JsonDocument.Parse(await new StreamReader(request.Body).ReadToEndAsync());
         string S(string n) => body.RootElement.ValueKind == JsonValueKind.Object && body.RootElement.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()!.Trim() : "";
+        if (JsonNode.Parse(body.RootElement.GetRawText()) is not JsonObject requestObject) return Results.BadRequest(new { refused = "Not a JSON object." });
         var aim = S("AIMName"); var anchor = S("TrustAnchorID"); var controller = S("ControllerID");
         if (aim.Length == 0 || anchor.Length == 0) return Results.BadRequest(new { refused = "AIMName and TrustAnchorID are needed." });
+        if (LicenceCaller.Check(requestObject, trustAnchors, DateTimeOffset.UtcNow) is { } unauthenticated) return Results.Json(new { refused = unauthenticated }, statusCode: 401);
         if (repository.Text(aim, null) is not { } text) return Results.NotFound(new { refused = $"{aim} is not in the Store." });
         var l3 = JsonNode.Parse(text)!.AsObject();
         if (l3["AIMLicence"] is not JsonObject offer) return Results.NotFound(new { refused = $"{aim} has no AIMLicence in its Metadata: it needs no AIM Licence." });
@@ -309,6 +320,22 @@ app.MapPost("/MPAI/Store/Licence/{id}/revoke", async (HttpRequest request, strin
     if (!licences.Revoke(id, reason, DateTimeOffset.UtcNow)) return Results.NotFound(new { missing = $"The Store issued no AIM Licence {id}." });
     Console.WriteLine($"[Store] revoked the AIM Licence {id}: {reason}");
     return Results.Json(new { aimLicenceId = id, status = "revoked", reason });
+});
+
+// The Store's operator makes a Trust Anchor known (admin key): AnchorID and PublicKey (SubjectPublicKeyInfo, hexadecimal). Only the holders of a Trust Anchor so registered are issued AIM Licences.
+app.MapPost("/MPAI/Store/TrustAnchor", async (HttpRequest request) =>
+{
+    if (!StoreIdentity.IsAdmin(request.Headers["MPAI-Admin"].ToString(), adminKey))
+        return Results.Json(new { refused = "The admin key of the Store is needed (header MPAI-Admin)." }, statusCode: 401);
+    try
+    {
+        using var body = JsonDocument.Parse(await new StreamReader(request.Body).ReadToEndAsync());
+        string S(string n) => body.RootElement.ValueKind == JsonValueKind.Object && body.RootElement.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()!.Trim() : "";
+        if (trustAnchors.Register(S("AnchorID"), S("PublicKey")) is { } wrong) return Results.BadRequest(new { refused = wrong });
+        Console.WriteLine($"[Store] recognises the Trust Anchor {S("AnchorID")}");
+        return Results.Json(new { anchorId = S("AnchorID"), recognised = true });
+    }
+    catch (JsonException ex) { return Results.BadRequest(new { refused = "Not JSON: " + ex.Message }); }
 });
 
 // The public key the Store signs AIM Licences with, by the KeyID the AIM Licence names. A Controller's trust in it comes from the Trust Anchor of the Store; this route lets a Controller

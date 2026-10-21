@@ -30,12 +30,12 @@ public class StoreTests
 
         public RunningStore(string extraArguments = "")
         {
-            var exe = Path.Combine(Repository.Root, "Store", "Service", "bin", "Debug", "net10.0", "StoreService.exe");
+            var exe = Path.Combine(Repository.Root, "Store", "Service", "bin", "Debug", "net10.0", "StoreService.dll");        // run by dotnet: no apphost to be blocked
             Skip.IfNot(File.Exists(exe), "The Store is not built: " + exe);
             Directory.CreateDirectory(Packages);
             Url = $"http://127.0.0.1:{FreePort()}";
-            process = Process.Start(new ProcessStartInfo(exe,
-                $"--Urls {Url} --Root \"{StoreFolder}\" --Packages \"{Packages}\" --Schemas \"{Repository.Schemas}\" --AdminKey {Admin} {extraArguments}")
+            process = Process.Start(new ProcessStartInfo("dotnet",
+                $"\"{exe}\" --Urls {Url} --Root \"{StoreFolder}\" --Packages \"{Packages}\" --Schemas \"{Repository.Schemas}\" --AdminKey {Admin} {extraArguments}")
             { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true })!;
             process.OutputDataReceived += (_, e) => { if (e.Data is not null) lock (log) log.AppendLine(e.Data); };
             process.ErrorDataReceived += (_, e) => { if (e.Data is not null) lock (log) log.AppendLine(e.Data); };
@@ -239,7 +239,7 @@ public class StoreTests
     {
         using var answer = await http.PostAsync($"/MPAI/Store/L3/{aim}/verify", new StringContent(
             new JsonObject { ["BinaryName"] = binary, ["Fingerprint"] = fingerprint }.ToJsonString(), Encoding.UTF8, "application/json"));
-        return (string)JsonNode.Parse(await answer.Content.ReadAsStringAsync())!["result"]!;
+        return (string)JsonNode.Parse(await answer.Content.ReadAsStringAsync())!["Result"]!;
     }
 
     // A submission: signed by the Implementer's key, or with the admin key for MPAI's own ID.

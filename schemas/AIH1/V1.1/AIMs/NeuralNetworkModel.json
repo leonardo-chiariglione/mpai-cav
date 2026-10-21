@@ -13,7 +13,9 @@
                      {"Name": "ARAData", "DataType": "AIH-ARD-V1.1"}],
 
   "ExternalPorts":  [{"Name": "AIHData", "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "ARAData", "Direction": "Output", "DataType": "AIH-ARD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "ARAData", "Direction": "Output", "DataType": "AIH-ARD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "NNModelIn",  "Direction": "Input",  "IsOptional": true, "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "NNModelOut", "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 

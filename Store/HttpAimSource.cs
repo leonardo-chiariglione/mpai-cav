@@ -15,10 +15,15 @@ public sealed class HttpAimSource : IAimSource, IDisposable
     private readonly string? trustAnchorId;
     private readonly string? controllerId;
     private readonly Dictionary<string, System.Security.Cryptography.ECDsa> keys = [];
+    private readonly AimCaller? caller;
 
-    public HttpAimSource(string storeUrl, HttpMessageHandler? handler = null, string? trustAnchorId = null, string? controllerId = null)
+    // WHO ASKS THE STORE FOR AN AIM LICENCE, and proves it: its Cryptographic Instance Identity and the key of it, its Instance Credential and the links of the chain to the Trust Anchor
+    // it asks the licence for. The Store checks them; it issues nothing to a caller it cannot authenticate.
+    public sealed record AimCaller(JsonObject Cii, JsonObject Credential, IReadOnlyList<AIF.Trust.PtfCredential.Link> Chain, System.Security.Cryptography.ECDsa Key);
+
+    public HttpAimSource(string storeUrl, HttpMessageHandler? handler = null, string? trustAnchorId = null, string? controllerId = null, AimCaller? caller = null)
     {
-        this.trustAnchorId = trustAnchorId; this.controllerId = controllerId;
+        this.trustAnchorId = trustAnchorId; this.controllerId = controllerId; this.caller = caller;
         http = handler is null ? new HttpClient() : new HttpClient(handler);
         http.BaseAddress = new Uri(storeUrl.TrimEnd('/') + "/");
         http.Timeout = TimeSpan.FromSeconds(30);
@@ -52,11 +57,17 @@ public sealed class HttpAimSource : IAimSource, IDisposable
     {
         try
         {
-            using var content = new StringContent(new JsonObject { ["BinaryName"] = binaryName, ["Fingerprint"] = fingerprint }.ToJsonString(), Encoding.UTF8, "application/json");
+            var nonce = Guid.NewGuid().ToString("N");
+            using var content = new StringContent(new JsonObject { ["BinaryName"] = binaryName, ["Fingerprint"] = fingerprint, ["Nonce"] = nonce }.ToJsonString(), Encoding.UTF8, "application/json");
             using var answer = http.PostAsync($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}/verify", content).GetAwaiter().GetResult();
             Reachable = true;
             if (!answer.IsSuccessStatusCode) return VerifyResult.NotRecorded;
-            return Enum.TryParse<VerifyResult>((string?)JsonNode.Parse(answer.Content.ReadAsStringAsync().GetAwaiter().GetResult())?["result"], out var result) ? result : VerifyResult.NotRecorded;
+            // The answer is the Store's, to this question: signed with a key the Store gave, naming the AIM, the binary, the fingerprint and the Nonce that were asked. Anything else is not
+            // an answer of the Store, and a Store that has not said it is the same has not.
+            if (JsonNode.Parse(answer.Content.ReadAsStringAsync().GetAwaiter().GetResult()) is not JsonObject said) return VerifyResult.NotRecorded;
+            if (AIF.Trust.PtfSignature.Verify(said, id => StoreKey(id)) != AIF.Trust.PtfSignature.Outcome.Valid) return VerifyResult.NotRecorded;
+            if ((string?)said["AIMName"] != aimName || (string?)said["BinaryName"] != binaryName || (string?)said["Fingerprint"] != fingerprint || (string?)said["Nonce"] != nonce) return VerifyResult.NotRecorded;
+            return Enum.TryParse<VerifyResult>((string?)said["Result"], out var result) ? result : VerifyResult.NotRecorded;
         }
         catch (HttpRequestException) { Reachable = false; return VerifyResult.NotRecorded; }       // a Store that cannot be asked has not said it is the same
         catch (TaskCanceledException) { Reachable = false; return VerifyResult.NotRecorded; }
@@ -71,6 +82,16 @@ public sealed class HttpAimSource : IAimSource, IDisposable
         {
             var request = new JsonObject { ["AIMName"] = aimName, ["TrustAnchorID"] = anchor };
             if (controllerId is not null) request["ControllerID"] = controllerId;
+            if (caller is not null)
+            {
+                request["Caller"] = new JsonObject
+                {
+                    ["Cii"] = caller.Cii.DeepClone(), ["Credential"] = caller.Credential.DeepClone(),
+                    ["Chain"] = new JsonArray(caller.Chain.Select(l => (JsonNode)new JsonObject { ["Cii"] = l.Cii.DeepClone(), ["Credential"] = l.Credential.DeepClone() }).ToArray())
+                };
+                request["Time"] = AIF.Trust.PtfIdentity.Time(DateTimeOffset.UtcNow);
+                AIF.Trust.PtfSignature.Sign(request, caller.Key, (string?)caller.Cii["CryptographicInstanceID"] ?? (string?)caller.Cii["AnchorID"] ?? "caller");
+            }
             using var content = new StringContent(request.ToJsonString(), Encoding.UTF8, "application/json");
             using var answer = http.PostAsync("MPAI/Store/Licence", content).GetAwaiter().GetResult();
             Reachable = true;
