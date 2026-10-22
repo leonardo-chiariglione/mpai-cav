@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M-Instance viewer (arms 4)</title>
+<title>M-Instance viewer (arms 5)</title>
 <!--
   THE M-ENVIRONMENT OF AN M-INSTANCE, AS IT CAN BE SEEN (MMM-TEC V2.2). The page reads
   the M-Instance's snapshot (./state) twice a second and draws it: its M-Locations as
@@ -210,8 +210,8 @@ function armsDown(frame) {
   frame.updateMatrixWorld(true);
 }
 // The vertices of the skin that follow a hand (a hand bone or a finger bone has most of their weight): what touches the table is the skin, not the bones.
-function handVertices(frame, side) {
-  const list = [], re = new RegExp(side + '.?(Hand|Finger)', 'i');
+function handVertices(frame, side, parts = 'Hand|Finger') {
+  const list = [], re = new RegExp(side + '.?(' + parts + ')', 'i');
   frame.traverse(o => {
     if (!o.isSkinnedMesh || !o.geometry.attributes.skinIndex) return;
     const mine = new Set(); o.skeleton.bones.forEach((b, i) => { if (re.test(b.name)) mine.add(i); });
@@ -235,14 +235,15 @@ function armsOnTable(frame, reach, top) {
   const wp = bone => bone.getWorldPosition(new THREE.Vector3());
   for (const [u, f, h, thumb, middle, pinky, side] of [[A.lu, A.lf, A.lh, A.lt, A.lm, A.lp, 'L'], [A.ru, A.rf, A.rh, A.rt, A.rm, A.rp, 'R']]) {
     if (!u || !f || !h || !u.userData.armDown) continue;
-    const forearm = f.userData.armRest ??= f.quaternion.clone(), flat = h.userData.handRest ??= h.quaternion.clone(), skin = handVertices(frame, side);
+    const forearm = f.userData.armRest ??= f.quaternion.clone(), flat = h.userData.handRest ??= h.quaternion.clone(), skin = handVertices(frame, side), contact = handVertices(frame, side, 'Hand|Finger|Forearm'), arm = handVertices(frame, side, 'Forearm');
     u.quaternion.copy(u.userData.armDown); f.quaternion.copy(forearm); h.quaternion.copy(flat); u.updateMatrixWorld(true);
     const s = placeOf(frame, u), inside = Math.sign(s.x) || 1;
     const pose = height => {
       let best = { cost: 1e9, a: 0, b: 0 };
-      const spot = (a, b) => { u.quaternion.copy(u.userData.armDown); swing(u, x, a); f.quaternion.copy(forearm); swing(f, x, b); h.quaternion.copy(flat); u.updateMatrixWorld(true); const p = placeOf(frame, h); return Math.hypot(p.z - reach, p.y - height, (p.x - s.x) * 0.5); };
+      const spot = (a, b, fine) => { u.quaternion.copy(u.userData.armDown); swing(u, x, a); f.quaternion.copy(forearm); swing(f, x, b); h.quaternion.copy(flat); u.updateMatrixWorld(true); const p = placeOf(frame, h), e = placeOf(frame, f); return Math.hypot(p.z - reach, p.y - height, (p.x - s.x) * 0.5, 6 * (e.y - (top + 0.025 - ELBOW_DROP)), fine ? 4 * (Math.min(...skinHeights(frame, arm)) - (top - HAND_SINK)) : 0); };   // the elbow at the table and the wrist near it, and in the end the underside of the forearm on it: the forearm lies along the table
       for (let a = -120; a <= 60; a += 6) for (let b = -140; b <= 20; b += 6) { const cost = spot(a, b); if (cost < best.cost) best = { cost, a, b }; }
-      for (let a = best.a - 6; a <= best.a + 6; a++) for (let b = best.b - 6; b <= best.b + 6; b++) { const cost = spot(a, b); if (cost < best.cost) best = { cost, a, b }; }   // a finer look round the best
+      best.cost = spot(best.a, best.b, true);
+      for (let a = best.a - 6; a <= best.a + 6; a++) for (let b = best.b - 6; b <= best.b + 6; b++) { const cost = spot(a, b, true); if (cost < best.cost) best = { cost, a, b }; }   // a finer look round the best
       spot(best.a, best.b);
       if (!thumb || !middle || !pinky) return;
       const axis = wp(h).sub(wp(f)).normalize(), turned = f.quaternion.clone(); let tw = { cost: 1e9, t: 0 };                      // the palm down: the line from the little finger to the thumb level, the thumb on the inside
@@ -255,7 +256,7 @@ function armsOnTable(frame, reach, top) {
       const hq = h.quaternion.clone(); let hb = { cost: 1e9, a: 0 };                                                              // the hand flat: its lowest and its average height as near as may be
       for (let a = -90; a <= 90; a += 5) {
         h.quaternion.copy(hq); swing(h, x, a); u.updateMatrixWorld(true);
-        const m = placeOf(frame, middle), p0 = placeOf(frame, h), ys = skinHeights(frame, skin), cost = (ys.reduce((q, y) => q + y, 0) / ys.length - Math.min(...ys)) + (m.z - p0.z < 0.02 ? 1 : 0);
+        const m = placeOf(frame, middle), p0 = placeOf(frame, h), ys = skinHeights(frame, skin), low = Math.min(...ys), cost = Math.abs(low - Math.min(...skinHeights(frame, arm))) + 0.5 * (ys.reduce((q, y) => q + y, 0) / ys.length - low) + (m.z - p0.z < 0.02 ? 1 : 0);   // the hand as low as the forearm, and flat
         if (cost < hb.cost) hb = { cost, a };
       }
       h.quaternion.copy(hq); swing(h, x, hb.a); u.updateMatrixWorld(true);
@@ -263,7 +264,7 @@ function armsOnTable(frame, reach, top) {
     let height = top + 0.03;
     for (let round = 0; round < 4; round++) {
       pose(height);
-      const gap = Math.min(...skinHeights(frame, skin)) - (top - HAND_SINK);                                    // how far the lowest point of the hand is above the table (below it, if negative)
+      const gap = Math.min(...skinHeights(frame, contact)) - (top - HAND_SINK);                                    // how far the lowest point of the forearm and hand is above the table (below it, if negative)
       if (Math.abs(gap) < 0.003) break;
       height -= gap;
     }
@@ -302,6 +303,7 @@ async function persona(t) {
 // A Persona at a seat of the meeting room sits: the thighs forward, the shins down, the body lowered onto the chair. The way a bone turns depends on how the model was made,
 // so each leg is turned and then looked at: the knee must be in front of the hip (the model faces +z), the foot below the knee; if not, the leg is turned the other way.
 const SIT_DROP = 0.45;
+const ELBOW_DROP = 0;   // the elbow (and with it the forearm and the upper arm) is this far (m) lower than the table's top plus the thickness of the forearm
 const HAND_SINK = 0.01;   // the lowest point of a hand on the table is this far (m) below its top, so that from a low eye it can never look as if it hovered
 const TABLE_REACH = 0.58;   // from the Persona's seat to where its wrists rest: the table's edge is 0.5 m ahead, the palms lie beyond it (SEAT_R - TABLE_R in MMM/World/make_world.py)
 function sitPose(g, on) {

@@ -1,13 +1,13 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/AudioObjectIdentification.json",
-  "title":                "Audio Object Identification V2.5",
-  "Header":               "CAE-AOI-V2.5",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/AudioInstanceIdentification.json",
+  "title":                "Audio Instance Identification V2.5",
+  "Header":               "CAE-AII-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AOI-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AII-V2.5"},
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Object Identification (CAE-AOI) of CAE-USC V2.5: receives AudioSceneGeometry, AudioObjects and produces AudioInstanceIdentifier.",
+  "Description":          "Audio Instance Identification (CAE-AII) of CAE-USC V2.5: receives AudioSceneGeometry, AudioObjects and produces AudioInstanceIdentifier.",
 
   "InternalTypes":        [ ],
 

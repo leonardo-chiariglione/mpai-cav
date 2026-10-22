@@ -12,7 +12,7 @@
   "CAE1/V2.5/AIMs/AudioAnalysisTransform.json": "valid",
   "CAE1/V2.5/AIMs/AudioDescriptorsMultiplexing.json": "valid",
   "CAE1/V2.5/AIMs/AudioDescriptorsPackaging.json": "valid",
-  "CAE1/V2.5/AIMs/AudioObjectIdentification.json": "valid",
+  "CAE1/V2.5/AIMs/AudioInstanceIdentification.json": "valid",
   "CAE1/V2.5/AIMs/AudioRecordingPreservation.json": "valid",
   "CAE1/V2.5/AIMs/AudioSceneDescription.json": "valid",
   "CAE1/V2.5/AIMs/AudioSeparationAndEnhancement.json": "valid",
