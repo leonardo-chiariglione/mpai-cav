@@ -5,8 +5,8 @@
     "OperatingSystem":  "Windows",
     "Architecture":  "x86-64",
     "Requires":  ".NET 10 runtime (x64)",
-    "Address":  "",
-    "Sha256":  "C8CF1DBC5630D190078B601603C07B4DB11FA8F1EEC1BA041D908526105DB5DE",
+    "Address":  "https://github.com/leonardo-chiariglione/packages/releases/download/aif-v3.0/AIF-V3.0-win-x64.zip",
+    "Sha256": "C8CF1DBC5630D190078B601603C07B4DB11FA8F1EEC1BA041D908526105DB5DE",
     "SizeBytes":  14108960,
     "EntryPoint":  "service\\MasService.exe \u003cconfiguration\u003e"
 }

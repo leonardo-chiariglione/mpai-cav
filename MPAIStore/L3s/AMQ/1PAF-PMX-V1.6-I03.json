@@ -26,7 +26,7 @@
 
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/MPAIStore/Packages/PAF-PMX-V1.6-I03-win-x64.zip",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/packages/releases/download/amq-v2.5/PAF-PMX-V1.6-I03-win-x64.zip",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Paf.Pmx",
                         "Architecture":      "x86-64",

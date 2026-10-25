@@ -34,7 +34,7 @@
                       {"Name": "openvoice-converter", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/checkpoint.pth", "Sha256": "9652C27E92B6B2A91632590AC9962EF7AE2B712E5C5B7F4C34EC55EE2B37AB9E", "Setting": "OpenVoiceCheckpoint", "AsFile": "checkpoint.pth", "IsOptional": true, "Terms": {"Licence": "MIT", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2", "PersonalData": false}, "Description": "The tone colour converter of OpenVoice V2, which makes the embedding of a voice and speaks in it."},
                       {"Name": "openvoice-config", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/config.json", "Sha256": "9DFFF60350B8C63F2C664EFD92A61B2516EFB22671466960F0E5DFEBD881FA47", "Setting": "OpenVoiceConfig", "AsFile": "config.json", "IsOptional": true, "ValidWith": ["9652C27E92B6B2A91632590AC9962EF7AE2B712E5C5B7F4C34EC55EE2B37AB9E"], "Description": "The configuration of that converter.", "Terms": {"Licence": "MIT", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2", "PersonalData": false}}],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/MPAIStore/Packages/MMC-TTS-V2.5-I03-win-x64.zip",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/packages/releases/download/amq-v2.5/MMC-TTS-V2.5-I03-win-x64.zip",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Mmc.Tts",
                         "Architecture":      "x86-64",

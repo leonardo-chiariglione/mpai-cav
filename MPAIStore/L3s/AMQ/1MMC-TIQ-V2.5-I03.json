@@ -19,7 +19,7 @@
                       {"Name": "tiq-decoder", "Uri": "https://media.githubusercontent.com/media/mpai-community/mpai-sw/main/Models/BLIP/onnx/blip_decoder_context_dynamic.onnx", "Sha256": "554B87CD9892D34CBF9029F2AA4B9EE8D4513AC561EB78EC64D17646F0191991", "Mirrors": ["https://github.com/mpai-community/mpai-sw/raw/main/Models/BLIP/onnx/blip_decoder_context_dynamic.onnx", "https://huggingface.co/mpai-community/blip-vqa-base-onnx/resolve/main/blip_decoder_context_dynamic.onnx"], "Setting": "DecoderModel", "AsFile": "blip_decoder_context_dynamic.onnx", "ValidWith": ["161F6D21D7380C22568F4E41A4F764410CF157BE9FAC75E3BB064EA4DEBB82DC"], "Description": "The text decoder of the model.", "Terms": {"Licence": "BSD-3-Clause", "Uri": "https://huggingface.co/Salesforce/blip-vqa-base", "PersonalData": false}},
                       {"Name": "tiq-vocab", "Uri": "https://huggingface.co/Salesforce/blip-vqa-base/resolve/main/vocab.txt", "Sha256": "07ECED375CEC144D27C900241F3E339478DEC958F92FDDBC551F295C992038A3", "Setting": "VocabFile", "AsFile": "vocab.txt", "ValidWith": ["161F6D21D7380C22568F4E41A4F764410CF157BE9FAC75E3BB064EA4DEBB82DC"], "Description": "The vocabulary of the model.", "Terms": {"Licence": "BSD-3-Clause", "Uri": "https://huggingface.co/Salesforce/blip-vqa-base", "PersonalData": false}}],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/MPAIStore/Packages/MMC-TIQ-V2.5-I03-win-x64.zip",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/packages/releases/download/amq-v2.5/MMC-TIQ-V2.5-I03-win-x64.zip",
                         "MASPort":          443,
                         "BinaryName":        "Mpai.Mmc.Tiq",
                         "Architecture":      "x86-64",

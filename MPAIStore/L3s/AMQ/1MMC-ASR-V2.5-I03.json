@@ -13,7 +13,7 @@
 
   "Topology":         [],
 
-  "Implementations":  [{"ImplementationURI": "file:///D:/AI/MPAIStore/Packages/MMC-ASR-V2.5-I03-win-x64.zip",
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/packages/releases/download/amq-v2.5/MMC-ASR-V2.5-I03-win-x64.zip",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Mmc.Asr",
                         "Architecture":      "x86-64",
