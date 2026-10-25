@@ -21,7 +21,7 @@ public sealed class AsmDeployment : IDisposable
 
     // Why it cannot be run here, or null.
     public static string? SkipReason() =>
-        !Directory.Exists(Path.Combine(Repository.Root, "Models")) ? "Models is absent: the model files are obtained separately." :
+        !TestModels.Can("ggml-small.bin") ? "Models is absent: the model files are obtained separately." :
         !File.Exists(Exe) ? "AsmServer is not built: " + Exe :
         System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == Port) ? $"Port {Port} is in use." : null;
 

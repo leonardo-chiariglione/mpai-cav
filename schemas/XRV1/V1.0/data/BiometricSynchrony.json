@@ -3,7 +3,7 @@
   "title":                  "Biometric Synchrony V1.0",
   "type":                   "object", 
   "additionalProperties":   false, 
-  "required":               [ "Header" ],
+  "required":               [ "Header", "BiometricSynchronyID", "UEnvironmentID", "BiometricSynchronyTime" ],
   "properties":             {
 
     "Header":               { "type": "string", "const": "XRV-BMS-V1.0" },
@@ -14,8 +14,8 @@
 
     "BiometricSynchronyData":        { "type": "object", "additionalProperties": false, "properties": {
 
-      "BrainSynchrony":    { "type": "number" },
-      "HeartSynchrony":    { "type": "number" } } },
+      "BrainSynchrony":    { "type": "number", "minimum": 0, "maximum": 1, "description": "Degree of synchrony of the brain activity, from 0 to 1." },
+      "HeartSynchrony":    { "type": "number", "minimum": 0, "maximum": 1, "description": "Degree of synchrony of the heart activity, from 0 to 1." } } },
 
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

@@ -3,7 +3,7 @@
   "title":                    "VE Data In V1.0",
   "type":                     "object",
   "additionalProperties":     false,
-  "required":                 [ "Header", "VEDataInID", "VEDataInTime", "VEDataIn" ],
+  "required":                 [ "Header", "VEDataInID", "VEDataInTime", "VEDataIn", "UEnvironmentID" ],
   "properties":               {
 
     "Header":                 { "type": "string", "const": "XRV-VDI-V1.0" },

@@ -6,7 +6,7 @@
   "required":                  [ "Header", "ObjectSpatialAttitudeID", "Position", "Orientation" ],
   "properties":                {
 
-    "Header":                  { "type": "string", "const": "OSD-OSA-V1.5", "description": "Spatial Attitude Header â€“ Standard OSD-OSA-Vx.y" },
+    "Header":                  { "type": "string", "const": "OSD-OSA-V1.5", "description": "Spatial Attitude Header – Standard OSD-OSA-Vx.y" },
     "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Spatial Attitude is defined." },
     "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Spatial Attitude is defined." },
     "ObjectSpatialAttitudeID": { "type": "string", "description": "Unique identifier of this Spatial Attitude instance." },

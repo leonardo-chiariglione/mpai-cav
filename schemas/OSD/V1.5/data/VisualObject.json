@@ -7,7 +7,7 @@
   "required":                       [ "Header", "MInstanceID", "VisualObjectID", "VisualObjectSpaceTime" ],
   "properties":                     {
 
-    "Header":                       { "type": "string", "const": "OSD-VIO-V1.5", "description": "Visual Object Header â€“ Standard OSD-VIO-Vx.y." },
+    "Header":                       { "type": "string", "const": "OSD-VIO-V1.5", "description": "Visual Object Header – Standard OSD-VIO-Vx.y." },
     "MInstanceID":                  { "type": "string", "description": "Identifier of M-Instance." },
     "UEnvironmentID":               { "type": "string", "description": "Identifier of the U-Environment." },
     "VisualObjectID":               { "type": "string", "description": "Identifier of the Visual Object." },

@@ -425,12 +425,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             return _running.TryGetValue(moduleName, out var started) ? _ua.ModuleStorage(started.Id) : null;
     }
 
-    // ACCESS (AIF V3.0, Basic API 3.9): the User's Sources, written through the User
-    // Agent; a Module's AIMs read them.
-    public AifError AccessCreate(string source) => _ua.MPAI_AIFU_Access_Create(source);
-    public AifError AccessPut(string source, string key, byte[] data) => _ua.MPAI_AIFU_Access_Put(source, key, data);
-    public AifError AccessDelete(string source, string key) => _ua.MPAI_AIFU_Access_Delete(source, key);
-
     public AifError SharedStorageInit(string moduleName, string location) => SharedStorageInit(moduleName, location, false);
 
     // WHOSE SESSION AN EXCHANGE SERVES (M3245 3.3): a Service's Controller serves

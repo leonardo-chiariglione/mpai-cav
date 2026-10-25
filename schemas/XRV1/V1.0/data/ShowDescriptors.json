@@ -3,7 +3,7 @@
   "title":                        "Show Descriptors V1.0",
   "description":                  "Descriptor collection for RE/VE Environment show components.",
   "type":                         "object", 
-  "required":                     [ "Header", "ShowDescriptorsID", "ShowDescriptors" ],
+  "required":                     [ "Header", "ShowDescriptorsID", "ShowDescriptors", "UEnvironmentID", "ShowDescriptorsTime" ],
   "additionalProperties":         false, "unevaluatedProperties": false, "properties": {
 
     "Header":                     { "type": "string", "const": "XRV-SHD-V1.0" },

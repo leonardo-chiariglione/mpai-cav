@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Instance\Mpai.Mmm.csproj" />
+    <ProjectReference Include="..\..\AIF\Controller\AIF.Controller.csproj" />
   </ItemGroup>
 
 </Project>

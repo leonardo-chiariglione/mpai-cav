@@ -141,7 +141,7 @@ public class MasEndToEndTests
     [Trait("Duration", "Long")]
     public void Step7EndToEnd()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, string>();
         var map = RoadMap.Grid(3);

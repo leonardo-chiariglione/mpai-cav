@@ -13,6 +13,11 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "ocr-det", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "DetModel", "AsFile": "ch_PP-OCRv5_server_det.onnx", "Description": "The text detection model (PP-OCRv5, server): finds the lines of text."},
+                      {"Name": "ocr-cls", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "ClsModel", "AsFile": "ch_ppocr_mobile_v2.0_cls_infer.onnx", "Description": "The orientation model: a line upside down is turned."},
+                      {"Name": "ocr-rec", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "RecModel", "AsFile": "latin_PP-OCRv5_rec_mobile_infer.onnx", "Description": "The recognition model of the latin alphabets."},
+                      {"Name": "ocr-keys", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "KeysFile", "AsFile": "ppocrv5_latin_dict.txt", "Description": "The characters the recognition model recognises."}],
+
   "Implementations":  [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
@@ -20,5 +25,7 @@
                        {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */"},
                        {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"}],
 
-  "DataXMData":       {}
+  "DataXMData":       {},
+
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/optical-character-recognition/"}]
 }

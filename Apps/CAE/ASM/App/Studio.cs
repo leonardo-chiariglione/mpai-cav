@@ -857,7 +857,7 @@ public sealed class Studio : IDisposable
     public byte[] Render()
     {
         if (SceneJson is null) throw new InvalidOperationException("The scene is empty.");
-        var rendering = new AudioRendering(Path.Combine(Paths.Root, "Models", "SteamAudio"));
+        var rendering = new AudioRendering(AppContext.BaseDirectory);   // Steam Audio comes with the program: the build puts it beside it
         if (rendering.Available) return WithRoom(rendering.Render(SceneJson).Data);
 
         const int rate = 48000;

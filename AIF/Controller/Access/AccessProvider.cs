@@ -52,7 +52,9 @@ public sealed class AccessProviderServer : IAsyncDisposable
         {
             "Create" => store.Create(source, provider),
             "Put"    => version is null ? AccessOutcome.Refused
-                      : store.Put(source, provider, key, Convert.FromBase64String((string?)request["Data"] ?? ""), version),
+                      : store.Put(source, provider, key, Convert.FromBase64String((string?)request["Data"] ?? ""), version,
+                                  (string?)request["Category"] ?? "Data",
+                                  request["Readers"] is JsonArray named ? named.Select(r => (string)r!).ToList() : null),
             "Delete" => version is null ? AccessOutcome.Refused : store.Delete(source, provider, key, version),
             _        => AccessOutcome.Refused
         };

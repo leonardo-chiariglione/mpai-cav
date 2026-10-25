@@ -4,7 +4,7 @@
   "description":                    "Participant data container.",
   "type":                           "object",
   "additionalProperties":           false,
-  "required":                       ["Header","ParticipantDataID"],
+  "required":                       [ "Header", "ParticipantDataID", "UEnvironmentID", "ParticipantDataTime" ],
   "properties":                     {
 
     "Header":                       { "type": "string", "const": "XRV-PTD-V1.0", "description": "Participant Data Header" },

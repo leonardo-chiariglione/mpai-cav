@@ -131,13 +131,5 @@ public class AsmVoiceThroughControllerTests
         finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
     }
 
-    private static Dictionary<string, string> VoiceSettings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    private static Dictionary<string, string> VoiceSettings(string aim) => TestModels.Settings(aim);
 }

@@ -35,23 +35,15 @@ public class AudioSegmentationTests
 
     private static float[] Say(string text, string voice)
     {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        var settings = all["1MMC-TTS-V2.5-I01"]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!; return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-        settings["VoiceModel"] = Path.Combine(Repository.Root, "Models", "Piper", "voices", voice, voice + ".onnx");
-        settings["VoiceConfig"] = settings["VoiceModel"] + ".json";
-        foreach (var k in settings.Keys.Where(k => k.StartsWith("Voice:") || k.StartsWith("VoiceConfig:")).ToList()) settings.Remove(k);
+        var settings = TestModels.Voice(voice);
         var wav = Mpai.Aims.Tts.TtsFactory.Create(settings).ProcessAsync(BasicTextObject.FromText(text)).GetAwaiter().GetResult().Data;
         return WavReader.ReadMono16k(new MemoryStream(wav), voice + ".wav");
     }
 
-    private static SpeakerEmbedder Embedder() => new(Path.Combine(Repository.Root, "Models", "ecapa-tdnn.onnx"));
+    private static SpeakerEmbedder Embedder() => new(TestModels.Of("ecapa-tdnn.onnx"));
 
     private static void RequireModels() =>
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "ecapa-tdnn.onnx")) &&
-                   Directory.Exists(Path.Combine(Repository.Root, "Models", "Piper", "voices", "en_GB-alan-medium")), "Models is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("ecapa-tdnn.onnx", "voice-en-GB", "voice-config-en-GB", "voice-en-US", "voice-config-en-US"), "The models cannot be had: the L3s declare them, and Access holds them or cannot obtain them.");
 
     private const string A = "en_GB-alan-medium", B = "en_US-lessiac-medium";
     private const string SayA1 = "Good morning, I would like to go to the central hospital please.";
@@ -136,7 +128,7 @@ public class AudioSegmentationTests
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         var ports = AimPortReader.Load(store, Aim);
         var plugin = new AusPlugin();
-        var aim = plugin.Create(ports, new Dictionary<string, string> { ["EcapaModel"] = Path.Combine(Repository.Root, "Models", "ecapa-tdnn.onnx") });
+        var aim = plugin.Create(ports, new Dictionary<string, string> { ["EcapaModel"] = TestModels.Of("ecapa-tdnn.onnx") });
 
         var reply = await aim.ProcessAsync(new Message
         {

@@ -3,7 +3,7 @@
   "title":                    "VE Data Out V1.0",
   "type":                     "object",
   "additionalProperties":     false,
-  "required":                 [ "Header", "VEDataOutID", "VEDataOutTime", "VEDataOut" ],
+  "required":                 [ "Header", "VEDataOutID", "VEDataOutTime", "VEDataOut", "UEnvironmentID" ],
   "properties":               {
 
     "Header":                 { "type": "string", "const": "XRV-VDO-V1.0" },

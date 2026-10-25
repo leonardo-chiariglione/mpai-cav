@@ -8,9 +8,10 @@ namespace Mpai.SpatialAudio;
 // STEAM AUDIO (Valve, Apache-2.0), version 4.8.1: the few functions of its C API
 // (phonon.h) that the User Agent's spatial renderer calls, declared as the header
 // declares them. The native library - phonon.dll on Windows, libphonon.so on
-// Linux - is not in the repository: it is obtained with Steam Audio's SDK and put
-// in Models/SteamAudio/<windows-x64 | linux-x64>, as the models are
-// (THIRD-PARTY-NOTICES.md). SteamAudio.Load names where it is.
+// Linux - is not in the repository: the build of this project fetches it from the
+// release of Valve, checks its SHA-256 and puts it beside the program, in
+// <windows-x64 | linux-x64> (Mpai.SpatialAudio.csproj, THIRD-PARTY-NOTICES.md).
+// SteamAudio.Load names where it is.
 internal static class SteamAudio
 {
     private const string Lib = "phonon";

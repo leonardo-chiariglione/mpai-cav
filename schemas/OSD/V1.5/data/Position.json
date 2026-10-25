@@ -6,7 +6,7 @@
   "required":               [ "Header", "PositionID" ],
   "properties":             {
 
-    "Header":               { "type": "string", "const": "OSD-OPS-V1.5", "description": "Position Header â€“ Standard OSD-OPS-Vx.y" },
+    "Header":               { "type": "string", "const": "OSD-OPS-V1.5", "description": "Position Header – Standard OSD-OPS-Vx.y" },
     "MInstanceID":          { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Position is defined." },
     "UEnvironmentID":       { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Position is defined." },
     "PositionID":           { "type": "string", "description": "Unique identifier of this Position instance." },
@@ -21,18 +21,18 @@
 
     "CartPosition":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian position (X, Y, Z) in metres." },
     "CartPositionAccuracy": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian position component (X, Y, Z) in metres." },
-    "SpherPosition":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, Ï†, Î¸) in metres and degrees." },
-    "SpherPositionAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, Ï†, Î¸)." },
+    "SpherPosition":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, φ, θ) in metres and degrees." },
+    "SpherPositionAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, φ, θ)." },
 
     "CartVelocity":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian velocity (X, Y, Z) in metres/s." },
     "CartVelocityAccuracy": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian velocity component (X, Y, Z) in metres/s." },
-    "SpherVelocity":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical velocity (r, Ï†, Î¸) in metres/s and degrees/s." },
-    "SpherVelocityAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical velocity component (r, Ï†, Î¸)." },
+    "SpherVelocity":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical velocity (r, φ, θ) in metres/s and degrees/s." },
+    "SpherVelocityAccuracy":{ "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical velocity component (r, φ, θ)." },
 
-    "CartAccel":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian acceleration (X, Y, Z) in metres/sÂ²." },
-    "CartAccelAccuracy":    { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/sÂ²." },
-    "SpherAccel":           { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical acceleration (r, Ï†, Î¸) in metres/sÂ² and degrees/sÂ²." },
-    "SpherAccelAccuracy":   { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical acceleration component (r, Ï†, Î¸)." },
+    "CartAccel":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian acceleration (X, Y, Z) in metres/s²." },
+    "CartAccelAccuracy":    { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/s²." },
+    "SpherAccel":           { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical acceleration (r, φ, θ) in metres/s² and degrees/s²." },
+    "SpherAccelAccuracy":   { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical acceleration component (r, φ, θ)." },
 
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                               "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Position in a trusted data exchange context." },

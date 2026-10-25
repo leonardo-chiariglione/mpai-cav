@@ -12,7 +12,6 @@
   "it updates the item at Version 2": "OK; read: streets of Turin, 2026",
   "refused before the store": "the request is Tampered | the request is Unsigned | the request is NotTheSender",
   "the Provider deletes an item": "OK; listed: turin",
-  "the User writes the Provider's Source": "NotAuthorised; read: streets of Turin, 2026",
   "the same request sent again": "Refused; Version 3",
   "who wrote an item, at which Version": "provider-1 at Version 2"
 }

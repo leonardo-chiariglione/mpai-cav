@@ -29,25 +29,14 @@ public class HciSpeechTests
     private const string Hci = HciProvider.Hci;
     private static readonly string[] Voices = ["en_GB-alan-medium", "en_US-lessiac-medium"];
 
-    // The repository's settings, their paths made absolute.
-    private static Dictionary<string, string> Settings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    // The settings of an AIM as its Controller gives them: the settings with the files of Access.
+    private static Dictionary<string, string> Settings(string aim) => TestModels.Settings(aim);
 
     // What a passenger says, as the cabin's microphone gives it: a Basic Audio Object
     // of PCM samples, at the rate the voice speaks.
     public static string Passenger(string text, string voice)
     {
-        var settings = Settings("1MMC-TTS-V2.5-I01");
-        settings["VoiceModel"] = Path.Combine(Repository.Root, "Models", "Piper", "voices", voice, voice + ".onnx");
-        settings["VoiceConfig"] = settings["VoiceModel"] + ".json";
-        foreach (var k in settings.Keys.Where(k => k.StartsWith("Voice:") || k.StartsWith("VoiceConfig:")).ToList()) settings.Remove(k);
+        var settings = TestModels.Voice(voice);
         var wav = Mpai.Aims.Tts.TtsFactory.Create(settings).ProcessAsync(BasicTextObject.FromText(text)).GetAwaiter().GetResult().Data;
         var (rate, pcm) = Pcm(wav);
         var qualifier = new AudioQualifier
@@ -142,7 +131,7 @@ public class HciSpeechTests
     [SkippableFact]
     public void Step3HearingAndSpeaking()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "Whisper", "models", "ggml-small.bin")), "the Whisper model is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("ggml-small.bin"), "the Whisper model is absent: the model files are obtained separately.");
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, object>();
         var sent = new List<JsonNode>();

@@ -19,6 +19,9 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings)."},
+                      {"Name": "reference-voices", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "IsOptional": true, "Description": "The voice features of 40 known speakers (LibriSpeech), one 192-value ECAPA vector per speaker, against which a voice is also matched; the people enrolled by ACR are in Shared Storage."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

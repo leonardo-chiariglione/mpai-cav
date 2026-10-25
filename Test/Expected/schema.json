@@ -175,7 +175,7 @@
   "XRV1/V1.0/AIMs/ActionGeneration.json": "/: required Required properties [\"Header\"] are not present",
   "XRV1/V1.0/AIMs/EnvironmentDescription.json": "/: required Required properties [\"Header\"] are not present",
   "XRV1/V1.0/AIMs/LiveTheatricalPerformance.json": "/: required Required properties [\"Header\"] are not present",
-  "XRV1/V1.0/AIMs/OperatorCommandInterpretation.json": "/: required Required properties [\"Header\"] are not present",
+  "XRV1/V1.0/AIMs/OperatorStatusInterpretation.json": "/: required Required properties [\"Header\"] are not present",
   "XRV1/V1.0/AIMs/ParticipantStatusInterpretation.json": "/: required Required properties [\"Header\"] are not present",
   "XRV1/V1.0/AIMs/PerformanceStatusInterpretation.json": "/: required Required properties [\"Header\"] are not present",
   "XRV1/V1.0/AIMs/REExperienceGeneration.json": "/: required Required properties [\"Header\"] are not present",

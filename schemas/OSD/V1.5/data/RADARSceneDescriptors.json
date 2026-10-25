@@ -6,7 +6,7 @@
   "required":                           [ "Header", "RADARSceneDescriptorsID", "RADARSceneDescriptorsSpaceTime" ],
   "properties":                         {
 
-    "Header":                           { "type": "string", "const": "OSD-RSD-V1.5", "description": "RADAR Scene Descriptors Header â€“ Standard OSD-RSD-Vx.y" },
+    "Header":                           { "type": "string", "const": "OSD-RSD-V1.5", "description": "RADAR Scene Descriptors Header – Standard OSD-RSD-Vx.y" },
     "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this RADAR Scene is or is intended to be located." },
     "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this RADAR Scene is or is intended to be located." },
     "RADARSceneDescriptorsID":          { "type": "string", "description": "Unique identifier of this RADAR Scene Descriptors instance." },

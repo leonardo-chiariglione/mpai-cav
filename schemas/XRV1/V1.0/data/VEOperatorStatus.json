@@ -3,16 +3,16 @@
   "title":                      "VE Operator Status V1.0",
   "type":                       "object",
   "additionalProperties":       false,
-  "required":                   [ "Header", "VEOperatorStatusID", "VEOperatorStatusData" ],
+  "required":                   [ "Header", "VEOperatorStatusID", "VEOperatorStatus", "UEnvironmentID", "VEOperatorStatusTime" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "XRV-VOS-V1.0" },
     "MInstanceID":              { "type": "string" },
     "UEnvironmentID":           { "type": "string" },
     "VEOperatorStatusID":       { "type": "string" },
-    "VEOperatorStatusSpaceTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "VEOperatorStatusTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "VEOperatorStatusData":     { "type": "object", "additionalProperties": false, "properties": {
+    "VEOperatorStatus":     { "type": "object", "additionalProperties": false, "properties": {
 
         "AudioConsole":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioConsole.json" },
         "VideoConsole":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VideoConsole.json" },

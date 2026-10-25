@@ -7,7 +7,7 @@
   "properties":                    {
 
     "Header":                      { "type": "string", "const": "OSD-IID-V1.5",
-                                     "description": "Instance Identifier Header â€“ Standard OSD-IID-Vx.y" },
+                                     "description": "Instance Identifier Header – Standard OSD-IID-Vx.y" },
     "MInstanceID":                 { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Instance Identifier." },
     "UEnvironmentID":              { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Instance Identifier." },
     "InstanceIdentifier":          { "type": "string", "description": "Primary instance identifier, equivalent to the first element of InstanceIdentifierData." },

@@ -3,7 +3,7 @@
   "title":                      "VE Venue Specification V1.0", 
   "description":                "Specification of a VE Venue.",
   "type":                       "object", 
-  "required":                   [ "Header" ], 
+  "required":                   [ "Header", "VEVenueSpecificationID", "UEnvironmentID", "VEVenueSpecificationTime" ], 
   "additionalProperties":       false, 
   "properties": {
 

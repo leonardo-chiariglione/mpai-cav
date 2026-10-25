@@ -3,7 +3,7 @@
   "title":                     "RE Data In V1.0",
   "type":                      "object",
   "additionalProperties":      false,
-  "required":                  ["Header", "REDataInID", "REDataInTime", "REDataIn"],
+  "required":                  [ "Header", "REDataInID", "REDataInTime", "REDataIn", "UEnvironmentID" ],
   "properties":                {
 
     "Header":                  { "type": "string", "const": "XRV-RDI-V1.0" },
@@ -40,7 +40,7 @@
         "required":            ["LiDARObjectTime", "LiDARObject"] } },
 
       "BiometricDataSets":     { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
-        "BiometricData":       { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" } },
+        "BiometricData":       { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/BiometricData.json" } },
         "required":            ["BiometricData"] } },
 
       "AppDataSets":           { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "properties": {
@@ -58,4 +58,4 @@
 
     "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
 
-    "DescrMetadata":           { "type": "string" } } }
+    "DescrMetadata":           { "type": "string", "maxLength": 2048 } } }

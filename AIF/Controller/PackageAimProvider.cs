@@ -48,12 +48,16 @@ public sealed class PackageAimProvider : IAimProvider
 
     public bool CanCreate(string aimName) => PluginFor(aimName) is not null;
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null, null);
+
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage,
+        ISharedStorage? privateStorage, IRuledStorage? moduleStorage, IAccessReader? access)
     {
         if (PluginFor(aimName) is not { } plugin)
             throw new InvalidOperationException($"No package provides {aimName}.");
 
-        var processor = plugin.Create(AimPortReader.Load(store, aimName), settings);
+        var processor = plugin.Create(AimPortReader.Load(store, aimName), settings, access);
 
         // AN IMPLEMENTATION IS NAMED BY ITS INSTANCE. IAimPlugin.Create is not told
         // which Instance it is building, so a plug-in names its processor with the

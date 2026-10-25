@@ -7,7 +7,7 @@
   "properties":                         {
 
     "Header":                           { "type": "string", "const": "OSD-AVO-V1.5",
-                                          "description": "Audio-Visual Object Header â€“ Standard OSD-AVO-Vx.y" },
+                                          "description": "Audio-Visual Object Header – Standard OSD-AVO-Vx.y" },
     "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Audio-Visual Object is or is intended to be located." },
     "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Audio-Visual Object is or is intended to be located." },
     "AVObjectID":                       { "type": "string", "description": "Unique identifier of this Audio-Visual Object." },

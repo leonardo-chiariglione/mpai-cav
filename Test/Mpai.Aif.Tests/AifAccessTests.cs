@@ -80,9 +80,6 @@ public class AifAccessTests(ITestOutputHelper output)
         result["another Provider writes the Source"] = $"{await other.MPAI_AIFP_Access_Put("maps", 10, "turin", Encoding.UTF8.GetBytes("streets"))}; read: {Text(store, "maps", "turin")}";
         result["another Provider creates the same Source"] = (await other.MPAI_AIFP_Access_Create("maps")).ToString();
 
-        // The User, through the User Agent, writing a Provider's Source.
-        result["the User writes the Provider's Source"] = $"{store.Put("maps", AccessStore.User, "turin", Encoding.UTF8.GetBytes("my streets"))}; read: {Text(store, "maps", "turin")}";
-
         result["the Provider deletes an item"] = $"{await provider.MPAI_AIFP_Access_Delete("maps", 7, "milan")}; listed: {string.Join(", ", store.List("maps"))}";
         result["who wrote an item, at which Version"] = store.Trace("maps", "turin", out var trace) == AccessOutcome.OK ? $"{trace!.Writer} at Version {trace.Version}" : "-";
 
@@ -100,31 +97,29 @@ public class AifAccessTests(ITestOutputHelper output)
         Expected.Match("access-provider.json", result);
     }
 
-    // The User's Sources, through the User Agent; an AIM reading, through the Controller.
+    // What a Provider wrote, an AIM that declares it reads through the Controller, and an AIM that declares nothing does not.
     [Fact]
-    public async Task UserAndAim()
+    public async Task AnAimReadsWhatItDeclares()
     {
         var result = new Dictionary<string, string>();
-        var amds = Root();
-        var ua = new UserAgent(new AmdStore(amds)) { Access = new AccessStore(Root()) };
-
-        result["the User creates a Source"] = ua.MPAI_AIFU_Access_Create("my-vocabulary").ToString();
-        result["the User puts an item"] = $"{ua.MPAI_AIFU_Access_Put("my-vocabulary", "greeting", Encoding.UTF8.GetBytes("ciao"))}; Version {ua.Access!.Version("my-vocabulary")}";
-        result["the User puts another"] = $"{ua.MPAI_AIFU_Access_Put("my-vocabulary", "farewell", Encoding.UTF8.GetBytes("arrivederci"))}; Version {ua.Access.Version("my-vocabulary")}";
-        result["the User deletes one"] = $"{ua.MPAI_AIFU_Access_Delete("my-vocabulary", "farewell")}; Version {ua.Access.Version("my-vocabulary")}";
-        result["the User deletes one not there"] = ua.MPAI_AIFU_Access_Delete("my-vocabulary", "farewell").ToString();
-        result["the User writes a Source it did not create"] = $"{ua.Access.Create("maps", "provider-1")} by provider-1; the User: {ua.MPAI_AIFU_Access_Put("maps", "turin", Encoding.UTF8.GetBytes("x"))}";
-        result["the User writes a Source no one created"] = ua.MPAI_AIFU_Access_Put("nothing", "k", [1]).ToString();
-        result["without an Access"] = new UserAgent(new AmdStore(amds)).MPAI_AIFU_Access_Create("x").ToString();
+        var access = new AccessStore(Root());
+        result["a Provider creates a Source"] = access.Create("my-vocabulary/", "provider-1").ToString();
+        result["it puts an item"] = $"{access.Put("my-vocabulary/", "provider-1", "greeting", Encoding.UTF8.GetBytes("ciao"), null, "Data", ["Reader"])}; Version {access.Version("my-vocabulary/")}";
+        result["it puts another"] = $"{access.Put("my-vocabulary/", "provider-1", "farewell", Encoding.UTF8.GetBytes("arrivederci"))}; Version {access.Version("my-vocabulary/")}";
+        result["it deletes one"] = $"{access.Delete("my-vocabulary/", "provider-1", "farewell")}; Version {access.Version("my-vocabulary/")}";
+        result["it deletes one not there"] = access.Delete("my-vocabulary/", "provider-1", "farewell").ToString();
 
         // An AIM of a Module reads, through its context: the only Access functions it has.
-        using var host = new AimHost { Access = ua.Access };
+        using var host = new AimHost { Access = access };
         host.RegisterRuntime(new Reader());
+        host.RegisterRuntime(new Reader("Stranger"));
+        host.BindAccess("Reader", [new AccessEntry("vocabulary", "my-vocabulary/", "", [], false)]);     // what its L3 declares
         var read = await host.ProcessAsync("Reader", new Message { MessageId = "1" });
         result["an AIM reads"] = read.Payload;
+        result["an AIM that declares nothing reads"] = (await host.ProcessAsync("Stranger", new Message { MessageId = "2" })).Payload;
 
         foreach (var (k, v) in result) output.WriteLine($"{k}: {v}");
-        Expected.Match("access-user.json", result);
+        Expected.Match("access-reads.json", result);
     }
 
     // AN AIM ON AN AIM HOST reads the Controller's Access through the link the Controller
@@ -134,11 +129,19 @@ public class AifAccessTests(ITestOutputHelper output)
     {
         var result = new Dictionary<string, string>();
         var access = new AccessStore(Root());
-        access.Create("my-vocabulary", AccessStore.User);
-        access.Put("my-vocabulary", AccessStore.User, "greeting", Encoding.UTF8.GetBytes("ciao"));
+        access.Create("my-vocabulary/", "provider-1");
+        access.Put("my-vocabulary/", "provider-1", "greeting", Encoding.UTF8.GetBytes("ciao"));
 
         // Any AIM the host holds an L3 of; what it runs is the Reader.
-        var store = new AmdStore(Mpai.Core.MpaiPaths.Amds); store.Scan();
+        // The L3 of this AIM declares what it reads (AccessSources): a copy of the repository's, with that added.
+        var amds = Root();
+        foreach (var f in Directory.EnumerateFiles(Mpai.Core.MpaiPaths.Amds, "1CAE-ASE-V1.0-I01.json"))
+        {
+            var l3 = JsonNode.Parse(File.ReadAllText(f))!.AsObject();
+            l3["AccessSources"] = new JsonArray(new JsonObject { ["Name"] = "vocabulary", ["Uri"] = "my-vocabulary/", ["Sha256"] = new string('0', 64) });
+            File.WriteAllText(Path.Combine(amds, Path.GetFileName(f)), l3.ToJsonString());
+        }
+        var store = new AmdStore(amds); store.Scan();
         var aim = "1CAE-ASE-V1.0-I01";
         var server = new AIF.RemoteHost.AimHostServer(store, AIF.Store.AimSettings.Empty, new ReaderProvider(aim), Root());
         await using var listener = new AIF.Channels.RemoteLink.Listener(0, new AIF.Channels.KeyAdmission("k"), server.Serve);
@@ -157,7 +160,7 @@ public class AifAccessTests(ITestOutputHelper output)
         var run = await link.RequestAsync(new JsonObject { ["Kind"] = "Process", ["Module"] = "M#1", ["Aim"] = aim, ["MessageId"] = "1", ["Ports"] = new JsonObject() });
         result["the AIM on the host reads"] = (string?)run["Payload"] ?? run.ToJsonString();
         result["asked of the Controller"] = string.Join(", ", asked);
-        result["a write asked of the Controller"] = RemoteAccess.Answer(access, new JsonObject { ["Function"] = "Put", ["Source"] = "my-vocabulary", ["Key"] = "greeting" }).ToJsonString();
+        result["a write asked of the Controller"] = RemoteAccess.Answer(access, new JsonObject { ["Function"] = "Put", ["Source"] = "my-vocabulary/", ["Key"] = "greeting" }).ToJsonString();
 
         foreach (var (k, v) in result) output.WriteLine($"{k}: {v}");
         Expected.Match("access-host.json", result);
@@ -177,15 +180,18 @@ public class AifAccessTests(ITestOutputHelper output)
         public Task<Message> ProcessAsync(Message message)
         {
             var context = message.Context;
-            var got = context.MPAI_AIFM_Access_Get("my-vocabulary", "greeting", out var data);
-            var missing = context.MPAI_AIFM_Access_Get("my-vocabulary", "farewell", out _);
+            var got = context.MPAI_AIFM_Access_Get("my-vocabulary/", "greeting", out var data);
+            var missing = context.MPAI_AIFM_Access_Get("my-vocabulary/", "farewell", out _);
             return Task.FromResult(message with
             {
                 Payload = $"Get greeting: {got} {Encoding.UTF8.GetString(data)}; Get farewell: {missing}; " +
-                          $"List: {string.Join(", ", context.MPAI_AIFM_Access_List("my-vocabulary", ""))}; " +
-                          $"Version: {context.MPAI_AIFM_Access_Version("my-vocabulary")}; " +
+                          $"List: {string.Join(", ", context.MPAI_AIFM_Access_List("my-vocabulary/", ""))}; " +
+                          $"Version: {context.MPAI_AIFM_Access_Version("my-vocabulary/")}; " +
                           $"Version of a Source not there: {context.MPAI_AIFM_Access_Version("none")}"
             });
         }
     }
+
+    // DATA THE USER AGENT DECLARES AND READS, that no AIM declares - a catalogue of avatars many Apps share: obtained and checked
+    // by the Controller, read through the Controller API, and not readable by an AIM that is not among its readers.
 }

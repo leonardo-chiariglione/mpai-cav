@@ -16,6 +16,9 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "sound-classifier", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "YamnetModel", "AsFile": "yamnet.onnx", "Description": "The sound classification model (YAMNet, 521 classes of AudioSet)."},
+                      {"Name": "sound-classes", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "YamnetClassMap", "AsFile": "yamnet_class_map.csv", "Description": "The names of the classes the sound classification model gives."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

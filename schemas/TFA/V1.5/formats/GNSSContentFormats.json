@@ -8,10 +8,10 @@
     { "const": "GLONASS",
       "description": "Global Navigation Satellite System (Russian Federation), a fully operational global GNSS." },
     { "const": "Galileo",
-      "description": "European Union global GNSS providing highÃ¢â‚¬â€˜precision civilian positioning services." },
+      "description": "European Union global GNSS providing high‑precision civilian positioning services." },
     { "const": "BeiDou",
-      "description": "Chinese global GNSS (BDS), fully commissioned in 2020 with a 35Ã¢â‚¬â€˜satellite constellation." },
+      "description": "Chinese global GNSS (BDS), fully commissioned in 2020 with a 35‑satellite constellation." },
     { "const": "QZSS",
-      "description": "JapanÃ¢â‚¬â„¢s regional QuasiÃ¢â‚¬â€˜Zenith Satellite System designed to augment GPS in East Asia/Oceania." },
+      "description": "Japan’s regional Quasi‑Zenith Satellite System designed to augment GPS in East Asia/Oceania." },
     { "const": "NavIC",
-      "description": "IndiaÃ¢â‚¬â„¢s IRNSS/NavIC regional navigation system covering India and ~1500 km beyond." } ] }
+      "description": "India’s IRNSS/NavIC regional navigation system covering India and ~1500 km beyond." } ] }

@@ -4,6 +4,8 @@
   "ExternalPorts":[{"Name": "BasicSpeechObject",         "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false},
                    {"Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":[],"Topology":[],
+  "AccessSources":   [{"Name": "spe-model", "Uri": "https://zenodo.org/records/6221127/files/w2v2-L-robust-12.6bc4a7fd-1.1.0.zip", "Sha256": "9B6E449686C0DB86F5C607B8C9FA1D87468C27198A1F0A20280C4E258239763D", "Member": "model.onnx", "Setting": "W2v2Model", "AsFile": "model.onnx", "Terms": {"Licence": "CC-BY-NC-SA-4.0 (non-commercial use only)", "Uri": "https://zenodo.org/records/6221127", "PersonalData": false}, "Description": "The speech emotion model (wav2vec 2.0, dimensional: arousal, dominance, valence), published by audeering."}],
+
   "Implementations":[{"ImplementationURI":"https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/SPE","MASPort":443,"BinaryName":"Mpai.Mmc.Spe","Architecture":"x86-64","OperatingSystem":"Windows","Version":"2.5","Source":"AIMStorage"}],
   "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "2 GB",   "Maximum": "4 GB"},{"Name": "CPU:Class", "Minimum": "Low",  "Request": "Medium", "Maximum": "High"}],
   "DataXMData":{},"Documentation":[{"Type":"Tutorial","URI":"https://mpai.community/standards/mpai-mmc/v2-5/"}]}

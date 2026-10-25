@@ -3,7 +3,7 @@
   "title":                    "Audio Console V1.0",
   "type":                     "object", 
   "additionalProperties":     false, 
-  "required":                 [ "Header", "AudioConsoleID", "AudioConsoleData" ],
+  "required":                 [ "Header", "AudioConsoleID", "AudioConsoleData", "ManufacturerID", "MasterVolume", "UEnvironmentID", "AudioConsoleTime" ],
   "properties":               {
 
     "Header":                { "type": "string", "const": "XRV-AUC-V1.0" },
@@ -14,38 +14,38 @@
 
     "ManufacturerID":        { "type": "string" },
 
-    "MasterVolume":          { "type": "number"},
+    "MasterVolume":          { "type": "number", "minimum": 0, "maximum": 100, "description": "Master volume, on a scale from 0 to 100." },
 
-    "AudioConsoleData":      { "type": "array", "items": { "type": "object", "properties": {
+    "AudioConsoleData":      { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
       
       "MetaverseObject":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
 
       "TrackSelection":      { "type": "string" },
-      "Volume":              { "type": "number" },
+      "Volume":              { "type": "number", "minimum": 0, "maximum": 100, "description": "Volume, on a scale from 0 to 100." },
       "AudioRouting":        { "type": "string" },
-      "AudioEffects":        { "type": "object", "properties": {
+      "AudioEffects":        { "type": "object", "additionalProperties": false, "properties": {
 
         "PointOfView":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
 
-        "Filters":           { "type": "object", "properties": {
-          "FilterType":      { "type": "array", "items": { "type": "object", "properties": {
-            "LowPass":       { "type": "number" },
-            "BandPass":      { "type": "number" },
-            "HighPass":      { "type": "number" } } } },
-          "QFactor":         { "type": "number" },
-          "Frequency":       { "type": "number" },
-          "Reverb":          { "type": "number" } } },
+        "Filters":           { "type": "object", "additionalProperties": false, "properties": {
+          "FilterType":      { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+            "LowPass":       { "type": "number", "minimum": 0.1, "maximum": 10, "description": "Low-pass filter value, from 0.1 to 10." },
+            "BandPass":      { "type": "number", "minimum": 0.1, "maximum": 10, "description": "Band-pass filter value, from 0.1 to 10." },
+            "HighPass":      { "type": "number", "minimum": 0.1, "maximum": 10, "description": "High-pass filter value, from 0.1 to 10." } } } },
+          "QFactor":         { "type": "number", "minimum": 0.1, "maximum": 10, "description": "Q factor of the filter, from 0.1 to 10." },
+          "Frequency":       { "type": "number", "minimum": 20, "maximum": 20000, "description": "Frequency, in Hz (20 to 20000 Hz)." },
+          "Reverb":          { "type": "number", "minimum": 0, "maximum": 255, "description": "Reverb level, 1 byte (0 to 255)." } } },
 
-        "Delay":             { "type": "number" },
-        "PitchShift":        { "type": "number" },
+        "Delay":             { "type": "number", "minimum": 0, "description": "Delay, in ms (not less than 0)." },
+        "PitchShift":        { "type": "number", "minimum": -24, "maximum": 24, "description": "Pitch shift, in semitones (-24 to 24)." },
 
-        "Tremolo":           { "type": "array", "items": { "type": "object", "properties": {
-          "VolumeRange":     { "type": "number" },
-          "TremoloFrequency":{ "type": "number" } } } },
+        "Tremolo":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "VolumeRange":     { "type": "number", "minimum": 0, "maximum": 100, "description": "Tremolo volume range, on a scale from 0 to 100." },
+          "TremoloFrequency":{ "type": "number", "minimum": 0.1, "maximum": 20, "description": "Tremolo frequency, in Hz (0.1 to 20 Hz)." } } } },
 
-        "Vibrato":           { "type": "array", "items": { "type": "object", "properties": {
-          "FrequencyRange":  { "type": "number" },
-          "VibratoFrequency":{ "type": "number" } } } } } } } } },
+        "Vibrato":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+          "FrequencyRange":  { "type": "number", "minimum": 0, "description": "Vibrato frequency range, in cents (not less than 0)." },
+          "VibratoFrequency":{ "type": "number", "minimum": 0.1, "maximum": 20, "description": "Vibrato frequency of oscillation, in Hz (0.1 to 20 Hz)." } } } } } } } } },
 
     "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":         { "type": "string", "maxLength": 2048 } } }

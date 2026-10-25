@@ -192,6 +192,38 @@ public sealed class AimHost : IDisposable
     // its store, or - on an AIM host - the Controller's, read over the link.
     public IAccessReader? Access { get; set; }
 
+    // What obtains the items of a set of Access when an AIM first reads them (the Controller's, never on an AIM host).
+    public AccessFetcher? Fetcher { get; set; }
+
+    // The Module this host holds the AIMs of and the AIM that is its central control (Metadata StorageControl): who may read
+    // a datum of Access is decided as it is in Shared Storage, from the holder of the handle.
+    public string? ModuleName { get; set; }
+    public string? CentralControl { get; set; }
+
+    // WHAT EACH AIM MAY READ OF IT: the Access the AIM declares in its Metadata (AccessSources). An AIM that declares
+    // nothing reads none; the entries are those of its Instance, so what it may read is what its L3 says.
+    private readonly Dictionary<string, IReadOnlyList<AccessEntry>> _accessEntries = new(StringComparer.Ordinal);
+
+    public void BindAccess(string aim, IReadOnlyList<AccessEntry> entries)
+    {
+        lock (_module) _accessEntries[aim] = entries;
+    }
+
+    // The Access of one AIM, narrowed to what its Metadata declares; given to the AIM when it is built.
+    public IAccessReader? AccessFor(string aim) => AccessOf(aim);
+
+    private IAccessReader? AccessOf(string aim)
+    {
+        if (Access is null) return null;
+        IReadOnlyList<AccessEntry> entries;
+        lock (_module) entries = _accessEntries.GetValueOrDefault(aim) ?? [];
+        IAccessReader scoped = Access is RemoteAccess remote ? remote.ForAim(aim) : Access is AccessStore store
+            ? store.As(new AIF.SharedStorage.StorageHolder(ModuleName, aim),
+                       CentralControl is { } c ? new AIF.SharedStorage.StorageHolder(ModuleName, c) : null)
+            : Access;
+        return new BoundAccess(scoped, entries, Fetcher, aim);
+    }
+
     public bool IsDead(string aim)
     {
         lock (_module)
@@ -250,7 +282,7 @@ public sealed class AimHost : IDisposable
         lock (_module)
             if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
         return context.WithHost(text => Report(instanceId, text),
-            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"), Access);
+            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"), AccessOf(instanceId));
     }
 
     // Completes when the Module is not paused.

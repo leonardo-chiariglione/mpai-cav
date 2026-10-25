@@ -128,10 +128,10 @@ var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? 
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.
-// The ASR Service recognises with Whisper (the repository's Models\Whisper), if it is there.
+// The ASR Service recognises with Whisper (from Access: the L3 of ASR declares the program and the model), if they can be had.
 var whisper = new WhisperAsr(repo);
 if (whisper.Available) { whisper.Start(); Console.WriteLine("Whisper starting for the ASR Service (the model loads in a few seconds)."); }
-else Console.WriteLine("Models\\Whisper is not there: the ASR Service finds no words.");
+else Console.WriteLine("Whisper (the program and the model the L3 of ASR declares) is not in Access: the ASR Service finds no words.");
 // --meeting-demo [seconds]: the bots of the meeting use case play it against this server, a step at a time (default 5 s apart), for the viewer - open /viewer/?look=12,0 -
 // to show. The bots have no voices, so the ASR Service recognises the words of a script instead of Whisper.
 var meetingDemo = Array.IndexOf(args, "--meeting-demo");

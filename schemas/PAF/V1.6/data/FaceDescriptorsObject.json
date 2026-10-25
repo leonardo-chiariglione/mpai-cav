@@ -7,7 +7,7 @@
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "PAF-FDO-V1.6",
-                                  "description": "Face Descriptors Object Header â€“ Standard PAF-FDO-Vx.y" },
+                                  "description": "Face Descriptors Object Header – Standard PAF-FDO-Vx.y" },
     "MInstanceID":              { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Face is or is intended to be located." },
     "UEnvironmentID":           { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Face is or is intended to be located." },
     "FaceDescriptorsObjectID":  { "type": "string", "description": "Unique identifier of this Face Descriptors Object instance." },

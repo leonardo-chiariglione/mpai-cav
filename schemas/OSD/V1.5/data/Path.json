@@ -6,7 +6,7 @@
   "required":         [ "Header", "PathID", "Path" ],
   "properties":       {
 
-    "Header":         { "type": "string", "const": "OSD-PAT-V1.5", "description": "Path Header â€“ Standard OSD-PAT-Vx.y" },
+    "Header":         { "type": "string", "const": "OSD-PAT-V1.5", "description": "Path Header – Standard OSD-PAT-Vx.y" },
     "MInstanceID":    { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Path is defined." },
     "UEnvironmentID": { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Path is defined." },
     "PathID":         { "type": "string", "description": "Unique identifier of this Path instance." },

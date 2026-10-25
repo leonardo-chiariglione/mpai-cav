@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Mpai.Abv.Server;
 
-// THE SPEECH RECOGNITION OF THE MINUTES: whisper-server (the repository's Models\Whisper), started once with its model loaded, asked for each utterance of a participant.
+// THE SPEECH RECOGNITION OF THE MINUTES: whisper-server (from Access: the L3 of ASR declares it), started once with its model loaded, asked for each utterance of a participant.
 // The language is left to the model to detect: the participants may speak several.
 public sealed class Whisper : IDisposable
 {
@@ -17,13 +17,14 @@ public sealed class Whisper : IDisposable
 
     public Whisper(string root, int port = 18178)
     {
-        program = Path.Combine(root, "Models", "Whisper", "bin", "whisper-server.exe");
-        model = Path.Combine(root, "Models", "Whisper", "models", "ggml-small.bin");
+        // the program and the model are those the L3 of Automatic Speech Recognition declares (asr-server, asr-model): Access gives their files
+        program = AIF.Controller.ModelFiles.TryOf(root, "asr-server", out var server) ? server : "";
+        model = AIF.Controller.ModelFiles.TryOf(root, "asr-model", out var ggml) ? ggml : "";
         this.port = port;
         http = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{port}/"), Timeout = TimeSpan.FromSeconds(60) };
     }
 
-    public bool Available => File.Exists(program) && File.Exists(model);
+    public bool Available => program.Length > 0 && model.Length > 0 && File.Exists(program) && File.Exists(model);
 
     // The languages the participants speak (ISO codes), from ABV_LANGS.
     public static readonly string[] Languages = (Environment.GetEnvironmentVariable("ABV_LANGS") ?? "en,it,pt,es,fr,de").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

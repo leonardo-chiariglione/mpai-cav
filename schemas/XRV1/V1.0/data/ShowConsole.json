@@ -4,7 +4,7 @@
   "description":               "Descriptor for show console elements: rigging, skybox, automation, set pieces, pyro, and robotics.",
   "type":                      "object",
   "additionalProperties":      false,
-  "required":                  ["Header", "ShowConsoleID", "ShowConsoleData"],
+  "required":                  [ "Header", "ShowConsoleID", "ShowConsoleData", "UEnvironmentID", "ShowConsoleTime" ],
   "properties":                {
 
     "Header":                  { "type": "string", "const": "XRV-SHC-V1.0" },

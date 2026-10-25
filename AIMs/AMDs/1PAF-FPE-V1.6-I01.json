@@ -4,6 +4,8 @@
   "ExternalPorts":[{"Name": "FaceObject",         "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                    {"Name": "FacePersonalStatus", "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":[],"Topology":[],
+  "AccessSources":   [{"Name": "face-emotion", "Uri": "https://github.com/HSE-asavchenko/face-emotion-recognition/raw/main/models/affectnet_emotions/onnx/enet_b0_8_va_mtl.onnx", "Sha256": "C43E056AD388D4A8DC911832B8291435B2AF537F967E5870EBD731574EC7E812", "Setting": "HseModel", "AsFile": "hsemotion_enet_b0_8_va_mtl.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://github.com/HSE-asavchenko/face-emotion-recognition/blob/main/LICENSE", "PersonalData": false}, "Description": "The facial emotion model (HSEmotion, valence and arousal)."}],
+
   "Implementations":[{"ImplementationURI":"https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/FPE","MASPort":443,"BinaryName":"Mpai.Paf.Fpe","Architecture":"x86-64","OperatingSystem":"Windows","Version":"2.5","Source":"AIMStorage"}],
   "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "2 GB",   "Maximum": "4 GB"},{"Name": "CPU:Class", "Minimum": "Low",  "Request": "Medium", "Maximum": "High"}],
   "DataXMData":{},"Documentation":[{"Type":"Tutorial","URI":"https://mpai.community/standards/mpai-mmc/v2-5/"}]}

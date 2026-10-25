@@ -21,15 +21,7 @@ public class AsmVoiceChainTests
         catch { return false; }
     }
 
-    private static Dictionary<string, string> Settings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    private static Dictionary<string, string> Settings(string aim) => TestModels.Settings(aim);
 
     private static SpatialAttitude At(double x, double y) => new()
     {

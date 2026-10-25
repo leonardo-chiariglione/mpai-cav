@@ -15,6 +15,8 @@
 
   "Topology":         [],
 
+  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx/resolve/main/ecapa-tdnn.onnx", "Sha256": "38FDFC7D2BC9E2925349BAAB9639FCAF4B4C755BE83EE7D616B6E3FBC9D5EAB3", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx", "PersonalData": false}, "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings)."}],
+
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/AUS",
                         "MASPort":           443,
                         "BinaryName":        "Mpai.Osd.Aus",

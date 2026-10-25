@@ -7,7 +7,7 @@
   "required":                             [ "Header", "SpeechSceneDescriptorsID", "SpeechSceneDescriptorsSpaceTime" ],
   "properties":                           {
 
-    "Header":                             { "type": "string", "const": "OSD-SSD-V1.5", "description": "Speech Scene Descriptors Header â€“ Standard OSD-SSD-Vx.y." },
+    "Header":                             { "type": "string", "const": "OSD-SSD-V1.5", "description": "Speech Scene Descriptors Header – Standard OSD-SSD-Vx.y." },
     "MInstanceID":                        { "type": "string", "description": "Identifier of the M-Instance." },
     "UEnvironmentID":                     { "type": "string", "description": "Identifier of the U-Environment." },
     "SpeechSceneDescriptorsID":           { "type": "string", "description": "ID of this Speech Scene Descriptors instance." },

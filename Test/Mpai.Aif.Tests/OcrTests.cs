@@ -21,7 +21,7 @@ public class OcrTests
 {
     private static readonly string Page = Path.Combine(AccessTests.Images, "NPR", "npr-page.png");
     private static readonly string Truth = Path.Combine(AccessTests.Images, "NPR", "npr-page-truth.txt");
-    private static string Model(string file) => Path.Combine(Repository.Root, "Models", "OCR", file);
+    private static string Model(string file) => TestModels.Can(file) ? TestModels.Of(file) : "";
 
     private static readonly Dictionary<string, string> Settings = new()
     {

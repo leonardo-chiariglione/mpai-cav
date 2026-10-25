@@ -105,7 +105,7 @@
 
       "SEXUALITY":            { "type": "object", "additionalProperties": false, "properties": {
         "GeneralAdjectival":  { "type": "object", "additionalProperties": false, "properties": {
-          "seductive":        { "type": "string", "enum": ["suggestive/risquÃ©/naughty"] },
+          "seductive":        { "type": "string", "enum": ["suggestive/risqué/naughty"] },
           "lewd/bawdy/indecent":{ "type": "string", "enum": ["lewd/bawdy/indecent"] },
           "prudish/priggish": { "type": "string", "enum": ["prudish/priggish"] } } } } },
 

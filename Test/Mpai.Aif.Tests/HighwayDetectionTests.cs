@@ -46,7 +46,7 @@ public class HighwayDetectionTests
     [SkippableFact]
     public void WhatTheDetectorFindsAtWhichDistance()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
         using var detector = new YoloxObjectDetector(model);
         var result = new Dictionary<string, string>();

@@ -4,7 +4,7 @@
   "title":                        "RE Venue Specification V1.0", 
   "description":                  "Specification of an RE Venue.",
   "type":                         "object", 
-  "required":                     [ "Header" ], 
+  "required":                     [ "Header", "REVenueSpecificationID", "UEnvironmentID", "REVenueSpecificationTime" ], 
   "additionalProperties":         false, 
   "properties":                   {
 

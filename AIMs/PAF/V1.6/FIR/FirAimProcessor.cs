@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,9 +53,18 @@ public sealed class FirAimProcessor : IAimProcessor
         ArcFaceRecogniser recogniser,
         SubjectGallery gallery,
         AimPortReader ports,
-        AIF.SharedStorage.ISharedStorage? galleryStore = null)
+        AIF.SharedStorage.ISharedStorage? galleryStore = null,
+        IAccessReader? access = null)
     {
         InstanceId  = instanceId;
+        // THE REFERENCE POPULATION is read from Access, where the Metadata declares it (AccessSources, "reference-faces"): the
+        // features of people already computed, pinned by SHA-256, never written by this AIM. The people enrolled by
+        // ACR are in the gallery (Shared Storage).
+        if (access is not null)
+            foreach (var uri in access.SourcesOf("reference-faces"))
+                if (access.Open(uri, "", out var stream) == AccessOutcome.OK)
+                    using (stream) gallery.LoadReference(stream);
+
         _detector   = detector;
         _recogniser = recogniser;
         _gallery    = gallery;

@@ -32,7 +32,7 @@ public sealed class ServiceFixture : IDisposable
         var exe = Path.Combine(root, "Apps", "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
 
         SkipReason =
-            !Directory.Exists(Path.Combine(root, "Models")) ? "Models is absent: the model files are obtained separately." :
+            !TestModels.Can("ggml-small.bin") ? "Models is absent: the model files are obtained separately." :
             !File.Exists(exe) ? "The Service is not built: " + exe :
             !OllamaHas("llama3.2:3b") ? "Ollama is not running with llama3.2:3b." :
             PortInUse(5108) ? "Port 5108 is in use." :

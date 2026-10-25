@@ -50,7 +50,12 @@ public static class MpaiPaths
                ?? System.AppContext.BaseDirectory;
     }
 
-    public static string Model(string fileName) => System.IO.Path.Combine(Root, "Models", fileName);
+    // A FILE AN AIM READS (a model, a database, a program): the setting the Controller gives it. The L3 of the AIM declares the file in its
+    // AccessSources, the Controller obtains it and gives the AIM the path; there is no folder where a model would be looked for.
+    public static string Given(System.Collections.Generic.IReadOnlyDictionary<string, string> settings, string key) =>
+        settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
+            ? v
+            : throw new System.InvalidOperationException($"The setting '{key}' is missing: the L3 of the AIM declares the file in its AccessSources, and the Controller gives its path.");
 
     // A SETTING THAT NAMES A PLACE MUST NOT NAME A MACHINE. Models are found under
     // Models\ beside the application, but the programs that read them - piper,
@@ -63,12 +68,12 @@ public static class MpaiPaths
         string.IsNullOrWhiteSpace(path) ? "" :
         System.IO.Path.IsPathRooted(path) ? path :
         System.IO.Path.Combine(Root, path);
-    // Machine-local data that is too large to keep in the repository (the voice engine with its Python environment, the LibriSpeech clips):
-    // the folder named by MPAI_DATA, or Data\ beside the application. Nothing is looked for outside the tree unless MPAI_DATA says so.
-    public static string Data => System.Environment.GetEnvironmentVariable("MPAI_DATA") is { Length: > 0 } d ? d : System.IO.Path.Combine(Root, "Data");
-    public static string OpenVoiceHome => System.IO.Path.Combine(Data, "openvoice");
-    public static string Clips => System.IO.Path.Combine(Data, "Datasets", "libri_wav");
-    // The Python that has torch: MPAI_PYTHON, else the virtual environment Data\pyannote-venv, else the python of the PATH.
+    // THE TEST INPUTS - the pictures and the sounds the tests use, and the demonstrations that need a real recording: Test/Data of the application.
+    public static string TestData => System.IO.Path.Combine(Root, "Test", "Data");
+    // Recordings of LibriSpeech speakers (1272, 1462, ...), one clip each: Test/Data/Speech/libri_wav.
+    public static string Clips => System.IO.Path.Combine(TestData, "Speech", "libri_wav");
+    // The Python that has torch (the voice engine, the segmentation of the reference voices): a tool of this machine, kept in Support/Python of the
+    // application; MPAI_PYTHON names another; else the python of the PATH.
     public static string Python
     {
         get
@@ -76,7 +81,7 @@ public static class MpaiPaths
             if (System.Environment.GetEnvironmentVariable("MPAI_PYTHON") is { Length: > 0 } p) return p;
             foreach (var rel in new[] { System.IO.Path.Combine("Scripts", "python.exe"), System.IO.Path.Combine("bin", "python") })
             {
-                var venv = System.IO.Path.Combine(Data, "pyannote-venv", rel);
+                var venv = System.IO.Path.Combine(Root, "Support", "Python", "pyannote-venv", rel);
                 if (System.IO.File.Exists(venv)) return venv;
             }
             return "python";

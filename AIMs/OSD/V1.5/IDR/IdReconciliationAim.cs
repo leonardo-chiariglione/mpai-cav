@@ -38,7 +38,6 @@ namespace Mpai.Hci.Idr;
 public sealed class IdReconciliationAim
 {
     private readonly double _faceWeight;   // w in [0,1]; voice weight = 1-w
-    private const string TaxonomyUri = "https://schemas.mpai.community/taxonomies/person.json";
 
     public IdReconciliationAim(double faceWeight = 0.5)
     {
@@ -127,8 +126,7 @@ public sealed class IdReconciliationAim
                     LabelConfidenceLevel = Math.Clamp(conf, 0.0, 1.0),
                     Taxonomy = new InstanceTaxonomy
                     {
-                        TaxonomyLevelIDs = new List<string> { "person" },
-                        TaxonomyDataURI = TaxonomyUri
+                        TaxonomyLevelIDs = new List<string> { "person" }
                     },
                     TaxonomyConfidenceLevel = 1.0
                 }
@@ -191,8 +189,7 @@ public sealed class IdReconciliationAim
             LabelConfidenceLevel = Math.Clamp(x.score, 0.0, 1.0),
             Taxonomy = new InstanceTaxonomy
             {
-                TaxonomyLevelIDs = new List<string> { "person" },
-                TaxonomyDataURI = TaxonomyUri
+                TaxonomyLevelIDs = new List<string> { "person" }
             },
             TaxonomyConfidenceLevel = 1.0
         }).ToList();
@@ -206,8 +203,7 @@ public sealed class IdReconciliationAim
                 LabelConfidenceLevel = 1.0,
                 Taxonomy = new InstanceTaxonomy
                 {
-                    TaxonomyLevelIDs = new List<string> { "person" },
-                    TaxonomyDataURI = TaxonomyUri
+                    TaxonomyLevelIDs = new List<string> { "person" }
                 },
                 TaxonomyConfidenceLevel = 1.0
             });

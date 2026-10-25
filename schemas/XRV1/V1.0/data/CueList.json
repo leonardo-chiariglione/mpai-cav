@@ -3,6 +3,7 @@
   "title":                          "Cue List V1.0",
   "type":                           "object",
   "additionalProperties":           false,
+  "required":                       [ "Header", "CueListID", "UEnvironmentID", "CueListTime", "CueListData" ],
   "properties":                     {
 
     "Header":                       { "type": "string", "const": "XRV-CLS-V1.0" },
@@ -77,16 +78,4 @@
 
     "MixedCue":                     { "type": "object", "additionalProperties": false, "required": ["MECueID", "MEGroups"], "properties": {
       "MECueID":                    { "type": "string" },
-      "MEGroups":                   { "type": "array", "items": { "$ref": "#/$defs/MEGroup" } } } },
-
-    "RealSubCue":                   { "type": "object", "additionalProperties": false, "required": ["RESubCueID", "REGroups"], "properties": {
-      "RESubCueID":                 { "type": "string" },
-      "REGroups":                   { "type": "array", "items": { "$ref": "#/$defs/REGroup" } } } },
-
-    "VirtualSubCue":                { "type": "object", "additionalProperties": false, "required": ["VESubCueID", "VEGroups"], "properties": {
-      "VESubCueID":                 { "type": "string" },
-      "VEGroups":                   { "type": "array", "items": { "$ref": "#/$defs/VEGroup" } } } },
-
-    "MixedSubCue":                  { "type": "object", "additionalProperties": false, "required": ["MESubCueID", "MEGroups"], "properties": {
-      "MESubCueID":                 { "type": "string" },
       "MEGroups":                   { "type": "array", "items": { "$ref": "#/$defs/MEGroup" } } } } } }

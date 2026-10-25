@@ -133,7 +133,7 @@ public class HighwayBaselineTests
     [Trait("Duration", "Long")]
     public void TheCavAsItIsOnTheHighway()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var report = new Dictionary<string, string>();
 
         // S0: an empty road. The CAV should hold its planned speed.
@@ -156,7 +156,7 @@ public class HighwayBaselineTests
     {
         var mode = Environment.GetEnvironmentVariable("MPAI_HIGHWAY_LIVE");
         Skip.If(string.IsNullOrEmpty(mode), "MPAI_HIGHWAY_LIVE is not set: this is the run that is watched.");
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var seconds = int.TryParse(Environment.GetEnvironmentVariable("MPAI_HIGHWAY_SECONDS"), out var n) ? n : 90;
         var hold = int.TryParse(Environment.GetEnvironmentVariable("MPAI_HIGHWAY_HOLD"), out var h) ? h : 0;
 

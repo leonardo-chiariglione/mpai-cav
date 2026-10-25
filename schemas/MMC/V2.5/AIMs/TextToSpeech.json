@@ -17,6 +17,20 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "voice-en", "Uri": "/* URI of the voice for 'en' */", "Sha256": "/* SHA-256 */", "Setting": "VoiceModel", "Description": "The voice for the language 'en'."},
+                      {"Name": "voice-config-en", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig", "Description": "The configuration of that voice."},
+                      {"Name": "voice-pt", "Uri": "/* URI of the voice for 'pt' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:pt", "IsOptional": true, "Description": "The voice for the language 'pt'."},
+                      {"Name": "voice-config-pt", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:pt", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "voice-es", "Uri": "/* URI of the voice for 'es' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:es", "IsOptional": true, "Description": "The voice for the language 'es'."},
+                      {"Name": "voice-config-es", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:es", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "voice-de", "Uri": "/* URI of the voice for 'de' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:de", "IsOptional": true, "Description": "The voice for the language 'de'."},
+                      {"Name": "voice-config-de", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:de", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "voice-fr", "Uri": "/* URI of the voice for 'fr' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:fr", "IsOptional": true, "Description": "The voice for the language 'fr'."},
+                      {"Name": "voice-config-fr", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:fr", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "voice-it", "Uri": "/* URI of the voice for 'it' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:it", "IsOptional": true, "Description": "The voice for the language 'it'."},
+                      {"Name": "voice-config-it", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:it", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "tts-program", "Uri": "/* URI of the archive of the speech synthesis program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the program inside the archive */", "Setting": "PiperExecutable", "Description": "The program that speaks with the voices."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

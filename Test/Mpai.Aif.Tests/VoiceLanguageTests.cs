@@ -27,15 +27,7 @@ public class VoiceLanguageTests
     ];
     private static readonly string[] Asserted = ["en", "pt", "es", "de", "fr", "it"];
 
-    private static Dictionary<string, string> Settings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    private static Dictionary<string, string> Settings(string aim) => TestModels.Settings(aim);
 
     // The 16-bit samples of a WAV.
     private static short[] Samples(byte[] wav)
@@ -77,7 +69,7 @@ public class VoiceLanguageTests
     {
         var tts = Settings("1MMC-TTS-V2.5-I01");
         var asr = Settings("1MMC-ASR-V2.5-I01");
-        Skip.IfNot(File.Exists(tts["PiperExecutable"]) && File.Exists(asr["ModelPath"]) && File.Exists(asr["ExecutablePath"]), "Piper or the Whisper model is absent: the model files are obtained separately.");
+        Skip.IfNot(tts.TryGetValue("PiperExecutable", out var piper) && File.Exists(piper) && asr.TryGetValue("ModelPath", out var model) && File.Exists(model) && asr.TryGetValue("ExecutablePath", out var whisper) && File.Exists(whisper), "Piper or the Whisper model is absent: the model files are obtained separately.");
 
         var synthesizer = Mpai.Aims.Tts.TtsFactory.Create(tts);
         var report = new JsonObject();

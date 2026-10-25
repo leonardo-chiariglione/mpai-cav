@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -69,7 +72,33 @@ public sealed class SubjectGallery
 
     // What is matched against: the subjects as they are, a Refresh on another thread
     // notwithstanding.
-    private List<Subject> Snapshot() { lock (_refresh) return _subjects.Values.ToList(); }
+    // The people enrolled, and the reference population read from Access that is not enrolled under the same id.
+    private List<Subject> Snapshot()
+    {
+        lock (_refresh)
+            return _subjects.Values.Concat(_reference.Values.Where(r => !_subjects.ContainsKey(r.SubjectId))).ToList();
+    }
+
+    // ---- The reference population (read from Access, never written) ---------
+
+    // A population of people whose vectors were computed beforehand, read from a file of reference features: it is matched
+    // against like the enrolled people, and is not stored with them - an enrolled person of the same id is the one used.
+    // Returns the header, so that the caller can see which model made the vectors.
+    public ReferenceFeaturesHeader LoadReference(System.IO.Stream stream)
+    {
+        var header = ReferenceFeatures.ReadHeader(stream);
+        var people = ReferenceFeatures.ReadPeople(stream, header).ToList();
+        lock (_refresh)
+            foreach (var (id, vector) in people)
+            {
+                if (!_reference.TryGetValue(id, out var s)) _reference[id] = s = new Subject { SubjectId = id };
+                if (header.Kind == "face") s.FaceEmbedding = vector; else s.VoiceEmbedding = vector;
+            }
+        return header;
+    }
+
+    public int ReferenceCount { get { lock (_refresh) return _reference.Count; } }
+    private readonly Dictionary<string, Subject> _reference = new();
 
     // ---- Top-1 identification (Model 1: the gallery IS FIR's and SIR's DB) --
 

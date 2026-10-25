@@ -7,7 +7,7 @@
   "required":                  [ "Header", "USDescriptorsID", "USDescriptorsSpaceTime" ],
   "properties":                {
 
-    "Header":                  { "type": "string", "const": "OSD-USD-V1.5", "description": "Ultrasound Scene Descriptors Header â€“ Standard OSD-USD-Vx.y." },
+    "Header":                  { "type": "string", "const": "OSD-USD-V1.5", "description": "Ultrasound Scene Descriptors Header – Standard OSD-USD-Vx.y." },
     "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance." },
     "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment." },
     "USDescriptorsID":         { "type": "string", "description": "ID of this Ultrasound Scene Descriptors instance." },

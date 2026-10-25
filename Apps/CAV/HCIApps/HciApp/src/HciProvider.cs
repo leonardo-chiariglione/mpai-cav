@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -119,33 +122,33 @@ internal sealed class HciProvider : IAimProvider, IDisposable
     // ---- shared engine builders (each constructed once, reused) ------------
 
     private ScrfdFaceDetector Scrfd(IReadOnlyDictionary<string, string> s) =>
-        _scrfd ??= new ScrfdFaceDetector(Setting(s, "ScrfdModel", Mpai.Core.MpaiPaths.Model("scrfd_10g_bnkps.onnx")));
+        _scrfd ??= new ScrfdFaceDetector(Mpai.Core.MpaiPaths.Given(s, "ScrfdModel"));
 
     private ArcFaceRecogniser ArcFace(IReadOnlyDictionary<string, string> s) =>
-        _arcFace ??= new ArcFaceRecogniser(Setting(s, "ArcFaceModel", Mpai.Core.MpaiPaths.Model("glintr100.onnx")));
+        _arcFace ??= new ArcFaceRecogniser(Mpai.Core.MpaiPaths.Given(s, "ArcFaceModel"));
 
     private SpeakerEmbedder Ecapa(IReadOnlyDictionary<string, string> s) =>
-        _ecapa ??= new SpeakerEmbedder(Setting(s, "EcapaModel", Mpai.Core.MpaiPaths.Model("ecapa-tdnn.onnx")));
+        _ecapa ??= new SpeakerEmbedder(Mpai.Core.MpaiPaths.Given(s, "EcapaModel"));
 
     private YoloxObjectDetector Yolox(IReadOnlyDictionary<string, string> s) =>
-        _yolox ??= new YoloxObjectDetector(Setting(s, "YoloxModel", Mpai.Core.MpaiPaths.Model("yolox_s.onnx")));
+        _yolox ??= new YoloxObjectDetector(Mpai.Core.MpaiPaths.Given(s, "YoloxModel"));
 
     private Mpai.Cae.Asi.SoundClassifier SoundAsi(IReadOnlyDictionary<string, string> s) =>
         _soundAsi ??= new Mpai.Cae.Asi.SoundClassifier(
-            Setting(s, "YamnetModel",    Mpai.Core.MpaiPaths.Model("yamnet.onnx")),
-            Setting(s, "YamnetClassMap", Mpai.Core.MpaiPaths.Model("yamnet_class_map.csv")));
+            Mpai.Core.MpaiPaths.Given(s, "YamnetModel"),
+            Mpai.Core.MpaiPaths.Given(s, "YamnetClassMap"));
 
     private Mpai.Cae.Aii.SoundClassifier SoundAii(IReadOnlyDictionary<string, string> s) =>
         _soundAii ??= new Mpai.Cae.Aii.SoundClassifier(
-            Setting(s, "YamnetModel",    Mpai.Core.MpaiPaths.Model("yamnet.onnx")),
-            Setting(s, "YamnetClassMap", Mpai.Core.MpaiPaths.Model("yamnet_class_map.csv")));
+            Mpai.Core.MpaiPaths.Given(s, "YamnetModel"),
+            Mpai.Core.MpaiPaths.Given(s, "YamnetClassMap"));
 
     private Wav2Vec2EmotionEstimator W2v2(IReadOnlyDictionary<string, string> s) =>
         _w2v2 ??= new Wav2Vec2EmotionEstimator(
             Setting(s, "W2v2Model", Path.Combine(Mpai.Core.MpaiPaths.Root, "Models", "w2v2-emotion", "model.onnx")));
 
     private HSEmotionEstimator Hse(IReadOnlyDictionary<string, string> s) =>
-        _hse ??= new HSEmotionEstimator(Setting(s, "HseModel", Mpai.Core.MpaiPaths.Model("hsemotion_enet_b0_8_va_mtl.onnx")));
+        _hse ??= new HSEmotionEstimator(Mpai.Core.MpaiPaths.Given(s, "HseModel"));
 
     private OllamaClient Llm(IReadOnlyDictionary<string, string> s)
     {

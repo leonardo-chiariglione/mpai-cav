@@ -40,6 +40,13 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "llm-weights", "Uri": "/* URI of the weights of the language model */", "Sha256": "/* SHA-256 */",
+                           "Description": "The weights of the language model of the dialogue."},
+                          {"Name": "llm-template", "Uri": "/* URI of the chat template */", "Sha256": "/* SHA-256 */", "IsOptional": true,
+                           "Description": "The chat template of the model."},
+                          {"Name": "llm-parameters", "Uri": "/* URI of the default parameters */", "Sha256": "/* SHA-256 */", "IsOptional": true,
+                           "Description": "The default parameters of the model."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

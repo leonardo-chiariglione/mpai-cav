@@ -4,26 +4,26 @@
   "description":                "Descriptor for video console configuration and effects.",
   "type":                       "object",
   "additionalProperties":       false,
-  "required":                   [ "Header", "VideoConsoleID", "VideoConsoleData" ],
+  "required":                   [ "Header", "VideoConsoleID", "VideoConsoleData", "UEnvironmentID", "VideoConsoleTime" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "XRV-VIC-V1.0" },
     "MInstanceID":              { "type": "string" },
     "UEnvironmentID":           { "type": "string" },
     "VideoConsoleID":           { "type": "string" },
-    "VideoConsoleSpaceTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "VideoConsoleTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
     "VideoConsoleData":         { "type": "object", "additionalProperties": false, "properties": {
 
       "MetaverseObject":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/MetaverseObject.json" },
 
-      "GlobalVolume":           { "type": "number" },
-      "GlobalLuminance":        { "type": "number" },
+      "GlobalVolume":           { "type": "number", "minimum": 0, "maximum": 100, "description": "Global volume, on a scale from 0 to 100." },
+      "GlobalLuminance":        { "type": "number", "minimum": 0, "maximum": 100, "description": "Global luminance, on a scale from 0 to 100." },
 
       "Elements":               { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
 
         "ClipSelection":        { "type": "string" },
-        "Volume":               { "type": "number" },
+        "Volume":               { "type": "number", "minimum": 0, "maximum": 100, "description": "Volume, on a scale from 0 to 100." },
         "VideoRouting":         { "type": "string" },
 
         "VideoEffects":         { "type": "object", "additionalProperties": false, "properties": {
@@ -37,31 +37,31 @@
 
             "CameraCommands":   { "type": "object", "additionalProperties": false, "properties": {
               "PointOfView":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
-              "Zoom":           { "type": "number" },
-              "Focus":          { "type": "number" },
-              "Aperture":       { "type": "number" } } },
+              "Zoom":           { "type": "number", "minimum": 1, "description": "Zoom factor (not less than 1)." },
+              "Focus":          { "type": "number", "minimum": 0, "maximum": 100, "description": "Focus, on a scale from 0 to 100." },
+              "Aperture":       { "type": "number", "minimum": 0.7, "maximum": 32, "description": "Aperture, as f-number (0.7 to 32)." } } },
 
-            "TonalityControl":  { "type": "object", "properties": {
-              "Brightness":     { "type": "number" },
-              "Contrast":       { "type": "number" },
-              "Colour":         { "type": "number" },
-              "Highlight":      { "type": "number" },
-              "Shadows":        { "type": "number" },
-              "Gamma":          { "type": "number" } } },
+            "TonalityControl":  { "type": "object", "additionalProperties": false, "properties": {
+              "Brightness":     { "type": "number", "minimum": 0, "maximum": 100, "description": "Brightness, on a scale from 0 to 100." },
+              "Contrast":       { "type": "number", "minimum": 0, "maximum": 100, "description": "Contrast, on a scale from 0 to 100." },
+              "Colour":         { "type": "number", "minimum": 0, "maximum": 100, "description": "Colour, on a scale from 0 to 100." },
+              "Highlight":      { "type": "number", "minimum": 0, "maximum": 100, "description": "Highlight, on a scale from 0 to 100." },
+              "Shadows":        { "type": "number", "minimum": 0, "maximum": 100, "description": "Shadows, on a scale from 0 to 100." },
+              "Gamma":          { "type": "number", "minimum": 0.1, "maximum": 10, "description": "Gamma (0.1 to 10)." } } },
 
             "VidEffectsControl":{ "type": "object", "additionalProperties": false, "properties": {
               "Position":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json" },
-              "Scaling":        { "type": "object", "properties": {
-                "H":            { "type": "number" },
-                "V":            { "type": "number" } } },
+              "Scaling":        { "type": "object", "additionalProperties": false, "properties": {
+                "H":            { "type": "number", "exclusiveMinimum": 0, "description": "Horizontal scaling factor (1 = unchanged, greater than 0)." },
+                "V":            { "type": "number", "exclusiveMinimum": 0, "description": "Vertical scaling factor (1 = unchanged, greater than 0)." } } },
               "Warping":        { "type": "string" },
               "BlendMode":      { "type": "number" },
-              "Transparency":   { "type": "number" },
-              "ColourCycling":  { "type": "object", "properties": {
-                "Range":        { "type": "number" },
-                "Frequency":    { "type": "number" } } },
+              "Transparency":   { "type": "number", "minimum": 0, "maximum": 100, "description": "Transparency, in percent (0 to 100)." },
+              "ColourCycling":  { "type": "object", "additionalProperties": false, "properties": {
+                "Range":        { "type": "number", "minimum": 0, "maximum": 360, "description": "Colour range, in degrees (0 to 360)." },
+                "Frequency":    { "type": "number", "minimum": 0, "description": "Colour cycling frequency, in Hz (not less than 0)." } } },
               "Kaleidoscope":   { "type": "string" },
-              "PlayBackSpeed":  { "type": "number" },
+              "PlayBackSpeed":  { "type": "number", "minimum": 0.1, "maximum": 10, "description": "Playback speed factor (1 = normal speed, 0.1 to 10)." },
               "PlayBackControl":{ "type": "string", "enum": [ "Play", "Pause", "Stop", "Loop" ] } } } } } } } } } } } },
 
     "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },

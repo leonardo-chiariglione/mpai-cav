@@ -22,6 +22,10 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "asr-model", "Uri": "/* URI of the speech recognition model */", "Sha256": "/* SHA-256 */", "Setting": "ModelPath", "Description": "The speech recognition model that the program of the Implementation reads."},
+                      {"Name": "asr-program", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the program inside the archive */", "Setting": "ExecutablePath", "Description": "The program that reads the speech recognition model."},
+                      {"Name": "asr-server", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the server inside the archive */", "Setting": "ServerPath", "Description": "The server that keeps the model loaded between turns."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

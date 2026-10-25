@@ -144,7 +144,7 @@ public class HighwayJunctionOvertakeTests
     [Trait("Duration", "Long")]
     public void ReadingTheIndicatorFromThePictureTheCavPassesTheCarThatTurnsOff()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var world = OvertakeAtJunction.LeadTurnsRight();
         var (trace, _) = Drive(world, 75, picture: true);
         Report("junction-overtake-picture", trace);

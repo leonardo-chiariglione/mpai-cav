@@ -3,7 +3,7 @@
   "title":                     "RE Data Out V1.0",
   "type":                      "object",
   "additionalProperties":      false,
-  "required":                  ["Header", "REDataOutID", "REDataOutTime", "REDataOut"],
+  "required":                  [ "Header", "REDataOutID", "REDataOutTime", "REDataOut", "UEnvironmentID" ],
   "properties":                {
 
     "Header":                  { "type": "string", "const": "XRV-RDO-V1.0" },

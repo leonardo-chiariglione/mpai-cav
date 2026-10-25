@@ -232,7 +232,7 @@ internal static class Program
         if (approving)
         {
             var approvals = new AIF.Store.MpaiStore(amdDir);
-            var providers = new IAimProvider[] { new AmqProvider(store), new MacProvider(store), new AcrProvider(store), new NprProvider(store) };
+            var providers = new IAimProvider[] { new AmqProvider(store), new MacProvider(store), new AcrProvider(store), new NprProvider(store), new McaProvider(store), new MtsProvider(store), new AmcProvider(store) };
             foreach (var aim in store.GetCatalog().Select(c => c.AIMName).Distinct().OrderBy(a => a, StringComparer.Ordinal))
             {
                 var file = providers.Select(p => p.ImplementationOf(aim)).FirstOrDefault(f => f is not null);
@@ -253,6 +253,9 @@ internal static class Program
             providers.Add(new MacProvider(s));
             providers.Add(new AcrProvider(s));
             providers.Add(new NprProvider(s));
+            providers.Add(new McaProvider(s));
+            providers.Add(new MtsProvider(s));
+            providers.Add(new AmcProvider(s));
             return new CompositeProvider(providers.ToArray());
         });
 

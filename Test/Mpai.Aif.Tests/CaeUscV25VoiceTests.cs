@@ -19,8 +19,8 @@ public class CaeUscV25VoiceTests
     [SkippableFact]
     public async Task TheSpeechModelIsTheEmbeddingOfTheVoiceAndTheSpeechThatUsesItSoundsLikeIt()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Mpai.Core.MpaiPaths.OpenVoiceHome, "converter")) && Mpai.Core.MpaiPaths.Python != "python", "the voice engine is not installed");
-        var worker = new OpenVoiceWorker();
+        Skip.IfNot(TestModels.Can("openvoice-source", "openvoice-converter") && Mpai.Core.MpaiPaths.Python != "python", "the voice engine is not installed");
+        var worker = new OpenVoiceWorker(TestModels.Settings("1CAE-SMC-V2.5-I01"));
         var target = Clip("1272"); var other = Clip("1462");
 
         // Speech Model Creation, as the AIM: the segments in, the ML Model Object out.

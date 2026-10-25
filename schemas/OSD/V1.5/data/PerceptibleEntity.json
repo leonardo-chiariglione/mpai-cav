@@ -6,7 +6,7 @@
   "required":                     [ "Header", "PerceptibleEntityID", "PerceptibleEntityData" ],
   "properties":                   {
 
-    "Header":                     { "type": "string", "const": "OSD-PCE-V1.5", "description": "Perceptible Entity Header â€“ Standard OSD-PCE-Vx.y" },
+    "Header":                     { "type": "string", "const": "OSD-PCE-V1.5", "description": "Perceptible Entity Header – Standard OSD-PCE-Vx.y" },
     "MInstanceID":                { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Perceptible Entity is located." },
     "UEnvironmentID":             { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Perceptible Entity is located." },
     "PerceptibleEntityID":        { "type": "string", "description": "Unique identifier of this Perceptible Entity instance." },

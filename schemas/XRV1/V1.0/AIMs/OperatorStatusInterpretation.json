@@ -1,12 +1,12 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/OperatorCommandInterpretation.json",
-  "title":                "Operator Command Interpretation V1.0",
+  "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/OperatorStatusInterpretation.json",
+  "title":                "Operator Status Interpretation V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-OCI-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-OSI-V1.0"},
 
   "APIProfile":           "Basic",
-  "Description":          "The Operator Status Interpretation (XRV-OCI) AIM interprets the RE Operator Descriptors and VE Operator Descriptors to produce the RE and VE Operator Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
+  "Description":          "The Operator Status Interpretation (XRV-OSI) AIM interprets the RE Operator Descriptors and VE Operator Descriptors to produce the RE and VE Operator Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
 
   "ExternalPorts":        [{"Name": "REOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-ROD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "VEOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-VOD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},

@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,13 +10,12 @@ using System.Text.Json.Nodes;
 
 namespace Mpai.Cae.Usc.Voice;
 
-// The voice engine as a process: openvoice_worker.py (OpenVoice V2, MIT) in a Python that has torch. Settings of the AIM Instance: "OpenVoicePython" (default MPAI_PYTHON, else the venv Data\pyannote-venv, else python),
-// "OpenVoiceHome" (the folder with the source and the converter checkpoint, default Data\openvoice, Data being MPAI_DATA or the folder beside the application), "OpenVoiceScript" (default the worker next to this assembly). The model is loaded at every
+// The voice engine as a process: openvoice_worker.py (OpenVoice V2, MIT) in a Python that has torch. Settings of the AIM Instance: "OpenVoicePython" (default MPAI_PYTHON, else the Python of Support/Python
+// "OpenVoiceSource", "OpenVoiceConfig" and "OpenVoiceCheckpoint" (where the Controller gives them from Access: the code, and the configuration and the checkpoint of the converter),
 // call (some seconds on a CPU): it is the reference Implementation, not a service.
 public sealed class OpenVoiceWorker(IReadOnlyDictionary<string, string>? settings = null)
 {
     private readonly string _python = Setting(settings, "OpenVoicePython", Mpai.Core.MpaiPaths.Python);
-    private readonly string _home = Setting(settings, "OpenVoiceHome", Mpai.Core.MpaiPaths.OpenVoiceHome);
     private readonly string _script = Setting(settings, "OpenVoiceScript", Path.Combine(Path.GetDirectoryName(typeof(OpenVoiceWorker).Assembly.Location) ?? AppContext.BaseDirectory, "openvoice_worker.py"));
 
     private static string Setting(IReadOnlyDictionary<string, string>? s, string key, string fallback) => s is not null && s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
@@ -49,7 +51,9 @@ public sealed class OpenVoiceWorker(IReadOnlyDictionary<string, string>? setting
         if (!File.Exists(_script)) throw new InvalidOperationException($"The voice engine's worker is not at {_script} (setting OpenVoiceScript).");
         var info = new ProcessStartInfo(_python) { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
         foreach (var a in new[] { "-W", "ignore", _script }.Concat(arguments)) info.ArgumentList.Add(a);
-        info.Environment["OPENVOICE_HOME"] = _home;
+        // Where the Controller gave them from Access: the code of OpenVoice, and the configuration and the checkpoint of its converter.
+        foreach (var (setting, variable) in new[] { ("OpenVoiceSource", "OPENVOICE_SRC"), ("OpenVoiceConfig", "OPENVOICE_CONFIG"), ("OpenVoiceCheckpoint", "OPENVOICE_CHECKPOINT") })
+            if (settings is not null && settings.TryGetValue(setting, out var given) && !string.IsNullOrWhiteSpace(given)) info.Environment[variable] = given;
         using var process = Process.Start(info) ?? throw new InvalidOperationException("The voice engine did not start.");
         var error = process.StandardError.ReadToEndAsync(); process.StandardOutput.ReadToEnd();
         process.WaitForExit();

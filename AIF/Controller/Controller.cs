@@ -198,6 +198,7 @@ public sealed class Controller
         node.Execution      = TextOf(root, "Execution") ?? node.Execution;
         node.StorageControl = TextOf(root, "StorageControl");
         node.Record         = TextOf(root, "Record");
+        node.AccessSources.AddRange(AccessEntry.ReadFrom(root));
         node.RestartLimit = IntOf(root, "RestartLimit") ?? 0;
         node.Period       = NumberOf(root, "Period");
         node.Deadline     = NumberOf(root, "Deadline");
@@ -449,9 +450,10 @@ public sealed class Controller
         {
             var aimName = graph.Root.AIMName;
             CheckResources(graph.Root);
+            host.BindAccess(aimName, graph.Root.AccessSources);
             host.RegisterRuntime(
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
+                provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), graph.Root.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName), host.AccessFor(aimName)));
             instantiated.Add(aimName);
             return instantiated;
         }
@@ -494,9 +496,10 @@ public sealed class Controller
             }
 
             CheckResources(child);
+            host.BindAccess(aimName, child.AccessSources);
             host.RegisterRuntime(
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
+                provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), child.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName), host.AccessFor(aimName)));
             instantiated.Add(aimName);
         }
     }

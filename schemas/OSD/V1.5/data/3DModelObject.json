@@ -8,7 +8,7 @@
   "properties":                     {
 
     "Header":                       { "type": "string", "const": "OSD-3DO-V1.5",
-                                      "description": "3D Model Object Header â€“ Standard OSD-3MO-Vx.y" },
+                                      "description": "3D Model Object Header – Standard OSD-3MO-Vx.y" },
     "MInstanceID":                  { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this object is or is intended to be located." },
     "UEnvironmentID":               { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this object is or is intended to be located." },
     "3DModelObjectID":              { "type": "string", "description": "Unique identifier of this 3D Model Object." },

@@ -3,6 +3,7 @@
   "title":                    "Script V1.0",
   "type":                     "object",
   "additionalProperties":     false,
+  "required":                 [ "Header", "ScriptID", "UEnvironmentID", "ScriptTime" ],
   "properties":               {
 
     "Header":                 { "type": "string", "const": "XRV-SCR-V1.0" },
@@ -50,4 +51,4 @@
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
 
-    "DescrMetadata":          { "type": "string" } } }
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

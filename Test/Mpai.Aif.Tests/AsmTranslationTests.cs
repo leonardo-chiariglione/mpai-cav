@@ -27,8 +27,7 @@ public class AsmTranslationTests
     public void ASpeechObjectTranslatedInPlace()
     {
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
-        string Model(string aim, string key) => Path.Combine(Repository.Root, (string)all[aim]![key]!);
-        Skip.IfNot(File.Exists(Model("1MMC-TTT-V2.5-I01", "TttEncoderModel")) && File.Exists(Model("1MMC-TTS-V2.5-I01", "Voice:it")), "the translation or the Italian voice model is absent.");
+        Skip.IfNot(TestModels.Can("ttt-encoder", "voice-it"), "the translation or the Italian voice model is absent.");
 
         var work = Path.Combine(Path.GetTempPath(), "asm-translation-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);
@@ -36,8 +35,7 @@ public class AsmTranslationTests
         File.WriteAllText(settings, all.ToJsonString());
 
         // The speech: English, as Text-To-Speech makes it, its Qualifier stating English.
-        var tts = all["1MMC-TTS-V2.5-I01"]!.AsObject().ToDictionary(p => p.Key, p =>
-            File.Exists(Path.Combine(Repository.Root, (string)p.Value!)) ? Path.Combine(Repository.Root, (string)p.Value!) : (string)p.Value!);
+        var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
         var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
 
         var r = new Dictionary<string, string>();
@@ -111,15 +109,13 @@ public class AsmTranslationTests
     public void ATranslationIsRevoked()
     {
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
-        string Model(string aim, string key) => Path.Combine(Repository.Root, (string)all[aim]![key]!);
-        Skip.IfNot(File.Exists(Model("1MMC-TTT-V2.5-I01", "TttEncoderModel")) && File.Exists(Model("1MMC-TTS-V2.5-I01", "Voice:it")), "the translation or the Italian voice is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("ttt-encoder", "voice-it"), "the translation or the Italian voice is absent: the model files are obtained separately.");
 
         var work = Path.Combine(Path.GetTempPath(), "asm-revoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);
         var settings = Path.Combine(work, "aim-settings.json");
         File.WriteAllText(settings, all.ToJsonString());
-        var tts = all["1MMC-TTS-V2.5-I01"]!.AsObject().ToDictionary(p => p.Key, p =>
-            File.Exists(Path.Combine(Repository.Root, (string)p.Value!)) ? Path.Combine(Repository.Root, (string)p.Value!) : (string)p.Value!);
+        var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
         var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
 
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));

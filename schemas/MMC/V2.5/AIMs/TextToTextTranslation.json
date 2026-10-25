@@ -8,7 +8,7 @@
 
   "ExternalPorts":   [{"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 1,                                       "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TextObject",       "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "Meaning",          "Direction": "Input",  "DataType": "MMC-MEA-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                     {"Name": "TextDescriptors",   "Direction": "Input",  "DataType": "MMC-TDO-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "TranslatedText",   "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "RecognisedText",   "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "PortNumber": 2,                                       "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "MediaSelector",    "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 2,                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
@@ -18,6 +18,13 @@
   "Topology":        [ ],
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "ttt-encoder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttEncoderModel", "AsFile": "encoder_model.onnx", "Description": "The encoder of the translation model (M2M100, 418 million parameters)."},
+                      {"Name": "ttt-decoder-first", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttDecoderFirstModel", "AsFile": "decoder_model.onnx", "Description": "The decoder of the first step of the translation."},
+                      {"Name": "ttt-decoder-past", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttDecoderPastModel", "AsFile": "decoder_with_past_model.onnx", "Description": "The decoder of the following steps of the translation."},
+                      {"Name": "ttt-spm", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttSpmModel", "AsFile": "sentencepiece.bpe.model", "Description": "The SentencePiece model of the translation model."},
+                      {"Name": "ttt-vocab", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttVocab", "AsFile": "vocab.json", "Description": "The vocabulary of the translation model."},
+                      {"Name": "ttt-special-tokens", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "TttSpecialTokens", "AsFile": "special_tokens_map.json", "Description": "The special tokens of the translation model, which give the order of its languages."}],
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

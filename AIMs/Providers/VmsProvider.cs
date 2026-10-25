@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 
@@ -42,14 +45,19 @@ public sealed class VmsProvider : IAimProvider, IDisposable
                 or "1MMC-EDP-V2.5-I02" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
                 or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I02";
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null, null);
+
+    // With the Access the AIM declared: the language model, whose weights Ollama is given from Access.
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, AIF.SharedStorage.ISharedStorage? storage,
+        AIF.SharedStorage.ISharedStorage? privateStorage, AIF.SharedStorage.IRuledStorage? moduleStorage, IAccessReader? access)
         => aimName switch
         {
             "1PAF-PDX-V1.6-I01" => new PdxAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-ASR-V2.5-I01" => new AsrAimProcessor(aimName, AsrFactory.Create(settings), AimPortReader.Load(_store, aimName)),
             "1MMC-NLU-V2.5-I01" => new NluAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-SCM-V2.5-I01" => new ScmAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "1MMC-EDP-V2.5-I02" => new EdpAimProcessor(aimName, Llm(settings), AimPortReader.Load(_store, aimName),
+            "1MMC-EDP-V2.5-I02" => new EdpAimProcessor(aimName, Llm(settings, access), AimPortReader.Load(_store, aimName),
                                                        persona: "the Secretary", avatarModel: Setting(settings, "VmsAvatarModel", "cav-avatar.glb")),
             "1MMC-PDX-V2.5-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
@@ -63,7 +71,14 @@ public sealed class VmsProvider : IAimProvider, IDisposable
         s.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
 
     // One Ollama client, model from settings (default llama3.2:3b), as LeafAimsProvider.
-    private OllamaClient Llm(IReadOnlyDictionary<string, string> s)
+    private OllamaClient Llm(IReadOnlyDictionary<string, string> s, IAccessReader? access)
+    {
+        var client = LlmFor(s);
+        client.UseAccess(access);
+        return client;
+    }
+
+    private OllamaClient LlmFor(IReadOnlyDictionary<string, string> s)
     {
         if (_llm is not null) return _llm;
         string model = Setting(s, "OllamaModel", "llama3.2:3b");

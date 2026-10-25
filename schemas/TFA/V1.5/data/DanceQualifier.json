@@ -1,0 +1,25 @@
+{ "$id":                  "https://schemas.mpai.community/TFA/V1.5/data/DanceQualifier.json",
+  "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "title":                "Dance Qualifier V1.5",
+  "description":          "Qualifier describing dance notation formats and implementation-defined attributes.",
+  "type":                 "object",
+  "required":             [ "Header", "DanceQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties": false,
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "TFA-DNQ-V1.5" },
+    "MInstanceID":        { "type": "string" },
+    "UEnvironmentID":     { "type": "string" },
+    "DanceQualifierID":   { "type": "string" },
+    "DanceQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":            { "type": "object", "additionalProperties": false },
+
+    "Formats":             { "type": "object", "additionalProperties": false, "properties": {
+      "ContentFormat":    { "type": "string", "enum": [ "Benesh", "Labanotation" ] } } },
+
+    "Attributes":         { "type": "object", "additionalProperties": true },
+
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048 } } }
+

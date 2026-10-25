@@ -1,0 +1,34 @@
+{
+    "Name": "Multimodal Translation",
+    "Description": "Speak in one language and hear the avatar say it in another.",
+    "Icon": "icon.svg",
+    "Pane": "normal",
+    "Version": "1.0",
+    "Standard": "MPAI-MMC V2.5",
+    "UseCase": "MTS",
+    "Module": "1MMC-MTS-V2.5-I01",
+    "Keywords": [
+        "translation",
+        "translate",
+        "language",
+        "languages",
+        "speech",
+        "interpreter"
+    ],
+    "Categories": [
+        "Language"
+    ],
+    "Languages": [
+        "en",
+        "it",
+        "es",
+        "pt",
+        "fr",
+        "de"
+    ],
+    "Asks": [
+        "microphone",
+        "typed text"
+    ],
+    "Keeps": "Nothing."
+}

@@ -8,9 +8,9 @@ namespace AIF.Metadata;
 // the one the L3's Header names.
 //
 // An L3 declares only what its Implementation supports. So:
-//   1. every Port of the L3 is a Port of the L2: the same Direction, and the L2's
-//      Data Type(s) include the L3's (an L2 Port may accept a Basic and a Full
-//      Object, an L3 Port one of them);
+//   1. every Port of the L3 is a Port of the L2: the same Direction and Port Number,
+//      and the L2's Data Type(s) include the L3's (an L2 Port may accept a Basic and
+//      a Full Object, an L3 Port one of them);
 //   2. an Input both declare is optional in both, or in neither; an Output the L2
 //      requires is not optional in the L3 (an L3 may always produce an Output the
 //      L2 makes optional: it gives more, not less);
@@ -18,9 +18,10 @@ namespace AIF.Metadata;
 //   4. every Sub-AIM of a composite L3 is a Sub-AIM of its L2, or a composite whose
 //      Sub-AIMs include one, at any depth - a Module may use a composite AIM where
 //      its Standard names one of the AIMs that composite contains -
-//   5. or a combination of Sub-AIMs of the L2 that exposes their interface (below).
-// Ports are matched by Direction and Data Type; names are labels, but where two
-// Ports could match, the one of the same name is preferred.
+//   5. or a combination of Sub-AIMs of the L2 that exposes their interface (below);
+//   6. every Access the L2 declares (AccessSources, by Name) is declared by the L3;
+//      the L3 may declare others of its own.
+// Ports are matched by Direction, Data Type and Port Number; names are labels.
 public sealed class L2Conformance
 {
     private readonly Dictionary<string, JsonElement> l2s = new(StringComparer.OrdinalIgnoreCase);
@@ -76,10 +77,14 @@ public sealed class L2Conformance
         {
             var candidates = p2.Select((y, i) => (y, i))
                 .Where(c => !used.Contains(c.i) && c.y.Direction == x.Direction && x.Types.IsSubsetOf(c.y.Types)).ToList();
-            // Paired by Port Number, never by name: the L2's Port n of that type is the L3's.
+            // Paired by Port Number, never by name: the L2's Port n of that type is the L3's,
+            // and the Port Numbers shall match.
             var pick = candidates.FirstOrDefault(c => c.y.Number == x.Number);
-            if (pick.y is null) pick = candidates.FirstOrDefault();
-            if (pick.y is null) { found.Add($"{x}: the L2 has no such Port."); continue; }
+            if (pick.y is null)
+            {
+                found.Add(candidates.Count == 0 ? $"{x}: the L2 has no such Port." : $"{x}: Port Number {x.Number} here; the L2 has no such Port with that Port Number.");
+                continue;
+            }
             used.Add(pick.i);
             var disagrees = x.Direction == "Output" ? x.Optional && !pick.y.Optional : pick.y.Optional != x.Optional;
             if (disagrees)
@@ -97,6 +102,7 @@ public sealed class L2Conformance
 
         found.AddRange(ResourcePolicies(l3, l2));
         found.AddRange(Implementations(l3, l2));
+        found.AddRange(AccessSources(l3, l2));
         found.AddRange(Filled(l3, "ResourcePolicies"));
         found.AddRange(Filled(l3, "Implementations"));
 
@@ -105,6 +111,17 @@ public sealed class L2Conformance
             if (!subs2.Contains(TypeOf(sub)) && !Contains(sub, subs2, 0) && !Combines(TypeOf(sub), l2, subs2))
                 found.Add($"Sub-AIM {sub}: not a Sub-AIM of the L2, nor a composite containing one, nor a combination of Sub-AIMs of the L2 exposing their interface.");
         return found;
+    }
+
+    // THE ACCESS the AIM reads: the L2 names the data the AIM reads (AccessSources, each by its Name - its Uri and SHA-256 are
+    // those of the Implementation); an L3 declares every Name its L2 declares - the optional ones too, so the two can be compared
+    // directly - and may declare more.
+    private static IEnumerable<string> AccessSources(JsonElement l3, JsonElement l2)
+    {
+        var declared = Items(l3, "AccessSources").Select(s => Text(s, "Name")).Where(n => n.Length > 0).ToHashSet(StringComparer.Ordinal);
+        foreach (var s in Items(l2, "AccessSources"))
+            if (Text(s, "Name") is { Length: > 0 } name && !IsPlaceholder(name) && !declared.Contains(name))
+                yield return $"Access '{name}' is in the L2 and is not declared by the L3.";
     }
 
     // WHAT THE L2 LISTS, THE L3 CHOOSES FROM - as the L2s write it: the options

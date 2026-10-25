@@ -300,41 +300,19 @@ public class SystemTests
 [Trait("Blocks", "Yes")]
 public class ModelTests
 {
-    // Every SHA256 entry of AIMs/aim-settings.json against the file its setting names.
-    [SkippableFact]
-    public void ModelHashes()
+    // THERE IS NO MODELS FOLDER AND NO MODEL IS PINNED OUTSIDE ITS L3: what an AIM reads is declared in the AccessSources of its L3, with the SHA-256 that pins
+    // it, and the Controller obtains it into Access. The settings of AIMs/aim-settings.json hold parameters, never the path of a model or a pin of a file.
+    [Fact]
+    public void NoSettingNamesAModelOrPinsAFile()
     {
-        var settingsFile = Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models")),
-            "Models is absent: the model files are obtained separately (docs/MAS-App-Models.md).");
-
-        var settings = JsonNode.Parse(File.ReadAllText(settingsFile))!.AsObject();
-        var mismatches = new List<string>();
-        var checkedCount = 0;
-
+        var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
+        var found = new List<string>();
         foreach (var (aim, node) in settings)
-        {
-            if (node is not JsonObject entries) continue;
-            foreach (var (key, value) in entries)
-            {
-                if (!key.StartsWith("SHA256:", StringComparison.Ordinal)) continue;
-                var setting = key["SHA256:".Length..];
-                var path = entries[setting]?.GetValue<string>();
-                if (path is null) { mismatches.Add($"{aim} {setting}: no such setting"); continue; }
-
-                var full = Path.IsPathRooted(path) ? path : Path.Combine(Repository.Root, path);
-                if (!File.Exists(full)) { mismatches.Add($"{aim} {setting}: {path} missing"); continue; }
-
-                using var stream = File.OpenRead(full);
-                var actual = Convert.ToHexString(SHA256.HashData(stream));
-                checkedCount++;
-                if (!string.Equals(actual, value?.GetValue<string>(), StringComparison.OrdinalIgnoreCase))
-                    mismatches.Add($"{aim} {setting}: {path} has {actual}");
-            }
-        }
-
-        Assert.True(mismatches.Count == 0,
-            $"{mismatches.Count} of {checkedCount + mismatches.Count} model hashes do not match:\n  " + string.Join("\n  ", mismatches));
+            if (node is JsonObject entries)
+                foreach (var (key, value) in entries)
+                    if (key.StartsWith("SHA256:", StringComparison.Ordinal) || key.StartsWith("Source:", StringComparison.Ordinal) || (value?.GetValue<string>() ?? "").Contains("Models", StringComparison.Ordinal))
+                        found.Add($"{aim} {key}");
+        Assert.True(found.Count == 0, "These settings name a model or pin a file, which the L3 does: " + string.Join(", ", found));
     }
 }
 

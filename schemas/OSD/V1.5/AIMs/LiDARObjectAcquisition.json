@@ -14,4 +14,4 @@
                        {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
                        {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"}],
   "DataXMData":       {},
-  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-osd/"}] }
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/lidar-object-acquisition/"}] }

@@ -61,7 +61,7 @@ public class CaeUscV25AppTests : IDisposable
     [SkippableFact]
     public void SpeechRestorationSystemInTheVoiceOfTheSpeakerGivesTheWholeRestoredSegment()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Mpai.Core.MpaiPaths.OpenVoiceHome, "converter")) && Mpai.Core.MpaiPaths.Python != "python" && Directory.Exists(Path.Combine(Mpai.Core.MpaiPaths.Clips, "1272")), "the voice engine or the clips are not installed");
+        Skip.IfNot(TestModels.Can("openvoice-source", "openvoice-converter") && Mpai.Core.MpaiPaths.Python != "python" && Directory.Exists(Path.Combine(Mpai.Core.MpaiPaths.Clips, "1272")), "the voice engine or the clips are not installed");
         var output = Path.Combine(work, "voice.wav"); var damaged = Path.Combine(Mpai.Core.MpaiPaths.Clips, "1462", "clip.wav");
         var (code, text, error) = Run(Exe("SRS", "SrsApp"), "--voice", Path.Combine(Mpai.Core.MpaiPaths.Clips, "1272", "clip.wav"), "--damaged", damaged, "--sections", "1.0-1.8,3.0-3.6", "--say", "hello there", "--say", "good morning", "--out", output);
         Assert.True(code == 0, text + error);

@@ -2,6 +2,8 @@
   "$id":                      "https://schemas.mpai.community/XRV1/V1.0/data/Event.json",
   "title":                    "Event V1.0",
   "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "EventID", "UEnvironmentID", "EventTime", "EventData" ],
   "properties":               {
 
     "Header":                { "type": "string", "const": "XRV-EVT-V1.0" },
@@ -14,26 +16,26 @@
 
     "AVSceneDescriptors":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json" },
 
-    "EventData":             { "type": "array", "items": { "type": "object", "properties": {
+    "EventData":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
 
       "PortableAvatar":      { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/PortableAvatar.json" },
       "AudioBehaviour":      { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
       "VisualBehaviour":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
-      "BiometricData":       { "$ref": "https://schemas.mpai.community/AIH1/V1.0/data/BiometricData.json" },
+      "BiometricData":       { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/BiometricData.json" },
       "ControllerData":      { "type": "string" } } } },
 
-    "ObjectDynamics":        { "type": "array", "items": { "type": "object", "properties": {
+    "ObjectDynamics":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
 
       "ObjectID":            { "type": "string" },
 
       "SpatialAttitude":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
 
-      "OtherObjects":        { "type": "object", "properties": {
+      "OtherObjects":        { "type": "object", "additionalProperties": false, "properties": {
         "SpatialAttitude":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
 
       "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } } },
 
-    "StageSettings":         { "type": "array", "items": { "type": "object", "properties": {
+    "StageSettings":         { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
       "Set":                 { "type": "string" },
       "FX":                  { "type": "object" },
       "Lighting":            { "type": "string" },
@@ -43,4 +45,4 @@
 
     "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
 
-    "DescrMetadata":         { "type": "string" } } }
+    "DescrMetadata":         { "type": "string", "maxLength": 2048 } } }

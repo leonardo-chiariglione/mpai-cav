@@ -4,16 +4,74 @@
        the author's decision of 2026/10/04, "AOD is UA's business". It renders an Audio
        Object or an Audio Scene as the User hears it, from the User Point of View (Steam
        Audio); the Loudspeaker Unit of the Physical Layer plays it. Portable (net10.0),
-       so that a User Agent on any platform can use it. -->
+       so that a User Agent on any platform can use it.
+
+       STEAM AUDIO IS A DEPENDENCY OF THIS CODE, as ONNX Runtime or SkiaSharp are of other code: a native library (Valve, Apache-2.0,
+       release 4.8.1) that the renderer loads in its own process. It is not data of Access and there is no Models folder: the build
+       fetches the release archive once into Support/native, takes from it the library of this platform, checks its SHA-256 against the
+       one pinned here and puts it beside the program (windows-x64/phonon.dll, linux-x64/libphonon.so), where SteamAudio.Load looks. -->
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <SteamAudioVersion>4.8.1</SteamAudioVersion>
+    <SteamAudioUrl>https://github.com/ValveSoftware/steam-audio/releases/download/v$(SteamAudioVersion)/steamaudio_$(SteamAudioVersion).zip</SteamAudioUrl>
+    <SteamAudioCache>$(MSBuildThisFileDirectory)..\..\..\..\Support\native\</SteamAudioCache>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <SteamAudioPlatform>windows-x64</SteamAudioPlatform>
+    <SteamAudioFile>phonon.dll</SteamAudioFile>
+    <SteamAudioSha256>CA3DBC01DBC24492717011E80F6A51404CA143AE344CA660971D2C983F1E058D</SteamAudioSha256>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Windows'))">
+    <SteamAudioPlatform>linux-x64</SteamAudioPlatform>
+    <SteamAudioFile>libphonon.so</SteamAudioFile>
+    <SteamAudioSha256>FAF7C4D69E0F104366F6553CDA38D3F946F761F7DB223BAF12663F6FBF2387DA</SteamAudioSha256>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
   </ItemGroup>
+
+  <UsingTask TaskName="ExtractZipMember" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Zip ParameterType="System.String" Required="true" />
+      <Member ParameterType="System.String" Required="true" />
+      <Target ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        using (var archive = ZipFile.OpenRead(Zip))
+        {
+            var entry = archive.GetEntry(Member);
+            if (entry == null) { Log.LogError("The archive " + Zip + " has no " + Member); return false; }
+            Directory.CreateDirectory(Path.GetDirectoryName(Target));
+            entry.ExtractToFile(Target, true);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="FetchSteamAudio" BeforeTargets="AssignTargetPaths">
+    <PropertyGroup>
+      <SteamAudioZip>$(SteamAudioCache)steamaudio_$(SteamAudioVersion).zip</SteamAudioZip>
+      <SteamAudioLibrary>$(SteamAudioCache)$(SteamAudioPlatform)\$(SteamAudioFile)</SteamAudioLibrary>
+    </PropertyGroup>
+    <MakeDir Directories="$(SteamAudioCache)" Condition="!Exists('$(SteamAudioLibrary)')" />
+    <DownloadFile SourceUrl="$(SteamAudioUrl)" DestinationFolder="$(SteamAudioCache)" Condition="!Exists('$(SteamAudioLibrary)') And !Exists('$(SteamAudioZip)')" />
+    <ExtractZipMember Zip="$(SteamAudioZip)" Member="steamaudio/lib/$(SteamAudioPlatform)/$(SteamAudioFile)" Target="$(SteamAudioLibrary)" Condition="!Exists('$(SteamAudioLibrary)')" />
+    <GetFileHash Files="$(SteamAudioLibrary)" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Hash" PropertyName="SteamAudioHash" />
+    </GetFileHash>
+    <Error Condition="'$(SteamAudioHash.ToUpperInvariant())' != '$(SteamAudioSha256)'"
+           Text="Steam Audio $(SteamAudioVersion): $(SteamAudioFile) is not the file whose SHA-256 is pinned in Mpai.SpatialAudio.csproj." />
+    <ItemGroup>
+      <None Include="$(SteamAudioLibrary)" Link="$(SteamAudioPlatform)\$(SteamAudioFile)" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 
 </Project>

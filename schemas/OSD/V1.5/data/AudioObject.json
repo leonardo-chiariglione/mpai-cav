@@ -7,7 +7,7 @@
   "properties":                     {
 
     "Header":                       { "type": "string", "const": "OSD-AUO-V1.5",
-                                      "description": "Audio Object Header â€“ Standard OSD-AUO-Vx.y" },
+                                      "description": "Audio Object Header – Standard OSD-AUO-Vx.y" },
     "MInstanceID":                  { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Audio Object is or is intended to be located." },
     "UEnvironmentID":               { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Audio Object is or is intended to be located." },
     "AudioObjectID":                { "type": "string", "description": "Unique identifier of this Audio Object." },

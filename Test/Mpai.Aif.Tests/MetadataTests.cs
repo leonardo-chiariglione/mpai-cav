@@ -125,6 +125,40 @@ public class MetadataTests
         finally { Directory.Delete(copy, recursive: true); }
     }
 
+    // The instance-of rule includes the Port Number: an L3 whose Port has another Port
+    // Number than the L2's Port of that Direction and Data Type does not conform.
+    [Fact]
+    public void PortNumbersMatch()
+    {
+        var conformance = new L2Conformance(Repository.Schemas, _ => null);
+        var l3 = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-PSE-V2.5-I01.json")))!;
+        var ports = l3["ExternalPorts"]!.AsArray();
+        ports[0]!["PortNumber"] = 7;
+        using var doc = JsonDocument.Parse(l3.ToJsonString());
+        Assert.Contains(conformance.Check(doc.RootElement), f => f.Contains("Port Number 7"));
+    }
+
+    // The instance-of rule includes the Access: an L3 declares every Access its L2 declares, by Name, and may declare others.
+    [Fact]
+    public void AccessOfTheL2IsDeclaredByTheL3()
+    {
+        var conformance = new L2Conformance(Repository.Schemas, _ => null);
+        static List<string> Check(L2Conformance c, JsonNode l3)
+        {
+            using var doc = JsonDocument.Parse(l3.ToJsonString());
+            return c.Check(doc.RootElement).Where(f => f.StartsWith("Access '")).ToList();
+        }
+        JsonNode L3() => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1PAF-FIR-V1.6-I01.json")))!;
+
+        Assert.Empty(Check(conformance, L3()));
+
+        var missing = L3(); var list = missing["AccessSources"]!.AsArray(); list.Remove(list.First(e => (string?)e!["Name"] == "reference-faces"));
+        Assert.Contains(Check(conformance, missing), f => f.Contains("'reference-faces'") && f.Contains("not declared"));
+
+        var more = L3(); more["AccessSources"]!.AsArray().Add(new JsonObject { ["Name"] = "voices", ["Uri"] = "https://example.org/voices/", ["Sha256"] = new string('0', 64) });
+        Assert.Empty(Check(conformance, more));
+    }
+
     // Every L3's ResourcePolicies read as the Controller reads them when it builds a
     // Module's AIMs: a number (CPU:Number, GPU:Number) as well as a string, and every
     // Memory value understood. AMQ and others failed to start in the Service when these

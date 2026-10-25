@@ -21,6 +21,8 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings)."}],
+
   "Implementations":  [
    {
     "BinaryName": "/* provided by implementer */",
@@ -44,4 +46,4 @@
 
   "DataXMData":  { },
 
-  "Documentation":  [{ "Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-osd/v1-5/" }] }
+  "Documentation":  [{ "Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-segmentation/" }] }

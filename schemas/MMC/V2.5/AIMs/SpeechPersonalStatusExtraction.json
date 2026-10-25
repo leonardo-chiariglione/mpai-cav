@@ -28,6 +28,8 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
+  "AccessSources":   [{"Name": "spe-model", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "W2v2Model", "AsFile": "model.onnx", "Description": "The speech emotion model."}],
+
   "Implementations":  [
    {
     "BinaryName": "/* provided by implementer */",

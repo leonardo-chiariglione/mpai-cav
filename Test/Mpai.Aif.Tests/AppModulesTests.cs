@@ -36,7 +36,7 @@ public class AppModulesTests
 
     private static void RequireModels()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models")), "Models is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("ggml-small.bin"), "The models cannot be had: the L3s declare them, and Access holds them or cannot obtain them.");
         Skip.IfNot(Ollama(), "Ollama is not running with llama3.2:3b.");
     }
 
@@ -164,6 +164,77 @@ public class AppModulesTests
             Assert.True(Spoke(said), $"{app}: {rsr} gave no speech{Why(api, rsr)}");
         }
         finally { api.StopFlow(rsr); }
+    }
+
+    // THE CONVERSATION MODULES, as their Apps send a turn (Apps/MMC/{MCA,MTS,AMC}): the person's speech or text, the
+    // Avatar Model and the machine's ID; the Portable Avatar that comes back speaks. Each through the provider of its App.
+    private static ControllerApi Of(Func<AIF.Store.AmdStore, AIF.Controller.IAimProvider> provider)
+    {
+        var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
+        return new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => provider(store));
+    }
+
+    [SkippableFact]
+    public void McaAnswersATypedTurn()
+    {
+        RequireModels();
+        const string MCA = "1MMC-MCA-V2.5-I01";
+        using var api = Of(s => new McaProvider(s));
+        try { Assert.True(Spoke(Turn(api, MCA, Text(1, "Name one fruit. Answer in five words."), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, MCA)}"); }
+        finally { api.StopFlow(MCA); }
+    }
+
+    [SkippableFact]
+    public void McaAnswersASpokenTurn()
+    {
+        RequireModels();
+        const string MCA = "1MMC-MCA-V2.5-I01";
+        using var api = Of(s => new McaProvider(s));
+        try { Assert.True(Spoke(Turn(api, MCA, Speech("question.wav"), Avatar, MachineId)), $"{MCA} gave no speech{Why(api, MCA)}"); }
+        finally { api.StopFlow(MCA); }
+    }
+
+    [SkippableFact]
+    public void MtsTranslatesATypedTurn()
+    {
+        RequireModels();
+        const string MTS = "1MMC-MTS-V2.5-I01";
+        using var api = Of(s => new MtsProvider(s));
+        var languages = new ControllerApi.Datum("OSD-SEL-V1.5", 1, MpaiJson.ToJson(BasicSelectorObject.Languages("en", "fr")));
+        try { Assert.True(Spoke(Turn(api, MTS, languages, Text(1, "Good morning, how are you?"), Avatar, MachineId)), $"{MTS} gave no speech{Why(api, MTS)}"); }
+        finally { api.StopFlow(MTS); }
+    }
+
+    [SkippableFact]
+    public void AmcAnswersASpokenTurnWithTheFace()
+    {
+        RequireModels();
+        const string AMC = "1MMC-AMC-V2.5-I01";
+        using var api = Of(s => new AmcProvider(s));
+        try { Assert.True(Spoke(Turn(api, AMC, Speech("question.wav"), Picture("red.jpg"), Avatar, MachineId)), $"{AMC} gave no speech{Why(api, AMC)}"); }
+        finally { api.StopFlow(AMC); }
+    }
+
+    // THE MEMORY LOOP: the Module gives the Summary of the conversation with each turn (Edited Summary), the User Agent
+    // gives it back with the next (Summary), and the Module takes it.
+    [SkippableTheory]
+    [InlineData("MCA")] [InlineData("AMC")]
+    public void TheConversationKeepsItsMemoryFromTurnToTurn(string app)
+    {
+        RequireModels();
+        string module = $"1MMC-{app}-V2.5-I01";
+        using var api = Of(s => app == "MCA" ? new McaProvider(s) : new AmcProvider(s));
+        try
+        {
+            var extra = app == "AMC" ? new[] { Picture("red.jpg") } : Array.Empty<ControllerApi.Datum>();
+            var first = Turn(api, module, new[] { Text(1, "My name is Marta. Say hello."), Avatar, MachineId }.Concat(extra).ToArray());
+            var summary = first.ByType("MMC-SUM-V2.5");
+            Assert.False(string.IsNullOrWhiteSpace(summary), $"{module} gave no Edited Summary{Why(api, module)}");
+            var second = api.Advance(module, new[] { Text(1, "Thank you."), Avatar, MachineId, new ControllerApi.Datum("MMC-SUM-V2.5", 1, summary!) }.Concat(extra).ToArray());
+            Assert.True(second.Ok, $"{module}: {second.Error}{Why(api, module)}");
+            Assert.True(Spoke(second), $"{module} gave no speech on the second turn{Why(api, module)}");
+        }
+        finally { api.StopFlow(module); }
     }
 
     // ---- the simulated inputs (the same Data Types and Ports a User Agent writes) ----

@@ -14,7 +14,7 @@
                                     "type": "object", "required": [ "Proposition" ], "properties": {
       "Proposition":              { "description": "Structured representation of the belief as a logical statement",
                                     "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Proposition.json" },
-      "Confidence":               { "description": "Numeric confidence (0.0Ã¢â‚¬â€œ1.0) in the truth of the belief",
+      "Confidence":               { "description": "Numeric confidence (0.0–1.0) in the truth of the belief",
                                     "type": "number", "minimum": 0.0, "maximum": 1.0 },
       "CognitiveStateConditions": { "description": "Cognitive state categories influencing this belief",
                                     "type": "array", "items": { "type": "object", "properties": {

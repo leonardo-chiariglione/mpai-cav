@@ -7,7 +7,7 @@
   "properties":           {
 
     "Header":             { "type": "string", "const": "OSD-OPV-V1.5",
-                            "description": "Point of View Header â€“ Standard OSD-OPV-Vx.y" },
+                            "description": "Point of View Header – Standard OSD-OPV-Vx.y" },
     "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Point of View is defined." },
     "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Point of View is defined." },
     "PointOfViewID":      { "type": "string", "description": "Unique identifier of this Point of View instance." },
@@ -21,10 +21,10 @@
 
     "CartPosition":       { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian position (X, Y, Z) in metres." },
     "CartAccuracy":       { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian position component (X, Y, Z) in metres." },
-    "SpherPosition":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, Ï†, Î¸) in metres and degrees." },
-    "SpherAccuracy":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, Ï†, Î¸)." },
-    "Orientation":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation in degrees." },
-    "OrientAccuracy":     { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)." },
+    "SpherPosition":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, φ, θ) in metres and degrees." },
+    "SpherAccuracy":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, φ, θ)." },
+    "Orientation":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Euler angles (α, β, γ) representing the Object's orientation in degrees." },
+    "OrientAccuracy":     { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Euler angle (α, β, γ) in Orientation (degrees)." },
 
     "Aperture":           { "type": "array", "description": "Field of View expressed as Azimuth and Elevation.",
                             "items": { "type": "object", "additionalProperties": false, "required": [ "Azimuth", "Elevation" ], "properties": {

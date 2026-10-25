@@ -21,7 +21,7 @@ namespace Mpai.Aif.Tests;
 // the voice of the other; every Response a text, every Identification a boolean.
 // Reported: what MAC said, the time of a registration and of a check.
 //
-// The photographs are the author's (Data\Images, or MPAI_TEST_IMAGES), outside the
+// The photographs are the author's (Test/Data/Images/Author, or MPAI_TEST_IMAGES), outside the
 // repository: no photograph of a person is kept in it.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
@@ -29,7 +29,7 @@ namespace Mpai.Aif.Tests;
 public class AccessTests
 {
     private const string Acr = "1MMC-ACR-V2.5-I01", Mac = "1MMC-MAC-V2.5-I01";
-    internal static readonly string Images = Environment.GetEnvironmentVariable("MPAI_TEST_IMAGES") ?? Path.Combine(Mpai.Core.MpaiPaths.Data, "Images");
+    internal static readonly string Images = Environment.GetEnvironmentVariable("MPAI_TEST_IMAGES") ?? Path.Combine(Mpai.Core.MpaiPaths.TestData, "Images", "Author");
 
     internal static string Face(string file) =>
         MpaiJson.ToJson(BasicVisualObject.FromFile(file, File.ReadAllBytes(Path.Combine(Images, file)), "Face"));
@@ -37,15 +37,7 @@ public class AccessTests
     // A person's voice: what they say, synthesised with their voice.
     internal static string Voice(string text, string voice)
     {
-        var all = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        var settings = all["1MMC-TTS-V2.5-I01"]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-        settings["VoiceModel"] = Path.Combine(Repository.Root, "Models", "Piper", "voices", voice, voice + ".onnx");
-        settings["VoiceConfig"] = settings["VoiceModel"] + ".json";
-        foreach (var k in settings.Keys.Where(k => k.StartsWith("Voice:") || k.StartsWith("VoiceConfig:")).ToList()) settings.Remove(k);
+        var settings = TestModels.Voice(voice);
         return MpaiJson.ToJson(Mpai.Aims.Tts.TtsFactory.Create(settings).ProcessAsync(BasicTextObject.FromText(text)).GetAwaiter().GetResult());
     }
 

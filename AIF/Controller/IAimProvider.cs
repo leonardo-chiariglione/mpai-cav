@@ -57,4 +57,16 @@ public interface IAimProvider
         ISharedStorage? privateStorage,
         IRuledStorage? moduleStorage) =>
         Create(aimName, settings, storage, privateStorage);
+
+    // With the Access the AIM declared in its Metadata as well (AccessSources), narrowed to it: an AIM that reads Access
+    // - the reference features a gallery is matched against, say - is given its reader here. A provider whose AIMs read
+    // Access overrides this; the default leaves it out.
+    IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage,
+        IRuledStorage? moduleStorage,
+        IAccessReader? access) =>
+        Create(aimName, settings, storage, privateStorage, moduleStorage);
 }

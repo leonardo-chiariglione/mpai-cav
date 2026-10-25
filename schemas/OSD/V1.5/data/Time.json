@@ -7,7 +7,7 @@
   "required":             [ "Header", "TimeID", "Data" ],
   "properties":           {
 
-    "Header":             { "type": "string", "const": "OSD-TIM-V1.5", "description": "Time Header â€“ Standard OSD-TIM-Vx.y." },
+    "Header":             { "type": "string", "const": "OSD-TIM-V1.5", "description": "Time Header – Standard OSD-TIM-Vx.y." },
     "MInstanceID":        { "type": "string", "description": "ID of the relevant Virtual Space." },
     "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment." },
     "TimeID":             { "type": "string", "description": "Identifier of this Time instance." },

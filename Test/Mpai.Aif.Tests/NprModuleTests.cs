@@ -75,7 +75,7 @@ public class NprModuleTests
     [InlineData(1, 183, 373)]
     public void ThePointedColumnIsRead(int column, double x, double y)
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
         Assert.Equal(AifError.OK, api.StartFlow(NPR));
         try { Judge(Read(api, x, y), Truth(column), $"column {column}"); }
@@ -85,7 +85,7 @@ public class NprModuleTests
     [SkippableFact]
     public void WithNoPointTheFirstColumnUnderTheHeadlineIsRead()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
         Assert.Equal(AifError.OK, api.StartFlow(NPR));
         try { Judge(Read(api, null, null), Truth(1), "no point"); }
@@ -98,7 +98,7 @@ public class NprModuleTests
     [SkippableFact]
     public async Task NprAppReadsTheClickedColumnThroughItsWorkflow()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
         using var done = new CancellationTokenSource(TimeSpan.FromMinutes(3));
         string? shown = null, staged = null;
@@ -161,7 +161,7 @@ public class NprModuleTests
     public void AnyPointInAColumnOfADensePageReadsThatColumn()
     {
         var page = Path.Combine(Folder, "db", "fr-le-petit-journal-1893-08-19.png");
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && File.Exists(page), "Models/OCR or the page is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && File.Exists(page), "Models/OCR or the page is absent.");
         using var api = Controller();
         Assert.Equal(AifError.OK, api.StartFlow(NPR));
         try
@@ -187,7 +187,7 @@ public class NprModuleTests
     [SkippableFact]
     public void TheColumnsLanguageIsOnItsText()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && Directory.Exists(Folder), "Models/OCR or the page in D:\\Images\\NPR is absent.");
         using var api = Controller();
         Assert.Equal(AifError.OK, api.StartFlow(NPR));
         try
@@ -210,7 +210,7 @@ public class NprModuleTests
     public void AGermanPageInBlackletterIsReadFromItsColumn()
     {
         var page = Path.Combine(Folder, "db", "de-correspondent-untersteiermark-1862-03-30.jpg");
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models", "OCR")) && File.Exists(page), "Models/OCR or the page is absent.");
+        Skip.IfNot(TestModels.Can("ocr-det") && File.Exists(page), "Models/OCR or the page is absent.");
         using var api = Controller();
         Assert.Equal(AifError.OK, api.StartFlow(NPR));
         try

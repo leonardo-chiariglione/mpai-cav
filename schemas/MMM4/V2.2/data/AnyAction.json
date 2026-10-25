@@ -24,7 +24,7 @@
     { "const": "MU-Send",         "description": "The Action of a Process in an M-Instance sending a Message to Processes in the Universe." },
     { "const": "Post",            "description": "The Action of a Process adding an Asset to its repository and making it perceptible." },
     { "const": "Property Manage", "description": "The Action of a Process modifying the perceptible characteristics of an Item:" },
-    { "const": "Register",        "description": "The Action of a human opening an Account based on the humanÃ¢â‚¬â„¢s Personal Data." },
+    { "const": "Register",        "description": "The Action of a human opening an Account based on the human’s Personal Data." },
     { "const": "Resolve",         "description": "The Action of a Process setting up a multi-M-Instance Session that involves two/more than two Processes in two/more than two M-Instances." },
     { "const": "Rights Manage",   "description": "The Action of a Process modifying the Rights of a Process or an Item." },
     { "const": "Transact",        "description": "The Action of a Process1 (\"sender\") granting Rights to a Receiver against a Transaction. Both could Transact a Service Provider1." },

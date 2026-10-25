@@ -7,7 +7,7 @@
   "required":               [ "Header", "TrajectoryID", "Trajectory" ],
   "properties":             {
 
-    "Header":               { "type": "string", "const": "OSD-TRJ-V1.5", "description": "Trajectory Header â€“ Standard OSD-TRJ-Vx.y." },
+    "Header":               { "type": "string", "const": "OSD-TRJ-V1.5", "description": "Trajectory Header – Standard OSD-TRJ-Vx.y." },
     "MInstanceID":          { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this Trajectory instance." },
     "UEnvironmentID":       { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this Trajectory instance." },
     "TrajectoryID":         { "type": "string", "description": "Identifier of Trajectory." },

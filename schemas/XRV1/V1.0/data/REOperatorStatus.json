@@ -3,7 +3,7 @@
   "title":                     "RE Operator Status V1.0",
   "type":                      "object",
   "additionalProperties":      false,
-  "required":                  ["Header", "REOperatorStatusID", "REOperatorStatus"],
+  "required":                  [ "Header", "REOperatorStatusID", "REOperatorStatus", "UEnvironmentID", "REOperatorStatusTime" ],
   "properties":                {
 
     "Header":                  { "type": "string", "const": "XRV-ROS-V1.0" },

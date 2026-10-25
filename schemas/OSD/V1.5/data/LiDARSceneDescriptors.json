@@ -7,7 +7,7 @@
   "properties":                         {
 
     "Header":                           { "type": "string", "const": "OSD-LSD-V1.5",
-                                          "description": "LiDAR Scene Descriptors Header â€“ Standard OSD-LSD-Vx.y" },
+                                          "description": "LiDAR Scene Descriptors Header – Standard OSD-LSD-Vx.y" },
     "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this LiDAR Scene is or is intended to be located." },
     "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this LiDAR Scene is or is intended to be located." },
     "LiDARSceneDescriptorsID":          { "type": "string", "description": "Unique identifier of this LiDAR Scene Descriptors instance." },

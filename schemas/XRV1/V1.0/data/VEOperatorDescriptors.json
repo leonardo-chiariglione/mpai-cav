@@ -4,7 +4,7 @@
   "description":                "Descriptors for Virtual Environment operator consoles and context.",
   "type":                       "object",
   "additionalProperties":       false,
-  "required":                   [ "Header", "VEOperatorDescriptorsID", "VEOperatorDescriptors" ],
+  "required":                   [ "Header", "VEOperatorDescriptorsID", "VEOperatorDescriptors", "UEnvironmentID", "VEOperatorDescriptorsTime" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "XRV-VOD-V1.0" },

@@ -3,7 +3,7 @@
   "title":                    "Action Table V1.0", 
   "type":                     "object", 
   "additionalProperties":     false,
-  "required":                 [ "Header", "ActionTableID" ],
+  "required":                 [ "Header", "ActionTableID", "UEnvironmentID", "ActionTableTime" ],
   "properties":               {
 
     "Header":                 { "type": "string", "const": "XRV-ATB-V1.0" },

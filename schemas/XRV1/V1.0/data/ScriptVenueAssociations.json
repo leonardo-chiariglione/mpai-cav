@@ -3,7 +3,7 @@
   "title":                    "Script-Venue Associations V1.0",
   "type":                     "object",
   "additionalProperties":     false,
-  "required":                 ["Header", "ScriptVenueAssociationsID", "ScriptVenueAssociationsTime"],
+  "required":                 [ "Header", "ScriptVenueAssociationsID", "ScriptVenueAssociationsTime", "UEnvironmentID" ],
   "properties":               {
 
     "Header":                 { "type": "string", "const": "XRV-SVA-V1.0" },
@@ -20,7 +20,7 @@
 
   "$defs":                    {
 
-    "Association":            { "type": "object", "additionalProperties": false, "properties": {
+    "Association":            { "type": "object", "additionalProperties": false, "required": [ "VenueElementID" ], "properties": {
       "Name":                 { "type": "string" },
       "MetaName":             { "type": "string" },
       "Nickname":             { "type": "string" },
@@ -29,7 +29,7 @@
       "DataSourceQualifier":  { "type": "string" },
       "DataSinkQualifier":    { "type": "string" } } },
 
-    "AvatarAssociation":      { "type": "object", "additionalProperties": false, "properties": {
+    "AvatarAssociation":      { "type": "object", "additionalProperties": false, "required": [ "VenueElementID" ], "properties": {
       "Nickname":             { "type": "string" },
       "AvatarID":             { "type": "string" },
       "SpatialAttitude":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
@@ -37,12 +37,12 @@
       "DataSourceQualifier":  { "type": "string" },
       "DataSinkQualifier":    { "type": "string" } } },
 
-    "StatusElement":          { "type": "object", "additionalProperties": false, "properties": {
+    "StatusElement":          { "type": "object", "additionalProperties": false, "required": [ "StatusElementID" ], "properties": {
       "StatusElementID":      { "type": "string" },
       "Parameters":           { "type": "array", "items": { "type": "string" } },
       "DataSourceQualifier":  { "type": "string" } } },
 
-    "ActionElement":          { "type": "object", "additionalProperties": false, "properties": {
+    "ActionElement":          { "type": "object", "additionalProperties": false, "required": [ "ActionID" ], "properties": {
       "ActionID":             { "type": "string" },
       "Parameters":           { "type": "array", "items": { "type": "string" } },
       "DataSinkQualifier":    { "type": "string" } } },
@@ -53,7 +53,7 @@
         "Characters":         { "type": "array", "items": { "$ref": "#/$defs/Association" } },
         "PerformerAvatars":   { "type": "array", "items": { "$ref": "#/$defs/AvatarAssociation" } },
         "TheatricalSetList":  { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
-          "TheatricalSet":    { "$ref": "#/$defs/Association" },
+          "TheatricalSet":    { "type": "array", "items": { "$ref": "#/$defs/Association" } },
           "Objects":          { "type": "array", "items": { "$ref": "#/$defs/Association" } } } } },
         "PerformanceStatusElements": { "type": "array", "items": { "$ref": "#/$defs/StatusElement" } } } },
 

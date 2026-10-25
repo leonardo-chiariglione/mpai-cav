@@ -3,6 +3,6 @@
   "title":   "Speech File Formats V1.5",
   "type":    "string", "oneOf": [
     { "const": "WAV",
-      "description": "Waveform Audio File Format (WAV): an uncompressed or losslessly compressed audio container commonly used for highÃ¢â‚¬â€˜quality speech recordings." },
+      "description": "Waveform Audio File Format (WAV): an uncompressed or losslessly compressed audio container commonly used for high‑quality speech recordings." },
     { "const": "MP4",
-      "description": "MPEGÃ¢â‚¬â€˜4 Part 14 (MP4): a multimedia container that can carry AAC/ALAC/Opus audio tracks, widely used for speech in mobile and web applications." } ] }
+      "description": "MPEG‑4 Part 14 (MP4): a multimedia container that can carry AAC/ALAC/Opus audio tracks, widely used for speech in mobile and web applications." } ] }

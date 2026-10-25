@@ -7,7 +7,7 @@
   "required":                           [ "Header", "UltrasoundObjectID", "UltrasoundObjectSpaceTime" ],
   "properties":                         {
 
-    "Header":                           { "type": "string", "const": "OSD-USO-V1.5", "description": "Ultrasound Object Header â€“ Standard OSD-USO-Vx.y." },
+    "Header":                           { "type": "string", "const": "OSD-USO-V1.5", "description": "Ultrasound Object Header – Standard OSD-USO-Vx.y." },
     "MInstanceID":                      { "type": "string", "description": "Identifier of M-Instance." },
     "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment." },
     "UltrasoundObjectID":               { "type": "string", "description": "Identifier of the Ultrasound Object." },

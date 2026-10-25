@@ -5,7 +5,7 @@
   "type":                       "object",
   "additionalProperties":       false,
   "unevaluatedProperties":      false,
-  "required":                   ["Header", "SeatOccupationID", "SeatOccupation"],
+  "required":                   [ "Header", "SeatOccupationID", "SeatOccupation", "UEnvironmentID", "SeatOccupationTime" ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "XRV-SOC-V1.0" },

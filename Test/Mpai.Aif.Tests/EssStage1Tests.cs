@@ -37,7 +37,7 @@ public class EssStage1Tests
     [SkippableFact]
     public void Step1DetectorOnTheDrive()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -141,7 +141,7 @@ public class EssStage1Tests
     [SkippableFact]
     public async Task Step4VisualSceneDescription()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -238,7 +238,7 @@ public class EssStage1Tests
     [SkippableFact]
     public async Task Step5EnvironmentDescription()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -322,7 +322,7 @@ public class EssStage1Tests
     [Trait("Duration", "Long")]
     public async Task Step6EndToEnd()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var drive = new SyntheticDrive(11, TimeSpan.FromSeconds(20));
         var (messages, truth) = drive.Make();
         var result = new Dictionary<string, string>();

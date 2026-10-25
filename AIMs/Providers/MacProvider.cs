@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 
@@ -43,11 +46,16 @@ public sealed class MacProvider : IAimProvider, IDisposable
         aimName is "1PAF-FIR-V1.6-I01" or "1MMC-SIR-V2.5-I01" or "1OSD-IDR-V1.5-I01" or "1MMC-PDX-V2.5-I01" or "1MMC-TTS-V2.5-I01" or "1PAF-GFD-V1.6-I01"
                 or "1PAF-GBD-V1.6-I01" or "1PAF-PMX-V1.6-I01";
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null, null);
+
+    // With the Access FIR and SIR declared: the reference population they are measured against.
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage,
+        ISharedStorage? privateStorage, IRuledStorage? moduleStorage, IAccessReader? access)
         => aimName switch
         {
-            "1PAF-FIR-V1.6-I01" => new FirAimProcessor(aimName, Scrfd(settings), ArcFace(settings), _gallery, AimPortReader.Load(_store, aimName), storage),
-            "1MMC-SIR-V2.5-I01" => new SirAimProcessor(aimName, Ecapa(settings), _gallery, AimPortReader.Load(_store, aimName), storage),
+            "1PAF-FIR-V1.6-I01" => new FirAimProcessor(aimName, Scrfd(settings), ArcFace(settings), _gallery, AimPortReader.Load(_store, aimName), storage, access),
+            "1MMC-SIR-V2.5-I01" => new SirAimProcessor(aimName, Ecapa(settings), _gallery, AimPortReader.Load(_store, aimName), storage, access),
             "1OSD-IDR-V1.5-I01" => new IdrAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-PDX-V2.5-I01" => new PsdAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "1MMC-TTS-V2.5-I01" => new TtsAimProcessor(aimName, TtsFactory.Create(settings), AimPortReader.Load(_store, aimName)),
@@ -58,11 +66,11 @@ public sealed class MacProvider : IAimProvider, IDisposable
         };
 
     private ArcFaceRecogniser ArcFace(IReadOnlyDictionary<string, string> s) =>
-        _arcFace ??= new ArcFaceRecogniser(Setting(s, "ArcFaceModel", MpaiPaths.Model("glintr100.onnx")));
+        _arcFace ??= new ArcFaceRecogniser(Mpai.Core.MpaiPaths.Given(s, "ArcFaceModel"));
     private SpeakerEmbedder Ecapa(IReadOnlyDictionary<string, string> s) =>
-        _ecapa ??= new SpeakerEmbedder(Setting(s, "EcapaModel", MpaiPaths.Model("ecapa-tdnn.onnx")));
+        _ecapa ??= new SpeakerEmbedder(Mpai.Core.MpaiPaths.Given(s, "EcapaModel"));
     private ScrfdFaceDetector Scrfd(IReadOnlyDictionary<string, string> s) =>
-        _scrfd ??= new ScrfdFaceDetector(Setting(s, "ScrfdModel", MpaiPaths.Model("scrfd_10g_bnkps.onnx")));
+        _scrfd ??= new ScrfdFaceDetector(Mpai.Core.MpaiPaths.Given(s, "ScrfdModel"));
 
     // A model's path, as the settings give it; a relative one is the repository's.
     private static string Setting(IReadOnlyDictionary<string, string> s, string key, string fallback) =>

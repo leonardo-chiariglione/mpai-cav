@@ -93,7 +93,7 @@ public static class Speech
     }
 }
 
-// What recognises the words of PCM: whisper-server (the repository's Models\Whisper), or whatever a test puts in its place.
+// What recognises the words of PCM: whisper-server (from Access: the L3 of ASR declares it), or whatever a test puts in its place.
 public delegate Task<string> Recognizer(byte[] pcm16k);
 
 public sealed class WhisperAsr : IDisposable
@@ -106,13 +106,14 @@ public sealed class WhisperAsr : IDisposable
 
     public WhisperAsr(string root, int port = 18179)
     {
-        program = Path.Combine(root, "Models", "Whisper", "bin", "whisper-server.exe");
-        model = Path.Combine(root, "Models", "Whisper", "models", "ggml-small.bin");
+        // the program and the model are those the L3 of Automatic Speech Recognition declares (asr-server, asr-model): Access gives their files
+        program = AIF.Controller.ModelFiles.TryOf(root, "asr-server", out var server) ? server : "";
+        model = AIF.Controller.ModelFiles.TryOf(root, "asr-model", out var ggml) ? ggml : "";
         this.port = port;
         http = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{port}/"), Timeout = TimeSpan.FromSeconds(120) };
     }
 
-    public bool Available => File.Exists(program) && File.Exists(model);
+    public bool Available => program.Length > 0 && model.Length > 0 && File.Exists(program) && File.Exists(model);
 
     public void Start()
     {

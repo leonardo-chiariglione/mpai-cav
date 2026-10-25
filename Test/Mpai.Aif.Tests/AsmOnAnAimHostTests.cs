@@ -50,7 +50,7 @@ public class AsmOnAnAimHostTests
     [SkippableFact]
     public void TheAudioSceneManagementAimsRunOnAnAimHost()
     {
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models")), "Models is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("ggml-small.bin"), "The models cannot be had: the L3s declare them, and Access holds them or cannot obtain them.");
         var amds = AmdsWithAsmPlaced();
         var work = Path.Combine(Path.GetTempPath(), "asm-host-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);

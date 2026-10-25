@@ -18,7 +18,7 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class SpatialAudioTests
 {
-    private static readonly string Steam = Path.Combine(Repository.Root, "Models", "SteamAudio");
+    private static readonly string Steam = AppContext.BaseDirectory;      // Steam Audio comes with the program: the build puts it beside it
 
     private static float[] Noise(int n, int seed) { var r = new Random(seed); return Enumerable.Range(0, n).Select(_ => (float)(0.3 * (r.NextDouble() * 2 - 1))).ToArray(); }
     private static float[] Tone(double hz, int n) => Enumerable.Range(0, n).Select(i => (float)(0.3 * Math.Sin(2 * Math.PI * hz * i / 48000.0))).ToArray();

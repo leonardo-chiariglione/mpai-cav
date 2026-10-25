@@ -28,7 +28,7 @@ namespace Mpai.Aif.Tests;
 public class AsmModuleTests
 {
     private const string Asm = AsmProvider.Module;
-    private static readonly string Steam = Path.Combine(Repository.Root, "Models", "SteamAudio");
+    private static readonly string Steam = AppContext.BaseDirectory;      // Steam Audio comes with the program: the build puts it beside it
 
     private static float[] Tone(double hz) => Enumerable.Range(0, 48000).Select(i => (float)(0.3 * Math.Sin(2 * Math.PI * hz * i / 48000.0))).ToArray();
     private static BasicAudioObject Captured(string name, double hz) => new()

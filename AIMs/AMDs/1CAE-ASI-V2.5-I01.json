@@ -14,6 +14,9 @@
 
   "Topology":             [],
 
+  "AccessSources":   [{"Name": "sound-classifier", "Uri": "https://huggingface.co/zeropointnine/yamnet-onnx/resolve/main/yamnet.onnx", "Sha256": "1510041DCE24A2E9E84EC546807AC408AE496DA6D1ED41BC3CCBA649623F8E19", "Mirrors": ["https://huggingface.co/andrelgomes/yamnet-onnx/resolve/main/yamnet.onnx"], "Setting": "YamnetModel", "AsFile": "yamnet.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://github.com/tensorflow/models/blob/master/LICENSE", "PersonalData": false}, "Description": "The sound classification model (YAMNet, 521 classes of AudioSet)."},
+                      {"Name": "sound-classes", "Uri": "https://raw.githubusercontent.com/tensorflow/models/master/research/audioset/yamnet/yamnet_class_map.csv", "Sha256": "CDF24D193E196D9E95912A2667051AE203E92A2BA09449218CCB40EF787C6DF2", "Setting": "YamnetClassMap", "AsFile": "yamnet_class_map.csv", "ValidWith": ["1510041DCE24A2E9E84EC546807AC408AE496DA6D1ED41BC3CCBA649623F8E19"], "Terms": {"Licence": "Apache-2.0", "Uri": "https://github.com/tensorflow/models/blob/master/LICENSE", "PersonalData": false}, "Description": "The names of the classes the sound classification model gives."}],
+
   "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE3/V1.0/ASI",
                             "MASPort":           443,
                             "BinaryName":        "Mpai.Cae.Asi",
