@@ -118,31 +118,24 @@ public class AppModulesTests
         Assert.Contains("red", AvatarUtterance.TextOfPortableAvatar(avatar!) ?? "", StringComparison.OrdinalIgnoreCase);
         Assert.True(AvatarUtterance.FromPortableAvatar(avatar!) is { } utterance && utterance.MachineSpeechWav.Length > 0, "the Portable Avatar carries no speech");
     }
-    // THE STANDALONE AMQ PROGRAMS (Apps/MMC/AMQ/Standalone), what they do with the Controller their window holds -
-    // the one an AmqProvider gives, and nothing else: the Module is given the picture, the typed question and the
-    // machine's ID; the answer is read from the Portable Avatar's Text Object; the sentence made of it is spoken
-    // through Response and Scene Rendering, given the avatar model and the machine's ID, and comes back as a
-    // Portable Avatar that carries speech.
+    // THE STANDALONE AMQ PROGRAM (Apps/MMC/AMQ/Standalone), what it does with the Controller its window holds - the one an
+    // AmqProvider gives, and nothing else: the Module is given the picture, the typed question and the machine's ID, and
+    // answers with a Portable Avatar that carries the answer as text and as speech, made by Text-To-Speech in the Module.
+    // The window renders it on the avatar it keeps: it makes no speech of its own.
     [SkippableFact]
-    public void TheStandaloneAmqProgramAnswersAndSpeaks()
+    public void TheStandaloneAmqProgramAnswersAndTheAnswerSpeaks()
     {
         RequireModels();
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         using var api = new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), _ => new AmqProvider(store));
-        const string rsr = "1PAF-RSR-V1.6-I01";
         try
         {
             var r = Turn(api, AMQ, Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId);
-            var answer = AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "";
-            Assert.Contains("red", answer, StringComparison.OrdinalIgnoreCase);
-
-            var sentence = $"It is {answer.Trim().TrimEnd('.')}.";
-            Assert.Equal(AifError.OK, api.StartFlow(rsr));
-            var said = api.Advance(rsr, new[] { Text(1, sentence), Text(2, sentence), Avatar, MachineId });
-            Assert.True(said.Ok, $"{rsr}: {said.Error}{Why(api, rsr)}");
-            Assert.True(Spoke(said), $"{rsr} gave no speech{Why(api, rsr)}");
+            var pav = r.ByType("PAF-PAV-V1.6");
+            Assert.Contains("red", AvatarUtterance.TextOfPortableAvatar(pav) ?? "", StringComparison.OrdinalIgnoreCase);
+            Assert.True(AvatarUtterance.FromPortableAvatar(pav) is { } utterance && utterance.MachineSpeechWav.Length > 0, "the Portable Avatar of AMQ carries no speech");
         }
-        finally { api.StopFlow(AMQ); api.StopFlow(rsr); }
+        finally { api.StopFlow(AMQ); }
     }
     // THE STANDALONE PROGRAMS (Apps/MMC/*/Standalone) speak their guidance through Response and Scene Rendering, given the
     // Controller their window holds - the one the provider of that App gives, and nothing else. For each App's provider: a

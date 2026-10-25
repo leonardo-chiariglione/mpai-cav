@@ -15,12 +15,17 @@
   -Packages  where the packages go (e.g. D:\MPAI\Packages). Required.
   -Ids       which AIMs, by Instance id; default: every leaf L3 in -Amds
   -Configuration  Release (default) or Debug
+  -Runtime   the platform to build for, for example win-x64 or linux-x64; by default the one the L3 names (its OperatingSystem and
+             Architecture). Only that platform's native libraries go into the package.
+  -ZipTo     a folder where each package is also zipped, as <ImplementationID>-<runtime>.zip: what is published for the Store.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Amds,
     [Parameter(Mandatory = $true)][string]$Packages,
     [string[]]$Ids,
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+    [string]$Runtime,
+    [string]$ZipTo
 )
 $ErrorActionPreference = 'Stop'
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
@@ -48,11 +53,27 @@ foreach ($id in $Ids) {
         Write-Host "  $id : no project builds $($impl.BinaryName)" -ForegroundColor Yellow; $skipped++; continue
     }
     $into = Join-Path $Packages $l3.Identifier.ImplementationID
-    Write-Host "  $id -> $into"
-    dotnet publish $projects[$impl.BinaryName] -c $Configuration -o $into --nologo -v q | Out-Null
+    # The platform: what the L3 names, unless told. A package carries the native libraries of that platform and no other.
+    $rid = $Runtime
+    if (-not $rid) {
+        $os   = switch -Wildcard ("$($impl.OperatingSystem)") { 'Windows' { 'win' } 'Linux' { 'linux' } 'MacOS' { 'osx' } default { '' } }
+        $arch = switch -Wildcard ("$($impl.Architecture)")    { 'x86-64' { 'x64' } 'ARM64' { 'arm64' } default { '' } }
+        $rid = if ($os -and $arch) { "$os-$arch" } else { '' }
+    }
+    Write-Host "  $id -> $into ($(if ($rid) { $rid } else { 'any platform' }))"
+    if (Test-Path $into) { Remove-Item $into -Recurse -Force }
+    $ridArgs = if ($rid) { @('-r', $rid, '--self-contained', 'false') } else { @() }
+    dotnet publish $projects[$impl.BinaryName] -c $Configuration -o $into @ridArgs -p:DebugType=none -p:DebugSymbols=false --nologo -v q | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Host "    FAILED to build $($impl.BinaryName)" -ForegroundColor Red; $skipped++; continue }
     if (-not (Test-Path (Join-Path $into "$($impl.BinaryName).dll"))) {
         Write-Host "    built, but $($impl.BinaryName).dll is not in the package" -ForegroundColor Red; $skipped++; continue
+    }
+    if ($ZipTo) {
+        New-Item -ItemType Directory -Force $ZipTo | Out-Null
+        $zip = Join-Path $ZipTo "$($l3.Identifier.ImplementationID)-$(if ($rid) { $rid } else { 'any' }).zip"
+        if (Test-Path $zip) { Remove-Item $zip }
+        Compress-Archive -Path (Join-Path $into '*') -DestinationPath $zip -CompressionLevel Optimal
+        Write-Host ("    {0}  {1:N1} MB" -f (Split-Path $zip -Leaf), ((Get-Item $zip).Length / 1MB))
     }
     $built++
 }

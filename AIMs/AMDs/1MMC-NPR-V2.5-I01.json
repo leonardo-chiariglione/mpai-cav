@@ -3,7 +3,7 @@
 
   "APIProfile":           "Basic",
   "OnDegraded":           "Continue",
-  "Description":          "Newspaper Reading: receives the image of a newspaper page and, when the person has pointed at the top of a column, the Point; returns the text of that column as a Portable Avatar, which reads it. Optical Character Recognition finds the lines of a band of the page about the Point; Column Text Selection takes the text of the column; Portable Avatar Multiplexing puts it in the Portable Avatar.",
+  "Description":          "Newspaper Reading: receives the image of a newspaper page and, when the person has pointed at the top of a column, the Point; returns the text of that column as a Portable Avatar, which reads it. Optical Character Recognition finds the lines of a band of the page about the Point; Column Text Selection takes the text of the column; Text-To-Speech makes the Speech Object of the text; Portable Avatar Multiplexing puts the text and the speech in the Portable Avatar, which the User Agent renders.",
 
   "InternalTypes":        [],
 
@@ -14,13 +14,16 @@
 
   "SubAIMs":              [{"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-OCR-V2.5-I01", "AIMName": "1MMC-OCR-V2.5-I01", "Relation": "Internal"}},
                            {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-CTS-V2.5-I01", "AIMName": "1MMC-CTS-V2.5-I01", "Relation": "Internal"}},
+                           {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I01", "AIMName": "1MMC-TTS-V2.5-I01", "Relation": "Internal"}},
                            {"Identifier": {"ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I01", "AIMName": "1PAF-PMX-V1.6-I01", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "1MMC-OCR-V2.5-I01", "DataType": "OSD-BVO-V1.5"}},
                            {"Output": {"AIMName": "1MMC-OCR-V2.5-I01", "DataType": "OSD-TXO-V1.5"}, "Input": {"AIMName": "1MMC-CTS-V2.5-I01", "DataType": "OSD-TXO-V1.5"}},
                            {"Output": {"AIMName": "", "DataType": "OSD-PNT-V1.5"}, "Input": {"AIMName": "1MMC-OCR-V2.5-I01", "DataType": "OSD-PNT-V1.5"}},
                            {"Output": {"AIMName": "", "DataType": "OSD-PNT-V1.5"}, "Input": {"AIMName": "1MMC-CTS-V2.5-I01", "DataType": "OSD-PNT-V1.5"}},
+                           {"Output": {"AIMName": "1MMC-CTS-V2.5-I01", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1MMC-TTS-V2.5-I01", "DataType": "OSD-BTO-V1.5"}},
                            {"Output": {"AIMName": "1MMC-CTS-V2.5-I01", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                           {"Output": {"AIMName": "1MMC-TTS-V2.5-I01", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "OSD-BSO-V1.5"}},
                            {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "string"}},
                            {"Output": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}}],
 

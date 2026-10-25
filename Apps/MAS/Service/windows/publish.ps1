@@ -21,7 +21,7 @@
 .EXAMPLE
   powershell -File Apps\MAS\Service\windows\publish.ps1
 #>
-param([string]$Config = 'Apps\MAS\Service\mas-server-EI.json',
+param([string]$Config = 'Apps\MAS\Service\mas-server-AI.json',
       [string]$ServiceUrl = 'https://localhost:5105/',
       [string]$Urls = 'https://localhost:5010')
 

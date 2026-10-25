@@ -236,17 +236,22 @@ public partial class MainWindow : Window
         await Task.Run(() => _north!.StopFlow(AmqModule));
         if (!r.Ok) { Diag("AMQ err=" + r.Error); SetStatus("no answer: " + r.Error); return; }
 
-        // The Module answers with a Portable Avatar that carries the answer as a Text Object.
-        var answer   = AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6"));
+        // The Module answers with a Portable Avatar that carries the answer as a Text Object and as a Speech Object (made by
+        // Text-To-Speech in the Module): this window shows the words and renders the Portable Avatar on the avatar it keeps.
+        var pav      = r.ByType("PAF-PAV-V1.6");
+        var answer   = AvatarUtterance.TextOfPortableAvatar(pav);
         Diag("answer='" + (answer ?? "") + "'");
 
-        var spoken = Phrase(_lastQuestion, answer);
-        AnswerText.Text = spoken;
+        AnswerText.Text = answer ?? "";
         SetStatus("done.");
 
-        // speak the composed sentence through the avatar with a face (via PAF-RSR).
-        if (!string.IsNullOrWhiteSpace(spoken))
-            await RenderPromptAsync(spoken);
+        if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance && _avatar is not null)
+        {
+            Diag("PAV speech wavBytes=" + utterance.MachineSpeechWav.Length);
+            await _avatar.PresentAsync(utterance);
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
+        }
+        else Diag("the Portable Avatar carries no speech");
     }
 
     private static string? TextOf(string? json)
