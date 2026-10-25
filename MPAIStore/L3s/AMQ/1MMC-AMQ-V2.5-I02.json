@@ -30,7 +30,7 @@
                           {"Output": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
                           {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "string"}}],
 
-  "Implementations":      [{ "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/MPAIStore/L3s/AMQ/1MMC-AMQ-V2.5-I02.json",
+  "Implementations":      [{ "ImplementationURI": "https://github.com/leonardo-chiariglione/packages",
                              "BinaryName": "Mpai.Mmc.Amq",
                              "Architecture": "x86-64",
                              "OperatingSystem": "Windows",

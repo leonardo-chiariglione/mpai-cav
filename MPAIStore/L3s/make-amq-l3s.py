@@ -51,7 +51,7 @@ t = t.replace('MMC-AMQ-V2.5-I01', 'MMC-AMQ-V2.5-I02')
 for leaf in LEAVES:
     t = t.replace(f'{leaf}-I01', f'{leaf}-I03')
 # the Composite AIM has no package: its ImplementationURI is where its L3 is
-t = uri.sub(lambda m: m.group(1) + '"https://github.com/leonardo-chiariglione/mpai-cav/blob/main/MPAIStore/L3s/AMQ/1MMC-AMQ-V2.5-I02.json"', t)
+t = uri.sub(lambda m: m.group(1) + '"https://github.com/leonardo-chiariglione/packages"', t)
 write('1MMC-AMQ-V2.5-I02.json', bom, t)
 print('1MMC-AMQ-V2.5-I02  (composite)')
 
