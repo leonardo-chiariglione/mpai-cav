@@ -12,7 +12,7 @@ no model: it obtains them, so the first start needs an Internet connection and d
 
 ## Where the workflows are
 A Module is run by a User Agent, and the User Agent follows the **workflow** of the App: a Workflow Description (`.orch`) that says what is acquired, what is offered to the Module, what is
-asked of it and what is presented. The workflow is not part of the Controller and not of the L3 of the Module. It is in the App's folder, `Apps\<App>`, beside its `app.json` (which names the Module).
+asked of it and what is presented. In this software the workflow is not part of the Controller, and the AIM Metadata has no field for it, so it is not in an L3. It is in the App's folder, `Apps\<App>`, beside its `app.json` (which names the Module).
 The Service lists the Apps of its configuration and hands the workflow of the one a client chooses to that client, which interprets it. The Apps of MPAI for the Store are in `MPAIStore\Apps`.
 A Module without an App folder can be run by a User Agent that has its own workflow, but the Service offers nothing for it.
 
