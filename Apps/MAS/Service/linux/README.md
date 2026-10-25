@@ -28,7 +28,6 @@ Everything under one folder, `/opt/mpai` here (any other works: give it to
 | `client/` | the browser client's host, with the client (WebAssembly) | 64 MB |
 | `Apps/`, `AMDs/`, `schemas/` | the six Apps, the L3s of the AIMs, the schemas | 2 MB |
 | `UserAgent/` | the avatar and the client's workflow | 6 MB |
-| `Models/` | the model files the Apps use - only those | 6.8 GB |
 | `bin/` | Piper 1.2.0 (TTS), `whisper-cli` of whisper.cpp 1.9.3 (ASR) | 55 MB |
 | `ollama/`, `ollama-models/` | Ollama 0.34.4, and llama3.2:3b (EDP, in MAD and MPD) | 4 GB |
 | `tls/` | the certificate of the client's host | - |
@@ -110,8 +109,7 @@ tar xzf mpai-linux-ubuntu2404-cuda12-*.tar.gz --no-same-owner    # the archive c
 chmod +x setup.sh build-whisper.sh run.sh service/MasService client/RcaWeb.Host
 ```
 
-and copy the repository's `Models` folder (6.8 GB, the files `aim-settings.json` names) to
-`/opt/mpai/Models`. Then continue with step 2 (the files are already in place).
+Then continue with step 2. The package holds no model: the Controller obtains what the L3 of each AIM declares, the first time a Module needs it, and keeps it in `AIF/Access`.
 
 ## In a container without systemd (a RunPod pod), and a driver older than 580
 
@@ -159,7 +157,7 @@ Keep the install on the volume (`/workspace/mpai`, linked as `/opt/mpai`) so tha
 
 ## 1. On the build machine: the package
 
-With the repository, its `Models` folder and the .NET 10 SDK (Git Bash on Windows, or
+With the repository and the .NET 10 SDK (Git Bash on Windows, or
 Linux), from the repository root:
 
 ```
@@ -167,8 +165,7 @@ MAS/Service/linux/package.sh ~/mpai-package /opt/mpai
 ```
 
 It publishes the Service and the client's host for linux-x64, and copies the Apps,
-the L3s, the schemas, the avatar and - from `Models` - the files `aim-settings.json`
-names, into `~/mpai-package`, laid out for `/opt/mpai`.
+the L3s, the schemas and the avatar into `~/mpai-package`, laid out for `/opt/mpai`.
 
 **To send it** where the server is not reached directly - as a release, say - cut it
 into parts of at most 1,900 MB (a GitHub release takes files up to 2 GB), in Linux or

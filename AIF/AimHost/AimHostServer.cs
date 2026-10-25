@@ -138,9 +138,9 @@ public sealed class AimHostServer
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
                 ImplementationEvidence.Record(RootOfTrust, aim, ImplementationEvidence.Of(provider.ImplementationOf(aim), settings.For(aim)));
                 // The Access this AIM declares, narrowed to it by what its L3 says (AccessSources).
-                hosted.Host.BindAccess(aim, AIF.Controller.AccessEntry.ReadFrom(store.GetAMD(identifier).RootElement));
+                hosted.Host.BindAccess(aim, AIF.Controller.AccessEntry.ReadForThisMachine(store.GetAMD(identifier).RootElement));
                 // what the AIM declares in Access is given to its Implementation as the Controller gives it to an AIM it runs itself
-                var givenSettings = AIF.Controller.AccessEntry.Overlay(settings.For(aim), AIF.Controller.AccessEntry.ReadFrom(store.GetAMD(identifier).RootElement), hosted.Host.AccessFor(aim), aim);
+                var givenSettings = AIF.Controller.AccessEntry.Overlay(settings.For(aim), AIF.Controller.AccessEntry.ReadForThisMachine(store.GetAMD(identifier).RootElement), hosted.Host.AccessFor(aim), aim);
                 var processor = provider.Create(aim, givenSettings,
                     new FileSharedStorage(scope, $"{module}/{aim}", "remote"),
                     new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"),

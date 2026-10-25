@@ -67,7 +67,7 @@ public class AccessModelsTests : IDisposable
     public void TheProgramsAreObtainedUnpackedAndAreTheOnesPinned(string l3, string setting)
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, l3)));
-        var entries = AccessEntry.ReadFrom(doc.RootElement).Where(e => e.Unpack).ToList();
+        var entries = AccessEntry.ReadForThisMachine(doc.RootElement).Where(e => e.Unpack).ToList();
         var store = new AccessStore(Path.Combine(work, "access"));
         var fetcher = new AccessFetcher(store);
         foreach (var e in entries) Assert.Equal(AccessOutcome.OK, fetcher.Ensure(e, "aim", out var why));
@@ -84,7 +84,7 @@ public class AccessModelsTests : IDisposable
     public void EachPiperVoiceOfAccessSpeaksWithThePiperOfAccess()
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-TTS-V2.5-I01.json")));
-        var entries = AccessEntry.ReadFrom(doc.RootElement).Where(e => e.Name.StartsWith("voice-") || e.Name == "tts-program").ToList();
+        var entries = AccessEntry.ReadForThisMachine(doc.RootElement).Where(e => e.Name.StartsWith("voice-") || e.Name == "tts-program").ToList();
         var store = new AccessStore(Path.Combine(work, "access"));
         var fetcher = new AccessFetcher(store);
         foreach (var e in entries) Assert.Equal(AccessOutcome.OK, fetcher.Ensure(e, "tts", out var why));
@@ -117,7 +117,7 @@ public class AccessModelsTests : IDisposable
         var clip = Path.Combine(Mpai.Core.MpaiPaths.Clips, "1272", "clip.wav");
         Skip.IfNot(File.Exists(clip), "The LibriSpeech clip is absent.");
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1CAE-SMC-V2.5-I01.json")));
-        var entries = AccessEntry.ReadFrom(doc.RootElement).Where(e => e.Name.StartsWith("openvoice-")).ToList();
+        var entries = AccessEntry.ReadForThisMachine(doc.RootElement).Where(e => e.Name.StartsWith("openvoice-")).ToList();
         Assert.Equal(3, entries.Count);
         var store = new AccessStore(Path.Combine(work, "access"));
         var fetcher = new AccessFetcher(store);

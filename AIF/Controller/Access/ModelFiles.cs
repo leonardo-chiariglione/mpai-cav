@@ -32,7 +32,7 @@ public static class ModelFiles
                     try
                     {
                         using var doc = JsonDocument.Parse(File.ReadAllText(file));
-                        foreach (var e in AccessEntry.ReadFrom(doc.RootElement).Where(e => !e.IsPlaceholder))
+                        foreach (var e in AccessEntry.ReadForThisMachine(doc.RootElement).Where(e => !e.IsPlaceholder))
                             found.Add(new Declared(Path.GetFileNameWithoutExtension(file), e));
                     }
                     catch (JsonException) { }

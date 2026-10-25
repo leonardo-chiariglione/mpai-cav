@@ -132,27 +132,7 @@ public sealed class PackageAimProvider : IAimProvider
         return null;
     }
 
-    private static bool ForThisMachine(string architecture, string operatingSystem)
-    {
-        static string Arch(string a) => a.ToLowerInvariant().Replace("-", "").Replace("_", "") switch
-        {
-            "x8664" or "x64" or "amd64" => "x64",
-            "arm64" or "aarch64"        => "arm64",
-            "x86" or "i386"             => "x86",
-            _                            => a.ToLowerInvariant()
-        };
-        var here = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        var ok = architecture.Length == 0 || Arch(architecture) == Arch(here);
-        if (operatingSystem.Length > 0)
-        {
-            var os = operatingSystem.ToLowerInvariant();
-            ok &= os.Contains("window") ? RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                : os.Contains("linux")  ? RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                : os.Contains("mac") || os.Contains("osx") ? RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                : true;
-        }
-        return ok;
-    }
+    private static bool ForThisMachine(string architecture, string operatingSystem) => ExecutionEnvironment.IsHere(architecture, operatingSystem);
 
     // THE PACKAGE, IN THE SCI'S CACHE. A file: URI is copied from where the
     // Implementer put it; an http(s) URI is downloaded, and a .zip unpacked.

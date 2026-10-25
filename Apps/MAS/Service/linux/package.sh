@@ -1,6 +1,6 @@
 #!/bin/bash
 # PACKAGE MPAI-MAS FOR A LINUX SERVER. Run from the repository root, on the build
-# machine (Git Bash on Windows, or Linux), with the .NET 10 SDK and the Models folder:
+# machine (Git Bash on Windows, or Linux), with the .NET 10 SDK:
 #
 #   Apps/MAS/Service/linux/package.sh <folder> [install-root]
 #   MPAI_GPU=1 Apps/MAS/Service/linux/package.sh <folder> [install-root]
@@ -15,8 +15,8 @@
 # <folder> receives everything the server needs, laid out as it will be installed
 # under install-root (default /opt/mpai): the MAS Service and the browser client's
 # host, published for linux-x64; the six Apps, their L3s and the schemas; the avatar
-# and the client's workflow; the model files the Apps use - and nothing else from
-# Models; the configuration, the settings, the systemd units, setup.sh and README.md.
+# and the client's workflow; and
+# the configuration, the settings, the systemd units, setup.sh and README.md.
 # Copy <folder> to install-root on the server, then run setup.sh there.
 set -e
 out="${1:?the folder to package into}"
@@ -49,18 +49,8 @@ mkdir -p "$out/warmup"
 cp Test/Data/question.wav "$out/warmup/question.wav"
 cp Test/Data/red.jpg "$out/warmup/picture.jpg"
 
-# MPAI_NO_MODELS=1: a package of the software without the model files (6.8 GB) - to be
-# published; the Models folder is then copied to <install-root>/Models separately.
-if [ "${MPAI_NO_MODELS:-0}" = 1 ]; then
-    echo "== the models are left out (MPAI_NO_MODELS=1): copy the repository's Models folder to $root/Models"
-else
-    echo "== the models the Apps use"
-    grep -o '"/opt/mpai/Models/[^"]*"' "$here/aim-settings.json" | tr -d '"' | sed 's#^/opt/mpai/##' | sort -u | while read -r model; do
-        mkdir -p "$out/$(dirname "$model")"
-        [ -f "$out/$model" ] && [ "$(stat -c %s "$out/$model")" = "$(stat -c %s "$model")" ] || cp "$model" "$out/$model"
-    done
-    du -sh "$out/Models"
-fi
+# The package holds no model: the Controller obtains what each AIM declares in the AccessSources of its L3 (address, SHA-256, terms) and keeps it in
+# AIF/Access, on the server, when the Module first needs it.
 
 if [ -n "${MPAI_WHISPER_DIR:-}" ]; then
     echo "== whisper.cpp, built beforehand for CUDA (build-whisper.sh)"

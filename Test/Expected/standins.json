@@ -1,7 +1,7 @@
 {
   "1MAS-APP-V1.0-I01 given OSD-BTO-V1.5#1, OSD-B3O-V1.5#1": "same: OK: PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(avatar+MMC-TTS.OutputSpeech(hello)+PAF-GBD.MachineBodyDescriptors(MMC-TTS.OutputSpeech(hello)+hello)+PAF-GFD.MachineFaceDescriptors(MMC-TTS.OutputSpeech(hello)+hello))",
   "1MMC-AMQ-V2.5-I01 given OSD-BSO-V1.5#2": "same: OK: ",
-  "1MMC-AMQ-V2.5-I01 given OSD-BVO-V1.5#1, OSD-BSO-V1.5#1": "same: OK: OSD-BVO-V1.5#1 MMC-TIQ.OutputImage(MMC-ASR.UserTextQuestion(question)+picture); PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(MMC-TIQ.OutputText(MMC-ASR.UserTextQuestion(question)+picture))",
-  "1MMC-AMQ-V2.5-I01 given OSD-BVO-V1.5#1, OSD-BTO-V1.5#1": "same: OK: OSD-BVO-V1.5#1 MMC-TIQ.OutputImage(welcome+picture); PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(MMC-TIQ.OutputText(welcome+picture))",
+  "1MMC-AMQ-V2.5-I01 given OSD-BVO-V1.5#1, OSD-BSO-V1.5#1": "same: OK: OSD-BVO-V1.5#1 MMC-TIQ.OutputImage(MMC-ASR.UserTextQuestion(question)+picture); PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(MMC-TTS.OutputSpeech(MMC-TIQ.OutputText(MMC-ASR.UserTextQuestion(question)+picture))+MMC-TIQ.OutputText(MMC-ASR.UserTextQuestion(question)+picture))",
+  "1MMC-AMQ-V2.5-I01 given OSD-BVO-V1.5#1, OSD-BTO-V1.5#1": "same: OK: OSD-BVO-V1.5#1 MMC-TIQ.OutputImage(welcome+picture); PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(MMC-TTS.OutputSpeech(MMC-TIQ.OutputText(welcome+picture))+MMC-TIQ.OutputText(welcome+picture))",
   "1PAF-RSR-V1.6-I01 given OSD-BTO-V1.5#1, OSD-BTO-V1.5#2, OSD-B3O-V1.5#1": "same: OK: PAF-PAV-V1.6#1 PAF-PMX.PortableAvatar(avatar+MMC-TTS.OutputSpeech(words)+PAF-GBD.MachineBodyDescriptors(MMC-TTS.OutputSpeech(words)+words)+PAF-GFD.MachineFaceDescriptors(MMC-TTS.OutputSpeech(words)+words))"
 }

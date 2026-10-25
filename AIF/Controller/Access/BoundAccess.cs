@@ -19,7 +19,7 @@ public sealed record AccessTerms(string Licence, string Uri, bool PersonalData);
 // classify the data: what is inside is the AIM's own business.
 public sealed record AccessEntry(
     string Name, string Uri, string Sha256, IReadOnlyList<string> KeyPrefixes, bool IsOptional, string Description = "",
-    IReadOnlyList<string>? Mirrors = null, IReadOnlyList<string>? ValidWith = null, AccessTerms? Terms = null, string Setting = "", string AsFile = "", string Member = "", bool Unpack = false, string Inside = "")
+    IReadOnlyList<string>? Mirrors = null, IReadOnlyList<string>? ValidWith = null, AccessTerms? Terms = null, string Setting = "", string AsFile = "", string Member = "", bool Unpack = false, string Inside = "", string OperatingSystem = "", string Architecture = "")
 {
     public const string ManifestKey = "manifest.json";
 
@@ -31,6 +31,9 @@ public sealed record AccessEntry(
 
     // Not yet bound to data: a template value, /* ... */.
     public bool IsPlaceholder => Uri.TrimStart().StartsWith("/*", StringComparison.Ordinal);
+
+    // For the machine that executes: it names no environment, or names this one (OperatingSystem, Architecture: as in Implementations).
+    public bool AppliesHere => ExecutionEnvironment.IsHere(Architecture, OperatingSystem);
 
     // Where the data is looked for, in order: its Uri, then its Mirrors.
     public IReadOnlyList<string> Locations => [Uri, .. Mirrors ?? []];
@@ -52,10 +55,16 @@ public sealed record AccessEntry(
                 terms = new AccessTerms(Text(t, "Licence"), Text(t, "Uri"), t.TryGetProperty("PersonalData", out var p) && p.ValueKind == JsonValueKind.True);
             entries.Add(new AccessEntry(Text(e, "Name"), Text(e, "Uri"), Text(e, "Sha256"), Texts("KeyPrefixes"), optional,
                 Text(e, "Description"), Texts("Mirrors"), Texts("ValidWith"), terms, Text(e, "Setting"), Text(e, "AsFile"), Text(e, "Member"),
-                e.TryGetProperty("Unpack", out var u) && u.ValueKind == JsonValueKind.True, Text(e, "Inside")));
+                e.TryGetProperty("Unpack", out var u) && u.ValueKind == JsonValueKind.True, Text(e, "Inside"), Text(e, "OperatingSystem"), Text(e, "Architecture")));
         }
         return entries;
     }
+
+    // The entries that apply where the AIM executes: what is obtained and given to it. An entry for another environment is neither.
+    public static List<AccessEntry> ReadForThisMachine(JsonElement aim) => ReadFrom(aim).Where(e => e.AppliesHere).ToList();
+
+    // Whether two entries could apply together: both for all, or for the same environment.
+    private static bool Together(AccessEntry a, AccessEntry b) => ExecutionEnvironment.Overlap(a.Architecture, a.OperatingSystem, b.Architecture, b.OperatingSystem);
 
     // WHETHER THE ENTRIES OF ONE AIM ARE CONSISTENT: a name used once; one SHA-256 for one Uri; Mirrors of the same kind as the
     // Uri (a set's end in a slash); and every SHA-256 in ValidWith that of another entry. Empty when they are.
@@ -66,12 +75,13 @@ public sealed record AccessEntry(
         {
             if (e.Name.Length == 0) return "an Access entry has no Name";
             if (e.Terms is null || e.Terms.Licence.Length == 0 || e.Terms.Uri.Length == 0) return $"'{e.Name}' states no Terms: the licence of the data and the URI where the terms are stated";
-            if (bound.Count(x => x.Name == e.Name) > 1) return $"the Name '{e.Name}' is used by more than one entry";
+            if (bound.Count(x => x.Name == e.Name && Together(x, e)) > 1) return $"the Name '{e.Name}' is used by more than one entry for the same environment";
+            if (e.Setting.Length > 0 && bound.Count(x => x.Setting == e.Setting && Together(x, e)) > 1) return $"the Setting '{e.Setting}' is given by more than one entry for the same environment";
             if (bound.Any(x => x.Uri == e.Uri && x.Member == e.Member && !Same(x.Sha256, e.Sha256))) return $"'{e.Name}': the Uri {e.Uri} is given two different SHA-256";
             if (e.Member.Length > 0 && e.IsSet) return $"'{e.Name}': a set of files cannot be a member of an archive";
             if (e.Unpack && (e.IsSet || e.Member.Length > 0)) return $"'{e.Name}': an archive to unpack is a file, not a set nor a member of an archive";
             if (e.Inside.Length > 0 && (!e.Unpack || e.Inside.Split('/', '\\').Contains(".."))) return $"'{e.Name}': Inside is a path inside an unpacked archive";
-            if (e.AsFile.Length > 0 && bound.Count(x => x.AsFile == e.AsFile) > 1) return $"the file name '{e.AsFile}' is given to more than one entry";
+            if (e.AsFile.Length > 0 && bound.Count(x => x.AsFile == e.AsFile && Together(x, e)) > 1) return $"the file name '{e.AsFile}' is given to more than one entry";
             if (e.Mirrors?.FirstOrDefault(m => m.EndsWith('/') != e.IsSet) is { } odd) return $"'{e.Name}': the mirror {odd} is not of the kind of its Uri";
             foreach (var h in e.ValidWith ?? [])
                 if (!bound.Any(x => x != e && Same(x.Sha256, h))) return $"'{e.Name}' is valid only with data {h}, which this AIM does not declare";
@@ -142,7 +152,7 @@ public sealed record AccessEntry(
         var source = new FileInfo(kept);
         if (File.Exists(view) && new FileInfo(view) is var have && have.Length == source.Length && have.LastWriteTimeUtc == source.LastWriteTimeUtc) return view;
         File.Delete(view);
-        if (!OperatingSystem.IsWindows() || !CreateHardLink(view, kept, IntPtr.Zero))
+        if (!System.OperatingSystem.IsWindows() || !CreateHardLink(view, kept, IntPtr.Zero))
         {
             File.Copy(kept, view, true);
             File.SetLastWriteTimeUtc(view, source.LastWriteTimeUtc);

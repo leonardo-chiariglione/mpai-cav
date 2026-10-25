@@ -198,7 +198,7 @@ public sealed class Controller
         node.Execution      = TextOf(root, "Execution") ?? node.Execution;
         node.StorageControl = TextOf(root, "StorageControl");
         node.Record         = TextOf(root, "Record");
-        node.AccessSources.AddRange(AccessEntry.ReadFrom(root));
+        node.AccessSources.AddRange(AccessEntry.ReadForThisMachine(root));
         node.RestartLimit = IntOf(root, "RestartLimit") ?? 0;
         node.Period       = NumberOf(root, "Period");
         node.Deadline     = NumberOf(root, "Deadline");

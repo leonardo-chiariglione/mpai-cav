@@ -80,14 +80,15 @@ public class AppModulesTests
     // THE APP, NOT ONLY THE MODULE: the workflow of the App (Apps/MMC/AMQ/MMC-AMQ.orch) run by the User Agent's
     // interpreter, with simulated devices instead of a person - a picture chosen (red.jpg), a question typed
     // (the microphone never hears anything), a stage and an avatar that record what they are given. The
-    // answer reaches the avatar as the machine's Portable Avatar carrying the answer as a Text Object.
+    // answer reaches the avatar as the machine's Portable Avatar carrying the answer as a Text Object and as a
+    // Speech Object, made by Text-To-Speech in the Module; the User Agent presents it and does not make speech.
     [SkippableFact]
     public async Task AmqAppAnswersThroughItsWorkflow()
     {
         RequireModels();
         using var api = Controller();
         using var done = new CancellationTokenSource(TimeSpan.FromMinutes(3));
-        string? staged = null; var prompts = new List<string>(); var yesNo = 0;
+        string? staged = null, avatar = null; var prompts = new List<string>(); var yesNo = 0;
 
         var devices = new Mpai.Ua.DeviceRegistry()
             .RegisterAcquire("OSD-BVO-V1.5", (_, _) => Task.FromResult<string?>(Picture("red.jpg").Json))
@@ -97,6 +98,7 @@ public class AppModulesTests
             .RegisterPresent("screen", data =>
             {
                 if (data.TryGetValue("Prompt", out var said1)) lock (prompts) prompts.Add(said1);
+                if (data.TryGetValue("PAF-PAV-V1.6", out var pav)) avatar = pav;
                 return Task.CompletedTask;
             });
         var said = new List<string>();
@@ -105,15 +107,16 @@ public class AppModulesTests
         try { await interpreter.RunAsync(workflow, done.Token); } catch (OperationCanceledException) { }
 
         Assert.True(staged is not null, "the picture was never put on the stage: " + string.Join(" / ", said));
-        // She asks whether the person wants to ask about a picture and, told yes, asks to select one; she says what the answer is, asks about
-        // another picture and, told no, says maybe another time, and the App ends.
-        Assert.True(prompts.Count >= 5, "what she said: " + string.Join(" / ", prompts) + " :: " + string.Join(" / ", said));
+        // She asks whether the person wants to ask about a picture and, told yes, asks to select one; the machine's Portable Avatar, with the
+        // answer as text and as speech, is presented; she asks about another picture and, told no, says maybe another time, and the App ends.
+        Assert.True(prompts.Count >= 4, "what she said: " + string.Join(" / ", prompts) + " :: " + string.Join(" / ", said));
         Assert.Equal("Do you want to ask a question about a picture?", prompts[0]);
         Assert.Equal("Please select a picture.", prompts[1]);
-        Assert.StartsWith("The answer is ", prompts[2]);
-        Assert.Contains("red", prompts[2], StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("Do you want to ask a question about another picture?", prompts[3]);
-        Assert.Equal("Maybe another time.", prompts[4]);
+        Assert.Equal("Do you want to ask a question about another picture?", prompts[2]);
+        Assert.Equal("Maybe another time.", prompts[3]);
+        Assert.True(avatar is not null, "the Portable Avatar was never presented: " + string.Join(" / ", said));
+        Assert.Contains("red", AvatarUtterance.TextOfPortableAvatar(avatar!) ?? "", StringComparison.OrdinalIgnoreCase);
+        Assert.True(AvatarUtterance.FromPortableAvatar(avatar!) is { } utterance && utterance.MachineSpeechWav.Length > 0, "the Portable Avatar carries no speech");
     }
     // THE STANDALONE AMQ PROGRAMS (Apps/MMC/AMQ/Standalone), what they do with the Controller their window holds -
     // the one an AmqProvider gives, and nothing else: the Module is given the picture, the typed question and the

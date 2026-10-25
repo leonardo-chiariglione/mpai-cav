@@ -9,7 +9,8 @@
 #  The Module is Answer to Multimodal Question (MMC-AMQ): it takes a picture,
 #  a question about it - spoken, or typed - and the ID of the machine that
 #  answers, and gives the answer as that machine's Portable Avatar, which carries
-#  the answer as a Text Object. The client shows the words and has them spoken.
+#  the answer as a Text Object and as a Speech Object, made by Text-To-Speech in
+#  the Module. The User Agent renders it with the avatar it keeps.
 #
 #  There is no welcome here: this App runs under the MAS launcher, which welcomes
 #  the person and offers the Apps (MPAI-MAS.orch). The person chooses a picture,
@@ -54,10 +55,10 @@ on Start:
             }
             offer MachineID (string:1) = "Thalia"
 
-            # --- and gives the answer, as the machine's Portable Avatar; she says what it is ---
+            # --- and gives the answer, as the machine's Portable Avatar, with its speech; the User Agent renders it ---
 
             ask   MachinePortableAvatar (PAF-PAV-V1.6)
-            prompt "The answer is {MachinePortableAvatar}."
+            present MachinePortableAvatar
 
             # --- another picture? yes: she asks to select it; else she says so and the App ends ---
 
