@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The AIF for Android</title><style>
+:root { --bg:#ffffff; --fg:#10243e; --muted:#566b7f; --card:#eaf0f5; --accent:#0e8c98; --accent-fg:#ffffff; --line:#c9d6e2; --warn:#e8962e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0d1b2a; --fg:#e8eef5; --muted:#9fb3c8; --card:#16293e; --accent:#2bb3c0; --accent-fg:#0d1b2a; --line:#2a4258; --warn:#f0a94a; } }
+:root[data-theme="dark"] { --bg:#0d1b2a; --fg:#e8eef5; --muted:#9fb3c8; --card:#16293e; --accent:#2bb3c0; --accent-fg:#0d1b2a; --line:#2a4258; --warn:#f0a94a; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 Calibri, "Segoe UI", system-ui, sans-serif; }
+main { max-width: 52rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+h1 { font: 700 2rem/1.2 Cambria, Georgia, serif; margin: .2em 0 .3em; text-wrap: balance; }
+h2 { font: 700 1.3rem/1.3 Cambria, Georgia, serif; margin: 2rem 0 .5rem; }
+p, li { max-width: 42rem; }
+a { color: var(--accent); }
+.crumbs { font-size: .9rem; color: var(--muted); }
+.lead { font-size: 1.15rem; color: var(--muted); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card { background: var(--card); border:1px solid var(--line); border-radius: .6rem; padding: 1rem 1.1rem; }
+.card h3 { margin:.1rem 0 .3rem; font: 700 1.15rem Cambria, Georgia, serif; }
+.tag { display:inline-block; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; padding:.1rem .5rem; border-radius:1rem; border:1px solid var(--line); color: var(--muted); }
+.tag.available { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+table { border-collapse: collapse; width: 100%; margin: .5rem 0 1rem; }
+th, td { text-align:left; padding:.45rem .7rem; border-bottom:1px solid var(--line); vertical-align: top; }
+th { width: 11rem; color: var(--muted); font-weight: 600; }
+.button { display:inline-block; background: var(--accent); color: var(--accent-fg); text-decoration:none; font-weight:700; padding:.7rem 1.2rem; border-radius:.5rem; }
+code, pre { font: .92rem Consolas, "Cascadia Mono", monospace; }
+pre { background: var(--card); border:1px solid var(--line); border-radius:.5rem; padding:.7rem .9rem; overflow-x:auto; }
+.hash { word-break: break-all; }
+.note { border-left: 4px solid var(--warn); padding:.2rem 0 .2rem .9rem; color: var(--muted); }
+nav.platforms { display:flex; flex-wrap:wrap; gap:.5rem; margin:.5rem 0 0; }
+nav.platforms a { text-decoration:none; border:1px solid var(--line); border-radius: 1rem; padding:.15rem .8rem; color: var(--fg); }
+nav.platforms a[aria-current] { background: var(--card); font-weight:700; }
+</style></head>
+<body><main>
+<div class="crumbs"><a href="index.html">The AIF</a></div>
+<nav class="platforms" aria-label="Environments"><a href="windows.html">Windows</a><a href="linux.html">Linux</a><a href="macos.html">macOS</a><a href="android.html" aria-current="page">Android</a><a href="ios.html">iOS</a></nav>
+<h1>The AIF for Android</h1>
+<p class="lead">A phone or a tablet holds the microphone, the camera and the screen. The Apps run on an MPAI-MAS Service and the access program is its client.</p>
+<p><span class="tag">planned</span></p>
+<p>On Android the access program is planned as a client of an MPAI-MAS Service: the phone captures the voice, the camera and the touch and shows the avatar, and the AI Modules run on the Service. No AI is needed on the phone.</p>
+<p>The Apps and their L3s are the same on every environment: what changes is the package of the AIF and the packages of the AIMs
+that are made for it. Meanwhile the <a href="windows.html">AIF for Windows</a> is available.</p>
+
+<h2>The access program</h2>
+<p>The AIF is the environment in which AI Modules run. What a person opens to reach the world of MPAI Apps is a program that
+uses it: <strong>MPAI Home</strong> (a provisional name). It lists the Apps that the MPAI Store offers, asks before the first download
+and opens an App in a window that follows its workflow.</p>
+<p class="note">MPAI Home is not available yet. It will come with the AIF for this environment.</p>
+
+</main></body></html>

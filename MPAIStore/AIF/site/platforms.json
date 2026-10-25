@@ -1,0 +1,27 @@
+{
+  "AccessProgramName": "MPAI Home",
+  "AccessProgramNameNote": "Provisional name of the program that gives access to the world of MPAI Apps; change it here and run make-aif-pages.py again.",
+  "Platforms": [
+    {
+      "Id": "windows", "Title": "Windows", "Status": "available",
+      "Description": "aif-V3.0-win-x64.json",
+      "Summary": "The AIF for Windows 10 and 11 on 64-bit Intel and AMD processors."
+    },
+    {
+      "Id": "linux", "Title": "Linux", "Status": "in preparation",
+      "Summary": "The same Controller, in a package for Linux. The L3s and the Apps do not change; the packages of the AIMs and the programs they use are made for Linux."
+    },
+    {
+      "Id": "macos", "Title": "macOS", "Status": "planned",
+      "Summary": "The same Controller, in a package for macOS. The L3s and the Apps do not change."
+    },
+    {
+      "Id": "android", "Title": "Android", "Status": "planned",
+      "Summary": "A phone or a tablet holds the microphone, the camera and the screen. The Apps run on an MPAI-MAS Service and the access program is its client."
+    },
+    {
+      "Id": "ios", "Title": "iOS", "Status": "planned",
+      "Summary": "An iPhone or an iPad holds the microphone, the camera and the screen. The Apps run on an MPAI-MAS Service and the access program is its client."
+    }
+  ]
+}
