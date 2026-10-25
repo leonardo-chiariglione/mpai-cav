@@ -1,0 +1,12 @@
+﻿{
+    "Name":  "AIF",
+    "Description":  "The AI Framework of a user of the MPAI Store: the Controller (in the MPAI-MAS Service) and the AIM host. It takes the L3s from a folder or from the Store, obtains the package of each AIM and the data each AIM declares, verifies them, and runs the Module.",
+    "Version":  "3.0",
+    "OperatingSystem":  "Windows",
+    "Architecture":  "x86-64",
+    "Requires":  ".NET 10 runtime (x64)",
+    "Address":  "",
+    "Sha256":  "DB360040F4D869179F2A5FB1FE6B73D6CEBDBA24071F24957E71C87C387070B5",
+    "SizeBytes":  14105740,
+    "EntryPoint":  "service\\MasService.exe \u003cconfiguration\u003e"
+}

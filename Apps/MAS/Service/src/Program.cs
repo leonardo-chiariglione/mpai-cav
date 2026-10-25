@@ -37,6 +37,28 @@ internal static class Program
     private const string MacModule = "1MMC-MAC-V2.5-I01";
     internal const string MasModule = "1MAS-APP-V1.0-I01";
 
+    // THE MODULES THIS SERVICE RUNS: those of the Apps it offers - the Module each App's app.json names - and the launcher's. A Service given no Apps runs
+    // the four of MPAI as a Service. What a Service offers is what it is configured with, so the same program is the AIF of a user of the MPAI Store.
+    private static string[] ModulesOf(MasServerConfig config)
+    {
+        var found = new List<string>();
+        if (config.Apps is { Length: > 0 } && config.AppDirectory is { } directory && Directory.Exists(directory))
+            foreach (var app in config.Apps)
+                foreach (var file in Directory.EnumerateFiles(directory, "app.json", SearchOption.AllDirectories)
+                                              .Where(f => string.Equals(Path.GetFileName(Path.GetDirectoryName(f)), app, StringComparison.OrdinalIgnoreCase)))
+                    try
+                    {
+                        using var descriptor = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+                        if (descriptor.RootElement.TryGetProperty("Module", out var module) && module.GetString() is { Length: > 0 } name && !found.Contains(name))
+                            found.Add(name);
+                    }
+                    catch (System.Text.Json.JsonException) { }
+        if (found.Count == 0) return [AmqModule, MasModule, MacModule, AcrModule];
+        // the launcher's Module, where the L3 of it is here (or is to come from the Store)
+        if (!found.Contains(MasModule) && (config.AmdDirectory is null || File.Exists(Path.Combine(config.AmdDirectory, MasModule + ".json")))) found.Add(MasModule);
+        return [.. found];
+    }
+
     private static async Task<int> Main(string[] args)
     {
         // "approve <config>": the Store's approval of what this Service deploys (below).
@@ -81,7 +103,7 @@ internal static class Program
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "L3");
             Console.WriteLine($"  L3s:           from the Store at {config.StoreUrl}, kept in {amdDir}");
             var fetched = await StoreL3Source.FetchAsync(config.StoreUrl,
-                new[] { AmqModule, MasModule, MacModule, AcrModule }, amdDir, Console.WriteLine);
+                ModulesOf(config), amdDir, Console.WriteLine);
             Console.WriteLine($"  L3s:           {fetched.Fetched} from the Store, {fetched.FromCache} from the cache, " +
                               $"{fetched.Missing.Count} missing{(fetched.Missing.Count > 0 ? ": " + string.Join(", ", fetched.Missing) : "")}");
         }
@@ -303,7 +325,8 @@ internal static class Program
         // ONE CONTROLLER, ONE MODULE. PAF-RSR-V1.6 is an AIM of MMC-AMQ-V2.5 and
         // is built with it; starting it separately would put a second Module under
         // this Controller, which cannot be.
-        foreach (var module in new[] { AmqModule, MasModule, MacModule, AcrModule })
+        var modules = ModulesOf(config);
+        foreach (var module in modules)
         {
             var failure = runner.Start(module);
             Console.WriteLine(failure is null
@@ -314,7 +337,7 @@ internal static class Program
         // THE GALLERY (M3245 3.2): the Shared Storage of Access Control Registration,
         // which registers into it, and of Access Control, which recognises from it.
         var gallery = config.Gallery ?? Mpai.Core.MpaiPaths.SharedStorage;
-        foreach (var module in new[] { AcrModule, MacModule })
+        foreach (var module in new[] { AcrModule, MacModule }.Where(m => modules.Contains(m)))
             north.SharedStorageInit(module, gallery);
         // On the server, what a session registers is kept as long as the session.
         if (config.ForgetOnClose)
