@@ -20,7 +20,7 @@ namespace AcrApp;
 // TYPE the name) and orchestration; it identifies data ONLY by data type:
 //   Start -> type name -> "look at camera" -> supply OSD-BVO (face)
 //         -> flow suspends -> "speak a sentence" -> supply OSD-BSO (speech) +
-//            OSD-BTO #1 (confirmation) + MMC-EPS + OSD-BTO #2 (name)
+//            OSD-BTO #1 (confirmation) + OSD-BTO #2 (name)
 //         -> EFD/ESD write the enrolment to the shared gallery via the Controller
 //         -> read OSD-BSO (spoken confirmation) + PAF-FDO (avatar) -> Stop.
 // The name is TYPED (ASR is unreliable for bare names) and is the enrolment key.
@@ -132,7 +132,7 @@ public partial class MainWindow : Window
             var result = r1;
 
             // 3) Speech - on suspension, prompt, capture, and supply OSD-BSO (which carries its time)
-            //    + confirmation (OSD-BTO #1) + Personal Status + name (OSD-BTO #2).
+            //    + confirmation (OSD-BTO #1) + name (OSD-BTO #2).
 #pragma warning disable CS0162 // the step is kept, and does not run: see SpeechStepAfterSuspension
             if (SpeechStepAfterSuspension)
             {
@@ -144,9 +144,8 @@ public partial class MainWindow : Window
                 var speechIn = new List<ControllerApi.Datum>();
                 if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
                 speechIn.Add(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(thankYou))));
-                speechIn.Add(new ControllerApi.Datum(EPS, MpaiJson.ToJson(LightSmileStatus())));
                 speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
-                Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+EPS+BTO#2(name)");
+                Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+BTO#2(name)");
                 speechIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
                 speechIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
                 var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
@@ -255,14 +254,6 @@ public partial class MainWindow : Window
         {
             TextEmotion        = Emotion.Of(FactorLabel.Of("CALMNESS", "serious", null, 0.7)),
             TextSocialAttitude = SocialAttitude.Of(FactorLabel.Of("SOCIAL RANK", "serious", null, 0.7))
-        }
-    };
-
-    private static EntityPersonalStatus LightSmileStatus() => new()
-    {
-        TextPersonalStatus = new TextPersonalStatus
-        {
-            TextEmotion = Emotion.Of(FactorLabel.Of("HAPPINESS", "light", null, 0.3))
         }
     };
 
