@@ -37,7 +37,7 @@ public class AmqFromPackagesTests
         {
             // the L3 names where the packages are; here, where they are on this machine
             var text = File.ReadAllText(f);
-            text = System.Text.RegularExpressions.Regex.Replace(text, "file:///[^\"]*/(Packages|upload)", new Uri(packages).AbsoluteUri.TrimEnd('/'));
+            text = System.Text.RegularExpressions.Regex.Replace(text, "(file:///[^\"]*/(Packages|upload)|https://github.com/leonardo-chiariglione/packages/releases/download/amq-v[0-9.]+)", new Uri(packages).AbsoluteUri.TrimEnd('/'));
             File.WriteAllText(Path.Combine(amds, Path.GetFileName(f)), text);
         }
 

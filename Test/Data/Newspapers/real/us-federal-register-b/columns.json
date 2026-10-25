@@ -1,0 +1,49 @@
+{
+ "Id": "us-federal-register-b",
+ "Language": "en",
+ "Dpi": 300,
+ "Width": 2550,
+ "Height": 3300,
+ "Kind": "real: a page of a government publication, rendered from its PDF",
+ "Columns": [
+  {
+   "Box": [
+    188,
+    251,
+    895,
+    3088
+   ],
+   "Point": [
+    535,
+    691
+   ],
+   "Text": "receive desired communications. This flexibility allows consumers greater control over robocalls while ensuring that critical, time-sensitive communications are not inadvertently stopped by the consumer. In addition, this approach addresses the concerns of utility companies that revocation requests will inadvertently extend to communications that they are legally required to make by limiting the scope of revocation only to the specific category of robocall to which they were directed. We note that one party has expressed opposition in an ex parte filing arguing that the revisions make compliance more complex. For the reasons discussed herein, however, we conclude that the industry and consumer group support is persuasive evidence that it does not.\nCurrently some callers may also empower consumers to make more granular choices about the types of informational calls they wish to receive, including providing them with the option to revoke consent for all robocalls and text messages requiring consent. Some commenters request that we mandate a means by which consumers may revoke consent to all robocalls from a particular caller. One commenter expresses concern, however, with the potential compliance burdens entailed by requiring callers to provide a revoke all method. Therefore, we seek further comment in the Further Notice of Proposed Rulemaking published elsewhere in the Federal Register to inform the record on whether the benefits to consumers from requiring callers to provide a one-step means to revoke consent to all future robocalls outweigh the potential compliance burdens.\nRevocation requests made in response to robocalls that contain an advertisement or constitute telemarketing revoke consent to all future robocalls containing an advertisement or that constitute telemarketing from that caller. Such calls constitute a specific category of communication for which there are no exemptions to the prior express consent requirement. As a result, consumers need only make a single revocation request to revoke consent to all future telemarketing robocalls from any caller. In that regard, we remind telemarketers that our rules require that a residential subscriber’s do-not-call request shall apply to the particular entity making the call (or on whose behalf a call is made), as well as affiliated entities if the consumer reasonably would expect them to be included."
+  },
+  {
+   "Box": [
+    925,
+    251,
+    1635,
+    3088
+   ],
+   "Point": [
+    1275,
+    290
+   ],
+   "Text": "B. Giving Consumers Clear, Simple, and Automated Ways To Revoke Consent\nWe modify our rules to allow callers to designate an exclusive means by which consumers may revoke consent instead of requiring callers to honor all revocation requests made ‘‘using any reasonable method,’’ as currently provided in § 64.1200(a)(10) of the Commission’s rules. Specifically, we conclude that callers may designate any of the three methods currently described in the second sentence of § 64.1200(a)(10) of the Commission’s rules as the exclusive means to make revocation requests. This approach adequately ensures that a simple, automated, easily understood method for revocation is readily available to consumers to revoke consent while streamlining the ability of callers to process such requests and reducing compliance burdens. In addition, this ensures that callers will not demand revocations to be made by unduly complex, difficult, or cumbersome methods that could prevent or deter consumers from revoking consent effectively.\nAs a result, callers may designate an exclusive revocation method that requires: (1) using an automated, interactive voice or key-press activated opt-out mechanism in response to a robocall, (2) using specific standardized words in response to an incoming text, and/or (3) using a website or telephone number provided by the caller to process opt-out requests, so long as the caller clearly and conspicuously discloses the designated method for revoking consent on the call or in the text. Callers that designate any of these three exclusive means to revoke consent will not be required to process revocation requests made by any other means. Any caller that does not designate one of the methods listed in § 64.1200(a)(10) of the Commission’s rules as the exclusive means to revoke consent must continue to process revocation requests when made in any reasonable manner.\nWe agree with both industry and consumer groups that the designated use of these methods ensures that consumers can easily revoke consent while allowing callers to use cost effective, automated systems to process all incoming revocation requests. This approach also provides clarity by eliminating the need to determine on a case-by-case basis whether a ‘‘reasonable means’’ is used to revoke consent. We also agree with industry and consumer groups who contend that callers that designate an exclusive method to revoke consent should"
+  },
+  {
+   "Box": [
+    1663,
+    250,
+    2370,
+    3088
+   ],
+   "Point": [
+    2016,
+    805
+   ],
+   "Text": "disclose that method on calls and in messages. This ensures that callers inform consumers of the designated revocation method. We therefore decline the request to allow callers to determine when and how to inform customers of the designated method. We agree with commenters, however, that requiring text senders to include all seven standardized words in a text message when designating a reply text as the exclusive means to revoke consent would make disclosures unnecessarily lengthy given the character limitations of text messages. As a result, we clarify that text senders can satisfy the disclosure requirement by disclosing even just one of the standardized words in each text message. For example, by indicating that recipients can revoke consent by responding ‘‘stop.’’ But text senders still must honor revocation requests made using any of the standardized words as our rules recognize these as commonly used words to reflect a clear and unmistakable desire to revoke consent.\nIn addition, we agree with industry and consumer groups that allowing callers to designate an automated revocation method as the exclusive means to revoke consent will incentivize more callers to make available such revocation methods and avoid delays inherent in manually processing revocation requests that result when made by non-designated methods. We disagree with the commenter who argues that callers that are regulated by another agency when communicating with consumers should be allowed to designate any such revocation method established by that agency’s regulations as the exclusive means to revoke consent. While certain callers may be subject to such requirements, the record in this matter does not provide sufficient confirmation of the consumer protections afforded by these alternative methods to conclude that callers can designate such methods as the exclusive method for revoking consent.\nWe emphasize that this rule modification does not alter the existing opt-out methods specified in our rules for calls made pursuant to an exemption or that include an advertisement or constitute telemarketing. For example, § 64.1200(b)(3) of the Commission’s rules requires calls made pursuant to an exemption in § 64.1200(a)(3)(ii) through (v) of the Commission’s rules or that use an artificial or prerecorded voice that introduces an advertisement or constitutes telemarketing to provide an automated, interactive voice- and/or key press-activated opt-out mechanism to make a do-not-call request. Callers"
+  }
+ ]
+}

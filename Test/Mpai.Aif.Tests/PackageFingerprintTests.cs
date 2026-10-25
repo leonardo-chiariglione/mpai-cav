@@ -23,7 +23,7 @@ public class PackageFingerprintTests
         Directory.CreateDirectory(target);
         foreach (var file in Directory.GetFiles(source, "*.json"))
         {
-            var text = System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(file), "file:///[^\"]*/(Packages|upload)", new Uri(packages).AbsoluteUri.TrimEnd('/'));
+            var text = System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(file), "(file:///[^\"]*/(Packages|upload)|https://github.com/leonardo-chiariglione/packages/releases/download/amq-v[0-9.]+)", new Uri(packages).AbsoluteUri.TrimEnd('/'));
             File.WriteAllText(Path.Combine(target, Path.GetFileName(file)), text);
         }
         return target;
