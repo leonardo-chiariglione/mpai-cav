@@ -1,0 +1,45 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "MMC-AMQ-V2.5-I02", "AIMName": "1MMC-AMQ-V2.5-I02"},
+  "Header":               "MMC-AMQ-V2.5",
+
+  "APIProfile":           "Basic",
+  "OnDegraded":           "Continue",
+  "Description":          "Answer to Multimodal Question (slide 3 of the MMC Reference Models): receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as a Portable Avatar, which utters it, and the Visual Object. Automatic Speech Recognition recognises the spoken question; Text and Image Query answers the question about the image; Text-To-Speech makes the Speech Object of the answer; Portable Avatar Multiplexing puts the answer, text and speech, in the Portable Avatar, which the User Agent renders.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "InputVisual", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "InputSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "InputText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "OutputVisual", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [{"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I03", "AIMName": "1MMC-ASR-V2.5-I03", "Relation": "Internal"}},
+                          {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-TIQ-V2.5-I03", "AIMName": "1MMC-TIQ-V2.5-I03", "Relation": "Internal"}},
+                          {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-TTS-V2.5-I03", "AIMName": "1MMC-TTS-V2.5-I03", "Relation": "Internal"}},
+                          {"Identifier": {"ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I03", "AIMName": "1PAF-PMX-V1.6-I03", "Relation": "Internal"}}],
+
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-ASR-V2.5-I03", "DataType": "OSD-BSO-V1.5"}},
+                          {"Output": {"AIMName": "1MMC-ASR-V2.5-I03", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BVO-V1.5"}},
+                          {"Output": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1MMC-TTS-V2.5-I03", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "1MMC-TTS-V2.5-I03", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "OSD-BSO-V1.5"}},
+                          {"Output": {"AIMName": "1MMC-TIQ-V2.5-I03", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}},
+                          {"Output": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
+                          {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I03", "DataType": "string"}}],
+
+  "Implementations":      [{ "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/MPAIStore/L3s/AMQ/1MMC-AMQ-V2.5-I02.json",
+                             "BinaryName": "Mpai.Mmc.Amq",
+                             "Architecture": "x86-64",
+                             "OperatingSystem": "Windows",
+                             "Version": "2.5",
+                             "Source": "AIMStorage" }],
+                             
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "3 GB",   "Request": "5 GB", "Maximum": "8 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/use-cases/answer-to-multimodal-question/"}]}

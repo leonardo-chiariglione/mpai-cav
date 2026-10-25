@@ -6,7 +6,7 @@
   },
   "Header": "MMC-MTS-V2.5",
   "APIProfile": "Basic",
-  "Description": "Multimodal Translation Service: the HCI Module for spoken translation with a Portable Avatar. Automatic Speech Recognition recognises the human's speech into text; Text-to-Text Translation translates it into the language named by the Language Selector; Response and Scene Rendering speaks the translation and produces the lip-synced Machine Face Descriptors in the target language. The translated text is also exposed. Non-affective; no Personal Status is supplied. Acquisition and delivery are the User Agent, not sub-AIMs.",
+  "Description": "Multimodal Translation Service: the HCI Module for spoken translation with a Portable Avatar. Automatic Speech Recognition recognises the human's speech into text; Text-to-Text Translation translates it into the language named by the Language Selector; Text-To-Speech makes the Speech Object of the translation; Portable Avatar Multiplexing puts the translation, text and speech, in the Portable Avatar, which the User Agent renders. The translated text is also exposed. Non-affective; no Personal Status is supplied. Acquisition and delivery are the User Agent, not sub-AIMs.",
   "InternalTypes": [
     {
       "Name": "RecognisedText",
@@ -80,131 +80,21 @@
       "IsRemote": ""
     }
   ],
-  "SubAIMs": [
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-ASR-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-TTT-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "PAF-RSR-V1.6",
-        "Relation": ""
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BSO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-ASR-V2.5",
-        "DataType": "OSD-BSO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-ASR-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-SEL-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-B3O-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-B3O-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "string"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "string"
-      }
-    }
-  ],
+  "SubAIMs": [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTT-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": ""}}],
+  "Topology": [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-SEL-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-B3O-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}},
+                          {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BSO-V1.5"}}],
   "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
   "Implementations": [
     {

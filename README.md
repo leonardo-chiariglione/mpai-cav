@@ -107,6 +107,7 @@ MKG/              the MPAI Knowledge Graph
 MMM/              the Metaverse Meeting software: Api, Client, Instance, Server, Viewer
 schemas/          the JSON schemas of the standards
 Store/            the MPAI Store: the core, Service, App
+MPAIStore/        what MPAI gives the Store: the L3s and the packages of the AIMs (L3s, Packages)
 Support/          local tools that are not source (Ollama, Python, native libraries); no models
 Test/             the tests: AsmApp, AsmVoice, CAV (recordings code), Data, Expected, legacy, Mpai.Aif.Tests, Reports, Results
 ```

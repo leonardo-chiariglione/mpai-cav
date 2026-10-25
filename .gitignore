@@ -102,3 +102,6 @@ MMM/tools/Microsoft-Rocketbox/
 
 # the Knowledge Graph is not published on GitHub; it stays on this PC
 /MKG/
+
+# the packages of the MPAI Store are release assets, not kept here
+MPAIStore/Packages/*.zip

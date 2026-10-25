@@ -37,7 +37,7 @@
                              "Version": "2.5",
                              "Source": "AIMStorage" }],
                              
-  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "3_GB",   "Request": "5_GB", "Maximum": "8_GB"},
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "3 GB",   "Request": "5 GB", "Maximum": "8 GB"},
                            {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
 
   "DataXMData":           { },

@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required":             [ "Header", "Identifier", "APIProfile", "Description", "ExternalPorts", "Implementations" ],
 
-  "$comment":             "An AIM is Basic or Composite. SubAIMs and Topology are required together and only for a Composite AIM (see dependentRequired). A Port is addressed by its Data Type and, where an AIM has more than one Port of the same Direction and Data Type, by a PortNumber; names are labels for people and are never used for addressing. Constrained fields admit a /* ... */ placeholder so that one file serves as both Implementer template and validated instance; AIMMetadata-strict.json disables placeholders through the 'placeholder' dynamic anchor.",
+  "$comment":             "An AIM is Basic or Composite. SubAIMs and Topology are required together and only for a Composite AIM (see dependentRequired). A Port is addressed by its Data Type and, where an AIM has more than one Port of the same Direction and Data Type, by a PortNumber; names are labels for people and are never used for addressing. Constrained fields admit a /* ... */ placeholder so that one file serves as both Implementer template and validated instance.",
 
   "properties":           {
 
@@ -168,7 +168,7 @@
 
 
     "Placeholder":        { "$dynamicAnchor": "placeholder",
-                            "$comment": "An unfilled template value of the form /* ... */. Every constrained field admits this as an alternative branch. AIMMetadata-strict.json redefines this anchor as false, so the same AIM file validates strictly once an Implementer has filled it in.",
+                            "$comment": "An unfilled template value of the form /* ... */. Every constrained field admits this as an alternative branch.",
                             "type": "string", "pattern": "^/\\*.*\\*/$" },
 
     "MPAIIdentifier":     { "type": "string", "pattern": "^[A-Z0-9]{3}-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$",

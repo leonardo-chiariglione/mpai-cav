@@ -1,0 +1,32 @@
+{ "Identifier":       { "ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I03", "AIMName": "1MMC-ASR-V2.5-I03" },
+  "Header":           "MMC-ASR-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Automatic Speech Recognition: receives a Basic Speech Object and its Speech Time and Speech arrives on one of two Ports and the text leaves on the matching one: Port 1 is a question about an image, Port 2 a reply to something the User Agent asked. The Port the speech arrives on says which it is, so nothing downstream has to infer it from what happens to be missing.",
+
+  "ExternalPorts":    [{"Name": "ImageSpeech",      "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "ResponseSpeech",   "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "UserTextQuestion", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 1,                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "TextQuestion",     "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 2,                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [],
+
+  "Topology":         [],
+
+  "Implementations":  [{"ImplementationURI": "file:///D:/AI/MPAIStore/Packages/MMC-ASR-V2.5-I03-win-x64.zip",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Mmc.Asr",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "2.5",
+                        "Source":            "AIMStorage"}],
+
+  "AccessSources":   [{"Name": "asr-model", "Uri": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin", "Sha256": "1BE3A9B2063867B937E64E2EC7483364A79917E157FA98C5D94B5C1FFFEA987B", "Setting": "ModelPath", "Terms": {"Licence": "MIT", "Uri": "https://github.com/openai/whisper/blob/main/LICENSE", "PersonalData": false}, "Description": "The Whisper speech recognition model (small, ggml format) that the whisper program reads."},
+                      {"Name": "asr-program", "OperatingSystem": "Windows", "Architecture": "x86-64", "Uri": "https://github.com/ggerganov/whisper.cpp/releases/download/b4938/whisper-bin-x64.zip", "Sha256": "C2A4B60EDB11F7E11A9191FFB50929535527D4D91C9903DBE3E554583BBBC63D", "Unpack": true, "Inside": "Release/whisper-cli.exe", "Setting": "ExecutablePath", "Terms": {"Licence": "MIT", "Uri": "https://github.com/ggerganov/whisper.cpp/blob/master/LICENSE", "PersonalData": false}, "Description": "The whisper program (whisper.cpp, Windows release b4938) that reads the model; it comes in a zip with the libraries it needs."},
+                      {"Name": "asr-server", "OperatingSystem": "Windows", "Architecture": "x86-64", "Uri": "https://github.com/ggerganov/whisper.cpp/releases/download/b4938/whisper-bin-x64.zip", "Sha256": "C2A4B60EDB11F7E11A9191FFB50929535527D4D91C9903DBE3E554583BBBC63D", "Unpack": true, "Inside": "Release/whisper-server.exe", "Setting": "ServerPath", "Description": "The server of the same release, which keeps the model loaded between turns.", "Terms": {"Licence": "MIT", "Uri": "https://github.com/ggerganov/whisper.cpp/blob/master/LICENSE", "PersonalData": false}}],
+
+  "ResourcePolicies": [{"Name": "Memory",    "Minimum": "0.5 GB", "Request": "1.5 GB", "Maximum": "4 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low",    "Request": "Medium", "Maximum": "High"}],
+
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

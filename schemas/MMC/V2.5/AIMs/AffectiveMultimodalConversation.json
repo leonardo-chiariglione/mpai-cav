@@ -6,7 +6,7 @@
   },
   "Header": "MMC-AMC-V2.5",
   "APIProfile": "Basic",
-  "Description": "Affective Multimodal Conversation: speech-only affective dialogue. Automatic Speech Recognition recognises the speech; Natural Language Understanding produces the Text Descriptors, the (refined) NLU Text and the Text Personal Status; Personal Status Extraction reads the Speech Personal Status from the Speech Object and multiplexes it with the Text Personal Status into the entity's Personal Status; Entity Dialogue Processing produces the machine's response Text and Personal Status, aware of both the meaning and the feeling; Response and Scene Rendering renders the Portable Avatar. The Summary of the conversation is internal to Entity Dialogue Processing. Acquisition and delivery are the User Agent, not sub-AIMs.",
+  "Description": "Affective Multimodal Conversation: speech-only affective dialogue. Automatic Speech Recognition recognises the speech; Natural Language Understanding produces the Text Descriptors, the (refined) NLU Text and the Text Personal Status; Personal Status Extraction reads the Speech Personal Status from the Speech Object and multiplexes it with the Text Personal Status into the entity's Personal Status; Entity Dialogue Processing produces the machine's response Text and Personal Status, aware of both the meaning and the feeling; Text-To-Speech makes the Speech Object of the response; Portable Avatar Multiplexing puts the response, text and speech, with its Personal Status, in the Portable Avatar, which the User Agent renders. The Summary of the conversation is internal to Entity Dialogue Processing. Acquisition and delivery are the User Agent, not sub-AIMs.",
   "InternalTypes": [
     {
       "Name": "RecognisedText",
@@ -106,211 +106,29 @@
       "IsRemote": ""
     }
   ],
-  "SubAIMs": [
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-ASR-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-NLU-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-PSE-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-EDP-V2.5",
-        "Relation": ""
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "IIDRA-assigned",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "PAF-RSR-V1.6",
-        "Relation": ""
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BSO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-ASR-V2.5",
-        "DataType": "OSD-BSO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BSO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-PSE-V2.5",
-        "DataType": "OSD-BSO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BVO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-PSE-V2.5",
-        "DataType": "OSD-BVO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-NLU-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-ASR-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-NLU-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-NLU-V2.5",
-        "DataType": "MMC-TPS-V2.5"
-      },
-      "Input": {
-        "AIMName": "MMC-PSE-V2.5",
-        "DataType": "MMC-TPS-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-NLU-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-PSE-V2.5",
-        "DataType": "MMC-EPS-V2.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-EPS-V2.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-EPS-V2.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "MMC-EPS-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-B3O-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-B3O-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "string"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "string"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMC-SUM-V2.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-SUM-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-SUM-V2.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMC-SUM-V2.5",
-        "PortNumber": 1
-      }
-    }
-  ],
+  "SubAIMs": [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-NLU-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PSE-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-EDP-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": ""}},
+                          {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": ""}}],
+  "Topology": [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-PSE-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "MMC-PSE-V2.5", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-NLU-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-NLU-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "MMC-NLU-V2.5", "DataType": "MMC-TPS-V2.5"}, "Input": {"AIMName": "MMC-PSE-V2.5", "DataType": "MMC-TPS-V2.5"}},
+                          {"Output": {"AIMName": "MMC-NLU-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-PSE-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
+                          {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "MMC-EPS-V2.5"}},
+                          {"Output": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
+                          {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-B3O-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}},
+                          {"Output": {"AIMName": "", "DataType": "MMC-SUM-V2.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-SUM-V2.5"}},
+                          {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-SUM-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-SUM-V2.5", "PortNumber": 1}},
+                          {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BSO-V1.5"}}],
   "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
   "Implementations": [
     {
