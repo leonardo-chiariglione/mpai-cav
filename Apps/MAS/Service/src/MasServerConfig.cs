@@ -95,6 +95,11 @@ public sealed class MasServerConfig
     // then reads. Absent, or anything else: from AmdDirectory, as before.
     public string? L3Source { get; init; }
 
+    // WHETHER THE PACKAGES ARE VERIFIED. With a StoreUrl and AimSource "Packages", the Controller measures the binary of every package it fetches and asks
+    // the Store whether that is the fingerprint it approved (MPAI_AIFS_VerifyImplementation); a package the Store does not approve is refused. On when a
+    // StoreUrl is configured, unless set to false here; without a Store there is nothing to ask and nothing is verified.
+    public bool? VerifyPackages { get; init; }
+
     // Where L3s fetched from the Store are kept. Absent means
     // <local application data>\MPAI\SCI\L3.
     public string? L3Cache { get; init; }

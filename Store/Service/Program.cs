@@ -159,7 +159,7 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
         }
 
         // THE FINGERPRINTS (STR-3): what is approved is recorded with its SHA-256, as the Implementer submitted it.
-        findings.AddRange(packages.RecordFingerprints(l3, id, fingerprints));
+        findings.AddRange(await packages.RecordFingerprintsAsync(l3, id, fingerprints));
 
         var entry = repository.Publish(id, text, findings);
         // Who submitted it, and the signature, are kept with the version.

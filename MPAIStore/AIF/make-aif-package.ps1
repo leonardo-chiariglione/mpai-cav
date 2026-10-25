@@ -30,6 +30,7 @@ foreach ($p in @(@('service', 'Apps\MAS\Service\src\MasService.csproj'), @('aimh
 }
 Copy-Item (Join-Path $PSScriptRoot 'README-AIF.md') (Join-Path $work 'README.md')
 Copy-Item (Join-Path $PSScriptRoot 'mas-server.store.example.json') (Join-Path $work 'mas-server.store.example.json')
+Set-Content (Join-Path $work 'aim-settings.json') '{}' -Encoding ascii      # the settings of the AIMs of this machine: none yet
 
 New-Item -ItemType Directory -Force (Split-Path $zip) | Out-Null
 if (Test-Path $zip) { Remove-Item $zip }

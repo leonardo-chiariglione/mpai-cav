@@ -16,7 +16,7 @@ namespace Mpai.StoreService;
 // not followed, so a submitted L3 cannot make the Store read its own disk.
 public sealed class PackageCheck
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
     private readonly string? packagesRoot;
 
     public PackageCheck(string? packagesRoot) =>
@@ -88,30 +88,52 @@ public sealed class PackageCheck
         return found;
     }
 
-    // THE FINGERPRINTS OF THE IMPLEMENTATIONS (STR-3): the Store measures the binary each Implementations entry names - BinaryName.dll in the package
-    // folder - and records its SHA-256 as submitted and approved. Only a package in the packages folder (a file: URI) is measured; any other is
-    // signalled, and no fingerprint is recorded for it. A composite with no binary of its own has nothing to measure.
-    public List<Finding> RecordFingerprints(JsonElement l3, string aimName, AIF.Store.ImplementationFingerprints fingerprints)
+    // THE FINGERPRINTS OF THE IMPLEMENTATIONS (STR-3): the Store measures the binary each Implementations entry names - BinaryName.dll in the package -
+    // and records its SHA-256 as submitted and approved. The package is a folder, or a .zip, in the packages folder (a file: URI), or a .zip at an
+    // http(s) address (fetched to be measured and not kept: the Store holds no code). A package it cannot reach or find the binary in records no fingerprint
+    // and is signalled. A composite with no binary of its own has nothing to measure.
+    public async Task<List<Finding>> RecordFingerprintsAsync(JsonElement l3, string aimName, AIF.Store.ImplementationFingerprints fingerprints)
     {
         var found = new List<Finding>();
         if (!l3.TryGetProperty("Implementations", out var impls) || impls.ValueKind != JsonValueKind.Array) return found;
+        if (l3.TryGetProperty("SubAIMs", out var subs) && subs.ValueKind == JsonValueKind.Array && subs.GetArrayLength() > 0) return found;     // a Composite AIM has no code of its own
         foreach (var impl in impls.EnumerateArray())
         {
             string S(string name) => impl.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
             var uri = S("ImplementationURI"); var binary = S("BinaryName");
             if (uri.Length == 0 || binary.Length == 0 || !Uri.TryCreate(uri, UriKind.Absolute, out var u)) continue;
-            if (!u.IsFile)
+            string? fingerprint = null;
+            try
             {
-                found.Add(new Finding("Fingerprint", "warning", $"{uri}: only a package in the Store's packages folder is measured; no fingerprint recorded for {binary}."));
-                continue;
+                if (u.IsFile)
+                {
+                    var folder = Inspectable(u);
+                    if (folder is null) { found.Add(new Finding("Fingerprint", "warning", $"{uri}: outside the Store's packages folder; no fingerprint recorded for {binary}.")); continue; }
+                    // The package is a folder holding BinaryName.dll, a .zip holding it, or the one file that is the Implementation (a model, say).
+                    var single = u.LocalPath.TrimEnd(Path.DirectorySeparatorChar);
+                    if (File.Exists(single) && single.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        using var zip = File.OpenRead(single);
+                        fingerprint = AIF.Store.ImplementationFingerprints.OfPackage(zip, binary);
+                    }
+                    else
+                    {
+                        var file = File.Exists(single) ? single : Path.Combine(folder, binary + ".dll");
+                        if (File.Exists(file)) fingerprint = AIF.Store.ImplementationFingerprints.Of(file);
+                    }
+                }
+                else if (u.Scheme is "http" or "https" && u.AbsolutePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    var bytes = await Http.GetByteArrayAsync(u);
+                    using var zip = new MemoryStream(bytes);
+                    fingerprint = AIF.Store.ImplementationFingerprints.OfPackage(zip, binary);
+                }
+                else { found.Add(new Finding("Fingerprint", "warning", $"{uri}: only a .zip package, or a package in the Store's packages folder, is measured; no fingerprint recorded for {binary}.")); continue; }
             }
-            var folder = Inspectable(u);
-            if (folder is null) { found.Add(new Finding("Fingerprint", "warning", $"{uri}: outside the Store's packages folder; no fingerprint recorded for {binary}.")); continue; }
-            // The package is a folder holding BinaryName.dll, or the one file that is the Implementation (a model, say).
-            var single = u.LocalPath.TrimEnd(Path.DirectorySeparatorChar);
-            var file = File.Exists(single) ? single : Path.Combine(folder, binary + ".dll");
-            if (!File.Exists(file)) continue;                                      // already an error of the package check
-            fingerprints.Approve(aimName, binary, AIF.Store.ImplementationFingerprints.Of(file), DateTimeOffset.UtcNow);
+            catch (Exception ex) { found.Add(new Finding("Fingerprint", "warning", $"{uri}: could not be measured ({ex.Message}); no fingerprint recorded for {binary}.")); continue; }
+
+            if (fingerprint is null) { found.Add(new Finding("Fingerprint", "warning", $"{uri}: {binary}.dll is not in the package; no fingerprint recorded.")); continue; }
+            fingerprints.Approve(aimName, binary, fingerprint, DateTimeOffset.UtcNow);
         }
         return found;
     }

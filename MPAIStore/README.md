@@ -23,3 +23,11 @@ python MPAIStore/L3s/make-amq-l3s.py https://github.com/leonardo-chiariglione/pa
 The L3s made here name `MPAIStore/Packages` on this machine, to try them before publishing.
 
 **Trying them:** `Test/Mpai.Aif.Tests/AmqFromPackagesTests.cs` gives the Controller only these five L3s; it fetches the packages one by one, loads the AIMs and runs AMQ.
+
+**The hashes, from the Implementer to the Controller:**
+1. The Implementer submits the L3s to the Store (`Store/Service/Submit-L3s.ps1`). For each leaf AIM the Store reaches the package its `ImplementationURI` names - a `.zip`
+   in its packages folder, or at an http(s) address - measures `BinaryName`.dll inside it, records the SHA-256 as approved, and keeps no code.
+2. The Controller (the AIF Service, configured with `StoreUrl` and `L3Source` `Store`, see `AIF/mas-server.store.example.json`) takes the L3s from the Store, fetches each package,
+   measures the same binary and puts the SHA-256 to the Store (`MPAI_AIFS_VerifyImplementation`). Only `Same` loads the package; `Different`, not recorded, or a Store that does not answer refuses the AIM.
+3. `Test/Mpai.Aif.Tests/PackageFingerprintTests.cs` does both with a Store running: the packages as submitted are approved; one with a byte added to its binary is refused.
+The other files of a package (the libraries it brings) are not measured.

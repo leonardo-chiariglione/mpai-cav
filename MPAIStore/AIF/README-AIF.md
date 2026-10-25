@@ -6,7 +6,7 @@ no model: it obtains them, so the first start needs an Internet connection and d
 
 ## What it does
 1. Reads the L3s of the Modules it offers (a folder, `AmdDirectory`; or the Store, `L3Source` and `StoreUrl`).
-2. For each AIM of a Module, obtains the package at the `ImplementationURI` of its L3 into its cache (`PackageCache`), and verifies it.
+2. For each AIM of a Module, obtains the package at the `ImplementationURI` of its L3 into its cache (`PackageCache`), measures the binary the L3 names (`BinaryName`.dll) and asks the Store whether that is the fingerprint it approved when the L3 was submitted. A package the Store does not approve - or cannot be asked about - is not loaded, and the Module is refused; no other code is run in its place. It needs `StoreUrl`: without one nothing is verified, and the Service says so when it starts (`Packages: NOT verified`). Only the binary the L3 names is measured, not the other files of the package.
 3. Obtains the data each AIM declares in its L3 (`AccessSources`: an address, a SHA-256, the terms of the data) into `AIF\Access`, once, and checks the SHA-256.
 4. Runs the Module for a User Agent that asks, through the Controller API (HTTP).
 
@@ -19,7 +19,7 @@ A Module without an App folder can be run by a User Agent that has its own workf
 ## To run it
 1. Unzip it where you want it.
 2. Copy `mas-server.store.example.json` to `mas-server.json` and edit it: `Apps` names the Apps to offer; each is a folder `Apps\<App>` with its `app.json`
-   (which names its Module) and its workflow; `AmdDirectory` is the folder of the L3s; `SettingsPath` is `aim-settings.json`.
+   (which names its Module) and its workflow; `StoreUrl` is the Store, with `L3Source` `Store` for the L3s to come from it (or `AmdDirectory`, a folder of L3s, with no verification of the packages); `SettingsPath` is `aim-settings.json` (it comes with the AIF, empty).
 3. `service\MasService.exe mas-server.json`
 
 The first start of a Module obtains what its AIMs declare: speech and vision models that may be a gigabyte or more; it is done once.

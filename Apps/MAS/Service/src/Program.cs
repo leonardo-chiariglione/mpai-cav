@@ -54,8 +54,9 @@ internal static class Program
                     }
                     catch (System.Text.Json.JsonException) { }
         if (found.Count == 0) return [AmqModule, MasModule, MacModule, AcrModule];
-        // the launcher's Module, where the L3 of it is here (or is to come from the Store)
-        if (!found.Contains(MasModule) && (config.AmdDirectory is null || File.Exists(Path.Combine(config.AmdDirectory, MasModule + ".json")))) found.Add(MasModule);
+        // the launcher's Module, where the L3 of it is here; the MPAI Store has none
+        if (!found.Contains(MasModule) && (config.AmdDirectory is null ? !string.Equals(config.L3Source, "Store", StringComparison.OrdinalIgnoreCase)
+                                                                                            : File.Exists(Path.Combine(config.AmdDirectory, MasModule + ".json")))) found.Add(MasModule);
         return [.. found];
     }
 
@@ -245,6 +246,12 @@ internal static class Program
         var packageCache = config.PackageCache ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "SCI", "Packages");
         if (fromPackages) Console.WriteLine($"  AIMs:          from their packages, kept in {packageCache}");
+        AIF.Store.HttpAimSource? packageApprovals = fromPackages && !string.IsNullOrWhiteSpace(config.StoreUrl) && config.VerifyPackages != false
+            ? new AIF.Store.HttpAimSource(config.StoreUrl) : null;
+        if (fromPackages)
+            Console.WriteLine(packageApprovals is null
+                ? "  Packages:      NOT verified - no Store to ask (set StoreUrl), or VerifyPackages is false"
+                : $"  Packages:      each one measured and put to the Store at {config.StoreUrl}; one it does not approve is refused");
 
         // THE STORE'S APPROVAL OF WHAT THIS SERVICE DEPLOYS (M3223 3.2): for every L3 of
         // an AIM these providers implement, the fingerprint of the binary that
@@ -270,7 +277,7 @@ internal static class Program
         using var north = new ControllerApi(amdDir, settingsPath, s =>
         {
             var providers = new List<IAimProvider>();
-            if (fromPackages) providers.Add(new PackageAimProvider(s, packageCache, Console.WriteLine));
+            if (fromPackages) providers.Add(new PackageAimProvider(s, packageCache, Console.WriteLine, packageApprovals));
             providers.Add(new AmqProvider(s));
             providers.Add(new MacProvider(s));
             providers.Add(new AcrProvider(s));
@@ -315,7 +322,7 @@ internal static class Program
                               $"{north.Controller.HostAnchors.Count} host anchor(s){(north.Controller.Manufacturer is null ? "" : ", hosts attested")}" +
                               (trust.Trace is null ? "" : $"; traced in {trust.Trace}"));
         }
-        else Console.WriteLine("  Trust:         none configured - nothing is verified");
+        else Console.WriteLine("  Trust:         no Trust Anchor configured (the Trust Protocol is off)");
 
         var runner = new ControllerApiRunner(north, store);
 

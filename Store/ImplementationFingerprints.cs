@@ -36,6 +36,16 @@ public sealed class ImplementationFingerprints : IImplementationVerifier
         return Convert.ToHexString(SHA256.HashData(stream));
     }
 
+    // The fingerprint of a binary inside a package that is a .zip: the entry named binaryName + ".dll" at the top of the package, or null if it is not there.
+    public static string? OfPackage(Stream zip, string binaryName)
+    {
+        using var archive = new System.IO.Compression.ZipArchive(zip, System.IO.Compression.ZipArchiveMode.Read, leaveOpen: true);
+        var entry = archive.GetEntry(binaryName + ".dll");
+        if (entry is null) return null;
+        using var stream = entry.Open();
+        return Convert.ToHexString(SHA256.HashData(stream));
+    }
+
     // Records the fingerprint of the binary that implements an AIM, as approved.
     public void Approve(string aimName, string binaryName, string fingerprint, DateTimeOffset at)
     {
