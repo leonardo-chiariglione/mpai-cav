@@ -10,7 +10,11 @@
   <main>
     <iframe id="avatar" src="avatar/cav-webview.html" allow="autoplay"></iframe>
 
-    @if (showApps)
+    @if (showApps && !classicList)
+    {
+      <Desk Apps="apps" OnOpen="ChooseApp" />
+    }
+    else if (showApps)
     {
       <aside class="apps">
         <h2>Apps</h2>

@@ -70,6 +70,8 @@ public partial class RcaShell : ComponentBase
 
     private IReadOnlyList<WebAppDirectory.App> apps = Array.Empty<WebAppDirectory.App>();
     private bool showApps;
+    // THE DESKTOP IS WHERE APPS ARE CHOSEN; the plain list of them is still there for an address ending in ?classic.
+    private bool classicList => Nav.Uri.Contains("classic", StringComparison.OrdinalIgnoreCase);
     private TaskCompletionSource<string?>? choosing;
 
     private bool   typing;

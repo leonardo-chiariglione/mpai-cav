@@ -160,11 +160,89 @@ app.Map("/MPAI/AIFU/{**rest}", async (HttpContext http) =>
     await response.Content.CopyToAsync(http.Response.Body, http.RequestAborted);
 });
 
+// THALIA'S DESKTOP (what the page shows around the Apps), through this origin.
+//
+//   /thalia/wallpaper       the picture behind the icons: the Wallpaper setting, else
+//                           %LOCALAPPDATA%\MPAI\Thalia\wallpaper.(jpg|png); none if there is none
+//   /thalia/status          whether the Service and the MPAI Store answer
+//   /thalia/store/{...}     a GET passed on to the MPAI Store (the Store setting, default
+//                           http://127.0.0.1:5020/): what the Store has approved, read from the page
+var storeUri = new Uri((builder.Configuration["Store"] ?? "http://127.0.0.1:5020/").TrimEnd('/') + "/");
+var storeHttp = new HttpClient { BaseAddress = storeUri, Timeout = TimeSpan.FromSeconds(10) };
+
+string? WallpaperFile()
+{
+    if (builder.Configuration["Wallpaper"] is { Length: > 0 } configured && File.Exists(configured)) return configured;
+    var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MPAI", "Thalia");
+    return new[] { "wallpaper.jpg", "wallpaper.png" }.Select(f => Path.Combine(folder, f)).FirstOrDefault(File.Exists);
+}
+
+app.MapGet("/thalia/wallpaper", (HttpContext ctx) =>
+{
+    ctx.Response.Headers.CacheControl = "no-cache";
+    return WallpaperFile() is { } file
+        ? Results.File(file, file.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg")
+        : Results.NotFound();
+});
+
+app.MapGet("/thalia/status", async () =>
+{
+    async Task<bool> Answers(HttpClient client, string path)
+    {
+        try { using var r = await client.GetAsync(path); return r.IsSuccessStatusCode; }
+        catch { return false; }
+    }
+    var serviceUp = await Answers(forward, "MPAI/AIFU/Status");
+    var storeUp = await Answers(storeHttp, "MPAI/Store/L3");
+    return Results.Json(new { service = serviceUp, store = storeUp });
+});
+
+// A SUBMISSION to the Store, passed on with the two headers the Store knows (the administrator key; an Implementer's signature).
+app.MapPost("/thalia/store/L3", async (HttpContext http) =>
+{
+    try
+    {
+        using var body = new MemoryStream();
+        await http.Request.Body.CopyToAsync(body);
+        body.Position = 0;
+        using var request = new HttpRequestMessage(HttpMethod.Post, "MPAI/Store/L3") { Content = new StreamContent(body) };
+        request.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+        foreach (var h in new[] { "MPAI-Admin", "MPAI-Signature" })
+            if (http.Request.Headers.TryGetValue(h, out var v)) request.Headers.TryAddWithoutValidation(h, v.ToString());
+        using var response = await storeHttp.SendAsync(request, http.RequestAborted);
+        http.Response.StatusCode = (int)response.StatusCode;
+        http.Response.ContentType = "application/json";
+        await response.Content.CopyToAsync(http.Response.Body, http.RequestAborted);
+    }
+    catch (HttpRequestException)
+    {
+        http.Response.StatusCode = StatusCodes.Status502BadGateway;
+        await http.Response.WriteAsync("The MPAI Store does not answer.");
+    }
+});
+
+app.MapGet("/thalia/store/{**rest}", async (string rest, HttpContext http) =>
+{
+    try
+    {
+        using var response = await storeHttp.GetAsync("MPAI/Store/" + rest + http.Request.QueryString, http.RequestAborted);
+        http.Response.StatusCode = (int)response.StatusCode;
+        if (response.Content.Headers.ContentType is { } type) http.Response.ContentType = type.ToString();
+        await response.Content.CopyToAsync(http.Response.Body, http.RequestAborted);
+    }
+    catch (HttpRequestException)
+    {
+        http.Response.StatusCode = StatusCodes.Status502BadGateway;
+        await http.Response.WriteAsync("The MPAI Store does not answer.");
+    }
+});
+
 app.MapFallbackToFile("index.html");
 
 Console.WriteLine($"=== MPAI-MAS browser client ===");
 Console.WriteLine($"  Open:     {builder.Configuration["Urls"] ?? "https://localhost:5010"}");
 Console.WriteLine($"  Service:  {service}{(serviceToken is null ? "" : " (with its bearer token)")}");
+Console.WriteLine($"  Store:    {storeUri}");
 Console.WriteLine($"  Assets:   {assets}");
 app.Run();
 
