@@ -6,7 +6,7 @@
     "Architecture":  "x86-64",
     "Requires":  ".NET 10 runtime (x64)",
     "Address":  "",
-    "Sha256":  "AC56194AA1F6E7CA5A195D37C5235CF3FE2C551E53D8C57EF46036EF99E228E8",
-    "SizeBytes":  14107110,
+    "Sha256":  "CDFBCD3ED47E63DED0D4810E8DD69387C82C67684D4614CC7E8A74F9FD9FBA32",
+    "SizeBytes":  14107312,
     "EntryPoint":  "service\\MasService.exe \u003cconfiguration\u003e"
 }
