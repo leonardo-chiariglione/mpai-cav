@@ -54,3 +54,17 @@ for leaf in LEAVES:
 t = uri.sub(lambda m: m.group(1) + '"https://github.com/leonardo-chiariglione/mpai-cav/blob/main/MPAIStore/L3s/AMQ/1MMC-AMQ-V2.5-I02.json"', t)
 write('1MMC-AMQ-V2.5-I02.json', bom, t)
 print('1MMC-AMQ-V2.5-I02  (composite)')
+
+# The App of AMQ: its workflow (Workflow Description Language) and its descriptor, which names the Module. The workflow is what a User Agent runs to drive the Module through the
+# Controller; the Service hands it to the client that chooses the App. It names the Module by the Instance of the L3 above.
+apps = os.path.join(os.path.dirname(here), 'Apps', 'AMQ')
+os.makedirs(apps, exist_ok=True)
+for name in ('app.json', 'MMC-AMQ.orch', 'icon.svg'):
+    raw = open(os.path.join(os.path.dirname(os.path.dirname(here)), 'Apps', 'MMC', 'AMQ', name), 'rb').read()
+    bom = raw[:3] == bytes([0xEF, 0xBB, 0xBF])
+    text = raw.decode('utf-8-sig').replace('MMC-AMQ-V2.5-I01', 'MMC-AMQ-V2.5-I02')
+    if implementer != '1':
+        text = text.replace('1MMC-AMQ-V2.5-I02', implementer + 'MMC-AMQ-V2.5-I02')
+    open(os.path.join(apps, name), 'w', encoding='utf-8-sig' if bom else 'utf-8', newline='').write(text)
+print('Apps/AMQ  (the workflow of the App)')
+

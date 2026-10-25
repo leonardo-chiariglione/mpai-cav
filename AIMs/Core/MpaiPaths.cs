@@ -91,8 +91,13 @@ public static class MpaiPaths
     public static string Amds          => System.IO.Path.Combine(Root, "AIMs", "AMDs");
     public static string Settings      => System.IO.Path.Combine(Root, "AIMs", "aim-settings.json");
     public static string Assets        => System.IO.Path.Combine(Root, "AIF", "UserAgent", "Assets");
-    // The governed Shared Storage area (AIF Shared Storage backing folder).
-    public static string SharedStorage => System.IO.Path.Combine(Root, "AIF", "Access", "SharedStorage");
-    // Access, the Controller's static or slowly changing data (AIF V3.0, Storage 6).
-    public static string Access        => System.IO.Path.Combine(Root, "AIF", "Access");
+    // Access, the Controller's static or slowly changing data (AIF V3.0, Storage 6): what it obtains, once, because an AIM declares it. In the repository, its
+    // AIF/Access. Installed - the AIF of a user of the MPAI Store, unzipped in any folder, which may not be writable - in the user's own data folder
+    // (%LOCALAPPDATA%\MPAI\AIF\Access). MPAI_ACCESS names another place.
+    public static string Access =>
+        System.Environment.GetEnvironmentVariable("MPAI_ACCESS") is { Length: > 0 } named ? named
+        : IsRoot(Root) ? System.IO.Path.Combine(Root, "AIF", "Access")
+        : System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "MPAI", "AIF", "Access");
+    // The governed Shared Storage area (AIF Shared Storage backing folder), in Access.
+    public static string SharedStorage => System.IO.Path.Combine(Access, "SharedStorage");
 }

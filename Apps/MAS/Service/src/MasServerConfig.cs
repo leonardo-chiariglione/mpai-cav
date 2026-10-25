@@ -220,7 +220,24 @@ public sealed class MasServerConfig
     {
         if (!File.Exists(path)) return new MasServerConfig();
 
+        // A RELATIVE PATH IS RELATIVE TO THE CONFIGURATION, not to where the Service was started from: the folder it is in may be anywhere, and the same file
+        // must say the same thing from whichever folder the Service is run.
         var text = File.ReadAllText(path);
+        if (System.Text.Json.Nodes.JsonNode.Parse(text, documentOptions: new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) is System.Text.Json.Nodes.JsonObject root)
+        {
+            var home = Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".";
+            void Resolve(System.Text.Json.Nodes.JsonObject at, params string[] keys)
+            {
+                foreach (var key in keys)
+                    foreach (var (name, value) in System.Linq.Enumerable.ToList(at))
+                        if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase) && value is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var s)
+                            && !string.IsNullOrWhiteSpace(s) && !Path.IsPathRooted(s) && !s.Contains("://", StringComparison.Ordinal))
+                            at[name] = Path.GetFullPath(Path.Combine(home, s));
+            }
+            Resolve(root, "AppDirectory", "AmdDirectory", "SettingsPath", "SchemaDirectory", "PackageCache", "L3Cache", "ModelCache", "OutputFolder",
+                          "Gallery", "SharedStorage", "CertificatePath", "PrivateKeyPath", "AuthorityPath", "WarmUpDirectory");
+            text = root.ToJsonString();
+        }
 
         var config = JsonSerializer.Deserialize<MasServerConfig>(
             text,
