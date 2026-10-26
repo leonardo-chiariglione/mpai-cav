@@ -47,9 +47,9 @@ public class AsmVoiceThroughControllerTests
         BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
     };
 
-    private static string Command(UserCommandData data) => MpaiJson.ToJson(new UserCommand
+    private static string Command(UserCommandRQ data) => MpaiJson.ToJson(new UserCommand
     {
-        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     });
 
     private static double? XOf(JsonNode? scene, string name) =>
@@ -101,7 +101,7 @@ public class AsmVoiceThroughControllerTests
                 Assert.Equal(AifError.OK, opened.Error);
                 ids.Add((string)JsonNode.Parse(opened.Json!)!["BasicAudioObjectID"]!);
             }
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandData
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
                                                                   new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
@@ -120,11 +120,11 @@ public class AsmVoiceThroughControllerTests
             // The User Command that comes out is given back where the User Agent addresses it.
             var understood = api.OutputRead(Asm, "CAE-UCM-V1.0", 6, 180_000);
             Assert.True(understood.Error == AifError.OK, "no User Command: " + understood.Error);
-            Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandData"]!["MovedObjects"]);
+            Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandRQ"]!["MovedObjects"]);
             Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 2, understood.Json!));
 
             var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 2, 60_000);
-            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport!.Outcome);
+            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
             var edited = api.OutputRead(Asm, "OSD-BAS-V1.5", 1, 60_000);
             Assert.True(XOf(JsonNode.Parse(edited.Json!), "violin")!.Value < violinAt, "the violin moved to the left");
         }

@@ -44,7 +44,7 @@ public class AsmEditingTests
         DescrMetadata = name
     };
 
-    private static UserCommand Command(UserCommandData data) => new() { UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data };
+    private static UserCommand Command(UserCommandRQ data) => new() { UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data };
     private static ManagedObject Ref(string id) => new() { ObjectID = id };
     private static SpatialAttitude At(double x) => new()
     {
@@ -84,7 +84,7 @@ public class AsmEditingTests
             string Said(string report)
             {
                 if (report.Length == 0) return "no report";
-                var done = MpaiJson.FromJson<UserCommand>(report).UserCommandReport!;
+                var done = MpaiJson.FromJson<UserCommand>(report).UserCommandRS!;
                 return $"{done.Outcome}: " + string.Join(", ", done.Actions.Select(a => $"{a.Action} {a.ObjectID} {a.Outcome}{(a.ResultID is null ? "" : " -> " + a.ResultID)}"));
             }
 
@@ -96,7 +96,7 @@ public class AsmEditingTests
 
             // 2. Its acoustics, the Object part, and where it is heard from: new versions.
             var profile = new AcousticProfile { AcousticProfileID = "music-acp", FrequencyRange = new FrequencyRange { MinFrequencyHz = 40, MaxFrequencyHz = 16000 }, Loudness = -18 };
-            var (modified, said2) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (modified, said2) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 UserPoV = new PointOfView { PointOfViewID = "behind", CartPosition = [0, -2, 1.6], Orientation = [0, 0, 0] },
                 ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = Ref(Id(music, "BasicAudioObjectID")!), AcousticProfile = profile }] }
@@ -108,7 +108,7 @@ public class AsmEditingTests
 
             // 3. Composing in Object Editing: an Object is composed in a Scene.
             var (voice, _) = await Run(AOE, objectOut, objectReport, (objectIn, MpaiJson.ToJson(Sound("voice"))));
-            var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
@@ -116,7 +116,7 @@ public class AsmEditingTests
 
             // 4. BAOs into a Basic Audio Scene, heard from a UserPoV.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            var (bas, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (bas, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(-1) }, new ObjectPlacement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
@@ -126,7 +126,7 @@ public class AsmEditingTests
             r["4 the report"] = Said(said4);
 
             // 5. One member moved, the other removed, and a member the Scene does not have.
-            var (moved, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandData
+            var (moved, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), NewSpatialAttitude = At(3) }] },
                 RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!) }, new ObjectPlacement { ObjectID = Ref("BAO999999") }] }

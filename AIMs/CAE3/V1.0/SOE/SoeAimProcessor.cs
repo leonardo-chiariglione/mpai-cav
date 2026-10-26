@@ -107,7 +107,7 @@ public sealed class SoeAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) { _undo.Revoke(revoked, report); outputs[_reportOut] = MpaiJson.ToJson(report.Report()); goto opened; }
+            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) { _undo.Revoke(revoked, report); outputs[_reportOut] = MpaiJson.ToJson(report.Report()); goto opened; }
             var waiting = Apply(command, report, outputs);
             if (_overwritten.Count > 0)
             {
@@ -141,7 +141,7 @@ public sealed class SoeAimProcessor : IAimProcessor
     // True when the command waits for a translation, which then reports it.
     private bool Apply(UserCommand command, CommandReport report, Dictionary<string, string> outputs)
     {
-        var data = command.UserCommandData;
+        var data = command.UserCommandRQ;
         if (data is null) return false;
         const string inScene = "where an Object is in a Scene is Speech Scene Editing's";
         foreach (var (action, any) in new[] { ("AddedObjects", data.AddedObjects is { Objects.Count: > 0 }),

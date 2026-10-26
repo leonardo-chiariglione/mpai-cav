@@ -92,7 +92,7 @@ public sealed class SseAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
             else
             {
                 var before = _open;
@@ -117,7 +117,7 @@ public sealed class SseAimProcessor : IAimProcessor
 
     private void Apply(UserCommand command, PointOfView? pov, CommandReport report)
     {
-        var data = command.UserCommandData;
+        var data = command.UserCommandRQ;
         if (data is null) return;
         var listener = data.UserPoV ?? pov;
 

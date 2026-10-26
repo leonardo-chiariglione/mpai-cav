@@ -10,11 +10,11 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class RevocationAimTests
 {
-    private static Mpai.Core.UserCommand Command(Mpai.Core.UserCommandData data) => new()
+    private static Mpai.Core.UserCommand Command(Mpai.Core.UserCommandRQ data) => new()
     {
-        UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     };
-    private static Mpai.Core.UserCommand Revoke(Mpai.Core.UserCommand earlier) => Command(new Mpai.Core.UserCommandData { RevokedUserCommandID = earlier.UserCommandID });
+    private static Mpai.Core.UserCommand Revoke(Mpai.Core.UserCommand earlier) => Command(new Mpai.Core.UserCommandRQ { RevokedUserCommandID = earlier.UserCommandID });
     private static Mpai.Core.ManagedObject Ref(string id) => new() { ObjectID = id };
     private static SpatialAttitude At(double x) => new()
     {
@@ -27,11 +27,11 @@ public class RevocationAimTests
         BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
     };
 
-    private static async Task<(JsonNode? Out, Mpai.Core.UserCommandReport? Report)> Run(AIF.Controller.IAimProcessor aim, string? outPort, string reportPort, params (string Port, string Json)[] inputs)
+    private static async Task<(JsonNode? Out, Mpai.Core.UserCommandRS? Report)> Run(AIF.Controller.IAimProcessor aim, string? outPort, string reportPort, params (string Port, string Json)[] inputs)
     {
         var m = new AIF.Controller.Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) };
         var o = await aim.ProcessAsync(m);
-        var report = o.Ports.TryGetValue(reportPort, out var r) && r.Length > 0 ? Mpai.Core.MpaiJson.FromJson<Mpai.Core.UserCommand>(r).UserCommandReport : null;
+        var report = o.Ports.TryGetValue(reportPort, out var r) && r.Length > 0 ? Mpai.Core.MpaiJson.FromJson<Mpai.Core.UserCommand>(r).UserCommandRS : null;
         return (outPort is not null && o.Ports.TryGetValue(outPort, out var j) ? JsonNode.Parse(j) : null, report);
     }
 
@@ -56,7 +56,7 @@ public class RevocationAimTests
             var (opened, _) = await Run(aoe, objectOut, report, (objectIn, Mpai.Core.MpaiJson.ToJson(Sound("music"))));
             var original = (string)opened!["BasicAudioObjectID"]!;
 
-            var louder = Command(new Mpai.Core.UserCommandData { LUFS = -12 });
+            var louder = Command(new Mpai.Core.UserCommandRQ { LUFS = -12 });
             var (changed, said) = await Run(aoe, objectOut, report, (command, Mpai.Core.MpaiJson.ToJson(louder)));
             Assert.NotEqual(original, (string)changed!["BasicAudioObjectID"]!);                     // a new version
             Assert.Equal("Done", said!.Outcome);
@@ -92,8 +92,8 @@ public class RevocationAimTests
             string idA = (string)a!["BasicAudioObjectID"]!, idB = (string)b!["BasicAudioObjectID"]!;
             int Members(JsonNode? scene) => scene?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0;
 
-            var addA = Command(new Mpai.Core.UserCommandData { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idA), SpatialAttitude = At(-1) }] } });
-            var addB = Command(new Mpai.Core.UserCommandData { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idB), SpatialAttitude = At(1) }] } });
+            var addA = Command(new Mpai.Core.UserCommandRQ { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idA), SpatialAttitude = At(-1) }] } });
+            var addB = Command(new Mpai.Core.UserCommandRQ { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idB), SpatialAttitude = At(1) }] } });
             var (one, _) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(addA)));
             var (two, _) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(addB)));
             Assert.Equal((1, 2), (Members(one), Members(two)));
@@ -110,7 +110,7 @@ public class RevocationAimTests
             Assert.Equal("Done", first!.Outcome);
             Assert.Null(nothing);                                                                 // the Scene that the command created is gone: nothing is open
 
-            var (_, unknown) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(Command(new Mpai.Core.UserCommandData { RevokedUserCommandID = "never-sent" }))));
+            var (_, unknown) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(Command(new Mpai.Core.UserCommandRQ { RevokedUserCommandID = "never-sent" }))));
             Assert.Equal("Failed", unknown!.Outcome);
         }
         finally { try { Directory.Delete(root, true); } catch { } }
@@ -129,7 +129,7 @@ public class RevocationAimTests
             await Run(soe, null, report, (objectIn, Mpai.Core.MpaiJson.ToJson(new BasicSpeechObject { BasicSpeechObjectID = "BSO000001" })));
             Assert.Null(Mpai.Cae.Soe.SpeechStore.Get(storage, "BSO000001")!.BasicSpeechObjectSpaceTime);
 
-            var place = Command(new Mpai.Core.UserCommandData { ChangedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = Ref("BSO000001"), SpatialAttitude = At(2) }] } });
+            var place = Command(new Mpai.Core.UserCommandRQ { ChangedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = Ref("BSO000001"), SpatialAttitude = At(2) }] } });
             var (_, said) = await Run(soe, null, report, (command, Mpai.Core.MpaiJson.ToJson(place)));
             Assert.Equal("Done", said!.Outcome);
             Assert.NotNull(Mpai.Cae.Soe.SpeechStore.Get(storage, "BSO000001")!.BasicSpeechObjectSpaceTime);

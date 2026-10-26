@@ -350,9 +350,9 @@ public sealed class Studio : IDisposable
 
     private static SpaceTime PlacedAt(double x, double y, double z, double yaw, double start, double? end = null) => new() { SpatialAttitude1 = At(x, y, z, yaw), Time = StartTime(start, end) };
 
-    private static UserCommand Command(UserCommandData data) => new()
+    private static UserCommand Command(UserCommandRQ data) => new()
     {
-        UserCommandID = "C" + Guid.NewGuid().ToString("N")[..10], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = "C" + Guid.NewGuid().ToString("N")[..10], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     };
 
     // Puts the object of the library in the scene - facing the listener - where the user says. The command carries the Object itself (the Object or ID of the data types):
@@ -366,7 +366,7 @@ public sealed class Studio : IDisposable
             if (Members.Any(m => m.Key == item.Key || (placedAs.TryGetValue(m.Key, out var held) && held == item))) return Task.FromResult(new Outcome(false, $"{item.File} is already in the scene."));
             double px = x ?? 0, py = y ?? 2;
             placedAs.Remove(item.Key!);                          // put in as itself, not as part of an audio object it was once in
-            return RunAsync(Command(new UserCommandData
+            return RunAsync(Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = MpaiJson.FromJson<BasicAudioObject>(json) }, SpatialAttitude = At(px, py, z, yaw, 0) }] }
             }), $"{item.File} is in the scene, {Describe(px, py)}.");
@@ -385,7 +385,7 @@ public sealed class Studio : IDisposable
             SpatialAttitude = At(p.Position[0] + dx, p.Position[1] + dy, p.Position[2], p.YawDeg, p.StartSeconds, p.EndSeconds)
         }).ToList();
         var first = placed[0].SpatialAttitude!.Position.CartPosition;
-        return RunAsync(Command(new UserCommandData { AddedObjects = new ObjectPlacements { Objects = placed } }), $"{item.File} is in the scene, {Describe(first[0], first[1])}.");
+        return RunAsync(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = placed } }), $"{item.File} is in the scene, {Describe(first[0], first[1])}.");
     }
 
     // The sounds that move together: the member, or all the sounds of the audio object it came from.
@@ -407,7 +407,7 @@ public sealed class Studio : IDisposable
                 NewSpatialAttitude = At(o.X + dx, o.Y + dy, o.Z + dz, o.Yaw + dyaw, begins, ends)
             };
         }).ToList();
-        return RunAsync(Command(new UserCommandData { MovedObjects = new ObjectMovements { Objects = moved } }), said ?? $"{m.Name} moved, {Describe(x, y)}.");
+        return RunAsync(Command(new UserCommandRQ { MovedObjects = new ObjectMovements { Objects = moved } }), said ?? $"{m.Name} moved, {Describe(x, y)}.");
     }
 
     // WHEN IT SOUNDS: from the second it starts (or that many seconds later than now, when relative) to the second it ends; the sound is cut there.
@@ -429,7 +429,7 @@ public sealed class Studio : IDisposable
     public Task<Outcome> EndAsync(Member m, double seconds) => TimeAsync(m, null, false, seconds);
 
     public Task<Outcome> RemoveAsync(Member m) =>
-        RunAsync(Command(new UserCommandData { RemovedObjects = new ObjectPlacements { Objects = GroupOf(m).Select(o => new ObjectPlacement { SpatialAttitude = At(o.X, o.Y, o.Z, o.Yaw, o.Start, o.End) }).ToList() } }),
+        RunAsync(Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = GroupOf(m).Select(o => new ObjectPlacement { SpatialAttitude = At(o.X, o.Y, o.Z, o.Yaw, o.Start, o.End) }).ToList() } }),
                  $"{m.Name} is out of the scene.");
 
     // A ROOM ROUND THE OBJECTS: the box of their places with a margin of floor all round, and a height - the distance between floor and ceiling - of at least minHeight
@@ -441,7 +441,7 @@ public sealed class Studio : IDisposable
         if (x1 - x0 < 2) { var c = (x0 + x1) / 2; (x0, x1) = (c - 1, c + 1); }
         if (y1 - y0 < 2) { var c = (y0 + y1) / 2; (y0, y1) = (c - 1, c + 1); }
         var room = new Room(x0, y0, x1, y1, Math.Max(minHeight, around.Max(m => m.Z) + 0.5), 0.15);
-        return RunAsync(Command(new UserCommandData { ClosedSpace = new JsonArray(room.ToClosedSpace()) }),
+        return RunAsync(Command(new UserCommandRQ { ClosedSpace = new JsonArray(room.ToClosedSpace()) }),
                         $"The room is built: {room.Width:0.#} m by {room.Depth:0.#} m, {room.Height:0.#} m high.");
     }
 
@@ -459,7 +459,7 @@ public sealed class Studio : IDisposable
     // WHAT AUDIO OBJECT EDITING DOES, AND THE SCENE FOLLOWS: the command carries the Object to edit, itself; the Module edits it (a new version of it) and gives it back; the
     // scene then has the new version in the place of the old one - the old one taken out, the new one put where it was, by its PoV - in one command, so that undo gives the
     // old one back.
-    private async Task<Outcome> EditObjectAsync(Member m, UserCommandData data, string said)
+    private async Task<Outcome> EditObjectAsync(Member m, UserCommandRQ data, string said)
     {
         string newObject;
         await turn.WaitAsync();
@@ -472,14 +472,14 @@ public sealed class Studio : IDisposable
                 var report = link.Read(ModuleLink.Ucm, 1);
                 return (report, report is null ? null : link.Read(ModuleLink.Bao, 1));
             });
-            var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport;
+            var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandRS;
             if (report is not { Outcome: "Done" or "Partly" } || objectJson is null) return new Outcome(false, report?.Actions.FirstOrDefault(a => a.Outcome != "Done")?.Reason ?? "That could not be done.");
             newObject = objectJson;
         }
         finally { turn.Release(); }
         var edited = MpaiJson.FromJson<BasicAudioObject>(newObject);
         if (ItemOf(m.Key) is { } via) placedAs[ObjectKey(edited)] = via;
-        return await RunAsync(Command(new UserCommandData
+        return await RunAsync(Command(new UserCommandRQ
         {
             RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { SpatialAttitude = At(m.X, m.Y, m.Z, m.Yaw, m.Start, m.End) }] },
             AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = edited }, SpatialAttitude = At(m.X, m.Y, m.Z, m.Yaw, m.Start, m.End) }] }
@@ -508,13 +508,13 @@ public sealed class Studio : IDisposable
     };
 
     private Task<Outcome> ObjectProfileAsync(Member m, Func<AcousticProfile, AcousticProfile> change, string said) =>
-        EditObjectAsync(m, new UserCommandData { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { BasicAudioObject = ObjectOf(m) }, AcousticProfile = change(ProfileOf(m)) }] } }, said);
+        EditObjectAsync(m, new UserCommandRQ { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { BasicAudioObject = ObjectOf(m) }, AcousticProfile = change(ProfileOf(m)) }] } }, said);
 
     private Task<Outcome> SceneProfileAsync(Func<AcousticProfile, AcousticProfile> change, string said)
     {
         if (SceneJson is null) return Task.FromResult(new Outcome(false, "There is no scene yet."));
         var current = SceneProfile ?? new AcousticProfile { AcousticProfileID = Guid.NewGuid().ToString() };
-        return RunAsync(Command(new UserCommandData { ModifiedScene = new SceneChange { AcousticProfile = change(current) } }), said);
+        return RunAsync(Command(new UserCommandRQ { ModifiedScene = new SceneChange { AcousticProfile = change(current) } }), said);
     }
 
     // --- the Object part ---
@@ -610,7 +610,7 @@ public sealed class Studio : IDisposable
         if (Room is not { } room) return Task.FromResult(new Outcome(false, "There is no room yet."));
         if (x1 - x0 < 0.5 || y1 - y0 < 0.5) return Task.FromResult(new Outcome(false, "A room cannot be smaller than half a metre."));
         var changed = room with { X0 = x0, Y0 = y0, X1 = x1, Y1 = y1, Height = Math.Clamp(height ?? room.Height, 0.5, 100) };
-        return RunAsync(Command(new UserCommandData { ClosedSpace = new JsonArray(changed.ToClosedSpace()) }),
+        return RunAsync(Command(new UserCommandRQ { ClosedSpace = new JsonArray(changed.ToClosedSpace()) }),
                         $"The room is {changed.Width:0.#} m by {changed.Depth:0.#} m, {changed.Height:0.#} m high.");
     }
 
@@ -619,7 +619,7 @@ public sealed class Studio : IDisposable
     {
         if (SceneJson is null) return Task.FromResult(new Outcome(false, "There is no scene yet."));
         var pov = new PointOfView { PointOfViewID = Guid.NewGuid().ToString(), CartPosition = [x, y, z], Orientation = [0, 0, yaw] };
-        return RunAsync(Command(new UserCommandData { UserPoV = pov }), $"You are at {x:0.##}, {y:0.##} m, facing {yaw:0}°.");
+        return RunAsync(Command(new UserCommandRQ { UserPoV = pov }), $"You are at {x:0.##}, {y:0.##} m, facing {yaw:0}°.");
     }
 
     // Reverberation: the time the sound takes to die away - RT60, RT30 or RT20 (a plot of seconds by frequency; one value here, for every frequency), or the EDT (seconds).
@@ -680,7 +680,7 @@ public sealed class Studio : IDisposable
     public Item? SaveObject(Member m, string name)
     {
         var group = GroupOf(m);
-        var command = Command(new UserCommandData
+        var command = Command(new UserCommandRQ
         {
             AddedObjects = new ObjectPlacements { Objects = group.Select(o => new ObjectPlacement { ObjectID = new ManagedObject { BasicAudioObject = ObjectOf(o) }, SpatialAttitude = At(o.X, o.Y, o.Z, o.Yaw, o.Start, o.End) }).ToList() }
         });
@@ -694,7 +694,7 @@ public sealed class Studio : IDisposable
             auo = reportJson is null ? null : link.Read(ModuleLink.Auo, 1, 20_000);
         }
         finally { turn.Release(); }
-        var action = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport?.Actions.FirstOrDefault(a => a.Action == "AddedObjects");
+        var action = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandRS?.Actions.FirstOrDefault(a => a.Action == "AddedObjects");
         if (action is not { Outcome: "Done" } || auo is null) throw new InvalidOperationException(action?.Reason ?? "The Module did not make the Audio Object.");
         var seconds = group.Max(o => o.End ?? (ItemOf(o.Key)?.Seconds ?? 0) + o.Start);
         var item = Keep("auo", Catalog.Unique(name, "auo"), auo, true, seconds);
@@ -710,7 +710,7 @@ public sealed class Studio : IDisposable
     {
         if (done.Count == 0) return new Outcome(false, "There is nothing to undo.");
         var last = done[^1];
-        var result = await RunAsync(Command(new UserCommandData { RevokedUserCommandID = last }), null, record: false);
+        var result = await RunAsync(Command(new UserCommandRQ { RevokedUserCommandID = last }), null, record: false);
         if (result.Ok) done.RemoveAt(done.Count - 1);
         return result.Ok ? new Outcome(true, "Undone.") : result;
     }
@@ -726,13 +726,13 @@ public sealed class Studio : IDisposable
                 link.DrainEditing();
                 link.Write(ModuleLink.Ucm, 2, MpaiJson.ToJson(command));
                 var report = link.Read(ModuleLink.Ucm, 2);
-                var parsed = report is null ? null : MpaiJson.FromJson<UserCommand>(report).UserCommandReport;
+                var parsed = report is null ? null : MpaiJson.FromJson<UserCommand>(report).UserCommandRS;
                 var ok = parsed is { Outcome: "Done" or "Partly" };
                 // A scene comes after a command that edits it; after one that revokes, perhaps none - when the revoked command had made the scene, there is no scene any more.
-                return (report, SceneFrom(ok && command.UserCommandData?.RevokedUserCommandID is null ? 60_000 : 2_000));
+                return (report, SceneFrom(ok && command.UserCommandRQ?.RevokedUserCommandID is null ? 60_000 : 2_000));
             });
             ReadScene(scene);
-            var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandReport;
+            var report = reportJson is null ? null : MpaiJson.FromJson<UserCommand>(reportJson).UserCommandRS;
             var ok = report is { Outcome: "Done" or "Partly" };
             if (ok && record) done.Add(command.UserCommandID);
             if (ok) KeepLastScene();

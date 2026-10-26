@@ -123,14 +123,14 @@ public class EdpAsmTests
         var play = await Say("play the scene");
         var ask = await Say("move it to the left");
         var undo = await Say("undo");
-        var moved = move.Command?["UserCommandData"]?["MovedObjects"]?["Objects"]?[0]?["NewSpatialAttitude"]?["Position"]?["CartPosition"]?[0];
+        var moved = move.Command?["UserCommandRQ"]?["MovedObjects"]?["Objects"]?[0]?["NewSpatialAttitude"]?["Position"]?["CartPosition"]?[0];
 
         Expected.Match("edp-asm-voice.json", new Dictionary<string, string>
         {
             ["the requests understood right, at least 75%"] = share >= 0.75 ? "yes" : $"no ({right} of {set["cases"]!.AsArray().Count})",
             ["the User Commands valid against their schema"] = valid == commands ? "all" : $"{valid} of {commands}",
             ["through EDP: move the violin to the left"] = $"{(moved is not null ? $"the violin to x = {moved.GetValue<double>():0.#}" : "no Moved Object")}; said \"{move.Reply}\"",
-            ["through EDP: play the scene"] = play.Command?["UserCommandData"]?["DeliveredObject"] is not null ? "a Delivered Object" : "no command",
+            ["through EDP: play the scene"] = play.Command?["UserCommandRQ"]?["DeliveredObject"] is not null ? "a Delivered Object" : "no command",
             ["through EDP: undo"] = undo.ForUA is not null ? $"Text For UA \"{undo.ForUA["Text"]}\", {(undo.Command is null ? "no User Command" : "a User Command")}" : "no Text For UA",
             ["through EDP: move it to the left"] = ask.Command is null && ask.Reply?.EndsWith('?') == true ? "a question, no command" : $"command {(ask.Command is null ? "none" : "sent")}, said \"{ask.Reply}\""
         });

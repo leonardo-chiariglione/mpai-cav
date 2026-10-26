@@ -49,7 +49,7 @@ public class AsmTranslationTests
             api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandData = new UserCommandData
+                UserCommandRQ = new UserCommandRQ
                 {
                     TranslatedObjects = new ObjectTranslations { Objects = [new ObjectTranslation
                     {
@@ -66,7 +66,7 @@ public class AsmTranslationTests
             // Speech Object Editing reports the command when the translation is done.
             var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000);
             r["the report of Speech Object Editing"] = report.Error != AifError.OK ? $"nothing ({report.Error})"
-                : string.Join("; ", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport is { } done
+                : string.Join("; ", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS is { } done
                     ? new[] { done.Outcome }.Concat(done.Actions.Select(a => $"{a.Action} {a.Outcome}")) : ["no report half"]);
 
             // The open Speech Object as it leaves the Module, the last one given.
@@ -127,7 +127,7 @@ public class AsmTranslationTests
             var translate = new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandData = new UserCommandData
+                UserCommandRQ = new UserCommandRQ
                 {
                     TranslatedObjects = new ObjectTranslations { Objects = [new ObjectTranslation
                     {
@@ -151,11 +151,11 @@ public class AsmTranslationTests
             api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandData = new UserCommandData { RevokedUserCommandID = translate.UserCommandID }
+                UserCommandRQ = new UserCommandRQ { RevokedUserCommandID = translate.UserCommandID }
             }));
             var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000);
             Assert.Equal(AifError.OK, report.Error);
-            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport!.Outcome);
+            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
             Assert.True(Stored()!.Data.SequenceEqual(english.Data));                                   // the original is back
         }
         finally

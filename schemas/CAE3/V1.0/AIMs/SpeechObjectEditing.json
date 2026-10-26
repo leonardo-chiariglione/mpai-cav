@@ -7,7 +7,7 @@
   "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SOE-V1.0"},
 
   "APIProfile":           "Basic",
-  "Description":          "Speech Object Editing. One Basic Speech Object is open at a time: a Basic Speech Object arriving is opened - from Shared Storage, by its identifier - or kept. The User Command changes where it is heard from (UserPoV, also on its own Port) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Basic Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its report half (UserCommandReport) saying how each action was executed (for a translation, when it is done).",
+  "Description":          "Speech Object Editing. One Basic Speech Object is open at a time: a Basic Speech Object arriving is opened - from Shared Storage, by its identifier - or kept. The User Command changes where it is heard from (UserPoV, also on its own Port) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Basic Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its report half (UserCommandRS) saying how each action was executed (for a translation, when it is done).",
 
   "InternalTypes":        [],
 
@@ -18,7 +18,7 @@
                            {"Name": "EditedSpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Speech", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Language", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "UserCommandReport", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "UserCommandRS", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
   "Topology":             [],

@@ -79,7 +79,7 @@ public class AsmVoiceChainTests
             var build = new UserCommand
             {
                 UserCommandID = "build", UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandData = new UserCommandData
+                UserCommandRQ = new UserCommandRQ
                 {
                     AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
                                                                       new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
@@ -98,10 +98,10 @@ public class AsmVoiceChainTests
             // 3. EDP, given the Scene and the words, makes the User Command.
             var understood = await Give(edp, (edpPorts.Input("OSD-BTO-V1.5"), MpaiJson.ToJson(BasicTextObject.FromText(heard))), (edpPorts.Input("OSD-BAS-V1.5"), scene));
             Assert.True(understood.Ports.TryGetValue(edpPorts.Output("CAE-UCM-V1.0"), out var ucm), "EDP gave no User Command for \"" + heard + "\"");
-            Assert.NotNull(JsonNode.Parse(ucm!)!["UserCommandData"]!["MovedObjects"]);
+            Assert.NotNull(JsonNode.Parse(ucm!)!["UserCommandRQ"]!["MovedObjects"]);
             // 4. Audio Scene Editing executes it, and says so.
             var edited = await Give(ase, (command, ucm!));
-            var report = MpaiJson.FromJson<UserCommand>(edited.Ports[sceneReport]).UserCommandReport!;
+            var report = MpaiJson.FromJson<UserCommand>(edited.Ports[sceneReport]).UserCommandRS!;
             Assert.Equal("Done", report.Outcome);
             Assert.True(XOf(JsonNode.Parse(edited.Ports[sceneOut]), "violin")!.Value < violinAt, "the violin moved to the left");
         }

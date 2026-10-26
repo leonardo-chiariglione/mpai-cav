@@ -225,7 +225,7 @@ Examples (another scene: members guitar, bass, flute; stored: thunder):
             }
         }
 
-        var data = new UserCommandData
+        var data = new UserCommandRQ
         {
             UserPoV = userPov, LUFS = lufs, DeliveredObject = delivered,
             AddedObjects = added.Count > 0 ? new ObjectPlacements { Objects = added } : null,
@@ -235,7 +235,7 @@ Examples (another scene: members guitar, bass, flute; stored: thunder):
             ModifiedObjects = modified.Count > 0 ? new ObjectChanges { Objects = modified } : null
         };
         var any = userPov is not null || delivered is not null || added.Count + removed.Count + moved.Count + changed.Count + modified.Count > 0;
-        var command = any ? new UserCommand { UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data } : null;
+        var command = any ? new UserCommand { UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data } : null;
         var ua = forUA.Count > 0 ? new TextForUA { TextForUATime = SimpleTime.At(DateTimeOffset.UtcNow), Text = string.Join(" ", forUA) } : null;
         return new Turn(string.Join(" ", said), command, ua);
     }

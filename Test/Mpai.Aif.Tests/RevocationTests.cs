@@ -11,7 +11,7 @@ public class RevocationTests
 {
     private static JsonObject Command(string id, JsonObject data) => new()
     {
-        ["Header"] = "CAE-UCM-V1.0", ["UserCommandID"] = id, ["UserCommandTime"] = EssJson.SimpleTime(id + "-T", 1000), ["UserCommandData"] = data
+        ["Header"] = "CAE-UCM-V1.0", ["UserCommandID"] = id, ["UserCommandTime"] = EssJson.SimpleTime(id + "-T", 1000), ["UserCommandRQ"] = data
     };
 
     private static bool Valid(JsonNode json)
@@ -32,7 +32,7 @@ public class RevocationTests
     public void TheReportSaysWhetherTheAIMUndidIt(string outcome)
     {
         var report = Command("UCM000007", new JsonObject { ["RevokedUserCommandID"] = "UCM000005" });
-        report["UserCommandReport"] = new JsonObject
+        report["UserCommandRS"] = new JsonObject
         {
             ["Outcome"] = outcome == "Done" ? "Done" : outcome == "Failed" ? "Failed" : "Failed",
             ["Actions"] = new JsonArray(new JsonObject { ["Action"] = "RevokedUserCommandID", ["ObjectID"] = "UCM000005", ["Outcome"] = outcome })

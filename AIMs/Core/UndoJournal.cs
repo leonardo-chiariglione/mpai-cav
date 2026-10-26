@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Mpai.Core;
 
 // WHAT AN AIM HAS DONE, TO UNDO IT (the author, 2026/10/11: the AIMs involved in a User Command must be able to undo). A User Command may revoke an earlier one by
-// its ID (UserCommandData.RevokedUserCommandID); the AIM that executed the earlier one undoes it, and its report says whether it did. Each AIM keeps one journal: a
+// its ID (UserCommandRQ.RevokedUserCommandID); the AIM that executed the earlier one undoes it, and its report says whether it did. Each AIM keeps one journal: a
 // command that changed something is recorded with how to put it back; a revocation finds it by its ID.
 //   - THE LAST FIRST. A command is undone only when it is the last that this AIM executed and not yet undone, and what it changed has not been changed by anything
 //     else since: a later command must be revoked before an earlier one. Otherwise the revocation is reported as failed, with the reason.

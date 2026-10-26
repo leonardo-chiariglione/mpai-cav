@@ -91,7 +91,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         {
             var command = MpaiJson.FromJson<UserCommand>(commandJson);
             var report = new CommandReport(command);
-            if (command.UserCommandData?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
             else
             {
                 var before = _open;
@@ -133,7 +133,7 @@ public sealed class AoeAimProcessor : IAimProcessor
 
     private void Apply(UserCommand command, CommandReport report)
     {
-        var data = command.UserCommandData;
+        var data = command.UserCommandRQ;
         if (data is null) return;
         const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
         foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),

@@ -35,9 +35,9 @@ public class BmeTests
         UserPoV = new PointOfView { PointOfViewID = "u", CartPosition = [0, 0, 0], Orientation = [0, 0, 0] }
     });
     private static string Speech(string id) => MpaiJson.ToJson(new BasicSpeechSceneDescriptors { MInstanceID = "M1", BasicSpeechSceneDescriptorsID = id });
-    private static string Command(UserCommandData data) => MpaiJson.ToJson(new UserCommand
+    private static string Command(UserCommandRQ data) => MpaiJson.ToJson(new UserCommand
     {
-        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     });
     private static string AudioObject(string id) => MpaiJson.ToJson(new BasicAudioObject { BasicAudioObjectID = id });
     private static string SpeechObject(string id) => MpaiJson.ToJson(new BasicSpeechObject { BasicSpeechObjectID = id });
@@ -63,7 +63,7 @@ public class BmeTests
                 if (o.Ports.TryGetValue(reportOut, out var rep))
                 {
                     reports.Add(rep);
-                    var done = MpaiJson.FromJson<UserCommand>(rep).UserCommandReport!;
+                    var done = MpaiJson.FromJson<UserCommand>(rep).UserCommandRS!;
                     said = $"{done.Outcome}: " + string.Join(", ", done.Actions.Select(a => $"{a.Action} {a.ObjectID} {a.Outcome}"));
                 }
                 return (o.Ports.TryGetValue(sceneOut, out var s) ? s : null, said);
@@ -76,18 +76,18 @@ public class BmeTests
 
             var r = new Dictionary<string, string>();
             await Run((first, Audio("music")), (second, Audio("rain")));
-            var (one, said1) = await Run((command, Command(new UserCommandData { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("rain")] } })));
+            var (one, said1) = await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("rain")] } })));
             r["1 two Audio Scenes"] = $"{Members(one)}; {said1}";
 
-            await Run((command, Command(new UserCommandData { RemovedObjects = new ObjectPlacements { Objects = [Place("rain")] } })));
+            await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("rain")] } })));
             await Run((second, Speech("voice")));
-            var (two, said2) = await Run((command, Command(new UserCommandData { AddedObjects = new ObjectPlacements { Objects = [Place("voice")] } })));
+            var (two, said2) = await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("voice")] } })));
             r["2 rain out, a Speech Scene in"] = $"{Members(two)}, {(two is null ? "-" : Valid("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", two))}; {said2}";
 
             var (followed, _) = await Run((second, Speech("voice-2")));
             r["3 a new version of the Speech Scene, followed"] = Members(followed);
 
-            var (removed, said4) = await Run((command, Command(new UserCommandData { RemovedObjects = new ObjectPlacements { Objects = [Place("music"), Place("nowhere")] } })));
+            var (removed, said4) = await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("music"), Place("nowhere")] } })));
             r["4 music out, and a Scene not there"] = $"{Members(removed)}; {said4}";
 
             r["5 the reports"] = string.Join("; ", reports.Select(j => Valid("CAE3/V1.0/data/UserCommand.json", j)).Distinct());
@@ -125,14 +125,14 @@ public class BmeTests
 
             var r = new Dictionary<string, string>();
             await Run((objectPort1, AudioObject("music")), (objectPort2, SpeechObject("voice")));
-            r["1 an Audio Object and a Speech Object"] = Holds(await Run((command, Command(new UserCommandData { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("voice")] } }))));
+            r["1 an Audio Object and a Speech Object"] = Holds(await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("voice")] } }))));
 
             await Run((scenePort2, Speech("dialogue")));
-            r["2 a Speech Scene added"] = Holds(await Run((command, Command(new UserCommandData { AddedObjects = new ObjectPlacements { Objects = [Place("dialogue")] } }))));
+            r["2 a Speech Scene added"] = Holds(await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("dialogue")] } }))));
 
             r["3 a new version of the Audio Object, followed"] = Holds(await Run((objectPort1, AudioObject("music-2"))));
 
-            r["4 the Speech Object and the Speech Scene out"] = Holds(await Run((command, Command(new UserCommandData { RemovedObjects = new ObjectPlacements { Objects = [Place("voice"), Place("dialogue")] } }))));
+            r["4 the Speech Object and the Speech Scene out"] = Holds(await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("voice"), Place("dialogue")] } }))));
             Expected.Match("bme-objects.json", r);
         }
         finally { try { Directory.Delete(root, true); } catch { } }

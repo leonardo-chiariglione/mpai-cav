@@ -36,17 +36,16 @@ public sealed class UserCommand
     public string      UserCommandID   { get; init; } = string.Empty;
     public SimpleTime? UserCommandTime { get; init; }
 
-    public UserCommandData? UserCommandData { get; init; }
+    public UserCommandRQ? UserCommandRQ { get; init; }
 
-    // THE OUTPUT HALF (the author, 2026/10/04: "User Command schema should have one
-    // half for input and one for Output (report)"): how the AIM that executed the
-    // command did, under the command's own UserCommandID.
-    public UserCommandReport? UserCommandReport { get; init; }
+    // THE RESPONSE (the author, 2026/10/04: "User Command schema should have one half for input and one for Output"; 2026/10/26: RQ and RS, one or the other, as in the
+    // other Data Types with a request and a response): how the AIM that executed the command did, under the command's own UserCommandID.
+    public UserCommandRS? UserCommandRS { get; init; }
 
     public string? DescrMetadata { get; init; }
 }
 
-public sealed class UserCommandReport
+public sealed class UserCommandRS
 {
     public SimpleTime?        ReportTime { get; init; }
     public string             Outcome    { get; init; } = "Done";   // Done | Partly | Failed | Ignored
@@ -55,7 +54,7 @@ public sealed class UserCommandReport
 
 public sealed class ReportAction
 {
-    public string  Action   { get; init; } = "";       // the UserCommandData field it comes from
+    public string  Action   { get; init; } = "";       // the UserCommandRQ field it comes from
     public string? ObjectID { get; init; }
     public string  Outcome  { get; init; } = "Done";   // Done | Failed | NotSupported
     public string? ResultID { get; set; }
@@ -89,8 +88,7 @@ public sealed class CommandReport(UserCommand command)
     {
         MInstanceID = command.MInstanceID, UEnvironmentID = command.UEnvironmentID,
         UserCommandID = command.UserCommandID, UserCommandTime = command.UserCommandTime ?? SimpleTime.At(DateTimeOffset.UtcNow),
-        UserCommandData = command.UserCommandData,
-        UserCommandReport = new UserCommandReport
+        UserCommandRS = new UserCommandRS
         {
             ReportTime = SimpleTime.At(DateTimeOffset.UtcNow),
             Outcome = actions.Count == 0 ? "Ignored"
@@ -101,7 +99,7 @@ public sealed class CommandReport(UserCommand command)
     };
 }
 
-public sealed class UserCommandData
+public sealed class UserCommandRQ
 {
     // Qualify an operation rather than being one.
     public PointOfView? UserPoV { get; init; }

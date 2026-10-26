@@ -1,11 +1,11 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
   "$id":                        "https://schemas.mpai.community/CAE3/V1.0/data/UserCommand.json",
   "title":                      "User Command V1.0",
-  "description":                "Audio or Visual Scene Editing Commands, in two halves: the command (UserCommandData), input to the AIM that executes it, and the report on its execution (UserCommandReport), output by that AIM under the same UserCommandID. At least one half is present; a report may repeat the command's data.",
+  "description":                "Audio or Visual Scene Editing Commands: a request (UserCommandRQ), input to the AIM that executes it, or the response to it (UserCommandRS), output by that AIM under the same UserCommandID. Exactly one of the two is present, as in the other Data Types with a request and a response.",
   "type":                       "object",
   "additionalProperties":       false,
   "required":                   [ "Header", "UserCommandID", "UserCommandTime" ],
-  "anyOf":                      [ { "required": [ "UserCommandData" ] }, { "required": [ "UserCommandReport" ] } ],
+  "oneOf":                      [ { "required": [ "UserCommandRQ" ], "not": { "required": [ "UserCommandRS" ] } }, { "required": [ "UserCommandRS" ], "not": { "required": [ "UserCommandRQ" ] } } ],
   "properties":                 {
 
     "Header":                   { "type": "string", "const": "CAE-UCM-V1.0" },
@@ -16,7 +16,7 @@
 
   "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
 
-    "UserCommandData":          { "type": "object", "additionalProperties": false, "properties": {
+    "UserCommandRQ":          { "type": "object", "additionalProperties": false, "properties": {
       "UserPoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
       "LUFS":                   { "type": "number" },
       "RevokedUserCommandID":   { "type": "string", "description": "The User Command to revoke, by its UserCommandID (the author, 2026/10/11: every User Command has an ID, and one can revoke an earlier one). It goes to the AIM that executed that command, which undoes it if it can; the report says whether it did: Done, Failed, or NotSupported where the AIM cannot undo it." },
@@ -65,11 +65,11 @@
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "SpeechQualifier":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json", "description": "The Qualifier of the translated Speech Object: its Attributes.Metadata.Language states the target language." } } } } } } } },
 
-    "UserCommandReport":        { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "How the User Command was executed: output by the AIM that executed it.", "properties": {
+    "UserCommandRS":        { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "How the User Command was executed: output by the AIM that executed it.", "properties": {
       "ReportTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
       "Outcome":                { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ], "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes." },
       "Actions":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ], "properties": {
-        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects" ], "description": "The field of UserCommandData the action comes from." },
+        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
         "ObjectID":             { "type": "string", "description": "The Object or Scene acted on." },
         "Outcome":              { "type": "string", "enum": [ "Done", "Failed", "NotSupported" ] },
         "ResultID":             { "type": "string", "description": "The identifier of what the action produced: every edit is a new version." },
