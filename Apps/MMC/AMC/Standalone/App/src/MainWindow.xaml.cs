@@ -1,39 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
-
-using AIF.Controller;   // AifError
 
 using Mpai.Core;
-using Mpai.UaKit;       // AvatarUaHost
+using Mpai.UaKit;       // AvatarUaHost, SpeechListener, TypedInput, MachineVoice, StandardDevices
 using Mpai.Aif.Api;     // ControllerApi, AvatarUtterance
+using Mpai.Ua;          // WorkflowInterpreter, DeviceRegistry
+using Mpai.Wdl;         // WorkflowReader
 
-using Mpai.PhysicalLayer;   // CameraUnit
 using Mpai.Providers;
 
 namespace MmcAmc;
 
-// MMC-AMC User Agent - Affective Multimodal Conversation, on its own: no MAS, no launcher. It follows the workflow of the App
-// (Apps/MMC/AMC/MMC-AMC.orch), driven through the type-addressed Controller API:
-//   start the Module once; each turn offers the person's speech (OSD-BSO) or typed text (OSD-BTO#1), a picture of the person's
-//   face taken by the camera (OSD-BVO, a Visual Object whose type is a Face), the Avatar Model this window draws (OSD-B3O) and
-//   the machine's ID (string); the Module reads the words, the voice and the face and answers with the machine's Portable Avatar (PAF-PAV),
-//   which carries the reply as text and as speech, and the Edited Summary (MMC-SUM), the memory of the conversation, which
-//   goes back with the next turn and nowhere else.
-// The window renders the Portable Avatar on the avatar it keeps and makes no speech of its own: the speech is made by
-// Text-To-Speech inside the Module. Ollama must be running for the dialogue (Entity Dialogue Processing).
-// The face is the camera's: the window never reasons about it.
+// MMC-AMC User Agent - Affective Multimodal Conversation, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
+// Workflow Description of the App (Apps/MMC/AMC/MMC-AMC.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Controller that runs the Module in this process. The workflow starts the Module, takes the Avatar Model, and each turn acquires the
+// person's speech or typed text and a picture of the face, offers them with the Avatar Model, the machine's ID and the memory of the
+// conversation, and presents the Portable Avatar the Module answers with. This window supplies only the devices that serve the Data Types
+// (the microphone, the text box, the camera, the Avatar Model, the avatar) and Stop. Every instruction is shown and said by the avatar.
+// The face is the camera's: the window never reasons about it. Ollama must be running for the dialogue (Entity Dialogue Processing).
 public partial class MainWindow : Window
 {
-    private const string Module = "1MMC-AMC-V2.5-I01";
-
     private const string BSO = "OSD-BSO-V1.5";
     private const string BTO = "OSD-BTO-V1.5";
     private const string BVO = "OSD-BVO-V1.5";
     private const string B3O = "OSD-B3O-V1.5";
-    private const string SUM = "MMC-SUM-V2.5";
     private const string PAV = "PAF-PAV-V1.6";
     private const string MachineName = "Thalia";
 
@@ -41,13 +35,23 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private ControllerApi? _north;
-    private AvatarUaHost?  _avatar;
-    private string?        _memory;          // the Edited Summary of the last turn
+    // The workflow of the App: the one source, read where the repository keeps it.
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "AMC", "MMC-AMC.orch");
+
+    private ControllerApi?            _north;
+    private AvatarUaHost?             _avatar;
+    private SpeechListener?           _ears;
+    private MachineVoice?             _voice;
+    private readonly TypedInput       _typed;
+    private CancellationTokenSource?  _stopping;
+    private Task?                     _running;
+    private bool                      _closing;
+    private bool                      _told;     // the instruction of this turn has been said
 
     public MainWindow()
     {
         InitializeComponent();
+        _typed = new TypedInput(TextBoxIn, SendButton);
         Loaded += OnLoaded;
     }
 
@@ -58,89 +62,52 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            AifError started = AifError.OK;
-            await Task.Run(() =>
-            {
-                _north = new ControllerApi(AmdDir, SettingsPath, store => new AmcProvider(store));
-                started = _north.StartFlow(Module);
-            });
-            if (started != AifError.OK) { SetStatus("could not start " + Module + ": " + started); return; }
-            SpeakButton.IsEnabled = SendButton.IsEnabled = true;
-            InstructionText.Text = "Talk to the avatar: press Speak and say something, or type it and press Enter.";
-            SetStatus("Ready.");
+            _ears  = new SpeechListener(_avatar);
+            _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), Program.Record);
+            var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new AmcProvider(store)));
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
+
+            _stopping = new CancellationTokenSource();
+            StopButton.IsEnabled = true;
+            SetStatus("Running.");
+            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), SetStatus);
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            try { await _running; }
+            catch (OperationCanceledException) { }
+            if (!_closing) SetStatus("Stopped.");
         }
-        catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
+        catch (Exception fatal) { Program.Record("workflow", fatal); SetStatus("stopped: " + fatal.Message); }
+        finally { StopButton.IsEnabled = false; }
     }
 
-    private async void SpeakButton_Click(object sender, RoutedEventArgs e)
+    private void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_avatar is null) return;
-        var face = CameraBox.IsChecked == true;
-        SetBusy(true); SetStatus("listening...");
-        try
-        {
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            if (speech is null || speech.Data.Length == 0) { SetStatus("no speech captured."); return; }
-            AddLine("You", "(spoken)");
-            await TurnAsync(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)), face);
-        }
-        catch (Exception ex) { Program.Record("speak", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
+        StopButton.IsEnabled = false;
+        _avatar?.Silence();
+        _stopping?.Cancel();
     }
 
-    private void SendButton_Click(object sender, RoutedEventArgs e) => _ = SendAsync();
-
-    private void TextBoxIn_KeyDown(object sender, KeyEventArgs e)
+    // Closing ends the workflow first (its On Stop asks the Controller to stop the Module), then the window closes.
+    protected override async void OnClosing(CancelEventArgs e)
     {
-        if (e.Key == Key.Enter && SendButton.IsEnabled) _ = SendAsync();
+        if (_closing || _running is null || _running.IsCompleted) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        _closing = true;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+        try { await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(10))); } catch { }
+        Close();
     }
 
-    private async Task SendAsync()
+    protected override void OnClosed(EventArgs e)
     {
-        var words = TextBoxIn.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(words)) return;
-        TextBoxIn.Clear();
-        var face = CameraBox.IsChecked == true;
-        SetBusy(true);
-        try
-        {
-            AddLine("You", words);
-            await TurnAsync(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))), face);
-        }
-        catch (Exception ex) { Program.Record("send", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
+        try { _voice?.Dispose(); } catch { }
+        try { _north?.Dispose(); } catch { }
+        base.OnClosed(e);
     }
 
-    // One turn: the person's words, the Avatar Model, the machine's ID and the memory; the Portable Avatar presented.
-    private async Task TurnAsync(ControllerApi.Datum said, bool useFace)
-    {
-        if (_north is null || _avatar is null) return;
-        SetStatus("thinking...");
-        var inputs = new List<ControllerApi.Datum>
-        {
-            said,
-            new ControllerApi.Datum(B3O, 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
-            new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
-        };
-        if (!string.IsNullOrWhiteSpace(_memory)) inputs.Add(new ControllerApi.Datum(SUM, 1, _memory!));
-        if (useFace && await Task.Run(() => new CameraUnit().AcquireFaceAsync()) is { } face)
-            inputs.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
-
-        var r = await Task.Run(() => _north!.Advance(Module, inputs));
-        if (!r.Ok) { Program.Record("advance", new Exception(r.Error.ToString())); SetStatus("no reply: " + r.Error); return; }
-
-        _memory = r.ByType(SUM) ?? _memory;
-        var pav = r.ByType(PAV);
-        AddLine(MachineName, AvatarUtterance.TextOfPortableAvatar(pav) is { Length: > 0 } words ? words : "(speaks)");   // Response and Scene Rendering gives speech, face and body, not text
-        SetStatus("done.");
-
-        if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance)
-        {
-            await _avatar.PresentAsync(utterance);
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
-        }
-        else SetStatus("the Portable Avatar carries no speech.");
-    }
+    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
 
     private void AddLine(string who, string words) => Dispatcher.Invoke(() =>
     {
@@ -148,9 +115,69 @@ public partial class MainWindow : Window
         Transcript.ScrollToEnd();
     });
 
-    private void SetBusy(bool b) => Dispatcher.Invoke(() => { SpeakButton.IsEnabled = !b; SendButton.IsEnabled = !b; });
-    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
+    // An instruction is shown AND said; the step goes on when she has finished saying it.
+    private async Task TellAsync(string words)
+    {
+        Dispatcher.Invoke(() => InstructionText.Text = words);
+        if (_voice is not null) await _voice.SayAsync(words);
+    }
 
-    protected override void OnClosed(EventArgs e)
-    { try { _north?.StopFlow(Module); } catch { } base.OnClosed(e); }
+    // Once in a turn: the microphone and the text box are asked for together, and a microphone that listens again does not tell again.
+    private async Task TellOnceAsync(string words)
+    {
+        if (_told) return;
+        _told = true;
+        await TellAsync(words);
+    }
+
+    // ---- the devices of this User Agent ---------------------------------------------------------------------------
+
+    private DeviceRegistry Devices()
+    {
+        var devices = new DeviceRegistry();
+        var stop = _stopping!.Token;
+
+        // THE AVATAR MODEL this window draws.
+        devices.RegisterAcquire(B3O, (_, _) => Task.FromResult<string?>(StandardDevices.AvatarModel()));
+
+        // THE PERSON'S SPEECH, from the microphone; it ends when the person stops speaking.
+        devices.RegisterAcquire(BSO, async (_, _, abandon) =>
+        {
+            await TellOnceAsync("Speak, or type and press Enter.");
+            var speech = await _ears!.ListenAsync(stop, abandon);
+            if (speech is null) return null;
+            AddLine("You", "(spoken)");
+            return MpaiJson.ToJson(speech);
+        });
+
+        // THE PERSON'S TYPED TEXT: the box opens, and Enter - the key or the button - gives it.
+        devices.RegisterAcquire(BTO, async (_, _, abandon) =>
+        {
+            var words = await _typed.AskAsync(stop, abandon);
+            if (words is null) return null;
+            AddLine("You", words);
+            return MpaiJson.ToJson(BasicTextObject.FromText(words));
+        });
+
+        // THE PERSON'S FACE, from the camera.
+        devices.RegisterAcquire(BVO, async (_, _) =>
+        {
+            await TellAsync("Look at the camera.");
+            return await StandardDevices.FaceAsync();
+        });
+
+        // THE AVATAR: the machine's Portable Avatar. The reply is shown; the utterance is presented on the avatar and the step ends when
+        // she has finished speaking.
+        devices.RegisterPresent("avatar", async data =>
+        {
+            if (!data.TryGetValue(PAV, out var pav)) return;
+            _told = false;   // the next turn tells again what to do
+            AddLine(MachineName, AvatarUtterance.TextOfPortableAvatar(pav) is { Length: > 0 } words ? words : "(speaks)");   // Response and Scene Rendering gives speech, face and body, not text
+            SetStatus("done.");
+            if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance) await StandardDevices.PresentAsync(_avatar!, utterance);
+            else SetStatus("the Portable Avatar carries no speech.");
+        });
+
+        return devices;
+    }
 }

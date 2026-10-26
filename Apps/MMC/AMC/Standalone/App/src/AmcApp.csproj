@@ -22,6 +22,9 @@
     <ProjectReference Include="..\..\..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- The workflow interpreter and the parser of the Workflow Description -->
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
     <!-- The camera: a Unit of the Physical Layer, which reasons about nothing -->
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
     <!-- Audio devices: live microphone capture and the delivery of speech -->
