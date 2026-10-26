@@ -172,6 +172,10 @@ public sealed class ObjectPlacements
 public sealed class ObjectListing
 {
     public string? Kind { get; init; }       // Audio Object | Basic Audio Object | Speech Object | Basic Speech Object | Audio Scene | Speech Scene | Multimodal Scene | All
+
+    // THE ONE TO LIST (the author, 2026/10/26): the name of a Scene (or of an Object) whose entry is wanted. For a Scene the entry gives the number of its members and, for
+    // each member, its name and its PoV - its position and orientation as provided in the Scene. Absent, every thing of the Kind is listed.
+    public string? ObjectID { get; init; }
 }
 
 // THE AMOUNTS OF A COMMAND ARE THE USER'S (the author, 2026/10/26): a position, an orientation, a loudness is a number the command carries; an AIM that finds none does not
@@ -247,9 +251,44 @@ public sealed class ObjectChange
     public SpatialAttitude? SpatialAttitude { get; init; }
     public AcousticProfile? AcousticProfile { get; init; }
 
-    // Present on ChangedObjects in the schema; describes the object's own
-    // nature rather than its placement.
-    public object? Qualifier { get; init; }
+    // THE FEATURES OF AN OBJECT THAT A ChangedObjects COMMAND EDITS (the author, 2026/10/26): a defined list, each feature changed by a value. The schema lists them by name,
+    // so that nothing else is allowed; an AIM that finds another name reports it (Unknown). The sound itself is not a feature: it is not edited.
+    //   Audio Object:        Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, and per child its SpaceTime inside the parent (Children)
+    //   Basic Audio Object:  Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata
+    // SpatialAttitude, the place of an Object in a Scene, is the Scene Editing AIMs'.
+    public string?          Name                 { get; init; }
+    public SimpleTime?      Time                 { get; init; }
+    public SpaceTime?       SpaceTime            { get; init; }
+    public PointOfView?     UserPoV              { get; init; }
+    public List<string>?    ParentAudioObjectIDs { get; init; }
+    public string?          DescrMetadata        { get; init; }
+    public List<ChildSpaceTime>? Children        { get; init; }
+    public string?          DeviceID             { get; init; }
+    public double?          Level                { get; init; }
+    public bool?            PerceptStatus        { get; init; }
+    public AudioQualifier?  AudioQualifier       { get; init; }
+
+    // The Speech Qualifier of a Speech Object (Speech Object Editing's; the schema's Qualifier, as before).
+    public object?          Qualifier            { get; init; }
+
+    // What the command carries that is no feature: reported, never silently dropped.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
+
+    [JsonIgnore]
+    public bool HasFeature =>
+        Name is not null || Time is not null || SpaceTime is not null || UserPoV is not null || ParentAudioObjectIDs is not null || DescrMetadata is not null ||
+        Children is { Count: > 0 } || DeviceID is not null || Level is not null || PerceptStatus is not null || AcousticProfile is not null || AudioQualifier is not null || Qualifier is not null;
+}
+
+// A child of an Audio Object, by its name, and where and when it is inside the parent.
+public sealed class ChildSpaceTime
+{
+    public string?    ObjectID  { get; init; }
+    public SpaceTime? SpaceTime { get; init; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
 }
 
 public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>

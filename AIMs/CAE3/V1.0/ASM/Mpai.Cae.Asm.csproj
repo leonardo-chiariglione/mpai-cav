@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
+    <ProjectReference Include="..\AMI\Mpai.Cae.Ami.csproj" />
     <ProjectReference Include="..\AOE\Mpai.Cae.Aoe.csproj" />
     <ProjectReference Include="..\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\SOE\Mpai.Cae.Soe.csproj" />

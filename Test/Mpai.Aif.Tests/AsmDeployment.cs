@@ -14,7 +14,7 @@ public sealed class AsmDeployment : IDisposable
     // Every AIM of the Module, as the Controller is told to find them.
     public static readonly string[] Placed =
     [
-        "1CAE-AOE-V1.0-I01", "1CAE-ASE-V1.0-I01", "1CAE-SOE-V1.0-I01", "1CAE-SSE-V1.0-I01", "1OSD-MSE-V1.5-I01", "1MMC-TST-V2.5-I01"
+        "1CAE-AMI-V1.0-I01", "1CAE-AOE-V1.0-I01", "1CAE-ASE-V1.0-I01", "1CAE-SOE-V1.0-I01", "1CAE-SSE-V1.0-I01", "1OSD-MSE-V1.5-I01", "1MMC-TST-V2.5-I01"
     ];
 
     public static string Exe => Path.Combine(Repository.Root, "Apps", "CAE", "ASM", "Server", "bin", "Debug", "net10.0", "AsmServer.exe");

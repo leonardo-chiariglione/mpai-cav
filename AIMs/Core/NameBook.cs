@@ -79,6 +79,35 @@ public sealed class NameBook
     // A key's name where it is to be told to the User: never the key itself.
     public string? Shown(string? key) => key is null ? null : NameOf(key);
 
+    // The name designates nothing from now on (the Object was renamed: its earlier versions keep the name they had).
+    public void Release(NamedKind kind, string name) => storage.MPAI_AIFM_SharedStorage_Delete(ByName(kind, name));
+
+    // The version made from another (an edit): the new key remembers the one it comes from, so that the Version of a thing is told even when the name changed.
+    public void Link(string newKey, string fromKey) =>
+        storage.MPAI_AIFM_SharedStorage_Put($"prevkey:{newKey}", Encoding.UTF8.GetBytes(fromKey));
+
+    // The Version of the thing whose version in force is this key: 1 for the first, one more for each edit it descends from.
+    public int Depth(string key)
+    {
+        var depth = 1;
+        for (var at = key; storage.MPAI_AIFM_SharedStorage_Exists($"prevkey:{at}") && depth < 100000; depth++)
+            at = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get($"prevkey:{at}"));
+        return depth;
+    }
+
+    // The version number of the thing named: how many versions the Module keeps under that name - of the key families given (BAO, AUO ...), as the first is 1.
+    public int VersionsOf(string name, params string[] families)
+    {
+        var count = 0;
+        foreach (var k in storage.MPAI_AIFM_SharedStorage_List("keyname:"))
+        {
+            var key = k["keyname:".Length..];
+            if (!families.Any(f => key.StartsWith(f, StringComparison.Ordinal))) continue;
+            if (Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(k)) == name) count++;
+        }
+        return Math.Max(count, 1);
+    }
+
     // Every name of the kind with the key now in force, in the order of the names.
     public IReadOnlyList<(string Name, string Key)> All(NamedKind kind)
     {
@@ -120,4 +149,22 @@ public sealed class ListedObject
     public string        ObjectID        { get; init; } = "";
     public string        Kind            { get; init; } = "";
     public List<string>? MemberObjectIDs { get; init; }
+
+    // WHAT THE LIST SAYS OF AN OBJECT (the author, 2026/10/26): its Duration in seconds, the number of children it is made of, and its Version (1 for the first, one more for
+    // every edit). Absent where the Kind has none (a Scene has no Duration here; the Duration of an Object that carries no sound is not known).
+    public double?       Duration        { get; init; }
+    public int?          ChildCount      { get; init; }
+    public int?          Version         { get; init; }
+
+    // WHAT THE LIST SAYS OF A SCENE named in the request (ObjectID): the number of its members and, for each, its name and its PoV - the position and orientation it has
+    // as provided in the Scene. Never a key; no Object is touched to say it.
+    public int?                ObjectCount { get; init; }
+    public List<ListedMember>? Members     { get; init; }
+}
+
+// A member of a Scene as the Scene holds it: its name, and its position and orientation in the Scene.
+public sealed class ListedMember
+{
+    public string           ObjectID { get; init; } = "";
+    public SpatialAttitude? PoV      { get; init; }
 }

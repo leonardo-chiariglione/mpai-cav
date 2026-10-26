@@ -273,17 +273,25 @@ public sealed class AseAim
     }
 
     // THE LIST (the author, 2026/10/26): the Audio Scenes the Module keeps - the version in force of each - by name, with the names of the Objects each holds. Never a key.
-    public IReadOnlyList<ListedObject> Listing(string requested)
+    //
+    // A Scene named in the request (named) is listed with the number of its members and, for each, its name and its PoV - the position and orientation the Scene gives it. No Object
+    // is read to say it.
+    public IReadOnlyList<ListedObject> Listing(string requested, string? named = null)
     {
         var found = new List<ListedObject>();
         if (!ListKinds.Asks(requested, ListKinds.AudioScene)) return found;
         foreach (var (name, key) in Names.All(NamedKind.AudioScene))
         {
-            var members = storage.Exists(key)
-                ? Deserialize<BasicAudioSceneDescriptors>(storage.Get(key)).BasicAudioSceneDescriptorsEntries
-                    .Select(e => ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID)).Where(n => n is not null).Select(n => n!).ToList()
-                : null;
-            found.Add(new ListedObject { ObjectID = name, Kind = ListKinds.AudioScene, MemberObjectIDs = members });
+            if (named is not null && name != named) continue;
+            var entries = storage.Exists(key) ? Deserialize<BasicAudioSceneDescriptors>(storage.Get(key)).BasicAudioSceneDescriptorsEntries : null;
+            var members = entries?.Select(e => ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID)).Where(n => n is not null).Select(n => n!).ToList();
+            found.Add(new ListedObject
+            {
+                ObjectID = name, Kind = ListKinds.AudioScene, MemberObjectIDs = members,
+                ObjectCount = named is null ? null : entries?.Count,
+                Members = named is null || entries is null ? null
+                    : entries.Select(e => new ListedMember { ObjectID = ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID) ?? "", PoV = e.AudioObjectSpaceTime?.SpatialAttitude1 }).ToList()
+            });
         }
         return found;
     }

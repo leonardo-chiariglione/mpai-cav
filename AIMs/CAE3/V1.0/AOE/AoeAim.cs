@@ -112,10 +112,14 @@ public sealed class AoeAim
     public string? NameOf(string? key) => Names.NameOf(key);
     public bool Holds(string? name) => KeyOf(name) is not null;
 
-    // The name designates this version (an earlier one put back by a revocation).
-    public void Select(string? key)
+    // The name designates this version (an earlier one put back by a revocation). Replacing is the version it takes the place of: if that one was renamed, the new name
+    // designates nothing from now on.
+    public void Select(string? key, string? replacing = null)
     {
-        if (key is not null && Names.NameOf(key) is { } name) Names.Point(NamedKind.AudioObject, name, key);
+        if (key is null || Names.NameOf(key) is not { } name) return;
+        Names.Point(NamedKind.AudioObject, name, key);
+        if (replacing is not null && Names.NameOf(replacing) is { } other && other != name && Names.KeyOf(NamedKind.AudioObject, other) == replacing)
+            Names.Release(NamedKind.AudioObject, other);
     }
 
     // A new version of a thing: a fresh key which the thing's name designates from now on.
@@ -124,6 +128,7 @@ public sealed class AoeAim
         var name = Names.NameOf(ofKey) ?? throw new InvalidOperationException("The Object has no name.");
         var key = NextId(prefix);
         Names.Point(NamedKind.AudioObject, name, key);
+        Names.Link(key, ofKey);
         return key;
     }
 
@@ -313,6 +318,7 @@ public sealed class AoeAim
             ChildObjects = existingData.ChildObjects,
             BasicAudioObjectData = existingData.BasicAudioObjectData,
             UserPoV = listenerPointOfView ?? existingData.UserPoV,
+            DeviceID = existingData.DeviceID,
             BasicAudioObjectProperties = updatedProps,
             AudioQualifier = existingData.AudioQualifier,
             DataXMData = existingData.DataXMData,
@@ -320,6 +326,116 @@ public sealed class AoeAim
         }));
 
         return new RepositoryAsset { AssetId = newKey, AssetType = AssetType.BAO };
+    }
+
+    // THE FEATURES OF AN OBJECT, EDITED (the author, 2026/10/26): a defined list, each changed by a value; every edit is a new version, which has the name of the Object
+    // (or the new name, when the name is a feature changed). The sound itself is not a feature. The Object is named by its name; the key of the version made, or why none.
+    //   Audio Object:        Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, Children (the SpaceTime of a child, by its name, inside the parent)
+    //   Basic Audio Object:  Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata
+    public (string? Key, string? Problem) ChangeFeatures(string key, ObjectChange change)
+    {
+        var basic = IsType(key, "BAO");
+        if (!basic && !IsType(key, "AUO")) return (null, "the Module keeps no such Object");
+        var wrong = new List<string>();
+        if (basic)
+        {
+            if (change.SpaceTime is not null) wrong.Add("SpaceTime");
+            if (change.ParentAudioObjectIDs is not null) wrong.Add("ParentAudioObjectIDs");
+            if (change.Children is { Count: > 0 }) wrong.Add("Children");
+        }
+        else
+        {
+            if (change.DeviceID is not null) wrong.Add("DeviceID");
+            if (change.Level is not null) wrong.Add("Level");
+            if (change.PerceptStatus is not null) wrong.Add("PerceptStatus");
+            if (change.AcousticProfile is not null) wrong.Add("AcousticProfile");
+            if (change.AudioQualifier is not null) wrong.Add("AudioQualifier");
+        }
+        if (wrong.Count > 0)
+            return (null, $"{string.Join(", ", wrong)} {(wrong.Count == 1 ? "is" : "are")} not {(basic ? "a feature of a Basic Audio Object (it is of an Audio Object)" : "a feature of an Audio Object (it is of a Basic Audio Object)")}");
+        if (change.Name is not null && NameBook.Clean(change.Name) is null) return (null, "Name: the new name is empty");
+        if (change.Level is { } level && (double.IsNaN(level) || double.IsInfinity(level))) return (null, "Level: a number (LUFS) is required");
+
+        var name = Names.NameOf(key) ?? throw new InvalidOperationException("The Object has no name.");
+        var newName = name;
+        if (NameBook.Clean(change.Name) is { } wanted && wanted != name) newName = Names.Free(NamedKind.AudioObject, wanted);
+
+        AudioObject? auo = null;
+        BasicAudioObject? bao = null;
+        if (basic) bao = Deserialize<BasicAudioObject>(storage.Get(key));
+        else
+        {
+            auo = Deserialize<AudioObject>(storage.Get(key));
+            foreach (var c in change.Children ?? [])
+            {
+                var child = NameBook.Clean(c.ObjectID);
+                if (child is null || c.SpaceTime is null) return (null, "Children: each child is named, with its SpaceTime inside the parent");
+                if (c.Unknown is { Count: > 0 }) return (null, $"Children: {string.Join(", ", c.Unknown.Keys)} is not a feature of a child");
+                var isChild = (auo.BasicAudioObjects ?? []).Any(e => NameOf(e.BAObjectIDOrBAObject?.BasicAudioObjectID) == child)
+                           || (auo.SubAudioObjects ?? []).Any(e => NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID) == child);
+                if (!isChild) return (null, $"Children: the Audio Object has no child named {child}");
+            }
+        }
+
+        var newKey = NextId(basic ? "BAO" : "AUO");
+        Names.Point(NamedKind.AudioObject, newName, newKey);
+        Names.Link(newKey, key);
+        if (newName != name) Names.Release(NamedKind.AudioObject, name);       // the old name designates nothing; its versions keep it
+
+        if (basic)
+        {
+            var props = bao!.BasicAudioObjectProperties ?? new BasicAudioObjectProperties();
+            storage.Put(newKey, Serialize(new BasicAudioObject
+            {
+                Header = bao.Header, MInstanceID = bao.MInstanceID, UEnvironmentID = bao.UEnvironmentID,
+                BasicAudioObjectID = newName,
+                BasicAudioObjectTime = change.Time is { } t ? new SpaceTime { MInstanceID = bao.MInstanceID, SpaceTimeID = Guid.NewGuid().ToString(), Time = t } : bao.BasicAudioObjectTime,
+                ParentObjects = bao.ParentObjects, ChildObjects = bao.ChildObjects,
+                BasicAudioObjectData = bao.BasicAudioObjectData,
+                UserPoV = change.UserPoV ?? bao.UserPoV,
+                DeviceID = change.DeviceID ?? bao.DeviceID,
+                BasicAudioObjectProperties = new BasicAudioObjectProperties
+                {
+                    BasicAudioObjectSpaceTime = props.BasicAudioObjectSpaceTime,
+                    Level = change.Level ?? props.Level,
+                    PerceptStatus = change.PerceptStatus ?? props.PerceptStatus,
+                    AcousticProfile = change.AcousticProfile ?? props.AcousticProfile,
+                    BasicAudioObjectIdentifier = props.BasicAudioObjectIdentifier
+                },
+                AudioQualifier = change.AudioQualifier ?? bao.AudioQualifier,
+                DataXMData = bao.DataXMData,
+                DescrMetadata = change.DescrMetadata ?? bao.DescrMetadata
+            }));
+        }
+        else
+        {
+            SpaceTime? Inside(string? childName, SpaceTime? current) =>
+                change.Children?.FirstOrDefault(c => NameBook.Clean(c.ObjectID) == childName)?.SpaceTime ?? current;
+            var basics = auo!.BasicAudioObjects?.Select(e => new BasicAudioObjectEntry
+            {
+                BasicAudioObjectSpaceTime = Inside(NameOf(e.BAObjectIDOrBAObject?.BasicAudioObjectID), e.BasicAudioObjectSpaceTime), BAObjectIDOrBAObject = e.BAObjectIDOrBAObject
+            }).ToList();
+            var subs = auo.SubAudioObjects?.Select(e => new SubAudioObjectEntry
+            {
+                SubAudioObjectSpaceTime = Inside(NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID), e.SubAudioObjectSpaceTime), SubAObjectIDOrSubAObject = e.SubAObjectIDOrSubAObject
+            }).ToList();
+            foreach (var childKey in (basics ?? []).Select(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID).Concat((subs ?? []).Select(e => e.SubAObjectIDOrSubAObject?.AudioObjectID)))
+                if (!string.IsNullOrEmpty(childKey)) PutReference(newKey, childKey);
+            storage.Put(newKey, Serialize(new AudioObject
+            {
+                Header = auo.Header, MInstanceID = auo.MInstanceID, UEnvironmentID = auo.UEnvironmentID,
+                AudioObjectID = newName,
+                AudioObjectTime = change.Time ?? auo.AudioObjectTime,
+                AudioObjectSpaceTime = change.SpaceTime ?? auo.AudioObjectSpaceTime,
+                UserPoV = change.UserPoV ?? auo.UserPoV,
+                ParentAudioObjectIDs = change.ParentAudioObjectIDs ?? auo.ParentAudioObjectIDs,
+                BasicAudioObjectCount = auo.BasicAudioObjectCount, BasicAudioObjects = basics,
+                SubAudioObjectCount = auo.SubAudioObjectCount, SubAudioObjects = subs,
+                DataXMData = auo.DataXMData,
+                DescrMetadata = change.DescrMetadata ?? auo.DescrMetadata
+            }));
+        }
+        return (newKey, null);
     }
 
     // ---- reading ------------------------------------------------------------
@@ -394,6 +510,8 @@ public sealed class AoeAim
             AudioObjectTime = audioObject.AudioObjectTime,
             AudioObjectSpaceTime = audioObject.AudioObjectSpaceTime,
             ParentAudioObjectIDs = audioObject.ParentAudioObjectIDs,
+            UserPoV = audioObject.UserPoV,
+            DescrMetadata = audioObject.DescrMetadata,
             BasicAudioObjectCount = basicChildren.Count,
             BasicAudioObjects = basicChildren.Count > 0 ? basicChildren : null,
             SubAudioObjectCount = subChildren.Count,
@@ -403,11 +521,12 @@ public sealed class AoeAim
 
     // THE LIST (the author, 2026/10/26): the Audio Objects and Basic Audio Objects the Module keeps - the version in force of each - by name; an Audio Object with the names
     // of the Objects it is made of. Never a key.
-    public IReadOnlyList<ListedObject> Listing(string requested)
+    public IReadOnlyList<ListedObject> Listing(string requested, string? named = null)
     {
         var found = new List<ListedObject>();
         foreach (var (name, key) in Names.All(NamedKind.AudioObject))
         {
+            if (named is not null && name != named) continue;
             var basic = IsType(key, "BAO");
             if (!ListKinds.Asks(requested, basic ? ListKinds.BasicAudioObject : ListKinds.AudioObject)) continue;
             List<string>? members = null;
@@ -418,9 +537,44 @@ public sealed class AoeAim
                     .Concat((auo.SubAudioObjects ?? []).Select(e => NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID)))
                     .Where(n => n is not null).Select(n => n!).ToList();
             }
-            found.Add(new ListedObject { ObjectID = name, Kind = basic ? ListKinds.BasicAudioObject : ListKinds.AudioObject, MemberObjectIDs = members });
+            found.Add(Describe(name, key, basic, members));
         }
         return found;
+    }
+
+    // WHAT THE LIST SAYS OF AN OBJECT (the author, 2026/10/26): its Kind, its Duration (seconds: that of its sound, or for an Audio Object the end of the child that lasts longest
+    // inside it), the number of children it is made of, its Version.
+    private ListedObject Describe(string name, string key, bool basic, List<string>? members)
+    {
+        double? duration = null;
+        var children = 0;
+        if (storage.Exists(key))
+        {
+            if (basic) duration = SoundLength.Seconds(Deserialize<BasicAudioObject>(storage.Get(key)).Data);
+            else
+            {
+                var auo = Deserialize<AudioObject>(storage.Get(key));
+                children = (auo.BasicAudioObjects?.Count ?? 0) + (auo.SubAudioObjects?.Count ?? 0);
+                duration = DurationOf(key);
+            }
+        }
+        return new ListedObject
+        {
+            ObjectID = name, Kind = basic ? ListKinds.BasicAudioObject : ListKinds.AudioObject, MemberObjectIDs = members,
+            Duration = duration, ChildCount = children, Version = Names.Depth(key)
+        };
+    }
+
+    private double? DurationOf(string auoKey)
+    {
+        var auo = Deserialize<AudioObject>(storage.Get(auoKey));
+        var ends = new List<double>();
+        foreach (var e in auo.BasicAudioObjects ?? [])
+            if (e.BAObjectIDOrBAObject?.BasicAudioObjectID is { } k && storage.Exists(k) && IsType(k, "BAO") &&
+                SoundLength.Seconds(Deserialize<BasicAudioObject>(storage.Get(k)).Data) is { } d) ends.Add(SoundLength.StartOf(e.BasicAudioObjectSpaceTime) + d);
+        foreach (var e in auo.SubAudioObjects ?? [])
+            if (e.SubAObjectIDOrSubAObject?.AudioObjectID is { } k && storage.Exists(k) && IsType(k, "AUO") && DurationOf(k) is { } d) ends.Add(SoundLength.StartOf(e.SubAudioObjectSpaceTime) + d);
+        return ends.Count > 0 ? Math.Round(ends.Max(), 6) : null;
     }
 
     // --- Deletion (surfaces the sixth Shared Storage primitive, Delete) ---

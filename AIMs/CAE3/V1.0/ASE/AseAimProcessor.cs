@@ -217,7 +217,10 @@ public sealed class AseAimProcessor : IAimProcessor
 
         if (data.ChangedObjects is { Objects.Count: > 0 } changed)
             foreach (var entry in changed.Objects)
+            {
+                if (entry.SpatialAttitude is null && entry.HasFeature) { report.NotSupported("ChangedObjects", IdOf(entry.ObjectID), "the features of an Object are Audio Object Editing's; here, where an Object is in the Scene"); continue; }
                 Place("ChangedObjects", IdOf(entry.ObjectID), entry.SpatialAttitude, report);
+            }
 
         // The acoustics of the Scene: its Acoustic Profile, as given.
         if (data.ModifiedScene?.AcousticProfile is { } acoustics)
@@ -309,7 +312,10 @@ public sealed class AseAimProcessor : IAimProcessor
         if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
         if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.AudioScene)
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
-        report.Listed(_ase.Listing(listing.Kind!));
+        if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
+        var listed = _ase.Listing(listing.Kind!, NameBook.Clean(listing.ObjectID));
+        if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
+        report.Listed(listed);
     }
 
     private static PointOfView Origin() => new() { PointOfViewID = Guid.NewGuid().ToString(), CartPosition = [0, 0, 0], Orientation = [0, 0, 0] };

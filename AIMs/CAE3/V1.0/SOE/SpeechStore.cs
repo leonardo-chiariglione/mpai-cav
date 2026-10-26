@@ -163,11 +163,12 @@ public static class SpeechStore
     }
 
     // THE LIST (the author, 2026/10/26): the Speech Objects and Basic Speech Objects the Module keeps, by name; a Speech Object with the names of those it holds.
-    public static IReadOnlyList<ListedObject> Listing(ISharedStorage storage, string requested)
+    public static IReadOnlyList<ListedObject> Listing(ISharedStorage storage, string requested, string? named = null)
     {
         var found = new List<ListedObject>();
         foreach (var (name, key) in Book(storage).All(NamedKind.SpeechObject))
         {
+            if (named is not null && name != named) continue;
             var basic = key.StartsWith("BSO", StringComparison.Ordinal);
             if (!ListKinds.Asks(requested, basic ? ListKinds.BasicSpeechObject : ListKinds.SpeechObject)) continue;
             List<string>? members = null;
@@ -175,9 +176,32 @@ public static class SpeechStore
                 members = (speech.BasicSpeechObjects ?? []).Select(e => e.BSObjectIDOrBSObject?.BasicSpeechObjectID)
                     .Concat((speech.SubSpeechObjects ?? []).Select(e => e.SubSObjectIDOrSubSObject?.SpeechObjectID))
                     .Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList();
-            found.Add(new ListedObject { ObjectID = name, Kind = basic ? ListKinds.BasicSpeechObject : ListKinds.SpeechObject, MemberObjectIDs = members });
+            // What the List says of an Object (the author, 2026/10/26): its Duration (seconds, of its speech, or for a Speech Object the end of the member that lasts longest),
+            // the number of members, its Version.
+            double? duration = null; var children = 0;
+            if (basic) duration = Get(storage, name) is { } one ? SoundLength.Seconds(one.Data) : null;
+            else if (GetObject(storage, name, resolve: false) is { } whole)
+            {
+                children = (whole.BasicSpeechObjects?.Count ?? 0) + (whole.SubSpeechObjects?.Count ?? 0);
+                duration = DurationOf(storage, whole);
+            }
+            found.Add(new ListedObject
+            {
+                ObjectID = name, Kind = basic ? ListKinds.BasicSpeechObject : ListKinds.SpeechObject, MemberObjectIDs = members,
+                Duration = duration, ChildCount = children, Version = Book(storage).VersionsOf(name, "BSO", "SPO")
+            });
         }
         return found;
+    }
+
+    private static double? DurationOf(ISharedStorage storage, SpeechObject whole)
+    {
+        var ends = new List<double>();
+        foreach (var e in whole.BasicSpeechObjects ?? [])
+            if (Get(storage, e.BSObjectIDOrBSObject?.BasicSpeechObjectID) is { } b && SoundLength.Seconds(b.Data) is { } d) ends.Add(SoundLength.StartOf(e.BasicSpeechObjectSpaceTime) + d);
+        foreach (var e in whole.SubSpeechObjects ?? [])
+            if (GetObject(storage, e.SubSObjectIDOrSubSObject?.SpeechObjectID, resolve: false) is { } s && DurationOf(storage, s) is { } d) ends.Add(SoundLength.StartOf(e.SubSpeechObjectSpaceTime) + d);
+        return ends.Count > 0 ? Math.Round(ends.Max(), 6) : null;
     }
 
     // The translation, made to stand where the original stood: the original's

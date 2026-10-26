@@ -10,7 +10,7 @@ using Mpai.SpatialAudio;
 namespace Mpai.Aif.Tests;
 
 // THE ASM MODULE'S AIMs IN A PROCESS OF THEIR OWN (M3217): the Controller and the Module are different processes that talk through the API. The L3 of
-// Audio Scene Management places its five Audio Scene Management AIMs (Relation External); they run on an AIM host - AIF.AimHost, a program of its own,
+// Audio Scene Management places its six Audio Scene Management AIMs (Relation External); they run on an AIM host - AIF.AimHost, a program of its own,
 // given the ASM provider - and the Controller reaches them through the Remote transport. Judged: the Module gives what it gives when its AIMs are built
 // by the Controller (AsmModuleTests), and the Controller built none of the placed AIMs.
 [Trait("Group", "Models")]
@@ -18,10 +18,10 @@ namespace Mpai.Aif.Tests;
 public class AsmOnAnAimHostTests
 {
     private const string Asm = AsmProvider.Module;
-    // Every AIM of the Module: the five of Audio Scene Management and Text and Speech Translation, which Speech Object Editing uses.
+    // Every AIM of the Module: the six of Audio Scene Management (the Interface, the four Editing AIMs and Multimodal Scene Editing) and Text and Speech Translation, which Speech Object Editing uses.
     private static readonly string[] Placed =
     [
-        AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Mse, "1MMC-TST-V2.5-I01"
+        AsmProvider.Ami, AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Mse, "1MMC-TST-V2.5-I01"
     ];
 
     // The L3s of the repository, with the ASM Module's Audio Scene Management AIMs placed elsewhere.

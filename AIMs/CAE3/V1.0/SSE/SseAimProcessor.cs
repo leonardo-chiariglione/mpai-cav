@@ -219,6 +219,7 @@ public sealed class SseAimProcessor : IAimProcessor
         if (data.ChangedObjects is { Objects.Count: > 0 } changes)
             foreach (var entry in changes.Objects)
             {
+                if (entry.SpatialAttitude is null && entry.HasFeature) { report.NotSupported("ChangedObjects", IdOf(entry.ObjectID), "the features of an Object are Audio Object Editing's; here, where an Object is in the Scene"); continue; }
                 if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", IdOf(entry.ObjectID), problem); continue; }
                 Replace("ChangedObjects", entry.ObjectID, i => At(i, entry.SpatialAttitude));
             }
@@ -275,15 +276,26 @@ public sealed class SseAimProcessor : IAimProcessor
         if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
         if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.SpeechScene)
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
-        report.Listed(Listing());
+        if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
+        var listed = Listing(NameBook.Clean(listing.ObjectID));
+        if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
+        report.Listed(listed);
     }
 
     // THE LIST (the author, 2026/10/26): the Speech Scenes the Module keeps - the version in force of each - by name, with the names of the Objects each holds.
-    private IReadOnlyList<ListedObject> Listing() =>
-        _names.All(NamedKind.SpeechScene).Select(e => new ListedObject
+    // A Scene named in the request is listed with the number of its members and, for each, its name and its PoV: the position and orientation the Scene gives it.
+    private IReadOnlyList<ListedObject> Listing(string? named = null) =>
+        _names.All(NamedKind.SpeechScene).Where(e => named is null || e.Name == named).Select(e =>
         {
-            ObjectID = e.Name, Kind = ListKinds.SpeechScene,
-            MemberObjectIDs = Load(e.Key)?.BasicSpeechSceneItems.Select(i => i.SpeechObject?.BasicSpeechObjectID).Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList()
+            var items = Load(e.Key)?.BasicSpeechSceneItems;
+            return new ListedObject
+            {
+                ObjectID = e.Name, Kind = ListKinds.SpeechScene,
+                MemberObjectIDs = items?.Select(i => i.SpeechObject?.BasicSpeechObjectID).Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList(),
+                ObjectCount = named is null ? null : items?.Count,
+                Members = named is null || items is null ? null
+                    : items.Select(i => new ListedMember { ObjectID = i.SpeechObject?.BasicSpeechObjectID ?? "", PoV = i.ObjectSpaceTime?.SpatialAttitude1 }).ToList()
+            };
         }).ToList();
 
     private BasicSpeechSceneDescriptors? Load(string? id) =>

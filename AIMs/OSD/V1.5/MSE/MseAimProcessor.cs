@@ -277,6 +277,7 @@ public sealed class MseAimProcessor : IAimProcessor
         if (data.ChangedObjects is { Objects.Count: > 0 } changes)
             foreach (var e in changes.Objects)
             {
+                if (e.SpatialAttitude is null && e.HasFeature) { report.NotSupported("ChangedObjects", e.ObjectID?.ObjectID, "the features of an Object are Audio Object Editing's; here, where an Object is in the Scene"); continue; }
                 if (Amounts.PlaceProblem(e.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", e.ObjectID?.ObjectID, problem); continue; }
                 Replace("ChangedObjects", e.ObjectID?.ObjectID, m => At(m, e.SpatialAttitude));
             }
@@ -364,11 +365,22 @@ public sealed class MseAimProcessor : IAimProcessor
         if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.MultimodalScene)
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
         // THE LIST (the author, 2026/10/26): the Multimodal Scenes the Module keeps - the version in force of each - by name, with the names of their members.
-        report.Listed(_names.All(NamedKind.MultimodalScene).Select(e => new ListedObject
+        if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
+        // A Scene named in the request is listed with the number of its members and, for each, its name and its PoV: the position and orientation the Scene gives it.
+        var named = NameBook.Clean(listing.ObjectID);
+        var listed = _names.All(NamedKind.MultimodalScene).Where(e => named is null || e.Name == named).Select(e =>
         {
-            ObjectID = e.Name, Kind = ListKinds.MultimodalScene,
-            MemberObjectIDs = Load(e.Key) is { } held ? Members(held).Select(m => m.Id).ToList() : null
-        }).ToList());
+            var members = Load(e.Key) is { } held ? Members(held) : null;
+            return new ListedObject
+            {
+                ObjectID = e.Name, Kind = ListKinds.MultimodalScene,
+                MemberObjectIDs = members?.Select(m => m.Id).ToList(),
+                ObjectCount = named is null ? null : members?.Count,
+                Members = named is null || members is null ? null : members.Select(m => new ListedMember { ObjectID = m.Id, PoV = m.Place.SpatialAttitude1 }).ToList()
+            };
+        }).ToList();
+        if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
+        report.Listed(listed);
     }
 
     private JsonObject? Load(string? id) =>

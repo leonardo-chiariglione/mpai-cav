@@ -59,6 +59,7 @@ public sealed class AoeAimProcessor : IAimProcessor
     private string? _open;
     private readonly UndoJournal _undo = new();
     private string? _composed;            // the Audio Object a command of this run made
+    private readonly List<(string Old, string New)> _changes = new();     // the versions the features edited by this command replaced
 
     public string InstanceId { get; }
 
@@ -125,8 +126,25 @@ public sealed class AoeAimProcessor : IAimProcessor
                 else
                 {
                     var before = _open;
+                    _changes.Clear();
                     Apply(command, report);
-                    _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { _open = v; _aoe.Select(v); }, N);
+                    var edited = _changes.ToList();
+                    if (edited.Count == 0)
+                        _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { var from = _open; _open = v; _aoe.Select(v, from); }, N);
+                    else
+                    {
+                        // Features edited: each Object has the version it had, under the name it had, put back - the last first.
+                        var names = edited.Select(c => N(c.New)).ToList();
+                        _undo.Record(command.UserCommandID, () => edited.Select((c, i) => _aoe.KeyOf(names[i]) == c.New).All(x => x), () =>
+                        {
+                            for (var i = edited.Count - 1; i >= 0; i--)
+                            {
+                                _aoe.Select(edited[i].Old, edited[i].New);
+                                if (_open == edited[i].New) _open = edited[i].Old;
+                            }
+                            return N(edited[0].Old);
+                        });
+                    }
                 }
                 if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
@@ -179,7 +197,36 @@ public sealed class AoeAimProcessor : IAimProcessor
         if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
         if (listing.Kind != ListKinds.All && ListKinds.ListedBy(listing.Kind) != "Audio Object Editing")
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
-        report.Listed(_aoe.Listing(listing.Kind!));
+        if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
+        var listed = _aoe.Listing(listing.Kind!, NameBook.Clean(listing.ObjectID));
+        if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
+        report.Listed(listed);
+    }
+
+    // THE FEATURES OF AN OBJECT EDITED (the author, 2026/10/26): each entry names the Object, and carries the features it changes by a value. A name that is no feature is reported,
+    // not dropped; where an Object is in a Scene is Scene Editing's.
+    private void Change(ObjectChanges changes, CommandReport report)
+    {
+        const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
+        foreach (var entry in changes.Objects)
+        {
+            var name = IdOf(entry.ObjectID);
+            if (entry.Unknown is { Count: > 0 } unknown)
+            { report.Failed("ChangedObjects", name, $"{string.Join(", ", unknown.Keys)}: not a feature that can be changed (Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, Children, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier)"); continue; }
+            if (entry.SpatialAttitude is not null) report.NotSupported("ChangedObjects", name, inScene);
+            if (entry.Qualifier is not null)
+            { report.Failed("ChangedObjects", name, "Qualifier is a feature of a Speech Object; the Audio Qualifier of an Audio Object is AudioQualifier"); continue; }
+            if (!entry.HasFeature)
+            { if (entry.SpatialAttitude is null) report.Failed("ChangedObjects", name, "nothing to change: a feature, with its value, is required"); continue; }
+            if (NameBook.Clean(name) is null) { report.Failed("ChangedObjects", null, "the Object to change is named by its name"); continue; }
+            var key = _aoe.KeyOf(name);
+            if (key is null) { report.Failed("ChangedObjects", name, "the Module keeps no Object of that name"); continue; }
+            var (made, problem) = _aoe.ChangeFeatures(key, entry);
+            if (made is null) { report.Failed("ChangedObjects", name, problem ?? "the Object was not changed"); continue; }
+            _changes.Add((key, made));
+            if (made.StartsWith("BAO", StringComparison.Ordinal)) _open = made; else _composed = made;
+            report.Done("ChangedObjects", name, N(made));
+        }
     }
 
     private void Apply(UserCommand command, CommandReport report)
@@ -190,9 +237,9 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
         foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
-                                              ("ChangedObjects", data.ChangedObjects is { Objects.Count: > 0 }),
                                               ("RemovedObjects", data.RemovedObjects is { Objects.Count: > 0 }) })
             if (any) report.NotSupported(action, N(_open), inScene);
+        if (data.ChangedObjects is { Objects.Count: > 0 } changes) Change(changes, report);
         if (data.TranslatedObjects is { Objects.Count: > 0 })
             report.NotSupported("TranslatedObjects", N(_open), "speech is translated by Speech Object Editing");
 

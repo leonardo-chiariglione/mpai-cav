@@ -4,6 +4,7 @@
   "type":                   "object",
   "additionalProperties":   false,
   "required":               [ "Header", "PositionID" ],
+  "anyOf":                  [ { "required": [ "CartPosition" ] }, { "required": [ "SpherPosition" ] } ],
   "properties":             {
 
     "Header":               { "type": "string", "const": "OSD-OPS-V1.5", "description": "Position Header – Standard OSD-OPS-Vx.y" },

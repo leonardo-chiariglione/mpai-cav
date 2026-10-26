@@ -416,6 +416,9 @@ public sealed class BasicAudioObject
     // ListenerPointOfView: the user is neutral, for audio and visual alike.
     public PointOfView? UserPoV { get; init; }
 
+    // The device the sound was captured with, or is to be played by (the schema's DeviceID).
+    public string? DeviceID { get; init; }
+
     public BasicAudioObjectProperties? BasicAudioObjectProperties { get; init; }
     public AudioQualifier? AudioQualifier { get; init; }
 
@@ -481,6 +484,7 @@ public sealed class BasicAudioObject
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
         UserPoV = UserPoV,
+        DeviceID = DeviceID,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,
@@ -502,6 +506,7 @@ public sealed class BasicAudioObject
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
         UserPoV = listener,
+        DeviceID = DeviceID,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,

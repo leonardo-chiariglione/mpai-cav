@@ -243,7 +243,10 @@ public sealed class SoeAimProcessor : IAimProcessor
         if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
         if (listing.Kind != ListKinds.All && ListKinds.ListedBy(listing.Kind) != "Speech Object Editing")
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
-        report.Listed(SpeechStore.Listing(_storage, listing.Kind!));
+        if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
+        var listed = SpeechStore.Listing(_storage, listing.Kind!, NameBook.Clean(listing.ObjectID));
+        if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
+        report.Listed(listed);
     }
 
     private static string? IdOf(ManagedObject? managed) =>
