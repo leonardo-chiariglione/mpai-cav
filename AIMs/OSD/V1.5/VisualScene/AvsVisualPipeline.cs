@@ -39,7 +39,7 @@ namespace Mpai.Osd.VisualScene;
 //  NOT treated as HCI-internal state. (FED from a REMOTE CAV crosses the same
 //  way, arriving in the Ego-Remote HCI Message (CAV-ERH-V2.0), also PTF-borne.)
 //
-//  Depends on: fused AudioVisualSceneDescriptors (OSD-BMS) and the FED type,
+//  Depends on: fused MultimodalSceneDescriptors (OSD-BMS) and the FED type,
 //  neither of which exists yet. Add when those are built.
 // ---------------------------------------------------------------------------
 public sealed class AvsVisualPipeline
@@ -111,7 +111,7 @@ public sealed class AvsVisualPipeline
             BasicVisualSceneDescriptorsEntries = entries
             // EXTENSION POINTs: crop each face to its own BasicVisualObject;
             // add body detection (also valid OSD-BVS objects); fuse with the
-            // audio scene -> BasicAudioVisualSceneDescriptors (OSD-BMS).
+            // audio scene -> BasicMultimodalSceneDescriptors (OSD-BMS).
         };
     }
 }

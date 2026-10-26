@@ -10,22 +10,29 @@ using Mpai.Core.OSD;
 namespace Mpai.Cae.Aoe;
 
 // CAE-AOE-V1.0 - Audio Object Editing, as the author's Reference Model of Audio Scene
-// Management draws it (CAE Reference Models, 2026/10/04): User Command, User PoV and
-// a Basic Audio Object in; the Basic Audio Object as edited, and the User Command
-// with its report, out. The Object goes on to Audio Scene Editing.
+// Management draws it (CAE Reference Models, 2026/10/26): User Command, User PoV and
+// an Audio Object (OSD-AUO) in; the Audio Object as edited, and the User Command with
+// its response, out. The Object goes on to Audio Scene Editing. There is no Basic Audio
+// Object on a Port: an Audio Object is a collection of Basic Audio Objects, and one that
+// holds a single Basic Audio Object is that Object.
 //
-// OPEN BY PORT, ACT BY COMMAND. One Object is open at a time, so no Command has to
-// name its target. A Basic Audio Object arriving is opened when Shared Storage holds
-// it (by its identifier), and created when it is new - a sound the User Agent
-// captured. Then a User Command acts on what is open:
+// OPEN BY PORT, ACT BY COMMAND. One Basic Object is open at a time, so no Command has to
+// name its target. An Audio Object arriving that holds one Basic Audio Object opens
+// that Object - from Shared Storage, by its identifier - or creates it when it is new
+// (a sound the User Agent captured). One that holds more is stored as an Audio Object,
+// from the Basic Objects it holds (each a new Object here, its identifier available to
+// a command), and is the Audio Object given back as it was stored. Then a User Command
+// acts on what is open:
 //
 //   ModifiedObjects   what it is like: loudness (LUFS) and the Object part of the
 //                     Acoustic Profile
 //   UserPoV           where it is heard from, when heard on its own
 //   AddedObjects      the named Objects, each with its place and its time, make a new
 //                     Audio Object (AUO), which is kept in Shared Storage; the report
-//                     names it (ResultID). The Module gives a User Agent an Audio
-//                     Object that way: the User Agent reads it in Shared Storage.
+//                     names it (ResultID), and it is the Audio Object the AIM gives.
+//
+// The Audio Object given is the one a command made or an Audio Object stored in this
+// run, else the open Basic Object as an Audio Object of one.
 //
 // Every edit is a new version in Shared Storage. Where an Object is in a Scene is
 // Audio Scene Editing's (AddedObjects, MovedObjects, ChangedObjects): a command
@@ -36,11 +43,9 @@ public sealed class AoeAimProcessor : IAimProcessor
 
     private readonly string _commandPort;
     private readonly string _povPort;
-    private readonly string _objectPort;
-    private readonly string _objectOut;
+    private readonly string _objectPort;  // the Audio Object in (OSD-AUO)
+    private readonly string _objectOut;   // the Audio Object out (OSD-AUO)
     private readonly string _reportOut;
-    private readonly string _auoIn;       // an Audio Object the User Agent read from its external storage
-    private readonly string _auoOut;      // the Audio Object this made (composed, or stored from outside)
 
     // What is open, between runs.
     private string? _open;
@@ -55,31 +60,34 @@ public sealed class AoeAimProcessor : IAimProcessor
         _aoe         = aoe;
         _commandPort = ports.Input("CAE-UCM-V1.0");
         _povPort     = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _objectPort  = ports.Input("OSD-BAO-V1.5");
-        _objectOut   = ports.Output("OSD-BAO-V1.5");
+        _objectPort  = ports.Input("OSD-AUO-V1.5");
+        _objectOut   = ports.Output("OSD-AUO-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
-        _auoIn       = ports.InputOrDefault("OSD-AUO-V1.5", "");
-        _auoOut      = ports.OutputOrDefault("OSD-AUO-V1.5", "");
     }
 
     public Task<Message> ProcessAsync(Message message)
     {
         var outputs = new Dictionary<string, string>();
 
-        // 1. opening, or creating, by Port.
+        // 1. opening, creating or storing, by Port.
+        string? made = null;
         if (message.Ports.TryGetValue(_objectPort, out var objectJson) && !string.IsNullOrWhiteSpace(objectJson))
         {
-            var basic = MpaiJson.FromJson<BasicAudioObject>(objectJson);
-            _open = !string.IsNullOrWhiteSpace(basic.BasicAudioObjectID) && _aoe.Has(basic.BasicAudioObjectID) ? basic.BasicAudioObjectID : _aoe.CreateObject(basic).AssetId;      // an Object with no identifier, or one the storage does not hold, is a new one
-            Console.WriteLine($"[CAE-AOE-V1.0] open {_open}");
-        }
-
-        // 1b. an Audio Object read from outside is stored here, and given back as stored.
-        string? made = null;
-        if (_auoIn.Length > 0 && message.Ports.TryGetValue(_auoIn, out var auoJson) && !string.IsNullOrWhiteSpace(auoJson))
-        {
-            made = _aoe.StoreAudioObject(MpaiJson.FromJson<AudioObject>(auoJson)).AssetId;
-            Console.WriteLine($"[CAE-AOE-V1.0] audio object {made}");
+            var auo = MpaiJson.FromJson<AudioObject>(objectJson);
+            if (auo.BasicAudioObjects is { Count: 1 } && auo.SubAudioObjects is not { Count: > 0 } && auo.BasicAudioObjects[0].BAObjectIDOrBAObject is { } basic)
+            {
+                // One Basic Audio Object: that Object is opened - an Object with no identifier, or one the storage does not hold, is a new one.
+                _open = !string.IsNullOrWhiteSpace(basic.BasicAudioObjectID) && _aoe.Has(basic.BasicAudioObjectID) ? basic.BasicAudioObjectID : _aoe.CreateObject(basic).AssetId;
+                Console.WriteLine($"[CAE-AOE-V1.0] open {_open}");
+            }
+            else
+            {
+                // Several: an Audio Object the storage holds is that one; else it is stored here, and given back as stored.
+                made = !string.IsNullOrWhiteSpace(auo.AudioObjectID) && auo.AudioObjectID.StartsWith("AUO", StringComparison.Ordinal) && _aoe.Has(auo.AudioObjectID)
+                    ? auo.AudioObjectID
+                    : _aoe.StoreAudioObject(auo).AssetId;
+                Console.WriteLine($"[CAE-AOE-V1.0] audio object {made}");
+            }
         }
 
         // 2. a User PoV on its Port: where the open Object is heard from.
@@ -101,18 +109,16 @@ public sealed class AoeAimProcessor : IAimProcessor
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
 
-        // 3b. an Audio Object made, as it is kept in Shared Storage.
+        // 4. the Audio Object: the one made or stored in this run, else the open Object as an Audio Object of one. Whole: the Objects it is made of are in it.
         if (made is null) made = _composed;
         _composed = null;
-        if (made is not null && _auoOut.Length > 0) outputs[_auoOut] = MpaiJson.ToJson(_aoe.Materialize(made));         // whole: the Objects it is made of are in it
-
-        // 4. the open Object, as it now stands.
-        if (_open is not null) outputs[_objectOut] = MpaiJson.ToJson(_aoe.Get(_open));
+        var given = made ?? _open;
+        if (given is not null) outputs[_objectOut] = MpaiJson.ToJson(_aoe.Materialize(given));
         return Task.FromResult(new Message
         {
             MessageId   = Guid.NewGuid().ToString(),
-            MessageType = _open is null ? "NoOpenObject" : "BasicAudioObject",
-            DataType    = _open is null ? "" : "OSD-BAO-V1.5",
+            MessageType = given is null ? "NoOpenObject" : "AudioObject",
+            DataType    = given is null ? "" : "OSD-AUO-V1.5",
             Ports       = outputs
         });
     }

@@ -269,28 +269,50 @@ public sealed class AudioSceneDescriptors
 public sealed class AudioSceneObjectEntry
 {
     public SpaceTime? AudioObjectSpaceTime { get; init; }   // fixed: schema's $ref corrected from SimpleTime to SpaceTime
-    // In C# the member itself; in JSON the schema's ObjectIDOrObject, an array of one.
+    // The member is a Basic Audio Object or an Audio Object, or the identifier of either:
+    // in C# the Object itself (one of the first two) or its identifier, in JSON the
+    // schema's ObjectIDOrObject, an array of one.
     [JsonIgnore]
     public AudioObject? ObjectIDOrObject { get; init; }
+    [JsonIgnore]
+    public BasicAudioObject? BasicObject { get; init; }
+    [JsonIgnore]
+    public string? ObjectId { get; init; }
     [JsonPropertyName("ObjectIDOrObject")]
-    public List<AudioObject>? ObjectIDOrObjectArray
+    public JsonArray? ObjectIDOrObjectArray
     {
-        get => ObjectIDOrObject is null ? null : [ObjectIDOrObject];
-        init => ObjectIDOrObject = value?.FirstOrDefault();
+        get => OneOf.Held(ObjectIDOrObject, BasicObject, ObjectId);
+        init
+        {
+            ObjectIDOrObject = OneOf.Take<AudioObject>(value, "OSD-AUO-V1.5");
+            BasicObject = OneOf.Take<BasicAudioObject>(value, "OSD-BAO-V1.5");
+            ObjectId = OneOf.Id(value);
+        }
     }
 }
 
 public sealed class SubAudioSceneEntry
 {
     public SpaceTime? SubAudioSceneSpaceTime { get; init; }
-    // In C# the member itself; in JSON the schema's SubASceneIDOrSubAScene, an array of one.
+    // The member is a Basic Audio Scene or an Audio Scene, or the identifier of either:
+    // in C# the Scene itself (one of the first two) or its identifier, in JSON the
+    // schema's SubASceneIDOrSubAScene, an array of one.
     [JsonIgnore]
     public AudioSceneDescriptors? SubAudioSceneIDOrSubAudioScene { get; init; }
+    [JsonIgnore]
+    public BasicAudioSceneDescriptors? BasicScene { get; init; }
+    [JsonIgnore]
+    public string? SceneId { get; init; }
     [JsonPropertyName("SubASceneIDOrSubAScene")]
-    public List<AudioSceneDescriptors>? SubAudioSceneIDOrSubAudioSceneArray
+    public JsonArray? SubAudioSceneIDOrSubAudioSceneArray
     {
-        get => SubAudioSceneIDOrSubAudioScene is null ? null : [SubAudioSceneIDOrSubAudioScene];
-        init => SubAudioSceneIDOrSubAudioScene = value?.FirstOrDefault();
+        get => OneOf.Held(SubAudioSceneIDOrSubAudioScene, BasicScene, SceneId);
+        init
+        {
+            SubAudioSceneIDOrSubAudioScene = OneOf.Take<AudioSceneDescriptors>(value, "OSD-ASD-V1.5");
+            BasicScene = OneOf.Take<BasicAudioSceneDescriptors>(value, "OSD-BAS-V1.5");
+            SceneId = OneOf.Id(value);
+        }
     }
 }
 

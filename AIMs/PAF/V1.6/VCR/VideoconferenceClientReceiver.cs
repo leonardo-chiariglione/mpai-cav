@@ -116,8 +116,8 @@ public sealed class VideoconferenceClientReceiver(string instanceId, IReadOnlyDi
     {
         var s = room?.DeepClone().AsObject() ?? new JsonObject
         {
-            ["Header"] = Scene, ["MInstanceID"] = "", ["BasicAVSceneDescriptorsID"] = "meeting",
-            ["BAVSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = SpaceTime, ["MInstanceID"] = "", ["SpaceTimeID"] = "meeting-st" }
+            ["Header"] = Scene, ["MInstanceID"] = "", ["BasicMultimodalSceneDescriptorsID"] = "meeting",
+            ["BMSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = SpaceTime, ["MInstanceID"] = "", ["SpaceTimeID"] = "meeting-st" }
         };
         var placed = new List<JsonNode>(); var speaking = new List<JsonNode>();
         foreach (var (id, state) in avatars)
@@ -129,7 +129,7 @@ public sealed class VideoconferenceClientReceiver(string instanceId, IReadOnlyDi
         }
         var objects = placed.Concat(speaking).ToArray();
         s["BasicObjectsData"] = new JsonArray(objects);
-        s["AVObjectCount"] = (s["BasicAVSceneDescriptorsData"]?.AsArray().Count ?? 0) + objects.Length;
+        s["MultimodalObjectCount"] = (s["BasicMultimodalSceneDescriptorsData"]?.AsArray().Count ?? 0) + objects.Length;
         return s;
     }
 }

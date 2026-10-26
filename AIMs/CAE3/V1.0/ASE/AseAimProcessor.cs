@@ -10,13 +10,16 @@ using Mpai.Core.OSD;
 namespace Mpai.Cae.Ase;
 
 // CAE-ASE-V1.0 - Audio Scene Editing, as the author's Reference Model of Audio Scene
-// Management draws it (CAE Reference Models, 2026/10/04): a Basic Audio Object (from
-// Audio Object Editing), a Basic Audio Scene, a User Command and a User PoV in; the
-// Basic Audio Scene as edited, and the User Command with its report, out.
+// Management draws it (CAE Reference Models, 2026/10/26): an Audio Object (OSD-AUO, from
+// Audio Object Editing), an Audio Scene (OSD-ASD), a User Command and a User PoV in; the
+// Audio Scene as edited, and the User Command with its response, out. There is no Basic
+// Audio Scene on a Port: an Audio Scene is a collection of Audio Objects and of Basic
+// Audio Scenes, and the one Basic Audio Scene that is edited is held in it.
 //
-// OPEN BY PORT, ACT BY COMMAND. One Scene is open at a time, so no Command names it.
-// A Basic Audio Scene arriving is opened. A User Command acts on the open Scene - the
-// first Object added to no open Scene creates one:
+// OPEN BY PORT, ACT BY COMMAND. One Basic Scene is open at a time, so no Command names
+// it. An Audio Scene arriving that holds a Basic Audio Scene - or whose own identifier is
+// one - opens that Scene. A User Command acts on the open Scene - the first Object added
+// to no open Scene creates one:
 //
 //   AddedObjects     place the named Basic Audio Objects
 //   MovedObjects     old attitude -> new attitude; the Object is the one at the old PoV
@@ -29,8 +32,13 @@ namespace Mpai.Cae.Ase;
 //
 //   RemovedObjects   take placed Objects out
 //
+// The Audio Scene given is the open Basic Audio Scene inside an Audio Scene of one
+// sub-scene, under the Basic Scene's identifier - its Closed Space, its Acoustic Profile
+// and its Objects stay in it, as Shared Storage holds them.
+//
 // Every edit is a new version in Shared Storage. The Objects are read from Shared
-// Storage by their identifiers; what Audio Object Editing leaves is there.
+// Storage by their identifiers; what Audio Object Editing leaves is there (the Audio
+// Object port is for the Controller to connect; nothing has to be read from it).
 public sealed class AseAimProcessor : IAimProcessor
 {
     private readonly AseAim _ase;
@@ -53,10 +61,10 @@ public sealed class AseAimProcessor : IAimProcessor
         InstanceId   = instanceId;
         _ase         = ase;
         _commandPort = ports.Input("CAE-UCM-V1.0");
-        _objectPort  = ports.InputOrDefault("OSD-BAO-V1.5", "");
-        _scenePort   = ports.Input("OSD-BAS-V1.5");
+        _objectPort  = ports.InputOrDefault("OSD-AUO-V1.5", "");
+        _scenePort   = ports.Input("OSD-ASD-V1.5");
         _povPort     = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _sceneOut    = ports.Output("OSD-BAS-V1.5");
+        _sceneOut    = ports.Output("OSD-ASD-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
 
@@ -67,7 +75,7 @@ public sealed class AseAimProcessor : IAimProcessor
         // 1. opening, by Port.
         if (message.Ports.TryGetValue(_scenePort, out var sceneJson) && !string.IsNullOrWhiteSpace(sceneJson))
         {
-            var id = MpaiJson.FromJson<BasicAudioSceneDescriptors>(sceneJson).BasicAudioSceneDescriptorsID;
+            var id = BasicSceneOf(MpaiJson.FromJson<AudioSceneDescriptors>(sceneJson));
             // A Scene the storage does not hold cannot be opened: the one open stays, and nothing is raised - an AIM that threw would stop the Module.
             if (!string.IsNullOrWhiteSpace(id) && _ase.Has(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {_open}"); }
         }
@@ -94,14 +102,42 @@ public sealed class AseAimProcessor : IAimProcessor
             _open = _ase.SetBasicSceneListener(_open, pov).AssetId;
 
         // 3. the open Scene, as it now stands.
-        if (_open is not null) outputs[_sceneOut] = MpaiJson.ToJson(_ase.MaterializeBasicScene(_open));
+        if (_open is not null) outputs[_sceneOut] = MpaiJson.ToJson(Given(_open));
         return Task.FromResult(new Message
         {
             MessageId   = Guid.NewGuid().ToString(),
-            MessageType = _open is null ? "NoOpenScene" : "BasicAudioSceneDescriptors",
-            DataType    = _open is null ? "" : "OSD-BAS-V1.5",
+            MessageType = _open is null ? "NoOpenScene" : "AudioSceneDescriptors",
+            DataType    = _open is null ? "" : "OSD-ASD-V1.5",
             Ports       = outputs
         });
+    }
+
+    // The Basic Audio Scene an Audio Scene holds: the first sub-scene that is one - in full, or by its identifier - else the Audio Scene's own identifier, which is a
+    // Basic Scene's when the Scene is one this AIM gave.
+    private static string? BasicSceneOf(AudioSceneDescriptors scene)
+    {
+        foreach (var sub in scene.SubAudioScenes ?? [])
+        {
+            var id = sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId;
+            if (id is not null && id.StartsWith("BAS", StringComparison.Ordinal)) return id;
+        }
+        return scene.AudioSceneDescriptorsID.StartsWith("BAS", StringComparison.Ordinal) ? scene.AudioSceneDescriptorsID : null;
+    }
+
+    // The open Basic Audio Scene as the Audio Scene this AIM gives: the Scene is the one sub-scene, which stands at the origin of the Audio Scene's frame.
+    private AudioSceneDescriptors Given(string basicSceneId)
+    {
+        var basic = _ase.MaterializeBasicScene(basicSceneId);
+        return new AudioSceneDescriptors
+        {
+            MInstanceID = basic.MInstanceID, UEnvironmentID = basic.UEnvironmentID,
+            AudioSceneDescriptorsID = basicSceneId,
+            AudioSceneDescriptorsTime = basic.BasicAudioSceneDescriptorsTime,
+            AudioSceneDescriptorsSpaceTime = basic.BASSpaceTime ?? new SpaceTime(),
+            UserPoV = basic.UserPoV,
+            SubAudioSceneCount = 1,
+            SubAudioScenes = [new SubAudioSceneEntry { BasicScene = basic }]
+        };
     }
 
     private void Apply(UserCommand command, PointOfView? pov, CommandReport report)

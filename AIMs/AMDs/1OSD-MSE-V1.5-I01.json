@@ -18,7 +18,7 @@
   "SubAIMs":              [],
   "Topology":             [],
 
-  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/BME", "MASPort": 443, "BinaryName": "Mpai.Osd.Bme", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.5", "Source": "AIMStorage"}],
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/MSE", "MASPort": 443, "BinaryName": "Mpai.Osd.Mse", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.5", "Source": "AIMStorage"}],
 
   "ResourcePolicies":     [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "1 GB", "Maximum": "2 GB"},
                            {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],

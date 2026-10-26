@@ -12,13 +12,17 @@ using Mpai.Core.OSD;
 namespace Mpai.Cae.Soe;
 
 // CAE-SOE-V1.0 - Speech Object Editing, as the author's Reference Model of Audio
-// Scene Management draws it (CAE Reference Models, 2026/10/04): User Command, User
-// PoV and a Basic Speech Object in; the Basic Speech Object as edited, and the User
-// Command with its report, out. The Object goes on to Speech Scene Editing.
+// Scene Management draws it (CAE Reference Models, 2026/10/26): User Command, User
+// PoV and a Speech Object (OSD-SPO) in; the Speech Object as edited, and the User
+// Command with its response, out. The Object goes on to Speech Scene Editing. There is
+// no Basic Speech Object on a Port: a Speech Object is a collection of Basic Speech
+// Objects, and one that holds a single Basic Speech Object is that Object.
 //
-// OPEN BY PORT, ACT BY COMMAND, as Audio Object Editing does. A Basic Speech Object
-// arriving is opened when Shared Storage holds it, and kept when it is new. Then a
-// User Command acts on what is open:
+// OPEN BY PORT, ACT BY COMMAND, as Audio Object Editing does. A Speech Object arriving
+// that holds one Basic Speech Object opens that Object when Shared Storage holds it, and
+// keeps it when it is new. One that holds more is kept as a Speech Object (its Basic
+// Speech Objects as new Objects) and is the Speech Object given back; the open Object
+// stays. Then a User Command acts on what is open:
 //
 //   UserPoV            where it is heard from, when heard on its own
 //   ChangedObjects     its Qualifier (a Speech Qualifier)
@@ -35,9 +39,9 @@ public sealed class SoeAimProcessor : IAimProcessor
 
     private readonly string _commandPort;
     private readonly string _povPort;
-    private readonly string _objectPort;        // OSD-BSO #1
-    private readonly string _translationPort;   // OSD-BSO #2, from Text and Speech Translation
-    private readonly string _objectOut;         // OSD-BSO #1
+    private readonly string _objectPort;        // OSD-SPO #1
+    private readonly string _translationPort;   // OSD-BSO #2, from Text and Speech Translation (it handles Basic Speech Objects)
+    private readonly string _objectOut;         // OSD-SPO #1
     private readonly string _speechOut;         // OSD-BSO #2, to Text and Speech Translation
     private readonly string _languageOut;       // OSD-SEL
     private readonly string _reportOut;
@@ -57,9 +61,9 @@ public sealed class SoeAimProcessor : IAimProcessor
         _storage         = storage;
         _commandPort     = ports.Input("CAE-UCM-V1.0");
         _povPort         = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _objectPort      = ports.Input("OSD-BSO-V1.5", 1);
+        _objectPort      = ports.Input("OSD-SPO-V1.5", 1);
         _translationPort = ports.InputOrDefault("OSD-BSO-V1.5", 2, "");
-        _objectOut       = ports.Output("OSD-BSO-V1.5", 1);
+        _objectOut       = ports.Output("OSD-SPO-V1.5", 1);
         _speechOut       = ports.OutputOrDefault("OSD-BSO-V1.5", 2, "");
         _languageOut     = ports.OutputOrDefault("OSD-SEL-V1.5", "");
         _reportOut       = ports.OutputOrDefault("CAE-UCM-V1.0", "");
@@ -72,11 +76,20 @@ public sealed class SoeAimProcessor : IAimProcessor
             port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
         // 1. opening, or keeping, by Port.
+        string? several = null;
         if (In(_objectPort) is { } objectJson)
         {
-            var speech = MpaiJson.FromJson<BasicSpeechObject>(objectJson);
-            _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null ? speech.BasicSpeechObjectID : SpeechStore.Keep(_storage, speech);
-            Console.WriteLine($"[CAE-SOE-V1.0] open {_open}");
+            var arrived = SpeechStore.Parse(objectJson);
+            if (SpeechStore.Alone(arrived) is { } speech)
+            {
+                _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null ? speech.BasicSpeechObjectID : SpeechStore.Keep(_storage, speech);
+                Console.WriteLine($"[CAE-SOE-V1.0] open {_open}");
+            }
+            else
+            {
+                several = SpeechStore.KeepObject(_storage, arrived);
+                Console.WriteLine($"[CAE-SOE-V1.0] speech object {several}");
+            }
         }
 
         // 2. a User PoV on its Port.
@@ -89,9 +102,9 @@ public sealed class SoeAimProcessor : IAimProcessor
             _pending = null;
             var report = new CommandReport(pending.Command);
             var id = IdOf(pending.Entry.ObjectID);
-            if (id is not null && SpeechStore.Get(_storage, id) is { } original)
+            if (id is not null && SpeechStore.Get(_storage, id) is { } original && MpaiJson.FromJson<BasicSpeechObject>(translationJson) is { } translation)
             {
-                SpeechStore.Put(_storage, SpeechStore.Replacing(original, MpaiJson.FromJson<BasicSpeechObject>(translationJson), pending.Entry.SpeechQualifier));
+                SpeechStore.Put(_storage, SpeechStore.Replacing(original, translation, pending.Entry.SpeechQualifier));
                 _open = id;
                 // what the translation replaced is kept: revoking the command puts the original back, in every Scene that holds it
                 _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_storage, original); return id; });
@@ -118,14 +131,15 @@ public sealed class SoeAimProcessor : IAimProcessor
             if (!waiting && _reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
 
-        // 5. the open Object, as it now stands.
+        // 5. the Speech Object: one stored in this run, else the open Object as a Speech Object of one.
         opened:
-        if (Open() is { } open) outputs[_objectOut] = MpaiJson.ToJson(open);
+        var given = several is not null ? SpeechStore.GetObject(_storage, several) : Open() is { } open ? SpeechStore.Wrap(open) : null;
+        if (given is not null) outputs[_objectOut] = MpaiJson.ToJson(given);
         return Task.FromResult(new Message
         {
             MessageId   = Guid.NewGuid().ToString(),
-            MessageType = _open is null ? "NoOpenObject" : "BasicSpeechObject",
-            DataType    = _open is null ? "" : "OSD-BSO-V1.5",
+            MessageType = given is null ? "NoOpenObject" : "SpeechObject",
+            DataType    = given is null ? "" : "OSD-SPO-V1.5",
             Ports       = outputs
         });
     }

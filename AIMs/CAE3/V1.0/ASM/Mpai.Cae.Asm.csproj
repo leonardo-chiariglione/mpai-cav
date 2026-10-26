@@ -17,7 +17,7 @@
     <ProjectReference Include="..\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\SOE\Mpai.Cae.Soe.csproj" />
     <ProjectReference Include="..\SSE\Mpai.Cae.Sse.csproj" />
-    <ProjectReference Include="..\..\..\OSD\V1.5\BME\Mpai.Osd.Bme.csproj" />
+    <ProjectReference Include="..\..\..\OSD\V1.5\MSE\Mpai.Osd.Mse.csproj" />
   </ItemGroup>
 
 </Project>

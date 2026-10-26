@@ -142,9 +142,9 @@ public class AsmModuleTests
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
                                                                  new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = bssId }, SpatialAttitude = At(0, 0) }] }
             }));
-            string Members(string json) => string.Join(" + ", JsonNode.Parse(json)!["BasicAVSceneDescriptorsData"]!.AsArray().Select(m => (string?)m!["BXSOrBXSID"]!["Header"] ?? "?"));
+            string Members(string json) => string.Join(" + ", JsonNode.Parse(json)!["BasicMultimodalSceneDescriptorsData"]!.AsArray().Select(m => (string?)m!["BXSOrBXSID"]!["Header"] ?? "?"));
             var bms = api.OutputRead(Asm, "OSD-BMS-V1.5", 1, 60_000);
-            r["the Multimodal Scene leaving the Module"] = bms.Error == AifError.OK ? $"{Members(bms.Json!)}, {Valid("OSD/V1.5/data/BasicAudioVisualSceneDescriptors.json", bms.Json!)}" : $"nothing ({bms.Error})";
+            r["the Multimodal Scene leaving the Module"] = bms.Error == AifError.OK ? $"{Members(bms.Json!)}, {Valid("OSD/V1.5/data/BasicMultimodalSceneDescriptors.json", bms.Json!)}" : $"nothing ({bms.Error})";
             var bmeReport = api.OutputRead(Asm, "CAE-UCM-V1.0", 5, 60_000);
             r["the report of Basic Multimodal Scene Editing"] = bmeReport.Error == AifError.OK && MpaiJson.FromJson<UserCommand>(bmeReport.Json!).UserCommandRS is { } bmeDone
                 ? $"{bmeDone.Outcome}; " + string.Join("; ", bmeDone.Actions.Select(a => $"{a.Action} {a.Outcome}"))
@@ -158,7 +158,7 @@ public class AsmModuleTests
             var followed = api.OutputRead(Asm, "OSD-BMS-V1.5", 1, 60_000);
             var newBss = IdIn(movedSpeech.Error, movedSpeech.Json, "BasicSpeechSceneDescriptorsID");
             r["the Speech Scene edited again, followed"] = followed.Error != AifError.OK ? $"nothing ({followed.Error})"
-                : JsonNode.Parse(followed.Json!)!["BasicAVSceneDescriptorsData"]!.AsArray().Any(m => (string?)m!["BXSOrBXSID"]!["BasicSpeechSceneDescriptorsID"] == newBss && newBss != bssId)
+                : JsonNode.Parse(followed.Json!)!["BasicMultimodalSceneDescriptorsData"]!.AsArray().Any(m => (string?)m!["BXSOrBXSID"]!["BasicSpeechSceneDescriptorsID"] == newBss && newBss != bssId)
                     ? "the Multimodal Scene holds the new version" : "the Multimodal Scene holds the old version";
         }
         finally

@@ -7,12 +7,13 @@
   "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-JSI-V2.5"},
 
   "APIProfile":           "Basic",
-  "Description":          "JSON Interface: between what a person says, as text, and an application that is driven by JSON instances. It is the same for every application: the application is given to it as the schema of its commands and the schema of its responses (CommandSchemaURI and ResponseSchemaURI, in the DataXMData of its L3). Request to command: a request in words, with what the AIM remembers of the commands it sent, becomes an Application JSON Instance (MMC-AJI) that conforms to the command schema, checked against it before it leaves; a request that is not for the application, or that does not become a valid instance, gives no command and a Facts text saying why. Response to facts: a response of the application, an Application JSON Instance that conforms to the response schema and names the command it answers (InReplyTo), becomes a Text Object of facts, from the descriptions in the schema: what was done, what was not, and why. The AIM does not decide what is said to the person: the facts go to the dialogue AIM.",
+  "Description":          "JSON Interface: between what a person says, as text, and an application that is driven by JSON instances. It is the same for every application: the application is given to it as the schema of its commands and the schema of its responses (CommandSchema and ResponseSchema, the AccessSources of its L3). Request to command: a request in words, with the state of the application (ApplicationContext) and what the AIM remembers of the commands it sent, becomes an Application JSON Instance (MMC-AJI) that conforms to the command schema, checked against it before it leaves; a request that is not for the application, or that does not become a valid instance, gives no command and a Facts text saying why. Response to facts: a response of the application, an Application JSON Instance that conforms to the response schema and names the command it answers (InReplyTo), becomes a Text Object of facts, from the descriptions in the schema: what was done, what was not, and why. The AIM does not decide what is said to the person: the facts go to the dialogue AIM.",
 
   "InternalTypes":        [],
 
   "ExternalPorts":        [{"Name": "Request", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ApplicationResponse", "Direction": "Input", "DataType": "MMC-AJI-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationResponse", "Direction": "Input", "DataType": "MMC-AJI-V2.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationContext", "Direction": "Input", "DataType": "MMC-AJI-V2.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ApplicationCommand", "Direction": "Output", "DataType": "MMC-AJI-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Facts", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
@@ -32,6 +33,9 @@
   "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
                            {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
 
-  "DataXMData":           { "CommandSchemaURI": "/* URI of the schema of the commands of the application */", "ResponseSchemaURI": "/* URI of the schema of the responses of the application */" },
+  "AccessSources":        [{"Name": "CommandSchema", "Uri": "/* URI of the schema of the commands of the application */", "Sha256": "/* SHA-256 */", "Setting": "CommandSchema", "Description": "The schema that a command conforms to; its descriptions are what tells the AIM what each field means."},
+                           {"Name": "ResponseSchema", "Uri": "/* URI of the schema of the responses of the application */", "Sha256": "/* SHA-256 */", "Setting": "ResponseSchema", "Description": "The schema that a response conforms to."}],
+
+  "DataXMData":           { },
 
   "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/json-interface/"}]}

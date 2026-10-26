@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -29,6 +30,89 @@ public static class SpeechStore
         }
         Put(storage, speech);
         return speech.BasicSpeechObjectID;
+    }
+
+    // A SPEECH OBJECT (OSD-SPO) IS A COLLECTION OF BASIC SPEECH OBJECTS. One that holds a single Basic Speech Object is that Object, in the form a Port of the
+    // Speech Object Data Type asks for: Wrap makes the Speech Object of one, under the Basic Object's own identifier; Alone gives the Basic Object back.
+    public static SpeechObject Wrap(BasicSpeechObject basic) => new()
+    {
+        MInstanceID = basic.MInstanceID, SpeechObjectID = basic.BasicSpeechObjectID,
+        SpeechObjectSpaceTime = basic.BasicSpeechObjectSpaceTime ?? new SpaceTime(), UserPoV = basic.UserPoV,
+        BasicSpeechObjectCount = 1, BasicSpeechObjects = [new BasicSpeechObjectEntry { BSObjectIDOrBSObject = basic }]
+    };
+
+    public static BasicSpeechObject? Alone(SpeechObject speech) =>
+        speech.BasicSpeechObjects is { Count: 1 } one && speech.SubSpeechObjects is not { Count: > 0 } ? one[0].BSObjectIDOrBSObject : null;
+
+    // What arrives on a Speech Object Port: a Speech Object - or, from an AIM that gives its Basic Speech Object as it is (Text and Speech Translation lists both),
+    // a Basic Speech Object, which is the Speech Object of one.
+    public static SpeechObject Parse(string json) =>
+        JsonNode.Parse(json)?["Header"]?.GetValue<string>() == "OSD-BSO-V1.5" ? Wrap(MpaiJson.FromJson<BasicSpeechObject>(json)) : MpaiJson.FromJson<SpeechObject>(json);
+
+    // A Speech Object of more than one Basic Speech Object is kept here: each Basic Speech Object as a new Object, if the storage does not hold it, and the Speech
+    // Object, under its own identifier - SPO000001 ... when it has none - holding them by their identifiers. One the storage holds already is that one.
+    public static string KeepObject(ISharedStorage storage, SpeechObject speech)
+    {
+        if (!string.IsNullOrWhiteSpace(speech.SpeechObjectID) && GetObject(storage, speech.SpeechObjectID, resolve: false) is not null) return speech.SpeechObjectID;
+        var basics = (speech.BasicSpeechObjects ?? []).Select(e =>
+        {
+            var b = e.BSObjectIDOrBSObject ?? throw new InvalidOperationException("The Speech Object names a speech it does not hold.");
+            var id = Get(storage, b.BasicSpeechObjectID) is not null ? b.BasicSpeechObjectID : Keep(storage, b);
+            return new BasicSpeechObjectEntry { BasicSpeechObjectSpaceTime = e.BasicSpeechObjectSpaceTime, BSObjectIDOrBSObject = new BasicSpeechObject { BasicSpeechObjectID = id } };
+        }).ToList();
+        var subs = (speech.SubSpeechObjects ?? []).Select(e =>
+        {
+            var s = e.SubSObjectIDOrSubSObject ?? throw new InvalidOperationException("The Speech Object names a Speech Object it does not hold.");
+            return new SubSpeechObjectEntry { SubSpeechObjectSpaceTime = e.SubSpeechObjectSpaceTime, SubSObjectIDOrSubSObject = new SpeechObject { SpeechObjectID = KeepObject(storage, s) } };
+        }).ToList();
+        if (basics.Count + subs.Count == 0) throw new InvalidOperationException("The Speech Object holds no speech.");
+        var kept = string.IsNullOrWhiteSpace(speech.SpeechObjectID) ? Next(storage, "SPO") : speech.SpeechObjectID;
+        var stored = new SpeechObject
+        {
+            MInstanceID = speech.MInstanceID, SpeechObjectID = kept, SpeechObjectSpaceTime = speech.SpeechObjectSpaceTime ?? new SpaceTime(), UserPoV = speech.UserPoV,
+            BasicSpeechObjectCount = basics.Count, BasicSpeechObjects = basics.Count > 0 ? basics : null,
+            SubSpeechObjectCount = subs.Count, SubSpeechObjects = subs.Count > 0 ? subs : null,
+            DataXMData = speech.DataXMData, DescrMetadata = speech.DescrMetadata
+        };
+        storage.MPAI_AIFM_SharedStorage_Put(kept, Encoding.UTF8.GetBytes(MpaiJson.ToJson(stored)));
+        return kept;
+    }
+
+    // The Speech Object kept under this identifier, with the Objects it holds as the storage now has them (a Basic Speech Object translated in its place is the
+    // translation in it); null when there is none - or what is there is not a Speech Object.
+    public static SpeechObject? GetObject(ISharedStorage storage, string id, bool resolve = true)
+    {
+        if (string.IsNullOrWhiteSpace(id) || !storage.MPAI_AIFM_SharedStorage_Exists(id)) return null;
+        var json = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(id));
+        SpeechObject? speech;
+        try { speech = JsonNode.Parse(json)?["Header"]?.GetValue<string>() == "OSD-SPO-V1.5" ? MpaiJson.FromJson<SpeechObject>(json) : null; }
+        catch { return null; }
+        if (speech is null || !resolve) return speech;
+        var basics = (speech.BasicSpeechObjects ?? []).Select(e => new BasicSpeechObjectEntry
+        {
+            BasicSpeechObjectSpaceTime = e.BasicSpeechObjectSpaceTime,
+            BSObjectIDOrBSObject = e.BSObjectIDOrBSObject is { } b ? Get(storage, b.BasicSpeechObjectID) ?? b : null
+        }).ToList();
+        var subs = (speech.SubSpeechObjects ?? []).Select(e => new SubSpeechObjectEntry
+        {
+            SubSpeechObjectSpaceTime = e.SubSpeechObjectSpaceTime,
+            SubSObjectIDOrSubSObject = e.SubSObjectIDOrSubSObject is { } s ? GetObject(storage, s.SpeechObjectID) ?? s : null
+        }).ToList();
+        return new SpeechObject
+        {
+            MInstanceID = speech.MInstanceID, SpeechObjectID = speech.SpeechObjectID, SpeechObjectSpaceTime = speech.SpeechObjectSpaceTime, UserPoV = speech.UserPoV,
+            BasicSpeechObjectCount = basics.Count, BasicSpeechObjects = basics.Count > 0 ? basics : null,
+            SubSpeechObjectCount = subs.Count, SubSpeechObjects = subs.Count > 0 ? subs : null,
+            DataXMData = speech.DataXMData, DescrMetadata = speech.DescrMetadata
+        };
+    }
+
+    private static string Next(ISharedStorage storage, string prefix)
+    {
+        var counter = $"_counter:{prefix}";
+        long next = storage.MPAI_AIFM_SharedStorage_Exists(counter) ? long.Parse(Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(counter))) + 1 : 1;
+        storage.MPAI_AIFM_SharedStorage_Put(counter, Encoding.UTF8.GetBytes(next.ToString()));
+        return $"{prefix}{next:D6}";
     }
 
     // The same Basic Speech Object with some of its fields changed.

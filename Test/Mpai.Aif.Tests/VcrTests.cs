@@ -58,7 +58,7 @@ public class VcrTests
             Assert.Equal(Seat(i).X, (double)at[0]!, 3);
             Assert.Equal(Seat(i).Y, (double)at[1]!, 3);
         }
-        Assert.Equal(4, (int)scene["AVObjectCount"]!);
+        Assert.Equal(4, (int)scene["MultimodalObjectCount"]!);
         Assert.Equal(4, Avatars(written).Count);                                                        // a Portable Avatar out for each one in
         Assert.DoesNotContain("3DModel", scene.ToJsonString());                                         // there is nobody yet to display the Scene to: no model in it
     }
@@ -76,7 +76,7 @@ public class VcrTests
         Assert.Equal((double)avatar[0]!, (double)speech[0]!, 3);
         Assert.Equal((double)avatar[2]! + 1.6, (double)speech[2]!, 3);
 
-        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD", "V1.5", "data", "BasicAudioVisualSceneDescriptors.json"))];
+        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD", "V1.5", "data", "BasicMultimodalSceneDescriptors.json"))];
         foreach (var w in written.Where(w => w.DataType == "OSD-BMS-V1.5"))
         {
             using var doc = JsonDocument.Parse(w.Json);

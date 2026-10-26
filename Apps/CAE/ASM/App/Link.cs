@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using AIF.Controller;   // the codes of the Controller API (AifError)
 using Mpai.Aif.Api;
 using Mpai.Core;
+using Mpai.Core.OSD;
 using Mpai.Ua;
 using Mpai.Wdl;
 
@@ -50,20 +51,25 @@ public sealed class ModuleLink : IDisposable
 {
     public const string Module = "1CAE-ASM-V1.0-I01";
 
-    // Data Types of the Module's boundary, by Port Number (CAE-ASM-V1.0, schemas/CAE3/V1.0/AIMs/AudioSceneManager.json).
-    public const string Bao = "OSD-BAO-V1.5", Bas = "OSD-BAS-V1.5", Bso = "OSD-BSO-V1.5", Bto = "OSD-BTO-V1.5", Ucm = "CAE-UCM-V1.0", Tfu = "MMC-TFU-V1.5", Auo = "OSD-AUO-V1.5";
+    // Data Types of the Module's boundary, by Port Number (CAE-ASM-V1.0, schemas/CAE3/V1.0/AIMs/AudioSceneManager.json): the Audio Object (OSD-AUO), the Audio Scene
+    // (OSD-ASD), the User Command (CAE-UCM). The Module has no Basic Data Type on a Port.
+    public const string Auo = "OSD-AUO-V1.5", Asd = "OSD-ASD-V1.5", Ucm = "CAE-UCM-V1.0";
+
+    // THE STUDIO WORKS ON ONE BASIC AUDIO OBJECT AND ONE BASIC AUDIO SCENE AT A TIME, so it names them as it holds them: Bao and Bas. At the Module's Ports they are the Audio
+    // Object of one Basic Audio Object and the Audio Scene of one Basic Audio Scene: given to the Port as such (Write), and taken out of what the Port gives (Read).
+    public const string Bao = "OSD-BAO-V1.5", Bas = "OSD-BAS-V1.5", Bso = "OSD-BSO-V1.5", Bto = "OSD-BTO-V1.5", Tfu = "MMC-TFU-V1.5";
 
     // The device of each Port the User Agent gives to, and of each it takes from, as the workflow names them.
     private static readonly (string Device, string Type, int Number)[] Streams =
     [
-        ("ObjectIn", Bao, 1), ("AudioObjectIn", Auo, 1), ("ObjectCommand", Ucm, 1),
-        ("SceneIn", Bas, 1), ("SceneCommand", Ucm, 2)
+        ("ObjectIn", Auo, 1), ("ObjectCommand", Ucm, 1),
+        ("SceneIn", Asd, 1), ("SceneCommand", Ucm, 2)
     ];
 
     private static readonly (string Device, string Type, int Number)[] Delivered =
     [
-        ("ObjectOut", Bao, 1), ("AudioObjectOut", Auo, 1),
-        ("ObjectReport", Ucm, 1), ("Scene", Bas, 1), ("SceneReport", Ucm, 2)
+        ("ObjectOut", Auo, 1),
+        ("ObjectReport", Ucm, 1), ("Scene", Asd, 1), ("SceneReport", Ucm, 2)
     ];
 
     private readonly IControllerApi api;
@@ -117,24 +123,48 @@ public sealed class ModuleLink : IDisposable
     }
 
     // The ports the editing exchanges leave a datum at that nobody asks for: read away before an exchange, so that what is read after it is of it.
-    private static readonly (string, int)[] EditingOutputs = [(Bao, 1), (Ucm, 1), (Ucm, 2), (Bas, 1), (Auo, 1)];
+    private static readonly (string, int)[] EditingOutputs = [(Auo, 1), (Ucm, 1), (Ucm, 2), (Asd, 1)];
 
     public void DrainEditing() => Drain(EditingOutputs);
     private void Drain((string, int)[] ports) { foreach (var key in ports) from[key].Drain(); }
 
-    // Gives a datum to the Port: the device streams it.
+    // Gives a datum to the Port: the device streams it. A Basic Audio Object is given as the Audio Object that holds it alone, a Basic Audio Scene as the Audio Scene that holds it.
     public void Write(string dataType, int portNumber, string json)
     {
+        (dataType, json) = dataType switch
+        {
+            Bao => (Auo, MpaiJson.ToJson(AudioObjectOf(MpaiJson.FromJson<BasicAudioObject>(json)))),
+            Bas => (Asd, MpaiJson.ToJson(AudioSceneOf(MpaiJson.FromJson<BasicAudioSceneDescriptors>(json)))),
+            _ => (dataType, json)
+        };
         if (!into.TryGetValue((dataType, portNumber), out var device)) throw new InvalidOperationException($"The workflow binds no device to {dataType}:{portNumber}.");
         device.Send(json);
     }
 
-    // What the Module gave at that Port, or nothing within the time.
+    // What the Module gave at that Port, or nothing within the time. The Basic Audio Object is the one an Audio Object holds alone, the Basic Audio Scene the one an Audio
+    // Scene holds; what holds something else is given as it is.
     public string? Read(string dataType, int portNumber, int milliseconds = 60_000)
     {
-        if (!from.TryGetValue((dataType, portNumber), out var device)) throw new InvalidOperationException($"The workflow delivers {dataType}:{portNumber} to no device.");
-        return device.Receive(milliseconds);
+        var port = dataType switch { Bao => Auo, Bas => Asd, _ => dataType };
+        if (!from.TryGetValue((port, portNumber), out var device)) throw new InvalidOperationException($"The workflow delivers {port}:{portNumber} to no device.");
+        var json = device.Receive(milliseconds);
+        if (json is null) return null;
+        if (dataType == Bao && MpaiJson.FromJson<AudioObject>(json) is { BasicAudioObjects: { Count: 1 } one, SubAudioObjects: null or { Count: 0 } } && one[0].BAObjectIDOrBAObject is { } bao) return MpaiJson.ToJson(bao);
+        if (dataType == Bas && MpaiJson.FromJson<AudioSceneDescriptors>(json).SubAudioScenes?.FirstOrDefault(s => s.BasicScene is not null)?.BasicScene is { } basic) return MpaiJson.ToJson(basic);
+        return json;
     }
+
+    private static AudioObject AudioObjectOf(BasicAudioObject bao) => new()
+    {
+        MInstanceID = bao.MInstanceID ?? "", AudioObjectID = bao.BasicAudioObjectID, AudioObjectSpaceTime = new SpaceTime(),
+        BasicAudioObjectCount = 1, BasicAudioObjects = [new BasicAudioObjectEntry { BAObjectIDOrBAObject = bao }]
+    };
+
+    private static AudioSceneDescriptors AudioSceneOf(BasicAudioSceneDescriptors scene) => new()
+    {
+        MInstanceID = scene.MInstanceID, AudioSceneDescriptorsID = scene.BasicAudioSceneDescriptorsID, AudioSceneDescriptorsSpaceTime = scene.BASSpaceTime ?? new SpaceTime(),
+        UserPoV = scene.UserPoV, SubAudioSceneCount = 1, SubAudioScenes = [new SubAudioSceneEntry { BasicScene = scene }]
+    };
     public void Dispose()
     {
         try { stopping.Cancel(); running?.Wait(TimeSpan.FromSeconds(30)); } catch { }

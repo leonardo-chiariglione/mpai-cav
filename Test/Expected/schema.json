@@ -138,7 +138,7 @@
   "OSD/V1.5/AIMs/AudioSegmentation.json": "valid",
   "OSD/V1.5/AIMs/AudioVisualAlignment.json": "valid",
   "OSD/V1.5/AIMs/BasicAudioSceneDescription.json": "valid",
-  "OSD/V1.5/AIMs/BasicAudioVisualSceneDescription.json": "valid",
+  "OSD/V1.5/AIMs/BasicMultimodalSceneDescription.json": "valid",
   "OSD/V1.5/AIMs/BasicLiDARSceneDescription.json": "valid",
   "OSD/V1.5/AIMs/BasicMultimodalSceneEditing.json": "valid",
   "OSD/V1.5/AIMs/BasicOfflineMapSceneDescription.json": "valid",

@@ -141,11 +141,24 @@ public static class SceneAudio
     {
         var user = scene.UserPoV ?? outerUser;
         foreach (var e in scene.AudioObjects ?? [])
-            if (e.ObjectIDOrObject is { } auo)
+        {
+            // A member is a Basic Audio Object or an Audio Object (or an identifier, which the renderer cannot hear).
+            if (e.BasicObject is { } basic)
+            {
+                var (p, yaw, pitch) = Compose(frame, Of(e.AudioObjectSpaceTime));
+                yield return new Member(basic, p, yaw, pitch, user, start + StartOf(e.AudioObjectSpaceTime), EndOf(e.AudioObjectSpaceTime) is { } end ? start + end : null);
+            }
+            else if (e.ObjectIDOrObject is { } auo)
                 foreach (var m in Members(auo, Compose(frame, Of(e.AudioObjectSpaceTime)), user, start + StartOf(e.AudioObjectSpaceTime))) yield return m;
+        }
         foreach (var s in scene.SubAudioScenes ?? [])
-            if (s.SubAudioSceneIDOrSubAudioScene is { } sub)
+        {
+            // A sub-scene is a Basic Audio Scene or an Audio Scene.
+            if (s.BasicScene is { } basicScene)
+                foreach (var m in Members(basicScene, Compose(frame, Of(s.SubAudioSceneSpaceTime)), user)) yield return m with { StartSeconds = start + StartOf(s.SubAudioSceneSpaceTime) + m.StartSeconds, EndSeconds = m.EndSeconds is { } e2 ? start + StartOf(s.SubAudioSceneSpaceTime) + e2 : null };
+            else if (s.SubAudioSceneIDOrSubAudioScene is { } sub)
                 foreach (var m in Members(sub, Compose(frame, Of(s.SubAudioSceneSpaceTime)), user, start + StartOf(s.SubAudioSceneSpaceTime))) yield return m;
+        }
     }
 
     // An Audio Object heard on its own, from its UserPoV.

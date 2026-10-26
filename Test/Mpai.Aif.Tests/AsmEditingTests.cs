@@ -10,12 +10,16 @@ namespace Mpai.Aif.Tests;
 // AUDIO OBJECT EDITING AND AUDIO SCENE EDITING, as the author's Reference Model of
 // Audio Scene Management draws them (2026/10/04): each AIM through its L3, one User
 // Command per action, the Assets versioned in Shared Storage, and every command given
-// back with its report half. Judged: a Basic Audio Object arriving is created; its
+// back with its response half. No Port has a Basic Data Type (2026/10/26): the AIMs take
+// and give the Audio Object (OSD-AUO) and the Audio Scene Descriptors (OSD-ASD), the one
+// Basic Object or Scene being edited the one the Audio Object or Audio Scene holds alone.
+// Judged: an Audio Object holding one Basic Audio Object arriving is created; its
 // Acoustic Profile is modified in a new version, and heard from a User PoV; composing
 // in Object Editing is reported as not supported (an Object is composed in a Scene);
-// Basic Audio Objects make a Basic Audio Scene with its User PoV; a member is moved
-// and another removed; a command naming a member the Scene does not have is reported
-// as failed; every output, command and report valid against its schema.
+// Basic Audio Objects make a Basic Audio Scene with its User PoV, given as an Audio
+// Scene; a member is moved and another removed; a command naming a member the Scene
+// does not have is reported as failed; every output, command and response valid against
+// its schema.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class AsmEditingTests
@@ -68,9 +72,9 @@ public class AsmEditingTests
             var ASE = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(storage), asePorts));
             var commands = new List<string>();
             var reports = new List<string>();
-            string objectIn = aoePorts.Input("OSD-BAO-V1.5"), objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-BAO-V1.5"),
+            string objectIn = aoePorts.Input("OSD-AUO-V1.5"), objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-AUO-V1.5"),
                    objectReport = aoePorts.Output("CAE-UCM-V1.0"),
-                   sceneCommand = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-BAS-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
+                   sceneCommand = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-ASD-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
 
             async Task<(string Out, string Report)> Run(IAimLike aim, string output, string report, params (string Port, string Json)[] inputs)
             {
@@ -90,24 +94,28 @@ public class AsmEditingTests
 
             var r = new Dictionary<string, string>();
 
-            // 1. A BAO arrives (a capture): created, and out as a BAO.
-            var (music, _) = await Run(AOE, objectOut, objectReport, (objectIn, MpaiJson.ToJson(Sound("music"))));
+            // 1. An Audio Object of one BAO arrives (a capture): created, and out as an Audio Object of that BAO.
+            var (musicAuo, _) = await Run(AOE, objectOut, objectReport, (objectIn, Forms.Auo(Sound("music"))));
+            var music = Forms.Bao(musicAuo);
             r["1 a BAO arriving: what AOE gives back"] = $"{Header(music)} {Id(music, "BasicAudioObjectID")}, {Valid("OSD/V1.5/data/BasicAudioObject.json", music)}";
+            r["1 the Audio Object AOE gives"] = $"{Header(musicAuo)} {Id(musicAuo, "AudioObjectID")}, {Valid("OSD/V1.5/data/AudioObject.json", musicAuo)}";
 
             // 2. Its acoustics, the Object part, and where it is heard from: new versions.
             var profile = new AcousticProfile { AcousticProfileID = "music-acp", FrequencyRange = new FrequencyRange { MinFrequencyHz = 40, MaxFrequencyHz = 16000 }, Loudness = -18 };
-            var (modified, said2) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
+            var (modifiedAuo, said2) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 UserPoV = new PointOfView { PointOfViewID = "behind", CartPosition = [0, -2, 1.6], Orientation = [0, 0, 0] },
                 ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = Ref(Id(music, "BasicAudioObjectID")!), AcousticProfile = profile }] }
             }))));
+            var modified = Forms.Bao(modifiedAuo);
             var modifiedNode = System.Text.Json.Nodes.JsonNode.Parse(modified);
             var acp = modifiedNode?["BasicAudioObjectProperties"]?["AcousticProfile"];
             r["2 its Acoustic Profile modified, heard from behind"] = $"{Id(modified, "BasicAudioObjectID")}, loudness {acp?["Loudness"]}, UserPoV {modifiedNode?["UserPoV"]?["PointOfViewID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", modified)}";
             r["2 the report"] = Said(said2);
 
             // 3. Composing in Object Editing: an Object is composed in a Scene.
-            var (voice, _) = await Run(AOE, objectOut, objectReport, (objectIn, MpaiJson.ToJson(Sound("voice"))));
+            var (voiceAuo, _) = await Run(AOE, objectOut, objectReport, (objectIn, Forms.Auo(Sound("voice"))));
+            var voice = Forms.Bao(voiceAuo);
             var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
@@ -116,21 +124,24 @@ public class AsmEditingTests
 
             // 4. BAOs into a Basic Audio Scene, heard from a UserPoV.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            var (bas, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
+            var (asd, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(-1) }, new ObjectPlacement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
+            var bas = Forms.Bas(asd);
+            r["4 the Audio Scene ASE gives"] = $"{Header(asd)} of {System.Text.Json.Nodes.JsonNode.Parse(asd)?["SubAudioScenes"]?.AsArray().Count ?? 0} sub-scene(s), {Valid("OSD/V1.5/data/AudioSceneDescriptors.json", asd)}";
             var basNode = System.Text.Json.Nodes.JsonNode.Parse(bas);
             r["4 two BAOs placed in a scene"] = $"{Header(bas)} of {basNode?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0} members, UserPoV {(basNode?["UserPoV"] is null ? "absent" : "set")}, {Valid("OSD/V1.5/data/BasicAudioSceneDescriptors.json", bas)}";
             r["4 the report"] = Said(said4);
 
             // 5. One member moved, the other removed, and a member the Scene does not have.
-            var (moved, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
+            var (movedAsd, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), NewSpatialAttitude = At(3) }] },
                 RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!) }, new ObjectPlacement { ObjectID = Ref("BAO999999") }] }
             }))));
+            var moved = Forms.Bas(movedAsd);
             var movedNode = System.Text.Json.Nodes.JsonNode.Parse(moved);
             r["5 moved and removed"] = $"{movedNode?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0} member(s), {Valid("OSD/V1.5/data/BasicAudioSceneDescriptors.json", moved)}";
             r["5 the report"] = Said(said5);

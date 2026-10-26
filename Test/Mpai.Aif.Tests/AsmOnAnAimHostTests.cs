@@ -21,7 +21,7 @@ public class AsmOnAnAimHostTests
     // Every AIM of the Module: the five of Audio Scene Management and Text and Speech Translation, which Speech Object Editing uses.
     private static readonly string[] Placed =
     [
-        AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Bme, "1MMC-TST-V2.5-I01"
+        AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Mse, "1MMC-TST-V2.5-I01"
     ];
 
     // The L3s of the repository, with the ASM Module's Audio Scene Management AIMs placed elsewhere.

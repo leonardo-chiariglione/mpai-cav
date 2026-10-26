@@ -14,19 +14,25 @@ using Mpai.Core.OSD;
 namespace Mpai.Cae.Sse;
 
 // CAE-SSE-V1.0 - Speech Scene Editing, as the author's Reference Model of Audio Scene
-// Management draws it (CAE Reference Models, 2026/10/04): a Basic Speech Object (from
-// Speech Object Editing), a Basic Speech Scene, a User Command and a User PoV in; the
-// Basic Speech Scene as edited, and the User Command with its report, out.
+// Management draws it (CAE Reference Models, 2026/10/26): a Speech Object (OSD-SPO, from
+// Speech Object Editing), a Speech Scene (OSD-SSD), a User Command and a User PoV in; the
+// Speech Scene as edited, and the User Command with its response, out. There is no Basic
+// Speech Scene on a Port: a Speech Scene is a collection of Speech Objects and of Basic
+// Speech Scenes, and the one Basic Speech Scene that is edited is held in it.
 //
-// OPEN BY PORT, ACT BY COMMAND, as Audio Scene Editing does. A Basic Speech Scene
-// arriving is opened (kept, when Shared Storage does not hold it yet). A User Command
-// acts on the open Scene - the first Object added to no open Scene creates one:
+// OPEN BY PORT, ACT BY COMMAND, as Audio Scene Editing does. A Speech Scene arriving that
+// holds a Basic Speech Scene - or whose own identifier is one - opens that Scene (kept,
+// when Shared Storage does not hold it yet and the Speech Scene holds it in full). A User
+// Command acts on the open Scene - the first Object added to no open Scene creates one:
 //
 //   AddedObjects     place the named Basic Speech Objects
 //   MovedObjects     old attitude -> new attitude
 //   ChangedObjects   where a placed Object is
 //   RemovedObjects   take placed Objects out
 //   UserPoV          where the Scene is heard from (also on its own Port)
+//
+// The Speech Scene given is the open Basic Speech Scene inside a Speech Scene of one
+// sub-scene, under the Basic Scene's identifier.
 //
 // Every edit is a new version in Shared Storage (BSS000001 ...). A member is held by
 // its identifier and read from Shared Storage when the Scene is output, so a Speech
@@ -54,10 +60,10 @@ public sealed class SseAimProcessor : IAimProcessor
         _storage     = storage;
         _mInstanceId = mInstanceId;
         _commandPort = ports.Input("CAE-UCM-V1.0");
-        _objectPort  = ports.InputOrDefault("OSD-BSO-V1.5", "");
-        _scenePort   = ports.Input("OSD-BSS-V1.5");
+        _objectPort  = ports.InputOrDefault("OSD-SPO-V1.5", "");
+        _scenePort   = ports.Input("OSD-SSD-V1.5");
         _povPort     = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _sceneOut    = ports.Output("OSD-BSS-V1.5");
+        _sceneOut    = ports.Output("OSD-SSD-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
 
@@ -71,18 +77,22 @@ public sealed class SseAimProcessor : IAimProcessor
         // given otherwise is kept, so that a command can name it.
         if (In(_objectPort) is { } objectJson)
         {
-            var speech = MpaiJson.FromJson<BasicSpeechObject>(objectJson);
-            if (SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is null) SpeechStore.Keep(_storage, speech);
+            var arrived = SpeechStore.Parse(objectJson);
+            if (SpeechStore.Alone(arrived) is { } speech) { if (SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is null) SpeechStore.Keep(_storage, speech); }
+            else SpeechStore.KeepObject(_storage, arrived);       // several: kept, its Basic Speech Objects with it
         }
 
         // 1. opening, by Port.
         if (In(_scenePort) is { } sceneJson)
         {
-            var scene = MpaiJson.FromJson<BasicSpeechSceneDescriptors>(sceneJson);
-            _open = !string.IsNullOrWhiteSpace(scene.BasicSpeechSceneDescriptorsID) && _storage.MPAI_AIFM_SharedStorage_Exists(scene.BasicSpeechSceneDescriptorsID)
-                ? scene.BasicSpeechSceneDescriptorsID
-                : Save(scene.BasicSpeechSceneItems, scene.UserPoV, scene);
-            Console.WriteLine($"[CAE-SSE-V1.0] opened {_open}");
+            var arrived = MpaiJson.FromJson<SpeechSceneDescriptors>(sceneJson);
+            var held = arrived.SubSpeechScenes?.FirstOrDefault(s => (s.BasicScene?.BasicSpeechSceneDescriptorsID ?? s.SceneId ?? "").StartsWith("BSS", StringComparison.Ordinal))?.BasicScene;
+            var id = held?.BasicSpeechSceneDescriptorsID
+                ?? arrived.SubSpeechScenes?.Select(s => s.SceneId).FirstOrDefault(i => i is not null && i.StartsWith("BSS", StringComparison.Ordinal))
+                ?? (arrived.SpeechSceneDescriptorsID.StartsWith("BSS", StringComparison.Ordinal) ? arrived.SpeechSceneDescriptorsID : null);
+            if (id is not null && _storage.MPAI_AIFM_SharedStorage_Exists(id)) _open = id;
+            else if (held is not null) _open = Save(held.BasicSpeechSceneItems, held.UserPoV, held);      // a Basic Speech Scene the storage does not hold, given in full
+            if (_open is not null) Console.WriteLine($"[CAE-SSE-V1.0] opened {_open}");
         }
 
         PointOfView? pov = In(_povPort) is { } povJson ? MpaiJson.FromJson<PointOfView>(povJson) : null;
@@ -105,15 +115,26 @@ public sealed class SseAimProcessor : IAimProcessor
             _open = Save(scene.BasicSpeechSceneItems, pov, scene);
 
         // 3. the open Scene, as it now stands: each member read from Shared Storage.
-        if (Load(_open) is { } open) outputs[_sceneOut] = MpaiJson.ToJson(Materialized(open));
+        if (Load(_open) is { } open) outputs[_sceneOut] = MpaiJson.ToJson(Given(Materialized(open)));
         return Task.FromResult(new Message
         {
             MessageId   = Guid.NewGuid().ToString(),
-            MessageType = _open is null ? "NoOpenScene" : "BasicSpeechSceneDescriptors",
-            DataType    = _open is null ? "" : "OSD-BSS-V1.5",
+            MessageType = _open is null ? "NoOpenScene" : "SpeechSceneDescriptors",
+            DataType    = _open is null ? "" : "OSD-SSD-V1.5",
             Ports       = outputs
         });
     }
+
+    // The Basic Speech Scene as the Speech Scene this AIM gives: the Scene is the one sub-scene, which stands at the origin of the Speech Scene's frame.
+    private static SpeechSceneDescriptors Given(BasicSpeechSceneDescriptors basic) => new()
+    {
+        MInstanceID = basic.MInstanceID, UEnvironmentID = basic.UEnvironmentID,
+        SpeechSceneDescriptorsID = basic.BasicSpeechSceneDescriptorsID,
+        SpeechSceneDescriptorsSpaceTime = basic.BasicSpeechSceneDescriptorsSpaceTime,
+        UserPoV = basic.UserPoV,
+        SubSpeechSceneCount = 1,
+        SubSpeechScenes = [new SubSpeechSceneEntry { BasicScene = basic }]
+    };
 
     private void Apply(UserCommand command, PointOfView? pov, CommandReport report)
     {

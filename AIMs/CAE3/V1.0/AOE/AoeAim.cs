@@ -854,6 +854,7 @@ public sealed class AoeAim
             {
                 MInstanceID = mInstanceId,
                 AudioObjectID = audioObjectAssetId,
+                AudioObjectSpaceTime = new SpaceTime(),      // the schema requires one: an Object of one stands where its Object does, at the origin of its own frame
                 BasicAudioObjectCount = 1,
                 BasicAudioObjects = new List<BasicAudioObjectEntry>
                 {

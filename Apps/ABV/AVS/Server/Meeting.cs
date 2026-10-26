@@ -100,8 +100,8 @@ public sealed class Meeting
     // The room: the Audio-Visual Scene Descriptors the participants' Portable Avatars do not have and the server adds.
     private static JsonObject Room() => new()
     {
-        ["Header"] = "OSD-BMS-V1.5", ["MInstanceID"] = "", ["BasicAVSceneDescriptorsID"] = "meeting-room",
-        ["BAVSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["MInstanceID"] = "", ["SpaceTimeID"] = "room-st" }
+        ["Header"] = "OSD-BMS-V1.5", ["MInstanceID"] = "", ["BasicMultimodalSceneDescriptorsID"] = "meeting-room",
+        ["BMSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["MInstanceID"] = "", ["SpaceTimeID"] = "room-st" }
     };
 
     private Message Call(PmxAimProcessor aim, Dictionary<string, JsonNode> inputs) =>

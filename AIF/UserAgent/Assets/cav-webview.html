@@ -166,7 +166,7 @@ function setEnvironment(bms) {
   grid.position.y = groundY;
   environment.add(grid);
   let drawn = 0;
-  for (const entry of (bms && bms.BasicAVSceneDescriptorsData) || []) {
+  for (const entry of (bms && bms.BasicMultimodalSceneDescriptorsData) || []) {
     const attitude = entry.BXSSpaceTime && entry.BXSSpaceTime.SpatialAttitude1;
     const position = attitude && attitude.Position && attitude.Position.CartPosition;
     if (!position) continue;
