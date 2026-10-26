@@ -324,20 +324,6 @@ public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>
     }
 }
 
-// MMC-TFU-V1.5 - Text For UA (MMC/V2.5/data/TextForUA.json): what a dialogue AIM
-// addresses to the User Agent, not to the User - an action only the User Agent
-// performs (in CAE-ASM: undo, save, stop), in the App's vocabulary.
-public sealed class TextForUA
-{
-    public string Header { get; init; } = "MMC-TFU-V1.5";
-    public string? MInstanceID { get; init; }
-    public string? UEnvironmentID { get; init; }
-    public string TextForUAID { get; init; } = Guid.NewGuid().ToString();
-    public SimpleTime? TextForUATime { get; init; }
-    public string Text { get; init; } = "";
-    public string? DescrMetadata { get; init; }
-}
-
 // A COMMAND THAT CANNOT BE READ IS REPORTED, NOT GUESSED (the author, 2026/10/26): a number given as a word, an amount of the wrong type. The AIM does not stop, nor does it
 // make the number up: the command's own ID, with the operation that could not be read, failed, and why.
 public static class CommandReader

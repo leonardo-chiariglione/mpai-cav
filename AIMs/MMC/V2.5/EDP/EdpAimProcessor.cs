@@ -62,14 +62,9 @@ public sealed class EdpAimProcessor : IAimProcessor
     private readonly string _mapPort;        // OSD-BOO (the CAV's Offline Map)
     private readonly string _ahmInPort;      // CAV-AHM, from the AMS
     private readonly string _ahmOutPort;     // CAV-AHM, to the AMS
-    private readonly string _asmScenePort;   // OSD-BAS (or OSD-ASD), the Scene the User speaks of (CAE-ASM)
-    private readonly string _ucmOutPort;     // CAE-UCM, the User Commands for CAE-ASM
-    private readonly string _tfuOutPort;     // MMC-TFU, what only the User Agent does (undo, save, stop)
     private readonly ISharedStorage? _private;
     private string? _cavState;               // where no Private Storage is given
     private const string CavKey = "cav-dialogue";
-    private const string SceneKey = "asm-scene";
-    private string? _asmScene;               // where no Private Storage is given
 
     // WHO SPEAKS: the persona interacting with the person - Thalia in MPAI as a
     // Service, the CAV in the car. Given by the provider, which knows where EDP runs.
@@ -83,9 +78,6 @@ public sealed class EdpAimProcessor : IAimProcessor
         _mapPort          = ports.InputOrDefault("OSD-BOO-V1.5", "");
         _ahmInPort        = ports.InputOrDefault("CAV-AHM-V2.0", "");
         _ahmOutPort       = ports.OutputOrDefault("CAV-AHM-V2.0", "");
-        _asmScenePort     = ports.InputOrDefault("OSD-BAS-V1.5", "");
-        _ucmOutPort       = ports.OutputOrDefault("CAE-UCM-V1.0", "");
-        _tfuOutPort       = ports.OutputOrDefault("MMC-TFU-V1.5", "");
         _instanceId       = instanceId;
         _llm              = llm;
         _summaryPort      = ports.Input("MMC-SUM-V2.5");
@@ -110,7 +102,13 @@ public sealed class EdpAimProcessor : IAimProcessor
         _refinedTextPort  = _secretary && refined != _textPort ? refined : "";
         _outModelPort     = _secretary ? ports.OutputOrDefault("OSD-B3O-V1.5", "") : "";
         _avatarModel      = avatarModel;
+
+        // WITH FACTS (the Voice Command Interface): an L3 whose Refined Text is its own input (#3) and that is not the secretary. What arrives there is not a text of the
+        // person: it is what an application did or did not do, told as facts, and the reply says it.
+        _factsPort        = !_secretary && refined.Length > 0 && refined != _textPort ? refined : "";
     }
+
+    private readonly string _factsPort;         // OSD-BTO #3: the facts an application's response comes to
 
     // ---- The Virtual Meeting Secretary --------------------------------------------
     private readonly bool _secretary;
@@ -129,11 +127,11 @@ public sealed class EdpAimProcessor : IAimProcessor
     {
         if (_secretary) return System.Threading.Tasks.Task.FromResult(Secretary(message));
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
-        // IN AUDIO SCENE MANAGEMENT the Scene and the words reach EDP as the Module's Channels bring them, not always together: the Scene it is told of is kept (in its
-        // Private Storage), and the words that come later are understood against it. A Scene on its own is nothing said: no reply, and no error.
-        if (_asmScenePort.Length > 0 && message.Ports.TryGetValue(_asmScenePort, out var told) && !string.IsNullOrWhiteSpace(told)) RememberScene(told);
-        if (Asm(message) is { } asm) return System.Threading.Tasks.Task.FromResult(asm);
-        if (_asmScenePort.Length > 0 && message.Ports.ContainsKey(_asmScenePort) && !message.Ports.ContainsKey(_textPort))
+        // WITH FACTS (the Voice Command Interface): what an application did, or why it did not, arrives as the Refined Text; the reply says it.
+        if (_factsPort.Length > 0 && ReadText(message, _factsPort) is { } facts)
+            return System.Threading.Tasks.Task.FromResult(Facts(message, facts));
+        // Facts are what this AIM waits for; a text of the person alone is not answered here.
+        if (_factsPort.Length > 0 && !message.Ports.ContainsKey(_textPort))
             return System.Threading.Tasks.Task.FromResult(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() });
         string? userText = ReadText(message, _textPort);
         if (userText is null)
@@ -253,6 +251,47 @@ public sealed class EdpAimProcessor : IAimProcessor
         });
     }
 
+    // THE REPLY TO THE FACTS. The facts - what the application did, what it did not and why, or what it needs from the person - are said to the person in a word or two, as
+    // they are: this AIM adds nothing, and knows nothing of the application. The text the person said, if it is there, tells what they asked.
+    private Message Facts(Message message, string facts)
+    {
+        const char Nl = (char)10;
+        var heard = ReadText(message, _textPort);
+        var memory = (Read<Summary>(message, _summaryPort)?.Text() ?? "").Split(Nl, StringSplitOptions.RemoveEmptyEntries).ToList();
+        while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
+
+        var system =
+            $"You are {_persona}, a courteous conversational machine. A person talks to an application by voice, and you tell them aloud what happened. " +
+            "Say in one or two short, plain sentences what the facts say: what was done, what was not and why, or what you need from the person (a number, a name). " +
+            "Use only the facts: add nothing. Say names and numbers as they are in the facts. Never mention JSON, commands, schemas or errors of the system. " +
+            "Return only what you say, as plain text.";
+        var prompt = new StringBuilder();
+        if (memory.Count > 0) prompt.AppendLine("The conversation so far: " + string.Join(Nl, memory));
+        if (!string.IsNullOrWhiteSpace(heard)) prompt.AppendLine($"What the person said: \"{heard}\"");
+        prompt.AppendLine($"Facts: {facts}");
+
+        string reply;
+        try { reply = _llm.ChatAsync(system, prompt.ToString()).GetAwaiter().GetResult().Trim(); }
+        catch (Exception ex)
+        {
+            return Message.Error(message.MessageId, _instanceId, $"LLM call failed (is Ollama running?): {ex.Message}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(heard)) memory.Add("User: " + heard.Replace(Nl, ' ').Trim());
+        memory.Add(_persona + ": " + reply.Replace(Nl, ' ').Trim());
+        while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
+        return new Message
+        {
+            MessageId = message.MessageId,
+            MessageType = message.MessageType,
+            Ports = new Dictionary<string, string>
+            {
+                [_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(reply)),
+                [_outSummaryPort] = MpaiJson.ToJson(Summary.Of(string.Join(Nl, memory)))
+            }
+        };
+    }
+
     // THE VIRTUAL MEETING SECRETARY. Each utterance of a participant arrives with the
     // Summary that Summary Creation made of the meeting so far, the utterance added.
     // The Summary goes back to Summary Creation (Edited Summary) and out of the Module
@@ -321,34 +360,6 @@ public sealed class EdpAimProcessor : IAimProcessor
 
     // THE CAV'S DIALOGUE: null where this is not one - no map, no AMS-HCI Message,
     // no dialogue begun.
-    // IN AUDIO SCENE MANAGEMENT (AsmDialogue): given the Scene the User is editing,
-    // what the User says becomes User Commands, and EDP says what was done or asks.
-    private Message? Asm(Message message)
-    {
-        if (_asmScenePort.Length == 0) return null;
-        var sceneJson = message.Ports.TryGetValue(_asmScenePort, out var given) && !string.IsNullOrWhiteSpace(given) ? given : RecallScene();
-        if (string.IsNullOrWhiteSpace(sceneJson)) return null;
-        var text = ReadText(message, _textPort);
-        if (string.IsNullOrWhiteSpace(text)) return null;
-        var scene = MpaiJson.FromJson<BasicAudioSceneDescriptors>(sceneJson);
-        if (scene is null) return null;
-        AsmDialogue.Turn turn;
-        try
-        {
-            turn = new AsmDialogue((system, turns, schema) => _llm.ChatSchemaAsync(system, turns, schema))
-                .HeardAsync(text, scene).GetAwaiter().GetResult();
-        }
-        catch (Exception ex)
-        {
-            return Message.Error(message.MessageId, _instanceId, $"LLM call failed (is Ollama running?): {ex.Message}");
-        }
-        var ports = new Dictionary<string, string> { [_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(turn.Reply)) };
-        if (turn.Command is not null && _ucmOutPort.Length > 0) ports[_ucmOutPort] = MpaiJson.ToJson(turn.Command);
-        if (turn.ForUA is not null && _tfuOutPort.Length > 0) ports[_tfuOutPort] = MpaiJson.ToJson(turn.ForUA);
-        if (message.Ports.TryGetValue(_summaryPort, out var summary) && !string.IsNullOrWhiteSpace(summary)) ports[_outSummaryPort] = summary;
-        return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
-    }
-
     private Message? Cav(Message message)
     {
         string? Port(string key) => key.Length > 0 && message.Ports.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;
@@ -388,18 +399,6 @@ public sealed class EdpAimProcessor : IAimProcessor
         if (toAms is not null && _ahmOutPort.Length > 0) ports[_ahmOutPort] = toAms.ToJsonString();
         if (Port(_summaryPort) is { } summary) ports[_outSummaryPort] = summary;
         return new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports };
-    }
-
-    private void RememberScene(string json)
-    {
-        if (_private is null) _asmScene = json;
-        else _private.MPAI_AIFM_SharedStorage_Put(SceneKey, Encoding.UTF8.GetBytes(json));
-    }
-
-    private string? RecallScene()
-    {
-        if (_private is null) return _asmScene;
-        return _private.MPAI_AIFM_SharedStorage_Exists(SceneKey) ? Encoding.UTF8.GetString(_private.MPAI_AIFM_SharedStorage_Get(SceneKey)) : null;
     }
 
     private string? LoadCav()

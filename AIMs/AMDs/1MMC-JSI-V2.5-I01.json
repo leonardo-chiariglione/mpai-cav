@@ -1,0 +1,32 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "MMC-JSI-V2.5-I01", "AIMName": "1MMC-JSI-V2.5-I01"},
+  "Header":               "MMC-JSI-V2.5",
+
+  "APIProfile":           "Basic",
+  "Description":          "JSON Interface with no application: the entries of its Access that make it an interface to one application - the schema of the commands, the schema of the responses and the guide - are left to be filled. Without them it sends no command and says so.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "Request", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationResponse", "Direction": "Input", "DataType": "MMC-AJI-V2.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationContext", "Direction": "Input", "DataType": "MMC-AJI-V2.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationCommand", "Direction": "Output", "DataType": "MMC-AJI-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Facts", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "AccessSources":        [{"Name": "CommandSchema", "Uri": "/* URI of the schema of the commands of the application */", "Sha256": "/* SHA-256 */", "Setting": "CommandSchema", "Description": "The schema that a command conforms to."},
+                           {"Name": "ResponseSchema", "Uri": "/* URI of the schema of the responses of the application */", "Sha256": "/* SHA-256 */", "Setting": "ResponseSchema", "Description": "The schema that a response conforms to."},
+                           {"Name": "ApplicationGuide", "Uri": "/* URI of the guide of the application */", "Sha256": "/* SHA-256 */", "Setting": "ApplicationGuide", "Description": "What the two schemas do not say about the application."},
+                           {"Name": "llm-weights", "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff", "Sha256": "dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff", "Terms": {"Licence": "Llama 3.2 Community License", "Uri": "https://www.llama.com/llama3_2/license/", "PersonalData": false}, "Description": "The weights of the language model of the dialogue (Llama 3.2, 3 billion parameters, Q4_K_M), in the form Ollama publishes them. Ollama is given them from Access and creates the model."},
+                      {"Name": "llm-template", "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:966de95ca8a62200913e3f8bfbf84c8494536f1b94b49166851e76644e966396", "Sha256": "966de95ca8a62200913e3f8bfbf84c8494536f1b94b49166851e76644e966396", "ValidWith": ["dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"], "Description": "The chat template of the model.", "Terms": {"Licence": "Llama 3.2 Community License", "Uri": "https://www.llama.com/llama3_2/license/", "PersonalData": false}},
+                      {"Name": "llm-parameters", "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:56bb8bd477a519ffa694fc449c2413c6f0e1d3b1c88fa7e3c9d88d3ae49d4dcb", "Sha256": "56bb8bd477a519ffa694fc449c2413c6f0e1d3b1c88fa7e3c9d88d3ae49d4dcb", "ValidWith": ["dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"], "Description": "The default parameters of the model (its stop tokens).", "Terms": {"Licence": "Llama 3.2 Community License", "Uri": "https://www.llama.com/llama3_2/license/", "PersonalData": false}}],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/JSI", "MASPort": 443, "BinaryName": "Mpai.Mmc.Jsi", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "4 GB",   "Request": "6 GB",   "Maximum": "8 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High",   "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/json-interface/"}]}

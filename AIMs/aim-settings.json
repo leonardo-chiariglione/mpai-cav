@@ -17,6 +17,12 @@
     "1MMC-EDP-V2.5-I01":  {
                               "OllamaModel":  "llama3.2:3b"
                           },
+    "1MMC-EDP-V2.5-I03":  {
+                              "OllamaModel":  "llama3.2:3b"
+                          },
+    "1MMC-JSI-V2.5-I02":  {
+                              "OllamaModel":  "llama3.2:3b"
+                          },
     "1MMC-SPE-V2.5-I01":  {
                           },
     "1PAF-FPE-V1.6-I01":  {
