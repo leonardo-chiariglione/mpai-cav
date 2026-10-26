@@ -7,15 +7,15 @@
   "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-ASE-V1.0"},
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Scene Editing. One Basic Audio Scene is open at a time, so a User Command need not name it: a Basic Audio Scene arriving is opened, and the first Object added to no open Scene creates one. The User Command places Basic Audio Objects - named by their identifiers in Shared Storage - (AddedObjects), moves them (MovedObjects), changes where they are (ChangedObjects), takes them out (RemovedObjects) and sets where the Scene is heard from (UserPoV, also on its own Port). Every edit is a new version in Shared Storage. Outputs: the open Basic Audio Scene, and the User Command, with its report half (UserCommandRS) saying how each action was executed.",
+  "Description":          "Audio Scene Editing. One Audio Scene is open at a time, so a User Command need not name it: a Audio Scene arriving is opened, and the first Object added to no open Scene creates one. The User Command places Audio Objects - named by their identifiers in Shared Storage - (AddedObjects), moves them (MovedObjects), changes where they are (ChangedObjects), takes them out (RemovedObjects) and sets where the Scene is heard from (UserPoV, also on its own Port). Every edit is a new version in Shared Storage. Outputs: the open Audio Scene, and the User Command, with its response (UserCommandRS) saying how each action was executed.",
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "AudioObject", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioScene", "Direction": "Input", "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "UserCommand", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "AudioObject", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioScene", "Direction": "Input", "DataType": "OSD-ASD-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": "OSD-ASD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "UserCommandRS", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

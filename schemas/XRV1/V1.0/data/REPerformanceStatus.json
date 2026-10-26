@@ -12,7 +12,7 @@
     "REPerformanceStatusID":      { "type": "string" },
     "REPerformanceStatusTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "AVSceneDescriptors":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json" },
+    "AVSceneDescriptors":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
 
     "REPerformanceStatusData":    { "type": "object", "additionalProperties": false, "properties": {
 

@@ -18,8 +18,8 @@
     "BasicEnvironmentDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
                             "description": "Space/Time where/when this Basic Environment Descriptors instance applies." },
 
-    "AudioVisualSceneDescriptors": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json",
-                            "description": "Audio-Visual Scene Descriptors of the environment, resulting from the fusion of available EST Scene Descriptors." },
+    "MultimodalSceneDescriptors": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json",
+                            "description": "Multimodal Scene Descriptors of the environment, resulting from the fusion of available EST Scene Descriptors." },
     "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
                             "description": "CAV Spatial Attitude derived from GNSS and Spatial Data." },
     "WeatherData":        { "$ref": "https://schemas.mpai.community/CAV2/V1.1/data/WeatherData.json",
