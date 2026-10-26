@@ -16,6 +16,8 @@
       <DockPanel>
         <Button x:Name="StartButton" DockPanel.Dock="Left" Content="Start" Width="110" Height="40"
                 FontSize="15" Margin="0,0,12,0" IsEnabled="False" Click="StartButton_Click"/>
+        <Button x:Name="StopButton" DockPanel.Dock="Left" Content="Stop" Width="80" Height="40"
+                FontSize="15" Margin="0,0,12,0" IsEnabled="False" Click="StopButton_Click"/>
         <Border x:Name="ResultBorder" DockPanel.Dock="Right" CornerRadius="6" Padding="16,8"
                 VerticalAlignment="Center" Background="#0F1620" Visibility="Collapsed">
           <TextBlock x:Name="ResultText" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>

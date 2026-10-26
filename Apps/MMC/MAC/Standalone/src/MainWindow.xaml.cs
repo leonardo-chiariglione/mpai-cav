@@ -1,54 +1,46 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-using AIF.Controller;   // AifError
-using AIF.Store;        // AmdStore (provider factory)
-
 using Mpai.Core;
-using Mpai.Core.OSD;
-using Mpai.PhysicalLayer;   // WebcamVisualAcquisition, VisualAcquisitionRequest
-using Mpai.UaKit;         // AvatarUaHost
+using Mpai.UaKit;         // AvatarUaHost, SpeechListener, StandardDevices
 using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
+using Mpai.Ua;            // WorkflowInterpreter, DeviceRegistry
+using Mpai.Wdl;           // WorkflowReader
 
 namespace HciMac;
 
-// HCI-MAC User Agent - drives MMC-MAC through the type-addressed Controller API.
-// The UA identifies data ONLY by data type: supply OSD-BVO (face) -> the flow
-// suspends -> supply OSD-BSO (speech) -> read OSD-BTO (Response, banner),
-// OSD-BSO (VocalResponse, speak), PAF-FDO (FaceDescriptors, avatar). No names.
+// MAC User Agent - Multimodal Access Control, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
+// Workflow Description of the App (Apps/MMC/MAC/MMC-MAC.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Controller that runs the Module in this process. The workflow starts the Module, takes the Avatar Model, has the avatar welcome the
+// person and ask for the face and a spoken sentence (the words are the workflow's and the Module speaks them), and presents the Portable
+// Avatar that gives the verdict. This window supplies only the devices that serve the Data Types (the camera, the microphone, the Avatar
+// Model, the avatar) and Stop. Start runs the workflow once; the person may run it again.
+// The workflow presents the Portable Avatar only: the window shows the words of the avatar and does not read a verdict out of them.
 public partial class MainWindow : Window
 {
-    // THE SPEECH STEP RAN WHEN THE MODULE SUSPENDED for its speech input. No Module
-    // suspends (M3205 5.1), and none has since the executor stopped doing so, so
-    // the step does not run - as before this was written. The two-step flow is to
-    // be redone with its Module in the HCI phase of the CAV.
-    private const bool SpeechStepAfterSuspension = false;
-
-    private const string MacModule = "1MMC-MAC-V2.5-I01";
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
-    private const string MachineName = "Thalia";  // the machine's ID: the Portable Avatar the Module gives is this machine's
-
-    private const string BVO = "OSD-BVO-V1.5";
     private const string BSO = "OSD-BSO-V1.5";
-    private const string BTO = "OSD-BTO-V1.5";
-    private const string EPS = "MMC-EPS-V2.5";
-    private const string FDO = "PAF-FDO-V1.6";
+    private const string BVO = "OSD-BVO-V1.5";
+    private const string B3O = "OSD-B3O-V1.5";
+    private const string PAV = "PAF-PAV-V1.6";
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
     private static readonly string GalleryJson  = Mpai.Core.MpaiPaths.Gallery;
 
-    private ControllerApi?     _north;
-    private AvatarUaHost? _avatar;
+    // The workflow of the App: the one source, read where the repository keeps it.
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "MAC", "MMC-MAC.orch");
 
-    private static void Diag(string s)
-    {
-        try { System.IO.File.AppendAllText(@"C:\Users\Leonardo\Downloads\mac-diag.log",
-              DateTime.Now.ToString("HH:mm:ss.fff") + "  " + s + System.Environment.NewLine); } catch { }
-    }
+    private ControllerApi?            _north;
+    private AvatarUaHost?             _avatar;
+    private SpeechListener?           _ears;
+    private CancellationTokenSource?  _stopping;
+    private Task?                     _running;
+    private bool                      _closing;
 
     public MainWindow()
     {
@@ -63,19 +55,15 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-
-            await Task.Run(() =>
-                _north = new ControllerApi(AmdDir, SettingsPath, store => new MacProvider(store, GalleryJson)));
+            _ears = new SpeechListener(_avatar);
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new MacProvider(store, GalleryJson)));
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
 
             InstructionText.Text = "Press Start to begin.";
             SetStatus("Ready.");
             StartButton.IsEnabled = true;
         }
-        catch (Exception fatal)
-        {
-            Program.Record("startup", fatal);
-            SetStatus("startup failed: " + fatal.Message);
-        }
+        catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
@@ -83,184 +71,117 @@ public partial class MainWindow : Window
         if (_north is null || _avatar is null) return;
         StartButton.IsEnabled = false;
         HideResult();
-        try { await RunFlowAsync(); }
-        catch (Exception ex) { Program.Record("flow", ex); SetStatus("error: " + ex.Message); }
+        _stopping = new CancellationTokenSource();
+        StopButton.IsEnabled = true;
+        try
+        {
+            var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
+            SetStatus("Running.");
+            var interpreter = new WorkflowInterpreter(_north.Async(), Devices(), SetStatus);
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            try { await _running; }
+            catch (OperationCanceledException) { }
+            if (!_closing) SetStatus(_stopping.IsCancellationRequested ? "Stopped." : "Done.");
+        }
+        catch (Exception ex) { Program.Record("workflow", ex); SetStatus("stopped: " + ex.Message); }
         finally
         {
-            InstructionText.Text = "Press Start to authenticate again.";
-            StartButton.IsEnabled = true;
+            StopButton.IsEnabled = false;
+            SetFace(""); SetVoice("");
+            if (!_closing)
+            {
+                InstructionText.Text = "Press Start to authenticate again.";
+                StartButton.IsEnabled = true;
+            }
         }
     }
 
-    private async Task RunFlowAsync()
+    private void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        var started = await Task.Run(() => _north!.StartFlow(MacModule));
-        Diag("StartFlow " + MacModule + " -> " + started);
-        if (started != AifError.OK) { SetStatus("could not start " + MacModule); return; }
+        StopButton.IsEnabled = false;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+    }
 
-        try
+    // Closing ends the workflow first (its On Stop asks the Controller to stop the Module), then the window closes.
+    protected override async void OnClosing(CancelEventArgs e)
+    {
+        if (_closing || _running is null || _running.IsCompleted) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        _closing = true;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+        try { await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(10))); } catch { }
+        Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        try { _north?.Dispose(); } catch { }
+        base.OnClosed(e);
+    }
+
+    // ---- the devices of this User Agent ---------------------------------------------------------------------------
+    // What the avatar says is the workflow's (the Module speaks it); an acquiring device here only waits for the person after she has
+    // said what to do, so nothing is said twice.
+
+    private DeviceRegistry Devices()
+    {
+        var devices = new DeviceRegistry();
+        var stop = _stopping!.Token;
+
+        // THE AVATAR MODEL this window draws.
+        devices.RegisterAcquire(B3O, (_, _) => Task.FromResult<string?>(StandardDevices.AvatarModel()));
+
+        // THE FACE, from the camera. No face is not a verdict: a camera held by another application is said, not reported as a rejection.
+        devices.RegisterAcquire(BVO, async (_, _) =>
         {
-            InstructionText.Text = "Welcome to the HCI Multimodal Access Control Service. Look at the camera.";
             SetFace("acquiring face...");
-            var speakLook = RenderPromptAsync("Welcome to the HCI Multimodal Access Control Service. Look at the camera.");
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var face = await CaptureFaceAsync();
-            await speakLook;
-            Diag("face bytes=" + (face?.Data?.Length ?? 0));
-
-            // NO FACE IS NOT A VERDICT. Carrying on with nothing supplied gave a
-            // suspended Module, an empty result and a banner reading 'not
-            // identified' - which says a person was not recognised when in truth
-            // none was ever seen. A camera held by another application is the
-            // commonest failure there is, and it was reported as a rejection.
-            if (face is null || face.Data.Length == 0)
+            await Task.Delay(TimeSpan.FromSeconds(1), stop);   // a moment to turn to the camera
+            var face = await StandardDevices.FaceAsync();
+            if (face is null)
             {
-                InstructionText.Text = "The camera is not available. Another application may be using it.";
+                Dispatcher.Invoke(() => InstructionText.Text = "The camera is not available. Another application may be using it.");
                 SetStatus("no image from the camera");
-                SetFace("");
-                return;
             }
+            SetFace("");
+            return face;
+        });
 
-            var faceIn = new List<ControllerApi.Datum>();
-            if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
-            faceIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-            faceIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-            var r1 = await Task.Run(() => _north!.Advance(MacModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error);
-            if (!r1.Ok) { SetStatus("run error"); return; }
+        // THE SPEECH, from the microphone; it ends when the person stops speaking.
+        devices.RegisterAcquire(BSO, async (_, _, abandon) =>
+        {
+            SetVoice("acquiring speech...");
+            var speech = await _ears!.ListenAsync(stop, abandon);
+            SetVoice("");
+            return speech is null ? null : MpaiJson.ToJson(speech);
+        });
 
-            var result = r1;
-
-#pragma warning disable CS0162 // the step is kept, and does not run: see SpeechStepAfterSuspension
-            if (SpeechStepAfterSuspension)
+        // THE AVATAR: the machine's Portable Avatar, which says what the workflow gave the Module to say, and at the end the verdict; the
+        // step ends when she has finished speaking.
+        devices.RegisterPresent("avatar", async data =>
+        {
+            if (!data.TryGetValue(PAV, out var pav)) return;
+            if (AvatarUtterance.TextOfPortableAvatar(pav) is { Length: > 0 } words)
             {
-                InstructionText.Text = "Speak your passphrase.";
-                SetVoice("acquiring speech...");
-                await RenderPromptAsync("Speak your passphrase.");
-                var speech = await CaptureSpeechAsync();
-
-                var speechIn = new List<ControllerApi.Datum>();
-                if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
-                speechIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-                speechIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-                var r2 = await Task.Run(() => _north!.Advance(MacModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error);
-                if (!r2.Ok) { SetStatus("resume error"); return; }
-                result = r2;
+                Dispatcher.Invoke(() => InstructionText.Text = words);
+                ShowResult(words);
             }
-#pragma warning restore CS0162
+            if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance) await StandardDevices.PresentAsync(_avatar!, utterance);
+            else SetStatus("the Portable Avatar carries no speech.");
+        });
 
-            string? responseText = null;
-            var rj = result.ByType(BTO);
-            if (!string.IsNullOrWhiteSpace(rj)) responseText = MpaiJson.FromJson<BasicTextObject>(rj)?.GetText();
-
-            // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
-            var pavUtterance = AvatarUtterance.FromPortableAvatar(result.ByType("PAF-PAV-V1.6"));
-            byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
-            FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
-
-            await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.4));
-
-            // THE VERDICT IS READ, NOT INFERRED. This searched the avatar's own
-            // sentence for the word "granted" - so rewording the utterance, or
-            // translating it, or enrolling somebody whose name contained the word,
-            // would have changed who was admitted. MMC-MAC now declares the verdict
-            // at its boundary as a boolean (the AIF type system), decided by OSD-IDR where it always was.
-            var ij = result.ByType("boolean");
-            bool granted = !string.IsNullOrWhiteSpace(ij) &&
-                           ij.Trim().Equals("true", System.StringComparison.OrdinalIgnoreCase);
-            string banner = string.IsNullOrWhiteSpace(responseText)
-                ? (granted ? "Access granted" : "Not identified")
-                : responseText;
-            ShowResult(banner, granted);
-            Diag("outputs: response=" + (responseText ?? "nil") + " wav=" + wav.Length + " fdo=" + (fdo == null ? "nil" : "present"));
-            SetStatus(granted ? "identified" : "not identified");
-        }
-        finally
-        {
-            await Task.Run(() => _north!.StopFlow(MacModule));
-        }
+        return devices;
     }
-
-    private async Task<BasicVisualObject?> CaptureFaceAsync()
-    {
-        try
-        {
-            var frame = await Task.Run(() =>
-                new WebcamVisualAcquisition()
-                    .AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
-                    .GetAwaiter().GetResult().Data);
-            if (frame is { Length: > 0 }) { try { System.IO.File.WriteAllBytes(@"C:\Users\Leonardo\Downloads\last-face.jpg", frame); } catch { } }
-            return (frame is { Length: > 0 }) ? BasicVisualObject.FromFile("webcam.jpg", frame, "Face") : null;
-        }
-        // A CAPTURE THAT FAILS SAYS SO - see AcrApp. Returning null on any
-        // exception made a camera in use, a driver fault and a rejected
-        // construction all look alike: no face, no reason.
-        catch (Exception ex) { Diag("face capture failed: " + ex); Program.Record("face", ex); return null; }
-    }
-
-    private async Task<BasicSpeechObject?> CaptureSpeechAsync()
-    {
-        try
-        {
-            // THE CAPTURE ALREADY RETURNS AN OBJECT, QUALIFIER AND ALL. Speech
-            // Object Acquisition determined the sampling frequency and the precision
-            // from the device and recorded them; taking .Data out and rebuilding from
-            // bytes threw that away and declared nothing in its place. The Data is raw
-            // PCM with no header, so the Qualifier was the only statement of what the
-            // bytes were - and every consumer downstream had to guess.
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            return (speech is not null && speech.Data.Length > 0) ? speech : null;
-        }
-        catch { return null; }
-    }
-
-    private async Task RenderPromptAsync(string words)
-    {
-        if (_north is null) return;
-        var inputs = new List<ControllerApi.Datum>
-        {
-            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
-            // Generative Face Description, which turns the words into visemes.
-            // Sending only #1 leaves the mouth with nothing to shape itself to.
-            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new ControllerApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
-        };
-        inputs.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-        var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok) return;
-
-        // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
-        var pavUtterance = AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6"));
-        byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
-        FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
-
-        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
-        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
-    }
-
-    private static EntityPersonalStatus SeriousStatus() => new()
-    {
-        TextPersonalStatus = new TextPersonalStatus
-        {
-            TextEmotion        = Emotion.Of(FactorLabel.Of("CALMNESS", "serious", null, 0.7)),
-            TextSocialAttitude = SocialAttitude.Of(FactorLabel.Of("SOCIAL RANK", "serious", null, 0.7))
-        }
-    };
 
     private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
     private void SetFace(string s)   => Dispatcher.Invoke(() => FaceStatus.Text = s);
     private void SetVoice(string s)  => Dispatcher.Invoke(() => VoiceStatus.Text = s);
 
-    private void ShowResult(string text, bool granted) => Dispatcher.Invoke(() =>
+    private void ShowResult(string text) => Dispatcher.Invoke(() =>
     {
         ResultText.Text = text;
-        ResultText.Foreground = new System.Windows.Media.SolidColorBrush(
-            granted ? System.Windows.Media.Color.FromRgb(0x4C, 0xC2, 0x7A)
-                    : System.Windows.Media.Color.FromRgb(0xE0, 0x6B, 0x6B));
+        ResultText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xEA, 0xF1, 0xFB));
         ResultBorder.Visibility = Visibility.Visible;
     });
 
