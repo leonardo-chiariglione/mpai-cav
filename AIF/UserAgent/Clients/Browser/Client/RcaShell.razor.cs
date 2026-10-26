@@ -198,7 +198,20 @@ public partial class RcaShell : ComponentBase
         }
     }
 
-    private void Stop() => (_appStopping ?? _stopping)?.Cancel();
+    // STOP STOPS HER: the token ends what waits for her to finish, and the sound itself is silenced.
+    private void Stop()
+    {
+        (_appStopping ?? _stopping)?.Cancel();
+        _ = Js.InvokeVoidAsync("rca.silence");
+    }
+
+    // How long she takes to say what she says, ended early by Stop.
+    private async Task SpeakingTimeAsync(TimeSpan time)
+    {
+        var stop = (_appStopping ?? _stopping)?.Token ?? CancellationToken.None;
+        try { await Task.Delay(time, stop); }
+        catch (OperationCanceledException) { await Js.InvokeVoidAsync("rca.silence"); }
+    }
 
     // STOP, AND HOW IT WAS PRESSED: a click has a click count, a key (Enter or
     // Space on the focused button) has none. Said on the status line and the console.
@@ -243,7 +256,7 @@ public partial class RcaShell : ComponentBase
                 utterance.FaceDescriptors is null ? null : MpaiJson.ToJson(utterance.FaceDescriptors),
                 Convert.ToBase64String(wav),
                 utterance.BodyDescriptors is null ? null : MpaiJson.ToJson(utterance.BodyDescriptors));
-            await Task.Delay(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
+            await SpeakingTimeAsync(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
         }
         catch (Exception ex) { Console.Error.WriteLine(ex); }
     }
@@ -455,7 +468,7 @@ public partial class RcaShell : ComponentBase
                 utterance.FaceDescriptors is null ? null : MpaiJson.ToJson(utterance.FaceDescriptors),
                 Convert.ToBase64String(wav),
                 utterance.BodyDescriptors is null ? null : MpaiJson.ToJson(utterance.BodyDescriptors));
-            await Task.Delay(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
+            await SpeakingTimeAsync(TimeSpan.FromSeconds(SpeechPackaging.WavSeconds(wav) + 0.8));
         });
 
         // THE AVATAR, AS AN INPUT: the model this client holds and draws (Thalia,

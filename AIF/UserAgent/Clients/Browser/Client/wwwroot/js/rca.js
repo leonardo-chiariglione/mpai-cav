@@ -171,6 +171,20 @@ window.rca = (() => {
       window.location.origin);
   }
 
+  // STOP MUST STOP HER: the avatar's page plays the speech in its own audio element (the page is served from this origin, so it can be
+  // reached). The sound is paused and the page told it has ended, which lets her mouth and body return to rest.
+  function silence() {
+    try {
+      const frame = document.getElementById('avatar');
+      const audio = frame && frame.contentDocument && frame.contentDocument.getElementById('responseAudio');
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.dispatchEvent(new Event('ended'));
+      stamp('silence: the avatar stopped speaking');
+    } catch (e) { console.error(e); }
+  }
+
   function focus(id) { const e = document.getElementById(id); if (e) e.focus(); }
 
   // THE PIXEL OF A PICTURE UNDER A CLICK: the picture's own pixels (X to the right, Y down), whatever size it is shown at; null outside it.
@@ -211,5 +225,5 @@ window.rca = (() => {
     if (e && e.requestFullscreen) e.requestFullscreen().catch(err => console.error(err));
   }
 
-  return { unlock, captureSpeech, abandonCapture, captureFrame, abandonFrame, present, focus, imagePoint, watchVideo, fullScreen, presence, stamp };
+  return { unlock, captureSpeech, abandonCapture, captureFrame, abandonFrame, present, silence, focus, imagePoint, watchVideo, fullScreen, presence, stamp };
 })();
