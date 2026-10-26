@@ -121,9 +121,10 @@ on Start:
   A workflow without the clause is as it was.
 - The steps are the driving Module's, and name no Module. A Port of a Data Type and Port Number that the driving Module has not is the application's: `OSD-AUO-V1.5:1` (a sound
   the person loads) and `OSD-ASD-V1.5` (the scene as edited) are Audio Scene Management's.
-- The Controller carries what the driving Module gives at its Application JSON Instance output (`MMC-AJI-V2.5`) to the application's Application JSON Instance input, and what the
-  application gives at its output (`MMC-AJI-V2.5:1`) to the driving Module's Application Response input (`MMC-AJI-V2.5:1`). The application takes commands from that Module and
-  from no other: any other write at its Application JSON Instance Port, or read there, is refused (NOT_AUTHORISED).
+- The Controller connects the two Modules generically: what one gives at an output Port is carried to the input Port of the other that has the same Data Type and Port Number, as it
+  comes, and the other way round; it knows nothing of the application. Between the Voice Command Interface and Audio Scene Management that is the Application JSON Instance
+  (`MMC-AJI-V2.5`): the Application Command to the application's User AJI Input, the application's User AJI Output (`MMC-AJI-V2.5:1`) to the Application Response (`MMC-AJI-V2.5:1`).
+  The Ports of the application that are connected are the driving Module's: any other write at them, or read, is refused (NOT_AUTHORISED).
 - The Controller API gains one request, `ConnectApplication(driving, application)`; the interpreter makes it when the workflow starts. Over MPAI-MAS it is not offered (it fails).
 - The state of the application: where the setting `RefreshState` of the JSON Interface is true, it asks the application what it holds (the guide's `StateRequests`) before it works
   out a request, and again after each response it tells; what the application answers to those questions is the state and is not told.

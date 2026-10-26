@@ -11,6 +11,10 @@
 #      VCI Application Command (MMC-AJI-V2.5)    -> ASM User AJI Input  (MMC-AJI-V2.5:1)
 #      ASM User AJI Output     (MMC-AJI-V2.5:1)  -> VCI Application Response (MMC-AJI-V2.5:1)
 #
+#  The Voice Command Interface is the authority, and Audio Scene Management does what the
+#  person, through it, tells it to do: it takes no command from anyone else, and it is the
+#  Controller that connects the two, not the User Agent and not the workflow.
+#
 #  The User Agent has no part in that: it binds devices to the Ports it is concerned with, each by
 #  Data Type and Port Number, and the Controller decides which Module a Port is of. The Ports the
 #  Module has not are the application's.
