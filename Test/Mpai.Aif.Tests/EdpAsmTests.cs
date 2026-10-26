@@ -65,7 +65,7 @@ public class EdpAsmTests
         return true;
     }
 
-    [SkippableFact]
+    [SkippableFact(Skip = "Replaced by the Voice Command Interface, MMC-VCI: EDP no longer has the Audio Scene input nor the User Command and Text For UA outputs of Audio Scene Management (the author, 2026/10/26).")]
     public async Task VoiceCommandsForTheScene()
     {
         Skip.IfNot(Ollama(), "Ollama is not running.");

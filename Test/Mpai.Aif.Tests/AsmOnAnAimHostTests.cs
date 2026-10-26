@@ -72,10 +72,10 @@ public class AsmOnAnAimHostTests
             catch (InvalidOperationException e) { throw new InvalidOperationException(e.Message + "\nThe AIM host said:\n" + host.Output, e); }
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
-            api.InputWrite(Asm, "OSD-BAO-V1.5", 1, MpaiJson.ToJson(Captured("low", 440)));
-            var read = api.OutputRead(Asm, "OSD-BAO-V1.5", 1, 60_000);
+            api.InputWrite(Asm, "OSD-AUO-V1.5", 1, Forms.Auo(Captured("low", 440)));
+            var read = api.OutputRead(Asm, "OSD-AUO-V1.5", 1, 60_000);
             Assert.True(read.Error == AifError.OK, $"the sound did not come back as the open Object ({read.Error})");
-            Assert.Equal("OSD-BAO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());
+            Assert.Equal("OSD-AUO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());
 
             // The placed AIMs ran in the host's process: the Channels between them and the Controller cross the Remote transport.
             Assert.Contains(api.ChannelAccounts(Asm), a => a.Contains("(Remote)"));

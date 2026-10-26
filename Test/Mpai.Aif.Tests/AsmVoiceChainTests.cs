@@ -42,7 +42,7 @@ public class AsmVoiceChainTests
             .Select(e => e?["AudioObjectSpaceTime"]?["SpatialAttitude1"]?["Position"]?["CartPosition"]?[0] is { } x ? (double?)x.GetValue<double>() : null)
             .FirstOrDefault();
 
-    [SkippableFact]
+    [SkippableFact(Skip = "Replaced by the Voice Command Interface, MMC-VCI: EDP no longer gives the User Command of Audio Scene Management, and the Ports of Audio Object Editing and Audio Scene Editing have no Basic Data Type (the author, 2026/10/26).")]
     [Trait("Duration", "Long")]
     public async Task WhatThePersonSaysMovesTheObjectInTheScene()
     {

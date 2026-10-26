@@ -16,7 +16,8 @@ namespace Mpai.Aif.Tests;
 // The translation replaces the original under its identifier: there is no Object in
 // two versions, nor two Objects at one place. Judged: the translated speech leaves the
 // Module, valid, its Qualifier stating Italian; the Speech Object stored under the
-// original's identifier is now the translation.
+// original's identifier is now the translation. The Module's Ports take and give the Speech Object (OSD-SPO); Text and Speech Translation, inside it, handles Basic Speech
+// Objects (the author, 2026/10/26).
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
 public class AsmTranslationTests
@@ -45,7 +46,7 @@ public class AsmTranslationTests
             r["the Module starts"] = api.StartFlow(Asm).ToString();
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
-            api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(english));
+            api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(english));
             api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
@@ -73,9 +74,9 @@ public class AsmTranslationTests
             (AifError Error, string? Json) read = (AifError.NotProduced, null);
             for (var i = 0; i < 6; i++)
             {
-                var next = api.OutputRead(Asm, "OSD-BSO-V1.5", 1, 5_000);
+                var next = api.OutputRead(Asm, "OSD-SPO-V1.5", 1, 5_000);
                 if (next.Error != AifError.OK) break;
-                read = (next.Error, next.Json);
+                read = (next.Error, Forms.Bso(next.Json!));
             }
             if (read.Error != AifError.OK) r["the translated speech"] = $"nothing ({read.Error})";
             else
@@ -123,7 +124,7 @@ public class AsmTranslationTests
         {
             Assert.Equal(AifError.OK, api.StartFlow(Asm));
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
-            api.InputWrite(Asm, "OSD-BSO-V1.5", 1, MpaiJson.ToJson(english));
+            api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(english));
             var translate = new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),

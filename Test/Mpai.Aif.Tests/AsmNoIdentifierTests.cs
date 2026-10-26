@@ -48,13 +48,13 @@ public class AsmNoIdentifierTests
 
             async Task<Message> Give(IAimProcessor aim, params (string Port, string Json)[] inputs) =>
                 await aim.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) });
-            string Object(Message m) => m.Ports[aoePorts.Output("OSD-BAO-V1.5")];
-            string Scene(Message m) => m.Ports[asePorts.Output("OSD-BAS-V1.5")];
+            string Object(Message m) => Forms.Bao(m.Ports[aoePorts.Output("OSD-AUO-V1.5")]);
+            string Scene(Message m) => Forms.Bas(m.Ports[asePorts.Output("OSD-ASD-V1.5")]);
             UserCommandRS Report(Message m, IAimProcessor aim) => MpaiJson.FromJson<UserCommand>(m.Ports[(aim == aoe ? aoePorts : asePorts).Output("CAE-UCM-V1.0")]).UserCommandRS!;
 
             // Two sounds, given to the Module: what it gives back is the Object, as the User Agent will hold it.
-            var violin = Object(await Give(aoe, (aoePorts.Input("OSD-BAO-V1.5"), MpaiJson.ToJson(Sound("violin")))));
-            var drums = Object(await Give(aoe, (aoePorts.Input("OSD-BAO-V1.5"), MpaiJson.ToJson(Sound("drums")))));
+            var violin = Object(await Give(aoe, (aoePorts.Input("OSD-AUO-V1.5"), Forms.Auo(Sound("violin")))));
+            var drums = Object(await Give(aoe, (aoePorts.Input("OSD-AUO-V1.5"), Forms.Auo(Sound("drums")))));
 
             // Both in the Scene: the Objects themselves, each where it is put.
             var built = await Give(ase, (asePorts.Input("CAE-UCM-V1.0"), MpaiJson.ToJson(Command(new UserCommandRQ
