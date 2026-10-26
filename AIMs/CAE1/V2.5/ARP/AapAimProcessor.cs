@@ -54,7 +54,7 @@ public sealed class AapAimProcessor(string instanceId, string audioKey, string a
             }
             if (Get(message, avKey) is string av)
             {
-                _avAudio = AudioVisualObject.Read(av).Audio;
+                _avAudio = BasicMultimodalObject.Read(av).Audio;
                 SetOffset();
                 give ??= _own;
             }

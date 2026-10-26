@@ -1,6 +1,6 @@
 { "$schema":                            "https://json-schema.org/draft/2020-12/schema",
-  "$id":                                "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioVisualObject.json",
-  "title":                              "Basic AudioVisual Object V1.5",
+  "$id":                                "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalObject.json",
+  "title":                              "Basic Multimodal Object V1.5",
   "type":                               "object",
   "properties":                         {
 

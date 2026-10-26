@@ -1,0 +1,56 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/OSD/V1.5/data/MultimodalObject.json",
+  "title":                              "Multimodal Object V1.5",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "MInstanceID", "AVObjectID", "AVObjectSpaceTime" ],
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "OSD-MMO-V1.5",
+                                          "description": "Multimodal Object Header – Standard OSD-MMO-Vx.y" },
+    "MInstanceID":                      { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Multimodal Object is or is intended to be located." },
+    "UEnvironmentID":                   { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Multimodal Object is or is intended to be located." },
+    "AVObjectID":                       { "type": "string", "description": "Unique identifier of this Multimodal Object." },
+    "AVObjectTime":                     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                          "description": "Time this Multimodal Object was produced." },
+
+    "AVObjectSpaceTime":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                          "description": "Space/Time where/when this Multimodal Object is located." },
+
+    "UserPoV":                          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+
+    "BasicAVObjectCount":               { "type": "integer", "minimum": 0, "description": "Number of Basic Multimodal Objects contained in this Multimodal Object." },
+
+    "BasicAVObjects":                   { "type": "array", "minItems": 0, "description": "Set of Basic Multimodal Objects contained in this Multimodal Object.",
+                                          "items": { "type": "object", "additionalProperties": false, "properties": {
+      "BasicAVObjectSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                          "description": "Space/Time where/when this Basic Multimodal Object is located within the containing Multimodal Object. If absent, the Space/Time of the containing object applies." },
+      "BMObjectIDOrBMObject":           { "$ref": "#/$defs/BMObjectIDOrBMObject", "description": "Either the ID of a Basic Multimodal Object or the Basic Multimodal Object itself." } } } },
+
+    "SubAVObjectCount":                 { "type": "integer", "minimum": 0, "description": "Number of child Multimodal Objects contained in this Multimodal Object." },
+
+    "SubAVObjects":                     { "type": "array", "minItems": 0, "description": "Set of child Multimodal Objects contained in this Multimodal Object.",
+                                          "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubAVObjectSpaceTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                          "description": "Space/Time where/when this child Multimodal Object is located within the containing Multimodal Object. If absent, the Space/Time of the containing object applies." },
+      "SubMObjectIDOrSubMObject":       { "$ref": "#/$defs/SubMObjectIDOrSubMObject", "description": "Either the ID of a child Multimodal Object or the child Multimodal Object itself." } } } },
+
+    "BMObjectOrMObject":                { "$ref": "#/$defs/BMObjectOrMObject", "description": "A mixed array of Basic Multimodal Objects and child Multimodal Objects contained in this Multimodal Object." },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                                          "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Multimodal Object in a trusted data exchange context." },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Multimodal Object (plain text, max 2048 characters)." } },
+
+  "$defs":                              {
+
+    "BMObjectOrMObject":                { "type": "array", "items": { "oneOf": [
+                                        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalObject.json" },
+                                        { "$ref": "#/$defs/BMObjectOrMObject" } ] } },
+
+    "BMObjectIDOrBMObject":             { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalObject.json" },
+                                        { "type": "string" } ] } },
+
+    "SubMObjectIDOrSubMObject":         { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
+                                        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalObject.json" },
+                                        { "type": "string" } ] } } } }

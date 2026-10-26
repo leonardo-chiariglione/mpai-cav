@@ -7,15 +7,15 @@
   "properties":                             {
 
     "Header":                               { "type": "string", "const": "OSD-MSD-V1.5",
-                                              "description": "AudioVisual Scene Descriptors Header – Standard OSD-MSD-Vx.y" },
-    "MInstanceID":                          { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this AudioVisual Scene is or is intended to be located." },
-    "UEnvironmentID":                       { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this AudioVisual Scene is or is intended to be located." },
-    "MultimodalSceneDescriptorsID":        { "type": "string", "description": "Unique identifier of this AudioVisual Scene Descriptors instance." },
+                                              "description": "Multimodal Scene Descriptors Header – Standard OSD-MSD-Vx.y" },
+    "MInstanceID":                          { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Multimodal Scene is or is intended to be located." },
+    "UEnvironmentID":                       { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Multimodal Scene is or is intended to be located." },
+    "MultimodalSceneDescriptorsID":        { "type": "string", "description": "Unique identifier of this Multimodal Scene Descriptors instance." },
     "MultimodalSceneDescriptorsTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
-                                              "description": "Time this AudioVisual Scene Descriptors instance was produced." },
+                                              "description": "Time this Multimodal Scene Descriptors instance was produced." },
 
     "MultimodalSceneDescriptorsSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this AudioVisual Scene Descriptors instance is located." },
+                                              "description": "Space/Time where/when this Multimodal Scene Descriptors instance is located." },
 
     "UserPoV":                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where the Scene is heard and seen from." },
     "ClosedSpace":                          { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
@@ -23,103 +23,103 @@
                                             { "type": "string" } ] },
                                               "description": "The Closed Space the Scene is in, placed by MultimodalSceneDescriptorsSpaceTime. A Basic Scene in this Scene with a Closed Space of its own keeps it for its members." },
 
-    "AudioObjectCount":                     { "type": "integer", "minimum": 0, "description": "Number of Audio Objects in the AudioVisual Scene." },
-    "AudioObjects":                         { "type": "array", "minItems": 0, "description": "Set of Audio Objects in the AudioVisual Scene.",
+    "AudioObjectCount":                     { "type": "integer", "minimum": 0, "description": "Number of Audio Objects in the Multimodal Scene." },
+    "AudioObjects":                         { "type": "array", "minItems": 0, "description": "Set of Audio Objects in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "AudioObjectSpaceTime":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Audio Object is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Audio Object is located within the Multimodal Scene." },
       "AudioObject":                        { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioObject.json" },
                                             { "type": "string" } ], "description": "A Basic Audio Object or an Audio Object, or its ID." } } } },
 
-    "SpeechObjectCount":                    { "type": "integer", "minimum": 0, "description": "Number of Speech Objects in the AudioVisual Scene." },
-    "SpeechObjects":                        { "type": "array", "minItems": 0, "description": "Set of Speech Objects in the AudioVisual Scene.",
+    "SpeechObjectCount":                    { "type": "integer", "minimum": 0, "description": "Number of Speech Objects in the Multimodal Scene." },
+    "SpeechObjects":                        { "type": "array", "minItems": 0, "description": "Set of Speech Objects in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "SpeechObjectSpaceTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Speech Object is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Speech Object is located within the Multimodal Scene." },
       "SpeechObject":                       { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
                                             { "type": "string" } ], "description": "A Basic Speech Object or a Speech Object, or its ID." } } } },
 
-    "VisualObjectCount":                    { "type": "integer", "minimum": 0, "description": "Number of Visual Objects in the AudioVisual Scene." },
-    "VisualObjects":                        { "type": "array", "minItems": 0, "description": "Set of Visual Objects in the AudioVisual Scene.",
+    "VisualObjectCount":                    { "type": "integer", "minimum": 0, "description": "Number of Visual Objects in the Multimodal Scene." },
+    "VisualObjects":                        { "type": "array", "minItems": 0, "description": "Set of Visual Objects in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "VisualObjectSpaceTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Visual Object is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Visual Object is located within the Multimodal Scene." },
       "VisualObject":                       { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualObject.json" },
                                             { "type": "string" } ],
                                               "description": "Either a Visual Object or the ID of a Visual Object." } } } },
 
-    "3DModelObjectCount":                   { "type": "integer", "minimum": 0, "description": "Number of 3D Model Objects in the AudioVisual Scene." },
-    "3DModelObjects":                       { "type": "array", "minItems": 0, "description": "Set of 3D Model Objects in the AudioVisual Scene.",
+    "3DModelObjectCount":                   { "type": "integer", "minimum": 0, "description": "Number of 3D Model Objects in the Multimodal Scene." },
+    "3DModelObjects":                       { "type": "array", "minItems": 0, "description": "Set of 3D Model Objects in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "3DModelObjectSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this 3D Model Object is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this 3D Model Object is located within the Multimodal Scene." },
       "3DModelObject":                      { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelObject.json" },
                                             { "type": "string" } ], "description": "Either a 3D Model Object or the ID of a 3D Model Object." } } } },
 
-    "AudioVisualObjectCount":               { "type": "integer", "minimum": 0, "description": "Number of AudioVisual Objects in the AudioVisual Scene." },
-    "AudioVisualObjects":                   { "type": "array", "minItems": 0, "description": "Set of AudioVisual Objects in the AudioVisual Scene.",
+    "AudioVisualObjectCount":               { "type": "integer", "minimum": 0, "description": "Number of Multimodal Objects in the Multimodal Scene." },
+    "AudioVisualObjects":                   { "type": "array", "minItems": 0, "description": "Set of Multimodal Objects in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "AudioVisualObjectSpaceTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this AudioVisual Object is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Multimodal Object is located within the Multimodal Scene." },
       "AudioVisualObject":                  { "oneOf": [
-                                            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualObject.json" },
-                                            { "type": "string" } ], "description": "Either an AudioVisual Object or the ID of an AudioVisual Object." } } } },
+                                            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalObject.json" },
+                                            { "type": "string" } ], "description": "Either a Multimodal Object or the ID of a Multimodal Object." } } } },
 
-    "SubAudioSceneCount":                   { "type": "integer", "minimum": 0, "description": "Number of Audio Sub-Scenes in the AudioVisual Scene." },
-    "SubAudioScenes":                       { "type": "array", "minItems": 0, "description": "Set of Audio Sub-Scenes in the AudioVisual Scene.",
+    "SubAudioSceneCount":                   { "type": "integer", "minimum": 0, "description": "Number of Audio Sub-Scenes in the Multimodal Scene." },
+    "SubAudioScenes":                       { "type": "array", "minItems": 0, "description": "Set of Audio Sub-Scenes in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "SubAudioSceneSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Audio Sub-Scene is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Audio Sub-Scene is located within the Multimodal Scene." },
       "SubAudioScene":                      { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json" },
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioSceneDescriptors.json" },
                                             { "type": "string" } ], "description": "A Basic Audio Scene Descriptors or an Audio Scene Descriptors instance, or its ID." } } } },
 
-    "SubSpeechSceneCount":                  { "type": "integer", "minimum": 0, "description": "Number of Speech Sub-Scenes in the AudioVisual Scene." },
-    "SubSpeechScenes":                      { "type": "array", "minItems": 0, "description": "Set of Speech Sub-Scenes in the AudioVisual Scene.",
+    "SubSpeechSceneCount":                  { "type": "integer", "minimum": 0, "description": "Number of Speech Sub-Scenes in the Multimodal Scene." },
+    "SubSpeechScenes":                      { "type": "array", "minItems": 0, "description": "Set of Speech Sub-Scenes in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "SubSpeechSceneSpaceTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Speech Sub-Scene is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Speech Sub-Scene is located within the Multimodal Scene." },
       "SubSpeechScene":                     { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechSceneDescriptors.json" },
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechSceneDescriptors.json" },
                                             { "type": "string" } ], "description": "A Basic Speech Scene Descriptors or a Speech Scene Descriptors instance, or its ID." } } } },
 
-    "SubVisualSceneCount":                  { "type": "integer", "minimum": 0, "description": "Number of Visual Sub-Scenes in the AudioVisual Scene." },
-    "SubVisualScenes":                      { "type": "array", "minItems": 0, "description": "Set of Visual Sub-Scenes in the AudioVisual Scene.",
+    "SubVisualSceneCount":                  { "type": "integer", "minimum": 0, "description": "Number of Visual Sub-Scenes in the Multimodal Scene." },
+    "SubVisualScenes":                      { "type": "array", "minItems": 0, "description": "Set of Visual Sub-Scenes in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "SubVisualSceneSpaceTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this Visual Sub-Scene is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Visual Sub-Scene is located within the Multimodal Scene." },
       "SubVisualScene":                     { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/VisualSceneDescriptors.json" },
                                             { "type": "string" } ], "description": "Either a Visual Scene Descriptors instance or its ID." } } } },
 
-    "Sub3DModelSceneCount":                 { "type": "integer", "minimum": 0, "description": "Number of 3D Model Sub-Scenes in the AudioVisual Scene." },
-    "Sub3DModelScenes":                     { "type": "array", "minItems": 0, "description": "Set of 3D Model Sub-Scenes in the AudioVisual Scene.",
+    "Sub3DModelSceneCount":                 { "type": "integer", "minimum": 0, "description": "Number of 3D Model Sub-Scenes in the Multimodal Scene." },
+    "Sub3DModelScenes":                     { "type": "array", "minItems": 0, "description": "Set of 3D Model Sub-Scenes in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "Sub3DModelSceneSpaceTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this 3D Model Sub-Scene is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this 3D Model Sub-Scene is located within the Multimodal Scene." },
       "Sub3DModelScene":                    { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/3DModelSceneDescriptors.json" },
                                             { "type": "string" } ], "description": "Either a 3D Model Scene Descriptors instance or its ID." } } } },
 
-    "SubMultimodalSceneCount":             { "type": "integer", "minimum": 0, "description": "Number of AudioVisual Sub-Scenes in the AudioVisual Scene." },
-    "SubMultimodalScenes":                 { "type": "array", "minItems": 0, "description": "Set of AudioVisual Sub-Scenes in the AudioVisual Scene.",
+    "SubMultimodalSceneCount":             { "type": "integer", "minimum": 0, "description": "Number of Multimodal Sub-Scenes in the Multimodal Scene." },
+    "SubMultimodalScenes":                 { "type": "array", "minItems": 0, "description": "Set of Multimodal Sub-Scenes in the Multimodal Scene.",
                                               "items": { "type": "object", "additionalProperties": false, "properties": {
       "SubMultimodalSceneSpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-                                              "description": "Space/Time where/when this AudioVisual Sub-Scene is located within the AudioVisual Scene." },
+                                              "description": "Space/Time where/when this Multimodal Sub-Scene is located within the Multimodal Scene." },
       "SubMultimodalScene":                { "oneOf": [
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json" },
                                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
-                                            { "type": "string" } ], "description": "A Basic AudioVisual Scene Descriptors or an AudioVisual Scene Descriptors instance, or its ID." } } } },
+                                            { "type": "string" } ], "description": "A Basic Multimodal Scene Descriptors or a Multimodal Scene Descriptors instance, or its ID." } } } },
 
 
     "DataXMData":                           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
-                                              "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this AudioVisual Scene Descriptors instance in a trusted data exchange context." },
-    "DescrMetadata":                        { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the AudioVisual Scene Descriptors instance (plain text, max 2048 characters)." } } }
+                                              "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Multimodal Scene Descriptors instance in a trusted data exchange context." },
+    "DescrMetadata":                        { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Multimodal Scene Descriptors instance (plain text, max 2048 characters)." } } }

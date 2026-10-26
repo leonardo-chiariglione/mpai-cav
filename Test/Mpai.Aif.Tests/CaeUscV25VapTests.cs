@@ -37,7 +37,7 @@ public class CaeUscV25VapTests
 
     private static Message Of(params (string Key, string Json)[] ports) => new() { MessageId = "m", Ports = ports.ToDictionary(p => p.Key, p => p.Json) };
     private static VapAimProcessor Vap() => new("vap", Av, AudioIrr, VideoIrr, Images);
-    private static string FilmObject() => AudioVisualObject.Make("av", new Audio(new short[Rate], Rate), Film());
+    private static string FilmObject() => BasicMultimodalObject.Make("av", new Audio(new short[Rate], Rate), Film());
     private static Irregularity A(double start, double end) => new(Guid.NewGuid().ToString(), "a", start, end);
 
     // ---- the film --------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -127,7 +127,7 @@ public class CaeUscV25VapTests
         Assert.All(list.Where(i => i.Source == "a"), i => Assert.DoesNotContain(i.Id, images));
         Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(reply.Ports[VideoIrr], "ImageURI").Count);
 
-        var noVideo = await Vap().ProcessAsync(Of((Av, AudioVisualObject.Make("av", new Audio(new short[Rate], Rate)))));
+        var noVideo = await Vap().ProcessAsync(Of((Av, BasicMultimodalObject.Make("av", new Audio(new short[Rate], Rate)))));
         Assert.True(noVideo.IsError); Assert.Contains("has no video", noVideo.Payload);
         Assert.False((await Vap().ProcessAsync(Of((AudioIrr, IrregularityFile.Make([A(1, 2)], OffsetMs))))).Ports.ContainsKey(VideoIrr));      // audio's file before the film: it waits
     }

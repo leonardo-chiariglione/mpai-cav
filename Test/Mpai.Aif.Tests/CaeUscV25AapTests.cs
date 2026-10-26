@@ -83,7 +83,7 @@ public class CaeUscV25AapTests
     public async Task TheAimGivesTheIrregularityFileWithTheOffsetAndTheAudioFilesOfWhatItFound()
     {
         var tape = IrregularTape();
-        var av = AudioVisualObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate));
+        var av = BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate));
         var reply = await Aap().ProcessAsync(Of((Paf, AudioObject.Make("pres", tape)), (Av, av)));
         Assert.False(reply.IsError, reply.Payload);
         Assert.True(Valid(["CAE1", "V2.5", "data", "IrregularityFile.json"], reply.Ports[Irr]));
@@ -103,7 +103,7 @@ public class CaeUscV25AapTests
     public async Task TheIrregularitiesOfTheFilmComeInTheTimeOfTheRecordingAndThoseFoundByBothAreOne()
     {
         var tape = IrregularTape(); var aap = Aap();
-        var first = await aap.ProcessAsync(Of((Paf, AudioObject.Make("pres", tape)), (Av, AudioVisualObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate)))));
+        var first = await aap.ProcessAsync(Of((Paf, AudioObject.Make("pres", tape)), (Av, BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate)))));
         var own = IrregularityFile.Read(first.Ports[Irr]).Irregularities;
 
         // The Video Analysis found two, in the time of the recording (it had the offset from the Audio Analysis): at 4.0 s (the dropout) and at 5.5 s (only the film saw it).
@@ -122,7 +122,7 @@ public class CaeUscV25AapTests
     [Fact]
     public async Task TheAudioAndTheFilmMayComeSeparatelyInEitherOrderAndTheOffsetFollowsWhenBothAreHeld()
     {
-        var tape = IrregularTape(); var film = AudioVisualObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate));
+        var tape = IrregularTape(); var film = BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate));
         var aap = Aap();
         var first = await aap.ProcessAsync(Of((Paf, AudioObject.Make("pres", tape))));                          // the recording first: its irregularities, no offset yet
         Assert.False(JsonNode.Parse(first.Ports[Irr])!.AsObject().ContainsKey("Offset"));
@@ -140,7 +140,7 @@ public class CaeUscV25AapTests
     public async Task TheLoopWithTheVideoAnalysisComesToAnEnd()
     {
         var tape = IrregularTape(); var aap = Aap();
-        var first = await aap.ProcessAsync(Of((Paf, AudioObject.Make("pres", tape)), (Av, AudioVisualObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate)))));
+        var first = await aap.ProcessAsync(Of((Paf, AudioObject.Make("pres", tape)), (Av, BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate)))));
         var video = IrregularityFile.Make([new Irregularity(Guid.NewGuid().ToString(), "v", 5.5, 5.6)]);
         var merged = await aap.ProcessAsync(Of((VideoIrr, video)));
         Assert.True(merged.Ports.ContainsKey(Irr));
@@ -157,7 +157,7 @@ public class CaeUscV25AapTests
         var video = IrregularityFile.Make([new Irregularity(Guid.NewGuid().ToString(), "v", 1, 2)]);
         var early = await Aap().ProcessAsync(Of((VideoIrr, video)));
         Assert.True(early.IsError); Assert.Contains("came before the Preservation Audio File", early.Payload);
-        var before = await Aap().ProcessAsync(Of((Paf, AudioObject.Make("pres", new Audio(Noise(8, 7), Rate))), (Av, AudioVisualObject.Make("av", new Audio(Noise(2, 9).Concat(Noise(8, 7)).ToArray(), Rate)))));
+        var before = await Aap().ProcessAsync(Of((Paf, AudioObject.Make("pres", new Audio(Noise(8, 7), Rate))), (Av, BasicMultimodalObject.Make("av", new Audio(Noise(2, 9).Concat(Noise(8, 7)).ToArray(), Rate)))));
         Assert.True(before.IsError); Assert.Contains("starts 2 s before the Preservation Audio File", before.Payload);
         Assert.False((await Aap().ProcessAsync(Of())).Ports.ContainsKey(Irr));                // nothing given, nothing to say
     }

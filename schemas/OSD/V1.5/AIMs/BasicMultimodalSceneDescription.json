@@ -12,7 +12,7 @@
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "SpaceTime",                        "Direction": "Input",  "DataType": "OSD-SPT-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioVisualObject",                "Direction": "Input",  "DataType": "OSD-AVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MultimodalObject",                "Direction": "Input",  "DataType": "OSD-MMO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicMultimodalSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicAudioObject",         "Direction": "Input",  "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicVisualObject",        "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},

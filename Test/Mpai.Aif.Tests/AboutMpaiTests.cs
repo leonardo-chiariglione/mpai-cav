@@ -6,7 +6,7 @@ using Mpai.Ua;
 
 namespace Mpai.Aif.Tests;
 
-// THE "ABOUT MPAI" APP: a video, played entirely by the User Agent. The workflow acquires a Basic AudioVisual Object (OSD-BMO-V1.5) that designates
+// THE "ABOUT MPAI" APP: a video, played entirely by the User Agent. The workflow acquires a Basic Multimodal Object (OSD-BMO-V1.5) that designates
 // the video by a DataURI and presents it; the Controller is never asked for anything. The step ends when the device that plays it returns.
 public class AboutMpaiTests
 {
