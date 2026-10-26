@@ -378,6 +378,128 @@ public class JsiTests
         Assert.Contains("violin: position", calls[0].Turns[^1].Content);
     }
 
+    // A REQUEST THAT IS ALWAYS THE SAME COMMAND is that command, sent without the language model: "what is in the scene" asks the application for a listing.
+    [Theory]
+    [InlineData("What is in the scene?")]
+    [InlineData("what's in the scene right now")]
+    public async Task AShortcutIsACommandWithoutTheModel(string words)
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var answer = await Ask(JsiRig.Processor(model), words, Context());
+        Assert.Empty(calls);
+        var command = JsiRig.CommandOf(answer, Ports);
+        Assert.NotNull(command);
+        Assert.Equal("Audio Scene", (string?)command!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("stage", (string?)command["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
+        Assert.Empty(new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(command["Instance"]!.ToJsonString())!);
+    }
+
+    [Fact]
+    public async Task AShortcutForTheSoundsListsEverything()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var command = JsiRig.CommandOf(await Ask(JsiRig.Processor(model), "which sounds do I have", Context()), Ports);
+        Assert.Empty(calls);
+        Assert.Equal("All", (string?)command!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+    }
+
+    // LISTINGS THAT COME ONE AFTER ANOTHER ADD UP: the sounds kept from one, the scene with where its members are from another; a listing that only names the members of the scene does
+    // not take their places away.
+    [Fact]
+    public async Task ListingsThatComeOneAfterAnotherAddUpToTheState()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model);
+        JsonObject Listing(string id, JsonArray listed)
+        {
+            var aji = JsiRig.ResponseTo(id, "Done");
+            aji["Instance"]!["UserCommandRS"]!.AsObject().Remove("Actions");
+            aji["Instance"]!["UserCommandRS"]!["ListedObjects"] = listed;
+            aji["InReplyTo"] = "asked-by-the-user-agent";
+            return aji;
+        }
+        async Task Give(JsonObject aji) => await jsi.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = new() { [JsiRig.Response(Ports)] = aji.ToJsonString() } });
+
+        // The scene, with where its members are.
+        var detailed = (JsonObject)((JsonArray)((JsonObject)JsiRig.Context(JsiRig.Scene())["Instance"]!["UserCommandRS"]!)["ListedObjects"]!)[0]!;
+        await Give(Listing("a", new JsonArray(detailed.DeepClone())));
+        // Everything: the sounds kept, and the scene only by the names of its members.
+        await Give(Listing("b", new JsonArray(
+            new JsonObject { ["ObjectID"] = "flute", ["Kind"] = "Basic Audio Object" },
+            new JsonObject { ["ObjectID"] = "concert", ["Kind"] = "Audio Scene", ["MemberObjectIDs"] = new JsonArray("violin", "cello", "voice", "drums", "piano") },
+            new JsonObject { ["ObjectID"] = "violin", ["Kind"] = "Basic Audio Object" })));
+        await Ask(jsi, "move the violin 1 metre to the left");
+        var told = calls[0].Turns[^1].Content;
+        Assert.Contains("violin: position = (-1.5, 2, 0)", told);                         // where it is, from the first
+        Assert.Contains("Stored sounds that can be added: flute", told);                    // what is kept, from the second (the violin is in the scene)
+        Assert.DoesNotContain("Stored sounds that can be added: flute, violin", told);
+    }
+
+    // WITH AN APPLICATION CONNECTED (RefreshState) the interface asks it what it holds, one question after another, before it works out a request, and again after every response it
+    // tells: the request waits for the answers, and is then worked out from the scene as it is.
+    [Fact]
+    public async Task AnApplicationThatIsConnectedIsAskedForTheStateBeforeARequestIsWorkedOut()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model, JsiRig.Jsi, refreshesState: true);
+        JsonObject Answer(JsonObject command, JsonArray listed)
+        {
+            var aji = JsiRig.ResponseTo((string)command["Instance"]!["UserCommandID"]!, "Done");
+            aji["Instance"]!["UserCommandRS"]!.AsObject().Remove("Actions");
+            aji["Instance"]!["UserCommandRS"]!["ListedObjects"] = listed;
+            aji["InReplyTo"] = (string)command["AJIID"]!;
+            return aji;
+        }
+        Task<Message> Give(JsonObject aji) => jsi.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = new() { [JsiRig.Response(Ports)] = aji.ToJsonString() } });
+
+        // The request waits; the first question goes: everything.
+        var first = await Ask(jsi, "move the violin 1 metre to the left");
+        Assert.Empty(calls);
+        Assert.Null(JsiRig.FactsOf(first, Ports));
+        var all = JsiRig.CommandOf(first, Ports)!;
+        Assert.Equal("All", (string?)all["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+
+        // Its answer: the second question goes, the scene.
+        var second = await Give(Answer(all, new JsonArray(
+            new JsonObject { ["ObjectID"] = "flute", ["Kind"] = "Basic Audio Object" },
+            new JsonObject { ["ObjectID"] = "stage", ["Kind"] = "Audio Scene", ["MemberObjectIDs"] = new JsonArray("violin") },
+            new JsonObject { ["ObjectID"] = "violin", ["Kind"] = "Basic Audio Object" })));
+        Assert.Empty(calls);
+        Assert.Null(JsiRig.FactsOf(second, Ports));
+        var scene = JsiRig.CommandOf(second, Ports)!;
+        Assert.Equal("Audio Scene", (string?)scene["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("stage", (string?)scene["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
+
+        // Its answer: the state is fresh, and the request that waited is worked out from it.
+        var members = new JsonArray(new JsonObject
+        {
+            ["ObjectID"] = "violin",
+            ["PoV"] = JsiRig.Attitude([4, 5, 0], [0, 0, 180])
+        });
+        var third = await Give(Answer(scene, new JsonArray(new JsonObject { ["ObjectID"] = "stage", ["Kind"] = "Audio Scene", ["ObjectCount"] = 1, ["Members"] = members })));
+        Assert.Single(calls);
+        Assert.Contains("violin: position = (4, 5, 0)", calls[0].Turns[^1].Content);
+        Assert.Contains("Stored sounds that can be added: flute", calls[0].Turns[^1].Content);
+        var move = JsiRig.CommandOf(third, Ports)!;
+        Assert.NotNull(move["Instance"]!["UserCommandRQ"]!["MovedObjects"]);
+
+        // The application answers the command: the person is told, and the state is asked for again.
+        var told = await Give(JsiRig.ResponseTo((string)move["Instance"]!["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null)) is { } r ? WithReplyTo(r, move) : null!);
+        Assert.Contains("violin", JsiRig.FactsOf(told, Ports));
+        Assert.Equal("All", (string?)JsiRig.CommandOf(told, Ports)!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+    }
+
+    private static JsonObject WithReplyTo(JsonObject response, JsonObject command) { response["InReplyTo"] = (string)command["AJIID"]!; return response; }
+
+    [Fact]
+    public async Task WithoutAnApplicationConnectedARequestIsWorkedOutAtOnce()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var answer = await Ask(JsiRig.Processor(model), "move the violin 1 metre to the left", Context());
+        Assert.Single(calls);
+        Assert.NotNull(JsiRig.CommandOf(answer, Ports));
+    }
+
     [Fact]
     public async Task WithoutAStateNoObjectCanBeNamedAndTheModelIsToldSo()
     {

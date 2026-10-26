@@ -1,0 +1,65 @@
+using System.Security.Cryptography;
+using System.Text.Json.Nodes;
+
+using AIF.Controller;
+using AIF.Store;
+
+using Mpai.Aif.Api;
+using Mpai.Cae.Asm;
+using Mpai.Providers;
+
+namespace Mpai.Cae.AsmVoice;
+
+// THE TWO MODULES OF ASM-VCI.orch IN ONE CONTROLLER: the Voice Command Interface (MMC-VCI-V2.5), which the workflow is over, and Audio Scene Management (CAE-ASM-V1.0), the
+// application it drives and the header of the workflow names. The workflow uses the Controller API only; this builds the Controller they run under.
+//
+// THE ACCESS OF THE JSON INTERFACE IS READ FROM THE FILES OF THIS SOFTWARE until the schema of the User Command and the guide are on the sites their L3 names (the author does not
+// publish yet): the L3s of the Modules are copied to a folder of the run, with the addresses of those three entries replaced by the files and their SHA-256 by the files' own. The
+// repository's L3s are not changed; the Controller still refuses what it cannot fetch or whose hash differs.
+public static class AsmVoiceModules
+{
+    public const string Vci = "1MMC-VCI-V2.5-I01", Asm = "1CAE-ASM-V1.0-I01", Jsi = "1MMC-JSI-V2.5-I02";
+
+    public static string GuideFile(string root) => Path.Combine(root, "Apps", "CAE", "ASM", "Access", "AsmApplicationGuide.json");
+    public static string CommandSchemaFile(string root) => Path.Combine(root, "schemas", "CAE3", "V1.0", "data", "UserCommand.json");
+
+    // The folder of the L3s of the run (a copy of AIMs\AMDs with the Access of the JSON Interface at the local files) and the file of the settings of the AIMs.
+    public sealed record Prepared(string Folder, string Amds, string Settings);
+
+    public static Prepared Prepare(string root, string? folder = null, JsonObject? settings = null)
+    {
+        folder ??= Path.Combine(Path.GetTempPath(), "mpai-asm-voice-" + Guid.NewGuid().ToString("N")[..8]);
+        var amds = Path.Combine(folder, "amds"); Directory.CreateDirectory(amds);
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(root, "AIMs", "AMDs"), "*.json")) File.Copy(file, Path.Combine(amds, Path.GetFileName(file)), true);
+
+        static string Hash(string file) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file)));
+        var l3Path = Path.Combine(amds, Jsi + ".json");
+        var l3 = JsonNode.Parse(File.ReadAllText(l3Path))!;
+        foreach (var entry in l3["AccessSources"]!.AsArray())
+        {
+            var file = (string)entry!["Name"]! switch { "ApplicationGuide" => GuideFile(root), "CommandSchema" or "ResponseSchema" => CommandSchemaFile(root), _ => null };
+            if (file is null) continue;
+            entry["Sha256"] = Hash(file);
+            entry["Mirrors"] = new JsonArray(new Uri(file).AbsoluteUri);
+        }
+        File.WriteAllText(l3Path, l3.ToJsonString());
+
+        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "AIMs", "aim-settings.json")))!.AsObject();
+        var jsi = all[Jsi] as JsonObject ?? new JsonObject(); all[Jsi] = jsi;
+        jsi["SchemasRoot"] = Path.Combine(root, "schemas");
+        jsi["RefreshState"] = "true";          // an application answers: the JSON Interface asks it what it holds before it works out a request
+        foreach (var (aim, own) in settings ?? [])
+        {
+            var merged = all[aim] as JsonObject ?? new JsonObject(); all[aim] = merged;
+            foreach (var (name, value) in own!.AsObject()) merged[name] = value?.DeepClone();
+        }
+        var settingsPath = Path.Combine(folder, "aim-settings.json");
+        File.WriteAllText(settingsPath, all.ToJsonString());
+        return new Prepared(folder, amds, settingsPath);
+    }
+
+    // The Controller of the run, holding both Modules: the AIMs of Audio Scene Management, and those of the Voice Command Interface (the speech recogniser, the JSON Interface, the
+    // dialogue, the speech synthesiser), and the leaf AIMs both name (the translation of Audio Scene Management). `vci` replaces the provider of the second where a test has speech or a language model of its own.
+    public static ControllerApi Controller(Prepared prepared, Func<AmdStore, IAimProvider>? vci = null) =>
+        new(prepared.Amds, prepared.Settings, store => new CompositeProvider(new AsmProvider(prepared.Amds), vci?.Invoke(store) ?? new VciProvider(store), new LeafAimsProvider(store)));
+}

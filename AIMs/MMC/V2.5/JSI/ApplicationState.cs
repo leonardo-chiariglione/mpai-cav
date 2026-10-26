@@ -12,10 +12,11 @@ namespace Mpai.Mmc.Jsi;
 public sealed class ApplicationState
 {
     public sealed record Member(string Name, IReadOnlyList<(string Label, string Value)> Facts);
-    public sealed record Scene(string Name, IReadOnlyList<Member> Members);
+    public sealed record Scene(string Name, IReadOnlyList<Member> Members, bool Detailed = true);
 
     public IReadOnlyList<Scene> Scenes { get; init; } = [];
     public IReadOnlyList<string> Stored { get; init; } = [];
+    public bool ListsStored { get; init; }
 
     public bool IsKnown => Scenes.Count > 0 || Stored.Count > 0;
 
@@ -29,6 +30,24 @@ public sealed class ApplicationState
 
     // Is this instance a listing of the application - does it hold the array of items that the guide reads the state from? An ApplicationContext that is not one (the
     // response to a command that listed nothing, say) says nothing about the state and does not replace it.
+    // WHAT A LISTING ADDS TO THE STATE KNOWN, when the listings come one after another - one names the sounds that are kept, another a scene with where its members are: the facts
+    // about the members of a scene that the newer listing only names are those the older gave; the sounds kept are the newer's if it lists any; the scenes are the newer's if it
+    // lists any, else the older's.
+    public ApplicationState OnTopOf(ApplicationState older)
+    {
+        var scenes = Scenes.Select(s =>
+        {
+            if (s.Detailed || older.Scenes.FirstOrDefault(o => o.Name == s.Name) is not { } before) return s;
+            return s with { Members = s.Members.Select(m => before.Members.FirstOrDefault(b => b.Name == m.Name) ?? m).ToList() };
+        }).ToList();
+        return new ApplicationState
+        {
+            Scenes = scenes.Count > 0 ? scenes : older.Scenes,
+            Stored = ListsStored ? Stored : older.Stored,
+            ListsStored = ListsStored || older.ListsStored
+        };
+    }
+
     public static bool IsListing(JsonNode? instance, ApplicationGuide guide) =>
         guide.Context is { } context && instance is not null && Select(instance, (string?)context["Items"] ?? "").Any();
 
@@ -41,6 +60,7 @@ public sealed class ApplicationState
         var sceneKinds = (context["SceneKinds"] as JsonArray)?.Select(x => (string?)x ?? "").ToHashSet() ?? [];
         var membersKey = (string?)context["Members"] ?? "Members";
         var memberName = (string?)context["MemberName"] ?? nameKey;
+        var memberNamesKey = (string?)context["MemberNames"] ?? "";
         var describe = (context["Describe"] as JsonArray)?.OfType<JsonObject>().Select(d => ((string?)d["Label"] ?? "", (string?)d["Path"] ?? "")).ToList() ?? [];
 
         var scenes = new List<Scene>();
@@ -62,10 +82,15 @@ public sealed class ApplicationState
                 members.Add(new Member(mn, facts));
                 inScenes.Add(mn);
             }
-            scenes.Add(new Scene(name, members));
+            // A listing that only names the members of a scene (the names, no facts about them): the members are those, and the scene is not detailed.
+            var detailed = members.Count > 0 || memberNamesKey.Length == 0 || !Select(o, memberNamesKey).Any();
+            if (members.Count == 0 && memberNamesKey.Length > 0)
+                foreach (var n in Elements(o, memberNamesKey))
+                    if ((string?)n is { Length: > 0 } named) { members.Add(new Member(named, [])); inScenes.Add(named); }
+            scenes.Add(new Scene(name, members, detailed));
         }
         var stored = listed.Where(l => !l.IsScene && !inScenes.Contains(l.Name)).Select(l => l.Name).Distinct(StringComparer.Ordinal).ToList();
-        return new ApplicationState { Scenes = scenes, Stored = stored };
+        return new ApplicationState { Scenes = scenes, Stored = stored, ListsStored = listed.Any(l => !l.IsScene) };
     }
 
     // The state, told to the language model.

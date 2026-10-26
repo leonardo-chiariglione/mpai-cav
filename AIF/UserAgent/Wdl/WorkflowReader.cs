@@ -23,7 +23,7 @@ public sealed class WorkflowReader
     }
 
     private static readonly Regex Header =
-        new(@"^workflow\s+(?<name>\S+)\s+over\s+(?<modules>.+?)\s*$", RegexOptions.Compiled);
+        new(@"^workflow\s+(?<name>\S+)\s+over\s+(?<modules>\S+)(\s+application\s+(?<apps>\S+))?\s*$", RegexOptions.Compiled);
 
     private static readonly Regex Ask =
         new(@"^ask\s+Controller\s+to\s+(?<verb>start|stop|pause|resume|take|give)\b\s*(?<rest>.*)$",
@@ -46,31 +46,6 @@ public sealed class WorkflowReader
         new(@"^(?<label>[A-Za-z_][\w]*)\s*\(\s*(?<type>[^):]+?)\s*(?::\s*(?<pn>\d+)\s*)?\)\s*(?:=\s*(?<lit>.*))?$",
             RegexOptions.Compiled);
 
-    // THE MODULES OF THE WORKFLOW BEING READ, for the steps that name the Module they are for (additive: a step that names none is for the first Module).
-    private IReadOnlyList<string> _modules = Array.Empty<string>();
-    private IReadOnlyDictionary<string, string> _aliases = new Dictionary<string, string>();
-
-    private string ModuleNamed(int n, string name)
-    {
-        if (_aliases.TryGetValue(name, out var real)) return real;
-        if (_modules.Contains(name)) return name;
-        throw new WorkflowSyntaxError(n, "'" + name + "' is not one of the Modules this workflow is over.");
-    }
-
-    // A trailing ' <word> <Module>' ('to ASM', 'from VCI') names the Module a step is for; it is taken off the text. Anything else after the word is not a Module.
-    private string? TakeModule(string word, ref string text)
-    {
-        var m = Regex.Match(text, @"\s+" + word + @"\s+(?<m>[A-Za-z0-9][\w.\-]*)\s*$", RegexOptions.IgnoreCase);
-        if (!m.Success) return null;
-        var name = m.Groups["m"].Value;
-        string? real;
-        if (_aliases.TryGetValue(name, out var a)) real = a;
-        else if (_modules.Contains(name)) real = name;
-        else return null;
-        text = text.Substring(0, m.Index);
-        return real;
-    }
-
     public Workflow Read(string text)
     {
         var lines = Normalise(text);
@@ -79,20 +54,13 @@ public sealed class WorkflowReader
         var m = Header.Match(lines[0].Text.Trim());
         if (!m.Success)
             throw new WorkflowSyntaxError(lines[0].Line,
-                "a workflow begins 'workflow <name> over <Module>[, <Module>...]'.");
+                "a workflow begins 'workflow <name> over <Module>[, <Module>...] [application <Module>[, <Module>...]]'.");
 
         var name    = m.Groups["name"].Value;
-        // 'over <Module>[, <Module>...]'; a Module may be given a short name, 'ASM=1CAE-ASM-V1.0-I01', by which the steps that are for it name it.
-        var modules = new List<string>();
-        var aliases = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var part in m.Groups["modules"].Value.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0))
-        {
-            var eq = part.IndexOf('=');
-            var real = eq > 0 ? part.Substring(eq + 1).Trim() : part;
-            modules.Add(real);
-            if (eq > 0) aliases[part.Substring(0, eq).Trim()] = real;
-        }
-        _modules = modules; _aliases = aliases;
+        var modules = m.Groups["modules"].Value.Split(',')
+                       .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+        var applications = m.Groups["apps"].Success
+            ? m.Groups["apps"].Value.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToList() : new List<string>();
 
         var onStart    = new List<Step>();
         var onStop     = new List<Step>();
@@ -114,7 +82,7 @@ public sealed class WorkflowReader
             current.Add(ReadOne(lines, ref i));
         }
 
-        return new Workflow { Name = name, Modules = modules, Aliases = aliases, OnStart = onStart, OnStop = onStop, OnDegraded = onDegraded };
+        return new Workflow { Name = name, Modules = modules, Applications = applications, OnStart = onStart, OnStop = onStop, OnDegraded = onDegraded };
     }
 
     // READS ONE STEP, AND WHERE IT IS A BLOCK, WHAT IS INSIDE IT. A block owns
@@ -269,45 +237,17 @@ public sealed class WorkflowReader
             //     stream Motion (CAV-SPD-V2.0) from device "Vehicle"
             case "stream":
             {
-                var streamTo = TakeModule("to", ref rest);        // '... to ASM': the Module the Port is of
                 var d = StreamDeviceLine.Match(rest.Trim());
                 if (d.Success)
-                    return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, d.Groups["datum"].Value).Port, Module = streamTo,
+                    return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, d.Groups["datum"].Value).Port,
                                       Text = d.Groups["device"].Value, FromDevice = true, Line = n };
                 var m = StreamLine.Match(rest.Trim());
                 if (!m.Success)
                     throw new WorkflowSyntaxError(n, "'stream' expects '<label> (<DataType>[:<PortNumber>]) from record \"<name>\" [at x<rate>]' or '... from device \"<name>\"'.");
                 var rate = m.Groups["rate"].Success ? double.Parse(m.Groups["rate"].Value, CultureInfo.InvariantCulture) : 1;
                 if (rate <= 0) throw new WorkflowSyntaxError(n, "'stream' plays at a rate above 0.");
-                return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, m.Groups["datum"].Value).Port, Module = streamTo,
+                return new Step { Kind = StepKind.Stream, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
                                   Text = m.Groups["record"].Value, Rate = rate, Line = n };
-            }
-
-            // WHAT ONE MODULE'S PORT GIVES, TO ANOTHER MODULE'S PORT (a workflow over several Modules), for the life of the workflow: the datum of that Data Type and Port
-            // Number that Module A gives is written to Module B's Port of the same Data Type and Port Number, as it comes. The workflow is the glue; the Controller API is
-            // all the User Agent uses.
-            //
-            //     route Command (MMC-AJI-V2.5:1) from VCI to ASM
-            case "route":
-            {
-                var m = Regex.Match(rest.Trim(), @"^(?<datum>.+?\))\s+from\s+(?<a>[A-Za-z0-9][\w.\-]*)\s+to\s+(?<b>[A-Za-z0-9][\w.\-]*)$", RegexOptions.IgnoreCase);
-                if (!m.Success)
-                    throw new WorkflowSyntaxError(n, "'route' expects '<label> (<DataType>[:<PortNumber>]) from <Module> to <Module>'.");
-                return new Step { Kind = StepKind.Route, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
-                                  Module = ModuleNamed(n, m.Groups["a"].Value), ToModule = ModuleNamed(n, m.Groups["b"].Value), Line = n };
-            }
-
-            // A DATUM WRITTEN TO A MODULE'S PORT NOW, without asking anything back: for a Module that runs continuously, whose answers are delivered or routed.
-            //
-            //     send Listing (MMC-AJI-V2.5:1) = {...} to ASM
-            case "send":
-            {
-                var sendTo = TakeModule("to", ref rest);
-                var fd = StreamDeviceLine.Match(rest.Trim());
-                if (fd.Success)
-                    return new Step { Kind = StepKind.Send, Port = ReadDatum(n, fd.Groups["datum"].Value).Port, Module = sendTo, Text = fd.Groups["device"].Value, FromDevice = true, Line = n };
-                var sd = ReadDatum(n, rest);
-                return new Step { Kind = StepKind.Send, Port = sd.Port, Module = sendTo, Literal = sd.Literal, Line = n };
             }
 
             // WHAT A BOUNDARY PORT GIVES, TO A DEVICE (M3205 3.1.1, M3237 3.2), for the
@@ -319,9 +259,8 @@ public sealed class WorkflowReader
             {
                 var m = DeliverLine.Match(rest.Trim());
                 if (!m.Success)
-                    throw new WorkflowSyntaxError(n, "'deliver' expects '<label> (<DataType>[:<PortNumber>]) [from <Module>] to device \"<name>\"'.");
+                    throw new WorkflowSyntaxError(n, "'deliver' expects '<label> (<DataType>[:<PortNumber>]) to device \"<name>\"'.");
                 return new Step { Kind = StepKind.Deliver, Port = ReadDatum(n, m.Groups["datum"].Value).Port,
-                                  Module = m.Groups["mod"].Success ? ModuleNamed(n, m.Groups["mod"].Value) : null,
                                   Text = m.Groups["device"].Value, Line = n };
             }
 
@@ -411,27 +350,23 @@ public sealed class WorkflowReader
             //     offer Voice (OSD-BSO-V1.5:1) from device "VoiceIn"
             //
             // The device is the User Agent's own: the Controller is offered the datum at the Port named by Data Type and Port Number, and nothing else.
-            // With several Modules a trailing 'to <Module>' says which one is offered the datum; none named, the first.
             case "offer":
             {
-                var offerTo = TakeModule("to", ref rest);
                 var fd = StreamDeviceLine.Match(rest.Trim());
                 if (fd.Success)
                 {
                     var dd = ReadDatum(n, fd.Groups["datum"].Value);
-                    return new Step { Kind = StepKind.Take, Port = dd.Port, Module = offerTo, Text = fd.Groups["device"].Value, FromDevice = true, Line = n };
+                    return new Step { Kind = StepKind.Take, Port = dd.Port, Text = fd.Groups["device"].Value, FromDevice = true, Line = n };
                 }
                 var od = ReadDatum(n, rest);
-                return new Step { Kind = StepKind.Take, Port = od.Port, Module = offerTo, Literal = od.Literal, Line = n };
+                return new Step { Kind = StepKind.Take, Port = od.Port, Literal = od.Literal, Line = n };
             }
 
-            // With several Modules a trailing 'from <Module>' says which one is asked; none named, the first.
             case "askfor":
             {
-                var askFrom = TakeModule("from", ref rest);
                 var wanted = SplitData(rest).Select(d => ReadDatum(n, d).Port).ToList();
                 if (wanted.Count == 0) throw new WorkflowSyntaxError(n, "'ask' names no datum.");
-                return new Step { Kind = StepKind.Give, Ports = wanted, Module = askFrom, Line = n };
+                return new Step { Kind = StepKind.Give, Ports = wanted, Line = n };
             }
 
             default:
@@ -443,11 +378,10 @@ public sealed class WorkflowReader
         switch (verb)
         {
             // start, stop, pause, resume take no argument: one Controller, one Module.
-            // With several Modules, 'ask Controller to start VCI' names the one; with none named it is the first.
-            case "start":  return new Step { Kind = StepKind.StartModule,  Module = rest.Length > 0 ? ModuleNamed(n, rest) : null, Line = n };
-            case "stop":   return new Step { Kind = StepKind.StopModule,   Module = rest.Length > 0 ? ModuleNamed(n, rest) : null, Line = n };
-            case "pause":  return new Step { Kind = StepKind.PauseModule,  Module = rest.Length > 0 ? ModuleNamed(n, rest) : null, Line = n };
-            case "resume": return new Step { Kind = StepKind.ResumeModule, Module = rest.Length > 0 ? ModuleNamed(n, rest) : null, Line = n };
+            case "start":  return new Step { Kind = StepKind.StartModule,  Line = n };
+            case "stop":   return new Step { Kind = StepKind.StopModule,   Line = n };
+            case "pause":  return new Step { Kind = StepKind.PauseModule,  Line = n };
+            case "resume": return new Step { Kind = StepKind.ResumeModule, Line = n };
 
             // OFFER AND ASK. The User Agent offers the Controller data identified
             // by Data Type and Port Number, and asks for data identified the same
@@ -481,7 +415,7 @@ public sealed class WorkflowReader
         @"^(?<datum>.+?\))\s+from\s+device\s+""(?<device>[^""]+)""$", RegexOptions.IgnoreCase);
 
     private static readonly Regex DeliverLine = new(
-        @"^(?<datum>.+?\))(\s+from\s+(?<mod>[A-Za-z0-9][\w.\-]*))?\s+to\s+device\s+""(?<device>[^""]+)""$", RegexOptions.IgnoreCase);
+        @"^(?<datum>.+?\))\s+to\s+device\s+""(?<device>[^""]+)""$", RegexOptions.IgnoreCase);
 
     private static readonly Regex StreamLine = new(
         @"^(?<datum>.+?\))\s+from\s+record\s+""(?<record>[^""]+)""(\s+at\s+x(?<rate>[0-9]+(\.[0-9]+)?))?$",
@@ -594,7 +528,7 @@ public sealed class WorkflowReader
     {
         "workflow ", "on Start:", "on Stop:", "on Degraded:", "ask ", "acquire ", "type ", "prompt ",
         "display ", "present ", "wait ", "set ", "loop ", "branch ", "await ", "end", "say ", "offer ", "ask ", "run ", "run ",
-        "stream ", "deliver ", "route ", "send "
+        "stream ", "deliver "
     };
 
     // A brace stands on its own: it closes a block and is not a continuation

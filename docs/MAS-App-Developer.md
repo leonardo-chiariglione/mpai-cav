@@ -100,34 +100,34 @@ on Stop:
 | `present`, `display`, `prompt`, `wait`, `end`, `run L` | Render; show text; show a message; pause; leave the loop; run the App a datum names. |
 | `on Stop:` | Runs when the App ends, even after the Stop button. |
 
-### A workflow over several Modules (additive, 2026/10/26)
+### A Module that drives an application (additive, 2026/10/26)
 
-The header may name several Modules, each with a short name by which the steps that are for it say so; a step that names none is for the first Module, so every workflow
-over one Module reads and runs as before.
+The Voice Command Interface drives the application: what the person says becomes a command for it, and its answer is said back. The Module the workflow is over is the driving
+Module; the application it drives is named in the header, and the Controller connects them by Data Type and Port Number. The driving Module is the authority, as the Avatar
+Videoconference Server is for the parties of a meeting: the application does what the person, through it, tells it to do.
 
 ```
-workflow ASM-VCI over VCI=1MMC-VCI-V2.5-I01, ASM=1CAE-ASM-V1.0-I01
+workflow ASM-VCI over 1MMC-VCI-V2.5-I01 application 1CAE-ASM-V1.0-I01
 
 on Start:
-    ask Controller to start VCI
-    ask Controller to start ASM
-    stream  Voice (OSD-BSO-V1.5) from device "Voice" to VCI
-    route   Command  (MMC-AJI-V2.5:1) from VCI to ASM
-    route   Response (MMC-AJI-V2.5:1) from ASM to VCI
-    deliver ReplyText (OSD-BTO-V1.5:2) from VCI to device "Reply"
-    send    Listing (MMC-AJI-V2.5:1) = {"Instance": {...}} to ASM
+    ask Controller to start
+    stream  Voice (OSD-BSO-V1.5:1) from device "Voice"
+    stream  Sound (OSD-AUO-V1.5:1) from device "SoundIn"
+    deliver ReplyText (OSD-BTO-V1.5:2) to device "ReplyText"
+    deliver Scene (OSD-ASD-V1.5) to device "Scene"
 ```
 
-| Step | Meaning |
-|---|---|
-| `ask Controller to start M` / `stop M` / `pause M` / `resume M` | The Module named; none named, the first. |
-| `offer L (T[:n]) ... to M`, `ask L (T[:n]), ... from M` | The Module the datum is given to, or asked of. |
-| `stream L (T[:n]) from device "D" to M`, `deliver L (T[:n]) from M to device "D"` | The Module whose Port is bound to the device. |
-| `route L (T[:n]) from A to B` | For the life of the workflow, what Module A's Port gives is written to Module B's Port of the same Data Type and Port Number. The workflow is the glue; the User Agent uses only the Controller API. |
-| `send L (T[:n]) = literal to M` (or `from device "D" to M`) | The datum is written to the Port now and nothing is asked back: for a Module that runs continuously. |
-| `= {...}` for `MMC-AJI-V2.5` | A literal for an Application JSON Instance, on one line; `Header` and `AJIID` are made if left out, `{id}` is a fresh identifier and `{now}` the time in seconds, at each run of the step. |
-
-An `acquire` with a Qualifier takes `{Label}` of what was obtained earlier into it, as the words of `prompt` do. A name that is not a Module of the workflow is refused when the workflow is read.
+- `application <Module>[, <Module>...]` after `over <Module>`: `ask Controller to start` starts the application with the Module and connects them; `ask Controller to stop` stops both.
+  A workflow without the clause is as it was.
+- The steps are the driving Module's, and name no Module. A Port of a Data Type and Port Number that the driving Module has not is the application's: `OSD-AUO-V1.5:1` (a sound
+  the person loads) and `OSD-ASD-V1.5` (the scene as edited) are Audio Scene Management's.
+- The Controller carries what the driving Module gives at its Application JSON Instance output (`MMC-AJI-V2.5`) to the application's Application JSON Instance input, and what the
+  application gives at its output (`MMC-AJI-V2.5:1`) to the driving Module's Application Response input (`MMC-AJI-V2.5:1`). The application takes commands from that Module and
+  from no other: any other write at its Application JSON Instance Port, or read there, is refused (NOT_AUTHORISED).
+- The Controller API gains one request, `ConnectApplication(driving, application)`; the interpreter makes it when the workflow starts. Over MPAI-MAS it is not offered (it fails).
+- The state of the application: where the setting `RefreshState` of the JSON Interface is true, it asks the application what it holds (the guide's `StateRequests`) before it works
+  out a request, and again after each response it tells; what the application answers to those questions is the state and is not told.
+- An `acquire` with a Qualifier takes `{Label}` of what was obtained earlier into it, as the words of `prompt` do.
 
 **Memory.** EDP keeps no memory of its own: each turn asks for `Memory
 (MMC-SUM-V2.5)` and offers it back with the next. A new run starts with none.

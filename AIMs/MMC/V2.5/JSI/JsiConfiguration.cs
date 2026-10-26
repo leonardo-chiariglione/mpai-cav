@@ -13,12 +13,12 @@ public delegate Task<string> StructuredModel(string system, IEnumerable<(string 
 public sealed record JsiConfiguration(
     string CommandSchemaUri, string? CommandSchemaFile,
     string ResponseSchemaUri, string? ResponseSchemaFile,
-    string? GuideFile, string? SchemasRoot = null)
+    string? GuideFile, string? SchemasRoot = null, bool RefreshesState = false)
 {
     // The settings of an AIM that the Controller gave it: the file of each Setting. The addresses come from the Metadata.
     public static JsiConfiguration From(IReadOnlyDictionary<string, string> settings, string commandSchemaUri, string responseSchemaUri)
     {
         string? Get(string key) => settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;
-        return new JsiConfiguration(commandSchemaUri, Get("CommandSchema"), responseSchemaUri, Get("ResponseSchema"), Get("ApplicationGuide"), Get("SchemasRoot"));
+        return new JsiConfiguration(commandSchemaUri, Get("CommandSchema"), responseSchemaUri, Get("ResponseSchema"), Get("ApplicationGuide"), Get("SchemasRoot"), string.Equals(Get("RefreshState"), "true", StringComparison.OrdinalIgnoreCase));
     }
 }

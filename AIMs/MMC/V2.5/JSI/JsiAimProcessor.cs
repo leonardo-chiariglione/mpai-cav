@@ -45,6 +45,16 @@ public sealed class JsiAimProcessor : IAimProcessor
     private readonly SemaphoreSlim _one = new(1, 1);
 
     private ApplicationState _state = new();
+
+    // THE STATE KEPT FRESH (an application is connected: the setting RefreshState): the commands the guide gives for asking the application what it holds (StateRequests) are sent
+    // one after another - each when the answer to the one before has come - at the first request, and again after every response the person is told; a request that comes
+    // while the state is not fresh is held until it is, so that it is worked out from the scene as it is. What the application answers to them is the state; it is not told.
+    private readonly HashSet<string> _stateAsked = new(StringComparer.Ordinal);
+    private bool _stale = true;
+    private int _chain = -1;                 // the state request asked now, or -1 when none is
+    private DateTime _askedAt;
+    private string? _held;                   // the request kept until the state is fresh
+    private bool Refreshing => _configuration.RefreshesState && HasApplication && _guide!.StateRequests.Count > 0;
     private readonly List<(string Id, string Request)> _sent = [];
     private readonly Dictionary<string, string> _requestOf = new(StringComparer.Ordinal);
 
@@ -95,12 +105,47 @@ public sealed class JsiAimProcessor : IAimProcessor
                 {
                     // Only a listing is a state: another response given as the context is ignored, and the state kept is not wiped.
                     var instance = (JsonNode.Parse(context) as JsonObject)?["Instance"];
-                    if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide);
+                    if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
                 }
                 catch (JsonException) { }
 
-            // 2. A response of the application, told as facts.
-            if (Input(message, _responseIn) is { } response && Respond(response) is { } told) facts.Add(told);
+            // 2. A response of the application, told as facts - or, if it answers a question about the state, taken as the state.
+            var asked = false;
+            if (Input(message, _responseIn) is { } response)
+            {
+                var told = Respond(response, out var outcome);
+                if (told is not null) facts.Add(told);
+                if (Refreshing)
+                {
+                    if (outcome == ResponseKind.Told)
+                    {
+                        _stale = true;
+                        if (_chain < 0) { command = StateRequest(_chain = 0); asked = command is not null; if (!asked) _chain = -1; }
+                    }
+                    else if (outcome == ResponseKind.State && _chain >= 0)
+                    {
+                        if (++_chain < _guide!.StateRequests.Count) { command = StateRequest(_chain); asked = command is not null; }
+                        if (!asked)
+                        {
+                            _chain = -1; _stale = false;
+                            if (_held is { } held)
+                            {
+                                _held = null;
+                                try
+                                {
+                                    var (aji, said) = await Understand(held).ConfigureAwait(false);
+                                    command = aji;
+                                    if (said is not null) facts.Add(said);
+                                }
+                                catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException)
+                                {
+                                    return Message.Error(message.MessageId, InstanceId, $"The language model could not be reached (is Ollama running?): {e.Message}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // 3. A request, to become a command.
             if (Input(message, _requestIn) is { } request)
@@ -110,16 +155,27 @@ public sealed class JsiAimProcessor : IAimProcessor
                 catch (JsonException) { return Message.Error(message.MessageId, InstanceId, "the request is not a Text Object"); }
                 if (!string.IsNullOrWhiteSpace(text))
                 {
-                    try
+                    if (Refreshing && (_stale || _chain >= 0))
                     {
-                        var (aji, said) = await Understand(text.Trim()).ConfigureAwait(false);
-                        command = aji;
-                        if (said is not null) facts.Add(said);
+                        // The state is not fresh: the request waits for it, and the chain of questions starts (or starts again, if the application has not answered in time).
+                        _held = text.Trim();
+                        if (!asked && (_chain < 0 || DateTime.UtcNow - _askedAt > TimeSpan.FromSeconds(10)))
+                        {
+                            command = StateRequest(_chain = 0);
+                            if (command is null) { _chain = -1; _stale = false; _held = null; }
+                        }
                     }
-                    catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException)
-                    {
-                        return Message.Error(message.MessageId, InstanceId, $"The language model could not be reached (is Ollama running?): {e.Message}");
-                    }
+                    else
+                        try
+                        {
+                            var (aji, said) = await Understand(text.Trim()).ConfigureAwait(false);
+                            command = aji;
+                            if (said is not null) facts.Add(said);
+                        }
+                        catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException)
+                        {
+                            return Message.Error(message.MessageId, InstanceId, $"The language model could not be reached (is Ollama running?): {e.Message}");
+                        }
                 }
             }
 
@@ -133,6 +189,27 @@ public sealed class JsiAimProcessor : IAimProcessor
 
     private static string? Input(Message message, string port) =>
         port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
+
+    private enum ResponseKind { Told, State, Foreign }
+
+    // The question about the state that the guide gives at that place, as a command of the application (an Application JSON Instance), completed and checked as any command is;
+    // it is not remembered as one of the person's.
+    private JsonObject? StateRequest(int index)
+    {
+        _askedAt = DateTime.UtcNow;
+        if (_guide is null || _commandCheck is null || _library is null || index >= _guide.StateRequests.Count) return null;
+        var view = new ModelView(_library, _guide, _state.NameSets);
+        if (view.Build(_commandCheck.Uri) is null) return null;
+        var completed = view.Complete(_guide.StateRequests[index].DeepClone());
+        if (_commandCheck.Violations(completed.ToJsonString()) is not { Count: 0 }) return null;
+        var aji = new JsonObject
+        {
+            ["Header"] = AjiHeader, ["AJIID"] = Guid.NewGuid().ToString(),
+            ["ApplicationSchemaURI"] = _configuration.CommandSchemaUri, ["Instance"] = completed
+        };
+        _stateAsked.Add((string)aji["AJIID"]!);
+        return aji;
+    }
 
     // ---- a request ----------------------------------------------------------------------------------------------------------------------
 
@@ -159,6 +236,22 @@ public sealed class JsiAimProcessor : IAimProcessor
         var view = new ModelView(_library, guide.ForRequest(text, _state.NameSets), _state.NameSets);
         if (view.Build(_commandCheck.Uri) is null)
             return (null, "No command was sent: the schema of the commands of the application cannot be read.");
+
+        // A request that is always the same command is that command, whatever the model would make of it.
+        if (guide.ShortcutFor(text) is { } shortcut)
+        {
+            var completed = view.Complete(shortcut.DeepClone());
+            if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
+            {
+                var aji = new JsonObject
+                {
+                    ["Header"] = AjiHeader, ["AJIID"] = Guid.NewGuid().ToString(),
+                    ["ApplicationSchemaURI"] = _configuration.CommandSchemaUri, ["Instance"] = completed
+                };
+                Remember(aji, completed, text, guide);
+                return (aji, null);
+            }
+        }
 
         var system = SystemText(guide, view);
         var turns = new List<(string Role, string Content)>(ExampleTurns(guide)) { ("user", RequestText(guide, text)) };
@@ -328,14 +421,21 @@ public sealed class JsiAimProcessor : IAimProcessor
 
     // ---- a response ---------------------------------------------------------------------------------------------------------------------
 
-    // The facts a response tells; none for a listing that answers a command this interface did not send - the application's user agent asked for it - which is the state.
-    private string? Respond(string json)
+    // The facts a response tells; none for the answer to a command this interface did not send - the application's user agent asked for it - and, if it lists, it is the state.
+    private string? Respond(string json, out ResponseKind outcome)
     {
+        outcome = ResponseKind.Told;
         JsonObject? aji;
         try { aji = JsonNode.Parse(json) as JsonObject; }
         catch (JsonException) { aji = null; }
         if (aji?["Instance"] is not JsonObject instance)
             return "The application sent a response that this interface cannot read.";
+        if ((string?)aji["InReplyTo"] is { } stateOf && _stateAsked.Remove(stateOf))
+        {
+            outcome = ResponseKind.State;
+            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            return null;
+        }
         if (_guide is null) return "The application sent a response, but this interface has no guide to tell it.";
 
         var uri = (string?)aji["ApplicationSchemaURI"];
@@ -345,9 +445,11 @@ public sealed class JsiAimProcessor : IAimProcessor
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
         var replyTo = (string?)aji["InReplyTo"];
-        if (replyTo is not null && !_requestOf.ContainsKey(replyTo) && !_sent.Any(s => s.Id == replyTo) && ApplicationState.IsListing(instance, _guide))
+        // An answer to a command that this interface did not send was asked for by the application's user agent: it is not for the person. A listing in it is the state.
+        if (replyTo is not null && !_requestOf.ContainsKey(replyTo) && !_sent.Any(s => s.Id == replyTo))
         {
-            _state = ApplicationState.Read(instance, _guide);
+            outcome = ResponseKind.Foreign;
+            if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
             return null;
         }
         string? asked = replyTo is not null && _requestOf.TryGetValue(replyTo, out var r) ? r : null;

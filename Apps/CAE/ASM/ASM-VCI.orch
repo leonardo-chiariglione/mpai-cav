@@ -1,0 +1,58 @@
+# =============================================================================
+#  ASM-VCI.orch - Audio Scene Management by voice
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller. The Module the workflow is over is the Voice Command Interface (MMC-VCI-V2.5):
+#  it is in the driving seat - what the person says becomes a command for an application, and the
+#  answer of the application is said back. The application it drives, Audio Scene Management
+#  (CAE-ASM-V1.0), is named in the header: the Controller starts it with the Module and connects it
+#  by Data Type and Port Number -
+#
+#      VCI Application Command (MMC-AJI-V2.5)    -> ASM User AJI Input  (MMC-AJI-V2.5:1)
+#      ASM User AJI Output     (MMC-AJI-V2.5:1)  -> VCI Application Response (MMC-AJI-V2.5:1)
+#
+#  The User Agent has no part in that: it binds devices to the Ports it is concerned with, each by
+#  Data Type and Port Number, and the Controller decides which Module a Port is of. The Ports the
+#  Module has not are the application's.
+#
+#    what the person gives -
+#      OSD-BSO-V1.5:1  what the person says (or types, spoken by the machine's voice)    to VCI
+#      OSD-AUO-V1.5:1  a sound the person loads from a file, under the name they give it  to ASM
+#
+#    what the person is given -
+#      OSD-BTO-V1.5:1  the words heard;  OSD-BTO-V1.5:2 and OSD-BSO-V1.5:1  the reply, in text and in speech   from VCI
+#      OSD-ASD-V1.5    the audio scene as edited                                                               from ASM
+# =============================================================================
+
+workflow ASM-VCI over 1MMC-VCI-V2.5-I01 application 1CAE-ASM-V1.0-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  Voice          (OSD-BSO-V1.5:1)  from device "Voice"
+    stream  Sound          (OSD-AUO-V1.5:1)  from device "SoundIn"
+
+    deliver Heard          (OSD-BTO-V1.5:1)  to device "Heard"
+    deliver ReplyText      (OSD-BTO-V1.5:2)  to device "ReplyText"
+    deliver ReplySpeech    (OSD-BSO-V1.5:1)  to device "ReplySpeech"
+
+    deliver Scene          (OSD-ASD-V1.5)    to device "Scene"
+    deliver ObjectOut      (OSD-AUO-V1.5)    to device "Unused"
+    deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "Unused"
+    deliver SceneReport    (CAE-UCM-V1.0:2)  to device "Unused"
+    deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "Unused"
+    deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "Unused"
+    deliver MultimodalOut  (OSD-MSD-V1.5)    to device "Unused"
+    deliver SpeechReport   (CAE-UCM-V1.0:3)  to device "Unused"
+    deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "Unused"
+    deliver MultimodalRep  (CAE-UCM-V1.0:5)  to device "Unused"
+
+    prompt "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+
+    ask Controller to stop

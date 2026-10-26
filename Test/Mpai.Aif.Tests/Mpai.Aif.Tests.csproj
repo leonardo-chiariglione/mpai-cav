@@ -66,6 +66,7 @@
     <ProjectReference Include="..\..\Apps\CAE\EAE\App\EaeApp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\EAE\Mpai.Cae.Usc.Eae.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Provider\Mpai.Cae.Usc.csproj" />
+    <ProjectReference Include="..\..\Apps\CAE\ASM\Voice\AsmVoice.csproj" />
   </ItemGroup>
 
   <ItemGroup>

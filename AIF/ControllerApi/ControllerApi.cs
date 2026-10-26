@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using AIF.Controller;
@@ -191,8 +192,85 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         catch (InvalidOperationException) { return AifError.NotTrusted; }         // NOT_TRUSTED, or NOT_LICENSED
         return AifError.OK;
     }
+    // THE APPLICATION A MODULE DRIVES (additive; the Voice Command Interface drives the application, and the Controller connects them by Data Type and Port Number).
+    // The driving Module's Application JSON Instance output is carried to the application's input of that Data Type, and the application's output to the driving Module's
+    // input of that Data Type and Port Number 1 (the Application Response); the Application Context (Port Number 2) is the driving Module's own business. A Port the driving
+    // Module does not have and the application has is the application's: a datum written to it, or read from it, by its Data Type and Port Number goes to the application.
+    private const string Aji = "MMC-AJI-V2.5";
+    private readonly Dictionary<string, List<string>> _applications = new();
+    private readonly Dictionary<string, List<CancellationTokenSource>> _pumps = new();
+
+    public AifError ConnectApplication(string drivingModule, string applicationModule)
+    {
+        var stop = new CancellationTokenSource();
+        lock (_tables)
+        {
+            if (!_running.ContainsKey(drivingModule) || !_running.ContainsKey(applicationModule)) return AifError.NotStarted;
+            if (!_applications.TryGetValue(drivingModule, out var list)) _applications[drivingModule] = list = new List<string>();
+            if (!list.Contains(applicationModule)) list.Add(applicationModule);
+            foreach (var m in new[] { drivingModule, applicationModule })
+            {
+                if (!_pumps.TryGetValue(m, out var pumps)) _pumps[m] = pumps = new List<CancellationTokenSource>();
+                pumps.Add(stop);
+            }
+        }
+        _ = Task.Run(() => Carry(drivingModule, applicationModule, stop.Token));
+        _ = Task.Run(() => Carry(applicationModule, drivingModule, stop.Token));
+        return AifError.OK;
+    }
+
+    // THE APPLICATION TAKES ITS COMMANDS FROM THE MODULE THAT DRIVES IT, AND FROM NO OTHER (the driving Module is the authority; the connection is the authorisation): its
+    // Application JSON Instance Ports are the Controller's to carry between, and a write or a read there by any other caller is refused.
+    [ThreadStatic] private static bool _carrying;
+
+    private bool IsApplicationAji(string moduleName, string dataType)
+    {
+        if (_carrying || dataType != Aji) return false;
+        lock (_tables) return _applications.Values.Any(list => list.Contains(moduleName));
+    }
+
+    private void Carry(string from, string to, CancellationToken stop)
+    {
+        _carrying = true;
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                var read = OutputRead(from, Aji, 1, 200);
+                if (read.Error == AifError.NotStarted) return;
+                if (read.Error == AifError.OK && read.Json is not null) InputWrite(to, Aji, 1, read.Json, -1);
+            }
+            catch (Exception) when (stop.IsCancellationRequested) { return; }
+            catch (Exception) { Thread.Sleep(100); }
+        }
+    }
+
+    // The Module that has the Port: the one named, else an application connected to it that has it.
+    private string Through(string moduleName, string direction, string dataType, int portNumber)
+    {
+        lock (_tables)
+        {
+            if (!_applications.TryGetValue(moduleName, out var applications)) return moduleName;
+            if (_running.TryGetValue(moduleName, out var own) && PortOf(own, direction, dataType, portNumber) is not null) return moduleName;
+            foreach (var application in applications)
+                if (_running.TryGetValue(application, out var a) && PortOf(a, direction, dataType, portNumber) is not null) return application;
+        }
+        return moduleName;
+    }
+
+    private void Disconnect(string moduleName)
+    {
+        lock (_tables)
+        {
+            if (_pumps.Remove(moduleName, out var pumps)) foreach (var p in pumps) p.Cancel();
+            _applications.Remove(moduleName);
+            foreach (var list in _applications.Values) list.Remove(moduleName);
+        }
+    }
+
     public void StopFlow(string moduleName)
     {
+        Disconnect(moduleName);
         List<AIF.Channels.ExternalHub>? hubs;
         lock (_tables)
         {
@@ -258,6 +336,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // (Phase 4) may have to.
     public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
+        moduleName = Through(moduleName, "Input", dataType, portNumber);
+        if (IsApplicationAji(moduleName, dataType)) return AifError.NotAuthorised;
         Started? continuous = null;
         lock (_tables)
         {
@@ -287,6 +367,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // continues, and a later read returns its result.
     public Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
     {
+        moduleName = Through(moduleName, "Output", dataType, portNumber);
+        if (IsApplicationAji(moduleName, dataType)) return new Read(AifError.NotAuthorised, null);
         Task<Result>? run;
         int? continuous = null;
         lock (_tables)
@@ -604,6 +686,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             _external.Clear();
         }
         foreach (var hub in hubs) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        foreach (var name in _pumps.Keys.ToList()) Disconnect(name);
         (_provider as IDisposable)?.Dispose();
     }
 }

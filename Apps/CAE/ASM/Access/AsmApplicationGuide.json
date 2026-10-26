@@ -80,6 +80,7 @@
     ],
     "Members": "Members",
     "MemberName": "ObjectID",
+    "MemberNames": "MemberObjectIDs",
     "Describe": [
       {
         "Label": "position",
@@ -702,6 +703,62 @@
         "degrees"
       ],
       "Text": "a turn changes gamma only; the position stays as it is."
+    }
+  ],
+  "StateRequests": [
+    {
+      "UserCommandRQ": {
+        "ListedObjects": {
+          "Kind": "All"
+        }
+      }
+    },
+    {
+      "UserCommandRQ": {
+        "ListedObjects": {
+          "Kind": "Audio Scene",
+          "ObjectID": "stage"
+        }
+      }
+    }
+  ],
+  "Shortcuts": [
+    {
+      "Phrases": [
+        "what is in the scene",
+        "what's in the scene",
+        "what is in the room",
+        "list the scene",
+        "list the objects",
+        "which objects",
+        "what objects",
+        "show me the scene",
+        "what is playing"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Audio Scene",
+            "ObjectID": "stage"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "what sounds",
+        "which sounds",
+        "what do i have",
+        "list the sounds",
+        "what have i loaded"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "All"
+          }
+        }
+      }
     }
   ],
   "Refusals": [

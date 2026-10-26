@@ -27,8 +27,8 @@ internal static class JsiRig
 
     public static JsiConfiguration Configuration() => new(UserCommandUri, UserCommandFile, UserCommandUri, UserCommandFile, GuideFile, Repository.Schemas);
 
-    public static JsiAimProcessor Processor(StructuredModel? model, string aim = Jsi) =>
-        new(aim, Ports(aim), aim == Jsi ? Configuration() : new JsiConfiguration("", null, "", null, null), model);
+    public static JsiAimProcessor Processor(StructuredModel? model, string aim = Jsi, bool refreshesState = false) =>
+        new(aim, Ports(aim), aim == Jsi ? Configuration() with { RefreshesState = refreshesState } : new JsiConfiguration("", null, "", null, null), model);
 
     public static JsonNode Scene() => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "Test", "AsmVoice", "cases.json")))!["scene"]!;
 

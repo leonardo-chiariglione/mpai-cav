@@ -50,8 +50,6 @@ public enum StepKind
     Stream,           // stream L (T:n) from record "R" [at x2] - a record played to a boundary Port
                       //   or from device "D" - what a device produces, to a boundary Port
     Deliver,          // deliver L (T:n) to device "D" - what a boundary Port gives, to a device
-    Route,            // route L (T:n) from A to B - what Module A's Port gives, to Module B's Port of the same Data Type and Port Number, for the life of the workflow (several Modules)
-    Send,             // send L (T:n) = "literal" | from device "D" to M - a datum written to Module M's Port now (a Module that runs continuously), nothing asked back
     Loop,             // loop until Stop:
     Branch            // branch on V { ... } else { ... }
 }
@@ -59,8 +57,7 @@ public enum StepKind
 public sealed class Step
 {
     public required StepKind Kind { get; init; }
-    public string?  Module        { get; init; }   // which Module the request names (none: the first). Route: the Module that gives
-    public string?  ToModule      { get; init; }   // Route: the Module that is given
+    public string?  Module        { get; init; }   // which Module the request names
     public PortRef? Port          { get; init; }   // Take, Acquire, Type
     public string?  Literal       { get; init; }   // Take: an inline value, if given
     public IReadOnlyList<PortRef> Ports  { get; init; } = Array.Empty<PortRef>();  // Give
@@ -109,9 +106,9 @@ public sealed class Workflow
 {
     public required string Name { get; init; }
     public IReadOnlyList<string> Modules    { get; init; } = Array.Empty<string>();
-    // A workflow over several Modules may give each a short name in its header ('over VCI=1MMC-VCI-V2.5-I01, ASM=1CAE-ASM-V1.0-I01'): the name by which its steps
-    // say which Module they are for. Short name -> the Module's name.
-    public IReadOnlyDictionary<string, string> Aliases { get; init; } = new Dictionary<string, string>();
+    // THE APPLICATION MODULES the (driving) Module is connected to (header clause 'application <Module>[, <Module>...]'): the Voice Command Interface drives the application; the
+    // Controller connects them by Data Type and Port Number. The steps of the workflow are the driving Module's; the Ports of the application are reached by their Data Types.
+    public IReadOnlyList<string> Applications { get; init; } = Array.Empty<string>();
     public IReadOnlyList<Step>   OnStart    { get; init; } = Array.Empty<Step>();
     public IReadOnlyList<Step>   OnStop     { get; init; } = Array.Empty<Step>();
     public IReadOnlyList<Step>   OnDegraded { get; init; } = Array.Empty<Step>();

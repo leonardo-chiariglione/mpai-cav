@@ -17,11 +17,13 @@ namespace Mpai.Mmc.Jsi;
 //   Generated        the properties that the AIM fills with a fresh identifier (the language model never writes an identifier).
 //   Fill             property name, or the path of a property, -> a template filled by the AIM (at a path, whatever the model says there); "{id}" is a fresh identifier and "{now}" the current time in seconds.
 //   Names            the paths whose value is the name of something the application has, with the set of names (Present or Stored) it is chosen from.
-//   Context          how the state of the application (an Application JSON Instance) is read: where its items are, their names, and what to say of each.
+//   Context          (Items, Name, Kind, SceneKinds, Members, MemberName, MemberNames, Describe, Words) how the state of the application (an Application JSON Instance) is read: where its items are, their names, and what to say of each.
 //   NeedsNumber      words that ask for a change by an amount the person did not give, and the question to ask when no number comes with them.
 //   Earlier          the property that identifies a command, so that the AIM can name earlier commands to the model (to revoke one).
 //   Descriptions     what a path of the schema means in this application: it replaces the description the schema gives, where the model is shown the shape of a command.
 //   Words, Skip      how a response is told: the wording of properties and values, and the properties left out.
+//   StateRequests    the commands that ask the application what it holds (sent in order, each when the answer to the one before has come, to keep the state fresh).
+//   Shortcuts        phrases that are always the same command, and that command: it is sent without the language model.
 //   Examples         requests and the commands (or the problem) they come to, in the shape the language model gives them.
 public sealed class ApplicationGuide
 {
@@ -94,9 +96,22 @@ public sealed class ApplicationGuide
         return result;
     }
 
+    // A REQUEST THAT IS ALWAYS THE SAME COMMAND ("what is in the scene" asks the application for a listing): the phrases and the command, which the AIM completes and checks as it
+    // does any other and sends without asking the language model.
+    public JsonObject? ShortcutFor(string request)
+    {
+        var lower = request.ToLowerInvariant().Replace("’", "'");
+        foreach (var shortcut in (Root["Shortcuts"] as JsonArray)?.OfType<JsonObject>() ?? [])
+            if (shortcut["Command"] is JsonObject command && Texts(shortcut, "Phrases").Any(p => lower.Contains(p.ToLowerInvariant()))) return command;
+        return null;
+    }
+
     public IReadOnlyList<string> NeedsNumberPhrases => Texts(Root["NeedsNumber"] as JsonObject, "Phrases");
     public IReadOnlyList<string> NumberWords => Texts(Root["NeedsNumber"] as JsonObject, "NumberWords");
     public string NeedsNumberQuestion => (string?)(Root["NeedsNumber"] as JsonObject)?["Question"] ?? "By how much? Please give me the number.";
+
+    // The commands that ask the application what it holds, one after another (the state kept fresh where an application is connected). Each is the content of an Instance.
+    public IReadOnlyList<JsonObject> StateRequests => (Root["StateRequests"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
     public IReadOnlyList<JsonObject> Examples => (Root["Examples"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
