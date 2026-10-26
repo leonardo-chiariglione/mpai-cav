@@ -1,64 +1,51 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
-
-using AIF.Controller;   // AifError
-using AIF.Store;        // AmdStore (provider factory)
 
 using Mpai.Core;
-using Mpai.Core.OSD;
-using Mpai.PhysicalLayer;   // WebcamVisualAcquisition, VisualAcquisitionRequest
-using Mpai.UaKit;         // AvatarUaHost
+using Mpai.UaKit;         // AvatarUaHost, SpeechListener, TypedInput, StandardDevices
 using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
+using Mpai.Ua;            // WorkflowInterpreter, DeviceRegistry
+using Mpai.Wdl;           // WorkflowReader
 
 namespace AcrApp;
 
-// ACR User Agent - drives MMC-ACR-V2.5 through the type-addressed Controller API.
-// The UA does only real-world I/O (render avatar, capture camera+microphone,
-// TYPE the name) and orchestration; it identifies data ONLY by data type:
-//   Start -> type name -> "look at camera" -> supply OSD-BVO (face)
-//         -> flow suspends -> "speak a sentence" -> supply OSD-BSO (speech) +
-//            OSD-BTO #1 (confirmation) + OSD-BTO #2 (name)
-//         -> EFD/ESD write the enrolment to the shared gallery via the Controller
-//         -> read OSD-BSO (spoken confirmation) + PAF-FDO (avatar) -> Stop.
-// The name is TYPED (ASR is unreliable for bare names) and is the enrolment key.
+// ACR User Agent - Access Control Registration, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
+// Workflow Description of the App (Apps/MMC/ACR/MMC-ACR.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Controller that runs the Module in this process. The workflow starts the Module, takes the Avatar Model, has the avatar welcome the
+// person and ask for the name, the face and a spoken sentence (the words are the workflow's and the Module speaks them), and has the
+// avatar confirm the registration. This window supplies only the devices that serve the Data Types (the name box, the camera, the
+// microphone, the Avatar Model, the avatar) and Stop. Register runs the workflow once; the person may run it again.
 public partial class MainWindow : Window
 {
-    // THE SPEECH STEP RAN WHEN THE MODULE SUSPENDED for its speech input. No Module
-    // suspends (M3205 5.1), and none has since the executor stopped doing so, so
-    // the step does not run - as before this was written. The two-step flow is to
-    // be redone with its Module in the HCI phase of the CAV.
-    private const bool SpeechStepAfterSuspension = false;
-
-    private const string AcrModule = "1MMC-ACR-V2.5-I01";
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
-    private const string MachineName = "Thalia";  // the machine's ID: the Portable Avatar the Module gives is this machine's
-
-    // data types the UA speaks at the boundary
-    private const string BVO = "OSD-BVO-V1.5";   // visual object (face)
-    private const string BSO = "OSD-BSO-V1.5";   // speech object
-    private const string BTO = "OSD-BTO-V1.5";   // text object (Response #1, UserName #2)
-    private const string EPS = "MMC-EPS-V2.5";   // personal status
+    private const string BSO = "OSD-BSO-V1.5";
+    private const string BTO = "OSD-BTO-V1.5";
+    private const string BVO = "OSD-BVO-V1.5";
+    private const string B3O = "OSD-B3O-V1.5";
+    private const string PAV = "PAF-PAV-V1.6";
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private ControllerApi?     _north;
-    private AvatarUaHost? _avatar;
-    private TaskCompletionSource<string>? _typedName;
+    // The workflow of the App: the one source, read where the repository keeps it.
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "ACR", "MMC-ACR.orch");
 
-    private static void Diag(string s)
-    {
-        try { System.IO.File.AppendAllText(@"C:\Users\Leonardo\Downloads\acr-diag.log",
-              DateTime.Now.ToString("HH:mm:ss.fff") + "  " + s + System.Environment.NewLine); } catch { }
-    }
+    private ControllerApi?            _north;
+    private AvatarUaHost?             _avatar;
+    private SpeechListener?           _ears;
+    private readonly TypedInput       _typed;
+    private CancellationTokenSource?  _stopping;
+    private Task?                     _running;
+    private bool                      _closing;
 
     public MainWindow()
     {
         InitializeComponent();
+        _typed = new TypedInput(NameBox, ConfirmNameButton);
         Loaded += OnLoaded;
     }
 
@@ -69,193 +56,116 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-
-            await Task.Run(() =>
-                _north = new ControllerApi(AmdDir, SettingsPath, store => new AcrProvider(store)));
+            _ears = new SpeechListener(_avatar);
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new AcrProvider(store)));
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
 
             SetStatus("Ready. Press Register to begin.");
             InstructionText.Text = "Press Register to begin.";
             StartButton.IsEnabled = true;
         }
-        catch (Exception fatal)
-        {
-            Program.Record("startup", fatal);
-            SetStatus($"startup failed: {fatal.Message}");
-        }
+        catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
     {
         if (_north is null || _avatar is null) return;
         StartButton.IsEnabled = false;
-        try { await RunFlowAsync(); }
-        catch (Exception ex) { Program.Record("flow", ex); SetStatus("error: " + ex.Message); }
-        finally
-        {
-            InstructionText.Text = "Press Register to enrol another person.";
-            StartButton.IsEnabled = true;
-        }
-    }
-
-    private async Task RunFlowAsync()
-    {
-        var started = await Task.Run(() => _north!.StartFlow(AcrModule));
-        Diag("StartFlow " + AcrModule + " -> " + started);
-        if (started != AifError.OK) { SetStatus("could not start " + AcrModule); return; }
-
+        _stopping = new CancellationTokenSource();
+        StopButton.IsEnabled = true;
         try
         {
-            // 1) Name - typed (no ASR).
-            InstructionText.Text = "Please type your name.";
-            await RenderPromptAsync("Welcome to the CAV Access Control Registration Service. Please type your name.");
-            var userName = (await PromptTypedNameAsync()).Trim();
-            if (string.IsNullOrWhiteSpace(userName)) { SetStatus("no name given"); return; }
-            Diag("name='" + userName + "'");
-
-            // 2) Face - prompt, ~1s to turn, capture. Supply OSD-BVO + name (OSD-BTO #2); the Visual Object carries its time.
-            InstructionText.Text = "Look at the camera.";
-            var speakLook = RenderPromptAsync("Look at the camera.");
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var face = await CaptureFaceAsync();
-            await speakLook;
-
-            var faceIn = new List<ControllerApi.Datum>();
-            if (face is not null) faceIn.Add(new ControllerApi.Datum(BVO, MpaiJson.ToJson(face)));
-            faceIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
-            Diag("face bytes=" + (face?.Data?.Length ?? 0) + " supplying BVO+BTO#2(name)");
-            faceIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-            faceIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-            var r1 = await Task.Run(() => _north!.Advance(AcrModule, faceIn));
-            Diag("Advance(face) -> err=" + r1.Error);
-            if (!r1.Ok) { SetStatus("run error"); return; }
-
-            var result = r1;
-
-            // 3) Speech - on suspension, prompt, capture, and supply OSD-BSO (which carries its time)
-            //    + confirmation (OSD-BTO #1) + name (OSD-BTO #2).
-#pragma warning disable CS0162 // the step is kept, and does not run: see SpeechStepAfterSuspension
-            if (SpeechStepAfterSuspension)
+            var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
+            SetStatus("Running.");
+            var interpreter = new WorkflowInterpreter(_north.Async(), Devices(), SetStatus);
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            try { await _running; }
+            catch (OperationCanceledException) { }
+            if (!_closing) SetStatus(_stopping.IsCancellationRequested ? "Stopped." : "Done.");
+        }
+        catch (Exception ex) { Program.Record("workflow", ex); SetStatus("stopped: " + ex.Message); }
+        finally
+        {
+            StopButton.IsEnabled = false;
+            if (!_closing)
             {
-                InstructionText.Text = "Please speak a short sentence so I can learn your voice.";
-                await RenderPromptAsync("Please speak a short sentence so I can learn your voice.");
-                var speech = await CaptureSpeechAsync();
-
-                var thankYou = $"{userName}, thank you for joining the CAV Access Control Registration Service. You should speak your passphrase when you enter the service.";
-                var speechIn = new List<ControllerApi.Datum>();
-                if (speech is not null) speechIn.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(speech)));
-                speechIn.Add(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(thankYou))));
-                speechIn.Add(new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(userName))));
-                Diag("speech bytes=" + (speech?.Data?.Length ?? 0) + " supplying BSO+BTO#1(resp)+BTO#2(name)");
-                speechIn.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-                speechIn.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-                var r2 = await Task.Run(() => _north!.Advance(AcrModule, speechIn));
-                Diag("Advance(speech) -> err=" + r2.Error);
-                if (!r2.Ok) { SetStatus("resume error"); return; }
-                result = r2;
+                InstructionText.Text = "Press Register to enrol another person.";
+                StartButton.IsEnabled = true;
             }
-#pragma warning restore CS0162
-
-            // 4) EFD/ESD wrote the enrolment to Shared Storage via the Controller.
-            //    Present the spoken confirmation (read by type).
-            InstructionText.Text = "Registering...";
-            // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
-            var pavUtterance = AvatarUtterance.FromPortableAvatar(result.ByType("PAF-PAV-V1.6"));
-            byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
-            FaceDescriptorsObject? avatarFace = pavUtterance?.FaceDescriptors;
-
-            Diag("outputs: vocalWav=" + wav.Length + " avatarFdo=" + (avatarFace==null?"nil":"present"));
-            await _avatar!.PresentAsync(new AvatarUtterance(wav, avatarFace));
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.4));
-            Diag("gallery entry expected under subject:" + userName);
-            SetStatus($"registered: {userName}");
-        }
-        finally
-        {
-            await Task.Run(() => _north!.StopFlow(AcrModule));
         }
     }
 
-    private async Task<BasicVisualObject?> CaptureFaceAsync()
+    private void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var frame = await Task.Run(() =>
-                new WebcamVisualAcquisition().AcquireAsync(new VisualAcquisitionRequest { VisualObjectType = "Face" })
-                    .GetAwaiter().GetResult().Data);
-            return (frame is { Length: > 0 }) ? BasicVisualObject.FromFile("probe.jpg", frame, "Face") : null;
-        }
-        // A CAPTURE THAT FAILS SAYS SO. This returned null on any exception,
-        // so a camera in use, a driver fault and a rejected construction all looked
-        // alike: no face, no reason.
-        catch (Exception ex) { Diag("face capture failed: " + ex); Program.Record("face", ex); return null; }
+        StopButton.IsEnabled = false;
+        _avatar?.Silence();
+        _stopping?.Cancel();
     }
 
-    private async Task<BasicSpeechObject?> CaptureSpeechAsync()
+    // Closing ends the workflow first (its On Stop asks the Controller to stop the Module), then the window closes.
+    protected override async void OnClosing(CancelEventArgs e)
     {
-        try
-        {
-            // THE CAPTURE ALREADY RETURNS AN OBJECT, QUALIFIER AND ALL. Speech
-            // Object Acquisition determined the sampling frequency and the precision
-            // from the device and recorded them; taking .Data out and rebuilding from
-            // bytes threw that away and declared nothing in its place. The Data is raw
-            // PCM with no header, so the Qualifier was the only statement of what the
-            // bytes were - and every consumer downstream had to guess.
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            return (speech is not null && speech.Data.Length > 0) ? speech : null;
-        }
-        catch { return null; }
+        if (_closing || _running is null || _running.IsCompleted) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        _closing = true;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+        try { await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(10))); } catch { }
+        Close();
     }
 
-    // --- Typed-name box (Enter or Confirm) ---
-    private Task<string> PromptTypedNameAsync()
+    protected override void OnClosed(EventArgs e)
     {
-        _typedName = new TaskCompletionSource<string>();
-        Dispatcher.Invoke(() => { NamePanel.Visibility = Visibility.Visible; NameBox.Text = ""; NameBox.Focus(); });
-        return _typedName.Task;
+        try { _north?.Dispose(); } catch { }
+        base.OnClosed(e);
     }
-    private void CompleteTypedName()
-    {
-        var tcs = _typedName; _typedName = null;
-        if (tcs is null) return;
-        Dispatcher.Invoke(() => NamePanel.Visibility = Visibility.Collapsed);
-        tcs.TrySetResult(NameBox.Text ?? "");
-    }
-    private void ConfirmName_Click(object sender, RoutedEventArgs e) => CompleteTypedName();
-    private void NameBox_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Enter) { e.Handled = true; CompleteTypedName(); } }
-
-    // --- Guidance prompts, via a one-shot PAF-RSR run (serious) ---
-    private async Task RenderPromptAsync(string words)
-    {
-        if (_north is null) return;
-        var inputs = new List<ControllerApi.Datum>
-        {
-            // PAF-RSR declares TextObject TWICE: #1 feeds Text-To-Speech, #2 feeds
-            // Generative Face Description, which turns the words into visemes. Sending
-            // only #1 leaves the mouth with nothing to shape itself to.
-            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new ControllerApi.Datum(EPS, MpaiJson.ToJson(SeriousStatus()))
-        };
-        inputs.Add(new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"))); // the Avatar Model this client draws
-        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))); // the machine's ID
-        var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok) return;
-        // The Module gives a Portable Avatar: the speech, and the face and body that move with it.
-        var pavUtterance = AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6"));
-        byte[] wav = pavUtterance?.MachineSpeechWav ?? Array.Empty<byte>();
-        FaceDescriptorsObject? fdo = pavUtterance?.FaceDescriptors;
-        await _avatar!.PresentAsync(new AvatarUtterance(wav, fdo));
-        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3));
-    }
-
-    private static EntityPersonalStatus SeriousStatus() => new()
-    {
-        TextPersonalStatus = new TextPersonalStatus
-        {
-            TextEmotion        = Emotion.Of(FactorLabel.Of("CALMNESS", "serious", null, 0.7)),
-            TextSocialAttitude = SocialAttitude.Of(FactorLabel.Of("SOCIAL RANK", "serious", null, 0.7))
-        }
-    };
 
     private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
+
+    // ---- the devices of this User Agent ---------------------------------------------------------------------------
+    // What the avatar says is the workflow's (the Module speaks it); an acquiring device here only waits for the person after she has
+    // said what to do, so nothing is said twice.
+
+    private DeviceRegistry Devices()
+    {
+        var devices = new DeviceRegistry();
+        var stop = _stopping!.Token;
+
+        // THE AVATAR MODEL this window draws.
+        devices.RegisterAcquire(B3O, (_, _) => Task.FromResult<string?>(StandardDevices.AvatarModel()));
+
+        // THE NAME, TYPED (speech recognition is unreliable for bare names): the box opens, and Enter or Confirm gives it.
+        devices.RegisterAcquire(BTO, async (_, _, abandon) =>
+        {
+            await Dispatcher.InvokeAsync(() => NamePanel.Visibility = Visibility.Visible);
+            try { return await _typed.AskAsync(stop, abandon) is { } name ? MpaiJson.ToJson(BasicTextObject.FromText(name)) : null; }
+            finally { await Dispatcher.InvokeAsync(() => NamePanel.Visibility = Visibility.Collapsed); }
+        });
+
+        // THE FACE, from the camera.
+        devices.RegisterAcquire(BVO, async (_, _) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), stop);   // a moment to turn to the camera
+            return await StandardDevices.FaceAsync();
+        });
+
+        // THE SPEECH, from the microphone; it ends when the person stops speaking.
+        devices.RegisterAcquire(BSO, async (_, _, abandon) =>
+        {
+            var speech = await _ears!.ListenAsync(stop, abandon);
+            return speech is null ? null : MpaiJson.ToJson(speech);
+        });
+
+        // THE AVATAR: the machine's Portable Avatar, which says what the workflow gave the Module to say; the step ends when she has
+        // finished speaking.
+        devices.RegisterPresent("avatar", async data =>
+        {
+            if (!data.TryGetValue(PAV, out var pav)) return;
+            if (AvatarUtterance.TextOfPortableAvatar(pav) is { Length: > 0 } words) Dispatcher.Invoke(() => InstructionText.Text = words);
+            if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance) await StandardDevices.PresentAsync(_avatar!, utterance);
+            else SetStatus("the Portable Avatar carries no speech.");
+        });
+
+        return devices;
+    }
 }

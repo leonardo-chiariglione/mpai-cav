@@ -19,13 +19,14 @@
           <TextBlock DockPanel.Dock="Left" Text="Type your name:" Foreground="#EAF1FB"
                      FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
           <Button x:Name="ConfirmNameButton" DockPanel.Dock="Right" Content="Confirm" Width="100" Height="34"
-                  FontSize="14" Margin="10,0,0,0" Click="ConfirmName_Click"/>
-          <TextBox x:Name="NameBox" Height="34" FontSize="15" VerticalContentAlignment="Center"
-                   KeyDown="NameBox_KeyDown"/>
+                  FontSize="14" Margin="10,0,0,0"/>
+          <TextBox x:Name="NameBox" Height="34" FontSize="15" VerticalContentAlignment="Center"/>
         </DockPanel>
         <DockPanel>
           <Button x:Name="StartButton" DockPanel.Dock="Left" Content="Register" Width="120" Height="40"
                   FontSize="15" Margin="0,0,12,0" IsEnabled="False" Click="StartButton_Click"/>
+          <Button x:Name="StopButton" DockPanel.Dock="Left" Content="Stop" Width="80" Height="40"
+                  FontSize="15" Margin="0,0,12,0" IsEnabled="False" Click="StopButton_Click"/>
           <StackPanel>
             <TextBlock x:Name="StatusText" Foreground="#9FB0C6" FontSize="12"/>
           </StackPanel>
