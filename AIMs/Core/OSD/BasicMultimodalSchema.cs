@@ -15,7 +15,7 @@ using Mpai.Core;
 namespace Mpai.Core.OSD;
 
 // ---------------------------------------------------------------------------
-//  Basic Multimodal Scene Descriptors - OSD/V1.5/data/
+//  Basic Audio-Visual Scene Descriptors - OSD/V1.5/data/
 //  BasicMultimodalSceneDescriptors.json, header OSD-BMS-V1.5.
 //
 //  The multimodal (fused) Basic scene. A BMS is a COMPOSITION of an arbitrary

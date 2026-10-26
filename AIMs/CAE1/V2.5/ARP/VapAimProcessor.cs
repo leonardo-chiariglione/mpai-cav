@@ -15,7 +15,7 @@ namespace Mpai.Cae.Usc.Arp;
 //     identifier is the same irregularity, one that the two found is one, Source b - and gives the merged Irregularity File, and the Irregularity Images of all of them: the frame of
 //     the film at the irregularity (the time of the film is the time of the recording less the offset), a PNG. None where the film does not cover the irregularity.
 //   - It gives them again only if they are not what it gave last, which is what makes the loop with the Audio Analysis come to an end.
-// The film is the stand-in of BasicMultimodalObject: its frames as grayscale. The AIM runs whenever a Message arrives (continuous execution).
+// The film is the stand-in of AudioVisualObject: its frames as grayscale. The AIM runs whenever a Message arrives (continuous execution).
 public sealed class VapAimProcessor(string instanceId, string avKey, string audioIrregularityKey, string videoIrregularityKey, string imagesKey) : IAimProcessor
 {
     public string InstanceId { get; } = instanceId;
@@ -37,7 +37,7 @@ public sealed class VapAimProcessor(string instanceId, string avKey, string audi
         {
             if (Get(message, avKey) is string av)
             {
-                var (_, frames) = BasicMultimodalObject.Read(av);
+                var (_, frames) = AudioVisualObject.Read(av);
                 _video = frames ?? throw new FormatException("The Audio-Visual File has no video (no data item \"video-frames\").");
                 _film = VideoAnalysis.Detect(_video).Select(d => new Irregularity(Guid.NewGuid().ToString(), "v", d.Start, d.End)).ToList();
                 _imaged.Clear(); _lastSignature = "";

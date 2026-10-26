@@ -8,7 +8,7 @@ namespace Mpai.Aif.Tests;
 // THE AUDIO AND SPEECH SCENES OF CAE-ASM, IN C# AND IN THEIR SCHEMAS (the author,
 // 2026/10/02). The Acoustic Profile has an Object part and a Scene part; a Basic
 // Audio Scene is made of Basic Audio Objects, with a UserPoV, a member's UserPoV,
-// a Closed Space and the Scene's acoustics; a Basic Multimodal Scene (BMS) holds
+// a Closed Space and the Scene's acoustics; a Basic Audio-Visual Scene (BMS) holds
 // Basic Scenes only, of any medium, at least one (the author, 2026/10/02): a voice
 // over music is the Basic Audio Scene of the music and the Basic Speech Scene of
 // the voice; a Basic Object is not a member, nor is another BMS. A Basic Visual

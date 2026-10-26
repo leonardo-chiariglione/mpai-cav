@@ -44,7 +44,7 @@ internal static class Program
             if (o.One("--film-audio") is { } filmAudio)
             {
                 var frames = o.One("--film-frames") is { } folder ? Frames(folder, double.Parse(o.One("--fps") ?? "10", System.Globalization.CultureInfo.InvariantCulture)) : null;
-                ua.Send("FilmIn", BasicMultimodalObject.Make("film", Inputs.Speech16(filmAudio), frames));
+                ua.Send("FilmIn", AudioVisualObject.Make("film", Inputs.Speech16(filmAudio), frames));
             }
 
             // The Module settles as the analyses exchange their files: the Master is read until it has not changed for a while.
