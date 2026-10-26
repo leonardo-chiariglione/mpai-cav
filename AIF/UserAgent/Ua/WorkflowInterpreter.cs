@@ -323,21 +323,6 @@ public sealed class WorkflowInterpreter
             throw new InvalidOperationException($"the Controller would not start {module}: {err}.");
         running.Add(module);
         say($"[C] started {module}");
-
-        // THE APPLICATIONS THE MODULE DRIVES (header clause 'application'): started, and connected to it by the Controller, by Data Type and Port Number.
-        if (module == Module && current is { Applications.Count: > 0 })
-            foreach (var application in current.Applications)
-            {
-                err = await north.StartFlowAsync(application);
-                if (err != AifError.OK)
-                    throw new InvalidOperationException($"the Controller would not start {application}: {err}.");
-                running.Add(application);
-                say($"[C] started {application}");
-                err = await north.ConnectApplicationAsync(module, application);
-                if (err != AifError.OK)
-                    throw new InvalidOperationException($"the Controller would not connect {application} to {module}: {err}.");
-                say($"[C] connected {application} to {module}");
-            }
     }
 
     private async Task StopModuleAsync(string module)
@@ -345,9 +330,6 @@ public sealed class WorkflowInterpreter
         await north.StopFlowAsync(module);
         running.Remove(module);
         say($"[C] stopped {module}");
-        if (module == Module && current is { Applications.Count: > 0 })
-            foreach (var application in current.Applications)
-                if (running.Remove(application)) { await north.StopFlowAsync(application); say($"[C] stopped {application}"); }
     }
 
     // Data given to the Controller for a Module accumulate until something is
@@ -499,7 +481,7 @@ public sealed class WorkflowInterpreter
                 // produce it refuses and names what it can, which is a fault in the
                 // App rather than in the run.
                 string? json;
-                try { json = await devices.AcquireAsync(port.DataType, step.ViaVad, step.Qualifier is null ? null : Fill(step.Qualifier)); }
+                try { json = await devices.AcquireAsync(port.DataType, step.ViaVad, step.Qualifier); }
                 catch (NotSupportedException ex)
                 {
                     say($"line {step.Line}: {ex.Message}");

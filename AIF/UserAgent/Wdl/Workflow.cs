@@ -106,9 +106,6 @@ public sealed class Workflow
 {
     public required string Name { get; init; }
     public IReadOnlyList<string> Modules    { get; init; } = Array.Empty<string>();
-    // THE APPLICATION MODULES the (driving) Module is connected to (header clause 'application <Module>[, <Module>...]'): the Voice Command Interface drives the application; the
-    // Controller connects them by Data Type and Port Number. The steps of the workflow are the driving Module's; the Ports of the application are reached by their Data Types.
-    public IReadOnlyList<string> Applications { get; init; } = Array.Empty<string>();
     public IReadOnlyList<Step>   OnStart    { get; init; } = Array.Empty<Step>();
     public IReadOnlyList<Step>   OnStop     { get; init; } = Array.Empty<Step>();
     public IReadOnlyList<Step>   OnDegraded { get; init; } = Array.Empty<Step>();

@@ -23,7 +23,7 @@ public sealed class WorkflowReader
     }
 
     private static readonly Regex Header =
-        new(@"^workflow\s+(?<name>\S+)\s+over\s+(?<modules>\S+)(\s+application\s+(?<apps>\S+))?\s*$", RegexOptions.Compiled);
+        new(@"^workflow\s+(?<name>\S+)\s+over\s+(?<modules>\S+)\s*$", RegexOptions.Compiled);
 
     private static readonly Regex Ask =
         new(@"^ask\s+Controller\s+to\s+(?<verb>start|stop|pause|resume|take|give)\b\s*(?<rest>.*)$",
@@ -54,13 +54,11 @@ public sealed class WorkflowReader
         var m = Header.Match(lines[0].Text.Trim());
         if (!m.Success)
             throw new WorkflowSyntaxError(lines[0].Line,
-                "a workflow begins 'workflow <name> over <Module>[, <Module>...] [application <Module>[, <Module>...]]'.");
+                "a workflow begins 'workflow <name> over <Module>[, <Module>...]'.");
 
         var name    = m.Groups["name"].Value;
         var modules = m.Groups["modules"].Value.Split(',')
                        .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
-        var applications = m.Groups["apps"].Success
-            ? m.Groups["apps"].Value.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToList() : new List<string>();
 
         var onStart    = new List<Step>();
         var onStop     = new List<Step>();
@@ -82,7 +80,7 @@ public sealed class WorkflowReader
             current.Add(ReadOne(lines, ref i));
         }
 
-        return new Workflow { Name = name, Modules = modules, Applications = applications, OnStart = onStart, OnStop = onStop, OnDegraded = onDegraded };
+        return new Workflow { Name = name, Modules = modules, OnStart = onStart, OnStop = onStop, OnDegraded = onDegraded };
     }
 
     // READS ONE STEP, AND WHERE IT IS A BLOCK, WHAT IS INSIDE IT. A block owns

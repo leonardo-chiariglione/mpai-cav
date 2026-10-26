@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 using AIF.Controller;
@@ -192,100 +191,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         catch (InvalidOperationException) { return AifError.NotTrusted; }         // NOT_TRUSTED, or NOT_LICENSED
         return AifError.OK;
     }
-    // THE APPLICATION A MODULE DRIVES (additive; the Voice Command Interface drives the application, and the Controller connects them by Data Type and Port Number).
-    // Nothing here is about an application or about a Data Type: of two Modules, what one gives at an output Port is carried to the input Port of the other that has the same
-    // Data Type and Port Number, as it comes, and the other way round. (Between the Voice Command Interface and Audio Scene Management that is the Application JSON Instance: its
-    // Application Command to the application's User AJI Input, the application's User AJI Output to its Application Response; the Application Context has no output to meet.)
-    // A Port the driving Module does not have and the application has is the application's: a datum written to it, or read from it, by its Data Type and Port Number goes to the
-    // application. The Ports of the application that are connected are the driving Module's to use, and no other caller's.
-    private readonly Dictionary<string, List<string>> _applications = new();
-    private readonly Dictionary<string, List<CancellationTokenSource>> _pumps = new();
-    private readonly HashSet<(string Module, string Direction, string DataType, int PortNumber)> _linked = new();
-
-    public AifError ConnectApplication(string drivingModule, string applicationModule)
-    {
-        var stop = new CancellationTokenSource();
-        var links = new List<(string From, string To, string DataType, int Number)>();
-        lock (_tables)
-        {
-            if (!_running.TryGetValue(drivingModule, out var driving) || !_running.TryGetValue(applicationModule, out var application)) return AifError.NotStarted;
-            if (!_applications.TryGetValue(drivingModule, out var list)) _applications[drivingModule] = list = new List<string>();
-            if (!list.Contains(applicationModule)) list.Add(applicationModule);
-            foreach (var m in new[] { drivingModule, applicationModule })
-            {
-                if (!_pumps.TryGetValue(m, out var pumps)) _pumps[m] = pumps = new List<CancellationTokenSource>();
-                pumps.Add(stop);
-            }
-            foreach (var (from, fromModule, to, toModule) in new[] { (driving, drivingModule, application, applicationModule), (application, applicationModule, driving, drivingModule) })
-            {
-                var inputs = (_ua.BoundaryPorts(to.Id) ?? Array.Empty<RuntimePort>()).Where(p => p.Direction == "Input").ToList();
-                foreach (var output in (_ua.BoundaryPorts(from.Id) ?? Array.Empty<RuntimePort>()).Where(p => p.Direction == "Output"))
-                    foreach (var input in inputs.Where(i => i.Accepts(output.DataType) && (i.PortNumber ?? 1) == (output.PortNumber ?? 1)))
-                    {
-                        var number = output.PortNumber ?? 1;
-                        links.Add((fromModule, toModule, output.DataType, number));
-                        if (toModule == applicationModule) _linked.Add((applicationModule, "Input", output.DataType, number));
-                        else _linked.Add((applicationModule, "Output", output.DataType, number));
-                    }
-            }
-        }
-        foreach (var (from, to, dataType, number) in links.Distinct())
-            _ = Task.Run(() => Carry(from, to, dataType, number, stop.Token));
-        return links.Count > 0 ? AifError.OK : AifError.NoSuchPort;
-    }
-
-    // The Ports of an application that are connected to the Module that drives it are that Module's: a write or a read there by any other caller is refused.
-    [ThreadStatic] private static bool _carrying;
-
-    private bool IsLinkedToADriver(string moduleName, string direction, string dataType, int portNumber)
-    {
-        if (_carrying) return false;
-        lock (_tables) return _linked.Contains((moduleName, direction, dataType, portNumber));
-    }
-
-    private void Carry(string from, string to, string dataType, int number, CancellationToken stop)
-    {
-        _carrying = true;
-        while (!stop.IsCancellationRequested)
-        {
-            try
-            {
-                var read = OutputRead(from, dataType, number, 200);
-                if (read.Error == AifError.NotStarted) return;
-                if (read.Error == AifError.OK && read.Json is not null) InputWrite(to, dataType, number, read.Json, -1);
-            }
-            catch (Exception) when (stop.IsCancellationRequested) { return; }
-            catch (Exception) { Thread.Sleep(100); }
-        }
-    }
-
-    // The Module that has the Port: the one named, else an application connected to it that has it.
-    private string Through(string moduleName, string direction, string dataType, int portNumber)
-    {
-        lock (_tables)
-        {
-            if (!_applications.TryGetValue(moduleName, out var applications)) return moduleName;
-            if (_running.TryGetValue(moduleName, out var own) && PortOf(own, direction, dataType, portNumber) is not null) return moduleName;
-            foreach (var application in applications)
-                if (_running.TryGetValue(application, out var a) && PortOf(a, direction, dataType, portNumber) is not null) return application;
-        }
-        return moduleName;
-    }
-
-    private void Disconnect(string moduleName)
-    {
-        lock (_tables)
-        {
-            if (_pumps.Remove(moduleName, out var pumps)) foreach (var p in pumps) p.Cancel();
-            _applications.Remove(moduleName);
-            foreach (var list in _applications.Values) list.Remove(moduleName);
-            _linked.RemoveWhere(l => l.Module == moduleName);
-        }
-    }
-
     public void StopFlow(string moduleName)
     {
-        Disconnect(moduleName);
         List<AIF.Channels.ExternalHub>? hubs;
         lock (_tables)
         {
@@ -351,8 +258,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // (Phase 4) may have to.
     public AifError InputWrite(string moduleName, string dataType, int portNumber, string json, int timeoutMs = -1)
     {
-        moduleName = Through(moduleName, "Input", dataType, portNumber);
-        if (IsLinkedToADriver(moduleName, "Input", dataType, portNumber)) return AifError.NotAuthorised;
         Started? continuous = null;
         lock (_tables)
         {
@@ -382,8 +287,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // continues, and a later read returns its result.
     public Read OutputRead(string moduleName, string dataType, int portNumber, int timeoutMs = -1)
     {
-        moduleName = Through(moduleName, "Output", dataType, portNumber);
-        if (IsLinkedToADriver(moduleName, "Output", dataType, portNumber)) return new Read(AifError.NotAuthorised, null);
         Task<Result>? run;
         int? continuous = null;
         lock (_tables)
@@ -701,7 +604,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             _external.Clear();
         }
         foreach (var hub in hubs) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
-        foreach (var name in _pumps.Keys.ToList()) Disconnect(name);
         (_provider as IDisposable)?.Dispose();
     }
 }

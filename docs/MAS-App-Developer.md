@@ -100,36 +100,6 @@ on Stop:
 | `present`, `display`, `prompt`, `wait`, `end`, `run L` | Render; show text; show a message; pause; leave the loop; run the App a datum names. |
 | `on Stop:` | Runs when the App ends, even after the Stop button. |
 
-### A Module that drives an application (additive, 2026/10/26)
-
-The Voice Command Interface drives the application: what the person says becomes a command for it, and its answer is said back. The Module the workflow is over is the driving
-Module; the application it drives is named in the header, and the Controller connects them by Data Type and Port Number. The driving Module is the authority, as the Avatar
-Videoconference Server is for the parties of a meeting: the application does what the person, through it, tells it to do.
-
-```
-workflow ASM-VCI over 1MMC-VCI-V2.5-I01 application 1CAE-ASM-V1.0-I01
-
-on Start:
-    ask Controller to start
-    stream  Voice (OSD-BSO-V1.5:1) from device "Voice"
-    stream  Sound (OSD-AUO-V1.5:1) from device "SoundIn"
-    deliver ReplyText (OSD-BTO-V1.5:2) to device "ReplyText"
-    deliver Scene (OSD-ASD-V1.5) to device "Scene"
-```
-
-- `application <Module>[, <Module>...]` after `over <Module>`: `ask Controller to start` starts the application with the Module and connects them; `ask Controller to stop` stops both.
-  A workflow without the clause is as it was.
-- The steps are the driving Module's, and name no Module. A Port of a Data Type and Port Number that the driving Module has not is the application's: `OSD-AUO-V1.5:1` (a sound
-  the person loads) and `OSD-ASD-V1.5` (the scene as edited) are Audio Scene Management's.
-- The Controller connects the two Modules generically: what one gives at an output Port is carried to the input Port of the other that has the same Data Type and Port Number, as it
-  comes, and the other way round; it knows nothing of the application. Between the Voice Command Interface and Audio Scene Management that is the Application JSON Instance
-  (`MMC-AJI-V2.5`): the Application Command to the application's User AJI Input, the application's User AJI Output (`MMC-AJI-V2.5:1`) to the Application Response (`MMC-AJI-V2.5:1`).
-  The Ports of the application that are connected are the driving Module's: any other write at them, or read, is refused (NOT_AUTHORISED).
-- The Controller API gains one request, `ConnectApplication(driving, application)`; the interpreter makes it when the workflow starts. Over MPAI-MAS it is not offered (it fails).
-- The state of the application: where the setting `RefreshState` of the JSON Interface is true, it asks the application what it holds (the guide's `StateRequests`) before it works
-  out a request, and again after each response it tells; what the application answers to those questions is the state and is not told.
-- An `acquire` with a Qualifier takes `{Label}` of what was obtained earlier into it, as the words of `prompt` do.
-
 **Memory.** EDP keeps no memory of its own: each turn asks for `Memory
 (MMC-SUM-V2.5)` and offers it back with the next. A new run starts with none.
 

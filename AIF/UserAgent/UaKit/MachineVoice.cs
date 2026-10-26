@@ -58,6 +58,33 @@ public sealed class MachineVoice : IDisposable
         catch (Exception ex) { _record("say", ex); }
     }
 
+    // THE MACHINE'S VOICE SAYING WORDS, AS A WAV, and not presented: for a person who types what they would say - the words are spoken in her voice and given to the Module as
+    // speech. Null when it cannot be made (recorded, as a line that cannot be spoken is).
+    public async Task<byte[]?> SynthesizeAsync(string words)
+    {
+        try
+        {
+            _api ??= _controller();
+            if (!_started)
+            {
+                var s = await Task.Run(() => _api!.StartFlow(RsrModule));
+                if (s != AifError.OK) { _record("synthesize", new Exception("could not start " + RsrModule + ": " + s)); return null; }
+                _started = true;
+            }
+            var text = MpaiJson.ToJson(BasicTextObject.FromText(words));
+            var inputs = new List<ControllerApi.Datum>
+            {
+                new(BTO, 1, text), new(BTO, 2, text),
+                new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
+                new("string", 1, System.Text.Json.JsonSerializer.Serialize(_machineName))
+            };
+            var r = await Task.Run(() => _api!.Advance(RsrModule, inputs));
+            if (!r.Ok) { _record("synthesize", new Exception(r.Error.ToString())); return null; }
+            return AvatarUtterance.FromPortableAvatar(r.ByType(PAV))?.MachineSpeechWav;
+        }
+        catch (Exception ex) { _record("synthesize", ex); return null; }
+    }
+
     // An utterance, presented on the avatar; the step ends when she has finished speaking.
     public Task PresentAsync(AvatarUtterance utterance) => StandardDevices.PresentAsync(_avatar, utterance);
 

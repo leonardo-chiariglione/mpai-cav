@@ -31,11 +31,6 @@ public interface IAsyncControllerApi
     Task<AifError>             StopAimAsync(string moduleName, string aimName);
     Task<AifError>             SharedStorageInitAsync(string moduleName, string location);
 
-    // THE APPLICATION A MODULE DRIVES, CONNECTED TO IT (additive): the Controller carries what the driving Module gives at its Application JSON Instance output to the application
-    // Module's Application JSON Instance input, and what the application gives at its output to the driving Module's Application Response input, by Data Type and Port Number;
-    // and a Port that the driving Module does not have is the application's, reached by its Data Type and Port Number. Not over MPAI-MAS.
-    Task<AifError> ConnectApplicationAsync(string drivingModule, string applicationModule) => Task.FromResult(AifError.Failed);
-
     // A payload placed for a boundary Input Port, its reference returned (M3215
     // 3.6). Not over MPAI-MAS (Phase 15): there a payload goes inline.
     Task<(AifError Error, string? Reference)> PayloadPutAsync(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data) =>
@@ -72,9 +67,6 @@ public static class ControllerApiAsync
 
         public Task<ControllerApi.Read> OutputReadAsync(string moduleName, string dataType, int portNumber, int timeoutMs = -1) =>
             Task.Run(() => api.OutputRead(moduleName, dataType, portNumber, timeoutMs));
-
-        public Task<AifError> ConnectApplicationAsync(string drivingModule, string applicationModule) =>
-            api is ControllerApi local ? Task.Run(() => local.ConnectApplication(drivingModule, applicationModule)) : Task.FromResult(AifError.Failed);
 
         public Task<AifError> PauseAsync(string moduleName) => Task.Run(() => api.Pause(moduleName));
 
