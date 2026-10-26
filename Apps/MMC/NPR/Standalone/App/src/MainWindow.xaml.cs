@@ -22,15 +22,22 @@ namespace MmcNpr;
 //   start the Module once; the person chooses the page (OSD-BVO), which is shown; a click at the top of a column is the Point
 //   (OSD-PNT, in pixels of the picture); each click offers the page, the Point and the machine's ID (string); the Module
 //   answers with the machine's Portable Avatar (PAF-PAV), which carries the text of the column.
-// The window shows the text and renders the Portable Avatar on the avatar it keeps; it makes no speech of its own.
+// The window shows the text and renders the Portable Avatar on the avatar it keeps. The workflow is the one the App has under
+// MPAI-MAS: she asks for a picture, then says to click on a column, and reads it; the two prompts are spoken through PAF-RSR.
 public partial class MainWindow : Window
 {
     private const string Module = "1MMC-NPR-V2.5-I01";
 
     private const string BVO = "OSD-BVO-V1.5";
+    private const string BTO = "OSD-BTO-V1.5";
     private const string PNT = "OSD-PNT-V1.5";
     private const string PAV = "PAF-PAV-V1.6";
     private const string MachineName = "Thalia";
+
+    // The words of the workflow (Apps/MMC/NPR/MMC-NPR.orch under the launcher).
+    private const string AskForPicture = "Choose a picture.";
+    private const string AskForColumn  = "Click on a column and I will read it.";
+    private const string RsrModule     = "1PAF-RSR-V1.6-I01";
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
@@ -41,6 +48,8 @@ public partial class MainWindow : Window
     private byte[]?        _pageBytes;
     private string?        _pagePath;
     private bool           _busy;
+    private ControllerApi? _say;
+    private bool           _rsrStarted;
 
     public MainWindow()
     {
@@ -65,11 +74,44 @@ public partial class MainWindow : Window
             LoadButton.IsEnabled = true;
             InstructionText.Text = "Choose the image of a newspaper page.";
             SetStatus("Ready.");
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
+            await SayAsync(AskForPicture);
         }
         catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
     }
 
-    private void LoadButton_Click(object sender, RoutedEventArgs e)
+    // Speak a line through PAF-RSR (text -> machine speech and face), presented on the avatar. A line that cannot be spoken is
+    // reported in the status and does not stop the App.
+    private async Task SayAsync(string words)
+    {
+        try
+        {
+            if (_avatar is null) return;
+            _say ??= new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store));
+            if (!_rsrStarted)
+            {
+                var s = await Task.Run(() => _say!.StartFlow(RsrModule));
+                if (s != AifError.OK) { Program.Record("say", new Exception("could not start " + RsrModule + ": " + s)); return; }
+                _rsrStarted = true;
+            }
+            // PAF-RSR takes the Text Object twice (#1 to Text-To-Speech, #2 to Generative Face Description), the Avatar Model and the machine's ID.
+            var inputs = new List<ControllerApi.Datum>
+            {
+                new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+                new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
+                new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
+                new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
+            };
+            var r = await Task.Run(() => _say!.Advance(RsrModule, inputs));
+            if (!r.Ok) { Program.Record("say", new Exception(r.Error.ToString())); return; }
+            if (AvatarUtterance.FromPortableAvatar(r.ByType(PAV)) is not { } utterance) return;
+            await _avatar.PresentAsync(utterance);
+            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
+        }
+        catch (Exception ex) { Program.Record("say", ex); }
+    }
+
+    private async void LoadButton_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files|*.*" };
         if (dlg.ShowDialog() != true) return;
@@ -86,7 +128,8 @@ public partial class MainWindow : Window
             InstructionText.Text = "Click at the top of a column and the avatar will read it.";
             SetStatus("Page loaded.");
         }
-        catch (Exception ex) { Program.Record("load", ex); SetStatus("could not load the page: " + ex.Message); }
+        catch (Exception ex) { Program.Record("load", ex); SetStatus("could not load the page: " + ex.Message); return; }
+        await SayAsync(AskForColumn);
     }
 
     // A click is the Point, in pixels of the picture (the page is drawn uniformly into the window).
