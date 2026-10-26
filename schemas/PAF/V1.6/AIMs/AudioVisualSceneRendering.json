@@ -7,7 +7,7 @@
   "Header":               "PAF-AVR-V1.6",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM renders the Audio-Visual Scene Descriptors from a given Point of View and a Portable Avatar, producing the Speech, Audio, and Visual Objects of the rendered Scene.",
+  "Description":          "This AIM renders the Multimodal Scene Descriptors from a given Point of View and a Portable Avatar, producing the Speech, Audio, and Visual Objects of the rendered Scene.",
 
   "InternalTypes":        [ ],
 

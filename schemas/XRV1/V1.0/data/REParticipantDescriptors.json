@@ -12,7 +12,7 @@
     "REParticipantDescriptorsID":   { "type": "string" },
     "REParticipantDescriptorsTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "AVSceneDescriptors":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/AudioVisualSceneDescriptors.json" },
+    "AVSceneDescriptors":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
     "SeatOccupation":               { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/SeatOccupation.json" },
 
     "REParticipantDescriptorsData": { "type": "array", "minItems": 0, "items": { "type": "object", "required": ["REParticipantID"], "additionalProperties": false, "properties": {

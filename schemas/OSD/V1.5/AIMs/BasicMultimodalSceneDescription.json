@@ -1,19 +1,19 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/OSD/V1.5/AIMs/BasicAudioVisualSceneDescription.json",
-  "title":                "Basic Audio-Visual Scene Description V1.5",
+  "$id":                  "https://schemas.mpai.community/OSD/V1.5/AIMs/BasicMultimodalSceneDescription.json",
+  "title":                "Basic Multimodal Scene Description V1.5",
 
   "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-BMS-V1.5"},
   "Header":               "OSD-BMS-V1.5",
 
   "APIProfile":           "Basic",
-  "Description":          "This AIM implements the Basic Audio-Visual Scene Description function.",
+  "Description":          "This AIM implements the Basic Multimodal Scene Description function.",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "SpaceTime",                        "Direction": "Input",  "DataType": "OSD-SPT-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioVisualObject",                "Direction": "Input",  "DataType": "OSD-AVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "BasicAudioVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "BasicMultimodalSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicAudioObject",         "Direction": "Input",  "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BasicVisualObject",        "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "InputSpeech",              "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
