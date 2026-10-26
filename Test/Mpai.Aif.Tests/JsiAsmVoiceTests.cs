@@ -126,7 +126,7 @@ public class JsiAsmVoiceTests
 
     // ---- the judgement -------------------------------------------------------------------------------------------------------------------------
 
-    private static (bool Ok, string Kind, JsonNode? Got) Judge(JsonObject expected, JsonObject? got, JsonNode scene)
+    internal static (bool Ok, string Kind, JsonNode? Got) Judge(JsonObject expected, JsonObject? got, JsonNode scene)
     {
         if (expected["none"] is not null) return got is null ? (true, "", null) : (false, "a command where none is possible", got);
         if (got is null) return (false, "no command", null);

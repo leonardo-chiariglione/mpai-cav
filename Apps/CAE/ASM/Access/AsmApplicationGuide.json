@@ -161,9 +161,9 @@
     "ChildCount": "children",
     "MemberObjectIDs": "made of",
     "PoV": "at",
-    "CartPosition": "position",
+    "CartPosition": "",
     "Orientation": "orientation",
-    "Position": "",
+    "Position": "position",
     "Duration": "seconds",
     "Version": "version",
     "Done": "done",
@@ -183,7 +183,8 @@
     "RevokedUserCommandID": "undid an earlier command",
     "TranslatedObjects": "translated",
     "ClosedSpace": "changed the room",
-    "ModifiedScene": "changed the acoustics"
+    "ModifiedScene": "changed the acoustics",
+    "UserCommandRS": ""
   },
   "Skip": [
     "Header",
@@ -195,7 +196,11 @@
     "DataXMData",
     "DescrMetadata",
     "Confidence",
-    "UserCommandRS"
+    "ObjectSpatialAttitudeID",
+    "PositionID",
+    "OrientationID",
+    "PointOfViewID",
+    "SimpleTimeID"
   ],
   "Examples": [
     {

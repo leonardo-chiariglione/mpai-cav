@@ -30,7 +30,7 @@ public class ThirdPartyNoticesTests
         foreach (var (file, aim) in sources)
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(file));
-            foreach (var e in AccessEntry.ReadFrom(doc.RootElement))
+            foreach (var e in AccessEntry.ReadFrom(doc.RootElement).Where(e => !e.IsPlaceholder))   // an entry still to be filled names no source
             {
                 var key = $"{e.Uri}|{e.Member}|{e.Sha256}";
                 if (!rows.TryGetValue(key, out var row)) rows[key] = row = (e, []);

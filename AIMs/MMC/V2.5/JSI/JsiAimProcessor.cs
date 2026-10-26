@@ -202,8 +202,19 @@ public sealed class JsiAimProcessor : IAimProcessor
                 return (null, null, $"{path} is empty: a command has to say what is to be done.");
         var violations = _commandCheck!.Violations(completed.ToJsonString());
         if (violations is null) return (null, null, "the schema of the commands is not available.");
-        if (violations.Count > 0) return (null, null, "it does not conform to the schema of the commands: " + string.Join("; ", violations.Take(5)) + ".");
+        if (violations.Count > 0) return (null, null, "it does not conform to the schema of the commands: " + Readable(violations, view) + ".");
         return (completed, null, null);
+    }
+
+    // What is wrong, said briefly: the validator tells every branch of every alternative it tried; what is told to the model is the deepest places that fail, without the
+    // generic wrappers and without what the AIM filled in itself.
+    private static string Readable(IReadOnlyList<string> violations, ModelView view)
+    {
+        var filled = (view.Full["x-fill"] as JsonObject)?.Select(p => "/" + p.Key).ToList() ?? [];
+        var generic = new[] { "Some properties did not match", "Some items do not match", "failing indexes", "expected to fail", "should be \"object\"", "should be \"string\"" };
+        var specific = violations.Where(v => !generic.Any(g => v.Contains(g, StringComparison.Ordinal)) && !filled.Any(f => v.StartsWith(f, StringComparison.Ordinal)))
+                                 .Distinct().OrderByDescending(v => v.Count(c => c == '/')).Take(4).ToList();
+        return string.Join("; ", (specific.Count > 0 ? specific : violations.Take(3).ToList()).Select(v => v.Trim()));
     }
 
     private static string Unfenced(string raw)

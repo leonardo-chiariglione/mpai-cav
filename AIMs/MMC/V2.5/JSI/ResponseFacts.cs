@@ -39,6 +39,10 @@ public static class ResponseFacts
                 var shown = a.Take(MostItems).Select(x => "(" + Render(x, words, skip) + ")");
                 return a.Count + ": " + string.Join("; ", shown) + (a.Count > MostItems ? $"; and {a.Count - MostItems} more" : "");
             case JsonObject o:
+                // A wrapper of one property that holds a list of values or an object says what is inside it.
+                var present = o.Where(p => p.Value is not null && !skip.Contains(p.Key)).ToList();
+                if (present.Count == 1 && present[0].Value is JsonObject or JsonArray && !(present[0].Value is JsonArray list && list.Any(x => x is JsonObject)))
+                    return Render(present[0].Value, words, skip);
                 var parts = new List<string>();
                 foreach (var (key, value) in o)
                 {

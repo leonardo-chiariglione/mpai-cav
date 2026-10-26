@@ -109,6 +109,7 @@ public sealed class EdpAimProcessor : IAimProcessor
     }
 
     private readonly string _factsPort;         // OSD-BTO #3: the facts an application's response comes to
+    private string? _heard;                     // what the person last said, until the facts about it come
 
     // ---- The Virtual Meeting Secretary --------------------------------------------
     private readonly bool _secretary;
@@ -127,12 +128,19 @@ public sealed class EdpAimProcessor : IAimProcessor
     {
         if (_secretary) return System.Threading.Tasks.Task.FromResult(Secretary(message));
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
-        // WITH FACTS (the Voice Command Interface): what an application did, or why it did not, arrives as the Refined Text; the reply says it.
-        if (_factsPort.Length > 0 && ReadText(message, _factsPort) is { } facts)
-            return System.Threading.Tasks.Task.FromResult(Facts(message, facts));
-        // Facts are what this AIM waits for; a text of the person alone is not answered here.
-        if (_factsPort.Length > 0 && !message.Ports.ContainsKey(_textPort))
-            return System.Threading.Tasks.Task.FromResult(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() });
+        // WITH FACTS (the Voice Command Interface): what an application did, or why it did not, arrives as the Refined Text; the reply says it. What the person said
+        // arrives before, on its own, and is kept until the facts come (they may come after the application has done what was asked): it is the dialogue's, and it ends
+        // with the reply. A text of the person alone is nothing to answer yet.
+        if (_factsPort.Length > 0)
+        {
+            var said = ReadText(message, _textPort);
+            if (!string.IsNullOrWhiteSpace(said)) _heard = said;
+            if (ReadText(message, _factsPort) is not { } facts)
+                return System.Threading.Tasks.Task.FromResult(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() });
+            var heardNow = _heard;
+            _heard = null;
+            return System.Threading.Tasks.Task.FromResult(Facts(message, facts, heardNow));
+        }
         string? userText = ReadText(message, _textPort);
         if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
@@ -253,10 +261,9 @@ public sealed class EdpAimProcessor : IAimProcessor
 
     // THE REPLY TO THE FACTS. The facts - what the application did, what it did not and why, or what it needs from the person - are said to the person in a word or two, as
     // they are: this AIM adds nothing, and knows nothing of the application. The text the person said, if it is there, tells what they asked.
-    private Message Facts(Message message, string facts)
+    private Message Facts(Message message, string facts, string? heard)
     {
         const char Nl = (char)10;
-        var heard = ReadText(message, _textPort);
         var memory = (Read<Summary>(message, _summaryPort)?.Text() ?? "").Split(Nl, StringSplitOptions.RemoveEmptyEntries).ToList();
         while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
 
