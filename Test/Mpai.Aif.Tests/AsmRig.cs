@@ -35,7 +35,7 @@ internal sealed class AsmRig : IDisposable
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         AmiPorts = AimPortReader.Load(store, AmiName);
         AoePorts = AimPortReader.Load(store, "1CAE-AOE-V1.0-I01"); AsePorts = AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-        SoePorts = AimPortReader.Load(store, "1CAE-SOE-V1.0-I01"); SsePorts = AimPortReader.Load(store, "1CAE-SSE-V1.0-I01");
+        SoePorts = AimPortReader.Load(store, "1MMC-SOE-V2.5-I01"); SsePorts = AimPortReader.Load(store, "1MMC-SSE-V2.5-I01");
         MsePorts = AimPortReader.Load(store, "1OSD-MSE-V1.5-I01");
 
         // The Interface as the Module's provider makes it; the Editing AIMs as it makes them, over the one Shared Storage.

@@ -1,10 +1,10 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/SpeechObjectEditing.json",
-  "title":                "Speech Object Editing V1.0",
-  "Header":               "CAE-SOE-V1.0",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/SpeechObjectEditing.json",
+  "title":                "Speech Object Editing V2.5",
+  "Header":               "MMC-SOE-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-SOE-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-SOE-V2.5"},
 
   "APIProfile":           "Basic",
   "Description":          "Speech Object Editing. One Speech Object is open at a time: a Speech Object arriving is opened - from Shared Storage, by its identifier - or kept. The User Command changes where it is heard from (UserPoV, also on its own Port) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its response (UserCommandRS) saying how each action was executed (for a translation, when it is done).",
@@ -38,4 +38,4 @@
 
   "DataXMData":           { },
 
-  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-object-editing/"}]}

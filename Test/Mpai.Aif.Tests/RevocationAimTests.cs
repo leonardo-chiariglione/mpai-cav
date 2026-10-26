@@ -132,20 +132,20 @@ public class RevocationAimTests
         var (root, storage, store) = Module();
         try
         {
-            var ports = AIF.Controller.AimPortReader.Load(store, "1CAE-SOE-V1.0-I01");
-            var soe = new Mpai.Cae.Soe.SoeAimProcessor("1CAE-SOE-V1.0-I01", storage, ports);
+            var ports = AIF.Controller.AimPortReader.Load(store, "1MMC-SOE-V2.5-I01");
+            var soe = new Mpai.Mmc.Soe.SoeAimProcessor("1MMC-SOE-V2.5-I01", storage, ports);
             string objectIn = ports.Input("OSD-SPO-V1.5", 1), command = ports.Input("CAE-UCM-V1.0"), report = ports.Output("CAE-UCM-V1.0");
             await Run(soe, null, report, (objectIn, Forms.Spo(new BasicSpeechObject { BasicSpeechObjectID = "hello" })));
-            Assert.Null(Mpai.Cae.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
+            Assert.Null(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
 
             var place = Command(new Mpai.Core.UserCommandRQ { ChangedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = Ref("hello"), SpatialAttitude = At(2) }] } });
             var (_, said) = await Run(soe, null, report, (command, Mpai.Core.MpaiJson.ToJson(place)));
             Assert.Equal("Done", said!.Outcome);
-            Assert.NotNull(Mpai.Cae.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
+            Assert.NotNull(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
 
             var (_, undone) = await Run(soe, null, report, (command, Mpai.Core.MpaiJson.ToJson(Revoke(place))));
             Assert.Equal("Done", undone!.Outcome);
-            Assert.Null(Mpai.Cae.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);   // where it was: nowhere in particular
+            Assert.Null(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);   // where it was: nowhere in particular
         }
         finally { try { Directory.Delete(root, true); } catch { } }
     }

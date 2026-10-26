@@ -45,7 +45,7 @@ public class AsmTranslationTests
 
         // The speech: English, as Text-To-Speech makes it, its Qualifier stating English.
         var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
-        var english = Mpai.Cae.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
+        var english = Mpai.Mmc.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         var r = new Dictionary<string, string>();
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
@@ -123,7 +123,7 @@ public class AsmTranslationTests
         var settings = Path.Combine(work, "aim-settings.json");
         File.WriteAllText(settings, all.ToJsonString());
         var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
-        var english = Mpai.Cae.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
+        var english = Mpai.Mmc.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
         try

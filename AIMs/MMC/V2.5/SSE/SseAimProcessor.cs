@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using AIF.Controller;
 using AIF.SharedStorage;
 
-using Mpai.Cae.Soe;
+using Mpai.Mmc.Soe;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Cae.Sse;
+namespace Mpai.Mmc.Sse;
 
-// CAE-SSE-V1.0 - Speech Scene Editing, as the author's Reference Model of Audio Scene
+// MMC-SSE-V2.5 - Speech Scene Editing, as the author's Reference Model of Audio Scene
 // Management draws it (CAE Reference Models, 2026/10/26): a Speech Object (OSD-SPO, from
 // Speech Object Editing), a Speech Scene (OSD-SSD), a User Command and a User PoV in; the
 // Speech Scene as edited, and the User Command with its response, out. There is no Basic
@@ -112,7 +112,7 @@ public sealed class SseAimProcessor : IAimProcessor
             if (key is not null) _open = key;
             else if (held is not null && NameBook.Clean(held.BasicSpeechSceneDescriptorsID) is not null)
                 _open = Save(held.BasicSpeechSceneItems, held.UserPoV, held, null, held.BasicSpeechSceneDescriptorsID);      // a Basic Speech Scene the storage does not hold, given in full
-            if (_open is not null) Console.WriteLine($"[CAE-SSE-V1.0] opened {N(_open)}");
+            if (_open is not null) Console.WriteLine($"[MMC-SSE-V2.5] opened {N(_open)}");
         }
 
         PointOfView? pov = In(_povPort) is { } povJson ? MpaiJson.FromJson<PointOfView>(povJson) : null;

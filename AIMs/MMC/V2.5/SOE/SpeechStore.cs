@@ -8,7 +8,7 @@ using AIF.SharedStorage;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Cae.Soe;
+namespace Mpai.Mmc.Soe;
 
 // SPEECH OBJECTS IN THE MODULE'S SHARED STORAGE (the author, 2026/10/03: Audio Scene
 // Management translates speech). A Basic Speech Object is kept as it is, as the JSON

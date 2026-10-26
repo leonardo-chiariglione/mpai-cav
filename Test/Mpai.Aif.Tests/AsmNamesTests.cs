@@ -5,8 +5,8 @@ using AIF.Controller;
 using AIF.SharedStorage;
 using Mpai.Cae.Aoe;
 using Mpai.Cae.Ase;
-using Mpai.Cae.Soe;
-using Mpai.Cae.Sse;
+using Mpai.Mmc.Soe;
+using Mpai.Mmc.Sse;
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Osd.Mse;
@@ -83,15 +83,15 @@ public class AsmNamesTests
             Storage = new FileSharedStorage(Root, "CAE-ASM", "ASM-Names");
             var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
             AoePorts = AimPortReader.Load(store, "1CAE-AOE-V1.0-I01"); AsePorts = AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-            SoePorts = AimPortReader.Load(store, "1CAE-SOE-V1.0-I01"); SsePorts = AimPortReader.Load(store, "1CAE-SSE-V1.0-I01");
+            SoePorts = AimPortReader.Load(store, "1MMC-SOE-V2.5-I01"); SsePorts = AimPortReader.Load(store, "1MMC-SSE-V2.5-I01");
             MsePorts = AimPortReader.Load(store, "1OSD-MSE-V1.5-I01");
             Aoe = NewAoe(); Ase = NewAse(); Soe = NewSoe(); Sse = NewSse(); Mse = NewMse();
         }
 
         public IAimProcessor NewAoe() => new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(Storage), AoePorts);
         public IAimProcessor NewAse() => new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(Storage), AsePorts);
-        public IAimProcessor NewSoe() => new SoeAimProcessor("1CAE-SOE-V1.0-I01", Storage, SoePorts);
-        public IAimProcessor NewSse() => new SseAimProcessor("1CAE-SSE-V1.0-I01", Storage, SsePorts);
+        public IAimProcessor NewSoe() => new SoeAimProcessor("1MMC-SOE-V2.5-I01", Storage, SoePorts);
+        public IAimProcessor NewSse() => new SseAimProcessor("1MMC-SSE-V2.5-I01", Storage, SsePorts);
         public IAimProcessor NewMse() => new MseAimProcessor("1OSD-MSE-V1.5-I01", Storage, MsePorts, "ASM");
 
         public async Task<Message> Give(IAimProcessor aim, params (string Port, string Json)[] inputs)

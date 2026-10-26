@@ -9,9 +9,9 @@ using AIF.SharedStorage;
 using Mpai.Core;
 using Mpai.Core.OSD;
 
-namespace Mpai.Cae.Soe;
+namespace Mpai.Mmc.Soe;
 
-// CAE-SOE-V1.0 - Speech Object Editing, as the author's Reference Model of Audio
+// MMC-SOE-V2.5 - Speech Object Editing, as the author's Reference Model of Audio
 // Scene Management draws it (CAE Reference Models, 2026/10/26): User Command, User
 // PoV and a Speech Object (OSD-SPO) in; the Speech Object as edited, and the User
 // Command with its response, out. The Object goes on to Speech Scene Editing. There is
@@ -96,12 +96,12 @@ public sealed class SoeAimProcessor : IAimProcessor
                 {
                     if (NameBook.Clean(speech.BasicSpeechObjectID) is null) throw new NameNeededException("the Basic Speech Object");
                     _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null && SpeechStore.IsTheSpeech(_storage, speech) ? speech.BasicSpeechObjectID.Trim() : SpeechStore.Keep(_storage, speech);
-                    Console.WriteLine($"[CAE-SOE-V1.0] open {_open}");
+                    Console.WriteLine($"[MMC-SOE-V2.5] open {_open}");
                 }
                 else
                 {
                     several = SpeechStore.KeepObject(_storage, arrived);
-                    Console.WriteLine($"[CAE-SOE-V1.0] speech object {several}");
+                    Console.WriteLine($"[MMC-SOE-V2.5] speech object {several}");
                 }
             }
             catch (NameNeededException e) { unnamed = $"{e.Message}: the Object is named in its identifier (BasicSpeechObjectID, SpeechObjectID)"; }
@@ -125,7 +125,7 @@ public sealed class SoeAimProcessor : IAimProcessor
                 // what the translation replaced is kept: revoking the command puts the original back, in every Scene that holds it
                 _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_storage, original); return id; });
                 report.Done("TranslatedObjects", id, id);
-                Console.WriteLine($"[CAE-SOE-V1.0] {id} replaced by its translation into {pending.Entry.TargetLanguage}");
+                Console.WriteLine($"[MMC-SOE-V2.5] {id} replaced by its translation into {pending.Entry.TargetLanguage}");
             }
             else report.Failed("TranslatedObjects", id, "no such Speech Object to replace");
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
@@ -228,7 +228,7 @@ public sealed class SoeAimProcessor : IAimProcessor
                 var source = speech.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode;
                 outputs[_speechOut]   = MpaiJson.ToJson(speech);
                 outputs[_languageOut] = MpaiJson.ToJson(BasicSelectorObject.Languages(source, target));
-                Console.WriteLine($"[CAE-SOE-V1.0] translating {id} from {source ?? "its language"} into {target}");
+                Console.WriteLine($"[MMC-SOE-V2.5] translating {id} from {source ?? "its language"} into {target}");
                 for (var i = 1; i < translated.Objects.Count; i++)
                     report.NotSupported("TranslatedObjects", IdOf(translated.Objects[i].ObjectID), "one Speech Object at a time");
                 _pending = (entry, command);

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CAE-SSE-V1.0, Speech Scene Editing: composes Basic Speech Scenes of Basic Speech
+  <!-- MMC-SSE-V2.5, Speech Scene Editing: composes Basic Speech Scenes of Basic Speech
        Objects in Shared Storage (the author's Reference Model of Audio Scene
        Management, 2026/10/04). -->
 
@@ -14,7 +14,7 @@
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
-    <ProjectReference Include="..\SOE\Mpai.Cae.Soe.csproj" />
+    <ProjectReference Include="..\SOE\Mpai.Mmc.Soe.csproj" />
   </ItemGroup>
 
 </Project>

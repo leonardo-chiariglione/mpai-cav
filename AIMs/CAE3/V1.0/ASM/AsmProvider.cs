@@ -3,8 +3,8 @@ using AIF.SharedStorage;
 using Mpai.Cae.Ami;
 using Mpai.Cae.Aoe;
 using Mpai.Cae.Ase;
-using Mpai.Cae.Soe;
-using Mpai.Cae.Sse;
+using Mpai.Mmc.Soe;
+using Mpai.Mmc.Sse;
 using Mpai.Osd.Mse;
 using Mpai.Core;
 
@@ -21,7 +21,7 @@ namespace Mpai.Cae.Asm;
 // the User Agent's (the author: "AOD, SOD are for UA").
 public sealed class AsmProvider : IAimProvider
 {
-    public const string Ami = "1CAE-AMI-V1.0-I01", Aoe = "1CAE-AOE-V1.0-I01", Ase = "1CAE-ASE-V1.0-I01", Soe = "1CAE-SOE-V1.0-I01", Sse = "1CAE-SSE-V1.0-I01", Mse = "1OSD-MSE-V1.5-I01";
+    public const string Ami = "1CAE-AMI-V1.0-I01", Aoe = "1CAE-AOE-V1.0-I01", Ase = "1CAE-ASE-V1.0-I01", Soe = "1MMC-SOE-V2.5-I01", Sse = "1MMC-SSE-V2.5-I01", Mse = "1OSD-MSE-V1.5-I01";
     public const string Module = "1CAE-ASM-V1.0-I01";
 
     private readonly AmdStoreHolder _amds;
