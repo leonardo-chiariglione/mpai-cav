@@ -15,7 +15,7 @@ namespace Mpai.Mmc.Jsi;
 //   Require          paths that the command has to have.
 //   Drop             paths of the schema that are not offered even though a listed path contains them.
 //   Generated        the properties that the AIM fills with a fresh identifier (the language model never writes an identifier).
-//   Fill             property name -> a template filled by the AIM; "{id}" is a fresh identifier and "{now}" the current time in seconds.
+//   Fill             property name, or the path of a property, -> a template filled by the AIM (at a path, whatever the model says there); "{id}" is a fresh identifier and "{now}" the current time in seconds.
 //   Names            the paths whose value is the name of something the application has, with the set of names (Present or Stored) it is chosen from.
 //   Context          how the state of the application (an Application JSON Instance) is read: where its items are, their names, and what to say of each.
 //   NeedsNumber      words that ask for a change by an amount the person did not give, and the question to ask when no number comes with them.

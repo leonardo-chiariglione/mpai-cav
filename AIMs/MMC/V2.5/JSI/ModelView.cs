@@ -148,6 +148,8 @@ public sealed class ModelView
         {
             var p = PathOf(name);
             var isRequired = required.Contains(name);
+            // A value the application gives at a place, whatever the model says there: the guide's Fill, by the path of the property.
+            if (!isRequired && _guide.Fill.TryGetValue(p, out var atPath)) { fill[name] = atPath.DeepClone(); continue; }
             if (isRequired)
             {
                 // The AIM's: a constant, an identifier, a time.

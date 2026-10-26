@@ -336,6 +336,48 @@ public class JsiTests
         Assert.Contains("violin: position = (7, 7, 0)", calls[1].Turns[^1].Content);
     }
 
+    // THE APPLICATION CONTEXT THAT IS NOT A LISTING IS IGNORED (the coordinator, 2026/10/26): the response to a command that listed nothing, given as the context, does not wipe the state.
+    [Fact]
+    public async Task AContextThatIsNotAListingIsIgnoredAndTheStateIsKept()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model);
+        await jsi.ProcessAsync(new Message { MessageId = "1", Ports = new() { [JsiRig.Context(Ports)] = Context().ToJsonString() } });
+        var done = JsiRig.ResponseTo("earlier", "Done", ("MovedObjects", "violin", "Done", null));
+        await jsi.ProcessAsync(new Message { MessageId = "2", Ports = new() { [JsiRig.Context(Ports)] = done.ToJsonString() } });
+        await Ask(jsi, "move the violin 1 metre to the left");
+        Assert.Contains("violin: position", calls[0].Turns[^1].Content);
+        Assert.DoesNotContain("The scene is not known", calls[0].Turns[^1].Content);
+    }
+
+    private const string AddFlute =
+        "{\"Working\":\"AddedObjects flute at 1, 1, 0.\",\"Command\":{\"UserCommandRQ\":{\"AddedObjects\":{\"Objects\":[{\"ObjectID\":\"flute\",\"SpatialAttitude\":{\"Position\":{\"CartPosition\":[1,1,0]},\"Orientation\":{\"Orientation\":[0,0,180]}}}]}}}}";
+
+    // WHAT THE APPLICATION GIVES AT A PLACE (the guide's Fill, by path): the name of the scene a command adds to, whatever the model says there.
+    [Fact]
+    public async Task TheGuideFillsWhatTheApplicationGivesAtAPath()
+    {
+        var (model, _) = Fake(AddFlute);
+        var answer = await Ask(JsiRig.Processor(model), "add the flute at 1, 1, 0", Context());
+        var command = JsiRig.CommandOf(answer, Ports);
+        Assert.NotNull(command);
+        Assert.Equal("stage", (string?)command!["Instance"]!["UserCommandRQ"]!["AddedObjects"]!["ObjectID"]);
+    }
+
+    // A LISTING THAT ANSWERS A COMMAND THIS INTERFACE DID NOT SEND is the application's user agent asking: it is the state, and is not told.
+    [Fact]
+    public async Task AListingThatAnswersACommandNotSentHereIsTheStateAndIsNotTold()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model);
+        var listing = (JsonObject)Context();
+        listing["InReplyTo"] = "asked-by-the-user-agent";
+        var answer = await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = listing.ToJsonString() } });
+        Assert.Null(JsiRig.FactsOf(answer, Ports));
+        await Ask(jsi, "move the violin 1 metre to the left");
+        Assert.Contains("violin: position", calls[0].Turns[^1].Content);
+    }
+
     [Fact]
     public async Task WithoutAStateNoObjectCanBeNamedAndTheModelIsToldSo()
     {

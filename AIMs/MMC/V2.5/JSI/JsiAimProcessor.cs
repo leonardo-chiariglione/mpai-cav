@@ -91,11 +91,16 @@ public sealed class JsiAimProcessor : IAimProcessor
 
             // 1. The state of the application, kept.
             if (Input(message, _contextIn) is { } context && _guide is not null)
-                try { _state = ApplicationState.Read((JsonNode.Parse(context) as JsonObject)?["Instance"], _guide); }
+                try
+                {
+                    // Only a listing is a state: another response given as the context is ignored, and the state kept is not wiped.
+                    var instance = (JsonNode.Parse(context) as JsonObject)?["Instance"];
+                    if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide);
+                }
                 catch (JsonException) { }
 
             // 2. A response of the application, told as facts.
-            if (Input(message, _responseIn) is { } response) facts.Add(Respond(response));
+            if (Input(message, _responseIn) is { } response && Respond(response) is { } told) facts.Add(told);
 
             // 3. A request, to become a command.
             if (Input(message, _requestIn) is { } request)
@@ -323,7 +328,8 @@ public sealed class JsiAimProcessor : IAimProcessor
 
     // ---- a response ---------------------------------------------------------------------------------------------------------------------
 
-    private string Respond(string json)
+    // The facts a response tells; none for a listing that answers a command this interface did not send - the application's user agent asked for it - which is the state.
+    private string? Respond(string json)
     {
         JsonObject? aji;
         try { aji = JsonNode.Parse(json) as JsonObject; }
@@ -339,6 +345,11 @@ public sealed class JsiAimProcessor : IAimProcessor
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
         var replyTo = (string?)aji["InReplyTo"];
+        if (replyTo is not null && !_requestOf.ContainsKey(replyTo) && !_sent.Any(s => s.Id == replyTo) && ApplicationState.IsListing(instance, _guide))
+        {
+            _state = ApplicationState.Read(instance, _guide);
+            return null;
+        }
         string? asked = replyTo is not null && _requestOf.TryGetValue(replyTo, out var r) ? r : null;
         if (asked is null && replyTo is not null)
             asked = _sent.FirstOrDefault(s => s.Id == replyTo).Request;

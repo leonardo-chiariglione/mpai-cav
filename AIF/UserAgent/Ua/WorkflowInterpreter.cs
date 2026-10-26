@@ -123,7 +123,7 @@ public sealed class WorkflowInterpreter
     {
         var streams = bound.ToList();
         bound.Clear();
-        var withDevices = streams.Where(s => s.FromDevice || s.Kind == StepKind.Deliver).ToList();
+        var withDevices = streams.Where(s => s.FromDevice || s.Kind is StepKind.Deliver or StepKind.Route).ToList();
         if (withDevices.Count > 0) BindDevices(withDevices, stop);
         streams = streams.Except(withDevices).ToList();
         foreach (var group in streams.GroupBy(s => s.Text!))
@@ -154,14 +154,14 @@ public sealed class WorkflowInterpreter
             var done = new TaskCompletionSource();
             new Thread(() =>
             {
-                try { PlayOne(key, played, rate, labels, token); done.SetResult(); }
+                try { PlayOne(key, first.Module ?? Module, played, rate, labels, token); done.SetResult(); }
                 catch (Exception e) { done.SetException(e); }
             }) { IsBackground = true, Priority = ThreadPriority.AboveNormal, Name = $"playback of {key}" }.Start();
             playing.Add(done.Task);
         }
     }
 
-    private void PlayOne(string record, List<RecordedMessage> messages, double rate, List<string> labels, CancellationToken stop)
+    private void PlayOne(string record, string module, List<RecordedMessage> messages, double rate, List<string> labels, CancellationToken stop)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var errors = new List<double>();
@@ -171,9 +171,9 @@ public sealed class WorkflowInterpreter
             {
                 var due = TimeSpan.FromTicks((long)(m.At.Ticks / rate));
                 Until(clock, due, stop);
-                var json = WithPayloadsAsync(m).GetAwaiter().GetResult();
+                var json = WithPayloadsAsync(m, module).GetAwaiter().GetResult();
                 errors.Add((clock.Elapsed - due).TotalMilliseconds);
-                north.InputWriteAsync(Module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult();
+                north.InputWriteAsync(module, m.DataType, m.PortNumber, json, -1).GetAwaiter().GetResult();
             }
         }
         catch (OperationCanceledException) { }
@@ -199,13 +199,34 @@ public sealed class WorkflowInterpreter
     private void BindDevices(IReadOnlyList<Step> steps, CancellationToken stop)
     {
         var token = CancellationTokenSource.CreateLinkedTokenSource(stop, endOfWorkflow.Token).Token;
+
+        // WHAT ONE MODULE GIVES, TO ANOTHER (a workflow over several Modules): read at the Port that gives, written at the Port that is given, as it comes.
+        foreach (var route in steps.Where(s => s.Kind == StepKind.Route))
+        {
+            var (from, to, port) = (route.Module ?? Module, route.ToModule ?? Module, route.Port!);
+            playing.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var read = await north.OutputReadAsync(from, port.DataType, port.PortNumber, 200);
+                        if (read.Ok && read.Json is not null) await north.InputWriteAsync(to, port.DataType, port.PortNumber, read.Json, -1);
+                    }
+                }
+                catch (OperationCanceledException) { }
+            }));
+            say($"route {port} from {from} to {to}");
+        }
+        steps = steps.Where(s => s.Kind != StepKind.Route).ToList();
+
         foreach (var group in steps.GroupBy(s => s.Text!))
         {
             var device = devices.Device(group.Key)
                 ?? throw new InvalidOperationException($"line {group.First().Line}: no device \"{group.Key}\" is known to this User Agent.");
             boundDevices.Add((group.Key, device));
 
-            var into = group.Where(s => s.FromDevice).ToDictionary(s => s.Port!.DataType, s => s.Port!, StringComparer.Ordinal);
+            var into = group.Where(s => s.FromDevice).ToDictionary(s => s.Port!.DataType, s => (Port: s.Port!, Module: ModuleOf(s)), StringComparer.Ordinal);
             if (into.Count > 0)
                 playing.Add(Task.Run(async () =>
                 {
@@ -213,7 +234,7 @@ public sealed class WorkflowInterpreter
                     {
                         await foreach (var (dataType, json) in device.ReadAsync(token))
                             if (into.TryGetValue(dataType, out var port))
-                                await north.InputWriteAsync(Module, dataType, port.PortNumber, json, -1);
+                                await north.InputWriteAsync(port.Module, dataType, port.Port.PortNumber, json, -1);
                     }
                     catch (OperationCanceledException) { }
                 }));
@@ -221,13 +242,14 @@ public sealed class WorkflowInterpreter
             foreach (var d in group.Where(s => s.Kind == StepKind.Deliver))
             {
                 var port = d.Port!;
+                var from = ModuleOf(d);
                 playing.Add(Task.Run(async () =>
                 {
                     try
                     {
                         while (!token.IsCancellationRequested)
                         {
-                            var read = await north.OutputReadAsync(Module, port.DataType, port.PortNumber, 200);
+                            var read = await north.OutputReadAsync(from, port.DataType, port.PortNumber, 200);
                             // Once at its safe state, a device is given nothing more: the
                             // Module may still be commanding it.
                             if (read.Ok && read.Json is not null && Volatile.Read(ref safeStopped) == 0) await device.DeliverAsync(port.DataType, read.Json, token);
@@ -248,9 +270,12 @@ public sealed class WorkflowInterpreter
                 while (!token.IsCancellationRequested && safeStopped == 0)
                 {
                     await Task.Delay(500, token);
-                    var status = await north.StatusAsync(Module);
-                    if (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive))
-                        await SafeStopAsync("an AIM of " + Module + " is " + status.Aims.First(a => a.Status != AimStatus.Alive).Status);
+                    foreach (var watched in (IReadOnlyList<string>)(current?.Modules.Count > 0 ? current.Modules : new[] { Module }))
+                    {
+                        var status = await north.StatusAsync(watched);
+                        if (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive))
+                            await SafeStopAsync("an AIM of " + watched + " is " + status.Aims.First(a => a.Status != AimStatus.Alive).Status);
+                    }
                 }
             }
             catch (OperationCanceledException) { }
@@ -284,13 +309,13 @@ public sealed class WorkflowInterpreter
 
     // The payloads of a recorded Object, given to the Module by reference where
     // the Controller API places payloads, inline where it does not (over MPAI-MAS).
-    private async Task<string> WithPayloadsAsync(RecordedMessage m)
+    private async Task<string> WithPayloadsAsync(RecordedMessage m, string module)
     {
         if (m.Payloads.Count == 0) return m.Json;
         var root = System.Text.Json.Nodes.JsonNode.Parse(m.Json)!;
         foreach (var (recorded, bytes) in m.Payloads)
         {
-            var (error, reference) = await north.PayloadPutAsync(Module, m.DataType, m.PortNumber, bytes);
+            var (error, reference) = await north.PayloadPutAsync(module, m.DataType, m.PortNumber, bytes);
             Replace(root, recorded, error == AifError.OK ? reference : null, bytes);
         }
         return root.ToJsonString();
@@ -349,8 +374,9 @@ public sealed class WorkflowInterpreter
     private void Take(Step step, string json)
     {
         var port = step.Port!;
-        if (!pending.TryGetValue(Module, out var list))
-            pending[Module] = list = new List<ControllerApi.Datum>();
+        var module = ModuleOf(step);
+        if (!pending.TryGetValue(module, out var list))
+            pending[module] = list = new List<ControllerApi.Datum>();
 
         list.Add(new ControllerApi.Datum(port.DataType, port.PortNumber, json));
         say($"[C] take {port.DataType}{(port.PortNumber is int n ? ":" + n : "")}");
@@ -358,10 +384,11 @@ public sealed class WorkflowInterpreter
 
     private async Task GiveAsync(Step step, CancellationToken stop)
     {
-        pending.TryGetValue(Module, out var inputs);
-        var result = await north.AdvanceAsync(Module, inputs ?? new List<ControllerApi.Datum>(),
+        var module = ModuleOf(step);
+        pending.TryGetValue(module, out var inputs);
+        var result = await north.AdvanceAsync(module, inputs ?? new List<ControllerApi.Datum>(),
                                               step.Ports.Select(p => (p.DataType, p.PortNumber)).ToList());
-        pending.Remove(Module);
+        pending.Remove(module);
 
         // WHAT THE WORKFLOW DOES WHEN ITS MODULE DEGRADES (M3213 3.5). The
         // Controller has applied the Module's own policy already; what follows
@@ -370,13 +397,13 @@ public sealed class WorkflowInterpreter
         {
             // A workflow that stopped its Module there has ended: nothing it asks
             // of the Module afterwards could be answered.
-            if (!running.Contains(Module))
-                throw new OperationCanceledException($"on Degraded stopped {Module}; the workflow ends.");
+            if (!running.Contains(module))
+                throw new OperationCanceledException($"on Degraded stopped {module}; the workflow ends.");
             if (!result.Ok) return;
         }
 
         if (!result.Ok)
-            throw new InvalidOperationException($"{Module} returned {result.Error}.");
+            throw new InvalidOperationException($"{module} returned {result.Error}.");
 
         say($"[C] returned: {string.Join(", ", result.Outputs.Select(d => d.DataType + ":" + d.PortNumber))}");
         foreach (var want in step.Ports)
@@ -402,13 +429,13 @@ public sealed class WorkflowInterpreter
     private async Task StepAsync(Step step, CancellationToken stop)
     {
         // STREAMS ARE BOUND, THEN PLAYED TOGETHER at the first step that is not one.
-        if (step.Kind is StepKind.Stream or StepKind.Deliver) { bound.Add(step); return; }
+        if (step.Kind is StepKind.Stream or StepKind.Deliver or StepKind.Route) { bound.Add(step); return; }
         if (bound.Count > 0) await PlayAsync(stop);
 
         switch (step.Kind)
         {
-            case StepKind.StartModule:  await StartModuleAsync(Module); break;
-            case StepKind.StopModule:   await StopModuleAsync(Module);  break;
+            case StepKind.StartModule:  await StartModuleAsync(ModuleOf(step)); break;
+            case StepKind.StopModule:   await StopModuleAsync(ModuleOf(step));  break;
 
             // Where the Controller API refuses - over MPAI-MAS, until Phase 15 - the
             // workflow stops plainly rather than pretending: a workflow that paused
@@ -417,10 +444,10 @@ public sealed class WorkflowInterpreter
             case StepKind.ResumeModule:
             {
                 var pause = step.Kind == StepKind.PauseModule;
-                var done  = pause ? await north.PauseAsync(Module) : await north.ResumeAsync(Module);
+                var done  = pause ? await north.PauseAsync(ModuleOf(step)) : await north.ResumeAsync(ModuleOf(step));
                 if (done != AifError.OK)
                     throw new NotSupportedException(
-                        $"line {step.Line}: the Controller did not {(pause ? "pause" : "resume")} {Module} ({done}).");
+                        $"line {step.Line}: the Controller did not {(pause ? "pause" : "resume")} {ModuleOf(step)} ({done}).");
                 break;
             }
 
@@ -437,6 +464,18 @@ public sealed class WorkflowInterpreter
             }
 
             case StepKind.Give: await GiveAsync(step, stop); break;
+
+            // A DATUM WRITTEN TO A MODULE'S PORT NOW: an inline value, one an earlier step obtained, or what a device gives.
+            case StepKind.Send:
+            {
+                var json = step.FromDevice ? await FromDeviceAsync(step, stop)
+                    : step.Literal is not null ? Literal(step.Port!.DataType, Fill(step.Literal))
+                    : Known(step.Port!.Label, step.Line);
+                var written = await north.InputWriteAsync(ModuleOf(step), step.Port!.DataType, step.Port.PortNumber, json, -1);
+                if (written != AifError.OK) throw new InvalidOperationException($"line {step.Line}: {ModuleOf(step)} would not take {step.Port}: {written}.");
+                say($"[C] send {step.Port.DataType}:{step.Port.PortNumber} to {ModuleOf(step)}");
+                break;
+            }
 
             // THE STATUS OF THE MODULE'S AIMS, as text a workflow can branch on:
             // one line per AIM - its name, ALIVE, DEGRADED or DEAD, why, and what
@@ -481,7 +520,7 @@ public sealed class WorkflowInterpreter
                 // produce it refuses and names what it can, which is a fault in the
                 // App rather than in the run.
                 string? json;
-                try { json = await devices.AcquireAsync(port.DataType, step.ViaVad, step.Qualifier); }
+                try { json = await devices.AcquireAsync(port.DataType, step.ViaVad, step.Qualifier is null ? null : Fill(step.Qualifier)); }
                 catch (NotSupportedException ex)
                 {
                     say($"line {step.Line}: {ex.Message}");
@@ -764,6 +803,9 @@ public sealed class WorkflowInterpreter
     private Workflow? current;
     private string Module => current?.Modules.FirstOrDefault() ?? "";
 
+    // THE MODULE A STEP IS FOR: the one it names (a workflow over several Modules), else the first, which is the only one of a workflow over one.
+    private string ModuleOf(Step step) => step.Module ?? Module;
+
     private string Fill(string text)
     {
         foreach (var kv in variables)
@@ -824,6 +866,21 @@ public sealed class WorkflowInterpreter
             ? Mpai.Core.MpaiJson.ToJson(Mpai.Core.BasicTextObject.FromText(text))
             : dataType == "string"
                 ? System.Text.Json.JsonSerializer.Serialize(text)
-                : throw new NotSupportedException(
-                      $"a workflow may write a literal for a Text Object or an ID; {dataType} must be acquired.");
+                : dataType.StartsWith("MMC-AJI", StringComparison.OrdinalIgnoreCase)
+                    ? ApplicationJsonInstance(text)
+                    : throw new NotSupportedException(
+                      $"a workflow may write a literal for a Text Object, an ID or an Application JSON Instance; {dataType} must be acquired.");
+
+    // AN APPLICATION JSON INSTANCE (MMC-AJI) WRITTEN IN THE WORKFLOW (additive): the object's JSON, on one line. "Header" and "AJIID" may be left out, and are made;
+    // "{id}" in the text is a fresh identifier and "{now}" the time in seconds, each time the step is run - a command that is sent again is a new command.
+    private static string ApplicationJsonInstance(string text)
+    {
+        text = text.Replace("{id}", Guid.NewGuid().ToString("N")[..8]).Replace("{now}", (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+        var node = System.Text.Json.Nodes.JsonNode.Parse(text) as System.Text.Json.Nodes.JsonObject
+            ?? throw new InvalidOperationException("the literal of an Application JSON Instance is a JSON object.");
+        if (node["Instance"] is null) throw new InvalidOperationException("the literal of an Application JSON Instance has no \"Instance\".");
+        node["Header"] ??= "MMC-AJI-V2.5";
+        node["AJIID"] ??= Guid.NewGuid().ToString();
+        return node.ToJsonString();
+    }
 }

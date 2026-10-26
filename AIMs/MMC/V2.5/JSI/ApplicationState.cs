@@ -27,6 +27,11 @@ public sealed class ApplicationState
         ["Stored"] = Stored
     };
 
+    // Is this instance a listing of the application - does it hold the array of items that the guide reads the state from? An ApplicationContext that is not one (the
+    // response to a command that listed nothing, say) says nothing about the state and does not replace it.
+    public static bool IsListing(JsonNode? instance, ApplicationGuide guide) =>
+        guide.Context is { } context && instance is not null && Select(instance, (string?)context["Items"] ?? "").Any();
+
     public static ApplicationState Read(JsonNode? instance, ApplicationGuide guide)
     {
         if (guide.Context is not { } context || instance is null) return new ApplicationState();

@@ -100,6 +100,35 @@ on Stop:
 | `present`, `display`, `prompt`, `wait`, `end`, `run L` | Render; show text; show a message; pause; leave the loop; run the App a datum names. |
 | `on Stop:` | Runs when the App ends, even after the Stop button. |
 
+### A workflow over several Modules (additive, 2026/10/26)
+
+The header may name several Modules, each with a short name by which the steps that are for it say so; a step that names none is for the first Module, so every workflow
+over one Module reads and runs as before.
+
+```
+workflow ASM-VCI over VCI=1MMC-VCI-V2.5-I01, ASM=1CAE-ASM-V1.0-I01
+
+on Start:
+    ask Controller to start VCI
+    ask Controller to start ASM
+    stream  Voice (OSD-BSO-V1.5) from device "Voice" to VCI
+    route   Command  (MMC-AJI-V2.5:1) from VCI to ASM
+    route   Response (MMC-AJI-V2.5:1) from ASM to VCI
+    deliver ReplyText (OSD-BTO-V1.5:2) from VCI to device "Reply"
+    send    Listing (MMC-AJI-V2.5:1) = {"Instance": {...}} to ASM
+```
+
+| Step | Meaning |
+|---|---|
+| `ask Controller to start M` / `stop M` / `pause M` / `resume M` | The Module named; none named, the first. |
+| `offer L (T[:n]) ... to M`, `ask L (T[:n]), ... from M` | The Module the datum is given to, or asked of. |
+| `stream L (T[:n]) from device "D" to M`, `deliver L (T[:n]) from M to device "D"` | The Module whose Port is bound to the device. |
+| `route L (T[:n]) from A to B` | For the life of the workflow, what Module A's Port gives is written to Module B's Port of the same Data Type and Port Number. The workflow is the glue; the User Agent uses only the Controller API. |
+| `send L (T[:n]) = literal to M` (or `from device "D" to M`) | The datum is written to the Port now and nothing is asked back: for a Module that runs continuously. |
+| `= {...}` for `MMC-AJI-V2.5` | A literal for an Application JSON Instance, on one line; `Header` and `AJIID` are made if left out, `{id}` is a fresh identifier and `{now}` the time in seconds, at each run of the step. |
+
+An `acquire` with a Qualifier takes `{Label}` of what was obtained earlier into it, as the words of `prompt` do. A name that is not a Module of the workflow is refused when the workflow is read.
+
 **Memory.** EDP keeps no memory of its own: each turn asks for `Memory
 (MMC-SUM-V2.5)` and offers it back with the next. A new run starts with none.
 

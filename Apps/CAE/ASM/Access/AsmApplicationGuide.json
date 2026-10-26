@@ -33,6 +33,7 @@
     "SimpleTimeID"
   ],
   "Fill": {
+    "UserCommandRQ.AddedObjects.ObjectID": "stage",
     "UserCommandTime": {
       "Header": "OSD-STM-V1.5",
       "SimpleTimeID": "{id}",
@@ -704,6 +705,17 @@
     }
   ],
   "Refusals": [
+    {
+      "Words": [
+        "load a sound",
+        "load the sound",
+        "load sound",
+        "open a sound",
+        "import a sound",
+        "bring a sound from"
+      ],
+      "Problem": "To load a sound, press the Load a sound button, and tell me what to call it."
+    },
     {
       "Words": [
         "save",
