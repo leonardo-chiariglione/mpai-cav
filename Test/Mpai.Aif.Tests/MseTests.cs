@@ -16,7 +16,9 @@ namespace Mpai.Aif.Tests;
 // multimodal and output, valid against its schema; a new version of the Speech Scene
 // arriving on its Port is followed; a member taken out leaves one medium, and nothing is
 // output; a Scene it does not have is reported as failed; every report valid against the
-// User Command schema. And Objects (the author, 2026/10/05: it "must be able to integrate
+// User Command schema. A Scene and an Object are identified by their names, which every
+// version keeps (the author, 2026/10/26), and the Multimodal Scene that a command makes has
+// the name the command gives it. And Objects (the author, 2026/10/05: it "must be able to integrate
 // objects and scenes"): an Audio Object (OSD-AUO) and a Speech Object (OSD-SPO) on the two
 // Object Ports make a Multimodal Scene of Objects only, valid; with a Speech Scene added,
 // one of Objects and a Scene.
@@ -44,7 +46,16 @@ public class MseTests
     });
     private static string AudioObject(string id) => Forms.Auo(new BasicAudioObject { BasicAudioObjectID = id });
     private static string SpeechObject(string id) => Forms.Spo(new BasicSpeechObject { BasicSpeechObjectID = id });
-    private static ObjectPlacement Place(string id) => new() { ObjectID = new ManagedObject { ObjectID = id } };
+    private static ObjectPlacement Place(string id) => new()
+    {
+        ObjectID = new ManagedObject { ObjectID = id },
+        SpatialAttitude = new SpatialAttitude
+        {
+            ObjectSpatialAttitudeID = Guid.NewGuid().ToString(),
+            Position = new Position { PositionID = Guid.NewGuid().ToString(), CartPosition = [0, 0, 0] },
+            Orientation = new Orientation { OrientationID = Guid.NewGuid().ToString(), EulerAngles = [0, 0, 0] }
+        }
+    };
 
     [Fact]
     public async Task TwoMediaMakeAMultimodalScene()
@@ -83,7 +94,7 @@ public class MseTests
 
             var r = new Dictionary<string, string>();
             await Run((first, Audio("music")), (second, Audio("rain")));
-            var (one, said1) = await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("rain")] } })));
+            var (one, said1) = await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [Place("music"), Place("rain")] } })));
             r["1 two Audio Scenes"] = $"{Members(one)}; {said1}";
 
             await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("rain")] } })));
@@ -91,8 +102,12 @@ public class MseTests
             var (two, said2) = await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("voice")] } })));
             r["2 rain out, a Speech Scene in"] = $"{Members(two)}, {(two is null ? "-" : Valid("OSD/V1.5/data/MultimodalSceneDescriptors.json", two))}; {said2}";
 
-            var (followed, _) = await Run((second, Speech("voice-2")));
-            r["3 a new version of the Speech Scene, followed"] = Members(followed);
+            // A new version of the Speech Scene keeps its name: it is heard from a User PoV now, and the Multimodal Scene holds it so.
+            var (followed, _) = await Run((second, Forms.Ssd(new BasicSpeechSceneDescriptors
+            {
+                MInstanceID = "M1", BasicSpeechSceneDescriptorsID = "voice", UserPoV = new PointOfView { PointOfViewID = "behind", CartPosition = [0, -2, 1.6], Orientation = [0, 0, 0] }
+            })));
+            r["3 a new version of the Speech Scene, followed"] = $"{Members(followed)}, UserPoV {(followed is null ? "-" : JsonNode.Parse(followed)!["SubSpeechScenes"]![0]!["SubSpeechScene"]!["UserPoV"]?["PointOfViewID"] ?? "none")}";
 
             var (removed, said4) = await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("music"), Place("nowhere")] } })));
             r["4 music out, and a Scene not there"] = $"{Members(removed)}; {said4}";
@@ -132,12 +147,14 @@ public class MseTests
 
             var r = new Dictionary<string, string>();
             await Run((objectPort1, AudioObject("music")), (objectPort2, SpeechObject("voice")));
-            r["1 an Audio Object and a Speech Object"] = Holds(await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("music"), Place("voice")] } }))));
+            r["1 an Audio Object and a Speech Object"] = Holds(await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [Place("music"), Place("voice")] } }))));
 
             await Run((scenePort2, Speech("dialogue")));
             r["2 a Speech Scene added"] = Holds(await Run((command, Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Place("dialogue")] } }))));
 
-            r["3 a new version of the Audio Object, followed"] = Holds(await Run((objectPort1, AudioObject("music-2"))));
+            // A new version of the Audio Object keeps its name, and holds another take.
+            var take = await Run((objectPort1, Forms.Auo(new BasicAudioObject { BasicAudioObjectID = "music", DescrMetadata = "second take" })));
+            r["3 a new version of the Audio Object, followed"] = $"{Holds(take)}; {(take is not null && take.Contains("second take") ? "the second take" : "the first take")}";
 
             r["4 the Speech Object and the Speech Scene out"] = Holds(await Run((command, Command(new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [Place("voice"), Place("dialogue")] } }))));
             Expected.Match("mse-objects.json", r);

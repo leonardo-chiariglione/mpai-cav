@@ -16,33 +16,37 @@
 
   "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
 
-    "UserCommandRQ":          { "type": "object", "additionalProperties": false, "properties": {
+    "UserCommandRQ":          { "type": "object", "additionalProperties": false,
+      "description": "A request. Every amount in it is a number the request carries - where an Object is put or moved to, the loudness - and an AIM that finds none reports it, it does not guess one. Objects and Scenes are identified by the name the User gave them.",
+      "allOf": [ { "if": { "required": [ "ModifiedObjects" ] }, "then": { "anyOf": [ { "required": [ "LUFS" ] }, { "properties": { "ModifiedObjects": { "properties": { "Objects": { "items": { "anyOf": [ { "required": [ "AcousticProfile" ] }, { "required": [ "SpatialAttitude" ] } ] } } } } } } ] } } ],
+      "properties": {
       "UserPoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
-      "LUFS":                   { "type": "number" },
+      "LUFS":                   { "type": "number", "description": "The loudness, in LUFS, as a number. Alone it sets the loudness of the open Object; with ModifiedObjects it is the amount the modification carries when no entry has an Acoustic Profile or a Spatial Attitude." },
       "RevokedUserCommandID":   { "type": "string", "description": "The User Command to revoke, by its UserCommandID (the author, 2026/10/11: every User Command has an ID, and one can revoke an earlier one). It goes to the AIM that executed that command, which undoes it if it can; the report says whether it did: Done, Failed, or NotSupported where the AIM cannot undo it." },
 
       "AcquiredObject":         { "$ref": "#/$defs/ManagedObject" },
       "DeliveredObject":        { "$ref": "#/$defs/ManagedObject" },
 
       "AddedObjects":           { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "ObjectID":             { "type": "string", "minLength": 1, "description": "The name of the Audio Object, or of the Scene, that the command makes of the Objects it adds (the name the User gives it, such as \"concert\"). Required when the command makes one: an Audio Object composed of the Objects, or the Scene created when none is open. A name that is taken becomes the name followed by the next free number (\"concert 2\")." },
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "SpatialAttitude" ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is put: the position and the orientation, as numbers. Required." } } } } } },
 
       "RemovedObjects":         { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "anyOf": [ { "required": [ "ObjectID" ] }, { "required": [ "SpatialAttitude" ] } ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
 
       "MovedObjects":           { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "NewSpatialAttitude" ], "anyOf": [ { "required": [ "ObjectID" ] }, { "required": [ "OldSpatialAttitude" ] } ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
-          "OldSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
-          "NewSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+          "OldSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is now, as numbers; names the Object when ObjectID is absent." },
+          "NewSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is to be: the position and the orientation, as numbers. Required." } } } } } },
 
       "ChangedObjects":         { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
+        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID" ], "anyOf": [ { "required": [ "SpatialAttitude" ] }, { "required": [ "Qualifier" ] } ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
           "Qualifier":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json" } } } } } },
@@ -52,6 +56,9 @@
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
+
+      "ListedObjects":          { "type": "object", "additionalProperties": false, "required": [ "Kind" ], "description": "Asks the Editing AIM that keeps the Objects or Scenes of a Kind to list them: the response (UserCommandRS.ListedObjects) gives their names, never storage keys.", "properties": {
+        "Kind":                 { "type": "string", "enum": [ "Audio Object", "Basic Audio Object", "Speech Object", "Basic Speech Object", "Audio Scene", "Speech Scene", "Multimodal Scene", "All" ], "description": "The Kind to list, or All for everything the AIM keeps. Required." } } },
 
       "ClosedSpace":           { "type": "array", "minItems": 1, "maxItems": 1, "description": "The space the open Scene is in - a room built round its Objects: a Closed Space, by ID or in full. It replaces the one the Scene had.", "items": { "oneOf": [
                                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json" },
@@ -69,11 +76,15 @@
       "ReportTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
       "Outcome":                { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ], "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes." },
       "Actions":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ], "properties": {
-        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
-        "ObjectID":             { "type": "string", "description": "The Object or Scene acted on." },
+        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
+        "ObjectID":             { "type": "string", "description": "The name of the Object or Scene acted on." },
         "Outcome":              { "type": "string", "enum": [ "Done", "Failed", "NotSupported" ] },
-        "ResultID":             { "type": "string", "description": "The identifier of what the action produced: every edit is a new version." },
-        "Reason":               { "type": "string", "maxLength": 1024, "description": "Why the action was not done." } } } } } },
+        "ResultID":             { "type": "string", "description": "The name of what the action produced: every edit is a new version, which has the name of the Object or Scene edited." },
+        "Reason":               { "type": "string", "maxLength": 1024, "description": "Why the action was not done." } } } },
+      "ListedObjects":          { "type": "array", "description": "The answer to a ListedObjects request: what the AIM keeps of the Kind asked for, by name - never a storage key.", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "Kind" ], "properties": {
+        "ObjectID":             { "type": "string", "description": "The name of the Object or Scene." },
+        "Kind":                 { "type": "string", "enum": [ "Audio Object", "Basic Audio Object", "Speech Object", "Basic Speech Object", "Audio Scene", "Speech Scene", "Multimodal Scene" ] },
+        "MemberObjectIDs":      { "type": "array", "items": { "type": "string" }, "description": "For an Audio Object, a Speech Object or a Scene: the names of the Objects it is made of." } } } } } },
 
     "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":            { "type": "string", "maxLength": 2048 } },

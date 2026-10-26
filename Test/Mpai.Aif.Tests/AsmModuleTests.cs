@@ -98,8 +98,8 @@ public class AsmModuleTests
             api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ
             {
                 UserPoV = user,
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "BAO000001" }, SpatialAttitude = At(-1.5, 1.5) },
-                                                                 new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "BAO000002" }, SpatialAttitude = At(1.5, 1.5) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "low" }, SpatialAttitude = At(-1.5, 1.5) },
+                                                                                      new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "high" }, SpatialAttitude = At(1.5, 1.5) }] }
             }));
             var scene = api.OutputRead(Asm, "OSD-ASD-V1.5", 1, 60_000);
             var basScene = scene.Error == AifError.OK ? Forms.Bas(scene.Json!) : null;
@@ -123,7 +123,7 @@ public class AsmModuleTests
             api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ
             {
                 UserPoV = user,
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "hello" }, SpatialAttitude = At(0, 2) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "hello" }, SpatialAttitude = At(0, 2) }] }
             }));
             var speechScene = api.OutputRead(Asm, "OSD-SSD-V1.5", 1, 60_000);
             r["the Speech Scene leaving the Module"] = speechScene.Error == AifError.OK
@@ -142,7 +142,7 @@ public class AsmModuleTests
             api.InputWrite(Asm, "CAE-UCM-V1.0", 5, Command(new UserCommandRQ
             {
                 UserPoV = user,
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
+                AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
                                                                  new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = bssId }, SpatialAttitude = At(0, 0) }] }
             }));
             string Members(string json)
@@ -164,9 +164,9 @@ public class AsmModuleTests
             }));
             var movedSpeech = api.OutputRead(Asm, "OSD-SSD-V1.5", 1, 60_000);
             var followed = api.OutputRead(Asm, "OSD-MSD-V1.5", 1, 60_000);
-            var newBss = IdIn(movedSpeech.Error, movedSpeech.Json, "SpeechSceneDescriptorsID");
-            r["the Speech Scene edited again, followed"] = followed.Error != AifError.OK ? $"nothing ({followed.Error})"
-                : JsonNode.Parse(followed.Json!)!["SubSpeechScenes"]!.AsArray().Any(m => (string?)m!["SubSpeechScene"]!["SpeechSceneDescriptorsID"] == newBss && newBss != bssId)
+            // The Speech Scene keeps its name when it is edited: the Multimodal Scene holds it by that name, as it now is.
+            r["the Speech Scene edited again, followed"] = followed.Error != AifError.OK || movedSpeech.Error != AifError.OK ? $"nothing ({followed.Error})"
+                : JsonNode.Parse(followed.Json!)!["SubSpeechScenes"]!.AsArray().Any(m => JsonNode.DeepEquals(m!["SubSpeechScene"], JsonNode.Parse(movedSpeech.Json!)) && !JsonNode.DeepEquals(JsonNode.Parse(speechScene.Json!), JsonNode.Parse(movedSpeech.Json!)))
                     ? "the Multimodal Scene holds the new version" : "the Multimodal Scene holds the old version";
         }
         finally

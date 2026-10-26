@@ -9,13 +9,14 @@ using Mpai.Core;
 namespace Mpai.Aif.Tests;
 
 // THE USER AGENT KNOWS NO IDENTIFIER OF AN OBJECT (the author, 2026/10/14). An Object is given to the Module itself - the Object or ID of the data types - and the Module reads
-// the identifier that is in it; an Object in a Scene is named by where it is (its PoV); the Audio Object the Module makes comes back whole, with its Objects in it.
+// the identifier that is in it - which is the name the User gave it, "violin", never a storage key (the author, 2026/10/26); an Object in a Scene is named by where it is
+// (its PoV); the Audio Object the Module makes comes back whole, with its Objects in it.
 [Trait("Group", "Fast")]
 public class AsmNoIdentifierTests
 {
     private static BasicAudioObject Sound(string name) => new()
     {
-        BasicAudioObjectID = "", BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
+        BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
     };
 
     private static UserCommand Command(UserCommandRQ data) => new() { UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data };
@@ -59,7 +60,7 @@ public class AsmNoIdentifierTests
             // Both in the Scene: the Objects themselves, each where it is put.
             var built = await Give(ase, (asePorts.Input("CAE-UCM-V1.0"), MpaiJson.ToJson(Command(new UserCommandRQ
             {
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Itself(violin), SpatialAttitude = At(1) }, new ObjectPlacement { ObjectID = Itself(drums), SpatialAttitude = At(3) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [new ObjectPlacement { ObjectID = Itself(violin), SpatialAttitude = At(1) }, new ObjectPlacement { ObjectID = Itself(drums), SpatialAttitude = At(3) }] }
             }))));
             Assert.Equal("Done", Report(built, ase).Outcome);
             Assert.Equal([("violin", 1.0), ("drums", 3.0)], Members(Scene(built)));
@@ -97,10 +98,11 @@ public class AsmNoIdentifierTests
             // An Audio Object made of them, each with its place: it comes back whole, with its Objects in it.
             var made = await Give(aoe, (aoePorts.Input("CAE-UCM-V1.0"), MpaiJson.ToJson(Command(new UserCommandRQ
             {
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Itself(quieter), SpatialAttitude = At(1) }, new ObjectPlacement { ObjectID = Itself(drums), SpatialAttitude = At(5) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "band", Objects = [new ObjectPlacement { ObjectID = Itself(quieter), SpatialAttitude = At(1) }, new ObjectPlacement { ObjectID = Itself(drums), SpatialAttitude = At(5) }] }
             }))));
             Assert.Equal("Done", Report(made, aoe).Outcome);
             var auo = JsonNode.Parse(made.Ports[aoePorts.Output("OSD-AUO-V1.5")])!;
+            Assert.Equal("band", (string?)auo["AudioObjectID"]);                                  // it has the name the command gave it
             Assert.Equal(2, auo["BasicAudioObjects"]!.AsArray().Count);
             Assert.All(auo["BasicAudioObjects"]!.AsArray(), e => Assert.Contains("BasicAudioObjectData", e!.ToJsonString()));
         }

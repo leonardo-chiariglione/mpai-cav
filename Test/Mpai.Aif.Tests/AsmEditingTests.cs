@@ -19,7 +19,9 @@ namespace Mpai.Aif.Tests;
 // Basic Audio Objects make a Basic Audio Scene with its User PoV, given as an Audio
 // Scene; a member is moved and another removed; a command naming a member the Scene
 // does not have is reported as failed; every output, command and response valid against
-// its schema.
+// its schema. An Object and a Scene are identified by the name the User gave them
+// ("music", "stage"), never by a storage key (the author, 2026/10/26): the Audio Object
+// and the Audio Scene a command makes are given their names by the command.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class AsmEditingTests
@@ -118,7 +120,7 @@ public class AsmEditingTests
             var voice = Forms.Bao(voiceAuo);
             var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "duo", Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
             r["3 composing in Object Editing: the report"] = Said(said3);
 
@@ -127,7 +129,7 @@ public class AsmEditingTests
             var (asd, said4) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 UserPoV = user,
-                AddedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(-1) }, new ObjectPlacement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
+                AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!), SpatialAttitude = At(-1) }, new ObjectPlacement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), SpatialAttitude = At(1) }] }
             }))));
             var bas = Forms.Bas(asd);
             r["4 the Audio Scene ASE gives"] = $"{Header(asd)} of {System.Text.Json.Nodes.JsonNode.Parse(asd)?["SubAudioScenes"]?.AsArray().Count ?? 0} sub-scene(s), {Valid("OSD/V1.5/data/AudioSceneDescriptors.json", asd)}";
@@ -139,7 +141,7 @@ public class AsmEditingTests
             var (movedAsd, said5) = await Run(ASE, sceneOut, sceneReport, (sceneCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {
                 MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = Ref(Id(voice, "BasicAudioObjectID")!), NewSpatialAttitude = At(3) }] },
-                RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!) }, new ObjectPlacement { ObjectID = Ref("BAO999999") }] }
+                RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = Ref(Id(modified, "BasicAudioObjectID")!) }, new ObjectPlacement { ObjectID = Ref("nothing") }] }
             }))));
             var moved = Forms.Bas(movedAsd);
             var movedNode = System.Text.Json.Nodes.JsonNode.Parse(moved);

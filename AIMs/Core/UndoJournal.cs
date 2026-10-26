@@ -26,10 +26,11 @@ public sealed class UndoJournal
     }
 
     // An AIM that keeps versions: the open one was before, and is now after. Nothing is recorded when the command left it as it was.
-    public void RecordVersions(string? commandId, string? before, string? after, Func<string?> open, Action<string?> restore)
+    // shown, when given, says how what is in force is told in the report (by its name: a storage key is never told).
+    public void RecordVersions(string? commandId, string? before, string? after, Func<string?> open, Action<string?> restore, Func<string?, string?>? shown = null)
     {
         if (before == after) return;
-        Record(commandId, () => open() == after, () => { restore(before); return before; });
+        Record(commandId, () => open() == after, () => { restore(before); return shown is null ? before : shown(before); });
     }
 
     // The revocation of a command, reported: Done with what is in force after, or Failed with why not.

@@ -24,6 +24,14 @@ public class AsmTranslationTests
 {
     private const string Asm = AsmProvider.Module;
 
+    // The Speech Object the Module keeps under a name: the key the Module's table of names gives for it is the Module's own, so it is looked up there.
+    private static BasicSpeechObject? Stored(AIF.SharedStorage.IRuledStorage? storage, string name)
+    {
+        if (storage is null || storage.MPAI_AIFM_RuledStorage_Get($"name:SpeechObject:{name}", out var key).ToString() != "OK") return null;
+        return storage.MPAI_AIFM_RuledStorage_Get(Encoding.UTF8.GetString(key), out var bytes).ToString() == "OK"
+            ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(bytes)) : null;
+    }
+
     [SkippableFact]
     public void ASpeechObjectTranslatedInPlace()
     {
@@ -37,7 +45,7 @@ public class AsmTranslationTests
 
         // The speech: English, as Text-To-Speech makes it, its Qualifier stating English.
         var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
-        var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
+        var english = Mpai.Cae.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         var r = new Dictionary<string, string>();
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
@@ -90,9 +98,7 @@ public class AsmTranslationTests
             }
 
             // The Speech Object kept under the original's identifier is now the translation.
-            var storage = api.SharedStorage(Asm);
-            var stored = storage is not null && storage.MPAI_AIFM_RuledStorage_Get(english.BasicSpeechObjectID, out var bytes).ToString() == "OK"
-                ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(bytes)) : null;
+            var stored = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID);
             r["the Speech Object under the original's identifier"] = stored is null ? "none"
                 : $"{(stored.Data.SequenceEqual(english.Data) ? "still the original" : "the translation")}, language {(stored.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
         }
@@ -117,7 +123,7 @@ public class AsmTranslationTests
         var settings = Path.Combine(work, "aim-settings.json");
         File.WriteAllText(settings, all.ToJsonString());
         var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
-        var english = Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult();
+        var english = Mpai.Cae.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
         try
@@ -145,8 +151,7 @@ public class AsmTranslationTests
             Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
 
             var storage = api.SharedStorage(Asm)!;
-            BasicSpeechObject? Stored() => storage.MPAI_AIFM_RuledStorage_Get(english.BasicSpeechObjectID, out var b).ToString() == "OK"
-                ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(b)) : null;
+            BasicSpeechObject? Stored() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID);
             Assert.False(Stored()!.Data.SequenceEqual(english.Data));                                  // the translation stands under the original's identifier
 
             api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand

@@ -34,9 +34,17 @@ namespace Mpai.Cae.Sse;
 // The Speech Scene given is the open Basic Speech Scene inside a Speech Scene of one
 // sub-scene, under the Basic Scene's identifier.
 //
-// Every edit is a new version in Shared Storage (BSS000001 ...). A member is held by
-// its identifier and read from Shared Storage when the Scene is output, so a Speech
-// Object translated in its place is heard translated in every Scene holding it.
+// A SCENE AND ITS OBJECTS ARE NAMED BY THE USER (the author, 2026/10/26): in the data, the
+// commands and the replies they are identified only by their names; the Module's storage
+// keys never leave it. The first Object added to no open Scene creates one, under the
+// name the command gives (ObjectID of AddedObjects, required then); a second Scene given
+// a name that is taken is "dialogue 2". Where an Object is put, to where it is moved,
+// are the command's amounts: a command without them is reported as failed, not guessed.
+// ListedObjects lists the Speech Scenes the Module keeps, by name, with their members.
+//
+// Every edit is a new version in Shared Storage (BSS000001 ... as the Module keeps them).
+// A member is held by its name and read from Shared Storage when the Scene is output, so
+// a Speech Object translated in its place is heard translated in every Scene holding it.
 public sealed class SseAimProcessor : IAimProcessor
 {
     private readonly ISharedStorage _storage;
@@ -49,8 +57,11 @@ public sealed class SseAimProcessor : IAimProcessor
     private readonly string _sceneOut;
     private readonly string _reportOut;
 
-    private string? _open;
+    private string? _open;      // the key of the version in force (the Module's own; the User is told the name)
     private readonly UndoJournal _undo = new();
+    private readonly NameBook _names;
+
+    private string? N(string? key) => _names.NameOf(key);
 
     public string InstanceId { get; }
 
@@ -59,6 +70,7 @@ public sealed class SseAimProcessor : IAimProcessor
         InstanceId   = instanceId;
         _storage     = storage;
         _mInstanceId = mInstanceId;
+        _names       = new NameBook(storage);
         _commandPort = ports.Input("CAE-UCM-V1.0");
         _objectPort  = ports.InputOrDefault("OSD-SPO-V1.5", "");
         _scenePort   = ports.Input("OSD-SSD-V1.5");
@@ -74,25 +86,33 @@ public sealed class SseAimProcessor : IAimProcessor
             port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
         // A Speech Object from Speech Object Editing is in Shared Storage already; one
-        // given otherwise is kept, so that a command can name it.
+        // given otherwise is kept, so that a command can name it. One with no name is not kept.
+        string? unnamed = null;
         if (In(_objectPort) is { } objectJson)
         {
-            var arrived = SpeechStore.Parse(objectJson);
-            if (SpeechStore.Alone(arrived) is { } speech) { if (SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is null) SpeechStore.Keep(_storage, speech); }
-            else SpeechStore.KeepObject(_storage, arrived);       // several: kept, its Basic Speech Objects with it
+            try
+            {
+                var arrived = SpeechStore.Parse(objectJson);
+                if (SpeechStore.Alone(arrived) is { } speech) { if (SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is null) SpeechStore.Keep(_storage, speech); }
+                else SpeechStore.KeepObject(_storage, arrived);       // several: kept, its Basic Speech Objects with it
+            }
+            catch (NameNeededException e) { unnamed = $"{e.Message}: the Object is named in its identifier (BasicSpeechObjectID, SpeechObjectID)"; }
+            catch (InvalidOperationException e) { unnamed = e.Message; }
         }
 
         // 1. opening, by Port.
         if (In(_scenePort) is { } sceneJson)
         {
             var arrived = MpaiJson.FromJson<SpeechSceneDescriptors>(sceneJson);
-            var held = arrived.SubSpeechScenes?.FirstOrDefault(s => (s.BasicScene?.BasicSpeechSceneDescriptorsID ?? s.SceneId ?? "").StartsWith("BSS", StringComparison.Ordinal))?.BasicScene;
+            var held = arrived.SubSpeechScenes?.FirstOrDefault(s => s.BasicScene is not null)?.BasicScene;
             var id = held?.BasicSpeechSceneDescriptorsID
-                ?? arrived.SubSpeechScenes?.Select(s => s.SceneId).FirstOrDefault(i => i is not null && i.StartsWith("BSS", StringComparison.Ordinal))
-                ?? (arrived.SpeechSceneDescriptorsID.StartsWith("BSS", StringComparison.Ordinal) ? arrived.SpeechSceneDescriptorsID : null);
-            if (id is not null && _storage.MPAI_AIFM_SharedStorage_Exists(id)) _open = id;
-            else if (held is not null) _open = Save(held.BasicSpeechSceneItems, held.UserPoV, held);      // a Basic Speech Scene the storage does not hold, given in full
-            if (_open is not null) Console.WriteLine($"[CAE-SSE-V1.0] opened {_open}");
+                ?? arrived.SubSpeechScenes?.Select(s => s.SceneId).FirstOrDefault(i => !string.IsNullOrWhiteSpace(i))
+                ?? arrived.SpeechSceneDescriptorsID;
+            var key = _names.KeyOf(NamedKind.SpeechScene, id) ?? _names.KeyOf(NamedKind.SpeechScene, arrived.SpeechSceneDescriptorsID);
+            if (key is not null) _open = key;
+            else if (held is not null && NameBook.Clean(held.BasicSpeechSceneDescriptorsID) is not null)
+                _open = Save(held.BasicSpeechSceneItems, held.UserPoV, held, null, held.BasicSpeechSceneDescriptorsID);      // a Basic Speech Scene the storage does not hold, given in full
+            if (_open is not null) Console.WriteLine($"[CAE-SSE-V1.0] opened {N(_open)}");
         }
 
         PointOfView? pov = In(_povPort) is { } povJson ? MpaiJson.FromJson<PointOfView>(povJson) : null;
@@ -100,19 +120,32 @@ public sealed class SseAimProcessor : IAimProcessor
         // 2. acting, by Command; the report goes back under the command's identifier.
         if (In(_commandPort) is { } commandJson)
         {
-            var command = MpaiJson.FromJson<UserCommand>(commandJson);
-            var report = new CommandReport(command);
-            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            var command = CommandReader.Read(commandJson, out var rejection);
+            if (command is null) { if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(rejection); }
             else
             {
-                var before = _open;
-                Apply(command, pov, report);
-                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+                var report = new CommandReport(command);
+                if (unnamed is not null) report.Failed("AcquiredObject", null, unnamed);
+                if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+                else
+                {
+                    var before = _open;
+                    Apply(command, pov, report);
+                    _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { _open = v; if (v is not null && N(v) is { } n) _names.Point(NamedKind.SpeechScene, n, v); }, N);
+                }
+                if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
-            if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
+        }
+        else if (unnamed is not null && _reportOut.Length > 0)
+        {
+            // An Object that came by its Port and was not taken: no command to report under, so a report of its own.
+            var report = new CommandReport(new UserCommand { UserCommandID = Guid.NewGuid().ToString() });
+            report.Failed("AcquiredObject", null, unnamed);
+            outputs[_reportOut] = MpaiJson.ToJson(report.Report());
+            if (pov is not null && Load(_open) is { } sceneKept) _open = Save(sceneKept.BasicSpeechSceneItems, pov, sceneKept, _open, null);
         }
         else if (pov is not null && Load(_open) is { } scene)
-            _open = Save(scene.BasicSpeechSceneItems, pov, scene);
+            _open = Save(scene.BasicSpeechSceneItems, pov, scene, _open, null);
 
         // 3. the open Scene, as it now stands: each member read from Shared Storage.
         if (Load(_open) is { } open) outputs[_sceneOut] = MpaiJson.ToJson(Given(Materialized(open)));
@@ -142,10 +175,11 @@ public sealed class SseAimProcessor : IAimProcessor
         if (data is null) return;
         var listener = data.UserPoV ?? pov;
 
+        if (data.ListedObjects is { } listing) List(listing, report);
         if (data.ModifiedObjects is { Objects.Count: > 0 })
-            report.NotSupported("ModifiedObjects", _open, "what an Object is like is Speech Object Editing's");
+            report.NotSupported("ModifiedObjects", N(_open), "what an Object is like is Speech Object Editing's");
         if (data.TranslatedObjects is { Objects.Count: > 0 })
-            report.NotSupported("TranslatedObjects", _open, "speech is translated by Speech Object Editing");
+            report.NotSupported("TranslatedObjects", N(_open), "speech is translated by Speech Object Editing");
 
         var scene = Load(_open);
         var items = scene?.BasicSpeechSceneItems.ToList() ?? new List<BasicSpeechSceneItem>();
@@ -157,6 +191,9 @@ public sealed class SseAimProcessor : IAimProcessor
             {
                 var id = IdOf(entry.ObjectID);
                 if (id is null || SpeechStore.Get(_storage, id) is null) { report.Failed("AddedObjects", id, "no such Basic Speech Object"); continue; }
+                if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("AddedObjects", id, problem); continue; }
+                if (scene is null && NameBook.Clean(added.ObjectID) is null)
+                { report.Failed("AddedObjects", id, "a name is needed for the Speech Scene that is made: the command gives it in ObjectID"); continue; }
                 items.Add(new BasicSpeechSceneItem { ObjectSpaceTime = Placement(entry.SpatialAttitude), SpeechObject = new BasicSpeechObject { BasicSpeechObjectID = id } });
                 report.Done("AddedObjects", id); changed = true;
             }
@@ -172,33 +209,48 @@ public sealed class SseAimProcessor : IAimProcessor
         BasicSpeechSceneItem At(BasicSpeechSceneItem i, SpatialAttitude? a) =>
             new() { SpeechObject = i.SpeechObject, UserPoV = i.UserPoV, ObjectSpaceTime = Placement(a) ?? i.ObjectSpaceTime };
 
+        // Where a member goes is the command's amount: a position and an orientation; none is not guessed.
         if (data.MovedObjects is { Objects.Count: > 0 } moved)
-            foreach (var entry in moved.Objects) Replace("MovedObjects", entry.ObjectID, i => At(i, entry.NewSpatialAttitude));
+            foreach (var entry in moved.Objects)
+            {
+                if (Amounts.PlaceProblem(entry.NewSpatialAttitude) is { } problem) { report.Failed("MovedObjects", IdOf(entry.ObjectID), problem); continue; }
+                Replace("MovedObjects", entry.ObjectID, i => At(i, entry.NewSpatialAttitude));
+            }
         if (data.ChangedObjects is { Objects.Count: > 0 } changes)
-            foreach (var entry in changes.Objects) Replace("ChangedObjects", entry.ObjectID, i => At(i, entry.SpatialAttitude));
+            foreach (var entry in changes.Objects)
+            {
+                if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", IdOf(entry.ObjectID), problem); continue; }
+                Replace("ChangedObjects", entry.ObjectID, i => At(i, entry.SpatialAttitude));
+            }
         if (data.RemovedObjects is { Objects.Count: > 0 } removed)
             foreach (var entry in removed.Objects) Replace("RemovedObjects", entry.ObjectID, _ => null);
 
         if (listener is not null)
         {
             if (scene is null && !changed) report.Failed("UserPoV", null, "no Basic Speech Scene is open");
-            else { report.Done("UserPoV", before); changed = true; }
+            else { report.Done("UserPoV", N(before)); changed = true; }
         }
 
         if (!changed) return;
-        _open = Save(items, listener ?? scene?.UserPoV ?? Origin(), scene);
-        report.Produced(_open);   // every action done made this version
+        _open = Save(items, listener ?? scene?.UserPoV ?? Origin(), scene, before, data.AddedObjects?.ObjectID);
+        report.Produced(N(_open)!);   // every action done made this version, which the Scene's name now designates
     }
 
-    // A new version: BSS000001, BSS000002 ...
-    private string Save(IEnumerable<BasicSpeechSceneItem> items, PointOfView? userPoV, BasicSpeechSceneDescriptors? from)
+    // A new version: BSS000001, BSS000002 ... as the Module keys them. A Scene made before (oldKey) keeps its name, which designates the new version from now on; a new
+    // one has the name given, or the next free one - and no name, no Scene.
+    private string Save(IEnumerable<BasicSpeechSceneItem> items, PointOfView? userPoV, BasicSpeechSceneDescriptors? from, string? oldKey, string? newName)
     {
+        var existingName = _names.NameOf(oldKey);
+        if (existingName is null && NameBook.Clean(newName) is null) throw new NameNeededException("the Speech Scene");
         const string counter = "_counter:BSS";
         long next = _storage.MPAI_AIFM_SharedStorage_Exists(counter)
             ? long.Parse(Encoding.UTF8.GetString(_storage.MPAI_AIFM_SharedStorage_Get(counter))) + 1 : 1;
         _storage.MPAI_AIFM_SharedStorage_Put(counter, Encoding.UTF8.GetBytes(next.ToString()));
-        var id = $"BSS{next:D6}";
-        // A member is kept by its identifier only; its Speech Object stays where it is.
+        var key = $"BSS{next:D6}";
+        string id;
+        if (existingName is not null) { id = existingName; _names.Point(NamedKind.SpeechScene, id, key); }
+        else id = _names.Claim(NamedKind.SpeechScene, newName, key);
+        // A member is kept by its name only; its Speech Object stays where it is.
         var kept = items.Select(i => new BasicSpeechSceneItem
         {
             ObjectSpaceTime = i.ObjectSpaceTime, UserPoV = i.UserPoV,
@@ -214,9 +266,25 @@ public sealed class SseAimProcessor : IAimProcessor
             UserPoV = userPoV, ClosedSpace = from?.ClosedSpace, AcousticProfile = from?.AcousticProfile,
             ObjectCount = kept.Count, BasicSpeechSceneItems = kept
         };
-        _storage.MPAI_AIFM_SharedStorage_Put(id, Encoding.UTF8.GetBytes(MpaiJson.ToJson(scene)));
-        return id;
+        _storage.MPAI_AIFM_SharedStorage_Put(key, Encoding.UTF8.GetBytes(MpaiJson.ToJson(scene)));
+        return key;
     }
+
+    private void List(ObjectListing listing, CommandReport report)
+    {
+        if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
+        if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.SpeechScene)
+        { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
+        report.Listed(Listing());
+    }
+
+    // THE LIST (the author, 2026/10/26): the Speech Scenes the Module keeps - the version in force of each - by name, with the names of the Objects each holds.
+    private IReadOnlyList<ListedObject> Listing() =>
+        _names.All(NamedKind.SpeechScene).Select(e => new ListedObject
+        {
+            ObjectID = e.Name, Kind = ListKinds.SpeechScene,
+            MemberObjectIDs = Load(e.Key)?.BasicSpeechSceneItems.Select(i => i.SpeechObject?.BasicSpeechObjectID).Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList()
+        }).ToList();
 
     private BasicSpeechSceneDescriptors? Load(string? id) =>
         id is null || !_storage.MPAI_AIFM_SharedStorage_Exists(id) ? null

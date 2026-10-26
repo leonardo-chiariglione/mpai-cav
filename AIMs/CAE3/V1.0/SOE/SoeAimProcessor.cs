@@ -32,7 +32,15 @@ namespace Mpai.Cae.Soe;
 //                      2026/10/03) - so every Speech Scene holding it holds the
 //                      translation, at its place.
 //
-// A Speech Object is kept under its own identifier, changed in place.
+// A SPEECH OBJECT IS NAMED BY THE USER (the author, 2026/10/26): in the data, the commands and
+// the replies it is identified only by its name - "hello" - the value of its
+// BasicSpeechObjectID or SpeechObjectID; the Module's storage keys never leave it. A second
+// Object given a name that is taken is "hello 2". An Object arriving with no name is not
+// kept: the report says that a name is needed. ListedObjects lists the Speech Objects the
+// Module keeps, by name. A placement is the command's amount: a ChangedObjects without
+// the Spatial Attitude's position is reported as failed, not guessed.
+//
+// A Speech Object is kept under its own name, changed in place.
 public sealed class SoeAimProcessor : IAimProcessor
 {
     private readonly ISharedStorage _storage;
@@ -75,21 +83,29 @@ public sealed class SoeAimProcessor : IAimProcessor
         string? In(string port) =>
             port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
-        // 1. opening, or keeping, by Port.
+        // 1. opening, or keeping, by Port: the Object the Module keeps under the name, when it is the same speech; any other is a new one, under that name or the next
+        // free one. An Object with no name is not kept.
         string? several = null;
+        string? unnamed = null;     // why an arriving Object was not taken, to be reported
         if (In(_objectPort) is { } objectJson)
         {
-            var arrived = SpeechStore.Parse(objectJson);
-            if (SpeechStore.Alone(arrived) is { } speech)
+            try
             {
-                _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null ? speech.BasicSpeechObjectID : SpeechStore.Keep(_storage, speech);
-                Console.WriteLine($"[CAE-SOE-V1.0] open {_open}");
+                var arrived = SpeechStore.Parse(objectJson);
+                if (SpeechStore.Alone(arrived) is { } speech)
+                {
+                    if (NameBook.Clean(speech.BasicSpeechObjectID) is null) throw new NameNeededException("the Basic Speech Object");
+                    _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null && SpeechStore.IsTheSpeech(_storage, speech) ? speech.BasicSpeechObjectID.Trim() : SpeechStore.Keep(_storage, speech);
+                    Console.WriteLine($"[CAE-SOE-V1.0] open {_open}");
+                }
+                else
+                {
+                    several = SpeechStore.KeepObject(_storage, arrived);
+                    Console.WriteLine($"[CAE-SOE-V1.0] speech object {several}");
+                }
             }
-            else
-            {
-                several = SpeechStore.KeepObject(_storage, arrived);
-                Console.WriteLine($"[CAE-SOE-V1.0] speech object {several}");
-            }
+            catch (NameNeededException e) { unnamed = $"{e.Message}: the Object is named in its identifier (BasicSpeechObjectID, SpeechObjectID)"; }
+            catch (InvalidOperationException e) { unnamed = e.Message; }
         }
 
         // 2. a User PoV on its Port.
@@ -118,8 +134,10 @@ public sealed class SoeAimProcessor : IAimProcessor
         // 4. acting, by Command.
         if (In(_commandPort) is { } commandJson)
         {
-            var command = MpaiJson.FromJson<UserCommand>(commandJson);
+            var command = CommandReader.Read(commandJson, out var rejection);
+            if (command is null) { if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(rejection); goto opened; }
             var report = new CommandReport(command);
+            if (unnamed is not null) report.Failed("AcquiredObject", null, unnamed);
             if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) { _undo.Revoke(revoked, report); outputs[_reportOut] = MpaiJson.ToJson(report.Report()); goto opened; }
             var waiting = Apply(command, report, outputs);
             if (_overwritten.Count > 0)
@@ -129,6 +147,13 @@ public sealed class SoeAimProcessor : IAimProcessor
             }
             // A translation is reported when it comes back; anything else now.
             if (!waiting && _reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
+        }
+        else if (unnamed is not null && _reportOut.Length > 0)
+        {
+            // An Object that came by its Port and was not taken: no command to report under, so a report of its own.
+            var report = new CommandReport(new UserCommand { UserCommandID = Guid.NewGuid().ToString() });
+            report.Failed("AcquiredObject", null, unnamed);
+            outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
 
         // 5. the Speech Object: one stored in this run, else the open Object as a Speech Object of one.
@@ -157,6 +182,7 @@ public sealed class SoeAimProcessor : IAimProcessor
     {
         var data = command.UserCommandRQ;
         if (data is null) return false;
+        if (data.ListedObjects is { } listing) List(listing, report);
         const string inScene = "where an Object is in a Scene is Speech Scene Editing's";
         foreach (var (action, any) in new[] { ("AddedObjects", data.AddedObjects is { Objects.Count: > 0 }),
                                               ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
@@ -181,7 +207,8 @@ public sealed class SoeAimProcessor : IAimProcessor
                 if (entry.Qualifier is { } q && System.Text.Json.JsonSerializer.Serialize(q) is var qJson &&
                     System.Text.Json.Nodes.JsonNode.Parse(qJson)?["Header"]?.GetValue<string>() == SpeechQualifierHeader)
                     qualifier = MpaiJson.FromJson<SpeechQualifier>(qJson);
-                if (qualifier is null && entry.SpatialAttitude is null) { report.Failed("ChangedObjects", id, "nothing to change: a Speech Qualifier or a Spatial Attitude is expected"); continue; }
+                if (qualifier is null && entry.SpatialAttitude is null) { report.Failed("ChangedObjects", id, "nothing to change: a Speech Qualifier or a Spatial Attitude is required"); continue; }
+                if (entry.SpatialAttitude is not null && Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", id, problem); continue; }
                 Keep(speech);
                 SpeechStore.Put(_storage, SpeechStore.With(speech, qualifier: qualifier,
                     spaceTime: entry.SpatialAttitude is null ? null : new SpaceTime { SpatialAttitude1 = entry.SpatialAttitude }));
@@ -209,6 +236,14 @@ public sealed class SoeAimProcessor : IAimProcessor
             }
         }
         return false;
+    }
+
+    private void List(ObjectListing listing, CommandReport report)
+    {
+        if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
+        if (listing.Kind != ListKinds.All && ListKinds.ListedBy(listing.Kind) != "Speech Object Editing")
+        { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
+        report.Listed(SpeechStore.Listing(_storage, listing.Kind!));
     }
 
     private static string? IdOf(ManagedObject? managed) =>

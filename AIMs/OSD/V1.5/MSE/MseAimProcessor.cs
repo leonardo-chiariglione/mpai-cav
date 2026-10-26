@@ -44,14 +44,20 @@ namespace Mpai.Osd.Mse;
 //
 // MULTIMODAL: the Scene is output when its members are of at least two media.
 //
-// THE MEMBERS BEING EDITED ARE FOLLOWED. A Scene or an Object is edited in new
-// versions; the one arriving on a Port is the one now open there. A member that is the
-// version last arrived on that Port is replaced by the new one - a new version of the
-// Multimodal Scene - so it holds its members as they now are.
+// THE MEMBERS ARE NAMED BY THE USER (the author, 2026/10/26): a Scene or an Object is
+// identified only by its name - "concert" - in the data, the commands and the replies; the
+// Module's storage keys never leave it. A Scene or an Object is edited in new versions
+// that keep its name; the one arriving on a Port is the one now open there, so a member
+// held by its name is held as it now is, with no replacing. The first member added to no
+// open Multimodal Scene creates one, under the name the command gives (ObjectID of
+// AddedObjects, required then); a second Multimodal Scene given a name that is taken is
+// "mix 2". Where a member is put, to where it is moved, are the command's amounts: a
+// command without them is reported as failed, not guessed. ListedObjects lists the
+// Multimodal Scenes the Module keeps, by name, with their members.
 //
-// Every edit is a new version in Shared Storage (MSD000001 ...). A member is held by
-// its identifier; each is kept as it last arrived - complete, as its Editing AIM gave
-// it - and output so.
+// Every edit is a new version in Shared Storage (MSD000001 ... as the Module keys them).
+// A member is held by its name; each is kept as it last arrived - complete, as its Editing
+// AIM gave it - and output so.
 public sealed class MseAimProcessor : IAimProcessor
 {
     // What a Multimodal Scene holds, by Header: its medium, the field that carries its
@@ -117,9 +123,11 @@ public sealed class MseAimProcessor : IAimProcessor
     private readonly string _sceneOut;
     private readonly string _reportOut;
 
-    private string? _open;
+    private string? _open;      // the key of the version in force (the Module's own; the User is told the name)
     private readonly UndoJournal _undo = new();
-    private readonly string?[] _last;       // the version last arrived on each Port
+    private readonly NameBook _names;
+
+    private string? N(string? key) => _names.NameOf(key);
 
     public string InstanceId { get; }
 
@@ -128,12 +136,12 @@ public sealed class MseAimProcessor : IAimProcessor
         InstanceId   = instanceId;
         _storage     = storage;
         _mInstanceId = mInstanceId;
+        _names       = new NameBook(storage);
         _commandPort = ports.Input("CAE-UCM-V1.0");
         // Each Port takes any medium: a Scene Port is found by the first Data Type it
         // lists (OSD-ASD), an Object Port by its own first (OSD-AUO).
         _inPorts     = [ports.InputOrDefault("OSD-ASD-V1.5", 1, ""), ports.InputOrDefault("OSD-ASD-V1.5", 2, ""),
                         ports.InputOrDefault("OSD-AUO-V1.5", 1, ""), ports.InputOrDefault("OSD-AUO-V1.5", 2, "")];
-        _last        = new string?[_inPorts.Length];
         _povPort     = ports.InputOrDefault("OSD-OPV-V1.5", "");
         _sceneOut    = ports.Output("OSD-MSD-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
@@ -145,29 +153,32 @@ public sealed class MseAimProcessor : IAimProcessor
         string? In(string port) =>
             port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
-        // 1. the Scenes and Objects being edited, followed.
-        for (var i = 0; i < _inPorts.Length; i++)
-            if (In(_inPorts[i]) is { } json && Keep(json) is { } id)
-                _last[i] = Follow(_last[i], id);
+        // 1. the Scenes and Objects being edited: kept as they come, under their names.
+        foreach (var port in _inPorts)
+            if (In(port) is { } json) Keep(json);
 
         PointOfView? pov = In(_povPort) is { } povJson ? MpaiJson.FromJson<PointOfView>(povJson) : null;
 
         // 2. acting, by Command; the report goes back under the command's identifier.
         if (In(_commandPort) is { } commandJson)
         {
-            var command = MpaiJson.FromJson<UserCommand>(commandJson);
-            var report = new CommandReport(command);
-            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            var command = CommandReader.Read(commandJson, out var rejection);
+            if (command is null) { if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(rejection); }
             else
             {
-                var before = _open;
-                Apply(command, pov, report);
-                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+                var report = new CommandReport(command);
+                if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+                else
+                {
+                    var before = _open;
+                    Apply(command, pov, report);
+                    _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { _open = v; if (v is not null && N(v) is { } n) _names.Point(NamedKind.MultimodalScene, n, v); }, N);
+                }
+                if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
-            if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
         else if (pov is not null && Load(_open) is { } scene)
-            _open = Save(Members(scene), pov, scene);
+            _open = Save(Members(scene), pov, scene, _open, null);
 
         // 3. the open Multimodal Scene, as it now stands - when it is multimodal.
         if (Load(_open) is { } open && Media(Members(open)) >= 2)
@@ -196,11 +207,11 @@ public sealed class MseAimProcessor : IAimProcessor
     // Where a member is kept by this AIM: apart from the Editing AIMs' own.
     private static string Key(string id) => "mse:" + id;
 
-    // A member as kept by this AIM, else as Shared Storage holds it; null when none.
+    // A member as kept by this AIM, else as Shared Storage holds it under its name (the version in force); null when none.
     private JsonNode? Stored(string id)
     {
-        foreach (var key in new[] { Key(id), id })
-            if (_storage.MPAI_AIFM_SharedStorage_Exists(key))
+        foreach (var key in new[] { Key(id), _names.KeyOfAny(id) })
+            if (key is not null && _storage.MPAI_AIFM_SharedStorage_Exists(key))
                 try { return JsonNode.Parse(Encoding.UTF8.GetString(_storage.MPAI_AIFM_SharedStorage_Get(key))); } catch { }
         return null;
     }
@@ -209,27 +220,17 @@ public sealed class MseAimProcessor : IAimProcessor
     private Kind? KindOf(string id) =>
         Stored(id)?["Header"]?.GetValue<string>() is { } header && Kinds.TryGetValue(header, out var kind) ? kind : null;
 
-    // The open Multimodal Scene holding the version last arrived holds the new one.
-    private string Follow(string? last, string now)
-    {
-        if (last is null || last == now || Load(_open) is not { } scene) return now;
-        var members = Members(scene);
-        if (!members.Any(m => m.Id == last)) return now;
-        _open = Save(members.Select(m => m.Id == last ? m with { Id = now } : m), UserPoVOf(scene), scene);
-        Console.WriteLine($"[OSD-MSE-V1.5] {last} -> {now} in {_open}");
-        return now;
-    }
-
     private void Apply(UserCommand command, PointOfView? pov, CommandReport report)
     {
         var data = command.UserCommandRQ;
         if (data is null) return;
         var listener = data.UserPoV ?? pov;
 
+        if (data.ListedObjects is { } listing) List(listing, report);
         if (data.ModifiedObjects is { Objects.Count: > 0 })
-            report.NotSupported("ModifiedObjects", _open, "what an Object is like is its Object Editing's");
+            report.NotSupported("ModifiedObjects", N(_open), "what an Object is like is its Object Editing's");
         if (data.TranslatedObjects is { Objects.Count: > 0 })
-            report.NotSupported("TranslatedObjects", _open, "speech is translated by Speech Object Editing");
+            report.NotSupported("TranslatedObjects", N(_open), "speech is translated by Speech Object Editing");
 
         var scene = Load(_open);
         var members = scene is null ? new List<Member>() : Members(scene);
@@ -242,9 +243,12 @@ public sealed class MseAimProcessor : IAimProcessor
                 var kind = id is null ? null : KindOf(id);
                 if (kind is null)
                 {
-                    report.Failed("AddedObjects", id, "a Multimodal Scene holds Scenes and Objects, named by their identifiers in Shared Storage");
+                    report.Failed("AddedObjects", id, "a Multimodal Scene holds Scenes and Objects, named by their names");
                     continue;
                 }
+                if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("AddedObjects", id, problem); continue; }
+                if (scene is null && NameBook.Clean(added.ObjectID) is null)
+                { report.Failed("AddedObjects", id, "a name is needed for the Multimodal Scene that is made: the command gives it in ObjectID"); continue; }
                 if (kind.List is null)
                 {
                     report.Failed("AddedObjects", id, $"a Multimodal Scene has no list for {kind.Medium}");
@@ -263,22 +267,31 @@ public sealed class MseAimProcessor : IAimProcessor
         }
         Member At(Member m, SpatialAttitude? a) => m with { Place = Placement(a) ?? m.Place };
 
+        // Where a member goes is the command's amount: a position and an orientation; none is not guessed.
         if (data.MovedObjects is { Objects.Count: > 0 } moved)
-            foreach (var e in moved.Objects) Replace("MovedObjects", e.ObjectID?.ObjectID, m => At(m, e.NewSpatialAttitude));
+            foreach (var e in moved.Objects)
+            {
+                if (Amounts.PlaceProblem(e.NewSpatialAttitude) is { } problem) { report.Failed("MovedObjects", e.ObjectID?.ObjectID, problem); continue; }
+                Replace("MovedObjects", e.ObjectID?.ObjectID, m => At(m, e.NewSpatialAttitude));
+            }
         if (data.ChangedObjects is { Objects.Count: > 0 } changes)
-            foreach (var e in changes.Objects) Replace("ChangedObjects", e.ObjectID?.ObjectID, m => At(m, e.SpatialAttitude));
+            foreach (var e in changes.Objects)
+            {
+                if (Amounts.PlaceProblem(e.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", e.ObjectID?.ObjectID, problem); continue; }
+                Replace("ChangedObjects", e.ObjectID?.ObjectID, m => At(m, e.SpatialAttitude));
+            }
         if (data.RemovedObjects is { Objects.Count: > 0 } removed)
             foreach (var e in removed.Objects) Replace("RemovedObjects", e.ObjectID?.ObjectID, _ => null);
 
         if (listener is not null)
         {
             if (scene is null && !changed) report.Failed("UserPoV", null, "no Multimodal Scene is open");
-            else { report.Done("UserPoV", _open); changed = true; }
+            else { report.Done("UserPoV", N(_open)); changed = true; }
         }
 
         if (!changed) return;
-        _open = Save(members, listener ?? (scene is null ? null : UserPoVOf(scene)), scene);
-        report.Produced(_open);
+        _open = Save(members, listener ?? (scene is null ? null : UserPoVOf(scene)), scene, scene is null ? null : _open, data.AddedObjects?.ObjectID);
+        report.Produced(N(_open)!);
     }
 
     private int Media(IEnumerable<Member> members) =>
@@ -306,15 +319,21 @@ public sealed class MseAimProcessor : IAimProcessor
         return null;
     }
 
-    // A new version: MSD000001, MSD000002 ... Each member, Scene or Object by its Header,
-    // goes in its own list, held by its identifier; a list with no member is left out.
-    private string Save(IEnumerable<Member> members, PointOfView? userPoV, JsonObject? from)
+    // A new version: MSD000001, MSD000002 ... as the Module keys them. A Multimodal Scene made before (oldKey) keeps its name, which designates the new version from now
+    // on; a new one has the name given, or the next free one - and no name, no Scene. Each member, Scene or Object by its Header, goes in its own list, held by its name;
+    // a list with no member is left out.
+    private string Save(IEnumerable<Member> members, PointOfView? userPoV, JsonObject? from, string? oldKey, string? newName)
     {
+        var existingName = _names.NameOf(oldKey);
+        if (existingName is null && NameBook.Clean(newName) is null) throw new NameNeededException("the Multimodal Scene");
         const string counter = "_counter:MSD";
         long next = _storage.MPAI_AIFM_SharedStorage_Exists(counter)
             ? long.Parse(Encoding.UTF8.GetString(_storage.MPAI_AIFM_SharedStorage_Get(counter))) + 1 : 1;
         _storage.MPAI_AIFM_SharedStorage_Put(counter, Encoding.UTF8.GetBytes(next.ToString()));
-        var id = $"MSD{next:D6}";
+        var key = $"MSD{next:D6}";
+        string id;
+        if (existingName is not null) { id = existingName; _names.Point(NamedKind.MultimodalScene, id, key); }
+        else id = _names.Claim(NamedKind.MultimodalScene, newName, key);
         var kept = members.ToList();
         var scene = new JsonObject
         {
@@ -335,8 +354,21 @@ public sealed class MseAimProcessor : IAimProcessor
             scene[list.Replace("Objects", "ObjectCount").Replace("Scenes", "SceneCount")] = held.Length;
             scene[list] = new JsonArray(held);
         }
-        _storage.MPAI_AIFM_SharedStorage_Put(id, Encoding.UTF8.GetBytes(scene.ToJsonString()));
-        return id;
+        _storage.MPAI_AIFM_SharedStorage_Put(key, Encoding.UTF8.GetBytes(scene.ToJsonString()));
+        return key;
+    }
+
+    private void List(ObjectListing listing, CommandReport report)
+    {
+        if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
+        if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.MultimodalScene)
+        { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
+        // THE LIST (the author, 2026/10/26): the Multimodal Scenes the Module keeps - the version in force of each - by name, with the names of their members.
+        report.Listed(_names.All(NamedKind.MultimodalScene).Select(e => new ListedObject
+        {
+            ObjectID = e.Name, Kind = ListKinds.MultimodalScene,
+            MemberObjectIDs = Load(e.Key) is { } held ? Members(held).Select(m => m.Id).ToList() : null
+        }).ToList());
     }
 
     private JsonObject? Load(string? id) =>

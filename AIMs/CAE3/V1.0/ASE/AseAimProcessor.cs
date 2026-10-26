@@ -36,8 +36,15 @@ namespace Mpai.Cae.Ase;
 // sub-scene, under the Basic Scene's identifier - its Closed Space, its Acoustic Profile
 // and its Objects stay in it, as Shared Storage holds them.
 //
+// A SCENE AND AN OBJECT ARE NAMED BY THE USER (the author, 2026/10/26): in the data, the
+// commands and the replies they are identified only by their names; the Module's storage
+// keys never leave it. The first Object added to no open Scene creates one, under the
+// name the command gives (ObjectID of AddedObjects, required then); a second Scene given
+// a name that is taken is "concert 2". The amounts - where an Object is put, to where it
+// is moved - are the command's: a command without them is reported as failed, not guessed.
+//
 // Every edit is a new version in Shared Storage. The Objects are read from Shared
-// Storage by their identifiers; what Audio Object Editing leaves is there (the Audio
+// Storage by their names; what Audio Object Editing leaves is there (the Audio
 // Object port is for the Controller to connect; nothing has to be read from it).
 public sealed class AseAimProcessor : IAimProcessor
 {
@@ -50,7 +57,7 @@ public sealed class AseAimProcessor : IAimProcessor
     private readonly string _sceneOut;
     private readonly string _reportOut;
 
-    // What is open, between runs.
+    // What is open, between runs: the key of the version in force (the Module's own; the User is told the name).
     private string? _open;
     private readonly UndoJournal _undo = new();
 
@@ -68,6 +75,8 @@ public sealed class AseAimProcessor : IAimProcessor
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
 
+    private string? N(string? key) => _ase.SceneName(key);
+
     public Task<Message> ProcessAsync(Message message)
     {
         var outputs = new Dictionary<string, string>();
@@ -77,7 +86,7 @@ public sealed class AseAimProcessor : IAimProcessor
         {
             var id = BasicSceneOf(MpaiJson.FromJson<AudioSceneDescriptors>(sceneJson));
             // A Scene the storage does not hold cannot be opened: the one open stays, and nothing is raised - an AIM that threw would stop the Module.
-            if (!string.IsNullOrWhiteSpace(id) && _ase.Has(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {_open}"); }
+            if (id is not null && _ase.Has(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {N(_open)}"); }
         }
 
         PointOfView? pov = null;
@@ -87,16 +96,20 @@ public sealed class AseAimProcessor : IAimProcessor
         // 2. acting, by Command; the report goes back under the command's identifier.
         if (message.Ports.TryGetValue(_commandPort, out var commandJson) && !string.IsNullOrWhiteSpace(commandJson))
         {
-            var command = MpaiJson.FromJson<UserCommand>(commandJson);
-            var report = new CommandReport(command);
-            if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+            var command = CommandReader.Read(commandJson, out var rejection);
+            if (command is null) { if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(rejection); }
             else
             {
-                var before = _open;
-                Apply(command, pov, report);
-                _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => _open = v);
+                var report = new CommandReport(command);
+                if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
+                else
+                {
+                    var before = _open;
+                    Apply(command, pov, report);
+                    _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { _open = v; _ase.Select(v); }, N);
+                }
+                if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
-            if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
         }
         else if (pov is not null && _open is not null)
             _open = _ase.SetBasicSceneListener(_open, pov).AssetId;
@@ -112,16 +125,13 @@ public sealed class AseAimProcessor : IAimProcessor
         });
     }
 
-    // The Basic Audio Scene an Audio Scene holds: the first sub-scene that is one - in full, or by its identifier - else the Audio Scene's own identifier, which is a
-    // Basic Scene's when the Scene is one this AIM gave.
-    private static string? BasicSceneOf(AudioSceneDescriptors scene)
+    // The Basic Audio Scene an Audio Scene holds: the first sub-scene that is one the Module keeps - in full, or by its name - else the Audio Scene's own name, which is a
+    // Basic Scene's when the Scene is one this AIM gave. The key of the version in force.
+    private string? BasicSceneOf(AudioSceneDescriptors scene)
     {
         foreach (var sub in scene.SubAudioScenes ?? [])
-        {
-            var id = sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId;
-            if (id is not null && id.StartsWith("BAS", StringComparison.Ordinal)) return id;
-        }
-        return scene.AudioSceneDescriptorsID.StartsWith("BAS", StringComparison.Ordinal) ? scene.AudioSceneDescriptorsID : null;
+            if (_ase.SceneKey(sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId) is { } held) return held;
+        return _ase.SceneKey(scene.AudioSceneDescriptorsID);
     }
 
     // The open Basic Audio Scene as the Audio Scene this AIM gives: the Scene is the one sub-scene, which stands at the origin of the Audio Scene's frame.
@@ -131,7 +141,7 @@ public sealed class AseAimProcessor : IAimProcessor
         return new AudioSceneDescriptors
         {
             MInstanceID = basic.MInstanceID, UEnvironmentID = basic.UEnvironmentID,
-            AudioSceneDescriptorsID = basicSceneId,
+            AudioSceneDescriptorsID = basic.BasicAudioSceneDescriptorsID,
             AudioSceneDescriptorsTime = basic.BasicAudioSceneDescriptorsTime,
             AudioSceneDescriptorsSpaceTime = basic.BASSpaceTime ?? new SpaceTime(),
             UserPoV = basic.UserPoV,
@@ -146,10 +156,11 @@ public sealed class AseAimProcessor : IAimProcessor
         if (data is null) return;
         var listener = data.UserPoV ?? pov;
 
+        if (data.ListedObjects is { } listing) List(listing, report);
         if (data.ModifiedObjects is { Objects.Count: > 0 })
-            report.NotSupported("ModifiedObjects", _open, "what an Object is like is Audio Object Editing's");
+            report.NotSupported("ModifiedObjects", N(_open), "what an Object is like is Audio Object Editing's");
         if (data.TranslatedObjects is { Objects.Count: > 0 })
-            report.NotSupported("TranslatedObjects", _open, "speech is translated by Speech Object Editing");
+            report.NotSupported("TranslatedObjects", N(_open), "speech is translated by Speech Object Editing");
 
         // What is taken out first, then what is put in: one command replaces an Object with another at the same PoV. An Object is named by an identifier, by the Object
         // itself (the Object or ID of the data types), or - for taking out and moving - by where it is.
@@ -159,17 +170,24 @@ public sealed class AseAimProcessor : IAimProcessor
             foreach (var entry in added.Objects)
             {
                 var id = IdOf(entry.ObjectID);
-                if (id is null || !id.StartsWith("BAO", StringComparison.Ordinal))
+                var key = _ase.ObjectKey(id);
+                if (!_ase.IsBasicObject(key))
                 {
-                    report.Failed("AddedObjects", id, "a Basic Audio Scene holds Basic Audio Objects, named by their identifiers");
+                    report.Failed("AddedObjects", id, "a Basic Audio Scene holds Basic Audio Objects, named by their names");
+                    continue;
+                }
+                if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("AddedObjects", id, problem); continue; }
+                if (_open is null && NameBook.Clean(added.ObjectID) is null)
+                {
+                    report.Failed("AddedObjects", id, "a name is needed for the Audio Scene that is made: the command gives it in ObjectID");
                     continue;
                 }
                 try
                 {
                     _open = _open is null
-                        ? _ase.CreateBasicScene(id, listener ?? Origin(), Placement(entry.SpatialAttitude)).AssetId
-                        : _ase.AddObjectToBasicScene(_open, id, Placement(entry.SpatialAttitude)).AssetId;
-                    report.Done("AddedObjects", id, _open);
+                        ? _ase.CreateBasicScene(key!, listener ?? Origin(), Placement(entry.SpatialAttitude), added.ObjectID).AssetId
+                        : _ase.AddObjectToBasicScene(_open, key!, Placement(entry.SpatialAttitude)).AssetId;
+                    report.Done("AddedObjects", id, N(_open));
                 }
                 catch (Exception failure) { report.Failed("AddedObjects", id, failure.Message); }
             }
@@ -180,6 +198,8 @@ public sealed class AseAimProcessor : IAimProcessor
                                                   ("ChangedObjects", data.ChangedObjects is { Objects.Count: > 0 }),
                                                   ("RemovedObjects", data.RemovedObjects is { Objects.Count: > 0 }) })
                 if (any) report.Failed(action, null, "no Basic Audio Scene is open");
+            if (data.ClosedSpace is { Count: > 0 }) report.Failed("ClosedSpace", null, "no Basic Audio Scene is open");
+            if (data.ModifiedScene?.AcousticProfile is not null) report.Failed("ModifiedScene", null, "no Basic Audio Scene is open");
             return;
         }
 
@@ -202,25 +222,22 @@ public sealed class AseAimProcessor : IAimProcessor
         // The acoustics of the Scene: its Acoustic Profile, as given.
         if (data.ModifiedScene?.AcousticProfile is { } acoustics)
         {
-            var before = _open;
             _open = _ase.SetBasicSceneAcousticProfile(_open, acoustics).AssetId;
-            report.Done("ModifiedScene", before, _open);
+            report.Done("ModifiedScene", N(_open), N(_open));
         }
 
         // The room: the space the Scene is in, replaced as given.
         if (data.ClosedSpace is { Count: > 0 } room)
         {
-            var before = _open;
             _open = _ase.SetBasicSceneClosedSpace(_open, room).AssetId;
-            report.Done("ClosedSpace", before, _open);
+            report.Done("ClosedSpace", N(_open), N(_open));
         }
 
         // Once, on the Scene: its User PoV overrides each member's.
         if (listener is not null)
         {
-            var before = _open;
             _open = _ase.SetBasicSceneListener(_open, listener).AssetId;
-            report.Done("UserPoV", before, _open);
+            report.Done("UserPoV", N(_open), N(_open));
         }
     }
 
@@ -271,7 +288,7 @@ public sealed class AseAimProcessor : IAimProcessor
             {
                 var result = _ase.RemoveFromBasicScene(_open!, id);
                 if (result is null) report.Failed("RemovedObjects", id, "the open Scene has no such member");
-                else { _open = result.AssetId; report.Done("RemovedObjects", id, _open); }
+                else { _open = result.AssetId; report.Done("RemovedObjects", id, N(_open)); }
             }
         }
     }
@@ -279,10 +296,20 @@ public sealed class AseAimProcessor : IAimProcessor
     // A move or a change is the member re-placed at the new attitude.
     private void Place(string action, string? id, SpatialAttitude? attitude, CommandReport report)
     {
+        // The amount is the command's: where the member is to be is a position and an orientation it carries; none is not guessed.
+        if (Amounts.PlaceProblem(attitude) is { } problem) { report.Failed(action, id, problem); return; }
         var result = id is null ? null : _ase.ReplaceInBasicScene(_open!, id, Placement(attitude));
         if (result is null) { report.Failed(action, id, "the open Scene has no such member"); return; }
         _open = result.AssetId;
-        report.Done(action, id, _open);
+        report.Done(action, id, N(_open));
+    }
+
+    private void List(ObjectListing listing, CommandReport report)
+    {
+        if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
+        if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.AudioScene)
+        { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
+        report.Listed(_ase.Listing(listing.Kind!));
     }
 
     private static PointOfView Origin() => new() { PointOfViewID = Guid.NewGuid().ToString(), CartPosition = [0, 0, 0], Orientation = [0, 0, 0] };

@@ -50,6 +50,9 @@ public sealed class UserCommandRS
     public SimpleTime?        ReportTime { get; init; }
     public string             Outcome    { get; init; } = "Done";   // Done | Partly | Failed | Ignored
     public List<ReportAction> Actions    { get; init; } = new();
+
+    // THE ANSWER TO A LIST (the author, 2026/10/26): the names of the Objects and Scenes asked for - never a storage key.
+    public List<ListedObject>? ListedObjects { get; init; }
 }
 
 public sealed class ReportAction
@@ -66,6 +69,7 @@ public sealed class ReportAction
 public sealed class CommandReport(UserCommand command)
 {
     private readonly List<ReportAction> actions = new();
+    private List<ListedObject>? listed;
 
     public void Done(string action, string? objectId, string? resultId = null) =>
         actions.Add(new ReportAction { Action = action, ObjectID = objectId, ResultID = resultId });
@@ -76,10 +80,17 @@ public sealed class CommandReport(UserCommand command)
     public void NotSupported(string action, string? objectId, string reason) =>
         actions.Add(new ReportAction { Action = action, ObjectID = objectId, Outcome = "NotSupported", Reason = reason });
 
+    // The answer to a List: what the AIM keeps of the Kind asked for, by name.
+    public void Listed(IEnumerable<ListedObject> entries, string? resultId = null)
+    {
+        (listed ??= new()).AddRange(entries);
+        actions.Add(new ReportAction { Action = "ListedObjects", ResultID = resultId });
+    }
+
     // The version the actions done so far produced, for those that do not name one yet.
     public void Produced(string resultId)
     {
-        foreach (var a in actions) if (a.Outcome == "Done" && a.ResultID is null) a.ResultID = resultId;
+        foreach (var a in actions) if (a.Outcome == "Done" && a.ResultID is null && a.Action != "ListedObjects") a.ResultID = resultId;
     }
 
     public bool Any => actions.Count > 0;
@@ -94,7 +105,8 @@ public sealed class CommandReport(UserCommand command)
             Outcome = actions.Count == 0 ? "Ignored"
                     : actions.All(a => a.Outcome == "Done") ? "Done"
                     : actions.Any(a => a.Outcome == "Done") ? "Partly" : "Failed",
-            Actions = actions.ToList()
+            Actions = actions.ToList(),
+            ListedObjects = listed
         }
     };
 }
@@ -114,6 +126,8 @@ public sealed class UserCommandRQ
     public ManagedObject?   DeliveredObject { get; init; }
 
     public ObjectPlacements? AddedObjects    { get; init; }
+    // THE LIST (the author, 2026/10/26): the Objects and Scenes the Module keeps, of one Kind or of all, by name.
+    public ObjectListing?    ListedObjects   { get; init; }
     public ObjectPlacements? RemovedObjects  { get; init; }
     public ObjectMovements?  MovedObjects    { get; init; }
     public ObjectChanges?    ChangedObjects  { get; init; }
@@ -149,7 +163,27 @@ public sealed class ManagedObject
 
 public sealed class ObjectPlacements
 {
+    // The name of the Audio Object, or of the Scene, that an AddedObjects makes (the author, 2026/10/26: a thing is created under a name the User gives, never a name made
+    // up). Needed when the command makes one; not used by RemovedObjects.
+    public string? ObjectID { get; init; }
     public List<ObjectPlacement> Objects { get; init; } = new();
+}
+
+public sealed class ObjectListing
+{
+    public string? Kind { get; init; }       // Audio Object | Basic Audio Object | Speech Object | Basic Speech Object | Audio Scene | Speech Scene | Multimodal Scene | All
+}
+
+// THE AMOUNTS OF A COMMAND ARE THE USER'S (the author, 2026/10/26): a position, an orientation, a loudness is a number the command carries; an AIM that finds none does not
+// guess one - it reports why.
+public static class Amounts
+{
+    // Why a placement is not one, or null when it is.
+    public static string? PlaceProblem(SpatialAttitude? attitude) =>
+        attitude is null ? "the Spatial Attitude with a position and an orientation is required"
+        : attitude.Position is not { } p || !(p.CartPosition is { Length: >= 3 } || p.SpherPosition is { Length: >= 3 }) ? "the position needs its coordinates (three numbers)"
+        : attitude.Orientation is null ? "the orientation is required"
+        : null;
 }
 
 public sealed class ObjectPlacement
@@ -263,4 +297,35 @@ public sealed class TextForUA
     public SimpleTime? TextForUATime { get; init; }
     public string Text { get; init; } = "";
     public string? DescrMetadata { get; init; }
+}
+
+// A COMMAND THAT CANNOT BE READ IS REPORTED, NOT GUESSED (the author, 2026/10/26): a number given as a word, an amount of the wrong type. The AIM does not stop, nor does it
+// make the number up: the command's own ID, with the operation that could not be read, failed, and why.
+public static class CommandReader
+{
+    public static readonly string[] Operations =
+        ["UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects",
+         "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects"];
+
+    // The command; null when the JSON is not one, and then rejection is the report to give.
+    public static UserCommand? Read(string json, out UserCommand? rejection)
+    {
+        rejection = null;
+        try { return MpaiJson.FromJson<UserCommand>(json); }
+        catch (Exception e) when (e is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            JsonNode? node = null;
+            try { node = JsonNode.Parse(json); } catch { }
+            var id = node?["UserCommandID"] is JsonValue v && v.TryGetValue<string>(out var s) ? s : Guid.NewGuid().ToString();
+            var report = new CommandReport(new UserCommand { UserCommandID = id });
+            var operations = (node?["UserCommandRQ"] as JsonObject)?.Select(p => p.Key).Where(Operations.Contains).ToList() ?? [];
+            var at = (e as JsonException)?.Path?.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (at is { Length: > 2 } && Operations.Contains(at[2].Split('[')[0])) operations = [at[2].Split('[')[0]];
+            var reason = "the command cannot be read as a User Command" + (e is JsonException { Path: { } path } ? $" (at {path})" : "") + ": every amount is a number the command carries";
+            if (operations.Count == 0) operations = ["AcquiredObject"];
+            foreach (var operation in operations) report.Failed(operation, null, reason);
+            rejection = report.Report();
+            return null;
+        }
+    }
 }
