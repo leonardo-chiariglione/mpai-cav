@@ -34,10 +34,9 @@
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <Button x:Name="LoadButton" Grid.Column="0" Content="Load Image..." Padding="10,4" Margin="0,0,8,0" Click="LoadButton_Click"/>
+      <Button x:Name="StopButton" Grid.Column="0" Content="Stop" Padding="10,4" Margin="0,0,8,0" Click="StopButton_Click" IsEnabled="False"/>
       <TextBox x:Name="QuestionBox" Grid.Column="1" FontSize="14" VerticalContentAlignment="Center" Padding="6,2"/>
-      <Button x:Name="SpeakButton" Grid.Column="2" Content="Speak Question" Padding="10,4" Margin="8,0,0,0" Click="SpeakButton_Click" IsEnabled="False"/>
-      <Button x:Name="AskButton" Grid.Column="3" Content="Ask" Padding="16,4" Margin="8,0,0,0" Click="AskButton_Click" IsEnabled="False"/>
+      <Button x:Name="AskButton" Grid.Column="3" Content="Ask" Padding="16,4" Margin="8,0,0,0" IsEnabled="False"/>
     </Grid>
 
     <!-- answer -->

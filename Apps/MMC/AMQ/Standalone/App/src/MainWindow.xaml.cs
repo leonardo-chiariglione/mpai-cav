@@ -1,57 +1,58 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using Microsoft.Win32;
-
-using AIF.Controller;   // AifError
-using AIF.Store;        // AmdStore
 
 using Mpai.Core;
-using Mpai.UaKit;       // AvatarUaHost, CaptureSpeech
+using Mpai.UaKit;       // AvatarUaHost, SpeechListener, TypedInput, MachineVoice, StandardDevices
 using Mpai.Aif.Api;     // ControllerApi, AvatarUtterance
+using Mpai.Ua;          // WorkflowInterpreter, DeviceRegistry
+using Mpai.Wdl;         // WorkflowReader
 
 using Mpai.Providers;
 
 namespace MmcAmq;
 
-// MMC-AMQ User Agent - Answer to Multimodal Question, driven through the
-// type-addressed Controller API. The UA presents an image and a question (typed or
-// spoken); the Module answers. One run per question:
-//   supply OSD-BVO (image) + OSD-BTO#1 (typed question) OR OSD-BSO#1 (spoken) + the machine's ID (string);
-//   read the Portable Avatar (PAF-PAV-V1.6), whose Text Object is the answer; it is spoken through PAF-RSR.
-// The answer is shown as text, spoken by the avatar, and the image is re-shown.
-// Acquisition/presentation are the UA's; the Module is ASR + TIQ + TTS.
+// MMC-AMQ User Agent - Answer to Multimodal Question, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
+// Workflow Description of the App (Apps/MMC/AMQ/MMC-AMQ.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Controller that runs the Module in this process. The workflow asks whether the person wants to ask about a picture, has the person
+// choose it (it is shown), takes the question (spoken or typed, whichever comes first), offers the Module the picture, the question and
+// the machine's ID, presents the Portable Avatar that carries the answer, and asks about another picture. This window supplies only the
+// devices that serve the Data Types (the file chooser, the stage, the microphone, the text box, the screen and the avatar) and Stop.
+// Every prompt and instruction is shown and said by the avatar. Typed: the yes or no. Speech is turned into words inside the Module only,
+// and this client has no Module that turns a spoken yes or no into a Text Object.
 public partial class MainWindow : Window
 {
-    private const string AmqModule = "1MMC-AMQ-V2.5-I01";
-
-    private const string BVO = "OSD-BVO-V1.5";   // visual object (image)
-    private const string BSO = "OSD-BSO-V1.5";   // speech object (spoken q / spoken answer)
-    private const string BTO = "OSD-BTO-V1.5";   // text object (typed question)
+    private const string BVO = "OSD-BVO-V1.5";   // visual object (the picture)
+    private const string BSO = "OSD-BSO-V1.5";   // speech object (the spoken question)
+    private const string BTO = "OSD-BTO-V1.5";   // text object (typed question, typed yes or no)
+    private const string PAV = "PAF-PAV-V1.6";
     private const string MachineName = "Thalia"; // the machine's ID: the Portable Avatar the Module gives is this machine's
 
     private static readonly string AmdDir       = Mpai.Core.MpaiPaths.Amds;
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private IControllerApi?    _north;
-    private AvatarUaHost? _avatar;
-    private byte[]?       _imageBytes;
-    private string?       _lastQuestion;
-    private string?       _imagePath;
+    // The workflow of the App: the one source, read where the repository keeps it.
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "AMQ", "MMC-AMQ.orch");
 
-    private static void Diag(string s)
-    {
-        try { System.IO.File.AppendAllText(@"C:\Users\Leonardo\Downloads\amq-diag.log",
-              DateTime.Now.ToString("HH:mm:ss.fff") + "  " + s + System.Environment.NewLine); } catch { }
-    }
+    private ControllerApi?            _north;
+    private AvatarUaHost?             _avatar;
+    private SpeechListener?           _ears;
+    private MachineVoice?             _voice;
+    private readonly TypedInput       _typed;
+    private CancellationTokenSource?  _stopping;
+    private Task?                     _running;
+    private bool                      _closing;
+    private bool                      _told;     // the instruction of this question has been said
 
     public MainWindow()
     {
         InitializeComponent();
+        _typed = new TypedInput(QuestionBox, AskButton);
         Loaded += OnLoaded;
     }
 
@@ -62,207 +63,134 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            await Task.Run(() =>
-            {
-                // THIS APPLICATION RUNS ITS MODULE IN PROCESS. Driving one over a
-                // network is AmqClient, a different application for a different
-                // user: it holds no model and no Framework. They were one source
-                // with a compilation switch, which meant the local application
-                // carried the networked path it never used.
-                _north = new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store));
-            });
-            LoadButton.IsEnabled = true;
-            SetStatus("Ready.");
+            _ears  = new SpeechListener(_avatar);
+            _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), Program.Record);
+            var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
+            // THIS APPLICATION RUNS ITS MODULE IN PROCESS. Driving one over a network is AmqClient, a different application.
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)));
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
-            Diag("welcome: speaking");
-            await SpeakWelcomeAsync();
-            Diag("welcome: done");
+
+            _stopping = new CancellationTokenSource();
+            StopButton.IsEnabled = true;
+            SetStatus("Running.");
+            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), SetStatus);
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            try { await _running; }
+            catch (OperationCanceledException) { }
+            if (!_closing) SetStatus("Stopped.");
         }
-        catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
+        catch (Exception fatal) { Program.Record("workflow", fatal); SetStatus("stopped: " + fatal.Message); }
+        finally { StopButton.IsEnabled = false; }
     }
 
-    private void LoadButton_Click(object sender, RoutedEventArgs e)
+    private void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFileDialog { Filter = "Images|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files|*.*" };
-        if (dlg.ShowDialog() != true) return;
-        try
-        {
-            _imagePath  = dlg.FileName;
-            _imageBytes = File.ReadAllBytes(_imagePath);
-            var bmp = new BitmapImage();
-            using (var ms = new MemoryStream(_imageBytes))
-            { bmp.BeginInit(); bmp.CacheOption = BitmapCacheOption.OnLoad; bmp.StreamSource = ms; bmp.EndInit(); }
-            ImageView.Source = bmp;
-            AskButton.IsEnabled = true;
-            SpeakButton.IsEnabled = true;
-            SetStatus("Image loaded. Type or speak your question, then Ask.");
-        }
-        catch (Exception ex) { Program.Record("load", ex); SetStatus("could not load image: " + ex.Message); }
+        StopButton.IsEnabled = false;
+        _avatar?.Silence();
+        _stopping?.Cancel();
     }
 
-    // Speak the question: capture speech, run AMQ with OSD-BSO (ASR transcribes inside the Module).
-    private async void SpeakButton_Click(object sender, RoutedEventArgs e)
+    // Closing ends the workflow first (its On Stop asks the Controller to stop the Module), then the window closes.
+    protected override async void OnClosing(CancelEventArgs e)
     {
-        if (_imageBytes is null || _avatar is null) return;
-        SetBusy(true); SetStatus("listening...");
-        try
-        {
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            if (speech is null || speech.Data.Length == 0) { SetStatus("no speech captured."); return; }
-            await RunAsync(spokenQuestion: speech, typedQuestion: null);
-        }
-        catch (Exception ex) { Program.Record("speak", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
+        if (_closing || _running is null || _running.IsCompleted) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        _closing = true;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+        try { await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(10))); } catch { }
+        Close();
     }
-
-    // Ask the typed question: run AMQ with OSD-BTO.
-    private async void AskButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_imageBytes is null) return;
-        var q = QuestionBox.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(q)) { SetStatus("type a question first (or use Speak Question)."); return; }
-        SetBusy(true);
-        try { await RunAsync(spokenQuestion: null, typedQuestion: q); }
-        catch (Exception ex) { Program.Record("ask", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
-    }
-
-
-    private const string Welcome =
-        "Welcome to the M P A I Answer to Multimodal Question Service. " +
-        "Select an image, then ask a question about it by typing or by speaking.";
-
-    private const string RsrModule = "1PAF-RSR-V1.6-I01";
-
-    // Speak a line through PAF-RSR (text -> machine speech + face), presented on the avatar.
-    private bool _rsrStarted = false;
-    private async Task RenderPromptAsync(string words)
-    {
-        if (_north is null || _avatar is null) return;
-        if (!_rsrStarted)
-        {
-            var s = await Task.Run(() => _north!.StartFlow(RsrModule));
-            Diag("StartFlow RSR -> " + s);
-            _rsrStarted = (s == AifError.OK);
-        }
-        // PAF-RSR renders a Text Object as the Portable Avatar of a machine: it declares TextObject TWICE (#1 feeds
-        // Text-To-Speech, #2 Generative Face Description, which turns the words into visemes - sending only #1
-        // leaves the mouth with nothing to shape itself to), and takes the Avatar Model this client draws and
-        // the machine's ID.
-        var inputs = new List<ControllerApi.Datum>
-        {
-            new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new ControllerApi.Datum(BTO, 2, MpaiJson.ToJson(BasicTextObject.FromText(words))),
-            new ControllerApi.Datum("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
-            new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
-        };
-        var r = await Task.Run(() => _north!.Advance(RsrModule, inputs));
-        if (!r.Ok) { Diag("RSR err=" + r.Error); return; }
-        // The Portable Avatar: the speech, and the face and body that move with it.
-        if (AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not { } utterance) { Diag("RSR gave no speech"); return; }
-        Diag("RSR spoke words=[" + (words.Length > 40 ? words.Substring(0, 40) : words) + "] wavBytes=" + utterance.MachineSpeechWav.Length);
-        await _avatar!.PresentAsync(utterance);
-        await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
-    }
-
-    private async Task SpeakWelcomeAsync()
-    {
-        InstructionText.Text = "Select an image, then ask a question about it (type or speak).";
-        try { await RenderPromptAsync(Welcome); } catch (Exception ex) { Diag("welcome ex=" + ex.Message); }
-    }
-
-    // Compose a natural sentence from the question and BLIP's short answer, so the
-    // lady says "This animal is a deer." rather than just "deer".
-    private static string Phrase(string? question, string? answer)
-    {
-        var a = (answer ?? "").Trim().TrimEnd('.').Trim();
-        if (a.Length == 0) return "I am not sure.";
-        var q = (question ?? "").Trim().ToLowerInvariant();
-        var al = a.ToLowerInvariant();
-
-        // yes/no answers
-        if (al == "yes") return "Yes.";
-        if (al == "no")  return "No.";
-
-        string Art(string w)  // a / an
-            => (w.Length > 0 && "aeiou".IndexOf(char.ToLowerInvariant(w[0])) >= 0) ? "an " : "a ";
-        bool numeric = int.TryParse(a, out _);
-
-        // "how many ..."
-        if (q.StartsWith("how many"))
-        {
-            var noun = q.Length > 8 ? q.Substring(8).Trim().TrimEnd('?').Trim() : "";
-            return noun.Length > 0 ? $"There are {a} {noun}." : $"There are {a}.";
-        }
-        // "what color ..." / "what colour ..."
-        if (q.Contains("color") || q.Contains("colour"))
-            return $"It is {a}.";
-        // "where ..."
-        if (q.StartsWith("where"))
-            return $"It is {a}.";
-        // "what animal is this" / "what kind of animal ..."
-        if (q.Contains("animal"))
-            return numeric ? $"There are {a}." : $"This animal is {Art(a)}{a}.";
-        // "what is this / what is in the image / what do you see"
-        if (q.StartsWith("what is") || q.Contains("what is in") || q.Contains("what do you see") || q.StartsWith("what's"))
-            return numeric ? $"There are {a}." : $"This is {Art(a)}{a}.";
-        // generic "what ..." -> "It is a X."
-        if (q.StartsWith("what"))
-            return numeric ? $"There are {a}." : $"It is {Art(a)}{a}.";
-        // fallback
-        return $"The answer is {a}.";
-    }
-    private async Task RunAsync(BasicSpeechObject? spokenQuestion, string? typedQuestion)
-    {
-        if (_north is null || _imageBytes is null) return;
-        _lastQuestion = typedQuestion;   // typed questions phrase precisely; spoken phrase generically
-        SetStatus("thinking...");
-
-        var image = BasicVisualObject.FromFile(_imagePath ?? "image.jpg", _imageBytes, "Image");
-        var inputs = new List<ControllerApi.Datum> { new ControllerApi.Datum(BVO, MpaiJson.ToJson(image)) };
-        if (spokenQuestion is not null)
-            inputs.Add(new ControllerApi.Datum(BSO, MpaiJson.ToJson(spokenQuestion)));
-        else if (typedQuestion is not null)
-            inputs.Add(new ControllerApi.Datum(BTO, MpaiJson.ToJson(BasicTextObject.FromText(typedQuestion))));
-        inputs.Add(new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName)));
-
-        var started = await Task.Run(() => _north!.StartFlow(AmqModule));
-        Diag("StartFlow AMQ -> " + started);
-        if (started != AifError.OK) { SetStatus("could not start " + AmqModule); return; }
-
-        Diag("Advance AMQ: inputs=[" + string.Join(",", inputs.ConvertAll(d => d.DataType)) + "]" + (spokenQuestion!=null?(" speechBytes="+spokenQuestion.Data.Length):"") + (typedQuestion!=null?(" typed='"+typedQuestion+"'"):""));
-        var r = await Task.Run(() => _north!.Advance(AmqModule, inputs));
-        Diag("Advance AMQ done ok=" + r.Ok + " err=" + r.Error + " PAV text=[" + (AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "nil") + "]");
-        await Task.Run(() => _north!.StopFlow(AmqModule));
-        if (!r.Ok) { Diag("AMQ err=" + r.Error); SetStatus("no answer: " + r.Error); return; }
-
-        // The Module answers with a Portable Avatar that carries the answer as a Text Object and as a Speech Object (made by
-        // Text-To-Speech in the Module): this window shows the words and renders the Portable Avatar on the avatar it keeps.
-        var pav      = r.ByType("PAF-PAV-V1.6");
-        var answer   = AvatarUtterance.TextOfPortableAvatar(pav);
-        Diag("answer='" + (answer ?? "") + "'");
-
-        AnswerText.Text = answer ?? "";
-        SetStatus("done.");
-
-        if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance && _avatar is not null)
-        {
-            Diag("PAV speech wavBytes=" + utterance.MachineSpeechWav.Length);
-            await _avatar.PresentAsync(utterance);
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
-        }
-        else Diag("the Portable Avatar carries no speech");
-    }
-
-    private static string? TextOf(string? json)
-    { if (string.IsNullOrWhiteSpace(json)) return null; try { return MpaiJson.FromJson<BasicTextObject>(json)?.GetText(); } catch { return null; } }
-    private static byte[] SpeechOf(string? json)
-    { if (string.IsNullOrWhiteSpace(json)) return Array.Empty<byte>(); try { return MpaiJson.FromJson<BasicSpeechObject>(json)?.Data ?? Array.Empty<byte>(); } catch { return Array.Empty<byte>(); } }
-
-    private void SetBusy(bool b) => Dispatcher.Invoke(() =>
-    { LoadButton.IsEnabled = !b; AskButton.IsEnabled = !b && _imageBytes is not null; SpeakButton.IsEnabled = !b && _imageBytes is not null; });
-    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
 
     protected override void OnClosed(EventArgs e)
-    { try { _north?.StopFlow(AmqModule); } catch { } base.OnClosed(e); }
+    {
+        try { _voice?.Dispose(); } catch { }
+        try { _north?.Dispose(); } catch { }
+        base.OnClosed(e);
+    }
+
+    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
+
+    // An instruction or a prompt is shown AND said; the step goes on when she has finished saying it.
+    private async Task TellAsync(string words)
+    {
+        Dispatcher.Invoke(() => InstructionText.Text = words);
+        if (_voice is not null) await _voice.SayAsync(words);
+    }
+
+    // ---- the devices of this User Agent ---------------------------------------------------------------------------
+
+    private DeviceRegistry Devices()
+    {
+        var devices = new DeviceRegistry();
+        var stop = _stopping!.Token;
+
+        // THE PICTURE, chosen by the person from the image folder (the prompt that precedes it has said so).
+        devices.RegisterAcquire(BVO, (_, _) => StandardDevices.PictureAsync(Dispatcher));
+
+        // THE QUESTION, SPOKEN: from the microphone; it ends when the person stops speaking. The instruction is said once per question.
+        devices.RegisterAcquire(BSO, async (_, _, abandon) =>
+        {
+            if (!_told) { _told = true; await TellAsync("Ask your question by speaking, or type it and press Enter."); }
+            return await _ears!.ListenAsync(stop, abandon) is { } speech ? MpaiJson.ToJson(speech) : null;
+        });
+
+        // TEXT TYPED: the question, or the yes or no the workflow asks for (a Text whose role is YesNo).
+        devices.RegisterAcquire(BTO, async (_, wanted, abandon) =>
+        {
+            if ((wanted ?? "").Contains("YesNo", StringComparison.OrdinalIgnoreCase))
+                await TellAsync("Type yes or no, and press Enter.");
+            var words = await _typed.AskAsync(stop, abandon);
+            return words is null ? null : MpaiJson.ToJson(BasicTextObject.FromText(words));
+        });
+
+        // THE STAGE: the picture, shown.
+        devices.RegisterPresent("stage", data =>
+        {
+            foreach (var kv in data)
+            {
+                if (!kv.Key.Contains("OSD-BVO", StringComparison.OrdinalIgnoreCase)) continue;
+                try
+                {
+                    var visual = MpaiJson.FromJson<BasicVisualObject>(kv.Value);
+                    if (visual?.Data is not { Length: > 0 }) continue;
+                    Dispatcher.Invoke(() =>
+                    {
+                        var image = new BitmapImage();
+                        image.BeginInit();
+                        image.StreamSource = new MemoryStream(visual.Data);
+                        image.CacheOption  = BitmapCacheOption.OnLoad;
+                        image.EndInit();
+                        ImageView.Source = image;
+                        AnswerText.Text = "";
+                    });
+                    _told = false;   // a new picture, a new question
+                }
+                catch { /* what cannot be shown is still what was given */ }
+            }
+            return Task.CompletedTask;
+        });
+
+        // THE SCREEN: a prompt is shown and said.
+        devices.RegisterPresent("screen", async data =>
+        {
+            if (data.TryGetValue("Prompt", out var words)) await TellAsync(words);
+        });
+
+        // THE AVATAR: the machine's Portable Avatar, which carries the answer as a Text Object and as a Speech Object. The words are shown;
+        // the utterance is presented and the step ends when she has finished speaking. A Portable Avatar that carries text and no speech
+        // is spoken from its words.
+        devices.RegisterPresent("avatar", async data =>
+        {
+            if (!data.TryGetValue(PAV, out var pav)) return;
+            var words = AvatarUtterance.TextOfPortableAvatar(pav) ?? "";
+            Dispatcher.Invoke(() => AnswerText.Text = words);
+            SetStatus("done.");
+            if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance) await _voice!.PresentAsync(utterance);
+            else if (words.Length > 0) await _voice!.SayAsync(words);
+            else SetStatus("The Module gave no answer.");
+        });
+
+        return devices;
+    }
 }

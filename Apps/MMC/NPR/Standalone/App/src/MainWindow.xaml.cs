@@ -120,14 +120,7 @@ public partial class MainWindow : Window
         {
             Instruct("Choose a picture.");
             await (_voice?.SayAsync("Choose a picture.") ?? Task.CompletedTask);
-            var chosen = await Dispatcher.InvokeAsync(() =>
-            {
-                var dlg = new OpenFileDialog { Title = "Choose a picture", Filter = "Images|*.jpg;*.jpeg;*.png;*.bmp;*.gif|All files|*.*" };
-                return dlg.ShowDialog() == true ? dlg.FileName : null;
-            });
-            if (chosen is null) return null;
-            var bytes = await File.ReadAllBytesAsync(chosen);
-            return MpaiJson.ToJson(BasicVisualObject.FromFile(Path.GetFileName(chosen), bytes, "Picture"));
+            return await StandardDevices.PictureAsync(Dispatcher);
         });
 
         // A POINT ON THE PAGE: the click, in pixels of the picture; waits until the person clicks, or the App is stopped.
