@@ -1,5 +1,5 @@
 {
-    "Name": "Newspaper Reading",
+    "Name": "Read newspapers",
     "Description": "Choose the image of a newspaper page, click at the top of a column, and the avatar reads it aloud.",
     "Icon": "icon.svg",
     "Pane": "wide",

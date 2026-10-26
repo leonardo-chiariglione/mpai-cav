@@ -1,5 +1,5 @@
 ﻿{
-    "Name": "Access Registration",
+    "Name": "Register for access",
     "Description": "Register your face and your voice, so that Access Control can recognise you.",
     "Icon": "icon.svg",
     "Pane": "none",
