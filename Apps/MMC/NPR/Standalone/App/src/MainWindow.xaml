@@ -19,14 +19,14 @@
 
     <!-- left: the page; a click at the top of a column asks for it -->
     <Border Grid.Row="1" Grid.Column="0" BorderBrush="#CCC" BorderThickness="1" Margin="0,0,8,0">
-      <Image x:Name="PageView" Stretch="Uniform" MouseLeftButtonDown="PageView_MouseLeftButtonDown"/>
+      <Image x:Name="PageView" Stretch="Uniform"/>
     </Border>
 
     <!-- right: the avatar (reads the column) -->
     <wv2:WebView2 x:Name="Web" Grid.Row="1" Grid.Column="1"/>
 
     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
-      <Button x:Name="LoadButton" Content="Choose a page..." Padding="12,4" Click="LoadButton_Click" IsEnabled="False"/>
+      <Button x:Name="StopButton" Content="Stop" Padding="12,4" Click="StopButton_Click" IsEnabled="False"/>
     </StackPanel>
 
     <Border Grid.Row="3" Grid.ColumnSpan="2" BorderBrush="#CCC" BorderThickness="1" Margin="0,8,0,0" Padding="8">
