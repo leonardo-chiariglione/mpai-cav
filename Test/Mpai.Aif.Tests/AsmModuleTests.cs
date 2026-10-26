@@ -95,13 +95,15 @@ public class AsmModuleTests
 
             // 2. One User Command: both in a Basic Audio Scene, heard from the User.
             var user = new PointOfView { PointOfViewID = "user", CartPosition = [0, 0, 1.6], Orientation = [0, 0, 0] };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "low" }, SpatialAttitude = At(-1.5, 1.5) },
                                                                                       new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "high" }, SpatialAttitude = At(1.5, 1.5) }] }
             }));
             var scene = api.OutputRead(Asm, "OSD-ASD-V1.5", 1, 60_000);
+            // The one User Command Port: the command reaches Audio and Speech Scene Editing, and the one that keeps no such Object reports it at its Port (Speech Scene Editing, 4): not the report judged below.
+            api.OutputRead(Asm, "CAE-UCM-V1.0", 4, 5_000);
             var basScene = scene.Error == AifError.OK ? Forms.Bas(scene.Json!) : null;
             r["the Scene leaving the Module"] = scene.Error == AifError.OK
                 ? $"{JsonNode.Parse(basScene!)!["BasicAudioSceneDescriptorsData"]!.AsArray().Count} members, {Valid("OSD/V1.5/data/AudioSceneDescriptors.json", scene.Json!)}"
@@ -120,7 +122,7 @@ public class AsmModuleTests
             api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(hello));
             var kept = api.OutputRead(Asm, "OSD-SPO-V1.5", 1, 60_000);
             r["a Speech Object, the open Object"] = kept.Error == AifError.OK ? $"{JsonNode.Parse(Forms.Bso(kept.Json!))!["BasicSpeechObjectID"]}, {Valid("OSD/V1.5/data/SpeechObject.json", kept.Json!)}" : $"nothing ({kept.Error})";
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = "hello" }, SpatialAttitude = At(0, 2) }] }
@@ -139,7 +141,7 @@ public class AsmModuleTests
             string? IdIn(AifError error, string? json, string field) => error == AifError.OK ? (string?)JsonNode.Parse(json!)![field] : null;
             var basId = IdIn(scene.Error, scene.Json, "AudioSceneDescriptorsID");
             var bssId = IdIn(speechScene.Error, speechScene.Json, "SpeechSceneDescriptorsID");
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 5, Command(new UserCommandRQ
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 UserPoV = user,
                 AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = basId }, SpatialAttitude = At(0, 0) },
@@ -158,7 +160,7 @@ public class AsmModuleTests
                 ? $"{bmeDone.Outcome}; " + string.Join("; ", bmeDone.Actions.Select(a => $"{a.Action} {a.Outcome}"))
                 : $"nothing ({bmeReport.Error})";
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 4, Command(new UserCommandRQ
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = new ManagedObject { ObjectID = "hello" }, NewSpatialAttitude = At(1, 3) }] }
             }));

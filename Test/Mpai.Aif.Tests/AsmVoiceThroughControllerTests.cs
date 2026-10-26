@@ -101,7 +101,7 @@ public class AsmVoiceThroughControllerTests
                 Assert.Equal(AifError.OK, opened.Error);
                 ids.Add((string)JsonNode.Parse(opened.Json!)!["BasicAudioObjectID"]!);
             }
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandRQ
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
                                                                   new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
@@ -121,7 +121,7 @@ public class AsmVoiceThroughControllerTests
             var understood = api.OutputRead(Asm, "CAE-UCM-V1.0", 6, 180_000);
             Assert.True(understood.Error == AifError.OK, "no User Command: " + understood.Error);
             Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandRQ"]!["MovedObjects"]);
-            Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 2, understood.Json!));
+            Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 1, understood.Json!));
 
             var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 2, 60_000);
             Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);

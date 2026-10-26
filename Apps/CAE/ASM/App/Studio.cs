@@ -724,7 +724,7 @@ public sealed class Studio : IDisposable
             var (reportJson, scene) = await Task.Run(() =>
             {
                 link.DrainEditing();
-                link.Write(ModuleLink.Ucm, 2, MpaiJson.ToJson(command));
+                link.Write(ModuleLink.Ucm, 1, MpaiJson.ToJson(command));
                 var report = link.Read(ModuleLink.Ucm, 2);
                 var parsed = report is null ? null : MpaiJson.FromJson<UserCommand>(report).UserCommandRS;
                 var ok = parsed is { Outcome: "Done" or "Partly" };

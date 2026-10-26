@@ -127,7 +127,7 @@ public class AsmInterfaceTests
         Assert.Equal("aji-2", placedBack["InReplyTo"]!.GetValue<string>());
         var placedRs = AsmRig.Response(placedBack["Instance"]!.ToJsonString());
         Assert.Equal("Done", placedRs.Outcome);                                                        // the Audio Scene Editing AIM placed it; the others kept no such Object
-        Assert.Equal(3, rig.Delivered.Count);                                                          // Audio, Speech and Multimodal Scene Editing
+        Assert.Equal(2, rig.Delivered.Count);                                                          // Audio and Speech Scene Editing
         Assert.Single(placedRs.Actions);
         Assert.Equal("stage", placed.Last(rig.AmiPorts.Output(AsmRig.Asd, 1)) is { } scene ? Obj(scene)["AudioSceneDescriptorsID"]!.GetValue<string>() : null);
 
@@ -232,13 +232,13 @@ public class AsmInterfaceTests
         await Everything(rig);
         rig.Delivered.Clear();
 
-        // At a Port of the boundary: one response, at the Port the command came by; the list is what every Editing AIM keeps.
+        // At the one Port of the boundary for commands: one response, at the response Port of the first Editing AIM; the list is what every Editing AIM keeps.
         var command = AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } });
-        var output = await rig.Through((rig.RqIn(3), AsmRig.Json(command)));
+        var output = await rig.Through((rig.RqIn(), AsmRig.Json(command)));
         Assert.Equal(5, rig.Delivered.Count);
         Assert.All(rig.Delivered, d => Assert.Equal(AsmRig.Json(command), d));
-        for (var k = 1; k <= 5; k++) Assert.Equal(k == 3 ? 1 : 0, output.At(rig.RsOut(k)).Count);
-        var one = output.Last(rig.RsOut(3))!;
+        for (var k = 1; k <= 5; k++) Assert.Equal(k == 1 ? 1 : 0, output.At(rig.RsOut(k)).Count);
+        var one = output.Last(rig.RsOut(1))!;
         Assert.True(Valid("CAE3/V1.0/data/UserCommand.json", one), one);
         Assert.Equal(command.UserCommandID, MpaiJson.FromJson<UserCommand>(one).UserCommandID);
         var rs = AsmRig.Response(one);
@@ -294,10 +294,11 @@ public class AsmInterfaceTests
         Assert.Equal([1], Route(new UserCommandRQ { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = AsmRig.Ref("a") }] } }));
         Assert.Equal([2], Route(new UserCommandRQ { ModifiedScene = new SceneChange() }));
         Assert.Equal([3], Route(new UserCommandRQ { TranslatedObjects = new ObjectTranslations { Objects = [new ObjectTranslation { ObjectID = AsmRig.Ref("a") }] } }));
-        Assert.Equal([2, 4, 5], Route(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "s", Objects = [AsmRig.Put("a", 1)] } }));
-        Assert.Equal([2, 4, 5], Route(new UserCommandRQ { MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = AsmRig.Ref("a"), NewSpatialAttitude = AsmRig.At(1) }] } }));
+        Assert.Equal([2, 4], Route(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "s", Objects = [AsmRig.Put("a", 1)] } }));
+        Assert.Equal([2, 4], Route(new UserCommandRQ { MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = AsmRig.Ref("a"), NewSpatialAttitude = AsmRig.At(1) }] } }));
         Assert.Equal([1], Route(new UserCommandRQ { ChangedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = AsmRig.Ref("a"), Level = -12 }] } }));
-        Assert.Equal([2, 4, 5], Route(new UserCommandRQ { ChangedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = AsmRig.Ref("a"), SpatialAttitude = AsmRig.At(1) }] } }));
+        Assert.Equal([2, 4], Route(new UserCommandRQ { ChangedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = AsmRig.Ref("a"), SpatialAttitude = AsmRig.At(1) }] } }));
+        Assert.Equal([5], AmiAimProcessor.Route(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [AsmRig.Put("stage", 0), AsmRig.Put("dialogue", 0)] } }, null, n => n == "stage"));   // a Scene is a member
         Assert.Equal([1], Route(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Basic Audio Object" } }));
         Assert.Equal([5], Route(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Multimodal Scene" } }));
         Assert.Equal([1, 2, 3, 4, 5], Route(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } }));
@@ -319,6 +320,10 @@ public class AsmInterfaceTests
 
             static string Key(JsonNode p) => $"{p["Direction"]} {(p["DataType"] is JsonValue ? p["DataType"]!.GetValue<string>() : "?")}#{p["PortNumber"]?.GetValue<int>() ?? 1}";
             var boundary = asm["ExternalPorts"]!.AsArray().Select(p => Key(p!)).ToList();
+            // One User Command and one User PoV at the boundary; the numbered Ports are the inner ones.
+            Assert.Equal(["Input CAE-UCM-V1.0#1"], boundary.Where(b => b.StartsWith("Input CAE-UCM")));
+            Assert.Equal(["Input OSD-OPV-V1.5#1"], boundary.Where(b => b.StartsWith("Input OSD-OPV")));
+            Assert.Equal(5, boundary.Count(b => b.StartsWith("Output CAE-UCM")));
             Assert.Contains("Input MMC-AJI-V2.5#1", boundary);
             Assert.Contains("Output MMC-AJI-V2.5#1", boundary);
 

@@ -45,7 +45,8 @@ public sealed class AmiAimProcessor : IAimProcessor
     public static readonly string[] Editors =
         ["Audio Object Editing", "Audio Scene Editing", "Speech Object Editing", "Speech Scene Editing", "Multimodal Scene Editing"];
 
-    private readonly string[] _rqIn = new string[6], _rsIn = new string[6], _rsOut = new string[6], _rqOut = new string[6], _povIn = new string[6], _povOut = new string[6];
+    private readonly string _rqIn, _povIn;      // the one User Command and the one User PoV the boundary gives
+    private readonly string[] _rsIn = new string[6], _rsOut = new string[6], _rqOut = new string[6], _povOut = new string[6];
     private readonly (string In, string Out)[] _toEditors, _fromEditors;
     private readonly string _ajiIn, _ajiOut;
     private readonly CommandSchemaCheck? _schema;
@@ -63,6 +64,7 @@ public sealed class AmiAimProcessor : IAimProcessor
     private readonly Dictionary<string, int[]> _sentTo = new();
     private readonly Queue<string> _sentOrder = new();
     private readonly Queue<(string Port, string Json)> _held = new();
+    private readonly HashSet<string> _scenes = new(StringComparer.Ordinal);     // the names of the Scenes that have left an Editing AIM
 
     public string InstanceId { get; }
 
@@ -72,13 +74,13 @@ public sealed class AmiAimProcessor : IAimProcessor
         _schema = schema;
         for (var k = 1; k <= 5; k++)
         {
-            _rqIn[k] = ports.Input(Ucm, k);
             _rsIn[k] = ports.Input(Ucm, k + 5);
             _rsOut[k] = ports.Output(Ucm, k);
             _rqOut[k] = ports.Output(Ucm, k + 5);
-            _povIn[k] = ports.Input(Opv, k);
             _povOut[k] = ports.Output(Opv, k);
         }
+        _rqIn = ports.Input(Ucm, 1);
+        _povIn = ports.Input(Opv, 1);
         // To the Editing AIMs: what arrives at the left-hand Port leaves at the right-hand Port 2.
         _toEditors = [(ports.Input(Auo, 1), ports.Output(Auo, 2)), (ports.Input(Asd, 1), ports.Output(Asd, 2)),
                       (ports.Input(Spo, 1), ports.Output(Spo, 2)), (ports.Input(Ssd, 1), ports.Output(Ssd, 2))];
@@ -106,17 +108,15 @@ public sealed class AmiAimProcessor : IAimProcessor
             }
 
             // 1. what the boundary gives the Editing AIMs: User Commands, User PoVs, Objects and Scenes - forwarded as they are.
-            for (var k = 1; k <= 5; k++)
-            {
-                if (In(_rqIn[k]) is { } command) Forward(k, command, outputs);
-                if (In(_povIn[k]) is { } pov) Emit(outputs, _povOut[k], pov);
-            }
+            if (In(_rqIn) is { } command) Forward(command, outputs);
+            if (In(_povIn) is { } pov)
+                for (var k = 1; k <= 5; k++) Emit(outputs, _povOut[k], pov);       // to each Editing AIM, on its own Port
             foreach (var (from, to) in _toEditors)
                 if (In(from) is { } data) Emit(outputs, to, data);
 
             // 2. what the Editing AIMs give the boundary: Objects, Scenes, and the responses to User Commands.
             foreach (var (from, to) in _fromEditors)
-                if (In(from) is { } data) Emit(outputs, to, data);
+                if (In(from) is { } data) { NoteScene(data); Emit(outputs, to, data); }
             for (var k = 1; k <= 5; k++)
                 if (In(_rsIn[k]) is { } response) Respond(k, response, outputs);
 
@@ -130,6 +130,13 @@ public sealed class AmiAimProcessor : IAimProcessor
                 Ports = outputs
             });
         }
+    }
+
+    private void NoteScene(string json)
+    {
+        var node = ParseObject(json);
+        foreach (var field in new[] { "AudioSceneDescriptorsID", "SpeechSceneDescriptorsID", "MultimodalSceneDescriptorsID" })
+            if (Text(node?[field]) is { Length: > 0 } name) _scenes.Add(name);
     }
 
     private void Emit(Dictionary<string, string> outputs, string port, string json)
@@ -157,21 +164,20 @@ public sealed class AmiAimProcessor : IAimProcessor
 
     // ---- the commands of the boundary --------------------------------------------------------------------------------------------------
 
-    private void Forward(int k, string json, Dictionary<string, string> outputs)
+    // THE ONE USER COMMAND OF THE BOUNDARY goes to the Editing AIMs that can act on it (Route), each on its own Port. Each response leaves, unchanged, at the response Port of its
+    // AIM; the list of all alone is held until every AIM has answered and leaves as one, at the first response Port.
+    private void Forward(string json, Dictionary<string, string> outputs)
     {
         var node = ParseObject(json);
         var id = Text(node?["UserCommandID"]) ?? "";
+        UserCommand? command = null;
+        try { command = MpaiJson.FromJson<UserCommand>(json); } catch (Exception e) when (e is JsonException or InvalidOperationException or FormatException or NotSupportedException) { }
+        var editors = command?.UserCommandRQ is { } rq ? Route(rq, i => _sentTo.GetValueOrDefault(i), _scenes.Contains) : [1];     // one that cannot be read goes to the first, which reports it
+        Remember(id, editors);
+        // Only the list of all is one answer; the others leave as the Editing AIMs gave them, each at its own response Port.
         if (IsListOfAll(node) && id.Length > 0 && !_pending.ContainsKey(id))
-        {
-            // To every Editing AIM; one answer.
-            var every = new[] { 1, 2, 3, 4, 5 };
-            _pending[id] = new Pending { Expected = every.ToHashSet(), OriginPort = k };
-            Remember(id, every);
-            foreach (var e in every) Emit(outputs, _rqOut[e], json);
-            return;
-        }
-        Remember(id, [k]);
-        Emit(outputs, _rqOut[k], json);
+            _pending[id] = new Pending { Expected = editors.ToHashSet(), OriginPort = 1 };
+        foreach (var e in editors) Emit(outputs, _rqOut[e], json);
     }
 
     private static bool IsListOfAll(JsonObject? command) =>
@@ -242,11 +248,11 @@ public sealed class AmiAimProcessor : IAimProcessor
     //   ClosedSpace, ModifiedScene      Audio Scene Editing
     //   ModifiedObjects, LUFS           Audio Object Editing
     //   ChangedObjects        Audio Object Editing for the features of an Object; the Scene Editing AIMs for its place (SpatialAttitude); Speech Object Editing for a Qualifier
-    //   AddedObjects, MovedObjects, RemovedObjects    the Scene Editing AIMs - Audio, Speech, Multimodal - of which the AIM that keeps the Objects named does it, the others
-    //                         report they keep none such
+    //   AddedObjects, MovedObjects, RemovedObjects    Audio and Speech Scene Editing (the one that keeps the Objects named does it, the other
+    //                         reports it keeps none such); Multimodal Scene Editing when a member is a Scene that has left an Editing AIM
     //   AcquiredObject, DeliveredObject     Audio Object Editing
     //   nothing else (a User PoV alone, a command of nothing known)   every AIM
-    public static int[] Route(UserCommandRQ rq, Func<string, int[]?>? sentTo = null)
+    public static int[] Route(UserCommandRQ rq, Func<string, int[]?>? sentTo = null, Func<string, bool>? isScene = null)
     {
         int[] every = [1, 2, 3, 4, 5];
         if (rq.RevokedUserCommandID is { } revoked) return sentTo?.Invoke(revoked) ?? every;
@@ -266,12 +272,23 @@ public sealed class AmiAimProcessor : IAimProcessor
             {
                 if (entry.HasFeature && entry.Qualifier is null) set.Add(1);
                 if (entry.Qualifier is not null) set.Add(3);
-                if (entry.SpatialAttitude is not null) { set.Add(2); set.Add(4); set.Add(5); }
+                if (entry.SpatialAttitude is not null) AddSceneEditors(set, [entry.ObjectID], isScene);
                 if (!entry.HasFeature && entry.SpatialAttitude is null) set.Add(1);
             }
-        if (rq.AddedObjects is { Objects.Count: > 0 } || rq.MovedObjects is { Objects.Count: > 0 } || rq.RemovedObjects is { Objects.Count: > 0 }) { set.Add(2); set.Add(4); set.Add(5); }
+        if (rq.AddedObjects is { Objects.Count: > 0 } added) AddSceneEditors(set, added.Objects.Select(o => o.ObjectID), isScene);
+        if (rq.MovedObjects is { Objects.Count: > 0 } moved) AddSceneEditors(set, moved.Objects.Select(o => o.ObjectID), isScene);
+        if (rq.RemovedObjects is { Objects.Count: > 0 } removed) AddSceneEditors(set, removed.Objects.Select(o => o.ObjectID), isScene);
         if (rq.AcquiredObject is not null || rq.DeliveredObject is not null) set.Add(1);
         return set.Count > 0 ? set.ToArray() : every;
+    }
+
+    // The Scene Editing AIMs that a command about the members of a Scene reaches: if a member is a Scene the Interface has seen leave an Editing AIM, the command makes or edits a
+    // Multimodal Scene (Multimodal Scene Editing); otherwise it is about the Objects of one medium, and Audio and Speech Scene Editing, the one that keeps them, do it.
+    private static void AddSceneEditors(SortedSet<int> set, IEnumerable<ManagedObject?> members, Func<string, bool>? isScene)
+    {
+        var scenes = isScene is not null && members.Any(m => m?.ObjectID is { } id && isScene(id));
+        if (scenes) set.Add(5);
+        else { set.Add(2); set.Add(4); }
     }
 
     // ---- the Application JSON Instance ----------------------------------------------------------------------------------------------------
@@ -306,7 +323,7 @@ public sealed class AmiAimProcessor : IAimProcessor
         if (command.UserCommandRQ is null) { Fail("the Instance is a response, not a request: it carries no UserCommandRQ", instance); return; }
         if (command.UserCommandID.Length == 0 || _pending.ContainsKey(command.UserCommandID)) { Fail("the User Command has no UserCommandID, or one that an earlier command still waits an answer for", instance); return; }
 
-        var editors = Route(command.UserCommandRQ, id => _sentTo.GetValueOrDefault(id));
+        var editors = Route(command.UserCommandRQ, id => _sentTo.GetValueOrDefault(id), _scenes.Contains);
         Remember(command.UserCommandID, editors);
         _pending[command.UserCommandID] = new Pending { Expected = editors.ToHashSet(), AjiId = ajiId, SchemaUri = uri };
         foreach (var e in editors) Emit(outputs, _rqOut[e], text);

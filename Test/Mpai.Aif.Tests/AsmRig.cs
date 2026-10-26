@@ -58,7 +58,7 @@ internal sealed class AsmRig : IDisposable
 
     // ---- the boundary ---------------------------------------------------------------------------------------------------------------
 
-    public string RqIn(int k) => AmiPorts.Input(Ucm, k);                    // the Port of the Composite at which a User Command arrives
+    public string RqIn(int _ = 1) => AmiPorts.Input(Ucm, 1);                // the one Port of the Composite at which a User Command arrives
     public string RsOut(int k) => AmiPorts.Output(Ucm, k);                  // the Port at which its response leaves
     public string AjiIn => AmiPorts.Input(Aji);
     public string AjiOut => AmiPorts.Output(Aji);

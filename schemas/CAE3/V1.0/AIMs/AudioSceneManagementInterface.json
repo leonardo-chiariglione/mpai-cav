@@ -11,16 +11,8 @@
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "AudioObjectUserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioObjectUserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneUserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneUserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechObjectUserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 3, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechObjectUserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 3, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechSceneUserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 4, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechSceneUserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 4, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MultiSceneUserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 5, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "MultiSceneUserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 5, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "UserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObject", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioScene", "Direction": "Input", "DataType": "OSD-ASD-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-SPO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},

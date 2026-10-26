@@ -63,7 +63,7 @@ public sealed class ModuleLink : IDisposable
     private static readonly (string Device, string Type, int Number)[] Streams =
     [
         ("ObjectIn", Auo, 1), ("ObjectCommand", Ucm, 1),
-        ("SceneIn", Asd, 1), ("SceneCommand", Ucm, 2)
+        ("SceneIn", Asd, 1), ("SceneCommand", Ucm, 1)
     ];
 
     private static readonly (string Device, string Type, int Number)[] Delivered =

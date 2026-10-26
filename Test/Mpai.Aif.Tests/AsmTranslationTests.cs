@@ -55,7 +55,7 @@ public class AsmTranslationTests
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
             api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(english));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ
@@ -147,14 +147,14 @@ public class AsmTranslationTests
                     }] }
                 }
             };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(translate));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(translate));
             Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
 
             var storage = api.SharedStorage(Asm)!;
             BasicSpeechObject? Stored() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID);
             Assert.False(Stored()!.Data.SequenceEqual(english.Data));                                  // the translation stands under the original's identifier
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ { RevokedUserCommandID = translate.UserCommandID }
