@@ -24,6 +24,7 @@
       <ComboBox x:Name="FromBox" Width="140"/>
       <TextBlock Text="  say it in" VerticalAlignment="Center" Margin="6,0"/>
       <ComboBox x:Name="ToBox" Width="140"/>
+      <Button x:Name="LanguagesButton" Content="OK" Padding="14,2" Margin="12,0,0,0" IsEnabled="False"/>
     </StackPanel>
 
     <!-- left: what was said and its translation -->
@@ -40,9 +41,9 @@
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <TextBox x:Name="TextBoxIn" Grid.Column="0" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" KeyDown="TextBoxIn_KeyDown"/>
-      <Button x:Name="SpeakButton" Grid.Column="1" Content="Speak" Padding="14,4" Margin="8,0,0,0" Click="SpeakButton_Click" IsEnabled="False"/>
-      <Button x:Name="TranslateButton" Grid.Column="2" Content="Translate" Padding="16,4" Margin="8,0,0,0" Click="TranslateButton_Click" IsEnabled="False"/>
+      <TextBox x:Name="TextBoxIn" Grid.Column="0" FontSize="14" VerticalContentAlignment="Center" Padding="6,2"/>
+      <Button x:Name="StopButton" Grid.Column="1" Content="Stop" Padding="14,4" Margin="8,0,0,0" Click="StopButton_Click" IsEnabled="False"/>
+      <Button x:Name="TranslateButton" Grid.Column="2" Content="Translate" Padding="16,4" Margin="8,0,0,0" IsEnabled="False"/>
     </Grid>
 
     <TextBlock x:Name="StatusText" Grid.Row="4" Grid.ColumnSpan="2" Foreground="#888" Margin="0,6,0,0"/>

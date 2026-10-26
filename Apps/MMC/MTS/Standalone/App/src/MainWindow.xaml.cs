@@ -1,32 +1,30 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-
-using AIF.Controller;   // AifError
 
 using Mpai.Core;
-using Mpai.UaKit;       // AvatarUaHost
+using Mpai.UaKit;       // AvatarUaHost, SpeechListener, TypedInput, MachineVoice, StandardDevices
 using Mpai.Aif.Api;     // ControllerApi, AvatarUtterance
+using Mpai.Ua;          // WorkflowInterpreter, DeviceRegistry
+using Mpai.Wdl;         // WorkflowReader
 
 using Mpai.Providers;
 
 namespace MmcMts;
 
-// MMC-MTS User Agent - Multimodal Translation Service, on its own: no MAS, no launcher. It follows the workflow of the App
-// (Apps/MMC/MTS/MMC-MTS.orch), driven through the type-addressed Controller API:
-//   start the Module once; each turn offers the Language Selector (the language the person speaks and the one the translation is
-//   to be in, OSD-SEL), the person's speech (OSD-BSO) or typed text (OSD-BTO#1), the Avatar Model this window draws (OSD-B3O) and
-//   the machine's ID (string); the Module answers with the translation as a Text Object and as the machine's Portable Avatar
-//   (PAF-PAV), which carries it as text and as speech.
-// The window shows the translation and renders the Portable Avatar on the avatar it keeps; the speech is made inside the Module.
+// MMC-MTS User Agent - Multimodal Translation Service, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
+// Workflow Description of the App (Apps/MMC/MTS/MMC-MTS.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Controller that runs the Module in this process. The workflow starts the Module, takes the Avatar Model and the Language Selector (the
+// language the person speaks and the one the translation is to be in), and each turn acquires the person's speech or typed text, offers
+// them with the Selector, the Avatar Model and the machine's ID, shows the translation and presents the Portable Avatar. This window
+// supplies only the devices that serve the Data Types (the language boxes, the microphone, the text box, the Avatar Model, the screen,
+// the avatar) and Stop. Every instruction is shown and said by the avatar.
 public partial class MainWindow : Window
 {
-    private const string Module = "1MMC-MTS-V2.5-I01";
-
     private const string BSO = "OSD-BSO-V1.5";
     private const string BTO = "OSD-BTO-V1.5";
     private const string SEL = "OSD-SEL-V1.5";
@@ -44,8 +42,20 @@ public partial class MainWindow : Window
     private static readonly string SettingsPath = Mpai.Core.MpaiPaths.Settings;
     private static readonly string AssetsDir    = Mpai.Core.MpaiPaths.Assets;
 
-    private ControllerApi? _north;
-    private AvatarUaHost?  _avatar;
+    // The workflow of the App: the one source, read where the repository keeps it.
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "MTS", "MMC-MTS.orch");
+
+    private ControllerApi?            _north;
+    private AvatarUaHost?             _avatar;
+    private SpeechListener?           _ears;
+    private MachineVoice?             _voice;
+    private readonly TypedInput       _typed;
+    private CancellationTokenSource?  _stopping;
+    private Task?                     _running;
+    private bool                      _closing;
+    private bool                      _told;           // the instruction of this turn has been said
+    private string                    _heard = "";     // what the person said or typed this turn
+    private string                    _from = "en";    // the language chosen as the person's
 
     public MainWindow()
     {
@@ -56,6 +66,7 @@ public partial class MainWindow : Window
             ToBox.Items.Add(new ComboBoxItem { Content = name, Tag = code });
         }
         FromBox.SelectedIndex = 0; ToBox.SelectedIndex = 1;
+        _typed = new TypedInput(TextBoxIn, TranslateButton);
         Loaded += OnLoaded;
     }
 
@@ -69,81 +80,140 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            AifError started = AifError.OK;
-            await Task.Run(() =>
+            _ears  = new SpeechListener(_avatar);
+            _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), Program.Record);
+            var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
+            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new MtsProvider(store)));
+            await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
+
+            _stopping = new CancellationTokenSource();
+            StopButton.IsEnabled = true;
+            SetStatus("Running.");
+            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), SetStatus);
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            try { await _running; }
+            catch (OperationCanceledException) { }
+            if (!_closing) SetStatus("Stopped.");
+        }
+        catch (Exception fatal) { Program.Record("workflow", fatal); SetStatus("stopped: " + fatal.Message); }
+        finally { StopButton.IsEnabled = false; }
+    }
+
+    private void StopButton_Click(object sender, RoutedEventArgs e)
+    {
+        StopButton.IsEnabled = false;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+    }
+
+    // Closing ends the workflow first (its On Stop asks the Controller to stop the Module), then the window closes.
+    protected override async void OnClosing(CancelEventArgs e)
+    {
+        if (_closing || _running is null || _running.IsCompleted) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        _closing = true;
+        _avatar?.Silence();
+        _stopping?.Cancel();
+        try { await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(10))); } catch { }
+        Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        try { _voice?.Dispose(); } catch { }
+        try { _north?.Dispose(); } catch { }
+        base.OnClosed(e);
+    }
+
+    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
+
+    // An instruction is shown AND said; the step goes on when she has finished saying it.
+    private async Task TellAsync(string words)
+    {
+        Dispatcher.Invoke(() => InstructionText.Text = words);
+        if (_voice is not null) await _voice.SayAsync(words);
+    }
+
+    // Once in a turn: the microphone and the text box are asked for together, and a microphone that listens again does not tell again.
+    private async Task TellOnceAsync(string words)
+    {
+        if (_told) return;
+        _told = true;
+        await TellAsync(words);
+    }
+
+    // ---- the devices of this User Agent ---------------------------------------------------------------------------
+
+    private DeviceRegistry Devices()
+    {
+        var devices = new DeviceRegistry();
+        var stop = _stopping!.Token;
+
+        // THE AVATAR MODEL this window draws.
+        devices.RegisterAcquire(B3O, (_, _) => Task.FromResult<string?>(StandardDevices.AvatarModel()));
+
+        // THE LANGUAGES, CHOSEN BY THE PERSON: the one the person speaks and the one the translation is to be in, one Selector for both.
+        devices.RegisterAcquire(SEL, async (_, _) =>
+        {
+            await TellAsync("Choose the input and output languages, then press OK.");
+            var chosen = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            RoutedEventHandler ok = (_, _) => chosen.TrySetResult(true);
+            using var onStop = stop.Register(() => chosen.TrySetResult(false));
+            await Dispatcher.InvokeAsync(() => { LanguagesButton.Click += ok; LanguagesButton.IsEnabled = true; });
+            var yes = await chosen.Task;
+            string? from = null, to = null;
+            await Dispatcher.InvokeAsync(() => { LanguagesButton.Click -= ok; LanguagesButton.IsEnabled = false; from = From; to = To; });
+            if (!yes) return null;
+            _from = from!;
+            return MpaiJson.ToJson(BasicSelectorObject.Languages(from!, to!));
+        });
+
+        // THE PERSON'S SPEECH, from the microphone, in the language the person said they speak.
+        devices.RegisterAcquire(BSO, async (_, _, abandon) =>
+        {
+            await TellOnceAsync("Speak, or type and press Enter.");
+            var speech = await _ears!.ListenAsync(stop, abandon);
+            if (speech is null) return null;
+            _heard = "(spoken)";
+            return MpaiJson.ToJson(WithLanguage(speech, _from));
+        });
+
+        // THE PERSON'S TYPED TEXT: the box opens, and Enter - the key or the button - gives it.
+        devices.RegisterAcquire(BTO, async (_, _, abandon) =>
+        {
+            var words = await _typed.AskAsync(stop, abandon);
+            if (words is null) return null;
+            _heard = words;
+            return MpaiJson.ToJson(WordsIn(words, _from));
+        });
+
+        // THE SCREEN: the translation is shown; a prompt, if the workflow has one, is shown and said.
+        devices.RegisterPresent("screen", async data =>
+        {
+            if (data.TryGetValue("Prompt", out var prompt)) { await TellAsync(prompt); return; }
+            foreach (var kv in data)
             {
-                _north = new ControllerApi(AmdDir, SettingsPath, store => new MtsProvider(store));
-                started = _north.StartFlow(Module);
-            });
-            if (started != AifError.OK) { SetStatus("could not start " + Module + ": " + started); return; }
-            SpeakButton.IsEnabled = TranslateButton.IsEnabled = true;
-            InstructionText.Text = "Choose the languages, then press Speak and say a sentence, or type it and press Enter.";
-            SetStatus("Ready.");
-        }
-        catch (Exception fatal) { Program.Record("startup", fatal); SetStatus("startup failed: " + fatal.Message); }
-    }
+                if (!kv.Key.StartsWith("Display:OSD-BTO", StringComparison.OrdinalIgnoreCase)) continue;
+                var translation = TextOf(kv.Value) ?? "";
+                Dispatcher.Invoke(() =>
+                {
+                    Transcript.AppendText($"{_heard}{Environment.NewLine}  =>  {translation}{Environment.NewLine}{Environment.NewLine}");
+                    Transcript.ScrollToEnd();
+                });
+            }
+        });
 
-    private async void SpeakButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_avatar is null) return;
-        var from = From;
-        SetBusy(true); SetStatus("listening...");
-        try
+        // THE AVATAR: the machine's Portable Avatar, which says the translation; the step ends when she has finished speaking.
+        devices.RegisterPresent("avatar", async data =>
         {
-            var speech = await Task.Run(() => _avatar!.CaptureSpeech());
-            if (speech is null || speech.Data.Length == 0) { SetStatus("no speech captured."); return; }
-            await TurnAsync(new ControllerApi.Datum(BSO, MpaiJson.ToJson(WithLanguage(speech, from))), "(spoken)");
-        }
-        catch (Exception ex) { Program.Record("speak", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
-    }
+            if (!data.TryGetValue(PAV, out var pav)) return;
+            _told = false;   // the next turn tells again what to do
+            SetStatus("done.");
+            if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance) await StandardDevices.PresentAsync(_avatar!, utterance);
+            else SetStatus("the Portable Avatar carries no speech.");
+        });
 
-    private void TranslateButton_Click(object sender, RoutedEventArgs e) => _ = SendAsync();
-
-    private void TextBoxIn_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && TranslateButton.IsEnabled) _ = SendAsync();
-    }
-
-    private async Task SendAsync()
-    {
-        var words = TextBoxIn.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(words)) return;
-        var from = From;
-        TextBoxIn.Clear();
-        SetBusy(true);
-        try { await TurnAsync(new ControllerApi.Datum(BTO, 1, MpaiJson.ToJson(WordsIn(words, from))), words); }
-        catch (Exception ex) { Program.Record("send", ex); SetStatus("error: " + ex.Message); }
-        finally { SetBusy(false); }
-    }
-
-    // One turn: the languages, the sentence, the Avatar Model and the machine's ID; the translation shown, the Portable Avatar presented.
-    private async Task TurnAsync(ControllerApi.Datum said, string heard)
-    {
-        if (_north is null || _avatar is null) return;
-        var languages = MpaiJson.ToJson(BasicSelectorObject.Languages(From, To));
-        SetStatus("translating...");
-        var inputs = new List<ControllerApi.Datum>
-        {
-            new ControllerApi.Datum(SEL, languages),
-            said,
-            new ControllerApi.Datum(B3O, 1, AvatarUtterance.AvatarDatum("cav-avatar.glb")),
-            new ControllerApi.Datum("string", 1, System.Text.Json.JsonSerializer.Serialize(MachineName))
-        };
-        var r = await Task.Run(() => _north!.Advance(Module, inputs));
-        if (!r.Ok) { Program.Record("advance", new Exception(r.Error.ToString())); SetStatus("no translation: " + r.Error); return; }
-
-        var pav = r.ByType(PAV);
-        var translation = TextOf(r.ByType(BTO)) ?? AvatarUtterance.TextOfPortableAvatar(pav) ?? "";
-        AddLine(heard, translation);
-        SetStatus("done.");
-
-        if (AvatarUtterance.FromPortableAvatar(pav) is { } utterance)
-        {
-            await _avatar.PresentAsync(utterance);
-            await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(utterance.MachineSpeechWav) + 0.3));
-        }
-        else SetStatus("the Portable Avatar carries no speech.");
+        return devices;
     }
 
     private static string? TextOf(string? json)
@@ -182,16 +252,4 @@ public partial class MainWindow : Window
         };
         return BasicSpeechObject.FromData(speech.Data, qualifier);
     }
-
-    private void AddLine(string heard, string translation) => Dispatcher.Invoke(() =>
-    {
-        Transcript.AppendText($"{heard}{Environment.NewLine}  =>  {translation}{Environment.NewLine}{Environment.NewLine}");
-        Transcript.ScrollToEnd();
-    });
-
-    private void SetBusy(bool b) => Dispatcher.Invoke(() => { SpeakButton.IsEnabled = !b; TranslateButton.IsEnabled = !b; });
-    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
-
-    protected override void OnClosed(EventArgs e)
-    { try { _north?.StopFlow(Module); } catch { } base.OnClosed(e); }
 }
