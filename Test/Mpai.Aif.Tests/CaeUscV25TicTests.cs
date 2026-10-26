@@ -145,7 +145,7 @@ public class CaeUscV25TicTests
     {
         var tape = IrregularTape();
         var film = new VideoFrames(32, 24, 10, Enumerable.Range(0, 100).Select(t => Frame(t >= 30 && t < 36 ? 200 : t >= 70 ? 60 : 120, t)).ToArray());    // the splice at 2.9-3.7 s of the film, a new tape at 6.9 s
-        var av = AudioVisualObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate), film);       // the film starts 2.5 s into the recording
+        var av = BasicMultimodalObject.Make("av", new Audio(tape.Samples[(int)(2.5 * Rate)..], Rate), film);       // the film starts 2.5 s into the recording
         var aap = new AapAimProcessor("aap", "paf", "av", "video", "files", "irr"); var vap = new VapAimProcessor("vap", "av", "irr", "irr", "images"); var tic = Tic();
 
         var a1 = await aap.ProcessAsync(Of(("paf", AudioObject.Make("pres", tape)), ("av", av)));            // the audio's own irregularities and the offset

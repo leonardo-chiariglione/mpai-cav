@@ -30,10 +30,10 @@ public sealed record VideoFrames(int Width, int Height, double FramesPerSecond, 
     }
 }
 
-// THE STAND-IN FOR THE PRESERVATION AUDIO-VISUAL FILE. A real one is a video file (MP4...) that this machine has no decoder for. Here the Basic Audio-Visual Object (OSD-BMO-V1.5)
+// THE STAND-IN FOR THE PRESERVATION AUDIO-VISUAL FILE. A real one is a video file (MP4...) that this machine has no decoder for. Here the Basic Multimodal Object (OSD-BMO-V1.5)
 // carries two data items: the one with the ID "audio" a WAV file (the audio digitised with the video clock) and the one with the ID "video-frames" the frames of the film (VideoFrames).
 // A decoder for a real video replaces this and nothing else of the AIMs that read it.
-public static class AudioVisualObject
+public static class BasicMultimodalObject
 {
     public const string Header = "OSD-BMO-V1.5";
 
