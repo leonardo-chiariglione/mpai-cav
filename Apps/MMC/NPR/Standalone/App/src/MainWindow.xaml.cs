@@ -61,7 +61,7 @@ public partial class MainWindow : Window
             SetStatus("Wait while the avatar loads");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            _voice = new MachineVoice(_avatar, MachineName);
+            _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), Program.Record);
             var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
             await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new NprProvider(store)));
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking

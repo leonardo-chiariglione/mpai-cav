@@ -31,9 +31,9 @@
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <TextBox x:Name="TextBoxIn" Grid.Column="0" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" KeyDown="TextBoxIn_KeyDown"/>
-      <Button x:Name="SpeakButton" Grid.Column="1" Content="Speak" Padding="14,4" Margin="8,0,0,0" Click="SpeakButton_Click" IsEnabled="False"/>
-      <Button x:Name="SendButton" Grid.Column="2" Content="Send" Padding="16,4" Margin="8,0,0,0" Click="SendButton_Click" IsEnabled="False"/>
+      <TextBox x:Name="TextBoxIn" Grid.Column="0" FontSize="14" VerticalContentAlignment="Center" Padding="6,2"/>
+      <Button x:Name="StopButton" Grid.Column="1" Content="Stop" Padding="14,4" Margin="8,0,0,0" Click="StopButton_Click" IsEnabled="False"/>
+      <Button x:Name="SendButton" Grid.Column="2" Content="Send" Padding="16,4" Margin="8,0,0,0" IsEnabled="False"/>
     </Grid>
 
     <TextBlock x:Name="StatusText" Grid.Row="3" Grid.ColumnSpan="2" Foreground="#888" Margin="0,6,0,0"/>
