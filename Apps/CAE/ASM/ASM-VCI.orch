@@ -36,7 +36,7 @@ on Start:
 
     deliver Scene          (OSD-ASD-V1.5)    to device "Scene"
     deliver ObjectOut      (OSD-AUO-V1.5)    to device "Unused"
-    deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "Unused"
+    deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "ObjectReport"
     deliver SceneReport    (CAE-UCM-V1.0:2)  to device "Unused"
     deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "Unused"
     deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "Unused"

@@ -59,6 +59,13 @@ public static class Driver
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", j => { lock (spoken) spoken.Add(j); say("RESPONSE SPEECH: " + (MpaiJson.FromJson<BasicSpeechObject>(j)?.Data?.Length ?? 0) + " bytes"); return Task.CompletedTask; }));
         devices.RegisterDevice("Scene", new ActingDevice("Scene", j => { lock (scenes) scenes.Add(j); say("SCENE: " + string.Join("; ", MainWindow.SoundsOf(j).Select(s => $"{s.Name} at {s.X:0.##}, {s.Y:0.##}, {s.Z:0.##}")) + (MainWindow.RoomOf(j) is { } r ? $" | ROOM {r.Width:0.##} x {r.Depth:0.##} m, ceiling {r.Height:0.##} m, centre {r.CentreX:0.##}, {r.CentreY:0.##}" : " | no room")); if (MainWindow.RoomOf(j) is not null || MainWindow.SoundsOf(j).Count > 0) File.WriteAllText(Value(args, "--drive") + ".asd.json", j); return Task.CompletedTask; }));
         devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
+        string? loadingId = null, loadingName = null; var loaded = new List<string>();
+        devices.RegisterDevice("ObjectReport", new ActingDevice("ObjectReport", j =>
+        {
+            say("OBJECT REPORT: " + System.Text.RegularExpressions.Regex.Replace(j, @"\s+", " "));
+            if (loadingId is not null && MainWindow.LoadSaid(j, loadingId, loadingName!) is { } said) { lock (loaded) loaded.Add(said); say("WINDOW SAYS: " + said); }
+            return Task.CompletedTask;
+        }));
         devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) say("SCREEN: " + p); return Task.CompletedTask; });
 
         var workflow = new WorkflowReader().Read(File.ReadAllText(Path.Combine(MpaiPaths.Root, "Apps", "CAE", "ASM", "ASM-VCI.orch")));
@@ -74,9 +81,10 @@ public static class Driver
             var eq = load.IndexOf('=');
             var name = load[..eq]; var file = load[(eq + 1)..];
             var sound = new BasicAudioObject { BasicAudioObjectID = name, DescrMetadata = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(await File.ReadAllBytesAsync(file)))] };
+            loadingId = Guid.NewGuid().ToString("N")[..8]; loadingName = name;
             sounds.Give(MpaiJson.ToJson(new UserCommand
             {
-                UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+                UserCommandID = loadingId, UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = sound } }
             }));
             say("SOUND SENT: " + name);

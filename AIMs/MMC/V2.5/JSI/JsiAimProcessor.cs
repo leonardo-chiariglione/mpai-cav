@@ -264,7 +264,9 @@ public sealed class JsiAimProcessor : IAimProcessor
         // A request that is not for the application, or that works on an object and names none that the application has, is answered without the model.
         if (RequestGuards.Refused(text, guide) is { } refusal) return (null, "No command was formed. " + refusal);
         var names = _state.NameSets;
-        if (RequestGuards.NamesNothing(text, guide, RequestGuards.Asked(text, guide, names), (names.GetValueOrDefault("Present") ?? []).Concat(names.GetValueOrDefault("Stored") ?? []).ToList()) is { } unnamed)
+        var forTheLatest = _configuration.UsesGrammar && (names.GetValueOrDefault("Latest") ?? []).Count > 0
+                           && RuleGrammar.Match(text, guide.Rules.Where(r => r["Implicit"] is not null).ToList(), names, _state) is not null;      // "two metres to the right": about the sound just loaded
+        if (!forTheLatest && RequestGuards.NamesNothing(text, guide, RequestGuards.Asked(text, guide, names), (names.GetValueOrDefault("Present") ?? []).Concat(names.GetValueOrDefault("Stored") ?? []).ToList()) is { } unnamed)
             return (null, "No command was formed. " + unnamed);
 
         if (_commandCheck is null || !_commandCheck.Available || _library is null)
@@ -294,7 +296,9 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (_configuration.UsesGrammar && guide.Rules.Count > 0 && RuleGrammar.Match(text, guide.Rules, _state.NameSets, _state, string.IsNullOrEmpty(last) ? null : last, _memory) is { } ruled)
         {
             var completed = view.Complete(ruled);
-            if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
+            var violated = _commandCheck.Violations(completed.ToJsonString());
+            if (violated.Count > 0) AimLog.Write(InstanceId, "[grammar] the command of a rule does not conform: " + string.Join("; ", violated.Take(3)));
+            if (violated.Count == 0)
             {
                 AimLog.Write(InstanceId, $"[timing] understood by the grammar: {watch.ElapsedMilliseconds} ms");
                 Remember(completed, text);

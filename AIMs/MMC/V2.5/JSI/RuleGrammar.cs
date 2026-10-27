@@ -59,6 +59,13 @@ public static class RuleGrammar
                 else if (TryNumber(word, out var number)) values[group] = number;
                 else values[group] = word.Trim();
             }
+            if (ok && rule["Implicit"] is JsonObject implicitNames)                               // a name the words do not say: the one the application has waiting (Latest)
+                foreach (var (variable, setNode) in implicitNames)
+                {
+                    var one = (nameSets.GetValueOrDefault((string)setNode!) ?? []).LastOrDefault();
+                    if (one is null) { ok = false; break; }
+                    values[variable] = one;
+                }
             if (!ok) continue;
             try
             {

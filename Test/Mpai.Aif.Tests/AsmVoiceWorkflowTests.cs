@@ -100,7 +100,7 @@ public class AsmVoiceWorkflowTests
             var devices = new DeviceRegistry();
             devices.RegisterDevice("Voice", Voice).RegisterDevice("SoundIn", SoundIn).RegisterDevice("SceneIn", new PushDevice("OSD-ASD-V1.5"))
                    .RegisterDevice("Heard", HeardText).RegisterDevice("ReplyText", ReplyText).RegisterDevice("ReplySpeech", ReplySpeech)
-                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused);
+                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused).RegisterDevice("ObjectReport", new RecordDevice());
             devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) lock (Prompts) Prompts.Add(p); return Task.CompletedTask; });
             var workflow = new WorkflowReader().Read(File.ReadAllText(Orch));
             var interpreter = new WorkflowInterpreter(Api.Async(), devices, line => { lock (this) Said += line + "\n"; });

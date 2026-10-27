@@ -2471,6 +2471,447 @@
           "DeliveredObject": "stage"
         }
       }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? (?:and )?y ?(?:=|equals)? ?<NUM:y>,? (?:and )?z ?(?:=|equals)? ?<NUM:z>",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{x}",
+                      "{y}",
+                      "{z}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?<NUM:n> metres? (?:to |on |at )?(?:the |my )?right(?: of me)?",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{n}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cy": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?<NUM:n> metres? (?:to |on |at )?(?:the |my )?left(?: of me)?",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{0-n}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cy": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?<NUM:n> metres? (?:to |on |at |in )?(?:the |my )?(?:front|ahead|forward)(?: of me)?",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{n}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?<NUM:n> metres? (?:to |on |at |in )?(?:the |my )?(?:back|behind|backwards)(?: of me)?",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:on|at|to) my right",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "2",
+        "cy": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:on|at|to) my left",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "-2",
+        "cy": "0",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:in front of me|ahead of me|in front)",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "0",
+        "cy": "2",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:behind me|at my back)",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "0",
+        "cy": "-2",
+        "cz": "0"
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:here|at the centre|at the center|in the centre|in the center|at the middle|in the middle)",
+      "Implicit": {
+        "name": "Latest"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{cy}",
+                      "{cz}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Let": {
+        "cx": "0",
+        "cy": "0",
+        "cz": "0"
+      }
     }
   ],
   "Asks": [

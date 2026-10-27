@@ -26,6 +26,7 @@ public sealed class ApplicationState
         ["Present"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Distinct(StringComparer.Ordinal).ToList(),
         ["Members"] = Scenes.SelectMany(s => s.Members.Select(m => m.Name)).Distinct(StringComparer.Ordinal).ToList(),
         ["Stored"] = Stored,
+        ["Latest"] = Stored.Where(n => !Scenes.Any(sc => sc.Name == n || sc.Members.Any(m => m.Name == n))).TakeLast(1).ToList(),      // the sound kept and not yet in the scene, last kept: the one a bare "two metres to the right" is about
         ["Kept"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Concat(Stored).Distinct(StringComparer.Ordinal).ToList()      // everything the application keeps, scenes and objects
     };
 

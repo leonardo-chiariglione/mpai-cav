@@ -187,6 +187,16 @@ public partial class MainWindow : Window
         }));
         devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
 
+        // THE MODULE'S REPORT ON A SOUND THE PERSON LOADED: told at once, written and said the same; then where to put it is asked.
+        devices.RegisterDevice("ObjectReport", new ActingDevice("ObjectReport", async json =>
+        {
+            var loading = _loading;
+            App.Log("[window] report on an object command: " + json.Length + " bytes" + (loading is null ? "" : ", waiting for the report on " + loading.Value.Name));
+            if (loading is null || LoadSaid(json, loading.Value.Id, loading.Value.Name) is not { } said) return;
+            _loading = null;
+            await TellAsync(said);
+        }));
+
         // THE SCREEN: what the workflow says is shown and said.
         devices.RegisterPresent("screen", async data => { if (data.TryGetValue("Prompt", out var words)) await TellAsync(words); });
         return devices;
@@ -365,6 +375,7 @@ public partial class MainWindow : Window
                 UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = sound } }
             };
+            _loading = (command.UserCommandID!, name);
             _soundIn.Give(MpaiJson.ToJson(command));
             SetStatus($"The sound {name} is sent.");
         }
@@ -468,6 +479,23 @@ public partial class MainWindow : Window
 
     // An instruction is shown AND said; the step goes on when she has finished saying it.
     private int _textsToSpeak;
+    private (string Id, string Name)? _loading;
+
+    // What is said when the Module has answered a command that acquires a sound: that it is loaded and where to put it, or why it is not. Null if the report is not about that command.
+    internal static string? LoadSaid(string json, string id, string name)
+    {
+        try
+        {
+            var report = JsonNode.Parse(json) as JsonObject;
+            if (report?["UserCommandRS"] is not JsonObject rs) return null;
+            if ((string?)report["UserCommandID"] is { } rid && rid != id && (string?)rs["UserCommandID"] != id) return null;
+            if ((string?)rs["Outcome"] == "Done" || (string?)rs["Outcome"] == "Succeeded")
+                return $"Loaded {name}. Where do you want to put it? For example: put the {name} at x 2, y 1, z 0, or say: two metres to the right.";
+            var reasons = (rs["Actions"] as JsonArray)?.OfType<JsonObject>().Select(a => (string?)a["Reason"]).Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().ToList() ?? [];
+            return $"I could not load {name}" + (reasons.Count > 0 ? ": " + string.Join("; ", reasons).TrimEnd('.') : "") + ".";
+        }
+        catch (Exception) { return null; }
+    }
 
     private async Task TellAsync(string words)
     {

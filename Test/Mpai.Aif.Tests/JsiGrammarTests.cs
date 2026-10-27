@@ -149,4 +149,19 @@ public class JsiGrammarTests
         Assert.Contains("I did not understand: banana split sunday", answer);
     }
 
+    [Theory]
+    [InlineData("two metres to the right", 2.0, 0.0)]
+    [InlineData("on my left", -2.0, 0.0)]
+    [InlineData("in front of me", 0.0, 2.0)]
+    [InlineData("put it at x 2, y 1, z 0", 2.0, 1.0)]
+    [InlineData("here", 0.0, 0.0)]
+    public async Task ABarePlaceIsAboutTheSoundJustLoaded(string words, double x, double y)
+    {
+        var jsi = JsiRig.Processor((_, _, _) => Task.FromResult("{\"Problem\":\"the model was asked\"}"), JsiRig.Jsi, false, true);
+        var answer = await jsi.ProcessAsync(JsiRig.Say(Ports, words, JsiRig.Context(JsiRig.Scene(), ["banjo"]))); Assert.True(JsiRig.CommandOf(answer, Ports) is not null, JsiRig.FactsOf(answer, Ports)); var rq = JsiRig.CommandOf(answer, Ports)!["UserCommandRQ"]!;
+        var added = rq["AddedObjects"]!["Objects"]![0]!;
+        Assert.Equal("banjo", (string?)added["ObjectID"]);
+        Assert.Equal(x, (double)added["SpatialAttitude"]!["Position"]!["CartPosition"]![0]!); Assert.Equal(y, (double)added["SpatialAttitude"]!["Position"]!["CartPosition"]![1]!);
+    }
+
 }
