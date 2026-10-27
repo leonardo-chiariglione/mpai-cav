@@ -102,7 +102,10 @@ public sealed class ModelView
             if (o[keyword] is JsonArray alternatives)
             {
                 var converted = alternatives.Select(a => Convert(a, document, uri, path, depth + 1, following)).OfType<JsonObject>().ToList();
-                var identifier = converted.FirstOrDefault(IsPlainString);
+                // Where the guide includes paths INSIDE the object, the object is wanted in full: the identifier is not one of the ways to say it.
+                var inFull = _guide.Include.Any(i => i.StartsWith(path + ".", StringComparison.Ordinal));
+                var identifier = inFull ? null : converted.FirstOrDefault(IsPlainString);
+                if (inFull) converted = converted.Where(c => !IsPlainString(c)).ToList();
                 if (identifier is not null) return Described(new JsonObject { ["type"] = "string" }, description ?? Clean((string?)identifier["description"]));
                 converted = converted.Where(c => c.Count > 0).ToList();
                 if (converted.Count == 0) return Described(new JsonObject(), description);

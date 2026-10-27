@@ -159,6 +159,7 @@ public sealed class JsiAimProcessor : IAimProcessor
                 string text;
                 try { text = MpaiJson.FromJson<BasicTextObject>(request)?.GetText() ?? ""; }
                 catch (JsonException) { return Message.Error(message.MessageId, InstanceId, "the request is not a Text Object"); }
+                if (IsNoise(text)) text = "";           // what a recogniser writes for a noise: nothing is said, nothing is answered
                 if (!string.IsNullOrWhiteSpace(text))
                 {
                     if (Refreshing && (_stale || _chain >= 0))
@@ -209,6 +210,19 @@ public sealed class JsiAimProcessor : IAimProcessor
         catch (Exception e) when (e is JsonException or FormatException or InvalidOperationException) { }
     }
 
+    private static readonly HashSet<string> Fillers = new(StringComparer.OrdinalIgnoreCase)
+    { "you", "thank you", "thanks", "thank you for watching", "thanks for watching", "bye", "bye bye", "okay", "ok", "um", "uh", "hmm", "mm", "the", "so", "yeah" };
+
+    // A NOISE THE RECOGNISER WROTE WORDS FOR: a lone word or a filler it makes up of silence ("you", "thank you for watching"), a lone word of fewer than four letters. A longer lone word ("undo", "stop") is a command.
+    public static bool IsNoise(string text)
+    {
+        var plain = new string(text.Where(c => char.IsLetterOrDigit(c) || c == ' ' || c == (char)39).ToArray()).Trim();
+        if (plain.Length == 0) return true;
+        if (Fillers.Contains(plain)) return true;
+        var words = plain.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return words.Length < 2 && plain.Length < 4;
+    }
+
     private static string? Input(Message message, string port) =>
         port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
@@ -237,26 +251,26 @@ public sealed class JsiAimProcessor : IAimProcessor
     private async Task<(JsonNode? Command, string? Hint)> Understand(string text)
     {
         if (!HasApplication)
-            return (null, "No command was sent: this JSON Interface has no application to serve (its Access names no schemas and no guide).");
+            return (null, "No command was formed: this JSON Interface has no application to serve (its Access names no schemas and no guide).");
         var guide = _guide!;
 
         // A change by an amount the person did not give is asked for, not guessed.
-        if (NeedsNumber(text, guide)) return (null, "No command was sent. " + guide.NeedsNumberQuestion);
+        if (NeedsNumber(text, guide)) return (null, "No command was formed. " + guide.NeedsNumberQuestion);
 
         // A request that is not for the application, or that works on an object and names none that the application has, is answered without the model.
-        if (RequestGuards.Refused(text, guide) is { } refusal) return (null, "No command was sent. " + refusal);
+        if (RequestGuards.Refused(text, guide) is { } refusal) return (null, "No command was formed. " + refusal);
         var names = _state.NameSets;
         if (RequestGuards.NamesNothing(text, guide, RequestGuards.Asked(text, guide, names), (names.GetValueOrDefault("Present") ?? []).Concat(names.GetValueOrDefault("Stored") ?? []).ToList()) is { } unnamed)
-            return (null, "No command was sent. " + unnamed);
+            return (null, "No command was formed. " + unnamed);
 
         if (_commandCheck is null || !_commandCheck.Available || _library is null)
-            return (null, "No command was sent: the schema of the commands of the application is not available, so a command cannot be checked.");
+            return (null, "No command was formed: the schema of the commands of the application is not available, so a command cannot be checked.");
         if (_model is null)
-            return (null, "No command was sent: there is no language model to understand the request.");
+            return (null, "No command was formed: there is no language model to understand the request.");
 
         var view = new ModelView(_library, guide.ForRequest(text, _state.NameSets), _state.NameSets);
         if (view.Build(_commandCheck.Uri) is null)
-            return (null, "No command was sent: the schema of the commands of the application cannot be read.");
+            return (null, "No command was formed: the schema of the commands of the application cannot be read.");
 
         // A request that is always the same command is that command, whatever the model would make of it.
         if (guide.ShortcutFor(text) is { } shortcut)
@@ -283,12 +297,12 @@ public sealed class JsiAimProcessor : IAimProcessor
                 Remember(instance, text);
                 return (instance, null);
             }
-            if (said is not null) return (null, "No command was sent. " + said);
+            if (said is not null) return (null, "No command was formed. " + said);
             problem = fault!;
             turns.Add(("assistant", raw));
             turns.Add(("user", $"That is not accepted: {fault} Answer again with the corrected JSON object only."));
         }
-        return (null, "No command was sent: the request could not be turned into a command that the application accepts (" + problem.TrimEnd('.') + "). Ask the person to say it again, with the names and the numbers.");
+        return (null, "No command was formed: the request could not be turned into a command that the application accepts (" + problem.TrimEnd('.') + "). Ask the person to say it again, with the names and the numbers.");
     }
 
     // What the model gave: a command (completed, checked), a problem it states, or the fault.

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace Mpai.Cae.AsmUa;
@@ -24,6 +25,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (Array.IndexOf(e.Args, "--drive") >= 0) { Shutdown(Task.Run(() => Driver.Run(e.Args)).GetAwaiter().GetResult()); return; }
         // A picture of the room, to a file, with nothing else started (no avatar, no sound): `AsmUa.exe --scene-png <file>`.
         var at = Array.IndexOf(e.Args, "--scene-png");
         if (at >= 0 && at + 1 < e.Args.Length)

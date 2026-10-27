@@ -46,6 +46,7 @@ public partial class MainWindow : Window
     private Task? _running;
     private bool _closing;
     private volatile bool _microphoneOn = true;
+    private CancellationTokenSource? _hearing;          // the scene being heard on the loudspeakers
     private TaskCompletionSource<string?>? _naming;      // the name the person is giving a sound
     private string? _lastScene;                          // the last Audio Scene Descriptors the Module gave
 
@@ -92,16 +93,15 @@ public partial class MainWindow : Window
 
             var workflow = new WorkflowReader().Read(File.ReadAllText(Path.Combine(MpaiPaths.Root, "Apps", "CAE", "ASM", "ASM-VCI.orch")));
             _stopping = new CancellationTokenSource();
-            StopButton.IsEnabled = LoadButton.IsEnabled = HearButton.IsEnabled = InputBox.IsEnabled = SendButton.IsEnabled = true;
+            LoadButton.IsEnabled = HearButton.IsEnabled = InputBox.IsEnabled = SendButton.IsEnabled = true;
             SetStatus("Ready.");
-            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), line => App.Log(line));
+            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), line => App.Log("[workflow] " + line));
             _running = interpreter.RunAsync(workflow, _stopping.Token);
             try { await _running; }
             catch (OperationCanceledException) { }
             if (!_closing) SetStatus("Stopped.");
         }
         catch (Exception fatal) { App.Record("workflow", fatal); SetStatus("Stopped: " + fatal.Message); }
-        finally { StopButton.IsEnabled = false; }
     }
 
     private static async Task<bool> OllamaAnswersAsync()
@@ -120,15 +120,17 @@ public partial class MainWindow : Window
         devices.RegisterDevice("SoundIn", _soundIn);
 
         // THE WORDS HEARD: shown; the Module is now working out the command, which takes a few seconds.
-        devices.RegisterDevice("Heard", new ActingDevice(json =>
+        devices.RegisterDevice("Heard", new ActingDevice("Heard", json =>
         {
-            Dispatcher.Invoke(() => { HeardText.Text = TextOf(json); AnswerText.Text = ""; });
+            var heard = TextOf(json);
+            if (Mpai.Mmc.Jsi.JsiAimProcessor.IsNoise(heard)) { App.Log("[window] noise ignored: " + heard); SetStatus("Ready."); return Task.CompletedTask; }
+            Dispatcher.Invoke(() => { HeardText.Text = heard; AnswerText.Text = ""; });
             SetStatus("Thinking...");
             return Task.CompletedTask;
         }));
 
         // THE RESPONSE IN TEXT: shown.
-        devices.RegisterDevice("ReplyText", new ActingDevice(json =>
+        devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", json =>
         {
             Dispatcher.Invoke(() => AnswerText.Text = TextOf(json));
             SetStatus("Ready.");
@@ -136,7 +138,7 @@ public partial class MainWindow : Window
         }));
 
         // THE RESPONSE IN SPEECH: said by the avatar; the step ends when she has finished.
-        devices.RegisterDevice("ReplySpeech", new ActingDevice(async json =>
+        devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", async json =>
         {
             try
             {
@@ -147,14 +149,14 @@ public partial class MainWindow : Window
         }));
 
         // THE AUDIO SCENE: drawn from above, by the names and the places the scene gives; kept to be heard.
-        devices.RegisterDevice("Scene", new ActingDevice(json =>
+        devices.RegisterDevice("Scene", new ActingDevice("Scene", json =>
         {
             _lastScene = json;
             var sounds = SoundsOf(json);
             Dispatcher.Invoke(() => Room.Show(sounds));
             return Task.CompletedTask;
         }));
-        devices.RegisterDevice("Unused", new ActingDevice(_ => Task.CompletedTask));
+        devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
 
         // THE SCREEN: what the workflow says is shown and said.
         devices.RegisterPresent("screen", async data => { if (data.TryGetValue("Prompt", out var words)) await TellAsync(words); });
@@ -168,7 +170,7 @@ public partial class MainWindow : Window
     }
 
     // The sounds of the scene, with where they are: read from the Audio Scene Descriptors.
-    private static List<SceneView.Sound> SoundsOf(string json)
+    internal static List<SceneView.Sound> SoundsOf(string json)
     {
         var found = new List<SceneView.Sound>();
         void Walk(JsonNode? node)
@@ -198,6 +200,7 @@ public partial class MainWindow : Window
     private void Submit()
     {
         var words = InputBox.Text.Trim();
+        App.Log("[window] Enter pressed, text: " + words + (_naming is not null ? " (the name of a sound)" : ""));
         if (words.Length == 0) return;
         InputBox.Clear();
         if (_naming is { } naming) { naming.TrySetResult(words); return; }       // the name of a sound, not a command
@@ -208,10 +211,15 @@ public partial class MainWindow : Window
 
     private void SendButton_Click(object sender, RoutedEventArgs e) => Submit();
 
+    // THE MICROPHONE, ON OR OFF, UNMISTAKABLY: off, nothing it hears reaches the Module.
     private void MicButton_Click(object sender, RoutedEventArgs e)
     {
         _microphoneOn = MicButton.IsChecked == true;
-        MicButton.Content = _microphoneOn ? "Microphone is on" : "Microphone is off";
+        MicButton.Content = _microphoneOn ? "Microphone is on" : "Microphone is off - click to listen";
+        MicButton.Background = new System.Windows.Media.SolidColorBrush(_microphoneOn ? System.Windows.Media.Color.FromRgb(0x2E, 0x9E, 0x4F) : System.Windows.Media.Color.FromRgb(0xC6, 0x28, 0x28));
+        App.Log("[window] microphone " + (_microphoneOn ? "on" : "off"));
+        if (!_microphoneOn) SetStatus("The microphone is off. Type, or click the red button to listen.");
+        else SetStatus("Ready.");
     }
 
     // A SOUND FROM A FILE: chosen by the person, named by them (she asks, shown and said), and sent to the Module in a User Command that acquires it.
@@ -252,23 +260,26 @@ public partial class MainWindow : Window
             var wav = await Task.Run(() => new Mpai.SpatialAudio.AudioRendering(AppContext.BaseDirectory).Render(scene).Data);
             if (wav is not { Length: > 0 }) { await TellAsync("The scene gave no sound."); return; }
             SetStatus("Playing the scene.");
+            _hearing = new CancellationTokenSource(); var heardToken = _hearing.Token;
             await Task.Run(() =>
             {
                 using var reader = new NAudio.Wave.WaveFileReader(new MemoryStream(wav));
                 using var output = new NAudio.Wave.WaveOutEvent();
                 output.Init(reader); output.Play();
-                while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing) Thread.Sleep(100);
+                while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing && !heardToken.IsCancellationRequested) Thread.Sleep(100);
             });
             SetStatus("Ready.");
         }
         catch (Exception ex) { App.Record("hear the scene", ex); SetStatus("The scene could not be heard: " + ex.Message); }
     }
 
+    // STOP SPEAKING: what she is saying and what is playing is cut off, and nothing else - the Module goes on, and the next request is answered as any other.
     private void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        StopButton.IsEnabled = false;
+        App.Log("[window] Stop speaking");
         _avatar?.Silence();
-        _stopping?.Cancel();
+        try { _hearing?.Cancel(); } catch { }
+        SetStatus("Ready.");
     }
 
     protected override async void OnClosing(CancelEventArgs e)
@@ -291,7 +302,7 @@ public partial class MainWindow : Window
 
     // ---- showing and saying -----------------------------------------------------------------------------------------------------------------------
 
-    private void SetStatus(string s) => Dispatcher.Invoke(() => StatusText.Text = s);
+    private void SetStatus(string s) { App.Log("[status] " + s); Dispatcher.Invoke(() => StatusText.Text = s); }
 
     // An instruction is shown AND said; the step goes on when she has finished saying it.
     private async Task TellAsync(string words)

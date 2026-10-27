@@ -151,7 +151,7 @@ public class VciTests
         Assert.Equal(["By how many metres should I move the violin?"], rig.Spoken);
         Assert.False(rig.Read(VciRig.Ucm, 1, 500).Ok);                                  // no command was sent
         Assert.Empty(rig.JsiTurns);                                                     // and the language model of the Interface was not asked
-        Assert.Contains("Response Hint: No command was sent. By how much", rig.Ollama!.Prompts.Single());
+        Assert.Contains("Response Hint: No command was formed. By how much", rig.Ollama!.Prompts.Single());
         Assert.Contains("What the person said: \"move the violin a bit to the left\"", rig.Ollama!.Prompts.Single());
     }
 

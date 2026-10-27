@@ -219,7 +219,7 @@ public class JsiTests
         Assert.Equal(2, calls.Count);                                                       // once more, not again
         Assert.Null(JsiRig.CommandOf(answer, Ports));
         var facts = JsiRig.FactsOf(answer, Ports)!;
-        Assert.StartsWith("No command was sent", facts);
+        Assert.StartsWith("No command was formed", facts);
         Assert.Contains("does not conform", facts);
     }
 
@@ -240,7 +240,7 @@ public class JsiTests
         var (model, calls) = Fake(empty, empty);
         var answer = await Ask(JsiRig.Processor(model), "move the violin 1 metre to the left", Context());
         Assert.Null(JsiRig.CommandOf(answer, Ports));
-        Assert.Contains("No command was sent", JsiRig.FactsOf(answer, Ports));
+        Assert.Contains("No command was formed", JsiRig.FactsOf(answer, Ports));
     }
 
     // ---- a request that cannot become a command ----------------------------------------------------------------------------------------------------
@@ -258,7 +258,7 @@ public class JsiTests
         Assert.Empty(calls);                                                                // the model is not asked to guess
         Assert.Null(JsiRig.CommandOf(answer, Ports));
         var facts = JsiRig.FactsOf(answer, Ports)!;
-        Assert.StartsWith("No command was sent", facts);
+        Assert.StartsWith("No command was formed", facts);
         Assert.Contains("By how much", facts);                                              // the number is asked for
     }
 
@@ -321,7 +321,7 @@ public class JsiTests
         var answer = await Ask(JsiRig.Processor(model), "add the saxophone at 1, 1, 0", Context());
         Assert.Single(calls);
         Assert.Null(JsiRig.CommandOf(answer, Ports));
-        Assert.Equal("No command was sent. There is no saxophone to add; the stored sounds are flute, rain and applause.", JsiRig.FactsOf(answer, Ports));
+        Assert.Equal("No command was formed. There is no saxophone to add; the stored sounds are flute, rain and applause.", JsiRig.FactsOf(answer, Ports));
     }
 
     // ---- the state of the application ---------------------------------------------------------------------------------------------------------------
