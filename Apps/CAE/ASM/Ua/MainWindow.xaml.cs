@@ -53,6 +53,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        // Her face is 0.866 of the height it had (the column less the room the words took) and of the width it had, so its surface is three quarters of what it was.
+        SideColumn.SizeChanged += (_, args) => Web.Height = Math.Max(150, (args.NewSize.Height - 150) * 0.866);
         InputBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) Submit(); };
     }
 

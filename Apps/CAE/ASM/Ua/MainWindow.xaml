@@ -7,31 +7,41 @@
   <Grid Margin="12">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
-      <ColumnDefinition Width="380"/>
+      <ColumnDefinition Width="329"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
-      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="0"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
     <TextBlock x:Name="InstructionText" Grid.Row="0" Grid.ColumnSpan="2" Text="Wait while the avatar loads" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
-    <Border Grid.Row="1" Grid.Column="0" BorderBrush="#CCC" BorderThickness="1" Margin="0,0,8,0">
+    <!-- the scene takes all the space left of the column of the lady and her words; it grows with the window -->
+    <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" BorderBrush="#CCC" BorderThickness="1" Margin="0,0,8,0">
       <local:SceneView x:Name="Room"/>
     </Border>
-    <wv2:WebView2 x:Name="Web" Grid.Row="1" Grid.Column="1"/>
 
-    <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="#CCC" BorderThickness="1" Margin="0,8,0,0" Padding="8">
-      <StackPanel>
-        <TextBlock Text="What I heard:" FontWeight="Bold"/>
-        <TextBlock x:Name="HeardText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
-        <TextBlock Text="What she answered:" FontWeight="Bold"/>
-        <TextBlock x:Name="AnswerText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
-        <TextBlock x:Name="StatusText" Foreground="#666" FontSize="13"/>
-      </StackPanel>
-    </Border>
+    <Grid Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" x:Name="SideColumn">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <!-- the lady: each side 0.866 of what it was, so a quarter less in surface; her height follows the window -->
+      <wv2:WebView2 x:Name="Web" Grid.Row="0" Height="300" VerticalAlignment="Top"/>
+      <Border Grid.Row="1" BorderBrush="#CCC" BorderThickness="1" Margin="0,8,0,0" Padding="8">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel>
+            <TextBlock Text="What I heard:" FontWeight="Bold"/>
+            <TextBlock x:Name="HeardText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
+            <TextBlock Text="What she answered:" FontWeight="Bold"/>
+            <TextBlock x:Name="AnswerText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
+            <TextBlock x:Name="StatusText" Foreground="#666" FontSize="13" TextWrapping="Wrap"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
 
     <Grid Grid.Row="3" Grid.ColumnSpan="2" Margin="0,8,0,0">
       <Grid.ColumnDefinitions>
