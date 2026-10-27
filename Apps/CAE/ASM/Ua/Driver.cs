@@ -57,7 +57,7 @@ public static class Driver
         devices.RegisterDevice("Heard", new ActingDevice("Heard", j => { var t = Text(j); lock (heard) heard.Add(t); say("HEARD: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", j => { var t = Text(j); lock (texts) texts.Add(t); say("RESPONSE TEXT: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", j => { lock (spoken) spoken.Add(j); say("RESPONSE SPEECH: " + (MpaiJson.FromJson<BasicSpeechObject>(j)?.Data?.Length ?? 0) + " bytes"); return Task.CompletedTask; }));
-        devices.RegisterDevice("Scene", new ActingDevice("Scene", j => { lock (scenes) scenes.Add(j); say("SCENE: " + string.Join("; ", MainWindow.SoundsOf(j).Select(s => $"{s.Name} at {s.X:0.##}, {s.Y:0.##}, {s.Z:0.##}"))); return Task.CompletedTask; }));
+        devices.RegisterDevice("Scene", new ActingDevice("Scene", j => { lock (scenes) scenes.Add(j); say("SCENE: " + string.Join("; ", MainWindow.SoundsOf(j).Select(s => $"{s.Name} at {s.X:0.##}, {s.Y:0.##}, {s.Z:0.##}")) + (MainWindow.RoomOf(j) is { } r ? $" | ROOM {r.Width:0.##} x {r.Depth:0.##} m, ceiling {r.Height:0.##} m, centre {r.CentreX:0.##}, {r.CentreY:0.##}" : " | no room")); if (MainWindow.RoomOf(j) is not null || MainWindow.SoundsOf(j).Count > 0) File.WriteAllText(Value(args, "--drive") + ".asd.json", j); return Task.CompletedTask; }));
         devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
         devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) say("SCREEN: " + p); return Task.CompletedTask; });
 

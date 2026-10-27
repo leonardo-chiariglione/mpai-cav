@@ -45,7 +45,9 @@ public partial class App : Application
         if (at >= 0 && at + 1 < e.Args.Length)
         {
             var room = new SceneView { Width = 700, Height = 600 };
-            room.Show([new SceneView.Sound("violin", 2, 1, 0, 180), new SceneView.Sound("drums", -1, 3, 0, 180), new SceneView.Sound("voice", 3.5, -2, 0, 90)]);
+            var asd = Array.IndexOf(e.Args, "--asd");                                 // `--asd <file>`: the Audio Scene Descriptors to draw, as the Scene device gets them
+            if (asd >= 0 && asd + 1 < e.Args.Length) { var json = File.ReadAllText(e.Args[asd + 1]); room.Show(Mpai.Cae.AsmUa.MainWindow.SoundsOf(json), Mpai.Cae.AsmUa.MainWindow.RoomOf(json)); }
+            else room.Show([new SceneView.Sound("violin", 2, 1, 0, 180), new SceneView.Sound("drums", -1, 3, 0, 180), new SceneView.Sound("voice", 3.5, -2, 0, 90)]);
             room.Measure(new Size(700, 600)); room.Arrange(new Rect(0, 0, 700, 600)); room.UpdateLayout();
             var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(700, 600, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
             bitmap.Render(room);

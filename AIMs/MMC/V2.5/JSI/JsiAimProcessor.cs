@@ -536,6 +536,17 @@ public sealed class JsiAimProcessor : IAimProcessor
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
         var asked = _requestOf.TryGetValue(id, out var r) ? r : _sent.FirstOrDefault(s => s.Id == id).Request;
+        // WHAT IS IN THE SCENE IS SAID AS IT IS (no language model re-tells a listing): the names the application listed, with where each is.
+        if (_configuration.SaysPlainly && ApplicationState.IsListing(instance, _guide))
+        {
+            _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            var parts = new List<string>();
+            foreach (var scene in _state.Scenes.Where(sc => sc.Members.Count > 0))
+                parts.Add("in the scene " + string.Join(", ", scene.Members.Select(m => m.Name + (m.Facts.FirstOrDefault().Value is { Length: > 0 } where ? " " + where.Replace("[", "").Replace("]", "") : ""))));
+            var kept = _state.Stored.Where(n => !_state.Scenes.Any(sc => sc.Name == n || sc.Members.Any(m => m.Name == n))).ToList();
+            if (kept.Count > 0) parts.Add("kept and not in the scene: " + string.Join(", ", kept));
+            return ResponseFacts.SayAsItIs + (parts.Count == 0 ? "There are no sounds in the scene and none kept yet." : char.ToUpperInvariant(parts[0][0]) + string.Join("; ", parts)[1..] + ".");
+        }
         return ResponseFacts.Tell(instance, _guide, asked, _configuration.SaysPlainly);
     }
 }

@@ -13,13 +13,16 @@ public sealed class SceneView : FrameworkElement
 {
     public sealed record Sound(string Name, double X, double Y, double Z, double Yaw);
 
+    public sealed record Room(double CentreX, double CentreY, double Width, double Depth, double Height);
+
     private IReadOnlyList<Sound> _sounds = [];
+    private Room? _room;
     private static readonly Brush[] Colours =
         [Brushes.SteelBlue, Brushes.IndianRed, Brushes.SeaGreen, Brushes.DarkOrange, Brushes.MediumPurple, Brushes.Teal, Brushes.Goldenrod, Brushes.SlateGray];
 
-    public void Show(IReadOnlyList<Sound> sounds)
+    public void Show(IReadOnlyList<Sound> sounds, Room? room = null)
     {
-        _sounds = sounds;
+        _sounds = sounds; _room = room;
         InvalidateVisual();
     }
 
@@ -30,7 +33,8 @@ public sealed class SceneView : FrameworkElement
         if (w < 40 || h < 40) return;
 
         // The picture holds at least 4 m round the listener, more if a sound is farther.
-        var reach = Math.Max(4.0, _sounds.Select(s => Math.Max(Math.Abs(s.X), Math.Abs(s.Y))).DefaultIfEmpty(0).Max() + 1);
+        var roomReach = _room is { } rm ? Math.Max(Math.Max(Math.Abs(rm.CentreX) + rm.Width / 2, Math.Abs(rm.CentreY) + rm.Depth / 2), 0) + 1 : 0;
+        var reach = Math.Max(Math.Max(4.0, roomReach), _sounds.Select(s => Math.Max(Math.Abs(s.X), Math.Abs(s.Y))).DefaultIfEmpty(0).Max() + 1);
         var scale = Math.Min(w, h) / 2 / reach * 0.92;
         Point At(double x, double y) => new(w / 2 + x * scale, h / 2 - y * scale);
 
@@ -45,6 +49,12 @@ public sealed class SceneView : FrameworkElement
                 Text(dc, m.ToString(CultureInfo.InvariantCulture), At(m, 0) + new Vector(-4, 3), 10, Brushes.Gray);
                 Text(dc, m.ToString(CultureInfo.InvariantCulture), At(0, m) + new Vector(4, -7), 10, Brushes.Gray);
             }
+        }
+        if (_room is { } room)                                                     // the room: a rectangle of its width and depth, with what it measures written on it
+        {
+            var a = At(room.CentreX - room.Width / 2, room.CentreY + room.Depth / 2); var b = At(room.CentreX + room.Width / 2, room.CentreY - room.Depth / 2);
+            dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(40, 70, 130, 180)), new Pen(Brushes.SteelBlue, 3), new Rect(a, b));
+            Text(dc, string.Create(CultureInfo.InvariantCulture, $"{room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m"), new Point(a.X + 8, a.Y + 6), 14, Brushes.SteelBlue);
         }
         Text(dc, "ahead", At(0, reach) + new Vector(6, 2), 12, Brushes.Gray);
         Text(dc, "right", At(reach, 0) + new Vector(-36, 4), 12, Brushes.Gray);
@@ -75,7 +85,7 @@ public sealed class SceneView : FrameworkElement
             Text(dc, s.Name, p + new Vector(-s.Name.Length * 3.6, 15), 13, Brushes.Black);
             Text(dc, $"{s.X:0.#}, {s.Y:0.#}, {s.Z:0.#}", p + new Vector(-22, 30), 10, Brushes.Gray);
         }
-        if (_sounds.Count == 0) Text(dc, "The room is empty.", new Point(w / 2 - 60, h / 2 + 60), 14, Brushes.Gray);
+        if (_sounds.Count == 0) Text(dc, _room is null ? "Nothing in the scene yet." : "No sounds yet", new Point(w / 2 - 60, h / 2 + 60), 14, Brushes.Gray);
     }
 
     private static void Text(DrawingContext dc, string text, Point at, double size, Brush brush) =>

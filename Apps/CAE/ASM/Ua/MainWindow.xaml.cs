@@ -146,7 +146,10 @@ public partial class MainWindow : Window
         devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", json =>
         {
             if (_warming) { _warmed++; return Task.CompletedTask; }
-            Dispatcher.Invoke(() => AnswerText.Text = TextOf(json));
+            var said = TextOf(json);
+            Interlocked.Increment(ref _textsToSpeak);
+            App.Log("[window] answer shown (and to be spoken): " + said);
+            Dispatcher.Invoke(() => AnswerText.Text = said);
             _stuck = 0;
             SetStatus("Ready.");
             return Task.CompletedTask;
@@ -156,9 +159,12 @@ public partial class MainWindow : Window
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", async json =>
         {
             if (_warming) return;
+            // WHAT IS SAID IS WHAT IS WRITTEN: speech is said only for an answer shown in the box; speech that has no answer written for it is not said.
+            if (Interlocked.Decrement(ref _textsToSpeak) < 0) { Interlocked.Exchange(ref _textsToSpeak, 0); App.Log("[window] speech without an answer written for it: NOT said"); return; }
             try
             {
                 var wav = MpaiJson.FromJson<BasicSpeechObject>(json)?.Data;
+                App.Log("[window] speaking the answer: " + (wav is null ? 0 : AvatarUaHost.WavDurationSeconds(wav)).ToString("0.0") + " s");
                 if (wav is { Length: > 0 })
                 {
                     // Played at once; the step lasts as long as she speaks, unless Stop speaking (or Esc) cuts it.
@@ -174,8 +180,9 @@ public partial class MainWindow : Window
         devices.RegisterDevice("Scene", new ActingDevice("Scene", json =>
         {
             _lastScene = json;
-            var sounds = SoundsOf(json);
-            Dispatcher.Invoke(() => Room.Show(sounds));
+            var sounds = SoundsOf(json); var room = RoomOf(json);
+            App.Log($"[window] scene: {sounds.Count} sound(s), room " + (room is null ? "none" : $"{room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m"));
+            Dispatcher.Invoke(() => Room.Show(sounds, room));
             return Task.CompletedTask;
         }));
         devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
@@ -192,6 +199,35 @@ public partial class MainWindow : Window
     {
         try { return MpaiJson.FromJson<BasicTextObject>(json)?.GetText() ?? ""; }
         catch { return ""; }
+    }
+
+    // The room of the scene, from its Closed Space: a box, by the corners the Audio Scene Descriptors give (first corner, the next along the width, the next along the depth, the one above the first).
+    internal static SceneView.Room? RoomOf(string json)
+    {
+        JsonObject? box = null;
+        void Walk(JsonNode? node)
+        {
+            if (box is not null) return;
+            switch (node)
+            {
+                case JsonObject o:
+                    if (o["RightParallelepiped"] is JsonObject r && r["CartPositions"] is JsonArray) { box = r; return; }
+                    foreach (var kv in o) Walk(kv.Value);
+                    break;
+                case JsonArray array:
+                    foreach (var element in array) Walk(element);
+                    break;
+            }
+        }
+        try
+        {
+            Walk(JsonNode.Parse(json));
+            if (box?["CartPositions"] is not JsonArray c || c.Count < 4) return null;
+            double V(int i, int k) => c[i]![k]!.GetValue<double>();
+            double w = Math.Abs(V(1, 0) - V(0, 0)), d = Math.Abs(V(2, 1) - V(0, 1)), h = Math.Abs(V(3, 2) - V(0, 2));
+            return new SceneView.Room((V(0, 0) + V(1, 0)) / 2, (V(0, 1) + V(2, 1)) / 2, w, d, h);
+        }
+        catch (Exception) { return null; }
     }
 
     // The sounds of the scene, with where they are: read from the Audio Scene Descriptors.
@@ -431,9 +467,12 @@ public partial class MainWindow : Window
     private void SetStatus(string s) { App.Log("[status] " + s); Dispatcher.Invoke(() => StatusText.Text = s); }
 
     // An instruction is shown AND said; the step goes on when she has finished saying it.
+    private int _textsToSpeak;
+
     private async Task TellAsync(string words)
     {
-        Dispatcher.Invoke(() => InstructionText.Text = words);
+        App.Log("[window] the window says: " + words);
+        Dispatcher.Invoke(() => { InstructionText.Text = words; AnswerText.Text = words; });
         if (_voice is not null) await _voice.SayAsync(words);
     }
 }
