@@ -113,6 +113,8 @@ public sealed class NameBook
     public enum DeletionOutcome { Deleted, NotKept, Held }
     public sealed record Deletion(DeletionOutcome Outcome, IReadOnlyCollection<string> Gone, string? Reason);
 
+    private bool IsLatest(string key) => NameOf(key) is not { } name || Enum.GetValues<NamedKind>().Any(kind => KeyOf(kind, name) == key);
+
     public Deletion Delete(NamedKind kind, string? name)
     {
         var key = KeyOf(kind, name);
@@ -124,7 +126,7 @@ public sealed class NameBook
             if (!storage.MPAI_AIFM_SharedStorage_Exists($"prevkey:{at}")) break;
             at = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get($"prevkey:{at}"));
         }
-        var holders = keys.SelectMany(k => storage.MPAI_AIFM_SharedStorage_List($"refby:{k}:").Select(r => r[$"refby:{k}:".Length..])).Where(h => !keys.Contains(h)).Distinct().ToList();
+        var holders = keys.SelectMany(k => storage.MPAI_AIFM_SharedStorage_List($"refby:{k}:").Select(r => r[$"refby:{k}:".Length..])).Where(h => !keys.Contains(h) && !h.StartsWith("AUO", StringComparison.Ordinal) && IsLatest(h)).Distinct().ToList();      // only a Scene whose latest version holds it: neither an older version of a Scene that has since taken it out, nor a rendering made of the Scene
         if (holders.Count > 0)
         {
             var names = holders.Select(h => NameOf(h) ?? "a scene").Distinct().ToList();

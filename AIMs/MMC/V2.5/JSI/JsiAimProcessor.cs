@@ -325,6 +325,9 @@ public sealed class JsiAimProcessor : IAimProcessor
             if (!known && guide.Try.Length > 0) return (null, DidNotUnderstand(text, guide));
         }
 
+        // GRAMMAR ONLY (the reliable demonstration): what the grammar does not match is not given to a language model; it is said that it was not understood, and what to try.
+        if (_configuration is { UsesGrammar: true, GrammarOnly: true }) return (null, DidNotUnderstand(text, guide));
+
         var system = SystemText(guide, view);
         var turns = new List<(string Role, string Content)>(ExampleTurns(guide)) { ("user", RequestText(guide, text)) };
         var wrapper = Wrapper(view.ForModel(), guide.Working);
@@ -561,6 +564,7 @@ public sealed class JsiAimProcessor : IAimProcessor
             if (kept.Count > 0) parts.Add("kept and not in the scene: " + string.Join(", ", kept));
             return ResponseFacts.SayAsItIs + (parts.Count == 0 ? "There are no sounds in the scene and none kept yet." : char.ToUpperInvariant(parts[0][0]) + string.Join("; ", parts)[1..] + ".");
         }
-        return ResponseFacts.Tell(instance, _guide, asked, _configuration.SaysPlainly);
+        var told = ResponseFacts.Tell(instance, _guide, asked, _configuration.SaysPlainly);
+        return _configuration.GrammarOnly && !told.StartsWith(ResponseFacts.SayAsItIs, StringComparison.Ordinal) ? ResponseFacts.SayAsItIs + told : told;
     }
 }

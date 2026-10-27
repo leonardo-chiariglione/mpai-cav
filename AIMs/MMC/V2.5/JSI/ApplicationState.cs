@@ -17,6 +17,7 @@ public sealed class ApplicationState
     public IReadOnlyList<Scene> Scenes { get; init; } = [];
     public IReadOnlyList<string> Stored { get; init; } = [];
     public bool ListsStored { get; init; }
+    public IReadOnlyList<string> Seen { get; init; } = [];            // the sounds kept, in the order they were first seen: the one seen last is the one just loaded
 
     public bool IsKnown => Scenes.Count > 0 || Stored.Count > 0;
 
@@ -26,7 +27,7 @@ public sealed class ApplicationState
         ["Present"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Distinct(StringComparer.Ordinal).ToList(),
         ["Members"] = Scenes.SelectMany(s => s.Members.Select(m => m.Name)).Distinct(StringComparer.Ordinal).ToList(),
         ["Stored"] = Stored,
-        ["Latest"] = Stored.Where(n => !Scenes.Any(sc => sc.Name == n || sc.Members.Any(m => m.Name == n))).TakeLast(1).ToList(),      // the sound kept and not yet in the scene, last kept: the one a bare "two metres to the right" is about
+        ["Latest"] = Stored.Where(n => !Scenes.Any(sc => sc.Name == n || sc.Members.Any(m => m.Name == n))).OrderBy(n => Seen.ToList().IndexOf(n)).TakeLast(1).ToList(),      // the sound kept and not yet in the scene, last kept: the one a bare "two metres to the right" is about
         ["Kept"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Concat(Stored).Distinct(StringComparer.Ordinal).ToList()      // everything the application keeps, scenes and objects
     };
 
@@ -42,11 +43,13 @@ public sealed class ApplicationState
             if (s.Detailed || older.Scenes.FirstOrDefault(o => o.Name == s.Name) is not { } before) return s;
             return s with { Members = s.Members.Select(m => before.Members.FirstOrDefault(b => b.Name == m.Name) ?? m).ToList() };
         }).ToList();
+        var stored = ListsStored ? Stored : older.Stored;
         return new ApplicationState
         {
             Scenes = scenes.Count > 0 ? scenes : older.Scenes,
-            Stored = ListsStored ? Stored : older.Stored,
-            ListsStored = ListsStored || older.ListsStored
+            Stored = stored,
+            ListsStored = ListsStored || older.ListsStored,
+            Seen = older.Seen.Concat(stored.Where(n => !older.Seen.Contains(n))).ToList()
         };
     }
 

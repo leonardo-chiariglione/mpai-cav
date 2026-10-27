@@ -29,6 +29,7 @@ on Start:
     stream  Voice          (OSD-BSO-V1.5:1)  from device "Voice"
     stream  ObjectCommand  (CAE-UCM-V1.0:1)  from device "SoundIn"
     stream  OpenScene      (OSD-ASD-V1.5:1)  from device "SceneIn"
+    stream  TypedText      (OSD-BTO-V1.5:1)  from device "TypedIn"
 
     deliver Heard          (OSD-BTO-V1.5:1)  to device "Heard"
     deliver ResponseText   (OSD-BTO-V1.5:2)  to device "ReplyText"

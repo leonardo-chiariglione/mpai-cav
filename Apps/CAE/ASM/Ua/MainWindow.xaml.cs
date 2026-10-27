@@ -41,7 +41,9 @@ public partial class MainWindow : Window
     private SpeechListener? _ears;
     private MachineVoice? _voice;
     private VoiceDevice? _voiceDevice;
-    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0"), _sceneIn = new("OSD-ASD-V1.5");
+    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0"), _sceneIn = new("OSD-ASD-V1.5"), _typedIn = new("OSD-BTO-V1.5");
+    private int _answers;                                // how many answers have been written (a script waits for the next)
+    private string _sceneDescription = "no sounds, no room";
     private CancellationTokenSource? _stopping;
     private Task? _running;
     private bool _closing;
@@ -60,6 +62,7 @@ public partial class MainWindow : Window
         SideColumn.SizeChanged += (_, args) => Web.Height = Math.Max(150, (args.NewSize.Height - 150) * 0.866);
         PreviewKeyDown += (_, args) => { if (args.Key == Key.Escape) { StopButton_Click(this, new RoutedEventArgs()); args.Handled = true; } };
         InputBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) Submit(); };
+        if (!App.Live) { _microphoneOn = false; MicButton.IsChecked = false; MicButton.Content = "Microphone is off - click to listen"; }       // the demonstration starts with the microphone off
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -73,7 +76,7 @@ public partial class MainWindow : Window
             _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), App.Record);
             await Task.Delay(TimeSpan.FromSeconds(2.0));          // let the avatar settle before it speaks
 
-            if (!await OllamaAnswersAsync())
+            if (App.Live && !await OllamaAnswersAsync())
             {
                 await TellAsync("The language model does not answer. Start it with the Ollama launcher, and start me again.");
                 SetStatus("Ollama is not running.");
@@ -87,12 +90,14 @@ public partial class MainWindow : Window
             Directory.CreateDirectory(run);
             await Task.Run(() =>
             {
-                _prepared = AsmVoiceModules.Prepare(MpaiPaths.Root, Path.Combine(run, "module"));
+                _prepared = AsmVoiceModules.Prepare(MpaiPaths.Root, Path.Combine(run, "module"),
+                    App.Live ? null : new JsonObject { [AsmVoiceModules.Jsi] = new JsonObject { ["GrammarOnly"] = "true" } },
+                    App.Live ? null : "scene " + DateTime.Now.ToString("HHmmss"));      // the demonstration: the grammar alone, no language model
                 _north = AsmVoiceModules.Controller(_prepared);
                 var started = _north.StartFlow(AsmVoiceModules.Asm);
                 if (started != AIF.Controller.AifError.OK) throw new InvalidOperationException("The Controller would not start the module: " + started);
                 // WHERE THE MODULE KEEPS ITS OBJECTS AND SCENES is one place for this person, the same at every start (its Private Storage is under it): what is stored is held until it is deleted, and no duration is stated.
-                _storageLocation = Path.Combine(downloads, "module-storage");
+                _storageLocation = App.Storage ?? Path.Combine(downloads, "module-storage");
                 _north.SharedStorageInit(AsmVoiceModules.Asm, _storageLocation);
             });
 
@@ -104,8 +109,9 @@ public partial class MainWindow : Window
             var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), line => App.Log("[workflow] " + line));
             _running = interpreter.RunAsync(workflow, _stopping.Token);
             // THE SCENE OF LAST TIME, BY ITS NAME: the Module opens what it kept (the one scene this application makes is called stage).
-            _ = Task.Run(async () => { await Task.Delay(2000); _sceneIn.Give(OpenStub("stage")); });
-            _ = WarmUpAsync();
+            if (App.Live) _ = Task.Run(async () => { await Task.Delay(2000); _sceneIn.Give(OpenStub("stage")); });      // the demonstration starts with a new, empty scene: what was kept stays in storage, listed as kept
+            if (App.Live) _ = WarmUpAsync();
+            if (App.Script is { } script) _ = RunScriptAsync(script);
             try { await _running; }
             catch (OperationCanceledException) { }
             if (!_closing) SetStatus("Stopped.");
@@ -129,6 +135,7 @@ public partial class MainWindow : Window
         devices.RegisterDevice("Voice", _voiceDevice);
         devices.RegisterDevice("SoundIn", _soundIn);
         devices.RegisterDevice("SceneIn", _sceneIn);
+        devices.RegisterDevice("TypedIn", _typedIn);
 
         // THE WORDS HEARD: shown; the Module is now working out the command, which takes a few seconds.
         devices.RegisterDevice("Heard", new ActingDevice("Heard", json =>
@@ -147,7 +154,7 @@ public partial class MainWindow : Window
         {
             if (_warming) { _warmed++; return Task.CompletedTask; }
             var said = TextOf(json);
-            Interlocked.Increment(ref _textsToSpeak);
+            Interlocked.Increment(ref _textsToSpeak); Interlocked.Increment(ref _answers);
             App.Log("[window] answer shown (and to be spoken): " + said);
             Dispatcher.Invoke(() => AnswerText.Text = said);
             _stuck = 0;
@@ -161,6 +168,7 @@ public partial class MainWindow : Window
             if (_warming) return;
             // WHAT IS SAID IS WHAT IS WRITTEN: speech is said only for an answer shown in the box; speech that has no answer written for it is not said.
             if (Interlocked.Decrement(ref _textsToSpeak) < 0) { Interlocked.Exchange(ref _textsToSpeak, 0); App.Log("[window] speech without an answer written for it: NOT said"); return; }
+            if (App.Silent) { App.Log("[window] (silent) the answer is not played"); return; }
             try
             {
                 var wav = MpaiJson.FromJson<BasicSpeechObject>(json)?.Data;
@@ -182,6 +190,8 @@ public partial class MainWindow : Window
             _lastScene = json;
             var sounds = SoundsOf(json); var room = RoomOf(json);
             App.Log($"[window] scene: {sounds.Count} sound(s), room " + (room is null ? "none" : $"{room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m"));
+            _sceneDescription = (sounds.Count == 0 ? "no sounds" : string.Join("; ", sounds.Select(x => FormattableString.Invariant($"{x.Name} at {x.X:0.##}, {x.Y:0.##}, {x.Z:0.##}, facing {x.Yaw:0.##}")))) + ", "
+                                + (room is null ? "no room" : FormattableString.Invariant($"room {room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m"));
             Dispatcher.Invoke(() => Room.Show(sounds, room));
             return Task.CompletedTask;
         }));
@@ -339,7 +349,8 @@ public partial class MainWindow : Window
         if (_naming is { } naming) { naming.TrySetResult(words); return; }       // the name of a sound, not a command
         HeardText.Text = words;
         SetStatus("Thinking...");
-        _voiceDevice?.Type(words);
+        if (App.Live) _voiceDevice?.Type(words);
+        else _typedIn.Give(MpaiJson.ToJson(BasicTextObject.FromText(words)));                  // the demonstration: the typed words are the text, at once
     }
 
     private void SendButton_Click(object sender, RoutedEventArgs e) => Submit();
@@ -369,17 +380,23 @@ public partial class MainWindow : Window
             _naming = null;
             InputBox.Clear();
             if (string.IsNullOrWhiteSpace(name)) return;
-            var sound = new BasicAudioObject { BasicAudioObjectID = name, DescrMetadata = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(bytes))] };
-            var command = new UserCommand
-            {
-                UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandRQ = new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = sound } }
-            };
-            _loading = (command.UserCommandID!, name);
-            _soundIn.Give(MpaiJson.ToJson(command));
-            SetStatus($"The sound {name} is sent.");
+            LoadSound(name, bytes);
         }
         catch (Exception ex) { _naming = null; App.Record("load a sound", ex); SetStatus("The sound could not be loaded: " + ex.Message); }
+    }
+
+    // A sound with its name, sent to the Module in a User Command that acquires it.
+    private void LoadSound(string name, byte[] bytes)
+    {
+        var sound = new BasicAudioObject { BasicAudioObjectID = name, DescrMetadata = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(bytes))] };
+        var command = new UserCommand
+        {
+            UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+            UserCommandRQ = new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = sound } }
+        };
+        _loading = (command.UserCommandID!, name);
+        _soundIn.Give(MpaiJson.ToJson(command));
+        SetStatus($"The sound {name} is sent.");
     }
 
     // THE SCENE ON THE LOUDSPEAKERS: the Audio Scene Descriptors the Module gave, rendered as the listener hears them.
@@ -500,8 +517,51 @@ public partial class MainWindow : Window
 
     private async Task TellAsync(string words)
     {
+        Interlocked.Increment(ref _answers);
         App.Log("[window] the window says: " + words);
         Dispatcher.Invoke(() => { InstructionText.Text = words; AnswerText.Text = words; });
-        if (_voice is not null) await _voice.SayAsync(words);
+        if (_voice is not null && !App.Silent) await _voice.SayAsync(words);
+    }
+
+    // THE REAL WINDOW, DRIVEN BY A SCRIPT: each line is `load <name> <file.wav>`, `say <words>` or `stop`, with `=> <what the answer contains> | <what the scene description contains>` to be checked.
+    // What the window shows after each line (the words heard, the answer box, the status line, the scene) is written to <script>.dump.txt.
+    private async Task RunScriptAsync(string path)
+    {
+        var dump = new System.Text.StringBuilder(); var failed = 0;
+        string Shown(Func<string> read) { var r = ""; Dispatcher.Invoke(() => r = read()); return r; }
+        try
+        {
+            await Task.Delay(2000);
+            foreach (var raw in File.ReadAllLines(path))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0 || line.StartsWith('#')) continue;
+                string? answerHas = null, sceneHas = null;
+                var arrow = line.IndexOf("=>", StringComparison.Ordinal);
+                if (arrow >= 0) { var checks = line[(arrow + 2)..].Split('|'); answerHas = checks[0].Trim(); sceneHas = checks.Length > 1 ? checks[1].Trim() : null; line = line[..arrow].Trim(); }
+                var before = _answers;
+                dump.AppendLine("> " + line);
+                if (line.StartsWith("load ", StringComparison.Ordinal))
+                {
+                    var parts = line[5..].Trim().Split(' ', 2);
+                    Dispatcher.Invoke(() => LoadSound(parts[0], File.ReadAllBytes(parts[1].Trim())));
+                }
+                else if (line.StartsWith("say ", StringComparison.Ordinal)) Dispatcher.Invoke(() => { InputBox.Text = line[4..].Trim(); Submit(); });
+                else if (line == "stop") { Dispatcher.Invoke(() => StopButton_Click(this, new RoutedEventArgs())); dump.AppendLine("  (Stop speaking pressed; button enabled: " + Shown(() => StopButton.IsEnabled.ToString()) + ")"); await Task.Delay(500); continue; }
+                var waited = System.Diagnostics.Stopwatch.StartNew();
+                while (_answers == before && waited.Elapsed < TimeSpan.FromSeconds(90)) await Task.Delay(100);
+                var timeout = _answers == before;
+                await Task.Delay(1500);
+                var heard = Shown(() => HeardText.Text); var answer = Shown(() => AnswerText.Text); var status = Shown(() => StatusText.Text);
+                dump.AppendLine("  HEARD:  " + heard.Replace("\n", " ")).AppendLine("  ANSWER: " + answer.Replace("\n", " ")).AppendLine("  STATUS: " + status).AppendLine("  SCENE:  " + _sceneDescription).AppendLine($"  ({waited.Elapsed.TotalSeconds:0.0} s)");
+                var pass = !timeout && (answerHas is null || answer.Contains(answerHas, StringComparison.OrdinalIgnoreCase)) && (sceneHas is null || _sceneDescription.Contains(sceneHas, StringComparison.OrdinalIgnoreCase));
+                if (!pass) failed++;
+                dump.AppendLine(pass ? "  PASS" : "  FAIL" + (timeout ? " (no answer in 90 s)" : $" (wanted answer containing '{answerHas}', scene containing '{sceneHas}')"));
+            }
+        }
+        catch (Exception e) { dump.AppendLine("SCRIPT FAILED: " + e); failed++; }
+        dump.AppendLine(failed == 0 ? "ALL PASS" : $"{failed} FAILED");
+        File.WriteAllText(path + ".dump.txt", dump.ToString());
+        Environment.Exit(failed == 0 ? 0 : 1);
     }
 }

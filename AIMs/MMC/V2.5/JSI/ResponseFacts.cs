@@ -36,6 +36,7 @@ public static class ResponseFacts
             if ((string?)a["Outcome"] != "Done" || (string?)a["Action"] is not { } action || (string?)said[action] is not { } phrase) return null;
             if (action == "ListedObjects") return null;
             var name = (string?)a["ObjectID"];
+            if (name is not null && actions.Count > 1 && name == (string?)guide.Root["Fill"]?["UserCommandRQ.AddedObjects.ObjectID"]) continue;      // the scene itself is not said among what was put in it
             if (phrase.Contains("{0}")) { if (name is null) return null; phrase = phrase.Replace("{0}", name); }
             parts.Add(phrase);
         }

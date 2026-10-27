@@ -20,6 +20,7 @@
                            {"Name": "AudioScene", "Direction": "Input", "DataType": "OSD-ASD-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpeechScene", "Direction": "Input", "DataType": "OSD-SSD-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "UserSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TypedText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EditedAudioObject", "Direction": "Output", "DataType": "OSD-AUO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObjectUserCommandRS", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": "OSD-ASD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},

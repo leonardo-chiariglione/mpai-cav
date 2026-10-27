@@ -10,6 +10,12 @@ public partial class App : Application
 {
     public static readonly string CrashLog = Path.Combine(AppContext.BaseDirectory, "asm-ua-crash.log");
 
+    // THE MODES. Demonstration (the default): typed words go straight to the Module as text, the microphone is off at the start, the grammar alone understands, nothing needs the language model.
+    // --live: the whole chain as before (typed words are spoken and recognised, the language model answers what the grammar does not). --silent: nothing is played (a test).
+    // --script <file>: the real window is driven by the lines of the file and what it shows is written to <file>.dump.txt.
+    public static bool Live, Silent;
+    public static string? Script, Storage;
+
     public static void Record(string context, Exception error)
     {
         try { File.AppendAllText(CrashLog, $"{DateTime.Now:o}  [{context}]  {error}{Environment.NewLine}"); }
@@ -57,7 +63,12 @@ public partial class App : Application
             Shutdown(0);
             return;
         }
-        new MainWindow().Show();
+        Live = e.Args.Contains("--live"); Silent = e.Args.Contains("--silent");
+        var script = Array.IndexOf(e.Args, "--script"); if (script >= 0 && script + 1 < e.Args.Length) Script = e.Args[script + 1];
+        var store = Array.IndexOf(e.Args, "--storage"); if (store >= 0 && store + 1 < e.Args.Length) Storage = e.Args[store + 1];
+        var window = new MainWindow();
+        if (Script is not null) { window.WindowStartupLocation = WindowStartupLocation.Manual; window.Left = -3000; window.Top = 0; window.ShowActivated = false; }
+        window.Show();
         Mpai.Core.AimLog.Sink = (aim, message) =>
         {
             try { File.AppendAllText(CrashLog, $"{DateTime.Now:o}  [{aim}]  {message}{Environment.NewLine}"); if (message.StartsWith("[timing]")) Log($"[{aim}] {message}"); }

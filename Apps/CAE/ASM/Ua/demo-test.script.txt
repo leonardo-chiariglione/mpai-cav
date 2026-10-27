@@ -1,0 +1,14 @@
+load clip84 C:\Users\Thor\AppData\Local\Temp\claude\D--DI\bff3f413-4817-4cf9-806c-e9082c4fd3d5\scratchpad\clip84.wav => Loaded clip84. Where do you want to put it
+say two metres to the right => Done | clip84 at 2, 0, 0
+say place a room of 4 by 4 metres at the centre => Done | room 4 x 4 m
+say put the clip84 at x 2, y 1, z 0 => Done | clip84 at 2, 1, 0
+say move clip84 one metre ahead => Done | clip84 at 2, 2, 0
+say turn clip84 to 90 degrees => Done | facing 90
+say make clip84 minus 14 LUFS => Done
+say what is in the scene => clip84
+say undo that => Done
+say remove clip84 => Done | no sounds
+say delete clip84 => Done
+stop
+say what is in the scene => Kept
+say frobnicate the thing => I did not understand

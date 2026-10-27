@@ -21,13 +21,31 @@ public static class AsmVoiceModules
 {
     public const string Vci = "1MMC-VCI-V2.5-I01", Asm = "1CAE-ASM-V1.0-I01", Jsi = "1MMC-JSI-V2.5-I02";
 
+    // THE GUIDE OF THIS RUN, when the run makes a scene of its own: the one scene this application makes is called as the run says (a new, empty scene at each start), in every place the guide names it.
+    private static string ContextWithScene(string root, string folder, string sceneName)
+    {
+        static JsonNode? Rename(JsonNode? node, string name)
+        {
+            switch (node)
+            {
+                case JsonObject o: { var copy = new JsonObject(); foreach (var (k, v) in o) copy[k] = Rename(v, name); return copy; }
+                case JsonArray a: return new JsonArray(a.Select(x => Rename(x, name)).ToArray());
+                case JsonValue v when v.TryGetValue<string>(out var text) && text == "stage": return JsonValue.Create(name);
+                default: return node?.DeepClone();
+            }
+        }
+        var path = Path.Combine(folder, "AsmApplicationContext.json");
+        File.WriteAllText(path, Rename(JsonNode.Parse(File.ReadAllText(ContextFile(root))), sceneName)!.ToJsonString());
+        return path;
+    }
+
     public static string ContextFile(string root) => Path.Combine(root, "Apps", "CAE", "ASM", "Access", "AsmApplicationContext.json");
     public static string CommandSchemaFile(string root) => Path.Combine(root, "schemas", "CAE3", "V1.0", "data", "UserCommand.json");
 
     // The folder of the L3s of the run (a copy of AIMs\AMDs with the Access of the JSON Interface at the local files) and the file of the settings of the AIMs.
     public sealed record Prepared(string Folder, string Amds, string Settings);
 
-    public static Prepared Prepare(string root, string? folder = null, JsonObject? settings = null)
+    public static Prepared Prepare(string root, string? folder = null, JsonObject? settings = null, string? sceneName = null)
     {
         folder ??= Path.Combine(Path.GetTempPath(), "mpai-asm-voice-" + Guid.NewGuid().ToString("N")[..8]);
         var amds = Path.Combine(folder, "amds"); Directory.CreateDirectory(amds);
@@ -38,7 +56,7 @@ public static class AsmVoiceModules
         var l3 = JsonNode.Parse(File.ReadAllText(l3Path))!;
         foreach (var entry in l3["AccessSources"]!.AsArray())
         {
-            var file = (string)entry!["Name"]! switch { "ApplicationContext" => ContextFile(root), "CommandSchema" or "ResponseSchema" => CommandSchemaFile(root), _ => null };
+            var file = (string)entry!["Name"]! switch { "ApplicationContext" => sceneName is null ? ContextFile(root) : ContextWithScene(root, folder, sceneName), "CommandSchema" or "ResponseSchema" => CommandSchemaFile(root), _ => null };
             if (file is null) continue;
             entry["Sha256"] = Hash(file);
             entry["Mirrors"] = new JsonArray(new Uri(file).AbsoluteUri);
