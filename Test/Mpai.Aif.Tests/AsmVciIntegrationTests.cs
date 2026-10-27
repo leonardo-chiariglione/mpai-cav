@@ -125,6 +125,25 @@ public class AsmVciIntegrationTests
         Assert.Contains(again.UserCommandRS!.ListedObjects!, o => o.ObjectID == "violin");
     }
 
+    [Fact]
+    public async Task ARoomIsMadeInAnEmptySceneAndOnlyAudioSceneEditingAnswersForIt()
+    {
+        using var rig = new AsmRig();
+        var room = AsmRig.Command(new UserCommandRQ
+        {
+            AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [] },
+            ClosedSpace = new System.Text.Json.Nodes.JsonArray(System.Text.Json.Nodes.JsonNode.Parse(
+                "{\"Header\":\"OSD-CSP-V1.5\",\"ClosedSpaceID\":\"room\",\"Shape\":[{\"Header\":\"OSD-SLC-V1.5\",\"SimpleLocationData\":[{\"RightParallelepiped\":{\"Header\":\"OSD-RPP-V1.5\",\"Dimensions\":\"3D\",\"CartPositions\":[[-2,-2,0],[2,-2,0],[-2,2,0],[-2,-2,2.5]]}}]}]}")!)
+        });
+        var answers = await rig.Ask(room);
+        var merged = answers.Merged(room.UserCommandID);
+        Assert.Equal("Done", merged.UserCommandRS!.Outcome);
+        Assert.Contains(merged.UserCommandRS.Actions!, a => a.Action == "ClosedSpace" && a.Outcome == "Done");
+        Assert.DoesNotContain(merged.UserCommandRS.Actions!, a => a.Outcome != "Done");               // no noise from the editors that have nothing to do with a room
+        var list = AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Audio Scene" } });
+        Assert.Contains((await rig.Ask(list)).Merged(list.UserCommandID).UserCommandRS!.ListedObjects!, o => o.ObjectID == "stage");
+    }
+
     // ---- the JSON Interface gathers the answers ----------------------------------------------------------------------------------------------------------
 
     private static JsiAimProcessor Gathering(StructuredModel model, int responders) =>

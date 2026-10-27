@@ -303,7 +303,7 @@ public partial class MainWindow : Window
     {
         _microphoneOn = MicButton.IsChecked == true;
         MicButton.Content = _microphoneOn ? "Microphone is on" : "Microphone is off - click to listen";
-        MicButton.Background = new System.Windows.Media.SolidColorBrush(_microphoneOn ? System.Windows.Media.Color.FromRgb(0x2E, 0x9E, 0x4F) : System.Windows.Media.Color.FromRgb(0xC6, 0x28, 0x28));
+        MicButton.Background = new System.Windows.Media.SolidColorBrush(_microphoneOn ? System.Windows.Media.Color.FromRgb(0x1E, 0x3A, 0x8A) : System.Windows.Media.Color.FromRgb(0xC6, 0x28, 0x28));
         App.Log("[window] microphone " + (_microphoneOn ? "on" : "off"));
         if (!_microphoneOn) SetStatus("The microphone is off. Type, or click the red button to listen.");
         else SetStatus("Ready.");

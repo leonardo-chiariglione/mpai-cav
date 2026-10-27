@@ -20,6 +20,12 @@ public static class ResponseFacts
     // so simple, and the dialogue is to put it into words.
     public static string? Plain(JsonNode response, ApplicationContext guide)
     {
+        // A command that could not be done, said as it is: what the Module reports, without a paraphrase.
+        if (response["UserCommandRS"] is JsonObject failed && (string?)failed["Outcome"] == "Failed" && failed["Actions"] is JsonArray { Count: > 0 } lost)
+        {
+            var reasons = lost.OfType<JsonObject>().Select(x => (string?)x["Reason"]).Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => r!.Trim().TrimEnd('.')).Distinct().ToList();
+            if (reasons.Count > 0) return "I could not do that: " + string.Join("; ", reasons) + ".";
+        }
         if (response["UserCommandRS"] is not JsonObject rs || (string?)rs["Outcome"] != "Done" || rs["ListedObjects"] is JsonArray { Count: > 0 }) return null;
         if (rs["Actions"] is not JsonArray { Count: > 0 } actions || guide.Root["Said"] is not JsonObject said) return null;
         var parts = new List<string>();

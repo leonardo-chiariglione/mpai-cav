@@ -136,6 +136,20 @@ public sealed class AseAim
         return new RepositoryAsset { AssetId = key, AssetType = AssetType.BAS };
     }
 
+    // A Scene with nothing in it yet, under the name given (a room can be built before any sound is put in it).
+    public RepositoryAsset CreateEmptyBasicScene(PointOfView listenerPointOfView, string? sceneName)
+    {
+        if (NameBook.Clean(sceneName) is null) throw new NameNeededException("the Audio Scene");
+        var key = NextId("BAS");
+        var name = Names.Claim(NamedKind.AudioScene, sceneName, key);
+        storage.Put(key, Serialize(new BasicAudioSceneDescriptors
+        {
+            MInstanceID = mInstanceId, BasicAudioSceneDescriptorsID = name, BASSpaceTime = Origin(), UserPoV = listenerPointOfView,
+            AudioObjectCount = 0, BasicAudioSceneDescriptorsEntries = new()
+        }));
+        return new RepositoryAsset { AssetId = key, AssetType = AssetType.BAS };
+    }
+
     // Adds an existing BasicAudioObject as a further placement in an existing Basic scene. Produces a NEW key (no-cascade Save rule).
     public RepositoryAsset AddObjectToBasicScene(string sceneKey, string basicAudioObjectKey, SpaceTime? placement = null)
     {

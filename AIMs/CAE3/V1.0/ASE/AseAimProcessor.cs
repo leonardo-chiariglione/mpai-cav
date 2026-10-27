@@ -193,6 +193,13 @@ public sealed class AseAimProcessor : IAimProcessor
                 catch (Exception failure) { report.Failed("AddedObjects", id, failure.Message); }
             }
 
+        // A room asked for when no Scene is open makes the (empty) Scene, under the name the command gives it (AddedObjects.ObjectID, with no Objects).
+        if (_open is null && data.ClosedSpace is { Count: > 0 } && NameBook.Clean(data.AddedObjects?.ObjectID) is not null)
+        {
+            try { _open = _ase.CreateEmptyBasicScene(listener ?? Origin(), data.AddedObjects!.ObjectID).AssetId; }
+            catch (Exception failure) { report.Failed("ClosedSpace", null, failure.Message); return; }
+        }
+
         if (_open is null)
         {
             foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),

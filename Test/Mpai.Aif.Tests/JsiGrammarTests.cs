@@ -99,4 +99,21 @@ public class JsiGrammarTests
         await jsi.ProcessAsync(JsiRig.Say(Ports, words, JsiRig.Context(JsiRig.Scene())));
         Assert.True(asked >= 0);                                                   // (the guards may answer before the model: what matters is that no rule made a command)
     }
+
+    [Theory]
+    [InlineData("place a room of 4x4 meters at the centre of the room", 2.0, 2.0)]
+    [InlineData("Place a room of four by four meters at the center of the room.", 2.0, 2.0)]
+    [InlineData("make the room 6 by 4 metres", 3.0, 2.0)]
+    [InlineData("create a square room of 3 metres by 3 metres centred at 0 0", 1.5, 1.5)]
+    [InlineData("build a 5 by 3 metre room", 2.5, 1.5)]
+    public async Task ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(string words, double halfX, double halfY)
+    {
+        var rq = await Command(words);
+        Assert.Null(rq!["MovedObjects"]);
+        Assert.Equal("stage", (string?)rq["AddedObjects"]!["ObjectID"]);                       // the Scene the room is made in, if none is open
+        Assert.Empty(rq["AddedObjects"]!["Objects"]!.AsArray());
+        var corners = rq["ClosedSpace"]![0]!["Shape"]![0]!["SimpleLocationData"]![0]!["RightParallelepiped"]!["CartPositions"]!.AsArray().Select(Numbers).ToList();
+        Assert.Equal([-halfX, -halfY, 0.0], corners[0]); Assert.Equal([halfX, -halfY, 0.0], corners[1]); Assert.Equal([-halfX, halfY, 0.0], corners[2]); Assert.Equal(2.5, corners[3][2]);
+    }
+
 }
