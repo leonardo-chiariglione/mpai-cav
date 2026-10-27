@@ -91,6 +91,40 @@ public class AsmVciIntegrationTests
         Assert.Equal("Failed", (await rig.Ask(unknown)).Merged(unknown.UserCommandID).UserCommandRS!.Outcome);
     }
 
+    // ---- deleting from where the Module keeps things -----------------------------------------------------------------------------------------------------
+
+    private static UserCommand Delete(params string[] names) =>
+        AsmRig.Command(new UserCommandRQ { DeletedObjects = new ObjectPlacements { Objects = names.Select(n => new ObjectPlacement { ObjectID = AsmRig.Ref(n) }).ToList() } });
+
+    [Fact]
+    public async Task ASceneAndAnObjectAreDeletedByTheirNamesAnObjectInASceneNotUntilTheSceneIs()
+    {
+        using var rig = new AsmRig();
+        async Task<UserCommand> Run(UserCommand command) => (await rig.Ask(command)).Merged(command.UserCommandID);
+        await rig.OpenAudio(AsmRig.Sound("violin")); await rig.OpenAudio(AsmRig.Sound("drums", 1, 2));
+        Assert.Equal("Done", (await Run(AsmRig.Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [AsmRig.Put("violin", 1)] } }))).UserCommandRS!.Outcome);
+
+        // The violin is a member of the scene: it is not deleted, and the response says by what.
+        var refused = await Run(Delete("violin"));
+        Assert.Equal("Failed", refused.UserCommandRS!.Outcome);
+        Assert.Contains(refused.UserCommandRS.Actions!, a => a.Action == "DeletedObjects" && (a.Reason ?? "").Contains("stage"));
+
+        // The drums are in no scene: deleted. A name the Module keeps nothing under is reported failed by every editor.
+        Assert.Equal("Done", (await Run(Delete("drums"))).UserCommandRS!.Outcome);
+        Assert.Equal("Failed", (await Run(Delete("harp"))).UserCommandRS!.Outcome);
+
+        // The scene, then the object it held.
+        Assert.Equal("Done", (await Run(Delete("stage"))).UserCommandRS!.Outcome);
+        Assert.Equal("Done", (await Run(Delete("violin"))).UserCommandRS!.Outcome);
+
+        var all = await Run(AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } }));
+        Assert.True(all.UserCommandRS!.ListedObjects is null or { Count: 0 }, AsmRig.Json(all));
+        // What went can be given again under the name.
+        await rig.OpenAudio(AsmRig.Sound("violin"));
+        var again = await Run(AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } }));
+        Assert.Contains(again.UserCommandRS!.ListedObjects!, o => o.ObjectID == "violin");
+    }
+
     // ---- the JSON Interface gathers the answers ----------------------------------------------------------------------------------------------------------
 
     private static JsiAimProcessor Gathering(StructuredModel model, int responders) =>

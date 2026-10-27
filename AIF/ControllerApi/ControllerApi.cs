@@ -427,6 +427,32 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     public AifError SharedStorageInit(string moduleName, string location) => SharedStorageInit(moduleName, location, false);
 
+    // THE USER AGENT'S STORE, READ, DELETE AND LIST on the Module's Shared Storage, through the handle the Controller binds to the User Agent: the rules and the Grants are the storage's.
+    private static AifError Outcome(AIF.SharedStorage.StorageOutcome o) => o switch
+    {
+        AIF.SharedStorage.StorageOutcome.OK => AifError.OK,
+        AIF.SharedStorage.StorageOutcome.NotFound => AifError.NotFound,
+        _ => AifError.NotAuthorised
+    };
+
+    public AifError SharedStorageStore(string moduleName, string key, byte[] data, string category = "Data") =>
+        SharedStorage(moduleName) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Put(key, data, category)) : AifError.NotStarted;
+
+    public AifError SharedStorageRead(string moduleName, string key, out byte[] data)
+    {
+        data = [];
+        if (SharedStorage(moduleName) is not { } storage) return AifError.NotStarted;
+        var outcome = storage.MPAI_AIFM_RuledStorage_Get(key, out var got);
+        data = got ?? [];
+        return Outcome(outcome);
+    }
+
+    public AifError SharedStorageDelete(string moduleName, string key) =>
+        SharedStorage(moduleName) is { } storage ? Outcome(storage.MPAI_AIFM_RuledStorage_Delete(key)) : AifError.NotStarted;
+
+    public IReadOnlyList<string> SharedStorageList(string moduleName, string prefix = "") =>
+        SharedStorage(moduleName) is { } storage ? storage.MPAI_AIFM_RuledStorage_List(null, prefix) : [];
+
     // WHOSE SESSION AN EXCHANGE SERVES (M3245 3.3): a Service's Controller serves
     // many clients; the data an exchange keeps for its session are that client's,
     // and deleted when the client's session ends.

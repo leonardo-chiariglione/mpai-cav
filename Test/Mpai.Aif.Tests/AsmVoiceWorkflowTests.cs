@@ -236,6 +236,15 @@ public class AsmVoiceWorkflowTests
             Assert.Equal(AifError.OK, api.StartFlow(AsmVoiceModules.Asm));
             Assert.Equal(AifError.OK, api.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(prepared.Folder, "storage")));
             Assert.All(api.Status(AsmVoiceModules.Asm).Aims, a => Assert.Equal(AimStatus.Alive, a.Status));
+
+            // The User Agent's own Store, Read, List and Delete on the Module's Shared Storage, through the Controller API (under the rules of the storage).
+            Assert.Equal(AifError.OK, api.SharedStorageStore(AsmVoiceModules.Asm, "ua-note", [1, 2, 3]));
+            Assert.Contains("ua-note", api.SharedStorageList(AsmVoiceModules.Asm, "ua-"));
+            Assert.Equal(AifError.OK, api.SharedStorageRead(AsmVoiceModules.Asm, "ua-note", out var note));
+            Assert.Equal([1, 2, 3], note);
+            Assert.Equal(AifError.OK, api.SharedStorageDelete(AsmVoiceModules.Asm, "ua-note"));
+            Assert.Equal(AifError.NotFound, api.SharedStorageRead(AsmVoiceModules.Asm, "ua-note", out _));
+            Assert.Equal(AifError.NotStarted, api.SharedStorageStore("no-such-module", "k", [1]));
         }
         finally { try { api.StopFlow(AsmVoiceModules.Asm); Directory.Delete(prepared.Folder, true); } catch { } }
     }

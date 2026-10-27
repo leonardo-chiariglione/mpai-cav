@@ -176,6 +176,7 @@ public sealed class SseAimProcessor : IAimProcessor
         var listener = data.UserPoV ?? pov;
 
         if (data.ListedObjects is { } listing) List(listing, report);
+        { var gone = Deletions.Apply(data, _names, NamedKind.SpeechScene, "Speech Scene", report); if (_open is not null && gone.Contains(_open)) _open = null; }
         if (data.ModifiedObjects is { Objects.Count: > 0 })
             report.NotSupported("ModifiedObjects", N(_open), "what an Object is like is Speech Object Editing's");
         if (data.TranslatedObjects is { Objects.Count: > 0 })

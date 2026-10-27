@@ -108,6 +108,45 @@ public sealed class NameBook
         return Math.Max(count, 1);
     }
 
+    // DELETION: a thing of the kind, by its name, with all its versions (the chain of the keys that descend from one another). Not deleted if another thing holds it - an Object that is a
+    // member of a Scene -: the Scene is deleted first. Returns what was deleted (the keys and the name), so that an AIM that has it open lets go.
+    public enum DeletionOutcome { Deleted, NotKept, Held }
+    public sealed record Deletion(DeletionOutcome Outcome, IReadOnlyCollection<string> Gone, string? Reason);
+
+    public Deletion Delete(NamedKind kind, string? name)
+    {
+        var key = KeyOf(kind, name);
+        if (key is null || Clean(name) is not { } clean) return new Deletion(DeletionOutcome.NotKept, [], null);
+        var keys = new List<string>();
+        for (var at = key; !keys.Contains(at); )
+        {
+            keys.Add(at);
+            if (!storage.MPAI_AIFM_SharedStorage_Exists($"prevkey:{at}")) break;
+            at = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get($"prevkey:{at}"));
+        }
+        var holders = keys.SelectMany(k => storage.MPAI_AIFM_SharedStorage_List($"refby:{k}:").Select(r => r[$"refby:{k}:".Length..])).Where(h => !keys.Contains(h)).Distinct().ToList();
+        if (holders.Count > 0)
+        {
+            var names = holders.Select(h => NameOf(h) ?? "a scene").Distinct().ToList();
+            return new Deletion(DeletionOutcome.Held, [], $"it is a member of {string.Join(", ", names)}: delete that first");
+        }
+        var gone = new List<string> { clean };
+        foreach (var k in keys)
+        {
+            foreach (var to in storage.MPAI_AIFM_SharedStorage_List($"ref:{k}:").ToList())
+            {
+                storage.MPAI_AIFM_SharedStorage_Delete(to);
+                storage.MPAI_AIFM_SharedStorage_Delete($"refby:{to[$"ref:{k}:".Length..]}:{k}");
+            }
+            storage.MPAI_AIFM_SharedStorage_Delete(k);
+            storage.MPAI_AIFM_SharedStorage_Delete(ByKey(k));
+            storage.MPAI_AIFM_SharedStorage_Delete($"prevkey:{k}");
+            gone.Add(k);
+        }
+        Release(kind, clean);
+        return new Deletion(DeletionOutcome.Deleted, gone, null);
+    }
+
     // Every name of the kind with the key now in force, in the order of the names.
     public IReadOnlyList<(string Name, string Key)> All(NamedKind kind)
     {
@@ -167,4 +206,30 @@ public sealed class ListedMember
 {
     public string           ObjectID { get; init; } = "";
     public SpatialAttitude? PoV      { get; init; }
+}
+
+
+// THE DELETION A USER COMMAND ASKS FOR, as every Editing AIM does it for the kind it keeps: each name the command gives is deleted if this AIM keeps a thing of that name; one it keeps
+// none of is reported failed (the Editing AIM that keeps it reports it done, and the answers of all are one response); one that something holds is not deleted and says by what.
+public static class Deletions
+{
+    // The names and the keys that went, for the AIM to let go of what it had open.
+    public static HashSet<string> Apply(UserCommandRQ data, NameBook book, NamedKind kind, string what, CommandReport report)
+    {
+        var gone = new HashSet<string>(StringComparer.Ordinal);
+        if (data.DeletedObjects is not { Objects.Count: > 0 } deleted) return gone;
+        foreach (var entry in deleted.Objects)
+        {
+            var name = entry.ObjectID?.ObjectID ?? entry.ObjectID?.BasicAudioObject?.BasicAudioObjectID;
+            if (NameBook.Clean(name) is null) { report.Failed("DeletedObjects", null, "the name of what is to be deleted is needed"); continue; }
+            var result = book.Delete(kind, name);
+            switch (result.Outcome)
+            {
+                case NameBook.DeletionOutcome.Deleted: foreach (var g in result.Gone) gone.Add(g); report.Done("DeletedObjects", name); break;
+                case NameBook.DeletionOutcome.Held: report.Failed("DeletedObjects", name, result.Reason ?? "something holds it"); break;
+                default: report.Failed("DeletedObjects", name, $"the Module keeps no {what} of that name"); break;
+            }
+        }
+        return gone;
+    }
 }

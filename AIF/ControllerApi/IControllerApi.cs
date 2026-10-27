@@ -34,4 +34,12 @@ public interface IControllerApi
     // MPAI_AIFU_SharedStorage_Init (M3203 3.4.1, M3213 3.6): where the Module's
     // Shared Storage is held.
     AifError SharedStorageInit(string moduleName, string location);
+
+    // THE USER AGENT'S OWN CALLS ON THE MODULE'S SHARED STORAGE (additive, 2026/10/27: store and delete are functions of any storage, for the User Agent as for the AIMs): Store, Read,
+    // Delete and List, as the holder UserAgent, under the rules and the Grants of the storage - a call the rules do not allow is NOT_AUTHORISED. A Controller that does not offer them
+    // (over MPAI-MAS) answers FAILED.
+    AifError SharedStorageStore(string moduleName, string key, byte[] data, string category = "Data") => AifError.Failed;
+    AifError SharedStorageRead(string moduleName, string key, out byte[] data) { data = []; return AifError.Failed; }
+    AifError SharedStorageDelete(string moduleName, string key) => AifError.Failed;
+    IReadOnlyList<string> SharedStorageList(string moduleName, string prefix = "") => [];
 }

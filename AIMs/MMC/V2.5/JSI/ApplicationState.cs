@@ -25,7 +25,8 @@ public sealed class ApplicationState
     {
         ["Present"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Distinct(StringComparer.Ordinal).ToList(),
         ["Members"] = Scenes.SelectMany(s => s.Members.Select(m => m.Name)).Distinct(StringComparer.Ordinal).ToList(),
-        ["Stored"] = Stored
+        ["Stored"] = Stored,
+        ["Kept"] = Scenes.SelectMany(s => new[] { s.Name }.Concat(s.Members.Select(m => m.Name))).Concat(Stored).Distinct(StringComparer.Ordinal).ToList()      // everything the application keeps, scenes and objects
     };
 
     // Is this instance a listing of the application - does it hold the array of items that the guide reads the state from? A response that is not one (the

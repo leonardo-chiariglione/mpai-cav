@@ -17,7 +17,7 @@ public static class UserCommandMerge
         var actions = new List<ReportAction>();
         foreach (var group in answers.SelectMany(a => a.UserCommandRS?.Actions ?? []).GroupBy(a => (a.Action, a.ObjectID)))
         {
-            var chosen = group.Any(a => a.Outcome == "Done") ? group.Where(a => a.Outcome == "Done") : group.Take(1);
+            var chosen = group.Any(a => a.Outcome == "Done") ? group.Where(a => a.Outcome == "Done") : group.OrderBy(a => (a.Reason ?? "").Contains("keeps no", StringComparison.Ordinal) ? 1 : 0).Take(1);   // none did it: the reason of the one that keeps the thing and could not, not of those that keep none
             actions.AddRange(chosen.DistinctBy(a => (a.Outcome, a.ResultID, a.Reason)));
         }
         // An AIM that declines a whole action - one that names no Object (an AIM that has nothing to do with it says so) - is not heard when another AIM did that action.

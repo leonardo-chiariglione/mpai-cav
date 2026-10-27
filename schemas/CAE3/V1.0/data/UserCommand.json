@@ -38,6 +38,10 @@
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
           "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
 
+      "DeletedObjects":         { "type": "object", "additionalProperties": false, "description": "Deletes, from where the Module keeps them, the Objects and Scenes named - the Audio Objects, Speech Objects, Audio Scenes, Speech Scenes and Multimodal Scenes, by the name the User gave them, with all their versions. Not the same as RemovedObjects, which takes an Object out of the open Scene and leaves it kept. An Object that is a member of a Scene is not deleted, and the response says so: the Scene is deleted first. Nothing is deleted that is not named.", "properties": {
+        "Objects":              { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID" ], "properties": {
+          "ObjectID":           { "$ref": "#/$defs/ManagedObject" } } } } } },
+
       "MovedObjects":           { "type": "object", "additionalProperties": false, "properties": {
         "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "NewSpatialAttitude" ], "anyOf": [ { "required": [ "ObjectID" ] }, { "required": [ "OldSpatialAttitude" ] } ], "properties": {
           "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
@@ -96,7 +100,7 @@
       "ReportTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
       "Outcome":                { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ], "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes." },
       "Actions":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ], "properties": {
-        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
+        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "DeletedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
         "ObjectID":             { "type": "string", "description": "The name of the Object or Scene acted on." },
         "Outcome":              { "type": "string", "enum": [ "Done", "Failed", "NotSupported" ] },
         "ResultID":             { "type": "string", "description": "The name of what the action produced: every edit is a new version, which has the name of the Object or Scene edited." },

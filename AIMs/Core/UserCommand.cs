@@ -129,6 +129,8 @@ public sealed class UserCommandRQ
     // THE LIST (the author, 2026/10/26): the Objects and Scenes the Module keeps, of one Kind or of all, by name.
     public ObjectListing?    ListedObjects   { get; init; }
     public ObjectPlacements? RemovedObjects  { get; init; }
+    // THE DELETION (the author, 2026/10/27): the Objects and Scenes named are deleted from where the Module keeps them, with all their versions; not RemovedObjects, which only takes an Object out of the open Scene.
+    public ObjectPlacements? DeletedObjects  { get; init; }
     public ObjectMovements?  MovedObjects    { get; init; }
     public ObjectChanges?    ChangedObjects  { get; init; }
     public ObjectChanges?    ModifiedObjects { get; init; }
@@ -329,7 +331,7 @@ public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>
 public static class CommandReader
 {
     public static readonly string[] Operations =
-        ["UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects",
+        ["UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "DeletedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects",
          "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects"];
 
     // The command; null when the JSON is not one, and then rejection is the report to give.

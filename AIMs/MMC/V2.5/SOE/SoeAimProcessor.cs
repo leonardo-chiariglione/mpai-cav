@@ -199,6 +199,7 @@ public sealed class SoeAimProcessor : IAimProcessor
         var data = command.UserCommandRQ;
         if (data is null) return false;
         if (data.ListedObjects is { } listing) List(listing, report);
+        { var gone = Deletions.Apply(data, new NameBook(_storage), NamedKind.SpeechObject, "Speech Object", report); if (_open is not null && gone.Contains(_open)) _open = null; }
         const string inScene = "where an Object is in a Scene is Speech Scene Editing's";
         foreach (var (action, any) in new[] { ("AddedObjects", data.AddedObjects is { Objects.Count: > 0 }),
                                               ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),

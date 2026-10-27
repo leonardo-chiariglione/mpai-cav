@@ -259,6 +259,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         var data = command.UserCommandRQ;
         if (data is null) return;
         if (data.ListedObjects is { } listing) List(listing, report);
+        { var gone = Deletions.Apply(data, _aoe.Names, NamedKind.AudioObject, "Audio Object", report); if (_open is not null && gone.Contains(_open)) _open = null; if (_composed is not null && gone.Contains(_composed)) _composed = null; }
 
         const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
         foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),

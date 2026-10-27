@@ -33,7 +33,7 @@
         "additionalProperties": false,
         "properties": {
           "Path": { "$ref": "#/$defs/Path" },
-          "Set": { "enum": ["Members", "Present", "Stored"], "description": "Members: the objects of the open scene; Present: the open scene and its objects; Stored: the objects kept and not yet used." } } } },
+          "Set": { "enum": ["Members", "Present", "Stored", "Kept"], "description": "Members: the objects of the open scene; Present: the open scene and its objects; Stored: the objects kept and not yet used; Kept: everything the application keeps, scenes and objects." } } } },
     "NeedsObject": {
       "type": "object",
       "description": "Requests that act on an object and name none are not turned into a command: the person is asked.",
