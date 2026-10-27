@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AUDIO SCENE MANAGEMENT BY VOICE: the User Agent. It supplies only DEVICES - the microphone and the text box (what the person says), the file chooser (a sound), the screen, the
+       avatar, the picture of the scene, the loudspeakers - and runs the workflow of the App (Apps/CAE/ASM/ASM-VCI.orch) with the interpreter of the User Agent, against a Controller
+       that holds the Voice Command Interface and, connected to it, Audio Scene Management. It knows no AIM and reads no storage. -->
+
+  <PropertyGroup>
+    <AssemblyName>AsmUa</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Mpai.Cae.AsmUa</RootNamespace>
+    <DefineConstants>$(DefineConstants);WINDOWS_DEVICES</DefineConstants>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\UaKit\SpatialAudio\Mpai.SpatialAudio.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\Voice\AsmVoice.csproj" />
+    <!-- the Modules' AIMs, built by the providers the Controller is given; the speech of the avatar (PAF-RSR leaves) and the Voice Command Interface's own -->
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -223,6 +223,23 @@ public class AsmVoiceWorkflowTests
     }
 
 
+    // THE MODULE AS THE USER AGENT STARTS IT FOR A PERSON: the real AIMs - the recogniser, the JSON Interface (its Access read from the files of this software), the dialogue and the
+    // synthesiser - under one Controller, started and given a place to keep its Objects and Scenes. Nothing is said to it: the language model, the microphone and the loudspeaker are not used.
+    [SkippableFact]
+    public void TheModuleStartsWithTheRealAimsAsThePersonsUserAgentStartsIt()
+    {
+        Skip.IfNot(TestModels.Can("ggml-small.bin"), "The models cannot be had: the L3s declare them, and Access holds them or cannot obtain them.");
+        var prepared = AsmVoiceModules.Prepare(Repository.Root);
+        using var api = AsmVoiceModules.Controller(prepared);
+        try
+        {
+            Assert.Equal(AifError.OK, api.StartFlow(AsmVoiceModules.Asm));
+            Assert.Equal(AifError.OK, api.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(prepared.Folder, "storage")));
+            Assert.All(api.Status(AsmVoiceModules.Asm).Aims, a => Assert.Equal(AimStatus.Alive, a.Status));
+        }
+        finally { try { api.StopFlow(AsmVoiceModules.Asm); Directory.Delete(prepared.Folder, true); } catch { } }
+    }
+
     [Fact]
     public async Task WhatIsSaidEditsTheSceneAndTheMachineAnswers()
     {
