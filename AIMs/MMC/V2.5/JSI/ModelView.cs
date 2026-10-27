@@ -22,13 +22,13 @@ namespace Mpai.Mmc.Jsi;
 public sealed class ModelView
 {
     private readonly SchemaLibrary _library;
-    private readonly ApplicationGuide _guide;
+    private readonly ApplicationContext _guide;
     private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> _nameSets;
 
     // The reduced schema, with the "x-fill" of the AIM in it.
     public JsonObject Full { get; private set; } = new();
 
-    public ModelView(SchemaLibrary library, ApplicationGuide guide, IReadOnlyDictionary<string, IReadOnlyList<string>>? nameSets = null)
+    public ModelView(SchemaLibrary library, ApplicationContext guide, IReadOnlyDictionary<string, IReadOnlyList<string>>? nameSets = null)
     {
         _library = library;
         _guide = guide;

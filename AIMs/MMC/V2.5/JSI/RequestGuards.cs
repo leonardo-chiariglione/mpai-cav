@@ -12,7 +12,7 @@ namespace Mpai.Mmc.Jsi;
 public static class RequestGuards
 {
     // A request that is not for the application: its words are in the guide's Refusals.
-    public static string? Refused(string request, ApplicationGuide guide)
+    public static string? Refused(string request, ApplicationContext guide)
     {
         var lower = request.ToLowerInvariant();
         foreach (var refusal in (guide.Root["Refusals"] as JsonArray)?.OfType<JsonObject>() ?? [])
@@ -25,7 +25,7 @@ public static class RequestGuards
 
     // A request that works on an object and names none: "move it", "the instrument closer", "rotate the guitar" when there is no guitar. The words of the request are compared with
     // the names the application has (a name written differently by speech recognition is still found: a letter or two of difference), and with the synonyms the guide gives.
-    public static string? NamesNothing(string request, ApplicationGuide guide, IReadOnlyCollection<string> paths, IReadOnlyList<string> names)
+    public static string? NamesNothing(string request, ApplicationContext guide, IReadOnlyCollection<string> paths, IReadOnlyList<string> names)
     {
         if (guide.Root["NeedsObject"] is not JsonObject needs || names.Count == 0) return null;
         var objectPaths = (needs["Paths"] as JsonArray)?.Select(x => (string?)x ?? "").ToList() ?? [];
@@ -48,7 +48,7 @@ public static class RequestGuards
     }
 
     // The paths whose words are in the request (the same reading as the guide's Triggers).
-    public static HashSet<string> Asked(string request, ApplicationGuide guide, IReadOnlyDictionary<string, IReadOnlyList<string>> nameSets)
+    public static HashSet<string> Asked(string request, ApplicationContext guide, IReadOnlyDictionary<string, IReadOnlyList<string>> nameSets)
     {
         var lower = request.ToLowerInvariant();
         var asked = new HashSet<string>(StringComparer.Ordinal);

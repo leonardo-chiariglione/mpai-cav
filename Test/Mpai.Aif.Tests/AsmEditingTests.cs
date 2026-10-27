@@ -74,7 +74,7 @@ public class AsmEditingTests
             var ASE = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(storage), asePorts));
             var commands = new List<string>();
             var reports = new List<string>();
-            string objectIn = aoePorts.Input("OSD-AUO-V1.5"), objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-AUO-V1.5"),
+            string objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-AUO-V1.5"),
                    objectReport = aoePorts.Output("CAE-UCM-V1.0"),
                    sceneCommand = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-ASD-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
 
@@ -97,7 +97,7 @@ public class AsmEditingTests
             var r = new Dictionary<string, string>();
 
             // 1. An Audio Object of one BAO arrives (a capture): created, and out as an Audio Object of that BAO.
-            var (musicAuo, _) = await Run(AOE, objectOut, objectReport, (objectIn, Forms.Auo(Sound("music"))));
+            var (musicAuo, _) = await Run(AOE, objectOut, objectReport, (objectCommand, Forms.Acquire(Forms.Auo(Sound("music")))));
             var music = Forms.Bao(musicAuo);
             r["1 a BAO arriving: what AOE gives back"] = $"{Header(music)} {Id(music, "BasicAudioObjectID")}, {Valid("OSD/V1.5/data/BasicAudioObject.json", music)}";
             r["1 the Audio Object AOE gives"] = $"{Header(musicAuo)} {Id(musicAuo, "AudioObjectID")}, {Valid("OSD/V1.5/data/AudioObject.json", musicAuo)}";
@@ -116,7 +116,7 @@ public class AsmEditingTests
             r["2 the report"] = Said(said2);
 
             // 3. Composing in Object Editing: an Object is composed in a Scene.
-            var (voiceAuo, _) = await Run(AOE, objectOut, objectReport, (objectIn, Forms.Auo(Sound("voice"))));
+            var (voiceAuo, _) = await Run(AOE, objectOut, objectReport, (objectCommand, Forms.Acquire(Forms.Auo(Sound("voice")))));
             var voice = Forms.Bao(voiceAuo);
             var (_, said3) = await Run(AOE, objectOut, objectReport, (objectCommand, MpaiJson.ToJson(Command(new UserCommandRQ
             {

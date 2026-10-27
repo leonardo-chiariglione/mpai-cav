@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 namespace Mpai.Mmc.Jsi;
 
 // THE GUIDE OF AN APPLICATION: everything the JSON Interface needs to know about one application that its two schemas do not say. It is a file of the Access of the
-// implementation (AccessSources, Setting ApplicationGuide), next to CommandSchema and ResponseSchema; the AIM itself knows no application.
+// implementation (AccessSources, Setting ApplicationContext), next to CommandSchema and ResponseSchema; the AIM itself knows no application.
 //
 //   Application      what the application is, in a sentence, for the language model.
 //   Conventions      text: the frame and the units the numbers of a command are in, and how the person's words become numbers.
@@ -17,7 +17,7 @@ namespace Mpai.Mmc.Jsi;
 //   Generated        the properties that the AIM fills with a fresh identifier (the language model never writes an identifier).
 //   Fill             property name, or the path of a property, -> a template filled by the AIM (at a path, whatever the model says there); "{id}" is a fresh identifier and "{now}" the current time in seconds.
 //   Names            the paths whose value is the name of something the application has, with the set of names (Present or Stored) it is chosen from.
-//   Context          (Items, Name, Kind, SceneKinds, Members, MemberName, MemberNames, Describe, Words) how the state of the application (an Application JSON Instance) is read: where its items are, their names, and what to say of each.
+//   Context          (Items, Name, Kind, SceneKinds, Members, MemberName, MemberNames, Describe, Words) how the state of the application (a User Command response) is read: where its items are, their names, and what to say of each.
 //   NeedsNumber      words that ask for a change by an amount the person did not give, and the question to ask when no number comes with them.
 //   Earlier          the property that identifies a command, so that the AIM can name earlier commands to the model (to revoke one).
 //   Descriptions     what a path of the schema means in this application: it replaces the description the schema gives, where the model is shown the shape of a command.
@@ -25,13 +25,13 @@ namespace Mpai.Mmc.Jsi;
 //   StateRequests    the commands that ask the application what it holds (sent in order, each when the answer to the one before has come, to keep the state fresh).
 //   Shortcuts        phrases that are always the same command, and that command: it is sent without the language model.
 //   Examples         requests and the commands (or the problem) they come to, in the shape the language model gives them.
-public sealed class ApplicationGuide
+public sealed class ApplicationContext
 {
     public JsonObject Root { get; }
 
-    public ApplicationGuide(JsonObject root) { Root = root; }
+    public ApplicationContext(JsonObject root) { Root = root; }
 
-    public static ApplicationGuide Parse(string json) =>
+    public static ApplicationContext Parse(string json) =>
         new(JsonNode.Parse(json) as JsonObject ?? throw new FormatException("The guide of the application is not a JSON object."));
 
     public string Application => Text("Application");
@@ -70,7 +70,7 @@ public sealed class ApplicationGuide
         (Root["Triggers"] as JsonArray)?.OfType<JsonObject>().Select(t => ((string?)t["Path"] ?? "", (IReadOnlyList<string>)Texts(t, "Words"))).ToList() ?? [];
 
     // The guide for this request: the paths that need a word offered if the request has one.
-    public ApplicationGuide ForRequest(string request, IReadOnlyDictionary<string, IReadOnlyList<string>>? nameSets = null)
+    public ApplicationContext ForRequest(string request, IReadOnlyDictionary<string, IReadOnlyList<string>>? nameSets = null)
     {
         var triggers = Triggers;
         if (triggers.Count == 0) return this;
@@ -80,7 +80,7 @@ public sealed class ApplicationGuide
                                          triggers.Any(t => asked.Contains(t.Path) && (path == t.Path || path.StartsWith(t.Path + ".", StringComparison.Ordinal)))).ToList();
         var copy = (JsonObject)Root.DeepClone();
         copy["Include"] = new JsonArray(kept.Select(k => (JsonNode)JsonValue.Create(k)!).ToArray());
-        return new ApplicationGuide(copy);
+        return new ApplicationContext(copy);
     }
 
     // A line of help for the words in the request, given to the model with the request: what a word of direction changes, in the application's own terms.

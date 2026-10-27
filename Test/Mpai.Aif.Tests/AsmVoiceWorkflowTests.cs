@@ -17,8 +17,8 @@ using Mpai.Wdl;
 
 namespace Mpai.Aif.Tests;
 
-// AUDIO SCENE MANAGEMENT BY VOICE: THE WORKFLOW OF THE APP, WITH THE REAL MODULES (2026/10/26). Apps/CAE/ASM/ASM-VCI.orch is read and run by the interpreter of the User Agent,
-// over ONE Controller that holds the two Modules - the Voice Command Interface and Audio Scene Management - built from their L3s, with their real AIMs: the JSON Interface (the
+// AUDIO SCENE MANAGEMENT BY VOICE: THE WORKFLOW OF THE APP, WITH THE REAL AIMs (2026/10/27). Apps/CAE/ASM/ASM-VCI.orch is read and run by the interpreter of the User Agent,
+// over ONE Controller that holds the one Module, Audio Scene Management, with the Voice Command Interface inside it, built from their L3s, with their real AIMs: the JSON Interface (the
 // guide and the schema of the User Command, from the files of this software), Entity Dialogue Processing (the language model is Ollama's HTTP interface, answered by the test),
 // the editing AIMs over a Shared Storage. What is faked is the world: the speech recogniser hears what the test says (no microphone), the synthesiser records what it is given
 // (no loudspeaker), and the language model of the JSON Interface is a function of the request (no GPU); the devices of the window are a push device for the voice and for the
@@ -66,7 +66,7 @@ public class AsmVoiceWorkflowTests
         public readonly ScriptedOllama Ollama;
         public readonly AsmVoiceModules.Prepared Prepared;
         public readonly ControllerApi Api;
-        public readonly PushDevice Voice = new("OSD-BSO-V1.5"), SoundIn = new("OSD-AUO-V1.5");
+        public readonly PushDevice Voice = new("OSD-BSO-V1.5"), SoundIn = new("CAE-UCM-V1.0");
         public readonly RecordDevice HeardText = new(), ReplyText = new(), ReplySpeech = new(), Scene = new(), Unused = new();
         public readonly List<string> Prompts = new();
         private readonly CancellationTokenSource _stop = new();
@@ -114,7 +114,7 @@ public class AsmVoiceWorkflowTests
             Voice.Push(MpaiJson.ToJson(new BasicSpeechObject { BasicSpeechObjectID = "voice" }));
         }
 
-        public void Load(string name, byte seed = 1) => SoundIn.Push(Forms.Auo(AsmRig.Sound(name, 1, seed)));
+        public void Load(string name, byte seed = 1) => SoundIn.Push(AsmRig.Json(AsmRig.Command(new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = AsmRig.Sound(name, 1, seed) } })));      // a sound arrives in a User Command
 
         public void Dispose()
         {
@@ -211,8 +211,8 @@ public class AsmVoiceWorkflowTests
     // What the dialogue is asked to say: the facts it is told, as they are.
     private static string Dialogue(string prompt)
     {
-        var at = prompt.IndexOf("Facts:", StringComparison.Ordinal);
-        return at < 0 ? "Yes." : prompt[(at + 6)..].Trim();
+        var at = prompt.IndexOf("Response Hint:", StringComparison.Ordinal);
+        return at < 0 ? "Yes." : prompt[(at + 14)..].Trim();
     }
 
     private static async Task<bool> Until(Func<bool> condition, int milliseconds = 30000)
@@ -284,10 +284,6 @@ public class AsmVoiceWorkflowTests
         await Say("undo that", 1);
         Assert.True(await Until(() => rig.Positions().TryGetValue("drums", out var p) && p[0] == 1), "the drums did not come back." + Why());
         Assert.Equal([1.0, 2.0, 0.0], rig.Positions()["drums"]);
-
-        // The application takes its commands from the Module that drives it and from no other: a write at its Application JSON Instance Port, or a read there, is refused.
-        Assert.Equal(AifError.NotAuthorised, rig.Api.InputWrite(AsmVoiceModules.Asm, "MMC-AJI-V2.5", 1, "{}", 1000));
-        Assert.Equal(AifError.NotAuthorised, rig.Api.OutputRead(AsmVoiceModules.Asm, "MMC-AJI-V2.5", 1, 100).Error);
 
         Assert.False(first);
         Assert.Contains("Hello", rig.Prompts.First());                      // the workflow's own words, shown and said by the device

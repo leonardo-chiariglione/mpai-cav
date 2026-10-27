@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace Mpai.Mmc.Jsi;
 
-// THE STATE OF THE APPLICATION, as it told it (the ApplicationContext, an Application JSON Instance), read as the guide says where to look. The AIM does not know what the
+// THE STATE OF THE APPLICATION, as it told it (the responses of the application that list what it holds), read as the guide says where to look. The AIM does not know what the
 // application is: the guide names the array of items, the property that names each, the kind that makes an item a scene, and what to say about each of its members.
 public sealed class ApplicationState
 {
@@ -28,7 +28,7 @@ public sealed class ApplicationState
         ["Stored"] = Stored
     };
 
-    // Is this instance a listing of the application - does it hold the array of items that the guide reads the state from? An ApplicationContext that is not one (the
+    // Is this instance a listing of the application - does it hold the array of items that the guide reads the state from? A response that is not one (the
     // response to a command that listed nothing, say) says nothing about the state and does not replace it.
     // WHAT A LISTING ADDS TO THE STATE KNOWN, when the listings come one after another - one names the sounds that are kept, another a scene with where its members are: the facts
     // about the members of a scene that the newer listing only names are those the older gave; the sounds kept are the newer's if it lists any; the scenes are the newer's if it
@@ -48,10 +48,10 @@ public sealed class ApplicationState
         };
     }
 
-    public static bool IsListing(JsonNode? instance, ApplicationGuide guide) =>
+    public static bool IsListing(JsonNode? instance, ApplicationContext guide) =>
         guide.Context is { } context && instance is not null && Select(instance, (string?)context["Items"] ?? "").Any();
 
-    public static ApplicationState Read(JsonNode? instance, ApplicationGuide guide)
+    public static ApplicationState Read(JsonNode? instance, ApplicationContext guide)
     {
         if (guide.Context is not { } context || instance is null) return new ApplicationState();
         var itemsPath = (string?)context["Items"] ?? "";
@@ -94,7 +94,7 @@ public sealed class ApplicationState
     }
 
     // The state, told to the language model.
-    public string Tell(ApplicationGuide guide)
+    public string Tell(ApplicationContext guide)
     {
         var context = guide.Context;
         string Word(string key, string fallback) => (string?)(context?["Words"] as JsonObject)?[key] ?? fallback;

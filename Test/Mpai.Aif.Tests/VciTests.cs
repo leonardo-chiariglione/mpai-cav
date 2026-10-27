@@ -65,13 +65,13 @@ public class VciTests
         // What makes it Audio Scene Management's is in the entries of its Access: the neutral L3 leaves them to be filled.
         static List<(string Name, string Uri)> Access(JsonElement a) => a.GetProperty("AccessSources").EnumerateArray().Select(e => (e.GetProperty("Name").GetString()!, e.GetProperty("Uri").GetString()!)).ToList();
         var neutralAccess = Access(neutral); var asmAccess = Access(asm);
-        foreach (var name in new[] { "CommandSchema", "ResponseSchema", "ApplicationGuide" })
+        foreach (var name in new[] { "CommandSchema", "ResponseSchema", "ApplicationContext" })
         {
             Assert.StartsWith("/*", neutralAccess.Single(e => e.Name == name).Uri);
             Assert.StartsWith("https://", asmAccess.Single(e => e.Name == name).Uri);
         }
         Assert.EndsWith("CAE3/V1.0/data/UserCommand.json", asmAccess.Single(e => e.Name == "CommandSchema").Uri);
-        Assert.EndsWith("Apps/CAE/ASM/Access/AsmApplicationGuide.json", asmAccess.Single(e => e.Name == "ApplicationGuide").Uri);
+        Assert.EndsWith("Apps/CAE/ASM/Access/AsmApplicationContext.json", asmAccess.Single(e => e.Name == "ApplicationContext").Uri);
     }
 
     // The entries of the Access of the JSON Interface for Audio Scene Management are the files of the repository: the SHA-256 of each is that of its file.
@@ -82,9 +82,9 @@ public class VciTests
         string Hash(string file) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
         Assert.Equal(Hash(JsiRig.UserCommandFile), entries.Single(e => e.Name == "CommandSchema").Sha256, ignoreCase: true);
         Assert.Equal(Hash(JsiRig.UserCommandFile), entries.Single(e => e.Name == "ResponseSchema").Sha256, ignoreCase: true);
-        Assert.Equal(Hash(JsiRig.GuideFile), entries.Single(e => e.Name == "ApplicationGuide").Sha256, ignoreCase: true);
+        Assert.Equal(Hash(JsiRig.ContextFile), entries.Single(e => e.Name == "ApplicationContext").Sha256, ignoreCase: true);
         Assert.Empty(AIF.Controller.AccessEntry.Check(entries));
-        Assert.Equal(["ApplicationGuide", "CommandSchema", "ResponseSchema"], entries.Where(e => e.Setting.Length > 0).Select(e => e.Setting).Order().ToArray());
+        Assert.Equal(["ApplicationContext", "CommandSchema", "ResponseSchema"], entries.Where(e => e.Setting.Length > 0).Select(e => e.Setting).Order().ToArray());
     }
 
     // ---- run ------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,28 +100,26 @@ public class VciTests
         Assert.Equal(AifError.OK, rig.Api.StartFlow(VciRig.Vci));
 
         // The application tells the Interface what the scene is, as the answer to a listing.
-        Assert.Equal(AifError.OK, rig.Write(VciRig.Aji, 2, JsiRig.Context(JsiRig.Scene()).ToJsonString()));
+        Assert.Equal(AifError.OK, rig.Write(VciRig.Ucm, 1, JsiRig.Context(JsiRig.Scene()).ToJsonString()));
 
         // A person speaks. The words leave as the Heard Text; the command leaves at the Application Command Port.
         rig.Say("move the violin 1 metre to the left");
         var heard = rig.Read(VciRig.Bto, 1);
         Assert.True(heard.Ok, heard.Error.ToString());
         Assert.Equal("move the violin 1 metre to the left", MpaiJson.FromJson<BasicTextObject>(heard.Json!)!.GetText());
-        var command = rig.Read(VciRig.Aji, 1);
+        var command = rig.Read(VciRig.Ucm, 1);
         Assert.True(command.Ok, command.Error.ToString());
         var aji = JsonNode.Parse(command.Json!)!;
-        Assert.Equal(JsiRig.UserCommandUri, (string?)aji["ApplicationSchemaURI"]);
-        Assert.NotNull(aji["Instance"]!["UserCommandRQ"]!["MovedObjects"]);
-        Assert.Empty(new Mpai.Mmc.Jsi.SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(aji["Instance"]!.ToJsonString())!);
+        Assert.NotNull(aji["UserCommandRQ"]!["MovedObjects"]);
+        Assert.Empty(new Mpai.Mmc.Jsi.SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(aji.ToJsonString())!);
 
         // A command that was sent is not said: the application may take time.
         Assert.False(rig.Read(VciRig.Bto, 2, 700).Ok);
         Assert.Empty(rig.Spoken);
 
         // The application answers, naming the command; the answer is said.
-        var response = JsiRig.ResponseTo((string)aji["Instance"]!["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null));
-        response["InReplyTo"] = (string)aji["AJIID"]!;
-        Assert.Equal(AifError.OK, rig.Write(VciRig.Aji, 1, response.ToJsonString()));
+        var response = JsiRig.ResponseTo((string)aji["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null));
+        Assert.Equal(AifError.OK, rig.Write(VciRig.Ucm, 1, response.ToJsonString()));
         var reply = rig.Read(VciRig.Bto, 2);
         Assert.True(reply.Ok, reply.Error.ToString());
         Assert.Equal("I moved the violin one metre to the left.", MpaiJson.FromJson<BasicTextObject>(reply.Json!)!.GetText());
@@ -132,7 +130,7 @@ public class VciTests
         // The dialogue was told what the person said and the facts - not the command, not its JSON.
         var told = rig.Ollama!.Prompts.Single();
         Assert.Contains("What the person said: \"move the violin 1 metre to the left\"", told);
-        Assert.Contains("Facts: The person had asked: \"move the violin 1 metre to the left\"", told);
+        Assert.Contains("Response Hint: The person had asked: \"move the violin 1 metre to the left\"", told);
         Assert.Contains("did moved, on violin", told);
         Assert.DoesNotContain("UserCommand", told);
         Assert.DoesNotContain("{", told);
@@ -143,7 +141,7 @@ public class VciTests
     {
         using var rig = new VciRig((_, _, _) => Task.FromResult(MoveViolin), _ => "By how many metres should I move the violin?");
         Assert.Equal(AifError.OK, rig.Api.StartFlow(VciRig.Vci));
-        Assert.Equal(AifError.OK, rig.Write(VciRig.Aji, 2, JsiRig.Context(JsiRig.Scene()).ToJsonString()));
+        Assert.Equal(AifError.OK, rig.Write(VciRig.Ucm, 1, JsiRig.Context(JsiRig.Scene()).ToJsonString()));
 
         rig.Say("move the violin a bit to the left");
         var reply = rig.Read(VciRig.Bto, 2);
@@ -151,9 +149,9 @@ public class VciTests
         Assert.Equal("By how many metres should I move the violin?", MpaiJson.FromJson<BasicTextObject>(reply.Json!)!.GetText());
         Assert.True(rig.Read(VciRig.Bso, 1).Ok);
         Assert.Equal(["By how many metres should I move the violin?"], rig.Spoken);
-        Assert.False(rig.Read(VciRig.Aji, 1, 500).Ok);                                  // no command was sent
+        Assert.False(rig.Read(VciRig.Ucm, 1, 500).Ok);                                  // no command was sent
         Assert.Empty(rig.JsiTurns);                                                     // and the language model of the Interface was not asked
-        Assert.Contains("Facts: No command was sent. By how much", rig.Ollama!.Prompts.Single());
+        Assert.Contains("Response Hint: No command was sent. By how much", rig.Ollama!.Prompts.Single());
         Assert.Contains("What the person said: \"move the violin a bit to the left\"", rig.Ollama!.Prompts.Single());
     }
 
@@ -168,6 +166,6 @@ public class VciTests
         Assert.True(heard.Ok, heard.Error.ToString());
         Assert.Equal("what is the weather like", MpaiJson.FromJson<BasicTextObject>(heard.Json!)!.GetText());
         Assert.True(rig.Read(VciRig.Bto, 2).Ok);                                         // it is answered: it is not for the application
-        Assert.False(rig.Read(VciRig.Aji, 1, 500).Ok);
+        Assert.False(rig.Read(VciRig.Ucm, 1, 500).Ok);
     }
 }

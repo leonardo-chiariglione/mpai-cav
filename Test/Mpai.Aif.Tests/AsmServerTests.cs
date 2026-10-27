@@ -31,14 +31,14 @@ public class AsmServerTests
 
         // A sound the User Agent captured: it comes back as the open Object.
         var bao = new BasicAudioObject { BasicAudioObjectID = "low", BasicAudioObjectData = [new InlineAudioData(Wav(440))], DescrMetadata = "low" };
-        Assert.Equal(AifError.OK, api.InputWrite(AsmDeployment.Module, "OSD-BAO-V1.5", 1, MpaiJson.ToJson(bao)));
-        var read = api.OutputRead(AsmDeployment.Module, "OSD-BAO-V1.5", 1, 60_000);
+        Assert.Equal(AifError.OK, api.InputWrite(AsmDeployment.Module, "CAE-UCM-V1.0", 1, Forms.Acquire(MpaiJson.ToJson(bao))));
+        var read = api.OutputRead(AsmDeployment.Module, "OSD-AUO-V1.5", 1, 60_000);
         Assert.True(read.Error == AifError.OK, $"the sound did not come back ({read.Error}):\n{asm.Said}");
-        Assert.Equal("OSD-BAO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());
+        Assert.Equal("OSD-AUO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());
 
         // Nothing else was asked for: a read of a Port that gives nothing answers within the time it was given, not before and not long after.
         var clock = System.Diagnostics.Stopwatch.StartNew();
-        var none = api.OutputRead(AsmDeployment.Module, "OSD-BSS-V1.5", 1, 700);
+        var none = api.OutputRead(AsmDeployment.Module, "OSD-BTO-V1.5", 1, 700);
         Assert.Equal(AifError.NotProduced, none.Error);
         Assert.InRange(clock.ElapsedMilliseconds, 500, 4000);
         api.StopFlow(AsmDeployment.Module);

@@ -43,7 +43,7 @@ public class EdpAsmTests
         using var llm = new OllamaClient(Model, context: 4096);
         using var rig = new VciRig((s, t, schema) => llm.ChatSchemaAsync(s, t, schema), null);
         Assert.Equal(AIF.Controller.AifError.OK, rig.Api.StartFlow(VciRig.Vci));
-        Assert.Equal(AIF.Controller.AifError.OK, rig.Write(VciRig.Aji, 2, JsiRig.Context(scene).ToJsonString()));
+        Assert.Equal(AIF.Controller.AifError.OK, rig.Write(VciRig.Ucm, 1, JsiRig.Context(scene).ToJsonString()));
 
         var result = new Dictionary<string, string>();
         foreach (var request in Requests)
@@ -51,7 +51,7 @@ public class EdpAsmTests
             rig.Say(request);
             Assert.True(rig.Read(VciRig.Bto, 1, 15000).Ok, "not heard: " + request);
             var expected = (JsonObject)cases[request].DeepClone();
-            var command = rig.Read(VciRig.Aji, 1, expected["none"] is not null ? 1500 : 40000);
+            var command = rig.Read(VciRig.Ucm, 1, expected["none"] is not null ? 1500 : 40000);
 
             if (expected["none"] is not null)
             {
@@ -66,15 +66,14 @@ public class EdpAsmTests
 
             Assert.True(command.Ok, "no command for: " + request);
             var aji = JsonNode.Parse(command.Json!)!;
-            var (ok, kind, got) = JsiAsmVoiceTests.Judge(expected, JsiRig.Normal(aji["Instance"]!), scene);
+            var (ok, kind, got) = JsiAsmVoiceTests.Judge(expected, JsiRig.Normal(aji), scene);
             Assert.True(ok, $"{request}: {kind} {got?.ToJsonString()}");
-            Assert.Empty(new Mpai.Mmc.Jsi.SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(aji["Instance"]!.ToJsonString())!);
+            Assert.Empty(new Mpai.Mmc.Jsi.SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(aji.ToJsonString())!);
 
             // The command is not said; the application answers; the answer is.
             Assert.False(rig.Read(VciRig.Bto, 2, 500).Ok, "said before the application answered: " + request);
-            var response = JsiRig.ResponseTo((string)aji["Instance"]!["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null));
-            response["InReplyTo"] = (string)aji["AJIID"]!;
-            Assert.Equal(AIF.Controller.AifError.OK, rig.Write(VciRig.Aji, 1, response.ToJsonString()));
+            var response = JsiRig.ResponseTo((string)aji["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null));
+            Assert.Equal(AIF.Controller.AifError.OK, rig.Write(VciRig.Ucm, 1, response.ToJsonString()));
             var reply = rig.Read(VciRig.Bto, 2, 40000);
             Assert.True(reply.Ok, "no answer once the application answered: " + request);
             Assert.False(string.IsNullOrWhiteSpace(MpaiJson.FromJson<BasicTextObject>(reply.Json!)!.GetText()));

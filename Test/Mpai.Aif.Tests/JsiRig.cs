@@ -17,7 +17,7 @@ internal static class JsiRig
     public const string Jsi = "1MMC-JSI-V2.5-I02", NeutralJsi = "1MMC-JSI-V2.5-I01";
 
     public static string UserCommandFile => Path.Combine(Repository.Schemas, "CAE3", "V1.0", "data", "UserCommand.json");
-    public static string GuideFile => Path.Combine(Repository.Root, "Apps", "CAE", "ASM", "Access", "AsmApplicationGuide.json");
+    public static string ContextFile => Path.Combine(Repository.Root, "Apps", "CAE", "ASM", "Access", "AsmApplicationContext.json");
 
     public static AimPortReader Ports(string aim)
     {
@@ -25,7 +25,7 @@ internal static class JsiRig
         return AimPortReader.Load(store, aim);
     }
 
-    public static JsiConfiguration Configuration() => new(UserCommandUri, UserCommandFile, UserCommandUri, UserCommandFile, GuideFile, Repository.Schemas);
+    public static JsiConfiguration Configuration() => new(UserCommandUri, UserCommandFile, UserCommandUri, UserCommandFile, ContextFile, Repository.Schemas);
 
     public static JsiAimProcessor Processor(StructuredModel? model, string aim = Jsi, bool refreshesState = false) =>
         new(aim, Ports(aim), aim == Jsi ? Configuration() with { RefreshesState = refreshesState } : new JsiConfiguration("", null, "", null, null), model);
@@ -35,15 +35,14 @@ internal static class JsiRig
     // ---- the ports of the JSON Interface ------------------------------------------------------------------------------------------------------
 
     public static string Request(AimPortReader p) => p.Input("OSD-BTO-V1.5");
-    public static string Response(AimPortReader p) => p.Input("MMC-AJI-V2.5", 1);
-    public static string Context(AimPortReader p) => p.Input("MMC-AJI-V2.5", 2);
-    public static string Command(AimPortReader p) => p.Output("MMC-AJI-V2.5");
-    public static string Facts(AimPortReader p) => p.Output("OSD-BTO-V1.5");
+    public static string Response(AimPortReader p) => p.Input("CAE-UCM-V1.0", 1);
+    public static string Command(AimPortReader p) => p.Output("CAE-UCM-V1.0", 1);
+    public static string Facts(AimPortReader p) => p.Output("OSD-BTO-V1.5");        // the Response Hint
 
     public static Message Say(AimPortReader p, string words, JsonNode? context = null)
     {
         var ports = new Dictionary<string, string> { [Request(p)] = MpaiJson.ToJson(BasicTextObject.FromText(words)) };
-        if (context is not null) ports[Context(p)] = context.ToJsonString();
+        if (context is not null) ports[Response(p)] = context.ToJsonString();         // the response that lists the scene: the state, as the application tells it
         return new Message { MessageId = Guid.NewGuid().ToString(), Ports = ports };
     }
 
@@ -68,7 +67,7 @@ internal static class JsiRig
         ["Orientation"] = new JsonObject { ["Header"] = "OSD-OOR-V1.5", ["OrientationID"] = Guid.NewGuid().ToString(), ["Orientation"] = new JsonArray(orientation.Select(x => (JsonNode)JsonValue.Create(x)!).ToArray()) }
     };
 
-    // The ApplicationContext: an Application JSON Instance whose Instance is the response that lists the scene.
+    // The response that lists the scene: the state of the application, as it tells it.
     public static JsonObject Context(JsonNode scene, string[]? stored = null)
     {
         var members = new JsonArray();
@@ -81,23 +80,16 @@ internal static class JsiRig
         var listed = new JsonArray(new JsonObject { ["ObjectID"] = (string)scene["name"]!, ["Kind"] = "Audio Scene", ["ObjectCount"] = members.Count, ["Members"] = members });
         foreach (var s in stored ?? scene["library"]!.AsArray().Select(x => (string)x!))
             listed.Add(new JsonObject { ["ObjectID"] = s, ["Kind"] = "Basic Audio Object" });
-        return Aji(new JsonObject
+        return new JsonObject
         {
             ["Header"] = "CAE-UCM-V1.0", ["UserCommandID"] = "context", ["UserCommandTime"] = Time(),
             ["UserCommandRS"] = new JsonObject { ["Outcome"] = "Done", ["ListedObjects"] = listed }
-        });
-    }
-
-    public static JsonObject Aji(JsonObject instance, string? inReplyTo = null)
-    {
-        var aji = new JsonObject { ["Header"] = "MMC-AJI-V2.5", ["AJIID"] = Guid.NewGuid().ToString(), ["ApplicationSchemaURI"] = UserCommandUri, ["Instance"] = instance };
-        if (inReplyTo is not null) aji["InReplyTo"] = inReplyTo;
-        return aji;
+        };
     }
 
     // A response of the application to a command: what it did, action by action.
     public static JsonObject ResponseTo(string commandId, string outcome, params (string Action, string Object, string Outcome, string? Reason)[] actions) =>
-        Aji(new JsonObject
+        new JsonObject
         {
             ["Header"] = "CAE-UCM-V1.0", ["UserCommandID"] = commandId, ["UserCommandTime"] = Time(),
             ["UserCommandRS"] = new JsonObject
@@ -110,7 +102,7 @@ internal static class JsiRig
                     return (JsonNode)o;
                 }).ToArray())
             }
-        });
+        };
 
     // ---- what a command does, in the words of the scene ------------------------------------------------------------------------------------------------
 

@@ -18,24 +18,31 @@ namespace Mpai.Aif.Tests;
 public class AsmOnAnAimHostTests
 {
     private const string Asm = AsmProvider.Module;
-    // Every AIM of the Module: the six of Audio Scene Management (the Interface, the four Editing AIMs and Multimodal Scene Editing) and Text and Speech Translation, which Speech Object Editing uses.
+    // Every AIM of the Module: the five of Audio Scene Management (the four Editing AIMs and Multimodal Scene Editing) and Text and Speech Translation, which Speech Object Editing uses.
     private static readonly string[] Placed =
     [
-        AsmProvider.Ami, AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Mse, "1MMC-TST-V2.5-I01"
+        AsmProvider.Aoe, AsmProvider.Ase, AsmProvider.Soe, AsmProvider.Sse, AsmProvider.Mse, "1MMC-TST-V2.5-I01"
     ];
 
     // The L3s of the repository, with the ASM Module's Audio Scene Management AIMs placed elsewhere.
+    // The L3s of the repository, with the ASM Module's Audio Scene Management AIMs placed elsewhere, and without the Voice Command Interface: it needs the speech models, and is not
+    // what is judged here (its Ports and its Topology are taken out of the copy of the L3 of the Module).
     private static string AmdsWithAsmPlaced()
     {
         var folder = Path.Combine(Path.GetTempPath(), "asm-placed-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         foreach (var file in Directory.EnumerateFiles(Repository.Amds, "*.json")) File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
-        var module = Path.Combine(folder, Asm + ".json");
-        var lines = File.ReadAllLines(module);
-        for (int i = 0; i < lines.Length; i++)
-            if (Placed.Any(p => lines[i].Contains($"\"AIMName\": \"{p}\"")))
-                lines[i] = lines[i].Replace("\"Relation\": \"Internal\"", "\"Relation\": \"External\"");
-        File.WriteAllLines(module, lines);
+        var l3Path = Path.Combine(folder, Asm + ".json");
+        var l3 = JsonNode.Parse(File.ReadAllText(l3Path))!;
+        const string Vci = "1MMC-VCI-V2.5-I01";
+        var subs = l3["SubAIMs"]!.AsArray();
+        foreach (var s in subs.Where(s => (string?)s!["Identifier"]!["AIMName"] == Vci).ToList()) subs.Remove(s);
+        var topology = l3["Topology"]!.AsArray();
+        foreach (var e in topology.Where(e => (string?)e!["Output"]!["AIMName"] == Vci || (string?)e["Input"]!["AIMName"] == Vci).ToList()) topology.Remove(e);
+        var ports = l3["ExternalPorts"]!.AsArray();
+        foreach (var port in ports.Where(p => (string?)p!["DataType"] == "OSD-BSO-V1.5" || (string?)p["DataType"] == "OSD-BTO-V1.5").ToList()) ports.Remove(port);
+        foreach (var s in subs.Where(s => Placed.Contains((string?)s!["Identifier"]!["AIMName"]))) s["Identifier"]!["Relation"] = "External";
+        File.WriteAllText(l3Path, l3.ToJsonString());
         return folder;
     }
 
@@ -72,7 +79,8 @@ public class AsmOnAnAimHostTests
             catch (InvalidOperationException e) { throw new InvalidOperationException(e.Message + "\nThe AIM host said:\n" + host.Output, e); }
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
-            api.InputWrite(Asm, "OSD-AUO-V1.5", 1, Forms.Auo(Captured("low", 440)));
+            // A sound arrives in a User Command (AcquiredObject), at the Port of Audio Object Editing.
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(AsmRig.Command(new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = Captured("low", 440) } })));
             var read = api.OutputRead(Asm, "OSD-AUO-V1.5", 1, 60_000);
             Assert.True(read.Error == AifError.OK, $"the sound did not come back as the open Object ({read.Error})");
             Assert.Equal("OSD-AUO-V1.5", JsonNode.Parse(read.Json!)!["Header"]!.ToString());

@@ -10,8 +10,9 @@ using Mpai.Providers;
 
 namespace Mpai.Cae.AsmVoice;
 
-// THE TWO MODULES OF ASM-VCI.orch IN ONE CONTROLLER: the Voice Command Interface (MMC-VCI-V2.5), which the workflow is over, and Audio Scene Management (CAE-ASM-V1.0), the
-// application it drives and the header of the workflow names. The workflow uses the Controller API only; this builds the Controller they run under.
+// THE MODULE OF ASM-VCI.orch: Audio Scene Management (CAE-ASM-V1.0), with the Voice Command Interface (MMC-VCI-V2.5) inside it. The workflow uses the Controller API only; this builds
+// the Controller it runs under, with the AIMs of Audio Scene Management, those of the Voice Command Interface (the speech recogniser, the JSON Interface, the dialogue, the speech
+// synthesiser) and the leaf AIMs both name (the translation).
 //
 // THE ACCESS OF THE JSON INTERFACE IS READ FROM THE FILES OF THIS SOFTWARE until the schema of the User Command and the guide are on the sites their L3 names (the author does not
 // publish yet): the L3s of the Modules are copied to a folder of the run, with the addresses of those three entries replaced by the files and their SHA-256 by the files' own. The
@@ -20,7 +21,7 @@ public static class AsmVoiceModules
 {
     public const string Vci = "1MMC-VCI-V2.5-I01", Asm = "1CAE-ASM-V1.0-I01", Jsi = "1MMC-JSI-V2.5-I02";
 
-    public static string GuideFile(string root) => Path.Combine(root, "Apps", "CAE", "ASM", "Access", "AsmApplicationGuide.json");
+    public static string ContextFile(string root) => Path.Combine(root, "Apps", "CAE", "ASM", "Access", "AsmApplicationContext.json");
     public static string CommandSchemaFile(string root) => Path.Combine(root, "schemas", "CAE3", "V1.0", "data", "UserCommand.json");
 
     // The folder of the L3s of the run (a copy of AIMs\AMDs with the Access of the JSON Interface at the local files) and the file of the settings of the AIMs.
@@ -37,7 +38,7 @@ public static class AsmVoiceModules
         var l3 = JsonNode.Parse(File.ReadAllText(l3Path))!;
         foreach (var entry in l3["AccessSources"]!.AsArray())
         {
-            var file = (string)entry!["Name"]! switch { "ApplicationGuide" => GuideFile(root), "CommandSchema" or "ResponseSchema" => CommandSchemaFile(root), _ => null };
+            var file = (string)entry!["Name"]! switch { "ApplicationContext" => ContextFile(root), "CommandSchema" or "ResponseSchema" => CommandSchemaFile(root), _ => null };
             if (file is null) continue;
             entry["Sha256"] = Hash(file);
             entry["Mirrors"] = new JsonArray(new Uri(file).AbsoluteUri);
@@ -58,7 +59,7 @@ public static class AsmVoiceModules
         return new Prepared(folder, amds, settingsPath);
     }
 
-    // The Controller of the run, holding both Modules: the AIMs of Audio Scene Management, and those of the Voice Command Interface (the speech recogniser, the JSON Interface, the
+    // The Controller of the run: the AIMs of Audio Scene Management, and those of the Voice Command Interface (the speech recogniser, the JSON Interface, the
     // dialogue, the speech synthesiser), and the leaf AIMs both name (the translation of Audio Scene Management). `vci` replaces the provider of the second where a test has speech or a language model of its own.
     public static ControllerApi Controller(Prepared prepared, Func<AmdStore, IAimProvider>? vci = null) =>
         new(prepared.Amds, prepared.Settings, store => new CompositeProvider(new AsmProvider(prepared.Amds), vci?.Invoke(store) ?? new VciProvider(store), new LeafAimsProvider(store)));

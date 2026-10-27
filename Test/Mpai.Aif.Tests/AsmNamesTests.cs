@@ -101,14 +101,14 @@ public class AsmNamesTests
             return o;
         }
 
-        public string AoeIn => AoePorts.Input("OSD-AUO-V1.5");
+        public string AoeIn => AoePorts.Input("CAE-UCM-V1.0");        // a sound arrives in a User Command (AcquiredObject)
         public string AoeCommand => AoePorts.Input("CAE-UCM-V1.0");
         public string AoeOut => AoePorts.Output("OSD-AUO-V1.5");
         public string AoeReport => AoePorts.Output("CAE-UCM-V1.0");
         public string AseCommand => AsePorts.Input("CAE-UCM-V1.0");
         public string AseOut => AsePorts.Output("OSD-ASD-V1.5");
         public string AseReport => AsePorts.Output("CAE-UCM-V1.0");
-        public string SoeIn => SoePorts.Input("OSD-SPO-V1.5", 1);
+        public string SoeIn => SoePorts.Input("CAE-UCM-V1.0");        // a speech arrives in a User Command (AcquiredObject)
         public string SoeCommand => SoePorts.Input("CAE-UCM-V1.0");
         public string SoeOut => SoePorts.Output("OSD-SPO-V1.5", 1);
         public string SoeReport => SoePorts.Output("CAE-UCM-V1.0");
@@ -136,10 +136,10 @@ public class AsmNamesTests
 
         // Audio Object Editing: a different sound with the name of one it keeps is "violin 2", then "violin 3"; the same sound given again is the same Object.
         string Opened(Message m) => JsonNode.Parse(Forms.Bao(m.Ports[module.AoeOut]))!["BasicAudioObjectID"]!.GetValue<string>();
-        Assert.Equal("violin", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin", 1))))));
-        Assert.Equal("violin 2", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin", 2))))));
-        Assert.Equal("violin", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin", 1))))));
-        Assert.Equal("violin 3", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin", 3))))));
+        Assert.Equal("violin", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 1)))))));
+        Assert.Equal("violin 2", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 2)))))));
+        Assert.Equal("violin", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 1)))))));
+        Assert.Equal("violin 3", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 3)))))));
         Assert.Equal(3, module.Storage.MPAI_AIFM_SharedStorage_List("BAO").Count);                        // three Objects, not four
 
         // An edit is a new version of the Object: it keeps its name, it is not a second Object.
@@ -149,9 +149,9 @@ public class AsmNamesTests
 
         // Speech Object Editing: the same.
         string Heard(Message m) => JsonNode.Parse(Forms.Bso(m.Ports[module.SoeOut]))!["BasicSpeechObjectID"]!.GetValue<string>();
-        Assert.Equal("hello", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello", 1))))));
-        Assert.Equal("hello 2", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello", 2))))));
-        Assert.Equal("hello", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello", 1))))));
+        Assert.Equal("hello", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello", 1)))))));
+        Assert.Equal("hello 2", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello", 2)))))));
+        Assert.Equal("hello", Heard(await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello", 1)))))));
 
         // Audio Scene Editing: a Scene made while another with the name exists is "stage 2".
         async Task<string> SceneNamed(string scene, string member)
@@ -240,8 +240,8 @@ public class AsmNamesTests
     public async Task ACommandWithoutItsAmountIsReportedNotGuessed()
     {
         using var module = new Module();
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin"))));
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("drums", 2))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin")))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("drums", 2)))));
         var built = await module.Give(module.Ase, (module.AseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [Put("violin", 1), Put("drums", 3)] } }))));
         Assert.Equal("Done", Report(built, module.AseReport).Outcome);
         double[] Xs(Message m) => JsonNode.Parse(Forms.Bas(m.Ports[module.AseOut]))!["BasicAudioSceneDescriptorsData"]!.AsArray()
@@ -285,7 +285,7 @@ public class AsmNamesTests
         Assert.True(Valid("CAE3/V1.0/data/UserCommand.json", notANumber.Ports[module.AoeReport]));
 
         // Speech Scene Editing, and Multimodal Scene Editing: the same.
-        await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello"))));
+        await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello")))));
         var sse = await module.Give(module.Sse, (module.SseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [Put("hello", 0)] } }))));
         Assert.Equal("Done", Report(sse, module.SseReport).Outcome);
         var sseNoTo = await module.Give(module.Sse, (module.SseCommand, Json_(Command(new UserCommandRQ { MovedObjects = new ObjectMovements { Objects = [new ObjectMovement { ObjectID = Ref("hello") }] } }))));
@@ -305,12 +305,12 @@ public class AsmNamesTests
     public async Task AListGivesOnlyNames()
     {
         using var module = new Module();
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin", 1))));
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("drums", 2))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 1)))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("drums", 2)))));
         await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { LUFS = -18 }))));            // a new version of drums: still one Object
         await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "band", Objects = [Put("violin", 0), Put("drums", 2)] } }))));
         var stage = await module.Give(module.Ase, (module.AseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [Put("violin", 1), Put("drums", 3)] } }))));
-        await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello"))));
+        await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello")))));
         var dialogue = await module.Give(module.Sse, (module.SseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [Put("hello", 0)] } }))));
         await module.Give(module.Mse, (module.MseScene1, stage.Ports[module.AseOut]), (module.MseScene2, dialogue.Ports[module.SseOut]));
         await module.Give(module.Mse, (module.MseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "mix", Objects = [Put("stage", 0), Put("dialogue", 0)] } }))));
@@ -361,7 +361,7 @@ public class AsmNamesTests
         using var module = new Module();
 
         // A sound with no name: not created - the report says a name is needed, and nothing is open.
-        var unnamed = await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound(""))));
+        var unnamed = await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("")))));
         var said = Report(unnamed, module.AoeReport);
         Assert.Equal("Failed", said.Outcome);
         Assert.Equal("AcquiredObject", said.Actions[0].Action);
@@ -371,9 +371,9 @@ public class AsmNamesTests
         Assert.True(Valid("CAE3/V1.0/data/UserCommand.json", unnamed.Ports[module.AoeReport]));
 
         // Named, it is created; a name made of spaces is no name.
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("violin"))));
-        await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("drums", 2))));
-        var blank = await module.Give(module.Aoe, (module.AoeIn, Forms.Auo(Sound("   ", 3))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin")))));
+        await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("drums", 2)))));
+        var blank = await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("   ", 3)))));
         Assert.Contains("name is needed", Report(blank, module.AoeReport).Actions[0].Reason);
         Assert.Equal(2, module.Storage.MPAI_AIFM_SharedStorage_List("BAO").Count);
 
@@ -391,10 +391,10 @@ public class AsmNamesTests
         Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BAS"));
 
         // Speech: an Object with no name is not kept, nor a Scene.
-        var noSpeech = await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech(""))));
+        var noSpeech = await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("")))));
         Assert.Contains("name is needed", Report(noSpeech, module.SoeReport).Actions[0].Reason);
         Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BSO"));
-        await module.Give(module.Soe, (module.SoeIn, Forms.Spo(Speech("hello"))));
+        await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello")))));
         var noSpeechScene = await module.Give(module.Sse, (module.SseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Put("hello", 0)] } }))));
         Assert.Contains("name is needed", Report(noSpeechScene, module.SseReport).Actions[0].Reason);
         Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BSS"));

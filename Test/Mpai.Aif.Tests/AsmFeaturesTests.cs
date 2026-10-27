@@ -50,7 +50,7 @@ public class AsmFeaturesTests
             var said = await rig.Give(rig.Aoe, (rig.AoePorts.Input(AsmRig.Ucm), json));
             return (said, AsmRig.Response(said.Ports[rig.AoePorts.Output(AsmRig.Ucm)]));
         }
-        public async Task<Message> Open(BasicAudioObject bao) => await rig.Give(rig.Aoe, (rig.AoePorts.Input(AsmRig.Auo), Forms.Auo(bao)));
+        public async Task<Message> Open(BasicAudioObject bao) => await rig.OpenAudio(bao);
         public string AuoOut => rig.AoePorts.Output(AsmRig.Auo);
         public static JsonObject Bao(Message m, string port) => JsonNode.Parse(Forms.Bao(m.Ports[port]))!.AsObject();
         public async Task<IReadOnlyList<ListedObject>> List(string kind, string? name = null)
@@ -317,7 +317,7 @@ public class AsmFeaturesTests
         Assert.Equal("Failed", AsmRig.Response((await rig.Give(rig.Aoe, (rig.AoePorts.Input(AsmRig.Ucm), AsmRig.Json(every)))).Ports[rig.AoePorts.Output(AsmRig.Ucm)]).Outcome);
 
         // Speech Object Editing says the same of a Speech Object.
-        await rig.Give(rig.Soe, (rig.SoePorts.Input(AsmRig.Spo, 1), Forms.Spo(AsmRig.Speech("hello", 0.5))));
+        await rig.OpenSpeech(AsmRig.Speech("hello", 0.5));
         var spoken = await rig.Give(rig.Soe, (rig.SoePorts.Input(AsmRig.Ucm), AsmRig.Json(AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } }))));
         var hello = AsmRig.Response(spoken.Ports[rig.SoePorts.Output(AsmRig.Ucm)]).ListedObjects!.Single();
         Assert.Equal(0.5, hello.Duration);
@@ -334,7 +334,7 @@ public class AsmFeaturesTests
         var aoe = new Aoe(rig);
         await aoe.Open(AsmRig.Sound("violin", 1));
         await aoe.Open(AsmRig.Sound("drums", 0.5, 2));
-        await rig.Give(rig.Soe, (rig.SoePorts.Input(AsmRig.Spo, 1), Forms.Spo(AsmRig.Speech("hello"))));
+        await rig.OpenSpeech(AsmRig.Speech("hello"));
         var stage = await rig.Give(rig.Ase, (rig.AsePorts.Input(AsmRig.Ucm), AsmRig.Json(AsmRig.Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [AsmRig.Put("violin", 1, 2), AsmRig.Put("drums", 3, 4)] } }))));
         var dialogue = await rig.Give(rig.Sse, (rig.SsePorts.Input(AsmRig.Ucm), AsmRig.Json(AsmRig.Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "dialogue", Objects = [AsmRig.Put("hello", 0, 5)] } }))));
         await rig.Give(rig.Mse, (rig.MsePorts.Input(AsmRig.Asd, 1), stage.Ports[rig.AsePorts.Output(AsmRig.Asd)]), (rig.MsePorts.Input(AsmRig.Asd, 2), dialogue.Ports[rig.SsePorts.Output(AsmRig.Ssd)]));

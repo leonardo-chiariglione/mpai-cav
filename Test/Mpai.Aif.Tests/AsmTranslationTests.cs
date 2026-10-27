@@ -48,14 +48,15 @@ public class AsmTranslationTests
         var english = Mpai.Mmc.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
 
-            api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(english));
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
+            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ
@@ -125,12 +126,13 @@ public class AsmTranslationTests
         var tts = TestModels.Settings("1MMC-TTS-V2.5-I01");
         var english = Mpai.Mmc.Soe.SpeechStore.With(Mpai.Aims.Tts.TtsFactory.Create(tts).ProcessAsync(BasicTextObject.FromText("Good morning. The concert starts at eight.")).GetAwaiter().GetResult(), id: "welcome");
 
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
         try
         {
             Assert.Equal(AifError.OK, api.StartFlow(Asm));
             api.SharedStorageInit(Asm, Path.Combine(work, "assets"));
-            api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(english));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(english)));
+            Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 60_000).Error);            // the speech is taken: reported
             var translate = new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
@@ -147,14 +149,14 @@ public class AsmTranslationTests
                     }] }
                 }
             };
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(translate));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(translate));
             Assert.Equal(AifError.OK, api.OutputRead(Asm, "CAE-UCM-V1.0", 3, 300_000).Error);          // translated: reported
 
             var storage = api.SharedStorage(Asm)!;
             BasicSpeechObject? Stored() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID);
             Assert.False(Stored()!.Data.SequenceEqual(english.Data));                                  // the translation stands under the original's identifier
 
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, MpaiJson.ToJson(new UserCommand
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
                 UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
                 UserCommandRQ = new UserCommandRQ { RevokedUserCommandID = translate.UserCommandID }

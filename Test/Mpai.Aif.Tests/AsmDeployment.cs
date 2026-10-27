@@ -14,7 +14,8 @@ public sealed class AsmDeployment : IDisposable
     // Every AIM of the Module, as the Controller is told to find them.
     public static readonly string[] Placed =
     [
-        "1CAE-AMI-V1.0-I01", "1CAE-AOE-V1.0-I01", "1CAE-ASE-V1.0-I01", "1MMC-SOE-V2.5-I01", "1MMC-SSE-V2.5-I01", "1OSD-MSE-V1.5-I01", "1MMC-TST-V2.5-I01"
+        "1CAE-AOE-V1.0-I01", "1CAE-ASE-V1.0-I01", "1MMC-SOE-V2.5-I01", "1MMC-SSE-V2.5-I01", "1OSD-MSE-V1.5-I01", "1MMC-TST-V2.5-I01",
+        "1MMC-ASR-V2.5-I01", "1MMC-JSI-V2.5-I02", "1MMC-EDP-V2.5-I03", "1MMC-TTS-V2.5-I01"
     ];
 
     public static string Exe => Path.Combine(Repository.Root, "Apps", "CAE", "ASM", "Server", "bin", "Debug", "net10.0", "AsmServer.exe");
@@ -38,6 +39,7 @@ public sealed class AsmDeployment : IDisposable
         var bin = AppContext.BaseDirectory;
         Host = new HostProcess(amds: Repository.Amds, provider: Path.Combine(bin, "Mpai.Cae.Asm.dll") + ":Mpai.Cae.Asm.AsmProvider",
             extra: ["--provider", Path.Combine(bin, "Mpai.Providers.dll") + ":Mpai.Providers.LeafAimsProvider",
+                    "--provider", Path.Combine(bin, "Mpai.Aif.Tests.dll") + ":Mpai.Aif.Tests.VciStandIn",
                     "--settings", Path.Combine(root, "AIMs", "aim-settings.json")],
             workingDirectory: root);
 

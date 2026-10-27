@@ -6,14 +6,14 @@ using System.Text.Json.Nodes;
 
 namespace Mpai.Mmc.Jsi;
 
-// A RESPONSE OF THE APPLICATION, TOLD AS FACTS: what was done, what was not and why, in the person's terms - names, numbers, counts. It is not a sentence addressed to the
-// person: the dialogue AIM composes what is said. The facts come out of the response itself, property by property, in the words the guide gives for the properties and the
-// values of this application (Words), without those it says to leave out (Skip). No language model is asked: a fact that is not in the response is not in the facts.
+// A RESPONSE OF THE APPLICATION, TOLD AS THE RESPONSE HINT: what was done, what was not and why, in the person's terms - names, numbers, counts. It is not a sentence addressed to the
+// person: the dialogue AIM composes what is said. The Response Hint comes out of the response itself, property by property, in the words the guide gives for the properties and the
+// values of this application (Words), without those it says to leave out (Skip). No language model is asked: what is not in the response is not in the Response Hint.
 public static class ResponseFacts
 {
     private const int MostItems = 12;
 
-    public static string Tell(JsonNode response, ApplicationGuide guide, string? inReplyTo = null)
+    public static string Tell(JsonNode response, ApplicationContext guide, string? inReplyTo = null)
     {
         var words = guide.Words;
         var skip = guide.Skip.ToHashSet(StringComparer.Ordinal);

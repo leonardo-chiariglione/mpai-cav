@@ -69,7 +69,7 @@ public class AsmModuleTests
         File.WriteAllText(settings, all.ToJsonString());
 
         var r = new Dictionary<string, string>();
-        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store)));
+        using var api = new ControllerApi(Repository.Amds, settings, store => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(store), new VciStandIn()));
         try
         {
             r["the Module starts"] = api.StartFlow(Asm).ToString();
@@ -81,15 +81,15 @@ public class AsmModuleTests
                 var read = api.OutputRead(Asm, "OSD-AUO-V1.5", 1, 60_000);
                 return read.Error == AifError.OK ? Forms.Bao(read.Json!) : $"nothing ({read.Error})";
             }
-            api.InputWrite(Asm, "OSD-AUO-V1.5", 1, Forms.Auo(Captured("low", 440)));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("low", 440))));
             var first = Played();
-            api.InputWrite(Asm, "OSD-AUO-V1.5", 1, Forms.Auo(Captured("high", 880)));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(Captured("high", 880))));
             var second = Played();
             r["a sound the User Agent captured, the open Object"] = first.StartsWith('{') ? $"{JsonNode.Parse(first)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", first)}" : first;
             r["a second sound, the open Object"] = second.StartsWith('{') ? $"{JsonNode.Parse(second)!["Header"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", second)}" : second;
 
             // 1b. An Object of Shared Storage, given by its identifier: opened.
-            api.InputWrite(Asm, "OSD-AUO-V1.5", 1, Forms.Auo(first));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Forms.Acquire(Forms.Auo(first)));
             var stored = Played();
             r["an Object of Shared Storage, opened"] = stored.StartsWith('{') ? $"{JsonNode.Parse(stored)!["Header"]} {JsonNode.Parse(stored)!["BasicAudioObjectID"]}, {Valid("OSD/V1.5/data/BasicAudioObject.json", stored)}" : stored;
 
@@ -119,7 +119,7 @@ public class AsmModuleTests
             // 3. The speech chain: a Speech Object the User Agent captured, placed by a
             // Speech Scene Command in a Basic Speech Scene; Speech Scene Editing reports it.
             var hello = new BasicSpeechObject { BasicSpeechObjectID = "hello", Data = SceneAudio.Wav(Tone(300), 1, 48000) };
-            api.InputWrite(Asm, "OSD-SPO-V1.5", 1, Forms.Spo(hello));
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 3, Forms.Acquire(MpaiJson.ToJson(hello)));
             var kept = api.OutputRead(Asm, "OSD-SPO-V1.5", 1, 60_000);
             r["a Speech Object, the open Object"] = kept.Error == AifError.OK ? $"{JsonNode.Parse(Forms.Bso(kept.Json!))!["BasicSpeechObjectID"]}, {Valid("OSD/V1.5/data/SpeechObject.json", kept.Json!)}" : $"nothing ({kept.Error})";
             api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ

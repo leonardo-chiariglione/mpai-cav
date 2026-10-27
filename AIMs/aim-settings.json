@@ -21,7 +21,8 @@
                               "OllamaModel":  "llama3.2:3b"
                           },
     "1MMC-JSI-V2.5-I02":  {
-                              "OllamaModel":  "llama3.2:3b"
+                              "OllamaModel":  "llama3.2:3b",
+                              "Responders":  "5"
                           },
     "1MMC-SPE-V2.5-I01":  {
                           },

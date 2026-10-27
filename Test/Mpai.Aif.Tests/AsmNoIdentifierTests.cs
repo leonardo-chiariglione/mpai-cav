@@ -54,8 +54,8 @@ public class AsmNoIdentifierTests
             UserCommandRS Report(Message m, IAimProcessor aim) => MpaiJson.FromJson<UserCommand>(m.Ports[(aim == aoe ? aoePorts : asePorts).Output("CAE-UCM-V1.0")]).UserCommandRS!;
 
             // Two sounds, given to the Module: what it gives back is the Object, as the User Agent will hold it.
-            var violin = Object(await Give(aoe, (aoePorts.Input("OSD-AUO-V1.5"), Forms.Auo(Sound("violin")))));
-            var drums = Object(await Give(aoe, (aoePorts.Input("OSD-AUO-V1.5"), Forms.Auo(Sound("drums")))));
+            var violin = Object(await Give(aoe, (aoePorts.Input("CAE-UCM-V1.0"), Forms.Acquire(Forms.Auo(Sound("violin"))))));
+            var drums = Object(await Give(aoe, (aoePorts.Input("CAE-UCM-V1.0"), Forms.Acquire(Forms.Auo(Sound("drums"))))));
 
             // Both in the Scene: the Objects themselves, each where it is put.
             var built = await Give(ase, (asePorts.Input("CAE-UCM-V1.0"), MpaiJson.ToJson(Command(new UserCommandRQ

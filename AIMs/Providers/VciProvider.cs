@@ -19,9 +19,9 @@ namespace Mpai.Providers;
 // Leaf provider for the MMC-VCI-V2.5 Module (Voice Command Interface). The Controller builds the composite from its L3 (1MMC-VCI-V2.5-I01); this provider supplies ONLY the
 // leaf AIMs its topology names:
 //   MMC-ASR - speech to text (Whisper)
-//   MMC-JSI - the JSON Interface: the request to a command, the response to facts. The same AIM for every application: which application is the Access of its L3
+//   MMC-JSI - the JSON Interface: the request to a command, the response to the Response Hint. The same AIM for every application: which application is the Access of its L3
 //             (1MMC-JSI-V2.5-I02 is Audio Scene Management's; I01 has no application and sends no command)
-//   MMC-EDP - the dialogue, as the L3 I03 has it: it says the facts (local LLM via Ollama)
+//   MMC-EDP - the dialogue, as the L3 I03 has it: it says the Response Hint (local LLM via Ollama)
 //   MMC-TTS - text to speech (Piper)
 // Acquisition (the microphone) and delivery (the loudspeaker) are the User Agent's, not sub-AIMs.
 public sealed class VciProvider : IAimProvider, IDisposable

@@ -69,7 +69,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         _aoe         = aoe;
         _commandPort = ports.Input("CAE-UCM-V1.0");
         _povPort     = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _objectPort  = ports.Input("OSD-AUO-V1.5");
+        _objectPort  = ports.InputOrDefault("OSD-AUO-V1.5", "");
         _objectOut   = ports.Output("OSD-AUO-V1.5");
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
@@ -83,7 +83,31 @@ public sealed class AoeAimProcessor : IAimProcessor
         // 1. opening, creating or storing, by Port.
         string? made = null;
         string? unnamed = null;     // why an arriving Object was not taken, to be reported
-        if (message.Ports.TryGetValue(_objectPort, out var objectJson) && !string.IsNullOrWhiteSpace(objectJson))
+        string? acquired = null;    // the name of the Object the User Command gave (AcquiredObject), taken
+        var arrivedCommand = message.Ports.TryGetValue(_commandPort, out var givenCommand) && !string.IsNullOrWhiteSpace(givenCommand) ? CommandReader.Read(givenCommand, out _) : null;
+        string? objectJson = _objectPort.Length > 0 && message.Ports.TryGetValue(_objectPort, out var onPort) && !string.IsNullOrWhiteSpace(onPort) ? onPort : null;
+
+        // The Object the User Command gives (AcquiredObject), in full or by its name: an Audio Object, or a Basic Audio Object, is taken as an Object that arrives; a name opens
+        // the Object the Module keeps under it. A Speech or Visual Object is not for this AIM.
+        if (objectJson is null && arrivedCommand?.UserCommandRQ?.AcquiredObject is { } acquiring)
+        {
+            if (acquiring.AudioObject is { } wholeObject) { objectJson = MpaiJson.ToJson(wholeObject); acquired = wholeObject.AudioObjectID; }
+            else if (acquiring.BasicAudioObject is { } basicObject)
+            {
+                objectJson = MpaiJson.ToJson(new AudioObject
+                {
+                    MInstanceID = basicObject.MInstanceID ?? "", AudioObjectID = basicObject.BasicAudioObjectID, AudioObjectSpaceTime = new SpaceTime(),
+                    BasicAudioObjectCount = 1, BasicAudioObjects = [new BasicAudioObjectEntry { BAObjectIDOrBAObject = basicObject }]
+                });
+                acquired = basicObject.BasicAudioObjectID;
+            }
+            else if (acquiring.SpeechObject is null && acquiring.VisualObject is null && acquiring.ObjectID is { Length: > 0 } wanted)
+            {
+                if (_aoe.KeyOf(wanted) is { } held) { _open = held; acquired = wanted; }
+                else unnamed = $"the Module keeps no Audio Object named {wanted}";
+            }
+        }
+        if (objectJson is not null)
         {
             try
             {
@@ -122,6 +146,7 @@ public sealed class AoeAimProcessor : IAimProcessor
             {
                 var report = new CommandReport(command);
                 if (unnamed is not null) report.Failed("AcquiredObject", null, unnamed);
+                else if (acquired is not null) report.Done("AcquiredObject", N(_open) ?? acquired);
                 if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) _undo.Revoke(revoked, report);
                 else
                 {

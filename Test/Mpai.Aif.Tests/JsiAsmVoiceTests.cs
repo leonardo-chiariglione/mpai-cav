@@ -60,7 +60,7 @@ public class JsiAsmVoiceTests
             if (expected["revoked"] is not null)
             {
                 var earlier = await processor.ProcessAsync(JsiRig.Say(ports, (string)set["earlier"]!["request"]!, context));
-                var id = (string?)JsiRig.CommandOf(earlier, ports)?["Instance"]?["UserCommandID"];
+                var id = (string?)JsiRig.CommandOf(earlier, ports)?["UserCommandID"];
                 expected["revoked"] = id ?? "(the earlier command was not understood)";
                 seconds.Clear();
             }
@@ -69,7 +69,7 @@ public class JsiAsmVoiceTests
             var answer = await processor.ProcessAsync(JsiRig.Say(ports, request, context));
             var took = seconds.Skip(before).Sum();
             var command = JsiRig.CommandOf(answer, ports);
-            var (ok, kind, got) = Judge(expected, command?["Instance"] is { } i ? JsiRig.Normal(i) : null, scene);
+            var (ok, kind, got) = Judge(expected, command is { } i ? JsiRig.Normal(i) : null, scene);
             rows.Add(new JsonObject
             {
                 ["request"] = request, ["ok"] = ok, ["kind"] = kind, ["seconds"] = Math.Round(took, 2),

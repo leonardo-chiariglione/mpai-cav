@@ -16,30 +16,32 @@ using Mpai.Core.OSD;
 
 namespace Mpai.Mmc.Jsi;
 
-// MMC-JSI-V2.5 - JSON Interface (the author, 2026/10/26).
+// MMC-JSI-V2.5 - JSON Interface (the author, 2026/10/26; the User Command as the command and the response, 2026/10/27).
 //
 // BETWEEN WHAT A PERSON SAYS, AS TEXT, AND AN APPLICATION DRIVEN BY JSON INSTANCES. The same AIM serves every application: the application is given to it as the entries of the
-// Access of its L3 - the schema of the commands (CommandSchema), the schema of the responses (ResponseSchema) and a guide that says what the schemas do not (ApplicationGuide).
-// Nothing in this class is about an application.
+// Access of its L3 - the schema of the commands (CommandSchema), the schema of the responses (ResponseSchema) and a guide that says what the schemas do not (ApplicationContext); they
+// are the Application Context, the standing description of the application. Nothing in this class is about an application.
 //
-//   Request  (BTO)            the person's words -> the language model, asked for its answer in the shape of the command schema (structured output), given the state of the
-//                             application and the commands it sent before -> the answer is completed and checked against the whole schema, and once more, with the fault told, if
-//                             it does not conform -> ApplicationCommand: an Application JSON Instance whose Instance conforms to the schema. A request that cannot become a
-//                             command - a number is missing, a name is not in the application, the application has no such thing, the answer will not conform - gives NO
-//                             command, and Facts that say, in plain words, what is missing.
-//   ApplicationResponse (AJI 1)  a response of the application -> Facts: what was done and what was not, in the words of the guide. The AIM does not decide what is said.
-//   ApplicationContext (AJI 2)   the state of the application, kept until the next one: the names the application has, and where its things are.
+//   Request  (BTO)            the person's words -> the language model, asked for its answer in the shape of the command schema (structured output), given what the AIM knows of
+//                             the state of the application and the commands it sent before -> the answer is completed and checked against the whole schema, and once more, with the
+//                             fault told, if it does not conform -> ApplicationCommand: a User Command request (CAE-UCM #1) that conforms to the schema. A request that cannot become a
+//                             command - a number is missing, a name is not in the application, the application has no such thing, the answer will not conform - gives NO command,
+//                             and a Response Hint that says, in plain words, what is missing.
+//   ApplicationResponse (CAE-UCM #1)  a User Command response, which names the command it answers by its UserCommandID -> the Response Hint: what was done and what was not, in the
+//                             words of the guide. The AIM does not decide what is said. When several AIMs answer one command (Responders), their answers are gathered and merged into
+//                             one response before it is told. A response that lists is the state of the application, kept until the next one.
 //
-// A COMMAND THAT WAS SENT IS NOT SAID: the person is told when the application answers. Facts leave when a request gave no command, and when a response arrives.
+// A COMMAND THAT WAS SENT IS NOT SAID: the person is told when the application answers. A Response Hint leaves when a request gave no command, and when a response arrives.
 public sealed class JsiAimProcessor : IAimProcessor
 {
-    public const string AjiHeader = "MMC-AJI-V2.5";
     private const int RemembersCommands = 5;
+    private const string Ucm = "CAE-UCM-V1.0";
+    private static readonly TimeSpan GatherFor = TimeSpan.FromSeconds(10);
 
-    private readonly string _requestIn, _responseIn, _contextIn, _commandOut, _factsOut;
+    private readonly string _requestIn, _responseIn, _commandOut, _hintOut;
     private readonly JsiConfiguration _configuration;
     private readonly StructuredModel? _model;
-    private readonly ApplicationGuide? _guide;
+    private readonly ApplicationContext? _guide;
     private readonly SchemaCheck? _commandCheck, _responseCheck;
     private readonly SchemaLibrary? _library;
     private readonly SemaphoreSlim _one = new(1, 1);
@@ -56,6 +58,9 @@ public sealed class JsiAimProcessor : IAimProcessor
     private string? _held;                   // the request kept until the state is fresh
     private bool Refreshing => _configuration.RefreshesState && HasApplication && _guide!.StateRequests.Count > 0;
     private readonly List<(string Id, string Request)> _sent = [];
+
+    // THE ANSWERS TO ONE COMMAND, when more than one AIM answers it (Responders): kept by the UserCommandID until all have answered - or, if one does not, until GatherFor has passed.
+    private readonly Dictionary<string, (DateTime Since, List<UserCommand> Answers)> _gathering = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _requestOf = new(StringComparer.Ordinal);
 
     public string InstanceId { get; }
@@ -66,14 +71,13 @@ public sealed class JsiAimProcessor : IAimProcessor
         _configuration = configuration;
         _model = model;
         _requestIn = ports.Input("OSD-BTO-V1.5");
-        _responseIn = ports.InputOrDefault("MMC-AJI-V2.5", 1, "");
-        _contextIn = ports.InputOrDefault("MMC-AJI-V2.5", 2, "");
-        _commandOut = ports.OutputOrDefault("MMC-AJI-V2.5", "");
-        _factsOut = ports.Output("OSD-BTO-V1.5");
+        _responseIn = ports.InputOrDefault(Ucm, 1, "");
+        _commandOut = ports.OutputOrDefault(Ucm, 1, "");
+        _hintOut = ports.Output("OSD-BTO-V1.5");
 
-        if (configuration.GuideFile is { } guideFile && File.Exists(guideFile))
+        if (configuration.ContextFile is { } guideFile && File.Exists(guideFile))
         {
-            try { _guide = ApplicationGuide.Parse(File.ReadAllText(guideFile)); }
+            try { _guide = ApplicationContext.Parse(File.ReadAllText(guideFile)); }
             catch (Exception e) when (e is JsonException or FormatException or IOException) { _guide = null; }
         }
         if (configuration.CommandSchemaUri.Length > 0 && !configuration.CommandSchemaUri.TrimStart().StartsWith("/*", StringComparison.Ordinal))
@@ -96,25 +100,19 @@ public sealed class JsiAimProcessor : IAimProcessor
         await _one.WaitAsync().ConfigureAwait(false);
         try
         {
-            var facts = new List<string>();
+            var hints = new List<string>();
             JsonNode? command = null;
 
-            // 1. The state of the application, kept.
-            if (Input(message, _contextIn) is { } context && _guide is not null)
-                try
-                {
-                    // Only a listing is a state: another response given as the context is ignored, and the state kept is not wiped.
-                    var instance = (JsonNode.Parse(context) as JsonObject)?["Instance"];
-                    if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
-                }
-                catch (JsonException) { }
-
-            // 2. A response of the application, told as facts - or, if it answers a question about the state, taken as the state.
+            // 1. A response of the application, told as the Response Hint - or, if it answers a question about the state, taken as the state. A gathering that has waited too long is
+            // told with the answers it has.
             var asked = false;
-            if (Input(message, _responseIn) is { } response)
+            var responses = new List<(string Json, bool Merged)>();
+            if (Input(message, _responseIn) is { } response) responses.Add((response, false));
+            foreach (var late in Overdue()) responses.Add((late, true));
+            foreach (var (each, merged) in responses)
             {
-                var told = Respond(response, out var outcome);
-                if (told is not null) facts.Add(told);
+                var told = Respond(each, out var outcome, merged);
+                if (told is not null) hints.Add(told);
                 if (Refreshing)
                 {
                     if (outcome == ResponseKind.Told)
@@ -133,9 +131,9 @@ public sealed class JsiAimProcessor : IAimProcessor
                                 _held = null;
                                 try
                                 {
-                                    var (aji, said) = await Understand(held).ConfigureAwait(false);
-                                    command = aji;
-                                    if (said is not null) facts.Add(said);
+                                    var (made, said) = await Understand(held).ConfigureAwait(false);
+                                    command = made;
+                                    if (said is not null) hints.Add(said);
                                 }
                                 catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException)
                                 {
@@ -147,7 +145,7 @@ public sealed class JsiAimProcessor : IAimProcessor
                 }
             }
 
-            // 3. A request, to become a command.
+            // 2. A request, to become a command.
             if (Input(message, _requestIn) is { } request)
             {
                 string text;
@@ -168,9 +166,9 @@ public sealed class JsiAimProcessor : IAimProcessor
                     else
                         try
                         {
-                            var (aji, said) = await Understand(text.Trim()).ConfigureAwait(false);
-                            command = aji;
-                            if (said is not null) facts.Add(said);
+                            var (made, said) = await Understand(text.Trim()).ConfigureAwait(false);
+                            command = made;
+                            if (said is not null) hints.Add(said);
                         }
                         catch (Exception e) when (e is System.Net.Http.HttpRequestException or TaskCanceledException)
                         {
@@ -181,7 +179,7 @@ public sealed class JsiAimProcessor : IAimProcessor
 
             var ports = new Dictionary<string, string>();
             if (command is not null && _commandOut.Length > 0) ports[_commandOut] = command.ToJsonString();
-            if (facts.Count > 0) ports[_factsOut] = MpaiJson.ToJson(BasicTextObject.FromText(string.Join(" ", facts)));
+            if (hints.Count > 0) ports[_hintOut] = MpaiJson.ToJson(BasicTextObject.FromText(string.Join(" ", hints)));
             return new Message { MessageId = message.MessageId, MessageType = ports.Count == 0 ? "Nothing" : message.MessageType, Ports = ports };
         }
         finally { _one.Release(); }
@@ -190,9 +188,12 @@ public sealed class JsiAimProcessor : IAimProcessor
     private static string? Input(Message message, string port) =>
         port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
-    private enum ResponseKind { Told, State, Foreign }
+    private enum ResponseKind { Told, State, Foreign, Gathering }
 
-    // The question about the state that the guide gives at that place, as a command of the application (an Application JSON Instance), completed and checked as any command is;
+    // The identifier the application knows a command by (the property the guide names as Earlier: the UserCommandID).
+    private string? IdOf(JsonNode? command) => (command as JsonObject)?[_guide?.Earlier is { Length: > 0 } key ? key : "UserCommandID"] is JsonValue v && v.TryGetValue<string>(out var id) && id.Length > 0 ? id : null;
+
+    // The question about the state that the guide gives at that place, as a command of the application, completed and checked as any command is;
     // it is not remembered as one of the person's.
     private JsonObject? StateRequest(int index)
     {
@@ -202,18 +203,14 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (view.Build(_commandCheck.Uri) is null) return null;
         var completed = view.Complete(_guide.StateRequests[index].DeepClone());
         if (_commandCheck.Violations(completed.ToJsonString()) is not { Count: 0 }) return null;
-        var aji = new JsonObject
-        {
-            ["Header"] = AjiHeader, ["AJIID"] = Guid.NewGuid().ToString(),
-            ["ApplicationSchemaURI"] = _configuration.CommandSchemaUri, ["Instance"] = completed
-        };
-        _stateAsked.Add((string)aji["AJIID"]!);
-        return aji;
+        if (IdOf(completed) is not { } id) return null;
+        _stateAsked.Add(id);
+        return completed as JsonObject;
     }
 
     // ---- a request ----------------------------------------------------------------------------------------------------------------------
 
-    private async Task<(JsonNode? Aji, string? Facts)> Understand(string text)
+    private async Task<(JsonNode? Command, string? Hint)> Understand(string text)
     {
         if (!HasApplication)
             return (null, "No command was sent: this JSON Interface has no application to serve (its Access names no schemas and no guide).");
@@ -243,13 +240,8 @@ public sealed class JsiAimProcessor : IAimProcessor
             var completed = view.Complete(shortcut.DeepClone());
             if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
             {
-                var aji = new JsonObject
-                {
-                    ["Header"] = AjiHeader, ["AJIID"] = Guid.NewGuid().ToString(),
-                    ["ApplicationSchemaURI"] = _configuration.CommandSchemaUri, ["Instance"] = completed
-                };
-                Remember(aji, completed, text, guide);
-                return (aji, null);
+                Remember(completed, text);
+                return (completed, null);
             }
         }
 
@@ -264,15 +256,8 @@ public sealed class JsiAimProcessor : IAimProcessor
             var (instance, said, fault) = Check(raw, view, guide);
             if (instance is not null)
             {
-                var aji = new JsonObject
-                {
-                    ["Header"] = AjiHeader,
-                    ["AJIID"] = Guid.NewGuid().ToString(),
-                    ["ApplicationSchemaURI"] = _configuration.CommandSchemaUri,
-                    ["Instance"] = instance
-                };
-                Remember(aji, instance, text, guide);
-                return (aji, null);
+                Remember(instance, text);
+                return (instance, null);
             }
             if (said is not null) return (null, "No command was sent. " + said);
             problem = fault!;
@@ -283,7 +268,7 @@ public sealed class JsiAimProcessor : IAimProcessor
     }
 
     // What the model gave: a command (completed, checked), a problem it states, or the fault.
-    private (JsonNode? Instance, string? Problem, string? Fault) Check(string raw, ModelView view, ApplicationGuide guide)
+    private (JsonNode? Instance, string? Problem, string? Fault) Check(string raw, ModelView view, ApplicationContext guide)
     {
         JsonNode? answer;
         try { answer = JsonNode.Parse(Unfenced(raw)); }
@@ -327,19 +312,20 @@ public sealed class JsiAimProcessor : IAimProcessor
         return raw;
     }
 
-    private void Remember(JsonObject aji, JsonNode instance, string request, ApplicationGuide guide)
+    private void Remember(JsonNode command, string request)
     {
-        var id = guide.Earlier.Length > 0 ? (string?)(instance as JsonObject)?[guide.Earlier] : null;
-        _sent.Add((id ?? (string?)aji["AJIID"] ?? "", request));
+        var id = IdOf(command) ?? "";
+        _sent.Add((id, request));
         while (_sent.Count > RemembersCommands) _sent.RemoveAt(0);
-        _requestOf[(string)aji["AJIID"]!] = request;
-        if (_requestOf.Count > 40) _requestOf.Remove(_requestOf.Keys.First());
-        // The AJI of an instance that names an identifier is also known by that identifier.
-        if (id is not null) _requestOf[id] = request;
+        if (id.Length > 0)
+        {
+            _requestOf[id] = request;
+            if (_requestOf.Count > 40) _requestOf.Remove(_requestOf.Keys.First());
+        }
     }
 
     // Words that ask for a change by an amount, and no number with them.
-    public static bool NeedsNumber(string text, ApplicationGuide guide)
+    public static bool NeedsNumber(string text, ApplicationContext guide)
     {
         var phrases = guide.NeedsNumberPhrases;
         if (phrases.Count == 0) return false;
@@ -368,7 +354,7 @@ public sealed class JsiAimProcessor : IAimProcessor
     // ---- what the model is told -------------------------------------------------------------------------------------------------------------
 
     // What does not change from one request to the next: what the model is, the shape of the answer, the conventions, the rules. Then the examples, as turns.
-    private static string SystemText(ApplicationGuide guide, ModelView view)
+    private static string SystemText(ApplicationContext guide, ModelView view)
     {
         var text = new StringBuilder();
         text.Append("You turn what a person says into a command for an application. ").Append(guide.Application).Append('\n');
@@ -387,7 +373,7 @@ public sealed class JsiAimProcessor : IAimProcessor
         return text.ToString();
     }
 
-    private static IEnumerable<(string Role, string Content)> ExampleTurns(ApplicationGuide guide)
+    private static IEnumerable<(string Role, string Content)> ExampleTurns(ApplicationContext guide)
     {
         foreach (var example in guide.Examples)
         {
@@ -410,7 +396,7 @@ public sealed class JsiAimProcessor : IAimProcessor
     }
 
     // The request, with the state of the application as it is now and the commands sent before.
-    private string RequestText(ApplicationGuide guide, string request)
+    private string RequestText(ApplicationContext guide, string request)
     {
         string? earlier = null;
         if (_sent.Count > 0 && guide.Earlier.Length > 0)
@@ -421,40 +407,66 @@ public sealed class JsiAimProcessor : IAimProcessor
 
     // ---- a response ---------------------------------------------------------------------------------------------------------------------
 
-    // The facts a response tells; none for the answer to a command this interface did not send - the application's user agent asked for it - and, if it lists, it is the state.
-    private string? Respond(string json, out ResponseKind outcome)
+    // The Response Hint a response gives; none for the answer to a command this interface did not send - the application's user agent asked for it - and, if it lists, it is the
+    // state. When more than one AIM answers a command, nothing until all have: the answers are one response.
+    private string? Respond(string json, out ResponseKind outcome, bool merged = false)
     {
         outcome = ResponseKind.Told;
-        JsonObject? aji;
-        try { aji = JsonNode.Parse(json) as JsonObject; }
-        catch (JsonException) { aji = null; }
-        if (aji?["Instance"] is not JsonObject instance)
+        JsonObject? instance;
+        try { instance = JsonNode.Parse(json) as JsonObject; }
+        catch (JsonException) { instance = null; }
+        if (instance is null || IdOf(instance) is not { } id)
             return "The application sent a response that this interface cannot read.";
-        if ((string?)aji["InReplyTo"] is { } stateOf && _stateAsked.Remove(stateOf))
+
+        var known = _stateAsked.Contains(id) || _requestOf.ContainsKey(id) || _sent.Any(s => s.Id == id);
+        if (!known)
+        {
+            // An answer to a command that this interface did not send was asked for by the application's user agent: it is not for the person. A listing in it is the state.
+            outcome = ResponseKind.Foreign;
+            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            return null;
+        }
+
+        if (!merged && _configuration.Responders > 1)
+        {
+            UserCommand? answer = null;
+            try { answer = MpaiJson.FromJson<UserCommand>(json); } catch (Exception e) when (e is JsonException or InvalidOperationException or FormatException or NotSupportedException) { }
+            if (answer is not null)
+            {
+                if (!_gathering.TryGetValue(id, out var gathered)) _gathering[id] = gathered = (DateTime.UtcNow, []);
+                gathered.Answers.Add(answer);
+                if (gathered.Answers.Count < _configuration.Responders) { outcome = ResponseKind.Gathering; return null; }
+                _gathering.Remove(id);
+                instance = (JsonObject)JsonNode.Parse(MpaiJson.ToJson(UserCommandMerge.Merge(id, gathered.Answers)))!;
+            }
+        }
+        return Tell(instance, id, out outcome);
+    }
+
+    // The gatherings that have waited too long: what has been answered, merged, as the response.
+    private IEnumerable<string> Overdue()
+    {
+        foreach (var (id, gathered) in _gathering.Where(g => DateTime.UtcNow - g.Value.Since > GatherFor).ToList())
+        {
+            _gathering.Remove(id);
+            yield return MpaiJson.ToJson(UserCommandMerge.Merge(id, gathered.Answers));
+        }
+    }
+
+    private string? Tell(JsonObject instance, string id, out ResponseKind outcome)
+    {
+        outcome = ResponseKind.Told;
+        if (_stateAsked.Remove(id))
         {
             outcome = ResponseKind.State;
             if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
             return null;
         }
         if (_guide is null) return "The application sent a response, but this interface has no guide to tell it.";
-
-        var uri = (string?)aji["ApplicationSchemaURI"];
-        if (_responseCheck is not null && uri is not null && uri != _responseCheck.Uri)
-            return "The application sent a response in a form this interface does not know (" + uri + ").";
         if (_responseCheck is { Available: true } && _responseCheck.Violations(instance.ToJsonString()) is { Count: > 0 } violations)
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
-        var replyTo = (string?)aji["InReplyTo"];
-        // An answer to a command that this interface did not send was asked for by the application's user agent: it is not for the person. A listing in it is the state.
-        if (replyTo is not null && !_requestOf.ContainsKey(replyTo) && !_sent.Any(s => s.Id == replyTo))
-        {
-            outcome = ResponseKind.Foreign;
-            if (ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
-            return null;
-        }
-        string? asked = replyTo is not null && _requestOf.TryGetValue(replyTo, out var r) ? r : null;
-        if (asked is null && replyTo is not null)
-            asked = _sent.FirstOrDefault(s => s.Id == replyTo).Request;
+        var asked = _requestOf.TryGetValue(id, out var r) ? r : _sent.FirstOrDefault(s => s.Id == id).Request;
         return ResponseFacts.Tell(instance, _guide, asked);
     }
 }

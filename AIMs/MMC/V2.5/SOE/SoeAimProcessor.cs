@@ -69,7 +69,7 @@ public sealed class SoeAimProcessor : IAimProcessor
         _storage         = storage;
         _commandPort     = ports.Input("CAE-UCM-V1.0");
         _povPort         = ports.InputOrDefault("OSD-OPV-V1.5", "");
-        _objectPort      = ports.Input("OSD-SPO-V1.5", 1);
+        _objectPort      = ports.InputOrDefault("OSD-SPO-V1.5", 1, "");
         _translationPort = ports.InputOrDefault("OSD-BSO-V1.5", 2, "");
         _objectOut       = ports.Output("OSD-SPO-V1.5", 1);
         _speechOut       = ports.OutputOrDefault("OSD-BSO-V1.5", 2, "");
@@ -87,7 +87,22 @@ public sealed class SoeAimProcessor : IAimProcessor
         // free one. An Object with no name is not kept.
         string? several = null;
         string? unnamed = null;     // why an arriving Object was not taken, to be reported
-        if (In(_objectPort) is { } objectJson)
+        string? acquired = null;    // the name of the Object the User Command gave (AcquiredObject), taken
+        var arrivedCommand = In(_commandPort) is { } givenCommand ? CommandReader.Read(givenCommand, out _) : null;
+        var objectJson = In(_objectPort);
+
+        // The Object the User Command gives (AcquiredObject), in full or by its name: a Speech Object is taken as an Object that arrives; a name opens the Object the Module
+        // keeps under it. An Audio or Visual Object is not for this AIM.
+        if (objectJson is null && arrivedCommand?.UserCommandRQ?.AcquiredObject is { } acquiring)
+        {
+            if (acquiring.SpeechObject is { } speechObject) { objectJson = MpaiJson.ToJson(speechObject); acquired = speechObject.BasicSpeechObjectID; }
+            else if (acquiring.AudioObject is null && acquiring.BasicAudioObject is null && acquiring.VisualObject is null && acquiring.ObjectID is { Length: > 0 } wanted)
+            {
+                if (SpeechStore.Get(_storage, wanted) is not null) { _open = wanted; acquired = wanted; }
+                else unnamed = $"the Module keeps no Speech Object named {wanted}";
+            }
+        }
+        if (objectJson is not null)
         {
             try
             {
@@ -138,6 +153,7 @@ public sealed class SoeAimProcessor : IAimProcessor
             if (command is null) { if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(rejection); goto opened; }
             var report = new CommandReport(command);
             if (unnamed is not null) report.Failed("AcquiredObject", null, unnamed);
+            else if (acquired is not null) report.Done("AcquiredObject", _open ?? acquired);
             if (command.UserCommandRQ?.RevokedUserCommandID is { } revoked) { _undo.Revoke(revoked, report); outputs[_reportOut] = MpaiJson.ToJson(report.Report()); goto opened; }
             var waiting = Apply(command, report, outputs);
             if (_overwritten.Count > 0)

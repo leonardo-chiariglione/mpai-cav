@@ -2,13 +2,11 @@
   "Header":               "MMC-SOE-V2.5",
 
   "APIProfile":           "Basic",
-  "Description":          "Speech Object Editing. One Speech Object is open at a time: a Speech Object arriving is opened - from Shared Storage, by its identifier - or kept. The User Command changes where it is heard from (UserPoV, also on its own Port) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its response (UserCommandRS) saying how each action was executed (for a translation, when it is done).",
+  "Description":          "Speech Object Editing. One Speech Object is open at a time: the Speech Object that the User Command gives (AcquiredObject), in full or by its name, is opened - from Shared Storage - or kept. The User Command changes where it is heard from (UserPoV) and its Speech Qualifier or Spatial Attitude (ChangedObjects), and has it translated (TranslatedObjects): the Speech and a Language Selector go to Text and Speech Translation, and the Translation, when it comes back, replaces the original under its identifier - so every Speech Scene holding it holds the translation, at its place. Outputs: the open Speech Object, to the Module and to Speech Scene Editing, and the User Command, with its response (UserCommandRS) saying how each action was executed (for a translation, when it is done).",
 
   "InternalTypes":        [],
 
   "ExternalPorts":        [{"Name": "UserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "UserPoV", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-SPO-V1.5", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Translation", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "EditedSpeechObject", "Direction": "Output", "DataType": "OSD-SPO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Speech", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},

@@ -50,7 +50,7 @@ public class JsiTests
     [Fact]
     public void TheModelIsShownTheSchemaReducedByTheGuide()
     {
-        var guide = ApplicationGuide.Parse(File.ReadAllText(JsiRig.GuideFile));
+        var guide = ApplicationContext.Parse(File.ReadAllText(JsiRig.ContextFile));
         var names = new Dictionary<string, IReadOnlyList<string>> { ["Present"] = ["concert", "violin", "cello"], ["Members"] = ["violin", "cello"], ["Stored"] = ["flute"] };
         var view = new ModelView(new SchemaLibrary(Repository.Schemas), guide, names);
         Assert.NotNull(view.Build(JsiRig.UserCommandUri));
@@ -83,7 +83,7 @@ public class JsiTests
     [Fact]
     public void WhatTheModelGivesIsCompletedToTheWholeSchema()
     {
-        var guide = ApplicationGuide.Parse(File.ReadAllText(JsiRig.GuideFile));
+        var guide = ApplicationContext.Parse(File.ReadAllText(JsiRig.ContextFile));
         var view = new ModelView(new SchemaLibrary(Repository.Schemas), guide);
         view.Build(JsiRig.UserCommandUri);
         var check = new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas);
@@ -104,7 +104,7 @@ public class JsiTests
     [Fact]
     public void EveryExampleOfTheGuideIsACommandOfTheSchemaOrAProblem()
     {
-        var guide = ApplicationGuide.Parse(File.ReadAllText(JsiRig.GuideFile));
+        var guide = ApplicationContext.Parse(File.ReadAllText(JsiRig.ContextFile));
         var view = new ModelView(new SchemaLibrary(Repository.Schemas), guide);
         view.Build(JsiRig.UserCommandUri);
         var check = new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas);
@@ -121,8 +121,8 @@ public class JsiTests
     [Fact]
     public void EveryPathOfTheGuideIsInTheSchema()
     {
-        var guide = ApplicationGuide.Parse(File.ReadAllText(JsiRig.GuideFile));
-        var all = new ModelView(new SchemaLibrary(Repository.Schemas), ApplicationGuide.Parse(File.ReadAllText(JsiRig.GuideFile)));
+        var guide = ApplicationContext.Parse(File.ReadAllText(JsiRig.ContextFile));
+        var all = new ModelView(new SchemaLibrary(Repository.Schemas), ApplicationContext.Parse(File.ReadAllText(JsiRig.ContextFile)));
         all.Build(JsiRig.UserCommandUri);
         var shown = all.Full;
         JsonNode? At(string path)
@@ -142,7 +142,7 @@ public class JsiTests
     // ---- a request becomes a command --------------------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task ACommandThatConformsLeavesInAnApplicationJsonInstance()
+    public async Task ACommandThatConformsLeavesInACommand()
     {
         var (model, calls) = Fake(MoveViolin);
         var jsi = JsiRig.Processor(model);
@@ -151,17 +151,11 @@ public class JsiTests
         Assert.Single(calls);
         var aji = JsiRig.CommandOf(answer, Ports);
         Assert.NotNull(aji);
-        Assert.Equal("MMC-AJI-V2.5", (string?)aji!["Header"]);
-        Assert.Equal(JsiRig.UserCommandUri, (string?)aji["ApplicationSchemaURI"]);
-        Assert.False(string.IsNullOrEmpty((string?)aji["AJIID"]));
-        Assert.Null(aji["InReplyTo"]);
         var check = new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas);
-        Assert.Empty(check.Violations(aji["Instance"]!.ToJsonString())!);
-        Assert.NotNull(aji["Instance"]!["UserCommandRQ"]!["MovedObjects"]);
+        Assert.Empty(check.Violations(aji.ToJsonString())!);
+        Assert.NotNull(aji["UserCommandRQ"]!["MovedObjects"]);
         // A command that was sent is not said: the person is told when the application answers.
         Assert.Null(JsiRig.FactsOf(answer, Ports));
-        // The AJI is an Application JSON Instance of the Data Type.
-        Assert.True(Valid("MMC/V2.5/data/ApplicationJSONInstance.json", aji.ToJsonString()), aji.ToJsonString());
     }
 
     [Fact]
@@ -324,7 +318,7 @@ public class JsiTests
     {
         var (model, calls) = Fake(MoveViolin, MoveViolin);
         var jsi = JsiRig.Processor(model);
-        await jsi.ProcessAsync(new Message { MessageId = "1", Ports = new() { [JsiRig.Context(Ports)] = Context().ToJsonString() } });      // the state alone is nothing said
+        await jsi.ProcessAsync(new Message { MessageId = "1", Ports = new() { [JsiRig.Response(Ports)] = Context().ToJsonString() } });      // the state alone is nothing said
         Assert.Empty(calls);
         await Ask(jsi, "move the violin 1 metre to the left");                                  // the words come later
         Assert.Contains("violin: position", calls[0].Turns[^1].Content);
@@ -342,9 +336,9 @@ public class JsiTests
     {
         var (model, calls) = Fake(MoveViolin);
         var jsi = JsiRig.Processor(model);
-        await jsi.ProcessAsync(new Message { MessageId = "1", Ports = new() { [JsiRig.Context(Ports)] = Context().ToJsonString() } });
+        await jsi.ProcessAsync(new Message { MessageId = "1", Ports = new() { [JsiRig.Response(Ports)] = Context().ToJsonString() } });
         var done = JsiRig.ResponseTo("earlier", "Done", ("MovedObjects", "violin", "Done", null));
-        await jsi.ProcessAsync(new Message { MessageId = "2", Ports = new() { [JsiRig.Context(Ports)] = done.ToJsonString() } });
+        await jsi.ProcessAsync(new Message { MessageId = "2", Ports = new() { [JsiRig.Response(Ports)] = done.ToJsonString() } });
         await Ask(jsi, "move the violin 1 metre to the left");
         Assert.Contains("violin: position", calls[0].Turns[^1].Content);
         Assert.DoesNotContain("The scene is not known", calls[0].Turns[^1].Content);
@@ -361,7 +355,7 @@ public class JsiTests
         var answer = await Ask(JsiRig.Processor(model), "add the flute at 1, 1, 0", Context());
         var command = JsiRig.CommandOf(answer, Ports);
         Assert.NotNull(command);
-        Assert.Equal("stage", (string?)command!["Instance"]!["UserCommandRQ"]!["AddedObjects"]!["ObjectID"]);
+        Assert.Equal("stage", (string?)command!["UserCommandRQ"]!["AddedObjects"]!["ObjectID"]);
     }
 
     // A LISTING THAT ANSWERS A COMMAND THIS INTERFACE DID NOT SEND is the application's user agent asking: it is the state, and is not told.
@@ -371,7 +365,6 @@ public class JsiTests
         var (model, calls) = Fake(MoveViolin);
         var jsi = JsiRig.Processor(model);
         var listing = (JsonObject)Context();
-        listing["InReplyTo"] = "asked-by-the-user-agent";
         var answer = await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = listing.ToJsonString() } });
         Assert.Null(JsiRig.FactsOf(answer, Ports));
         await Ask(jsi, "move the violin 1 metre to the left");
@@ -389,9 +382,9 @@ public class JsiTests
         Assert.Empty(calls);
         var command = JsiRig.CommandOf(answer, Ports);
         Assert.NotNull(command);
-        Assert.Equal("Audio Scene", (string?)command!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
-        Assert.Equal("stage", (string?)command["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
-        Assert.Empty(new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(command["Instance"]!.ToJsonString())!);
+        Assert.Equal("Audio Scene", (string?)command!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("stage", (string?)command["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
+        Assert.Empty(new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(command.ToJsonString())!);
     }
 
     [Fact]
@@ -400,7 +393,7 @@ public class JsiTests
         var (model, calls) = Fake(MoveViolin);
         var command = JsiRig.CommandOf(await Ask(JsiRig.Processor(model), "which sounds do I have", Context()), Ports);
         Assert.Empty(calls);
-        Assert.Equal("All", (string?)command!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("All", (string?)command!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
     }
 
     // LISTINGS THAT COME ONE AFTER ANOTHER ADD UP: the sounds kept from one, the scene with where its members are from another; a listing that only names the members of the scene does
@@ -413,15 +406,14 @@ public class JsiTests
         JsonObject Listing(string id, JsonArray listed)
         {
             var aji = JsiRig.ResponseTo(id, "Done");
-            aji["Instance"]!["UserCommandRS"]!.AsObject().Remove("Actions");
-            aji["Instance"]!["UserCommandRS"]!["ListedObjects"] = listed;
-            aji["InReplyTo"] = "asked-by-the-user-agent";
+            aji["UserCommandRS"]!.AsObject().Remove("Actions");
+            aji["UserCommandRS"]!["ListedObjects"] = listed;
             return aji;
         }
         async Task Give(JsonObject aji) => await jsi.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = new() { [JsiRig.Response(Ports)] = aji.ToJsonString() } });
 
         // The scene, with where its members are.
-        var detailed = (JsonObject)((JsonArray)((JsonObject)JsiRig.Context(JsiRig.Scene())["Instance"]!["UserCommandRS"]!)["ListedObjects"]!)[0]!;
+        var detailed = (JsonObject)((JsonArray)((JsonObject)JsiRig.Context(JsiRig.Scene())["UserCommandRS"]!)["ListedObjects"]!)[0]!;
         await Give(Listing("a", new JsonArray(detailed.DeepClone())));
         // Everything: the sounds kept, and the scene only by the names of its members.
         await Give(Listing("b", new JsonArray(
@@ -444,10 +436,9 @@ public class JsiTests
         var jsi = JsiRig.Processor(model, JsiRig.Jsi, refreshesState: true);
         JsonObject Answer(JsonObject command, JsonArray listed)
         {
-            var aji = JsiRig.ResponseTo((string)command["Instance"]!["UserCommandID"]!, "Done");
-            aji["Instance"]!["UserCommandRS"]!.AsObject().Remove("Actions");
-            aji["Instance"]!["UserCommandRS"]!["ListedObjects"] = listed;
-            aji["InReplyTo"] = (string)command["AJIID"]!;
+            var aji = JsiRig.ResponseTo((string)command["UserCommandID"]!, "Done");
+            aji["UserCommandRS"]!.AsObject().Remove("Actions");
+            aji["UserCommandRS"]!["ListedObjects"] = listed;
             return aji;
         }
         Task<Message> Give(JsonObject aji) => jsi.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = new() { [JsiRig.Response(Ports)] = aji.ToJsonString() } });
@@ -457,7 +448,7 @@ public class JsiTests
         Assert.Empty(calls);
         Assert.Null(JsiRig.FactsOf(first, Ports));
         var all = JsiRig.CommandOf(first, Ports)!;
-        Assert.Equal("All", (string?)all["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("All", (string?)all["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
 
         // Its answer: the second question goes, the scene.
         var second = await Give(Answer(all, new JsonArray(
@@ -467,8 +458,8 @@ public class JsiTests
         Assert.Empty(calls);
         Assert.Null(JsiRig.FactsOf(second, Ports));
         var scene = JsiRig.CommandOf(second, Ports)!;
-        Assert.Equal("Audio Scene", (string?)scene["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
-        Assert.Equal("stage", (string?)scene["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
+        Assert.Equal("Audio Scene", (string?)scene["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("stage", (string?)scene["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
 
         // Its answer: the state is fresh, and the request that waited is worked out from it.
         var members = new JsonArray(new JsonObject
@@ -481,15 +472,15 @@ public class JsiTests
         Assert.Contains("violin: position = (4, 5, 0)", calls[0].Turns[^1].Content);
         Assert.Contains("Stored sounds that can be added: flute", calls[0].Turns[^1].Content);
         var move = JsiRig.CommandOf(third, Ports)!;
-        Assert.NotNull(move["Instance"]!["UserCommandRQ"]!["MovedObjects"]);
+        Assert.NotNull(move["UserCommandRQ"]!["MovedObjects"]);
 
         // The application answers the command: the person is told, and the state is asked for again.
-        var told = await Give(JsiRig.ResponseTo((string)move["Instance"]!["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null)) is { } r ? WithReplyTo(r, move) : null!);
+        var told = await Give(JsiRig.ResponseTo((string)move["UserCommandID"]!, "Done", ("MovedObjects", "violin", "Done", null)) is { } r ? WithReplyTo(r, move) : null!);
         Assert.Contains("violin", JsiRig.FactsOf(told, Ports));
-        Assert.Equal("All", (string?)JsiRig.CommandOf(told, Ports)!["Instance"]!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
+        Assert.Equal("All", (string?)JsiRig.CommandOf(told, Ports)!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
     }
 
-    private static JsonObject WithReplyTo(JsonObject response, JsonObject command) { response["InReplyTo"] = (string)command["AJIID"]!; return response; }
+    private static JsonObject WithReplyTo(JsonObject response, JsonObject command) => response;
 
     [Fact]
     public async Task WithoutAnApplicationConnectedARequestIsWorkedOutAtOnce()
@@ -512,16 +503,19 @@ public class JsiTests
 
     // ---- a response becomes facts ---------------------------------------------------------------------------------------------------------------------
 
+    // The UserCommandID of a command this interface sends for a request: the response that carries it is the application's answer to the person.
+    private static async Task<string> Sent(JsiAimProcessor jsi) =>
+        (string)JsiRig.CommandOf(await Ask(jsi, "move the violin 1 metre to the left", Context()), Ports)!["UserCommandID"]!;
+
     [Fact]
     public async Task AResponseBecomesFactsWithTheRequestItAnswers()
     {
         var (model, _) = Fake(MoveViolin);
         var jsi = JsiRig.Processor(model);
         var sent = JsiRig.CommandOf(await Ask(jsi, "move the violin 1 metre to the left", Context()), Ports)!;
-        var id = (string)sent["Instance"]!["UserCommandID"]!;
+        var id = (string)sent["UserCommandID"]!;
 
         var response = JsiRig.ResponseTo(id, "Done", ("MovedObjects", "violin", "Done", null));
-        response["InReplyTo"] = (string)sent["AJIID"]!;
         var answer = await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = response.ToJsonString() } });
 
         Assert.Null(JsiRig.CommandOf(answer, Ports));
@@ -537,7 +531,7 @@ public class JsiTests
     public async Task AResponseThatFailedSaysWhy()
     {
         var jsi = JsiRig.Processor(Fake(MoveViolin).Model);
-        var response = JsiRig.ResponseTo("c", "Partly", ("MovedObjects", "violin", "Done", null), ("RemovedObjects", "harp", "Failed", "there is no harp in the scene"));
+        var response = JsiRig.ResponseTo(await Sent(jsi), "Partly", ("MovedObjects", "violin", "Done", null), ("RemovedObjects", "harp", "Failed", "there is no harp in the scene"));
         var facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = response.ToJsonString() } }), Ports)!;
         Assert.Contains("result partly done", facts);
         Assert.Contains("did removed, on harp", facts);
@@ -549,7 +543,9 @@ public class JsiTests
     public async Task AListingBecomesTheNamesAndTheCounts()
     {
         var jsi = JsiRig.Processor(Fake(MoveViolin).Model);
-        var facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = Context().ToJsonString() } }), Ports)!;
+        var listing = (JsonObject)Context();
+        listing["UserCommandID"] = await Sent(jsi);                                                  // the response to a command this interface sent
+        var facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = listing.ToJsonString() } }), Ports)!;
         Assert.Contains("concert", facts);
         Assert.Contains("objects 5", facts);
         Assert.Contains("on violin, at position -1.5, 2, 0, orientation 0, 0, 180", facts);
@@ -557,16 +553,13 @@ public class JsiTests
     }
 
     [Fact]
-    public async Task AResponseInAFormThatIsNotTheApplicationsIsNotTold()
+    public async Task AResponseThatDoesNotConformToTheSchemaIsNotTold()
     {
         var jsi = JsiRig.Processor(Fake(MoveViolin).Model);
-        var response = JsiRig.ResponseTo("c", "Done");
-        response["ApplicationSchemaURI"] = "https://schemas.mpai.community/CAV/V2.0/data/Other.json";
-        var facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = response.ToJsonString() } }), Ports)!;
-        Assert.Contains("a form this interface does not know", facts);
-        var broken = JsiRig.ResponseTo("c", "Done");
-        broken["Instance"]!["UserCommandRS"]!["Outcome"] = "Brilliant";
-        facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = broken.ToJsonString() } }), Ports)!;
+        var id = await Sent(jsi);
+        var broken = JsiRig.ResponseTo(id, "Done");
+        broken["UserCommandRS"]!["Outcome"] = "Brilliant";
+        var facts = JsiRig.FactsOf(await jsi.ProcessAsync(new Message { MessageId = "r", Ports = new() { [JsiRig.Response(Ports)] = broken.ToJsonString() } }), Ports)!;
         Assert.Contains("does not conform", facts);
     }
 
@@ -587,14 +580,14 @@ public class JsiTests
         };
         var jsi = JsiRig.Processor(model);
         var first = JsiRig.CommandOf(await Ask(jsi, "move the violin 1 metre to the left", Context()), Ports)!;
-        var id = (string)first["Instance"]!["UserCommandID"]!;
+        var id = (string)first["UserCommandID"]!;
 
         var undone = JsiRig.CommandOf(await Ask(jsi, "undo that"), Ports)!;
         Assert.Contains("Commands sent before", turnsSeen[1][^1].Content);
         Assert.Contains(id + ": \"move the violin 1 metre to the left\"", turnsSeen[1][^1].Content);       // told which commands were sent, by their identifier
-        Assert.Equal(id, (string?)undone["Instance"]!["UserCommandRQ"]!["RevokedUserCommandID"]);
+        Assert.Equal(id, (string?)undone["UserCommandRQ"]!["RevokedUserCommandID"]);
         var check = new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas);
-        Assert.Empty(check.Violations(undone["Instance"]!.ToJsonString())!);
+        Assert.Empty(check.Violations(undone.ToJsonString())!);
     }
 
     // ---- no application, no language model ---------------------------------------------------------------------------------------------------
@@ -632,14 +625,13 @@ public class JsiTests
 
     // ---- the Ports -----------------------------------------------------------------------------------------------------------------------------------------------
 
-    // By Data Type and Port Number, as its L2 has them: the words (OSD-BTO), the response (MMC-AJI 1), the state (MMC-AJI 2); the command (MMC-AJI) and the facts (OSD-BTO).
+    // By Data Type and Port Number, as its L2 has them: the words (OSD-BTO), the response (CAE-UCM 1: it carries the state too, when it lists); the command (CAE-UCM 1) and the Response Hint (OSD-BTO).
     [Fact]
     public void ItsPortsAreThoseOfItsL2()
     {
         Assert.Equal("OSD-BTO-V1.5#1", JsiRig.Request(Ports));
-        Assert.Equal("MMC-AJI-V2.5#1", JsiRig.Response(Ports));
-        Assert.Equal("MMC-AJI-V2.5#2", JsiRig.Context(Ports));
-        Assert.Equal("MMC-AJI-V2.5#1", JsiRig.Command(Ports));
+        Assert.Equal("CAE-UCM-V1.0#1", JsiRig.Response(Ports));
+        Assert.Equal("CAE-UCM-V1.0#1", JsiRig.Command(Ports));
         Assert.Equal("OSD-BTO-V1.5#1", JsiRig.Facts(Ports));
     }
 

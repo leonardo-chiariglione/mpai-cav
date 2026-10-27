@@ -104,12 +104,12 @@ public sealed class EdpAimProcessor : IAimProcessor
         _avatarModel      = avatarModel;
 
         // WITH FACTS (the Voice Command Interface): an L3 whose Refined Text is its own input (#3) and that is not the secretary. What arrives there is not a text of the
-        // person: it is what an application did or did not do, told as facts, and the reply says it.
+        // person: it is what an application did or did not do, told as the Response Hint, and the reply says it.
         _factsPort        = !_secretary && refined.Length > 0 && refined != _textPort ? refined : "";
     }
 
-    private readonly string _factsPort;         // OSD-BTO #3: the facts an application's response comes to
-    private string? _heard;                     // what the person last said, until the facts about it come
+    private readonly string _factsPort;         // OSD-BTO #3: the Response Hint an application's response comes to
+    private string? _heard;                     // what the person last said, until the Response Hint about it comes
 
     // ---- The Virtual Meeting Secretary --------------------------------------------
     private readonly bool _secretary;
@@ -129,7 +129,7 @@ public sealed class EdpAimProcessor : IAimProcessor
         if (_secretary) return System.Threading.Tasks.Task.FromResult(Secretary(message));
         if (Cav(message) is { } cav) return System.Threading.Tasks.Task.FromResult(cav);
         // WITH FACTS (the Voice Command Interface): what an application did, or why it did not, arrives as the Refined Text; the reply says it. What the person said
-        // arrives before, on its own, and is kept until the facts come (they may come after the application has done what was asked): it is the dialogue's, and it ends
+        // arrives before, on its own, and is kept until the Response Hint comes (it may come after the application has done what was asked): it is the dialogue's, and it ends
         // with the reply. A text of the person alone is nothing to answer yet.
         if (_factsPort.Length > 0)
         {
@@ -259,7 +259,7 @@ public sealed class EdpAimProcessor : IAimProcessor
         });
     }
 
-    // THE REPLY TO THE FACTS. The facts - what the application did, what it did not and why, or what it needs from the person - are said to the person in a word or two, as
+    // THE REPLY TO THE RESPONSE HINT. The Response Hint - what the application did, what it did not and why, or what it needs from the person - are said to the person in a word or two, as
     // they are: this AIM adds nothing, and knows nothing of the application. The text the person said, if it is there, tells what they asked.
     private Message Facts(Message message, string facts, string? heard)
     {
@@ -269,13 +269,13 @@ public sealed class EdpAimProcessor : IAimProcessor
 
         var system =
             $"You are {_persona}, a courteous conversational machine. A person talks to an application by voice, and you tell them aloud what happened. " +
-            "Say in one or two short, plain sentences what the facts say: what was done, what was not and why, or what you need from the person (a number, a name). " +
-            "Use only the facts: add nothing. Say names and numbers as they are in the facts. Never mention JSON, commands, schemas or errors of the system. " +
+            "Say in one or two short, plain sentences what the Response Hint says: what was done, what was not and why, or what you need from the person (a number, a name). " +
+            "Use only the Response Hint: add nothing. Say names and numbers as they are in the Response Hint. Never mention JSON, commands, schemas or errors of the system. " +
             "Return only what you say, as plain text.";
         var prompt = new StringBuilder();
         if (memory.Count > 0) prompt.AppendLine("The conversation so far: " + string.Join(Nl, memory));
         if (!string.IsNullOrWhiteSpace(heard)) prompt.AppendLine($"What the person said: \"{heard}\"");
-        prompt.AppendLine($"Facts: {facts}");
+        prompt.AppendLine($"Response Hint: {facts}");
 
         string reply;
         try { reply = _llm.ChatAsync(system, prompt.ToString()).GetAwaiter().GetResult().Trim(); }

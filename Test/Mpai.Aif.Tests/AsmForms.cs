@@ -9,6 +9,10 @@ namespace Mpai.Aif.Tests;
 // alone, and read the Basic Object an Object holds alone, with these.
 internal static class Forms
 {
+    // An Object brought in by a User Command (AcquiredObject): the User Command the editing AIM takes it from, since no Port of the editing AIMs takes an Object.
+    public static string Acquire(string objectJson) =>
+        MpaiJson.ToJson(AsmRig.Command(new UserCommandRQ { AcquiredObject = MpaiJson.FromJson<ManagedObject>(objectJson) }));
+
     public static string Auo(BasicAudioObject bao) => MpaiJson.ToJson(new AudioObject
     {
         MInstanceID = bao.MInstanceID ?? "", AudioObjectID = bao.BasicAudioObjectID, AudioObjectSpaceTime = new SpaceTime(),

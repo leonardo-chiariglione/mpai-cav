@@ -2,7 +2,7 @@
   "Header":               "MMC-EDP-V2.5",
 
   "APIProfile":           "Basic",
-  "Description":          "Entity Dialogue Processing in the Voice Command Interface: what an application did, or why it did not, or what it needs from the person, arrives as facts (the Refined Text), and the machine says it - briefly, from the facts only, knowing nothing of the application. The Text Object is what the person said, when it is there. The reply is the Machine Text; the dialogue memory is the Summary.",
+  "Description":          "Entity Dialogue Processing in the Voice Command Interface: what an application did, or why it did not, or what it needs from the person, arrives as the Response Hint (the Refined Text), and the machine says it - briefly, from the Response Hint only, knowing nothing of the application. The Text Object is what the person said, when it is there. The reply is the Machine Text; the dialogue memory is the Summary.",
 
   "InternalTypes":        [],
 

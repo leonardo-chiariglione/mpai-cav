@@ -20,7 +20,7 @@ namespace Mpai.Aif.Tests;
 internal sealed class VciRig : IDisposable
 {
     public const string Vci = "1MMC-VCI-V2.5-I01";
-    public const string Bso = "OSD-BSO-V1.5", Bto = "OSD-BTO-V1.5", Aji = "MMC-AJI-V2.5";
+    public const string Bso = "OSD-BSO-V1.5", Bto = "OSD-BTO-V1.5", Ucm = "CAE-UCM-V1.0";
 
     public readonly string Folder = Path.Combine(Path.GetTempPath(), "vci-rig-" + Guid.NewGuid().ToString("N"));
     public readonly Queue<string> Heard = new();                                  // what the recogniser will hear, in order
@@ -51,7 +51,7 @@ internal sealed class VciRig : IDisposable
             if (name == "1MMC-JSI-V2.5-I02")
                 foreach (var entry in l3["AccessSources"]!.AsArray().Where(e => !((string)e!["Name"]!).StartsWith("llm-")))
                 {
-                    var file = (string)entry!["Name"]! == "ApplicationGuide" ? JsiRig.GuideFile : JsiRig.UserCommandFile;
+                    var file = (string)entry!["Name"]! == "ApplicationContext" ? JsiRig.ContextFile : JsiRig.UserCommandFile;
                     var copy = entry.DeepClone();
                     copy["Sha256"] = Hash(file);
                     copy["Mirrors"] = new JsonArray(new Uri(file).AbsoluteUri);
@@ -64,7 +64,7 @@ internal sealed class VciRig : IDisposable
         File.WriteAllText(settings, new JsonObject
         {
             ["1MMC-EDP-V2.5-I03"] = Ollama is null ? new JsonObject() : new JsonObject { ["OllamaUrl"] = Ollama.Url },
-            ["1MMC-JSI-V2.5-I02"] = new JsonObject { ["SchemasRoot"] = Repository.Schemas }
+            ["1MMC-JSI-V2.5-I02"] = new JsonObject { ["SchemasRoot"] = Repository.Schemas, ["Responders"] = "1" }
         }.ToJsonString());
         Api = new Mpai.Aif.Api.ControllerApi(amds, settings, store => new Provider(store, this));
     }
