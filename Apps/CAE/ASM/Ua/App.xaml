@@ -25,5 +25,24 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- STOP SPEAKING: a momentary button. It is dark red; while the mouse holds it down it is a little darker; it never stays pressed, and it does not keep the focus. -->
+        <Style x:Key="StopButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Padding" Value="14,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Face" Background="#C62828" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="White"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Face" Property="Background" Value="#8E1B1B"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

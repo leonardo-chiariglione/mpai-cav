@@ -224,6 +224,15 @@ public sealed class JsiAimProcessor : IAimProcessor
         return words.Length < 2 && plain.Length < 4;
     }
 
+    // WHAT IS SAID WHEN A REQUEST DID NOT BECOME A COMMAND: never a language model's account of it, but the words heard and what to try, with the names of what the application holds.
+    private string DidNotUnderstand(string text, ApplicationContext guide)
+    {
+        var names = _state.NameSets;
+        var one = (names.GetValueOrDefault("Latest") ?? []).LastOrDefault() ?? (names.GetValueOrDefault("Members") ?? []).FirstOrDefault() ?? (names.GetValueOrDefault("Stored") ?? []).FirstOrDefault(n => !(names.GetValueOrDefault("Present") ?? []).Contains(n));
+        var tryLine = one is null ? guide.Try : $"Try for example: put the {one} at x 2, y 1, z 0, move the {one} one metre ahead, place a room of 4 by 4 metres, or what is in the scene.";
+        return Said($"I did not understand: {text.Trim().TrimEnd('.')}. {tryLine}");
+    }
+
     // What the interface itself says to the person, as it is: said as it is where the dialogue is not asked (SayPlainly).
     private string Said(string what) => _configuration.SaysPlainly ? ResponseFacts.SayAsItIs + what : "No command was formed. " + what;
 
@@ -313,7 +322,7 @@ public sealed class JsiAimProcessor : IAimProcessor
             if (guide.Asks.FirstOrDefault(a => a.Words.Any(w => lower.Contains(w.ToLowerInvariant()))) is { Say.Length: > 0 } ask) return (null, Said(ask.Say));
             var known = guide.Triggers.SelectMany(t => t.Words).Concat(_state.NameSets.Values.SelectMany(v => v)).Where(w => w.Length > 2 && !w.StartsWith("{"))
                              .Any(w => Regex.IsMatch(lower, @"\b" + Regex.Escape(w.Trim().ToLowerInvariant())));
-            if (!known && guide.Try.Length > 0) return (null, Said($"I did not understand: {text.Trim().TrimEnd('.')}. {guide.Try}"));
+            if (!known && guide.Try.Length > 0) return (null, DidNotUnderstand(text, guide));
         }
 
         var system = SystemText(guide, view);
@@ -332,11 +341,12 @@ public sealed class JsiAimProcessor : IAimProcessor
                 Remember(instance, text);
                 return (instance, null);
             }
-            if (said is not null) return (null, "No command was formed. " + said);
+            if (said is not null) return (null, _configuration.UsesGrammar && guide.Try.Length > 0 ? DidNotUnderstand(text, guide) : "No command was formed. " + said);
             problem = fault!;
             turns.Add(("assistant", raw));
             turns.Add(("user", $"That is not accepted: {fault} Answer again with the corrected JSON object only."));
         }
+        if (_configuration.UsesGrammar && guide.Try.Length > 0) return (null, DidNotUnderstand(text, guide));
         return (null, "No command was formed: the request could not be turned into a command that the application accepts (" + problem.TrimEnd('.') + "). Ask the person to say it again, with the names and the numbers.");
     }
 

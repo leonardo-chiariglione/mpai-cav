@@ -1578,7 +1578,7 @@
       ]
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?right",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?right",
       "Names": {
         "name": "Members"
       },
@@ -1617,7 +1617,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?right (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?right (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -1656,7 +1656,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?left",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?left",
       "Names": {
         "name": "Members"
       },
@@ -1695,7 +1695,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?left (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?left (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -1734,7 +1734,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?forward",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?forward",
       "Names": {
         "name": "Members"
       },
@@ -1773,7 +1773,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?forward (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?forward (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -1812,7 +1812,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?ahead",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?ahead",
       "Names": {
         "name": "Members"
       },
@@ -1851,7 +1851,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?ahead (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?ahead (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -1890,7 +1890,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?back",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?back",
       "Names": {
         "name": "Members"
       },
@@ -1929,7 +1929,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?back (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?back (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -1968,7 +1968,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?backwards",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?backwards",
       "Names": {
         "name": "Members"
       },
@@ -2007,7 +2007,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?backwards (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?backwards (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -2046,7 +2046,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?behind",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?behind",
       "Names": {
         "name": "Members"
       },
@@ -2085,7 +2085,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?behind (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?behind (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -2124,7 +2124,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?up",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?up",
       "Names": {
         "name": "Members"
       },
@@ -2163,7 +2163,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?up (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?up (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -2202,7 +2202,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?down",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?down",
       "Names": {
         "name": "Members"
       },
@@ -2241,7 +2241,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:to the )?down (?:by )?<NUM:n> metres?",
+      "Pattern": "(?:move|shift|push|bring|place|put|position|set) (?:the )?(?<name>.+?) (?:to the )?down (?:by )?<NUM:n> metres?",
       "Names": {
         "name": "Members"
       },
@@ -2280,7 +2280,7 @@
       }
     },
     {
-      "Pattern": "(?:move|shift|put|place|bring|set) (?:the )?(?<name>.+?) (?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? (?:and )?y ?(?:=|equals)? ?<NUM:y>,? (?:and )?z ?(?:=|equals)? ?<NUM:z>",
+      "Pattern": "(?:move|shift|put|place|position|bring|set) (?:the )?(?<name>.+?) (?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? ?(?:and )?y ?(?:=|equals)? ?<NUM:y>,? ?(?:and )?z ?(?:=|equals)? ?<NUM:z>",
       "Names": {
         "name": "Members"
       },
@@ -2316,7 +2316,7 @@
       }
     },
     {
-      "Pattern": "(?:put|place|add|bring in|bring) (?:the )?(?<name>.+?) (?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? (?:and )?y ?(?:=|equals)? ?<NUM:y>,? (?:and )?z ?(?:=|equals)? ?<NUM:z>",
+      "Pattern": "(?:put|place|position|set|add|bring in|bring) (?:the )?(?<name>.+?) (?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? ?(?:and )?y ?(?:=|equals)? ?<NUM:y>,? ?(?:and )?z ?(?:=|equals)? ?<NUM:z>",
       "Names": {
         "name": "Stored"
       },
@@ -2473,7 +2473,637 @@
       }
     },
     {
-      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? (?:and )?y ?(?:=|equals)? ?<NUM:y>,? (?:and )?z ?(?:=|equals)? ?<NUM:z>",
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?right",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{n}",
+                      "{cy}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?right (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{n}",
+                      "{cy}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?left",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{0-n}",
+                      "{cy}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?left (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{0-n}",
+                      "{cy}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?ahead",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?ahead (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?forward",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?forward (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?back",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?back (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?behind",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?behind (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the |in the )?backwards",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|put|position|set|add|bring in|bring|move|shift|push) (?:the )?(?<name>.+?) (?:to the |in the )?backwards (?:by )?<NUM:n> metres?",
+      "Names": {
+        "name": "Stored"
+      },
+      "Let": {
+        "z0": "0",
+        "cx": "0",
+        "cy": "0"
+      },
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "SpatialAttitude": {
+                  "Header": "OSD-OSA-V1.5",
+                  "ObjectSpatialAttitudeID": "{name}",
+                  "Position": {
+                    "Header": "OSD-OPS-V1.5",
+                    "PositionID": "{name}",
+                    "CartPosition": [
+                      "{cx}",
+                      "{0-n}",
+                      "{z0}"
+                    ]
+                  },
+                  "Orientation": {
+                    "Header": "OSD-OOR-V1.5",
+                    "OrientationID": "{name}",
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:(?:put|place|set|add) it )?(?:at |to )?x ?(?:=|equals)? ?<NUM:x>,? ?(?:and )?y ?(?:=|equals)? ?<NUM:y>,? ?(?:and )?z ?(?:=|equals)? ?<NUM:z>",
       "Implicit": {
         "name": "Latest"
       },

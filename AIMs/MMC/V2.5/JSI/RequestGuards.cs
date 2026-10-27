@@ -37,6 +37,8 @@ public static class RequestGuards
         var anything = (needs["Anything"] as JsonArray)?.Select(x => (string?)x ?? "").Where(x => x.Length > 0).ToList() ?? [];
         if (anything.Any(w => Regex.IsMatch(lower, @"\b" + Regex.Escape(w.ToLowerInvariant()) + @"\b"))) return null;
         if (names.Any(n => lower.Contains(n.ToLowerInvariant()))) return null;
+        var squashed = Regex.Replace(lower, "[^a-z0-9]", "");                                  // clip 84 is clip84
+        if (names.Any(n => Regex.Replace(n.ToLowerInvariant(), "[^a-z0-9]", "") is { Length: > 1 } flat && squashed.Contains(flat))) return null;
         var tokens = Regex.Matches(lower, @"[a-z0-9']+").Select(m => m.Value).ToList();
         foreach (var (synonym, name) in (needs["Synonyms"] as JsonObject)?.Select(p => (p.Key.ToLowerInvariant(), (string?)p.Value ?? "")) ?? [])
             if (tokens.Contains(synonym) && names.Contains(name, StringComparer.OrdinalIgnoreCase)) return null;

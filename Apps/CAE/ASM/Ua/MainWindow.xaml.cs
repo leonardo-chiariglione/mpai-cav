@@ -413,6 +413,7 @@ public partial class MainWindow : Window
         _avatar?.Silence();
         try { _speaking?.Cancel(); } catch { }
         try { _hearing?.Cancel(); } catch { }
+        StopButton.IsEnabled = true;                                                   // momentary: nothing latches, the next answer is spoken as any other
         SetStatus("Ready.");
     }
 

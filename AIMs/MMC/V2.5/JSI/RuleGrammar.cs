@@ -52,7 +52,8 @@ public static class RuleGrammar
                 if (rule["Names"]?[group] is JsonValue setName && (string?)setName is { } set)
                 {
                     var names = nameSets.GetValueOrDefault(set) ?? [];
-                    var found = names.FirstOrDefault(n => string.Equals(n, word.Trim(), StringComparison.OrdinalIgnoreCase));
+                    var flat = Flat(word);                                                          // clip 84, Clip84 and clip84 are one name
+                    var found = names.FirstOrDefault(n => string.Equals(n, word.Trim(), StringComparison.OrdinalIgnoreCase)) ?? (flat.Length > 0 ? names.FirstOrDefault(n => Flat(n) == flat) : null);
                     if (found is null) { ok = false; break; }
                     values[group] = found;
                 }
@@ -80,6 +81,8 @@ public static class RuleGrammar
         }
         return null;
     }
+
+    private static string Flat(string text) => Regex.Replace(text.ToLowerInvariant(), "[^a-z0-9]", "");
 
     private static JsonNode Fill(JsonNode node, Dictionary<string, object> values)
     {
