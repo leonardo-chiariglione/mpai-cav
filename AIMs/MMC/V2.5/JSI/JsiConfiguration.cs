@@ -13,7 +13,7 @@ public delegate Task<string> StructuredModel(string system, IEnumerable<(string 
 public sealed record JsiConfiguration(
     string CommandSchemaUri, string? CommandSchemaFile,
     string ResponseSchemaUri, string? ResponseSchemaFile,
-    string? ContextFile, string? SchemasRoot = null, bool RefreshesState = false, int Responders = 1)
+    string? ContextFile, string? SchemasRoot = null, bool RefreshesState = false, int Responders = 1, bool SaysPlainly = false, bool UsesGrammar = false)
 {
     // The settings of an AIM that the Controller gave it: the file of each Setting. The addresses come from the Metadata. Responders: how many AIMs answer one command (the
     // editing AIMs of Audio Scene Management all do), so that their answers are one response.
@@ -21,6 +21,6 @@ public sealed record JsiConfiguration(
     {
         string? Get(string key) => settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : null;
         return new JsiConfiguration(commandSchemaUri, Get("CommandSchema"), responseSchemaUri, Get("ResponseSchema"), Get("ApplicationContext"), Get("SchemasRoot"), string.Equals(Get("RefreshState"), "true", StringComparison.OrdinalIgnoreCase),
-            int.TryParse(Get("Responders"), out var responders) && responders > 1 ? responders : 1);
+            int.TryParse(Get("Responders"), out var responders) && responders > 1 ? responders : 1, string.Equals(Get("SayPlainly"), "true", StringComparison.OrdinalIgnoreCase), string.Equals(Get("Grammar"), "true", StringComparison.OrdinalIgnoreCase));
     }
 }

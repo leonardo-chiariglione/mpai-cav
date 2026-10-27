@@ -280,7 +280,25 @@ public sealed class EdpAimProcessor : IAimProcessor
         prompt.AppendLine($"Response Hint: {facts}");
 
         string reply;
-        try { reply = _llm.ChatAsync(system, prompt.ToString()).GetAwaiter().GetResult().Trim(); }
+        // A Response Hint that is already what is to be said is said as it is: no language model is asked.
+        if (facts.StartsWith("SAY: ", StringComparison.Ordinal))
+        {
+            reply = facts["SAY: ".Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(heard)) memory.Add("User: " + heard.Replace(Nl, ' ').Trim());
+            memory.Add(_persona + ": " + reply.Replace(Nl, ' ').Trim());
+            while (memory.Count > RecentExchanges * 2) memory.RemoveAt(0);
+            return new Message
+            {
+                MessageId = message.MessageId, MessageType = message.MessageType,
+                Ports = new Dictionary<string, string>
+                {
+                    [_outTextPort] = MpaiJson.ToJson(BasicTextObject.FromText(reply)),
+                    [_outSummaryPort] = MpaiJson.ToJson(Summary.Of(string.Join(Nl, memory)))
+                }
+            };
+        }
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        try { reply = _llm.ChatAsync(system, prompt.ToString()).GetAwaiter().GetResult().Trim(); AimLog.Write(_instanceId, $"[timing] dialogue language model: {timer.ElapsedMilliseconds} ms"); }
         catch (Exception ex)
         {
             return Message.Error(message.MessageId, _instanceId, $"LLM call failed (is Ollama running?): {ex.Message}");

@@ -46,6 +46,7 @@ public partial class MainWindow : Window
     private Task? _running;
     private bool _closing;
     private volatile bool _microphoneOn = true;
+    private CancellationTokenSource? _speaking;         // what she is saying: Stop speaking cuts it
     private CancellationTokenSource? _hearing;          // the scene being heard on the loudspeakers
     private string? _storageLocation;                   // where the Module keeps its Objects and Scenes: the Controller's; asked how long to keep them, through the Controller API
     private TaskCompletionSource<string?>? _naming;      // the name the person is giving a sound
@@ -57,6 +58,7 @@ public partial class MainWindow : Window
         Loaded += OnLoaded;
         // Her face is 0.866 of the height it had (the column less the room the words took) and of the width it had, so its surface is three quarters of what it was.
         SideColumn.SizeChanged += (_, args) => Web.Height = Math.Max(150, (args.NewSize.Height - 150) * 0.866);
+        PreviewKeyDown += (_, args) => { if (args.Key == Key.Escape) { StopButton_Click(this, new RoutedEventArgs()); args.Handled = true; } };
         InputBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) Submit(); };
     }
 
@@ -103,6 +105,7 @@ public partial class MainWindow : Window
             _running = interpreter.RunAsync(workflow, _stopping.Token);
             // THE SCENE OF LAST TIME, BY ITS NAME: the Module opens what it kept (the one scene this application makes is called stage).
             _ = Task.Run(async () => { await Task.Delay(2000); _sceneIn.Give(OpenStub("stage")); });
+            _ = WarmUpAsync();
             try { await _running; }
             catch (OperationCanceledException) { }
             if (!_closing) SetStatus("Stopped.");
@@ -121,6 +124,7 @@ public partial class MainWindow : Window
     private DeviceRegistry Devices()
     {
         _voiceDevice = new VoiceDevice(_ears!, words => _voice!.SynthesizeAsync(words), () => _microphoneOn, words => _ = TellAsync(words));
+        _voiceDevice.TimedOut = () => _ = OnRecogniserStuckAsync();
         var devices = new DeviceRegistry();
         devices.RegisterDevice("Voice", _voiceDevice);
         devices.RegisterDevice("SoundIn", _soundIn);
@@ -129,6 +133,8 @@ public partial class MainWindow : Window
         // THE WORDS HEARD: shown; the Module is now working out the command, which takes a few seconds.
         devices.RegisterDevice("Heard", new ActingDevice("Heard", json =>
         {
+            _voiceDevice?.Heard();
+            if (_warming) return Task.CompletedTask;
             var heard = TextOf(json);
             if (Mpai.Mmc.Jsi.JsiAimProcessor.IsNoise(heard)) { App.Log("[window] noise ignored: " + heard); SetStatus("Ready."); return Task.CompletedTask; }
             Dispatcher.Invoke(() => { HeardText.Text = heard; AnswerText.Text = ""; });
@@ -139,7 +145,9 @@ public partial class MainWindow : Window
         // THE RESPONSE IN TEXT: shown.
         devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", json =>
         {
+            if (_warming) { _warmed++; return Task.CompletedTask; }
             Dispatcher.Invoke(() => AnswerText.Text = TextOf(json));
+            _stuck = 0;
             SetStatus("Ready.");
             return Task.CompletedTask;
         }));
@@ -147,10 +155,17 @@ public partial class MainWindow : Window
         // THE RESPONSE IN SPEECH: said by the avatar; the step ends when she has finished.
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", async json =>
         {
+            if (_warming) return;
             try
             {
                 var wav = MpaiJson.FromJson<BasicSpeechObject>(json)?.Data;
-                if (wav is { Length: > 0 }) await _voice!.PresentAsync(new AvatarUtterance(wav, null));
+                if (wav is { Length: > 0 })
+                {
+                    // Played at once; the step lasts as long as she speaks, unless Stop speaking (or Esc) cuts it.
+                    _speaking = new CancellationTokenSource();
+                    await _avatar!.PresentAsync(new AvatarUtterance(wav, null));
+                    try { await Task.Delay(TimeSpan.FromSeconds(AvatarUaHost.WavDurationSeconds(wav) + 0.3), _speaking.Token); } catch (OperationCanceledException) { }
+                }
             }
             catch (Exception e) { App.Record("response speech", e); }
         }));
@@ -204,6 +219,68 @@ public partial class MainWindow : Window
         try { Walk(JsonNode.Parse(json)); } catch (Exception) { }
         return found;
     }
+
+    // THE RECOGNISER DID NOT ANSWER IN TIME: the person is told to say it again; if it happens twice running, the Module is started again (its storage is where it was) so that the next
+    // request works.
+    // WARMING UP: before the person asks anything, two requests go through the whole chain - the recogniser, the JSON Interface and its model, the dialogue and its model, the voice - and
+    // their answers are thrown away, so that the first request the person makes is not the cold one.
+    private volatile bool _warming;
+    private int _warmed;
+    private async Task WarmUpAsync()
+    {
+        try
+        {
+            _warming = true; _warmed = 0;
+            SetStatus("Warming up...");
+            await Task.Delay(4000);
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            foreach (var words in new[] { "what is in the scene", "rearrange everything so that it sounds nicer" })
+            {
+                var before = _warmed;
+                _voiceDevice?.Type(words);
+                var waited = System.Diagnostics.Stopwatch.StartNew();
+                while (_warmed == before && waited.Elapsed < TimeSpan.FromSeconds(90)) await Task.Delay(200);
+                App.Log($"[window] warm-up \"{words}\": {(_warmed > before ? "answered" : "no answer")} after {waited.Elapsed.TotalSeconds:0.0} s");
+            }
+            App.Log($"[window] warmed up in {clock.Elapsed.TotalSeconds:0.0} s");
+        }
+        catch (Exception e) { App.Record("warm-up", e); }
+        finally { _warming = false; SetStatus("Ready."); }
+    }
+
+    private int _stuck;
+    private async Task OnRecogniserStuckAsync()
+    {
+        _stuck++;
+        SetStatus("I did not get that.");
+        _ = TellAsync("I did not get that, please repeat.");
+        if (_stuck < 2 || _restarting) return;
+        _restarting = true;
+        try
+        {
+            App.Log("[window] the recogniser was stuck twice: the Module is started again");
+            SetStatus("Starting the audio scene module again...");
+            _stopping?.Cancel();
+            try { if (_running is not null) await Task.WhenAny(_running, Task.Delay(TimeSpan.FromSeconds(15))); } catch { }
+            await Task.Run(() =>
+            {
+                _north!.StopFlow(AsmVoiceModules.Asm);
+                var started = _north.StartFlow(AsmVoiceModules.Asm);
+                if (started != AIF.Controller.AifError.OK) throw new InvalidOperationException("The Controller would not start the module: " + started);
+                _north.SharedStorageInit(AsmVoiceModules.Asm, _storageLocation!);
+            });
+            var workflow = new WorkflowReader().Read(File.ReadAllText(Path.Combine(MpaiPaths.Root, "Apps", "CAE", "ASM", "ASM-VCI.orch")));
+            _stopping = new CancellationTokenSource();
+            var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), line => App.Log("[workflow] " + line));
+            _running = interpreter.RunAsync(workflow, _stopping.Token);
+            _stuck = 0;
+            SetStatus("Ready.");
+            _ = TellAsync("I am ready again.");
+        }
+        catch (Exception e) { App.Record("restart", e); SetStatus("The module could not be started again: " + e.Message); }
+        finally { _restarting = false; }
+    }
+    private bool _restarting;
 
     // ---- what the person does ---------------------------------------------------------------------------------------------------------------------
 
@@ -288,6 +365,7 @@ public partial class MainWindow : Window
     {
         App.Log("[window] Stop speaking");
         _avatar?.Silence();
+        try { _speaking?.Cancel(); } catch { }
         try { _hearing?.Cancel(); } catch { }
         SetStatus("Ready.");
     }

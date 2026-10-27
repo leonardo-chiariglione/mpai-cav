@@ -48,6 +48,8 @@ public static class AsmVoiceModules
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "AIMs", "aim-settings.json")))!.AsObject();
         var jsi = all[Jsi] as JsonObject ?? new JsonObject(); all[Jsi] = jsi;
         jsi["SchemasRoot"] = Path.Combine(root, "schemas");
+        jsi["Grammar"] = "true";            // the application's grammar first, the language model only for what it does not match
+        jsi["SayPlainly"] = "true";          // a response that did all that was asked is said in a few words, without the dialogue's language model
         jsi["RefreshState"] = "true";          // an application answers: the JSON Interface asks it what it holds before it works out a request
         foreach (var (aim, own) in settings ?? [])
         {

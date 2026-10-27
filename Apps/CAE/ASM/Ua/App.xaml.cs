@@ -44,7 +44,7 @@ public partial class App : Application
         new MainWindow().Show();
         Mpai.Core.AimLog.Sink = (aim, message) =>
         {
-            try { File.AppendAllText(CrashLog, $"{DateTime.Now:o}  [{aim}]  {message}{Environment.NewLine}"); }
+            try { File.AppendAllText(CrashLog, $"{DateTime.Now:o}  [{aim}]  {message}{Environment.NewLine}"); if (message.StartsWith("[timing]")) Log($"[{aim}] {message}"); }
             catch { }
         };
     }

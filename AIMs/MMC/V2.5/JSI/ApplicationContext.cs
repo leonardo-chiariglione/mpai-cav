@@ -113,6 +113,9 @@ public sealed class ApplicationContext
     // The commands that ask the application what it holds, one after another (the state kept fresh where an application is connected). Each is the content of an Instance.
     public IReadOnlyList<JsonObject> StateRequests => (Root["StateRequests"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
+    // The grammar the application gives (RuleGrammar): requests that are always a command of a known shape, understood without the language model.
+    public IReadOnlyList<JsonObject> Rules => (Root["Rules"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
+
     public IReadOnlyList<JsonObject> Examples => (Root["Examples"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
     private string Text(string name) => (string?)Root[name] ?? "";

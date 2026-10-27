@@ -13,8 +13,30 @@ public static class ResponseFacts
 {
     private const int MostItems = 12;
 
-    public static string Tell(JsonNode response, ApplicationContext guide, string? inReplyTo = null)
+    // THE MARK OF A RESPONSE HINT THAT IS ALREADY WHAT IS TO BE SAID: the dialogue says it as it is, without asking its language model.
+    public const string SayAsItIs = "SAY: ";
+
+    // A response that did what was asked, all of it, and lists nothing, said in a few words from the guide's own words for the actions (Said: "MovedObjects": "moved {0}"); null where it is not
+    // so simple, and the dialogue is to put it into words.
+    public static string? Plain(JsonNode response, ApplicationContext guide)
     {
+        if (response["UserCommandRS"] is not JsonObject rs || (string?)rs["Outcome"] != "Done" || rs["ListedObjects"] is JsonArray { Count: > 0 }) return null;
+        if (rs["Actions"] is not JsonArray { Count: > 0 } actions || guide.Root["Said"] is not JsonObject said) return null;
+        var parts = new List<string>();
+        foreach (var a in actions.OfType<JsonObject>())
+        {
+            if ((string?)a["Outcome"] != "Done" || (string?)a["Action"] is not { } action || (string?)said[action] is not { } phrase) return null;
+            if (action == "ListedObjects") return null;
+            var name = (string?)a["ObjectID"];
+            if (phrase.Contains("{0}")) { if (name is null) return null; phrase = phrase.Replace("{0}", name); }
+            parts.Add(phrase);
+        }
+        return "Done: " + string.Join(", ", parts.Distinct()) + ".";
+    }
+
+    public static string Tell(JsonNode response, ApplicationContext guide, string? inReplyTo = null, bool plainly = false)
+    {
+        if (plainly && Plain(response, guide) is { } plain) return SayAsItIs + plain;
         var words = guide.Words;
         var skip = guide.Skip.ToHashSet(StringComparer.Ordinal);
         var intro = (string?)guide.Root["ResponseIntro"] ?? "The application answered";

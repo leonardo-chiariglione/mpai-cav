@@ -278,6 +278,20 @@ public sealed class JsiAimProcessor : IAimProcessor
             var completed = view.Complete(shortcut.DeepClone());
             if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
             {
+                if (completed["UserCommandRQ"]?["ListedObjects"] is null) Remember(completed, text);      // a listing is not one of the person's commands to be undone
+                return (completed, null);
+            }
+        }
+
+        // THE GRAMMAR OF THE APPLICATION FIRST (no language model): a request one of its rules matches is a command at once, checked against the schema as any is.
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var last = _sent.LastOrDefault(x => x.Id.Length > 0).Id;
+        if (_configuration.UsesGrammar && guide.Rules.Count > 0 && RuleGrammar.Match(text, guide.Rules, _state.NameSets, _state, string.IsNullOrEmpty(last) ? null : last) is { } ruled)
+        {
+            var completed = view.Complete(ruled);
+            if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
+            {
+                AimLog.Write(InstanceId, $"[timing] understood by the grammar: {watch.ElapsedMilliseconds} ms");
                 Remember(completed, text);
                 return (completed, null);
             }
@@ -290,7 +304,9 @@ public sealed class JsiAimProcessor : IAimProcessor
         string problem = "";
         for (var attempt = 0; attempt < 2; attempt++)
         {
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             var raw = await _model(system, turns, wrapper).ConfigureAwait(false);
+            AimLog.Write(InstanceId, $"[timing] language model, attempt {attempt + 1}: {clock.ElapsedMilliseconds} ms");
             var (instance, said, fault) = Check(raw, view, guide);
             if (instance is not null)
             {
@@ -505,6 +521,6 @@ public sealed class JsiAimProcessor : IAimProcessor
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
         var asked = _requestOf.TryGetValue(id, out var r) ? r : _sent.FirstOrDefault(s => s.Id == id).Request;
-        return ResponseFacts.Tell(instance, _guide, asked);
+        return ResponseFacts.Tell(instance, _guide, asked, _configuration.SaysPlainly);
     }
 }

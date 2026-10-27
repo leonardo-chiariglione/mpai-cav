@@ -49,6 +49,15 @@ public sealed class VoiceDevice : IDevice
     private readonly Action<string> _say;
     private readonly Channel<string> _typed = Channel.CreateUnbounded<string>();
 
+    // ONE REQUEST AT A TIME IN THE RECOGNISER: what is given to the Module waits for its words (Heard) before the next is given; what the microphone hears meanwhile is dropped, not piled up.
+    // If the words do not come in time, the recogniser is taken to be stuck: that is said, and the owner of this device is told (TimedOut).
+    private DateTime? _sentAt;
+    public Action? TimedOut { get; set; }
+    public TimeSpan Patience { get; set; } = TimeSpan.FromSeconds(25);
+    public void Heard() => _sentAt = null;
+    private bool Busy => _sentAt is { } at && DateTime.UtcNow - at < Patience;
+    private bool Gone(int bytes, int rate) => bytes < 0.5 * rate * 2 || bytes > 15 * rate * 2;      // under half a second, or over fifteen: a click, or the room's noise
+
     public VoiceDevice(SpeechListener ears, Func<string, Task<byte[]?>> synthesise, Func<bool> microphoneOn, Action<string> say)
     { _ears = ears; _synthesise = synthesise; _microphoneOn = microphoneOn; _say = say; }
 
@@ -68,8 +77,11 @@ public sealed class VoiceDevice : IDevice
                 try
                 {
                     var speech = await _ears.ListenAsync(cancel, CancellationToken.None);
+                    var rate = speech?.SpeechQualifier?.Format?.ContentFormats?.RawData?.SamplingFrequency is { } r and > 0 ? (int)r : 16000;
                     if (speech is not null && !_microphoneOn()) App.Log("[voice] speech heard while the microphone is off: dropped");
-                    else if (speech is not null) { App.Log("[voice] speech heard by the microphone: " + speech.Data.Length + " bytes"); heard.Writer.TryWrite(MpaiJson.ToJson(speech)); }
+                    else if (speech is not null && Gone(speech.Data.Length, rate)) App.Log($"[voice] a capture of {speech.Data.Length} bytes at {rate} Hz is a click or the noise of the room: dropped");
+                    else if (speech is not null && Busy) App.Log("[voice] speech heard while the last is still being recognised: dropped (" + speech.Data.Length + " bytes)");
+                    else if (speech is not null) { App.Log("[voice] speech heard by the microphone: " + speech.Data.Length + " bytes"); _sentAt = DateTime.UtcNow; heard.Writer.TryWrite(MpaiJson.ToJson(speech)); }
                 }
                 catch (Exception e)
                 {
@@ -84,13 +96,27 @@ public sealed class VoiceDevice : IDevice
             try
             {
                 await foreach (var words in _typed.Reader.ReadAllAsync(cancel))
-                    if (await _synthesise(words) is { } wav) { App.Log("[voice] typed words spoken: " + wav.Length + " bytes, given to the Module"); heard.Writer.TryWrite(SpeechOf(wav)); }
+                    if (await _synthesise(words) is { } wav) { App.Log("[voice] typed words spoken: " + wav.Length + " bytes, given to the Module"); _sentAt = DateTime.UtcNow; heard.Writer.TryWrite(SpeechOf(wav)); }
                     else _say("I could not turn the typed words into speech.");
             }
             catch (OperationCanceledException) { }
             catch (Exception e) { App.Record("typed words", e); App.Log("[voice] typed words FAILED: " + e.Message); _say("The typed words could not be given: " + e.Message); }
         }, CancellationToken.None);
 
+        // THE WATCHDOG: words that do not come in time are not waited for for ever.
+        var watchdog = Task.Run(async () =>
+        {
+            while (!cancel.IsCancellationRequested)
+            {
+                await Task.Delay(1000, CancellationToken.None);
+                if (_sentAt is { } at && DateTime.UtcNow - at >= Patience)
+                {
+                    _sentAt = null;
+                    App.Log($"[voice] no words came back within {Patience.TotalSeconds:0} s: the recogniser is taken to be stuck");
+                    try { TimedOut?.Invoke(); } catch (Exception e) { App.Record("watchdog", e); }
+                }
+            }
+        }, CancellationToken.None);
         await foreach (var json in heard.Reader.ReadAllAsync(cancel)) yield return ("OSD-BSO-V1.5", json);
     }
 
