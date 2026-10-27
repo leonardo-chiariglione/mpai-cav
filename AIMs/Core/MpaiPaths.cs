@@ -70,8 +70,8 @@ public static class MpaiPaths
         System.IO.Path.Combine(Root, path);
     // THE TEST INPUTS - the pictures and the sounds the tests use, and the demonstrations that need a real recording: Test/Data of the application.
     public static string TestData => System.IO.Path.Combine(Root, "Test", "Data");
-    // Recordings of LibriSpeech speakers (1272, 1462, ...), one clip each: Test/Data/Speech/libri_wav.
-    public static string Clips => System.IO.Path.Combine(TestData, "Speech", "libri_wav");
+    // Recordings of LibriSpeech speakers (1272, 1462, ...), one clip each, named clip<speaker>.wav: Test/Data/Speech.
+    public static string Clips => System.IO.Path.Combine(TestData, "Speech");
     // The Python that has torch (the voice engine, the segmentation of the reference voices): a tool of this machine, kept in Support/Python of the
     // application; MPAI_PYTHON names another; else the python of the PATH.
     public static string Python

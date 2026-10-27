@@ -5,8 +5,8 @@
 param([switch]$NoPlay)
 $ErrorActionPreference = 'Stop'
 $root = $env:MPAI_ROOT; if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
-$clips = Join-Path $root 'Test\Data\Speech\libri_wav'
-$voice = Join-Path $clips '1272\clip.wav'; $original = Join-Path $clips '1462\clip.wav'
+$clips = Join-Path $root 'Test\Data\Speech'
+$voice = Join-Path $clips 'clip1272.wav'; $original = Join-Path $clips 'clip1462.wav'
 foreach ($f in $voice, $original) { if (-not (Test-Path $f)) { Write-Host "The recording $f is not on this PC: the demonstration needs the two LibriSpeech clips of $clips (Test\Data\Speech of the tree)." -ForegroundColor Red; exit 1 } }
 $project = Join-Path $root 'Apps\CAE\SRS\App\SrsApp.csproj'; $exe = Join-Path $root 'Apps\CAE\SRS\App\bin\Debug\net10.0\SrsApp.exe'
 $out = Join-Path (Join-Path $env:USERPROFILE 'Downloads') "MPAI USC\SRS demo\$(Get-Date -Format 'yyyy-MM-dd HH.mm.ss')"

@@ -59,8 +59,8 @@ try {
         }
         'EAE' {
             if (Yes "Make a demonstration capture first?`n`nYes: two real voices in a noisy simulated room (LibriSpeech clips in Test\Data\Speech of the tree).`nNo: you pick your own capture and array." $title) {
-                $libri = Join-Path $root 'Test\Data\Speech\libri_wav'
-                $clips = (Join-Path $libri '1272\clip.wav'), (Join-Path $libri '1462\clip.wav')
+                $libri = Join-Path $root 'Test\Data\Speech'
+                $clips = (Join-Path $libri 'clip1272.wav'), (Join-Path $libri 'clip1462.wav')
                 & $exe --demo $out --speech $clips[0] $clips[1]
                 $capture = Join-Path $out 'room.wav'; $array = Join-Path $out 'array.json'
             } else {

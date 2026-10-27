@@ -92,12 +92,12 @@ public class ReferencePopulationEndToEndTests
         {
             Assert.Equal(AifError.OK, api.StartFlow(Sir));
             api.SharedStorageInit(Sir, gallery);
-            var speakers = Directory.EnumerateDirectories(Libri).Select(Path.GetFileName).OrderBy(s => s, StringComparer.Ordinal).Take(6).ToList();
+            var speakers = Directory.EnumerateFiles(Libri, "clip*.wav").Select(f => Path.GetFileNameWithoutExtension(f)["clip".Length..]).OrderBy(s => s, StringComparer.Ordinal).Take(6).ToList();
             var right = new List<string>();
             var wrong = new List<string>();
             foreach (var speaker in speakers)
             {
-                var speech = BasicSpeechObject.FromData(File.ReadAllBytes(Path.Combine(Libri, speaker!, "clip.wav")), new SpeechQualifier
+                var speech = BasicSpeechObject.FromData(File.ReadAllBytes(Path.Combine(Libri, "clip" + speaker + ".wav")), new SpeechQualifier
                 {
                     SpeechQualifierID = Guid.NewGuid().ToString(),
                     Format = new SpeechFormat

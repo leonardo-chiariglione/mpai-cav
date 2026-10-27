@@ -114,7 +114,7 @@ public class AccessModelsTests : IDisposable
     public void TheVoiceEngineWorksFromTheOpenVoiceOfAccess()
     {
         Skip.IfNot(File.Exists(Mpai.Core.MpaiPaths.Python), "The Python of the voice engine is absent.");
-        var clip = Path.Combine(Mpai.Core.MpaiPaths.Clips, "1272", "clip.wav");
+        var clip = Path.Combine(Mpai.Core.MpaiPaths.Clips, "clip1272.wav");
         Skip.IfNot(File.Exists(clip), "The LibriSpeech clip is absent.");
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1CAE-SMC-V2.5-I01.json")));
         var entries = AccessEntry.ReadForThisMachine(doc.RootElement).Where(e => e.Name.StartsWith("openvoice-")).ToList();
