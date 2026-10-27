@@ -56,7 +56,17 @@ public sealed class VoiceDevice : IDevice
     public TimeSpan Patience { get; set; } = TimeSpan.FromSeconds(25);
     public void Heard() => _sentAt = null;
     private bool Busy => _sentAt is { } at && DateTime.UtcNow - at < Patience;
-    private bool Gone(int bytes, int rate) => bytes < 0.5 * rate * 2 || bytes > 15 * rate * 2;      // under half a second, or over fifteen: a click, or the room's noise
+    private bool Gone(int bytes, int rate) => bytes < 0.4 * rate * 2 || bytes > 30 * rate * 2;      // under 0.4 s: a click; over thirty seconds: not an utterance
+
+    // ONE UTTERANCE, WHOLE: what the microphone captures in pieces - a person pauses to think, and the capture ends at 1.2 s of quiet - is joined while the pieces come within 1.5 s of one
+    // another; the request goes when 1.5 s have passed with nothing more, and when the recogniser is free. Nothing is dropped for being busy: it waits.
+    public static readonly TimeSpan Joining = TimeSpan.FromSeconds(1.5);
+    private BasicSpeechObject? _pending;
+    private DateTime _pendingAt;
+    private readonly object _gate = new();
+
+    public static BasicSpeechObject Join(BasicSpeechObject first, BasicSpeechObject next) =>
+        BasicSpeechObject.FromData([.. first.Data, .. next.Data], first.SpeechQualifier!);
 
     public VoiceDevice(SpeechListener ears, Func<string, Task<byte[]?>> synthesise, Func<bool> microphoneOn, Action<string> say)
     { _ears = ears; _synthesise = synthesise; _microphoneOn = microphoneOn; _say = say; }
@@ -80,8 +90,17 @@ public sealed class VoiceDevice : IDevice
                     var rate = speech?.SpeechQualifier?.Format?.ContentFormats?.RawData?.SamplingFrequency is { } r and > 0 ? (int)r : 16000;
                     if (speech is not null && !_microphoneOn()) App.Log("[voice] speech heard while the microphone is off: dropped");
                     else if (speech is not null && Gone(speech.Data.Length, rate)) App.Log($"[voice] a capture of {speech.Data.Length} bytes at {rate} Hz is a click or the noise of the room: dropped");
-                    else if (speech is not null && Busy) App.Log("[voice] speech heard while the last is still being recognised: dropped (" + speech.Data.Length + " bytes)");
-                    else if (speech is not null) { App.Log("[voice] speech heard by the microphone: " + speech.Data.Length + " bytes"); _sentAt = DateTime.UtcNow; heard.Writer.TryWrite(MpaiJson.ToJson(speech)); }
+                    else if (speech is not null)
+                    {
+                        lock (_gate)
+                        {
+                            var joined = _pending is not null && DateTime.UtcNow - _pendingAt < Joining;
+                            App.Log($"[voice] capture of {speech.Data.Length} bytes ({speech.Data.Length / 2.0 / rate:0.0} s)" + (joined ? $", joined to the {_pending!.Data.Length} bytes before it" : ""));
+                            _pending = joined ? Join(_pending!, speech) : _pending is null ? speech : _pending;
+                            if (!joined && !ReferenceEquals(_pending, speech)) _pending = Join(_pending, speech);      // (a piece that waited a long while is still the same utterance if not sent)
+                            _pendingAt = DateTime.UtcNow;
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
@@ -101,6 +120,22 @@ public sealed class VoiceDevice : IDevice
             }
             catch (OperationCanceledException) { }
             catch (Exception e) { App.Record("typed words", e); App.Log("[voice] typed words FAILED: " + e.Message); _say("The typed words could not be given: " + e.Message); }
+        }, CancellationToken.None);
+
+        // THE UTTERANCE GOES when nothing has been joined to it for 1.5 s and the recogniser is free.
+        var sender = Task.Run(async () =>
+        {
+            while (!cancel.IsCancellationRequested)
+            {
+                await Task.Delay(100, CancellationToken.None);
+                BasicSpeechObject? send = null;
+                lock (_gate)
+                    if (_pending is not null && DateTime.UtcNow - _pendingAt >= Joining && !Busy) { send = _pending; _pending = null; }
+                if (send is null) continue;
+                App.Log($"[voice] utterance of {send.Data.Length} bytes given to the Module");
+                _sentAt = DateTime.UtcNow;
+                heard.Writer.TryWrite(MpaiJson.ToJson(send));
+            }
         }, CancellationToken.None);
 
         // THE WATCHDOG: words that do not come in time are not waited for for ever.

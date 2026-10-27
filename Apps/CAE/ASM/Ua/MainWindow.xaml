@@ -54,7 +54,7 @@
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <Button x:Name="StopButton" Grid.Column="0" Content="Stop speaking (Esc)" Padding="14,4" Margin="0,0,8,0" Click="StopButton_Click" Background="#C62828" Foreground="White" FontWeight="Bold"/>
-      <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone is on" IsChecked="True" Padding="12,4" Margin="0,0,8,0" Click="MicButton_Click" Background="#1E3A8A" Foreground="White" FontWeight="Bold" MinWidth="230"/>
+      <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone is on" IsChecked="True" Margin="0,0,8,0" Click="MicButton_Click" Style="{StaticResource MicButton}" MinWidth="250"/>
       <Button x:Name="LoadButton" Grid.Column="2" Content="Load a sound..." Padding="12,4" Margin="0,0,8,0" Click="LoadButton_Click" IsEnabled="False"/>
       <Button x:Name="HearButton" Grid.Column="3" Content="Hear the scene" Padding="12,4" Margin="0,0,8,0" Click="HearButton_Click" IsEnabled="False"/>
       <TextBox x:Name="InputBox" Grid.Column="4" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" IsEnabled="False"/>

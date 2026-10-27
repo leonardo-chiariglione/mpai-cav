@@ -87,7 +87,17 @@ public static class Driver
         {
             int before; lock (texts) before = texts.Count;
             say("SAY: " + words);
-            var wav = await voice.SynthesizeAsync(words);
+            byte[]? wav;
+            if (words.Contains('|'))                                                  // "first part|second part": what the microphone captures in two pieces, joined as the window joins them
+            {
+                var pieces = new List<byte[]>();
+                foreach (var part in words.Split('|')) if (await voice.SynthesizeAsync(part) is { } w) pieces.Add(w);
+                var data = pieces.SelectMany(w => w.Skip(44)).ToArray();
+                wav = pieces[0].Take(44).Concat(data).ToArray();
+                BitConverter.GetBytes(data.Length).CopyTo(wav, 40); BitConverter.GetBytes(data.Length + 36).CopyTo(wav, 4);
+                say($"{pieces.Count} parts joined: {data.Length / 2.0 / 22050:0.0} s");
+            }
+            else wav = await voice.SynthesizeAsync(words);
             say("the typed words as speech: " + (wav?.Length ?? 0) + " bytes");
             if (wav is null) continue;
             speech.Give(VoiceDevice.SpeechOf(wav));

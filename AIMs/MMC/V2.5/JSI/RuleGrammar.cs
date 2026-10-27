@@ -27,7 +27,7 @@ public static class RuleGrammar
     private const string Number = @"(?:minus |negative |-)?(?:\d+(?:\.\d+)?|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|sixty|ninety|hundred|half)";
 
     // The command the request comes to, or null: no rule matched, a name is not one the application has, or the command does not conform (the caller checks it).
-    public static JsonObject? Match(string request, IReadOnlyList<JsonObject> rules, IReadOnlyDictionary<string, IReadOnlyList<string>> nameSets, ApplicationState state, string? lastCommandId = null)
+    public static JsonObject? Match(string request, IReadOnlyList<JsonObject> rules, IReadOnlyDictionary<string, IReadOnlyList<string>> nameSets, ApplicationState state, string? lastCommandId = null, IDictionary<string, double>? memory = null)
     {
         var text = Regex.Replace(request.ToLowerInvariant().Trim().TrimEnd('.', '!', '?', ','), @"\s+", " ");
         text = Regex.Replace(text, @"^(?:please|can you|could you|would you|i want you to|i want to|now) ", "");
@@ -43,6 +43,7 @@ public static class RuleGrammar
             if (!match.Success) continue;
 
             var values = new Dictionary<string, object>(StringComparer.Ordinal);
+            if (memory is not null) foreach (var (k, v) in memory) values[k] = v;                  // what an earlier request said and a rule keeps (the size of the room)
             if (lastCommandId is not null) values["last"] = lastCommandId;
             var ok = true;
             foreach (var group in regex.GetGroupNames().Where(g => !int.TryParse(g, out _)))
@@ -63,7 +64,10 @@ public static class RuleGrammar
             {
                 if (rule["Let"] is JsonObject let)
                     foreach (var (name, expression) in let) values[name] = new Expression((string)expression!, values, state).Value();
-                return (JsonObject)Fill(template, values);
+                var made = (JsonObject)Fill(template, values);
+                if (memory is not null && rule["Keep"] is JsonArray keep)
+                    foreach (var k in keep.Select(x => (string)x!)) if (values.TryGetValue(k, out var v) && v is double d) memory[k] = d;
+                return made;
             }
             catch (Exception e) when (e is FormatException or InvalidOperationException or KeyNotFoundException or DivideByZeroException) { continue; }
         }

@@ -26,6 +26,20 @@ public partial class App : Application
     {
         base.OnStartup(e);
         if (Array.IndexOf(e.Args, "--drive") >= 0) { Shutdown(Task.Run(() => Driver.Run(e.Args)).GetAwaiter().GetResult()); return; }
+        // The microphone button, on and off, to a file: `AsmUa.exe --mic-png <file>`.
+        var mic = Array.IndexOf(e.Args, "--mic-png");
+        if (mic >= 0 && mic + 1 < e.Args.Length)
+        {
+            var row = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Background = System.Windows.Media.Brushes.White };
+            foreach (var on in new[] { true, false })
+                row.Children.Add(new System.Windows.Controls.Primitives.ToggleButton { Style = (Style)FindResource("MicButton"), IsChecked = on, Margin = new Thickness(10), MinWidth = 250, Content = on ? "Microphone is on" : "Microphone is off - click to listen" });
+            row.Measure(new Size(700, 80)); row.Arrange(new Rect(0, 0, 700, 80)); row.UpdateLayout();
+            var shot = new System.Windows.Media.Imaging.RenderTargetBitmap(700, 80, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+            shot.Render(row);
+            var enc = new System.Windows.Media.Imaging.PngBitmapEncoder(); enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(shot));
+            using (var file = File.Create(e.Args[mic + 1])) enc.Save(file);
+            Shutdown(0); return;
+        }
         // A picture of the room, to a file, with nothing else started (no avatar, no sound): `AsmUa.exe --scene-png <file>`.
         var at = Array.IndexOf(e.Args, "--scene-png");
         if (at >= 0 && at + 1 < e.Args.Length)

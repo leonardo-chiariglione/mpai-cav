@@ -50,6 +50,7 @@ public sealed class JsiAimProcessor : IAimProcessor
     private readonly SemaphoreSlim _one = new(1, 1);
 
     private ApplicationState _state = new();
+    private readonly Dictionary<string, double> _memory = new(StringComparer.Ordinal);      // numbers a rule of the grammar keeps for the next request (the size of the room)
 
     // THE STATE KEPT FRESH (an application is connected: the setting RefreshState): the commands the guide gives for asking the application what it holds (StateRequests) are sent
     // one after another - each when the answer to the one before has come - at the first request, and again after every response the person is told; a request that comes
@@ -223,6 +224,9 @@ public sealed class JsiAimProcessor : IAimProcessor
         return words.Length < 2 && plain.Length < 4;
     }
 
+    // What the interface itself says to the person, as it is: said as it is where the dialogue is not asked (SayPlainly).
+    private string Said(string what) => _configuration.SaysPlainly ? ResponseFacts.SayAsItIs + what : "No command was formed. " + what;
+
     private static string? Input(Message message, string port) =>
         port.Length > 0 && message.Ports.TryGetValue(port, out var json) && !string.IsNullOrWhiteSpace(json) ? json : null;
 
@@ -287,7 +291,7 @@ public sealed class JsiAimProcessor : IAimProcessor
         // THE GRAMMAR OF THE APPLICATION FIRST (no language model): a request one of its rules matches is a command at once, checked against the schema as any is.
         var watch = System.Diagnostics.Stopwatch.StartNew();
         var last = _sent.LastOrDefault(x => x.Id.Length > 0).Id;
-        if (_configuration.UsesGrammar && guide.Rules.Count > 0 && RuleGrammar.Match(text, guide.Rules, _state.NameSets, _state, string.IsNullOrEmpty(last) ? null : last) is { } ruled)
+        if (_configuration.UsesGrammar && guide.Rules.Count > 0 && RuleGrammar.Match(text, guide.Rules, _state.NameSets, _state, string.IsNullOrEmpty(last) ? null : last, _memory) is { } ruled)
         {
             var completed = view.Complete(ruled);
             if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
@@ -296,6 +300,16 @@ public sealed class JsiAimProcessor : IAimProcessor
                 Remember(completed, text);
                 return (completed, null);
             }
+        }
+
+        // WHAT THE GRAMMAR DID NOT MATCH, AND IS NOT FOR THE MODEL: a request that needs something it does not give is asked for, and one that says nothing the application knows is not guessed at.
+        if (_configuration.UsesGrammar && guide.Rules.Count > 0)
+        {
+            var lower = text.ToLowerInvariant();
+            if (guide.Asks.FirstOrDefault(a => a.Words.Any(w => lower.Contains(w.ToLowerInvariant()))) is { Say.Length: > 0 } ask) return (null, Said(ask.Say));
+            var known = guide.Triggers.SelectMany(t => t.Words).Concat(_state.NameSets.Values.SelectMany(v => v)).Where(w => w.Length > 2 && !w.StartsWith("{"))
+                             .Any(w => Regex.IsMatch(lower, @"\b" + Regex.Escape(w.Trim().ToLowerInvariant())));
+            if (!known && guide.Try.Length > 0) return (null, Said($"I did not understand: {text.Trim().TrimEnd('.')}. {guide.Try}"));
         }
 
         var system = SystemText(guide, view);

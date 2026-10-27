@@ -116,4 +116,37 @@ public class JsiGrammarTests
         Assert.Equal([-halfX, -halfY, 0.0], corners[0]); Assert.Equal([halfX, -halfY, 0.0], corners[1]); Assert.Equal([-halfX, halfY, 0.0], corners[2]); Assert.Equal(2.5, corners[3][2]);
     }
 
+    [Theory]
+    [InlineData("place a square room 4 metres by 4 metres at the centre of the room with a ceiling 3 metres high", 3.0)]
+    [InlineData("place a room of 4 by 4 metres, ceiling height 3 metres", 3.0)]
+    [InlineData("place a room of 4 by 4 metres with a ceiling at 3 meters", 3.0)]
+    [InlineData("place a room of 4 by 4 metres three metres high", 3.0)]
+    public async Task TheCeilingIsPartOfTheRoom(string words, double height)
+    {
+        var rq = await Command(words);
+        var corners = rq!["ClosedSpace"]![0]!["Shape"]![0]!["SimpleLocationData"]![0]!["RightParallelepiped"]!["CartPositions"]!.AsArray().Select(Numbers).ToList();
+        Assert.Equal([-2.0, -2.0, 0.0], corners[0]); Assert.Equal(height, corners[3][2]);
+    }
+
+    [Fact]
+    public async Task TheCeilingAloneUpdatesTheRoomJustMadeAndWithoutARoomItIsAsked()
+    {
+        var jsi = JsiRig.Processor((_, _, _) => Task.FromResult("{\"Problem\":\"the model was asked\"}"), JsiRig.Jsi, false, true);
+        var ask = await jsi.ProcessAsync(JsiRig.Say(Ports, "now make the ceiling 3 metres", JsiRig.Context(JsiRig.Scene())));
+        Assert.Null(JsiRig.CommandOf(ask, Ports));
+        Assert.Contains("How big is the room", JsiRig.FactsOf(ask, Ports));
+        await jsi.ProcessAsync(JsiRig.Say(Ports, "place a room of 6 by 4 metres", JsiRig.Context(JsiRig.Scene())));
+        var rq = JsiRig.CommandOf(await jsi.ProcessAsync(JsiRig.Say(Ports, "now make the ceiling 3 metres", JsiRig.Context(JsiRig.Scene()))), Ports)!["UserCommandRQ"]!;
+        var corners = rq["ClosedSpace"]![0]!["Shape"]![0]!["SimpleLocationData"]![0]!["RightParallelepiped"]!["CartPositions"]!.AsArray().Select(Numbers).ToList();
+        Assert.Equal([-3.0, -2.0, 0.0], corners[0]); Assert.Equal(3.0, corners[3][2]);
+    }
+
+    [Fact]
+    public async Task WhatSaysNothingKnownIsNotGuessedAt()
+    {
+        var jsi = JsiRig.Processor((_, _, _) => Task.FromResult("{\"Problem\":\"the model was asked\"}"), JsiRig.Jsi, false, true);
+        var answer = JsiRig.FactsOf(await jsi.ProcessAsync(JsiRig.Say(Ports, "banana split sunday", JsiRig.Context(JsiRig.Scene()))), Ports);
+        Assert.Contains("I did not understand: banana split sunday", answer);
+    }
+
 }

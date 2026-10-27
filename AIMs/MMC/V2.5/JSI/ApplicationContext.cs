@@ -116,6 +116,12 @@ public sealed class ApplicationContext
     // The grammar the application gives (RuleGrammar): requests that are always a command of a known shape, understood without the language model.
     public IReadOnlyList<JsonObject> Rules => (Root["Rules"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
+    // What is said, without the language model, to a request that no rule matched and that says nothing the application knows (Try), and to one that names a thing but gives what is needed
+    // for it nowhere (Asks: words and what to say).
+    public string Try => Text("Try");
+    public IReadOnlyList<(IReadOnlyList<string> Words, string Say)> Asks =>
+        (Root["Asks"] as JsonArray)?.OfType<JsonObject>().Select(a => ((IReadOnlyList<string>)Texts(a, "Words"), (string?)a["Say"] ?? "")).ToList() ?? [];
+
     public IReadOnlyList<JsonObject> Examples => (Root["Examples"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
     private string Text(string name) => (string?)Root[name] ?? "";

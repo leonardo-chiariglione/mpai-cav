@@ -809,12 +809,14 @@
     {
       "Path": "UserCommandRQ.ClosedSpace",
       "Words": [
-        "room",
-        "walls",
-        "square room",
-        "size of the room",
+        "by meters",
         "by metres",
-        "by meters"
+        "ceiling",
+        "height",
+        "room",
+        "size of the room",
+        "square room",
+        "walls"
       ]
     },
     {
@@ -1045,12 +1047,306 @@
   },
   "Rules": [
     {
-      "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?(?:square |new )?(?:room|area|space)(?: of| that is| which is| measuring| with)? ?<NUM:a>(?: metres?)? ?(?:by|x|times) ?<NUM:b>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?",
+      "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?(?:square |new )?(?:room|area|space)(?: of| that is| which is| measuring| with)? ?<NUM:a>(?: metres?)? ?(?:by|x|times) ?<NUM:b>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?(?:,? ?(?:and )?(?:with |has )?(?:(?:a )?(?:ceiling|height)(?: height)?(?: of| at| that is| is)? ?<NUM:h>(?: metres?)?(?: high)?|<NUM:h> metres? high))",
       "Let": {
         "x0": "-a/2",
         "x1": "a/2",
         "y0": "-b/2",
         "y1": "b/2"
+      },
+      "Keep": [
+        "a",
+        "b",
+        "h"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": []
+          },
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "Header": "OSD-RPP-V1.5",
+                        "Dimensions": "3D",
+                        "CartPositions": [
+                          [
+                            "{x0}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x1}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y1}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y0}",
+                            "{h}"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?square (?:room|area|space)(?: of| that is| which is| measuring| with)? ?<NUM:a>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?(?:,? ?(?:and )?(?:with |has )?(?:(?:a )?(?:ceiling|height)(?: height)?(?: of| at| that is| is)? ?<NUM:h>(?: metres?)?(?: high)?|<NUM:h> metres? high))",
+      "Let": {
+        "x0": "-a/2",
+        "x1": "a/2",
+        "b": "a"
+      },
+      "Keep": [
+        "a",
+        "b",
+        "h"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": []
+          },
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "Header": "OSD-RPP-V1.5",
+                        "Dimensions": "3D",
+                        "CartPositions": [
+                          [
+                            "{x0}",
+                            "{x0}",
+                            0
+                          ],
+                          [
+                            "{x1}",
+                            "{x0}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{x1}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{x0}",
+                            "{h}"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Pattern": "(?:now |please )?(?:make|set|put|raise|lower)? ?the (?:ceiling|height)(?: height)?(?: of the room)?(?: to| at| of| is)? ?<NUM:h>(?: metres?)?(?: high)?",
+      "Let": {
+        "x0": "-a/2",
+        "x1": "a/2",
+        "y0": "-b/2",
+        "y1": "b/2"
+      },
+      "Keep": [
+        "h"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": []
+          },
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "Header": "OSD-RPP-V1.5",
+                        "Dimensions": "3D",
+                        "CartPositions": [
+                          [
+                            "{x0}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x1}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y1}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y0}",
+                            "{h}"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Pattern": "(?:now |please )?(?:the )?ceiling(?: height)?(?: to| at| of| is)? ?<NUM:h>(?: metres?)?(?: high)?",
+      "Let": {
+        "x0": "-a/2",
+        "x1": "a/2",
+        "y0": "-b/2",
+        "y1": "b/2"
+      },
+      "Keep": [
+        "h"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": []
+          },
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "Header": "OSD-RPP-V1.5",
+                        "Dimensions": "3D",
+                        "CartPositions": [
+                          [
+                            "{x0}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x1}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y1}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y0}",
+                            "{h}"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Pattern": "(?:make|set) the room <NUM:h>(?: metres?)? high",
+      "Let": {
+        "x0": "-a/2",
+        "x1": "a/2",
+        "y0": "-b/2",
+        "y1": "b/2"
+      },
+      "Keep": [
+        "h"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "ObjectID": "stage",
+            "Objects": []
+          },
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "Header": "OSD-RPP-V1.5",
+                        "Dimensions": "3D",
+                        "CartPositions": [
+                          [
+                            "{x0}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x1}",
+                            "{y0}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y1}",
+                            0
+                          ],
+                          [
+                            "{x0}",
+                            "{y0}",
+                            "{h}"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?(?:square |new )?(?:room|area|space)(?: of| that is| which is| measuring| with)? ?<NUM:a>(?: metres?)? ?(?:by|x|times) ?<NUM:b>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?",
+      "Let": {
+        "x0": "-a/2",
+        "x1": "a/2",
+        "y0": "-b/2",
+        "y1": "b/2",
+        "h": "2.5"
       },
       "Command": {
         "UserCommandRQ": {
@@ -1086,7 +1382,7 @@
                           [
                             "{x0}",
                             "{y0}",
-                            2.5
+                            "{h}"
                           ]
                         ]
                       }
@@ -1097,7 +1393,11 @@
             }
           ]
         }
-      }
+      },
+      "Keep": [
+        "a",
+        "b"
+      ]
     },
     {
       "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?<NUM:a>(?: metres?)? ?(?:by|x|times) ?<NUM:b>(?: metres?)? (?:square |new )?(?:room|area|space)(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?",
@@ -1105,7 +1405,8 @@
         "x0": "-a/2",
         "x1": "a/2",
         "y0": "-b/2",
-        "y1": "b/2"
+        "y1": "b/2",
+        "h": "2.5"
       },
       "Command": {
         "UserCommandRQ": {
@@ -1141,7 +1442,7 @@
                           [
                             "{x0}",
                             "{y0}",
-                            2.5
+                            "{h}"
                           ]
                         ]
                       }
@@ -1152,7 +1453,11 @@
             }
           ]
         }
-      }
+      },
+      "Keep": [
+        "a",
+        "b"
+      ]
     },
     {
       "Pattern": "(?:make|set) the (?:room|area|space) (?:to |of )?<NUM:a>(?: metres?)? ?(?:by|x|times) ?<NUM:b>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?",
@@ -1160,7 +1465,8 @@
         "x0": "-a/2",
         "x1": "a/2",
         "y0": "-b/2",
-        "y1": "b/2"
+        "y1": "b/2",
+        "h": "2.5"
       },
       "Command": {
         "UserCommandRQ": {
@@ -1196,7 +1502,7 @@
                           [
                             "{x0}",
                             "{y0}",
-                            2.5
+                            "{h}"
                           ]
                         ]
                       }
@@ -1207,13 +1513,18 @@
             }
           ]
         }
-      }
+      },
+      "Keep": [
+        "a",
+        "b"
+      ]
     },
     {
       "Pattern": "(?:place|create|make|build|put|set up|add|give me) (?:a |the |an )?square (?:room|area|space)(?: of| that is| which is| measuring| with)? ?<NUM:a>(?: metres?)?(?: at .*| (?:centred|centered) .*| in the (?:centre|center) .*| of the (?:room|scene))?",
       "Let": {
         "x0": "-a/2",
-        "x1": "a/2"
+        "x1": "a/2",
+        "h": "2.5"
       },
       "Command": {
         "UserCommandRQ": {
@@ -1249,7 +1560,7 @@
                           [
                             "{x0}",
                             "{x0}",
-                            2.5
+                            "{h}"
                           ]
                         ]
                       }
@@ -1260,7 +1571,11 @@
             }
           ]
         }
-      }
+      },
+      "Keep": [
+        "a",
+        "b"
+      ]
     },
     {
       "Pattern": "(?:move|shift|push|bring) (?:the )?(?<name>.+?) (?:by )?<NUM:n> metres? (?:to the |towards the )?right",
@@ -2156,6 +2471,31 @@
           "DeliveredObject": "stage"
         }
       }
+    }
+  ],
+  "Asks": [
+    {
+      "Words": [
+        "ceiling",
+        "how high is the room",
+        "height of the room"
+      ],
+      "Say": "How big is the room? Say for example: place a room of 4 by 4 metres, with a ceiling 3 metres high."
+    }
+  ],
+  "Try": "Try for example: move the violin two metres to the right, place a room of 4 by 4 metres, what is in the scene, or undo that.",
+  "Reasons": [
+    {
+      "When": "no Basic Audio Scene is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "the open Scene has no such member",
+      "Say": "That sound is not in the scene. Put it in the scene first."
+    },
+    {
+      "When": "keeps no Audio Scene of that name",
+      "Say": "There is no scene of that name."
     }
   ]
 }
