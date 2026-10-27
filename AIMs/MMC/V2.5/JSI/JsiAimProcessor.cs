@@ -278,7 +278,8 @@ public sealed class JsiAimProcessor : IAimProcessor
             var completed = view.Complete(shortcut.DeepClone());
             if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
             {
-                if (completed["UserCommandRQ"]?["ListedObjects"] is null) Remember(completed, text);      // a listing is not one of the person's commands to be undone
+                if (completed["UserCommandRQ"]?["ListedObjects"] is null) Remember(completed, text);
+                else if (IdOf(completed) is { Length: > 0 } listingId) _requestOf[listingId] = text;      // its answer is told, but a listing is not one of the person's commands to be undone
                 return (completed, null);
             }
         }
