@@ -21,4 +21,4 @@ The Module runs continuously (Execution Continuous in its L3). The Objects, Scen
 
 The App has no vocal interface: recognition, understanding and synthesis are not part of the Module (the author's decision of 2026-10-17). It understands typed words by its own grammar. A vocal interface would be another Module that the App runs beside this one; it is not built.
 
-Start it with `AllApps\10 ASM (audio scene management).bat`. Its library of sounds and scenes is in `Downloads\ASM`. Test: `AsmStudioSelfTests` runs the App's own self-test (103 checks, `AsmApp --selftest`); the report goes to `Downloads\ASM\self-test`.
+Start it with `AllApps\CAE\ASM.bat`. Its library of sounds and scenes is in `Downloads\ASM`. Test: `AsmStudioSelfTests` runs the App's own self-test (103 checks, `AsmApp --selftest`); the report goes to `Downloads\ASM\self-test`.

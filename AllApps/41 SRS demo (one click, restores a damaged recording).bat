@@ -1,5 +1,0 @@
-@echo off
-rem SPEECH RESTORATION SYSTEM, A DEMONSTRATION: a real recording is damaged in two places and restored by the Module with the voice of another speaker; it plays the original, the damaged and the restored one. Needs the voice engine (the L3 of Speech Model Creation declares it: Access) and the LibriSpeech clips (Test\Data\Speech\libri_wav), in the folder Data of the tree or in MPAI_DATA.
-call "%~dp0_settings.bat"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0_srs-demo.ps1"
-pause

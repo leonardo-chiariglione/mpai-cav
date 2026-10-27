@@ -8,7 +8,7 @@
 | `HfeUserAgent.cs` | the End User's: registers, acquires Health Data and gives a Model Licence, hears the alert, retrieves, uploads, asks for de-identification and audit, trains when the Back End asks |
 | `HbeUserAgent.cs` | the Back End's: carries what the Module asks of the Blockchain, asks AIH Data Processing for the AIH Data De-Identification and Auditing work on and hands it to them, answers the clients (`IBackEnd`), runs a round of federated learning |
 | `Trust.cs` | the security model of AIF (MPAI-PTF): the Back End is the Trust Authority; parties are enrolled, establish trust, and sign what they exchange (`BackEndTrust`, `PartyTrust`, `TrustedClient`, `TrustedBackEnd`) |
-| `Demo` | `AihDemo`, the first slice narrated (AllApps, 40) |
+| `Demo` | `AihDemo`, the first slice narrated (`AllApps\AIH\HSP demo.bat`) |
 
 A User Agent reaches its Module through the Controller API only. In `AihFirstSliceTests` the Controller and the Module of each end run as different processes (the Module's AIMs on an AIM host).
 ## Building and running
@@ -24,7 +24,7 @@ dotnet build Apps\AIH\HSP\Demo\AihDemo.csproj -c Debug -nologo -v q
 dotnet Apps\AIH\HSP\Demo\bin\Debug\net10.0\AihDemo.dll
 ```
 
-or double-click `AllApps\40 AIH-HSP demo (first slice, narrated).bat`, which does the same. For Release, use `-c Release` and `bin\Release`.
+or double-click `AllApps\AIH\HSP demo.bat`, which does the same. For Release, use `-c Release` and `bin\Release`.
 The AIH tests: `dotnet test Test\Mpai.Aif.Tests --filter FullyQualifiedName~Aih`.
 
 ### On Linux
@@ -39,7 +39,7 @@ If the scripts are not executable, run `chmod +x *.sh` first. The AIH tests: `do
 
 `AIH_DEMO_TRACE=1 ./run-aih-demo.sh` shows the stack of a failure. What was tried on Linux follows.
 
-The scripts only wrap `dotnet build Demo/AihDemo.csproj` and `dotnet Demo/bin/<configuration>/net10.0/AihDemo.dll`, which is what `AllApps\40 AIH-HSP demo (first slice, narrated).bat` does on Windows.
+The scripts only wrap `dotnet build Demo/AihDemo.csproj` and `dotnet Demo/bin/<configuration>/net10.0/AihDemo.dll`, which is what `AllApps\AIH\HSP demo.bat` does on Windows.
 Needs the .NET 10 SDK; without root, `dotnet-install.sh --channel 10.0` puts it in `~/.dotnet`. If the system has no ICU library (`apt install libicu-dev`), set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1`.
 
 Tried on Ubuntu 26.04 (WSL2), .NET 10.0.402, x86-64: it builds (about 10 s, from a clean copy of the tree), and the first slice runs to the end - the Controllers and their AIM hosts as separate processes,

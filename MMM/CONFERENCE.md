@@ -26,7 +26,7 @@ a Persona (a Rocketbox avatar of a catalogue of 113: it does not bring its own);
 
 ## Running it
 
-**Through Tailscale (the way for the guests).** `AllApps\43 MMM meeting (through Tailscale).bat`, or `MMM\Run-Meeting.bat -Chair Leonardo -Guests "anna@example.com=Anna,..." -Until 19:00`.
+**Through Tailscale (the way for the guests).** `AllApps\MMM\MMM meeting.bat`, or `MMM\Run-Meeting.bat -Chair Leonardo -Guests "anna@example.com=Anna,..." -Until 19:00`.
 Tailscale tells the server who is asking, so nothing is typed and there is no code: whoever browses on this PC is the chair; a guest the chair listed (their Tailscale login = their name in the
 meeting) may go into the meeting room, for the meeting; any other login on the tailnet is a visitor, who may go into the atrium and no further. Nothing that does not come by Tailscale is answered.
 Needs: Tailscale on this PC and on each guest's, https certificates enabled for the tailnet (the admin console: DNS, HTTPS certificates: the microphone needs https), each guest invited to the tailnet
