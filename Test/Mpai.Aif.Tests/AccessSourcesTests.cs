@@ -328,10 +328,10 @@ public class AccessSourcesTests : IDisposable
         Assert.Equal(["aim", "other"], store.Trace(file.Uri, "model.bin", out var trace) == AccessOutcome.OK ? trace!.Readers : null);
         Assert.Equal(AccessFetcher.Writer, trace!.Writer);
 
-        // a Provider writes with the readers it names, or with none: every holder reads
-        store.Create("maps", "provider-1");
-        store.Put("maps", "provider-1", "private", [1], 1, "Data", ["aim"]);
-        store.Put("maps", "provider-1", "public", [2], 2);
+        // the Controller writes with the readers it names, or with none: every holder reads
+        store.Create("maps");
+        store.Put("maps", "private", [1], "Data", ["aim"]);
+        store.Put("maps", "public", [2]);
         Assert.Equal(AccessOutcome.OK, store.As(Me).Get("maps", "private", out _));
         Assert.Equal(AccessOutcome.NotAuthorised, store.As(Other).Get("maps", "private", out _));
         Assert.Equal(AccessOutcome.OK, store.As(Other).Get("maps", "public", out _));

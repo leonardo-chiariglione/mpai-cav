@@ -114,10 +114,46 @@ public sealed class UserAgent
         _                           => AifError.Failed               // Exists, Refused
     };
 
-    // THE PROVIDERS' DOOR (AIF V3.0, Basic API 6): a listener on which Providers write
-    // their Sources, each on a link admitted by the Trust Protocol of this Controller.
-    public AccessProviderServer OpenAccessToProviders(AIF.Trust.TrustProtocol protocol, int port = 0) =>
-        new(Access ?? throw new InvalidOperationException("this Controller has no Access."), protocol, port);
+    // THE DATA OF PROVIDERS (AIF V3.0, Storage 6.3): only the Controller writes Access. It obtains what the Metadata of an AIM names
+    // from the URI the Metadata gives; the data of a Provider, over a link the Trust Protocol admitted. AccessTrust is that
+    // protocol (null: every Uri is obtained as it always was); OpenAccessHosts, the hosts whose data is published openly, obtained
+    // by its SHA-256 alone.
+    public AIF.Trust.TrustProtocol? AccessTrust { get; set; }
+    public ISet<string> OpenAccessHosts { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    private AccessFetcher? NewFetcher()
+    {
+        if (Access is null) return null;
+        var fetcher = new AccessFetcher(Access) { Trust = AccessTrust };
+        foreach (var host in OpenAccessHosts) fetcher.OpenHosts.Add(host);
+        return fetcher;
+    }
+
+    private IEnumerable<DescriptorNode> LeavesOf(string aimName)
+    {
+        var selected = _store.GetCatalog().FirstOrDefault(c => c.AIMName == aimName);
+        return selected is null || _controller is null ? [] : AimsOf(_controller.RegisterAim(new Identifier
+        { AIMName = selected.AIMName, ImplementerID = selected.ImplementerID, ImplementationID = selected.ImplementationID }).Root);
+    }
+
+    // UPDATING ACCESS: the Controller reads the Metadata of a Module again and obtains what it names that Access does not hold - a new
+    // SHA-256 for a Uri is a new Version of its Source. It is done each time a Module starts, and when this is called; nothing
+    // watches a Uri. What was done for each entry of each AIM of the Module.
+    public IReadOnlyList<AccessUpdate> RefreshAccess(string moduleName)
+    {
+        var fetcher = NewFetcher();
+        return fetcher is null ? [] : LeavesOf(moduleName).SelectMany(l => fetcher.Refresh(l.AccessSources, l.AIMName)).ToList();
+    }
+
+    // REMOVING FROM ACCESS: the Controller removes the Sources that the Metadata of no Module in its catalogue declares, and
+    // keeps those that one does. An AIM, the User Agent and a Provider have no such call.
+    public (IReadOnlyList<string> Removed, IReadOnlyList<string> Kept) PruneAccess()
+    {
+        var fetcher = NewFetcher();
+        if (fetcher is null) return ([], []);
+        var declared = _store.GetCatalog().SelectMany(c => LeavesOf(c.AIMName)).SelectMany(l => l.AccessSources);
+        return fetcher.Prune(AccessFetcher.Declared(declared));
+    }
 
     // THE TRANSPORTS OF THIS CONTROLLER (M3205 3.6.2, M3215 3.1): Controller, which
     // relays and can observe, and InProcess. The Channels of a Module use the one
@@ -558,7 +594,7 @@ public sealed class UserAgent
         };
 
         var graph = _controller.RegisterAim(identifier);
-        var fetcher = Access is null ? null : new AccessFetcher(Access);
+        var fetcher = NewFetcher();
         var host  = new AimHost { Access = Access, Fetcher = fetcher, ModuleName = name, CentralControl = graph.Root.StorageControl };
         RunningModule? started = null;
 

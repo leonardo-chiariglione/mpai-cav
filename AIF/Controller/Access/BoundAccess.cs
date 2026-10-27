@@ -171,10 +171,29 @@ public sealed record AccessEntry(
 // declared one is refused wherever it came from, so what the AIM reads is exactly what its Metadata names. The items of a set
 // are obtained when first read, each checked against the hash its manifest gives. http, https and file URIs. Data is
 // received into a file as it arrives and hashed on the way, so its size is not held in memory.
+//
+// ONLY THE CONTROLLER WRITES ACCESS (AIF V3.0, Storage 6): a Provider - a third party holding the rights to data - publishes
+// it at a URI and the Metadata of an AIM names that URI; the Controller always opens the exchange. Where the Controller has a
+// Trust Protocol (Trust), it obtains the data of a Provider over a link that protocol admitted - the Provider answers the
+// TrustRequest with a TrustResponse signed by an anchor the Controller trusts, directly or through a credential issued under
+// one it trusts, naming the certificate of that link - and refuses the data of one that is not admitted. Data that its owner
+// publishes openly (OpenHosts: the hosts named by the one who configures the Controller) is obtained without admission; its
+// SHA-256 is what makes it the data the Metadata names. Without a Trust Protocol every Uri is obtained as it always was.
+// THE ACCESS FOLLOWS ITS METADATA: Ensure, called when a Module starts and by Refresh, obtains data whose SHA-256 is not the
+// one held and keeps it as a new Version of the Source; data that the Source held before is refused (a step back).
 public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
 {
-    public const string Writer = "Controller";
+    public const string Writer = AccessStore.Controller;
     private readonly HttpClient http = http ?? Client();
+
+    // The Trust Protocol of this Controller, where it requires Providers to be admitted; null: as it has always been.
+    public AIF.Trust.TrustProtocol? Trust { get; set; }
+
+    // Hosts whose data is published openly, obtained without admission, only by its SHA-256.
+    public ISet<string> OpenHosts { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    // A Provider that was not admitted, or whose data is not reached over https.
+    private sealed class NotAdmitted(string why) : Exception(why);
 
     // Servers refuse a request that says nothing of who makes it.
     private static HttpClient Client()
@@ -217,7 +236,8 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
         try
         {
             using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            using (var from = u.IsFile ? File.OpenRead(u.LocalPath) : http.GetStreamAsync(u).GetAwaiter().GetResult())
+            using var link = !u.IsFile && Trust is not null && !OpenHosts.Contains(u.Host) ? Admit(u) : null;
+            using (var from = u.IsFile ? File.OpenRead(u.LocalPath) : link is not null ? link.Get(u) : http.GetStreamAsync(u).GetAwaiter().GetResult())
             using (var to = File.Create(temp))
             {
                 var buffer = new byte[1 << 20];
@@ -228,6 +248,19 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
             return temp;
         }
         catch { try { File.Delete(temp); } catch { } throw; }
+    }
+
+    // THE LINK TO A PROVIDER: opened and admitted by the Trust Protocol, or the data is refused.
+    private ProviderLink Admit(Uri u)
+    {
+        if (u.Scheme != Uri.UriSchemeHttps) throw new NotAdmitted($"{u.Host} is not a host of openly published data, and a Provider is reached over https");
+        var link = new ProviderLink(Trust!);
+        try
+        {
+            if (link.Admit(u) is { } why) throw new NotAdmitted($"{u.Host} is not admitted: {why}");
+            return link;
+        }
+        catch { link.Dispose(); throw; }
     }
 
     // Whether the item kept is the one with that hash. A file already checked and unchanged is not read again: checking a
@@ -247,9 +280,9 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
     private bool Reuse(string source, string key, string hash, string reader)
     {
         if (!store.Recall(hash, out var from, out var fromKey) || (from == source && fromKey == key) || !Holds(from, fromKey, hash)) return false;
-        if (store.Version(source) < 0) store.Create(source, Writer);
-        if (store.Trace(source, key, out _) == AccessOutcome.OK) return store.Allow(source, Writer, key, [reader]) == AccessOutcome.OK;
-        return store.PutFrom(source, Writer, key, from, fromKey, readers: [reader], sha256: hash) == AccessOutcome.OK;
+        if (store.Version(source) < 0) store.Create(source);
+        if (store.Trace(source, key, out _) == AccessOutcome.OK) return store.Allow(source, key, [reader]) == AccessOutcome.OK;
+        return store.PutFrom(source, key, from, fromKey, readers: [reader], sha256: hash) == AccessOutcome.OK;
     }
 
     // Looks at each location in turn for data with that hash; keeps the first found. Why not, in why.
@@ -257,6 +290,7 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
     {
         var tried = new List<string>();
         var wrong = false;
+        var denied = false;
         if (Reuse(source, key, hash, reader)) { why = ""; store.Remember(hash, source, key); return AccessOutcome.OK; }
         foreach (var location in locations)
         {
@@ -266,15 +300,17 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
                 temp = Download(location, member, out var got);
                 if (!AccessEntry.Same(got, hash)) { wrong = true; tried.Add($"{location} is not the data its Metadata names (SHA-256 {got})"); continue; }
                 why = "";
-                var kept = Keep(source, key, temp, reader, hash);
+                var kept = Keep(source, key, temp, reader, hash, location);
+                if (kept == AccessOutcome.Refused) { wrong = true; tried.Add($"{location}: the Source held this data before, and is not brought back to it"); continue; }
                 if (kept == AccessOutcome.OK) store.Remember(hash, source, key);
                 return kept;
             }
+            catch (NotAdmitted e) { denied = true; tried.Add($"{location} is refused: {e.Message}"); }
             catch (Exception e) { tried.Add($"{location} cannot be obtained: {e.Message}"); }
             finally { if (temp is not null) try { File.Delete(temp); } catch { } }
         }
         why = string.Join("; ", tried);
-        return wrong ? AccessOutcome.Refused : AccessOutcome.NotFound;
+        return wrong || denied ? AccessOutcome.Refused : AccessOutcome.NotFound;
     }
 
     // Makes sure what the entry names is in Access, for the AIM Instance that declared it (the reader the Controller, as the
@@ -287,7 +323,7 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
         if (Holds(entry.Uri, key, entry.Sha256))
         {
             store.Remember(entry.Sha256, entry.Uri, key);
-            return store.Allow(entry.Uri, Writer, key, [reader]);
+            return store.Allow(entry.Uri, key, [reader]);
         }
         return Obtain(entry.Uri, key, entry.Locations.Select(l => entry.IsSet ? l + AccessEntry.ManifestKey : l), entry.Sha256, reader, out why, entry.Member);
     }
@@ -302,20 +338,61 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
             if (!doc.RootElement.TryGetProperty("Items", out var items) || !items.TryGetProperty(key, out var hash) || hash.GetString() is not { } expected)
                 return AccessOutcome.NotFound;
             if (store.Trace(entry.Uri, key, out _) == AccessOutcome.OK && Holds(entry.Uri, key, expected))
-                return store.Allow(entry.Uri, Writer, key, [reader]);
+                return store.Allow(entry.Uri, key, [reader]);
             return Obtain(entry.Uri, key, entry.Locations.Select(l => new Uri(new Uri(l), key).ToString()), expected, reader, out _);
         }
         catch { return AccessOutcome.NotFound; }
     }
 
-    private AccessOutcome Keep(string source, string key, string file, string reader, string hash)
+    private AccessOutcome Keep(string source, string key, string file, string reader, string hash, string from)
     {
-        if (store.Version(source) < 0) store.Create(source, Writer);
+        if (store.Version(source) < 0) store.Create(source);
         // what was read before by others stays readable by them
         var readers = store.Trace(source, key, out var before) == AccessOutcome.OK ? before!.Readers?.Union([reader]).ToList() : [reader];
-        return store.PutFile(source, Writer, key, file, readers: readers, sha256: hash);
+        return store.PutFile(source, key, file, readers: readers, sha256: hash, from: from);
     }
+
+    // ---- UPDATING: the Controller looks at what the Metadata names again ----------------------------------------------------
+
+    // THE ACCESS OF A MODULE FOLLOWS ITS METADATA. The Controller learns of an update when it reads the Metadata again, as it
+    // does each time a Module starts, and when it is asked - this call - for the entries of a Module: no daemon looks at a Uri.
+    // An entry whose SHA-256 is not the one Access holds is obtained and kept as a new Version of its Source, and the AIMs that
+    // read it afterwards see that Version; data the Source held before is refused. What was obtained, what was not, and why.
+    public IReadOnlyList<AccessUpdate> Refresh(IEnumerable<AccessEntry> entries, string reader)
+    {
+        var done = new List<AccessUpdate>();
+        foreach (var entry in entries.Where(e => !e.IsPlaceholder && e.AppliesHere))
+        {
+            var before = store.Version(entry.Uri);
+            var outcome = Ensure(entry, reader, out var why);
+            done.Add(new AccessUpdate(entry.Name, entry.Uri, outcome, outcome == AccessOutcome.OK && store.Version(entry.Uri) > before, why));
+        }
+        return done;
+    }
+
+    // ---- LEAVING: a Source that no Module declares any more ------------------------------------------------------------------
+
+    // THE CONTROLLER REMOVES FROM ACCESS the Sources that the Metadata of no Module declares (declared: their Uris), on its own
+    // call - an AIM has no function that deletes, nor does the User Agent. A Source that a Module still declares is not removed.
+    // Each removal is recorded by the store (access-removed.log). The Sources removed, and those kept because they are declared.
+    public (IReadOnlyList<string> Removed, IReadOnlyList<string> Kept) Prune(IEnumerable<string> declared)
+    {
+        var keep = new HashSet<string>(declared, StringComparer.Ordinal);
+        var removed = new List<string>();
+        var kept = new List<string>();
+        foreach (var source in store.Sources())
+            if (keep.Contains(source)) kept.Add(source);
+            else if (store.Remove(source) == AccessOutcome.OK) removed.Add(source);
+        return (removed, kept);
+    }
+
+    // The Sources and Uris that entries declare: the file, the set, and their Mirrors' data is kept under the Uri.
+    public static IEnumerable<string> Declared(IEnumerable<AccessEntry> entries) =>
+        entries.Where(e => !e.IsPlaceholder).Select(e => e.Uri).Distinct(StringComparer.Ordinal);
 }
+
+// What a Refresh did for one entry.
+public sealed record AccessUpdate(string Name, string Uri, AccessOutcome Outcome, bool Updated, string Why);
 
 // ACCESS AS ONE AIM READS IT (AIF V3.0, Metadata AccessSources and Storage 3): who may read a datum of Access is decided by
 // the rules of the datum, as in Shared Storage - its Readers - which the reader given here (the Access of one holder: an AIM

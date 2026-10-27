@@ -9,19 +9,14 @@ using Xunit.Abstractions;
 
 namespace Mpai.Aif.Tests;
 
-// ACCESS (AIF V3.0, Storage 6; Basic API 3.9, 4.11.3, 6): the data a Module reads and
-// never writes. Each Source has one Writer. A Provider writes its Sources over a link
-// the Controller admitted with the Trust Protocol, each request signed by it and
-// stating a Version higher than the current one; the User writes its own through the
-// User Agent; an AIM only reads, through the Controller.
+// ACCESS (AIF V3.0, Storage 6; Basic API 3.9, 4.11.3): the data a Module reads and
+// never writes. Only the Controller writes it - it obtains it from the URIs the Metadata
+// of an AIM names (AccessProcessTests); an AIM only reads, through the Controller.
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
 public class AifAccessTests(ITestOutputHelper output)
 {
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
-
-    private static TrustAnchorKey Key(string id, ECDsa key) => new(id, key, Now.AddHours(-1), Now.AddDays(1));
-    private static TrustProtocol Party(string id, ECDsa key, params JsonObject[] trusted) => new(Key(id, key), key, trusted);
 
     private static string Root()
     {
@@ -33,81 +28,17 @@ public class AifAccessTests(ITestOutputHelper output)
     private static string Text(AccessStore store, string source, string key) =>
         store.Get(source, key, out var data) == AccessOutcome.OK ? Encoding.UTF8.GetString(data) : "-";
 
-    [Fact]
-    public async Task Provider()
-    {
-        var result = new Dictionary<string, string>();
-        using var controllerKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        using var providerKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        using var otherKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        using var strangerKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        var controllerAnchor = Key("controller-1", controllerKey).Object();
-
-        // The Controller trusts two Providers; the stranger it does not know.
-        var controller = Party("controller-1", controllerKey, Key("provider-1", providerKey).Object(), Key("provider-2", otherKey).Object());
-        var store = new AccessStore(Root());
-        var refusals = new List<string>();
-        await using var server = new AccessProviderServer(store, controller);
-        server.Refused += refusals.Add;
-
-        await using var provider = await AccessProvider.ConnectAsync("localhost", server.Port,
-            Party("provider-1", providerKey, controllerAnchor), Key("provider-1", providerKey), providerKey);
-        await using var other = await AccessProvider.ConnectAsync("localhost", server.Port,
-            Party("provider-2", otherKey, controllerAnchor), Key("provider-2", otherKey), otherKey);
-
-        result["a Provider creates its Source"] = $"{await provider.MPAI_AIFP_Access_Create("maps")}; the Writer is {store.WriterOf("maps")}, Version {store.Version("maps")}";
-        result["it puts an item at Version 1"] = $"{await provider.MPAI_AIFP_Access_Put("maps", 1, "turin", Encoding.UTF8.GetBytes("streets of Turin"))}; read: {Text(store, "maps", "turin")}, Version {store.Version("maps")}";
-        result["it updates the item at Version 2"] = $"{await provider.MPAI_AIFP_Access_Put("maps", 2, "turin", Encoding.UTF8.GetBytes("streets of Turin, 2026"))}; read: {Text(store, "maps", "turin")}";
-        result["an update at an older Version"] = $"{await provider.MPAI_AIFP_Access_Put("maps", 1, "turin", Encoding.UTF8.GetBytes("old streets"))}; read: {Text(store, "maps", "turin")}";
-
-        // A request recorded and sent again, as it was.
-        var request = provider.Signed(new JsonObject { ["Function"] = "Put", ["Source"] = "maps", ["Version"] = 3, ["Key"] = "milan", ["Data"] = Convert.ToBase64String(Encoding.UTF8.GetBytes("streets of Milan")) });
-        result["a signed request"] = $"{await provider.SendAsIs(request)}; read: {Text(store, "maps", "milan")}";
-        result["the same request sent again"] = $"{await provider.SendAsIs(request)}; Version {store.Version("maps")}";
-
-        // Altered on the way: the Data changed after it was signed.
-        var altered = JsonNode.Parse(provider.Signed(new JsonObject { ["Function"] = "Put", ["Source"] = "maps", ["Version"] = 4, ["Key"] = "turin", ["Data"] = Convert.ToBase64String(Encoding.UTF8.GetBytes("the Provider's")) }))!;
-        altered["Data"] = Convert.ToBase64String(Encoding.UTF8.GetBytes("someone else's"));
-        result["a request altered after it was signed"] = $"{await provider.SendAsIs(altered.ToJsonString())}; read: {Text(store, "maps", "turin")}";
-
-        // Not signed at all.
-        result["a request not signed"] = $"{await provider.SendAsIs(new JsonObject { ["Function"] = "Delete", ["Source"] = "maps", ["Version"] = 5, ["Key"] = "turin" }.ToJsonString())}; read: {Text(store, "maps", "turin")}";
-
-        // Signed by one trusted Provider, sent on the link of another.
-        result["a request signed by the Provider of another link"] = $"{await other.SendAsIs(provider.Signed(new JsonObject { ["Function"] = "Delete", ["Source"] = "maps", ["Version"] = 6, ["Key"] = "turin" }))}; read: {Text(store, "maps", "turin")}";
-
-        // Another trusted Provider, on its own link, writing a Source it did not create.
-        result["another Provider writes the Source"] = $"{await other.MPAI_AIFP_Access_Put("maps", 10, "turin", Encoding.UTF8.GetBytes("streets"))}; read: {Text(store, "maps", "turin")}";
-        result["another Provider creates the same Source"] = (await other.MPAI_AIFP_Access_Create("maps")).ToString();
-
-        result["the Provider deletes an item"] = $"{await provider.MPAI_AIFP_Access_Delete("maps", 7, "milan")}; listed: {string.Join(", ", store.List("maps"))}";
-        result["who wrote an item, at which Version"] = store.Trace("maps", "turin", out var trace) == AccessOutcome.OK ? $"{trace!.Writer} at Version {trace.Version}" : "-";
-
-        // A Provider the Controller does not trust: its link is not admitted.
-        try
-        {
-            await using var stranger = await AccessProvider.ConnectAsync("localhost", server.Port,
-                Party("provider-3", strangerKey, controllerAnchor), Key("provider-3", strangerKey), strangerKey);
-            result["a Provider the Controller does not trust"] = $"admitted: {await stranger.MPAI_AIFP_Access_Create("stolen")}";
-        }
-        catch (UnauthorizedAccessException) { result["a Provider the Controller does not trust"] = $"its link refused; the Source exists: {store.Version("stolen") >= 0}"; }
-
-        result["refused before the store"] = string.Join(" | ", refusals);
-        foreach (var (k, v) in result) output.WriteLine($"{k}: {v}");
-        Expected.Match("access-provider.json", result);
-    }
-
-    // What a Provider wrote, an AIM that declares it reads through the Controller, and an AIM that declares nothing does not.
+    // What the Controller keeps, an AIM that declares it reads through the Controller, and an AIM that declares nothing does not.
     [Fact]
     public async Task AnAimReadsWhatItDeclares()
     {
         var result = new Dictionary<string, string>();
         var access = new AccessStore(Root());
-        result["a Provider creates a Source"] = access.Create("my-vocabulary/", "provider-1").ToString();
-        result["it puts an item"] = $"{access.Put("my-vocabulary/", "provider-1", "greeting", Encoding.UTF8.GetBytes("ciao"), null, "Data", ["Reader"])}; Version {access.Version("my-vocabulary/")}";
-        result["it puts another"] = $"{access.Put("my-vocabulary/", "provider-1", "farewell", Encoding.UTF8.GetBytes("arrivederci"))}; Version {access.Version("my-vocabulary/")}";
-        result["it deletes one"] = $"{access.Delete("my-vocabulary/", "provider-1", "farewell")}; Version {access.Version("my-vocabulary/")}";
-        result["it deletes one not there"] = access.Delete("my-vocabulary/", "provider-1", "farewell").ToString();
+        result["the Controller creates a Source"] = access.Create("my-vocabulary/").ToString();
+        result["the Controller puts an item"] = $"{access.Put("my-vocabulary/", "greeting", Encoding.UTF8.GetBytes("ciao"), "Data", ["Reader"])}; Version {access.Version("my-vocabulary/")}";
+        result["it puts another"] = $"{access.Put("my-vocabulary/", "farewell", Encoding.UTF8.GetBytes("arrivederci"))}; Version {access.Version("my-vocabulary/")}";
+        result["it deletes one"] = $"{access.Delete("my-vocabulary/", "farewell")}; Version {access.Version("my-vocabulary/")}";
+        result["it deletes one not there"] = access.Delete("my-vocabulary/", "farewell").ToString();
 
         // An AIM of a Module reads, through its context: the only Access functions it has.
         using var host = new AimHost { Access = access };
@@ -129,8 +60,8 @@ public class AifAccessTests(ITestOutputHelper output)
     {
         var result = new Dictionary<string, string>();
         var access = new AccessStore(Root());
-        access.Create("my-vocabulary/", "provider-1");
-        access.Put("my-vocabulary/", "provider-1", "greeting", Encoding.UTF8.GetBytes("ciao"));
+        access.Create("my-vocabulary/");
+        access.Put("my-vocabulary/", "greeting", Encoding.UTF8.GetBytes("ciao"));
 
         // Any AIM the host holds an L3 of; what it runs is the Reader.
         // The L3 of this AIM declares what it reads (AccessSources): a copy of the repository's, with that added.

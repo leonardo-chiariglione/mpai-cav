@@ -8,23 +8,24 @@ namespace AIF.Controller;
 // ACCESS (AIF V3.0, Storage 6): the static or slowly changing data a Module needs -
 // domain knowledge, data models, knowledge bases - which the AIMs of a Module READ and
 // never write. Its content is organised in Sources: a set of items, each at a Key, with
-// a Version that changes whenever its content changes, and ONE Writer, whoever created
-// the Source - a Provider (a third party holding the rights to the data, wanting to be
-// its only provider), named by the trust anchor its link was admitted with, or the User.
+// a Version that changes whenever its content changes. ONLY THE CONTROLLER WRITES ACCESS:
+// it obtains the data an AIM's Metadata names from the URI the Metadata gives (AccessFetcher),
+// a Provider being a third party that publishes data at such a URI. There is no other
+// writer: no AIM, no User Agent, no Provider.
 //
-// The store enforces the one rule: only the Writer of a Source writes it. What proves a
-// Provider is checked before a call reaches this store (AccessProviderServer): the link,
-// the signature of each request. What the store adds for a Provider is the Version: an
-// update states the new Version, and one not higher than the current one is refused -
-// an old item cannot be sent again, nor a Source brought back to an earlier state. A
-// User's update raises the Version by one.
+// What the store adds is the Version: it rises by one at every write, so an AIM that reads
+// MPAI_AIFM_Access_Version can tell that content has changed; and a Source is never brought
+// back to an earlier state - an item records the SHA-256 of what it held before, and data
+// with one of those is refused. A Source leaves Access only through Remove, an operation
+// of the Controller (Prune): the Sources that no Module's Metadata declares any more.
 //
 // On disk, per Source a folder (its name in hexadecimal, any text being a valid Source):
 // source.json - the Source, its Writer and Version - and per item a .data and a .info
 // (the Key, who wrote it, when, at which Version).
 public enum AccessOutcome { OK, NotFound, NotAuthorised, Exists, Refused }
 
-public sealed record AccessTrace(string Writer, DateTimeOffset Stamp, long Version, string Category = "Data", IReadOnlyList<string>? Readers = null);
+// From: where the Controller obtained the item (the location it was fetched from); empty where it was not fetched.
+public sealed record AccessTrace(string Writer, DateTimeOffset Stamp, long Version, string Category = "Data", IReadOnlyList<string>? Readers = null, string From = "");
 
 public sealed class AccessStore : IAccessReader
 {
@@ -44,7 +45,10 @@ public sealed class AccessStore : IAccessReader
     private sealed record SourceInfo(string Source, string Writer, long Version);
     // Sha256, Length and FileTime: what the file was when its SHA-256 was last checked - the same length and time are the same file.
 private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, long Version, string Category = "Data", List<string>? Readers = null,
-                                   string? Sha256 = null, long Length = 0, DateTime FileTime = default);
+                                   string? Sha256 = null, long Length = 0, DateTime FileTime = default, List<string>? Earlier = null, string From = "");
+
+    // THE ONE WRITER.
+    public const string Controller = "Controller";
 
     // THE NAMES ON DISK ARE SHORT: a Source is a URI, and a Key may be a long path, so a name made of the text itself would
     // pass the length a program that reads the file is able to open (260 characters on Windows); the name is the first 32
@@ -86,54 +90,53 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     private void Save(SourceInfo info) =>
         File.WriteAllText(Path.Combine(Folder(info.Source), "source.json"), JsonSerializer.Serialize(info));
 
-    // ---- the Writer's: creating a Source and writing it --------------------------------
+    // ---- the Controller's: creating a Source and writing it -----------------------------
 
-    public AccessOutcome Create(string source, string writer)
+    public AccessOutcome Create(string source)
     {
-        if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(writer)) return AccessOutcome.Refused;
+        if (string.IsNullOrWhiteSpace(source)) return AccessOutcome.Refused;
         lock (one)
         {
             if (Info(source) is not null) return AccessOutcome.Exists;
             Directory.CreateDirectory(Folder(source));
-            Save(new SourceInfo(source, writer, 0));
+            Save(new SourceInfo(source, Controller, 0));
             return AccessOutcome.OK;
         }
     }
 
-    // version: the new Version a Provider states; null for the User, whose update
-    // raises the Version by one.
     // The rules of an item are those of a datum of Shared Storage (AIF V3.0, Storage 3): its Category, and its Readers - the
-    // AIM Instances, Modules or User Agent that may read it; none named: every holder.
-    public AccessOutcome Put(string source, string writer, string key, byte[] data, long? version = null,
-                             string category = "Data", IReadOnlyCollection<string>? readers = null) =>
-        Write(source, writer, key, version, info =>
+    // AIM Instances, Modules or User Agent that may read it; none named: every holder. The Version of the Source rises by one.
+    public AccessOutcome Put(string source, string key, byte[] data, string category = "Data", IReadOnlyCollection<string>? readers = null) =>
+        Write(source, key, Hash(data), (info, earlier) =>
         {
             File.WriteAllBytes(Item(source, key) + ".data", data);
-            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(new ItemInfo(key, writer, now(), info.Version, category, readers?.ToList())));
+            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Sha256: Hash(data), Earlier: earlier)));
             return AccessOutcome.OK;
         });
 
-    // The same, the data being a file (a large item is never held in memory): it is copied into the Source.
-    public AccessOutcome PutFile(string source, string writer, string key, string path, long? version = null,
-                                 string category = "Data", IReadOnlyCollection<string>? readers = null, string? sha256 = null) =>
-        Write(source, writer, key, version, info =>
+    // The same, the data being a file (a large item is never held in memory): it is copied into the Source. sha256: the hash
+    // the file was checked to have.
+    public AccessOutcome PutFile(string source, string key, string path, string category = "Data", IReadOnlyCollection<string>? readers = null, string? sha256 = null, string from = "") =>
+        Write(source, key, sha256, (info, earlier) =>
         {
             File.Copy(path, Item(source, key) + ".data", true);
-            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, writer, now(), info.Version, category, readers?.ToList()), Item(source, key) + ".data", sha256)));
+            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Earlier: earlier, From: from), Item(source, key) + ".data", sha256)));
             return AccessOutcome.OK;
         });
 
     // The same, the data being an item already kept in another Source (the same bytes needed under another Uri).
-    public AccessOutcome PutFrom(string source, string writer, string key, string fromSource, string fromKey,
+    public AccessOutcome PutFrom(string source, string key, string fromSource, string fromKey,
                                  string category = "Data", IReadOnlyCollection<string>? readers = null, string? sha256 = null) =>
-        Write(source, writer, key, null, info =>
+        Write(source, key, sha256, (info, earlier) =>
         {
             var from = Item(fromSource, fromKey) + ".data";
             if (!File.Exists(from)) return AccessOutcome.NotFound;
             File.Copy(from, Item(source, key) + ".data", true);
-            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, writer, now(), info.Version, category, readers?.ToList()), Item(source, key) + ".data", sha256)));
+            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Earlier: earlier), Item(source, key) + ".data", sha256)));
             return AccessOutcome.OK;
         });
+
+    private static string Hash(byte[] data) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data));
 
     // The item with the SHA-256 that was checked of the file as it is now.
     private static ItemInfo Checked(ItemInfo info, string file, string? sha256)
@@ -197,8 +200,9 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         return true;
     }
 
-    public AccessOutcome Delete(string source, string writer, string key, long? version = null) =>
-        Write(source, writer, key, version, _ =>
+    // Removes one item: the Version of the Source rises. An operation of the Controller; no AIM has it.
+    public AccessOutcome Delete(string source, string key) =>
+        Write(source, key, null, (_, _) =>
         {
             if (!File.Exists(Item(source, key) + ".data")) return AccessOutcome.NotFound;
             File.Delete(Item(source, key) + ".data");
@@ -206,16 +210,52 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
             return AccessOutcome.OK;
         });
 
-    private AccessOutcome Write(string source, string writer, string key, long? version, Func<SourceInfo, AccessOutcome> act)
+    // THE SOURCE LEAVES ACCESS, with what it holds: an operation of the Controller (Prune), for a Source that no Module declares
+    // any more. What was removed is recorded - the Source, its Version and items, and when - in access-removed.log beside the
+    // store, and the places remembered for its data are forgotten.
+    public AccessOutcome Remove(string source)
+    {
+        lock (one)
+        {
+            if (Info(source) is not { } info) return AccessOutcome.NotFound;
+            var items = List(source);
+            Directory.Delete(Folder(source), true);
+            var by = Path.Combine(root, "by-hash");
+            if (Directory.Exists(by))
+                foreach (var hint in Directory.EnumerateFiles(by).ToList())
+                {
+                    try { if (File.ReadAllText(hint).StartsWith(source + (char)9, StringComparison.Ordinal)) File.Delete(hint); } catch (IOException) { }
+                }
+            File.AppendAllText(Path.Combine(root, "access-removed.log"), JsonSerializer.Serialize(new { Source = source, info.Version, Items = items, When = now() }) + Environment.NewLine);
+            return AccessOutcome.OK;
+        }
+    }
+
+    // The Sources in Access.
+    public IReadOnlyList<string> Sources() =>
+        Directory.EnumerateDirectories(root)
+            .Select(d => Path.Combine(d, "source.json")).Where(File.Exists)
+            .Select(f => JsonSerializer.Deserialize<SourceInfo>(File.ReadAllText(f))!.Source).Order(StringComparer.Ordinal).ToList();
+
+    // hash: the SHA-256 of what is written, where it is known. THE VERSION RISES BY ONE with every write; what an item held before is
+    // kept as the SHA-256 of it, and data that has one of those is refused: a Source is never brought back to an earlier state.
+    private AccessOutcome Write(string source, string key, string? hash, Func<SourceInfo, List<string>?, AccessOutcome> act)
     {
         if (string.IsNullOrEmpty(key)) return AccessOutcome.Refused;
         lock (one)
         {
             if (Info(source) is not { } info) return AccessOutcome.NotFound;
-            if (info.Writer != writer) return AccessOutcome.NotAuthorised;
-            var next = version ?? info.Version + 1;
-            if (next <= info.Version) return AccessOutcome.Refused;          // a replay, or a step back
-            var outcome = act(info with { Version = next });
+            List<string>? earlier = null;
+            var file = Item(source, key) + ".info";
+            if (File.Exists(file))
+            {
+                var before = JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(file))!;
+                earlier = [.. before.Earlier ?? []];
+                if (before.Sha256 is { } held && !string.Equals(held, hash, StringComparison.OrdinalIgnoreCase)) earlier.Add(held.ToUpperInvariant());
+                if (hash is not null && earlier.Contains(hash.ToUpperInvariant(), StringComparer.OrdinalIgnoreCase)) return AccessOutcome.Refused;   // a step back
+            }
+            var next = info.Version + 1;
+            var outcome = act(info with { Version = next }, earlier);
             if (outcome == AccessOutcome.OK) Save(info with { Version = next });
             return outcome;
         }
@@ -270,20 +310,18 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         var file = Item(source, key) + ".info";
         if (!File.Exists(file)) return AccessOutcome.NotFound;
         var info = JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(file))!;
-        trace = new AccessTrace(info.Writer, info.Stamp, info.Version, info.Category, info.Readers);
+        trace = new AccessTrace(info.Writer, info.Stamp, info.Version, info.Category, info.Readers, info.From);
         return AccessOutcome.OK;
     }
 
     // ---- who may read: the rules of Shared Storage ----------------------------------------
 
-    // The writer of a Source adds readers to an item it wrote: the rule of its datum, widened by the one who set it. An item
-    // readable by every holder stays so.
-    public AccessOutcome Allow(string source, string writer, string key, IEnumerable<string> readers)
+    // The Controller adds readers to an item: the rule of its datum, widened. An item readable by every holder stays so.
+    public AccessOutcome Allow(string source, string key, IEnumerable<string> readers)
     {
         lock (one)
         {
-            if (Info(source) is not { } s) return AccessOutcome.NotFound;
-            if (s.Writer != writer) return AccessOutcome.NotAuthorised;
+            if (Info(source) is null) return AccessOutcome.NotFound;
             var file = Item(source, key) + ".info";
             if (!File.Exists(file)) return AccessOutcome.NotFound;
             var info = JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(file))!;
@@ -294,8 +332,8 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         }
     }
 
-    // Whether a holder may read an item: the one who wrote it and the central control always; otherwise those the writer
-    // named as readers, or every holder where it named none.
+    // Whether a holder may read an item: the Controller and the central control always; otherwise those the Controller named
+    // as readers, or every holder where it named none.
     private bool MayRead(StorageHolder holder, StorageHolder? central, ItemInfo info) =>
         holder.Is(info.Writer) || (central is not null && central == holder) ||
         (info.Readers is { } named ? named.Any(holder.Is) : true);
