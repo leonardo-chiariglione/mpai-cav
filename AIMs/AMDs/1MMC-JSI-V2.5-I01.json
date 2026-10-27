@@ -8,6 +8,7 @@
 
   "ExternalPorts":        [{"Name": "Request", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ApplicationResponse", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationContext", "Direction": "Input", "DataType": "MMC-APC-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ApplicationCommand", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ResponseHint", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
 

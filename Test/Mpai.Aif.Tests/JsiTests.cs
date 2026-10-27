@@ -45,6 +45,39 @@ public class JsiTests
 
     private static Task<Message> Ask(JsiAimProcessor jsi, string words, JsonNode? context = null) => jsi.ProcessAsync(JsiRig.Say(Ports, words, context));
 
+    // ---- the Application Context on its Port ---------------------------------------------------------------------------------------------------
+
+    private static Message GiveContext(string json) =>
+        new() { MessageId = Guid.NewGuid().ToString(), Ports = new Dictionary<string, string> { [Ports.Input("MMC-APC-V2.5")] = json } };
+
+    [Fact]
+    public async Task AnApplicationContextOnItsPortReplacesTheOneOfAccess()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model);
+        var given = JsonNode.Parse(File.ReadAllText(JsiRig.ContextFile))!.AsObject();
+        given["Application"] = "A test application whose words are stranger than the ones of Access.";
+        var said = await jsi.ProcessAsync(GiveContext(given.ToJsonString()));
+        Assert.Equal("Nothing", said.MessageType);                       // the context is taken; nothing is said and nothing is sent
+        await Ask(jsi, "move the violin 1 metre to the right", Context());
+        Assert.Contains("stranger than the ones of Access", calls[0].System);
+    }
+
+    [Fact]
+    public async Task AnApplicationContextThatIsNotOneIsRefusedAndTheOneInUseStays()
+    {
+        var (model, calls) = Fake(MoveViolin);
+        var jsi = JsiRig.Processor(model);
+        var bad = JsonNode.Parse(File.ReadAllText(JsiRig.ContextFile))!.AsObject();
+        bad["Application"] = "A test application that must not be used.";
+        bad["Header"] = "MMC-XXX-V2.5";
+        await jsi.ProcessAsync(GiveContext(bad.ToJsonString()));
+        bad["Header"] = "MMC-APC-V2.5"; bad["Include"] = "not a list";
+        await jsi.ProcessAsync(GiveContext(bad.ToJsonString()));
+        await Ask(jsi, "move the violin 1 metre to the right", Context());
+        Assert.DoesNotContain("must not be used", calls[0].System);
+    }
+
     // ---- the shape the model is shown ---------------------------------------------------------------------------------------------------------
 
     [Fact]

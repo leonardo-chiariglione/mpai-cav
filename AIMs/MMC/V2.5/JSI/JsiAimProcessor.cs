@@ -38,10 +38,13 @@ public sealed class JsiAimProcessor : IAimProcessor
     private const string Ucm = "CAE-UCM-V1.0";
     private static readonly TimeSpan GatherFor = TimeSpan.FromSeconds(10);
 
-    private readonly string _requestIn, _responseIn, _commandOut, _hintOut;
+    private readonly string _requestIn, _responseIn, _contextIn, _commandOut, _hintOut;
+    private const string ContextDataType = "MMC-APC-V2.5";
+    private const string ContextSchemaUri = SchemaCheck.Authority + "MMC/V2.5/data/ApplicationContext.json";
+    private readonly string? _schemasRoot;
     private readonly JsiConfiguration _configuration;
     private readonly StructuredModel? _model;
-    private readonly ApplicationContext? _guide;
+    private ApplicationContext? _guide;   // from the Access of the L3, or from the Application Context Port when one arrives
     private readonly SchemaCheck? _commandCheck, _responseCheck;
     private readonly SchemaLibrary? _library;
     private readonly SemaphoreSlim _one = new(1, 1);
@@ -72,6 +75,8 @@ public sealed class JsiAimProcessor : IAimProcessor
         _model = model;
         _requestIn = ports.Input("OSD-BTO-V1.5");
         _responseIn = ports.InputOrDefault(Ucm, 1, "");
+        _contextIn = ports.InputOrDefault(ContextDataType, 1, "");
+        _schemasRoot = configuration.SchemasRoot;
         _commandOut = ports.OutputOrDefault(Ucm, 1, "");
         _hintOut = ports.Output("OSD-BTO-V1.5");
 
@@ -100,6 +105,9 @@ public sealed class JsiAimProcessor : IAimProcessor
         await _one.WaitAsync().ConfigureAwait(false);
         try
         {
+            // 0. An Application Context that arrives on its Port replaces the one read from Access, if it follows the structure of an Application Context.
+            if (Input(message, _contextIn) is { } context) AcceptContext(context);
+
             var hints = new List<string>();
             JsonNode? command = null;
 
@@ -183,6 +191,22 @@ public sealed class JsiAimProcessor : IAimProcessor
             return new Message { MessageId = message.MessageId, MessageType = ports.Count == 0 ? "Nothing" : message.MessageType, Ports = ports };
         }
         finally { _one.Release(); }
+    }
+
+    // An Application Context given on the Port: used for the requests that follow, unless it does not follow the structure of an Application Context (then it is ignored and the
+    // one in use stays). Where the schema cannot be found the context is taken as it comes.
+    private void AcceptContext(string json)
+    {
+        try
+        {
+            var violations = new SchemaCheck(ContextSchemaUri, null, _schemasRoot).Violations(json);
+            if (violations is { Count: > 0 }) return;
+            var parsed = ApplicationContext.Parse(json);
+            if (parsed.Root["Header"]?.GetValue<string>() != "MMC-APC-V2.5") return;
+            _guide = parsed;
+            _stale = true;
+        }
+        catch (Exception e) when (e is JsonException or FormatException or InvalidOperationException) { }
     }
 
     private static string? Input(Message message, string port) =>

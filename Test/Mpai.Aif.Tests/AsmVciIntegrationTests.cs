@@ -162,7 +162,7 @@ public class AsmVciIntegrationTests
     [Fact]
     public void TheApplicationContextOfAudioSceneManagementFollowsTheStructureOfOne()
     {
-        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "MMC", "V2.5", "access", "ApplicationContext.json"))];
+        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "MMC", "V2.5", "data", "ApplicationContext.json"))];
         using var doc = JsonDocument.Parse(File.ReadAllText(JsiRig.ContextFile));
         EvaluationResultsText(schema, doc, out var valid, out var why);
         Assert.True(valid, why);

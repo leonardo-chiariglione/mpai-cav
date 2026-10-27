@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/MMC/V2.5/access/ApplicationContext.json",
+  "$id": "https://schemas.mpai.community/MMC/V2.5/data/ApplicationContext.json",
   "title": "Application Context V2.5",
-  "description": "The Application Context of an application served by JSON Interface (MMC-JSI): the standing description of the application, given to the AIM through its Access (Settings CommandSchema, ResponseSchema and ApplicationContext). CommandSchema and ResponseSchema are the schemas of the commands and of the responses of the application; this schema is the structure of the Application Context beyond them, which says what those two schemas do not. A path in a guide is a dotted path from the name of a command or response, through its properties, to the property or object it designates (for example UserCommandRQ.MovedObjects.Objects.ObjectID). Only Header is required: every other member is a help that an implementation of JSON Interface may use.",
+  "description": "The Application Context (MMC-APC) of an application served by JSON Interface (MMC-JSI): the standing description of the application. JSON Interface obtains it from the Access of its implementation (Settings CommandSchema, ResponseSchema and ApplicationContext), or receives it on its Application Context Port; this Data Type is the whole of it. CommandSchema and ResponseSchema are the addresses of the schemas of the commands and of the responses of the application; the other members are the structure that says what those two schemas do not. A path is a dotted path from the name of a command or response, through its properties, to the property or object it designates (for example UserCommandRQ.MovedObjects.Objects.ObjectID). Only Header is required: every other member is a help that an implementation of JSON Interface may use.",
   "type": "object",
   "required": ["Header"],
   "additionalProperties": false,
@@ -12,7 +12,9 @@
     "WordList": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "description": "Words or phrases, in lower case, that are looked for in a request." },
     "Command": { "type": "object", "description": "A command, an instance of the CommandSchema." } },
   "properties": {
-    "Header": { "const": "MMC-JSI-ApplicationContext", "description": "Identifies the structure." },
+    "Header": { "const": "MMC-APC-V2.5", "description": "Identifies the structure." },
+    "CommandSchema": { "type": "string", "format": "uri", "description": "The address of the schema that a command of the application conforms to." },
+    "ResponseSchema": { "type": "string", "format": "uri", "description": "The address of the schema that a response of the application conforms to." },
     "Description": { "type": "string", "description": "Says which application the Application Context is for and where it is kept in the Access of the implementation." },
     "Application": { "type": "string", "description": "What the application is and does, in words, given to the language model." },
     "Conventions": { "type": "string", "description": "What the schemas do not say and the commands rely on: units, axes, orientations, which field a verb is for, how a change by an amount is made, other words for an object." },
