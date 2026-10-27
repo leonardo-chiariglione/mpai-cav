@@ -46,14 +46,14 @@ public static class Driver
         say("the Controller is built");
         var started = api.StartFlow(AsmVoiceModules.Asm);
         say("the Module starts: " + started);
-        api.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(run, "storage"));
+        api.SharedStorageInit(AsmVoiceModules.Asm, Value(args, "--storage") ?? Path.Combine(run, "storage"));
         using var voice = new MachineVoice(null!, "Thalia", () => new ControllerApi(MpaiPaths.Amds, MpaiPaths.Settings, store => new AmqProvider(store)), (c, e) => say("voice error [" + c + "]: " + e.Message));
 
         var speech = new GivingDevice("OSD-BSO-V1.5");
-        var sounds = new GivingDevice("CAE-UCM-V1.0");
+        var sounds = new GivingDevice("CAE-UCM-V1.0"); var sceneIn = new GivingDevice("OSD-ASD-V1.5");
         var heard = new List<string>(); var texts = new List<string>(); var spoken = new List<string>(); var scenes = new List<string>();
         var devices = new DeviceRegistry();
-        devices.RegisterDevice("Voice", speech).RegisterDevice("SoundIn", sounds);
+        devices.RegisterDevice("Voice", speech).RegisterDevice("SoundIn", sounds).RegisterDevice("SceneIn", sceneIn);
         devices.RegisterDevice("Heard", new ActingDevice("Heard", j => { var t = Text(j); lock (heard) heard.Add(t); say("HEARD: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", j => { var t = Text(j); lock (texts) texts.Add(t); say("RESPONSE TEXT: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", j => { lock (spoken) spoken.Add(j); say("RESPONSE SPEECH: " + (MpaiJson.FromJson<BasicSpeechObject>(j)?.Data?.Length ?? 0) + " bytes"); return Task.CompletedTask; }));
@@ -67,6 +67,7 @@ public static class Driver
         var running = Task.Run(async () => { try { await interpreter.RunAsync(workflow, stop.Token); } catch (OperationCanceledException) { } catch (Exception e) { say("WORKFLOW FAILED: " + e); } });
         await Task.Delay(1500);
         say("the workflow runs");
+        if (args.Contains("--open")) { sceneIn.Give(MainWindow.OpenStub("stage")); say("the scene stage is asked for by its name"); await Task.Delay(2500); }
 
         foreach (var load in Values(args, "--load"))
         {

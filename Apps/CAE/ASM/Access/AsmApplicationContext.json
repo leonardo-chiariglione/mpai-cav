@@ -898,7 +898,17 @@
         "which sounds",
         "what do i have",
         "list the sounds",
-        "what have i loaded"
+        "what have i loaded",
+        "in store",
+        "in stock",
+        "are stored",
+        "what is stored",
+        "which scenes",
+        "what scenes",
+        "scenes do i have",
+        "scenes that you have",
+        "audio scenes",
+        "what do you have"
       ],
       "Command": {
         "UserCommandRQ": {

@@ -14,6 +14,7 @@
       <RowDefinition Height="*"/>
       <RowDefinition Height="0"/>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
     <TextBlock x:Name="InstructionText" Grid.Row="0" Grid.ColumnSpan="2" Text="Wait while the avatar loads" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,8"/>
@@ -59,5 +60,12 @@
       <TextBox x:Name="InputBox" Grid.Column="4" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" IsEnabled="False"/>
       <Button x:Name="SendButton" Grid.Column="5" Content="Send" Padding="16,4" Margin="8,0,0,0" IsEnabled="False" Click="SendButton_Click"/>
     </Grid>
+    <!-- how long what is stored is kept: until the person deletes it, unless they give a date -->
+    <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
+      <TextBlock Text="What is stored is kept:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+      <RadioButton x:Name="KeepForever" Content="until it is deleted" IsChecked="True" VerticalAlignment="Center" Margin="0,0,14,0" Checked="Keep_Changed"/>
+      <RadioButton x:Name="KeepUntilDate" Content="until" VerticalAlignment="Center" Margin="0,0,6,0" Checked="Keep_Changed"/>
+      <DatePicker x:Name="KeepDate" SelectedDateChanged="Keep_Changed" Width="140"/>
+    </StackPanel>
   </Grid>
 </Window>

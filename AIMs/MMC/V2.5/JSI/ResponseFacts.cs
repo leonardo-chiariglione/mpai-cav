@@ -19,6 +19,10 @@ public static class ResponseFacts
         var skip = guide.Skip.ToHashSet(StringComparer.Ordinal);
         var intro = (string?)guide.Root["ResponseIntro"] ?? "The application answered";
         var text = intro + ": " + Render(response, words, skip, top: true) + ".";
+        // A listing that listed nothing says so: nothing is stored.
+        if (response["UserCommandRS"] is JsonObject rs && (rs["Actions"] as JsonArray)?.Any(a => (string?)a?["Action"] == "ListedObjects" && (string?)a?["Outcome"] == "Done") == true
+            && !(rs["ListedObjects"] is JsonArray { Count: > 0 }))
+            text += " Nothing is stored: there are no sounds and no scenes yet.";
         if (!string.IsNullOrWhiteSpace(inReplyTo)) text = "The person had asked: \"" + inReplyTo.Trim() + "\". " + text;
         return text;
     }

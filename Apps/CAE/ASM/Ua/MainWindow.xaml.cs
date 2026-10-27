@@ -41,12 +41,13 @@ public partial class MainWindow : Window
     private SpeechListener? _ears;
     private MachineVoice? _voice;
     private VoiceDevice? _voiceDevice;
-    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0");
+    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0"), _sceneIn = new("OSD-ASD-V1.5");
     private CancellationTokenSource? _stopping;
     private Task? _running;
     private bool _closing;
     private volatile bool _microphoneOn = true;
     private CancellationTokenSource? _hearing;          // the scene being heard on the loudspeakers
+    private string? _storageLocation;                   // where the Module keeps its Objects and Scenes: the Controller's; asked how long to keep them, through the Controller API
     private TaskCompletionSource<string?>? _naming;      // the name the person is giving a sound
     private string? _lastScene;                          // the last Audio Scene Descriptors the Module gave
 
@@ -88,15 +89,20 @@ public partial class MainWindow : Window
                 _north = AsmVoiceModules.Controller(_prepared);
                 var started = _north.StartFlow(AsmVoiceModules.Asm);
                 if (started != AIF.Controller.AifError.OK) throw new InvalidOperationException("The Controller would not start the module: " + started);
-                _north.SharedStorageInit(AsmVoiceModules.Asm, Path.Combine(run, "storage"));
+                // WHERE THE MODULE KEEPS ITS OBJECTS AND SCENES is one place for this person, the same at every start (its Private Storage is under it): what is stored is held until it is deleted, and no duration is stated.
+                _storageLocation = Path.Combine(downloads, "module-storage");
+                _north.SharedStorageInit(AsmVoiceModules.Asm, _storageLocation);
             });
 
+            Dispatcher.Invoke(RestoreKeep);
             var workflow = new WorkflowReader().Read(File.ReadAllText(Path.Combine(MpaiPaths.Root, "Apps", "CAE", "ASM", "ASM-VCI.orch")));
             _stopping = new CancellationTokenSource();
             LoadButton.IsEnabled = HearButton.IsEnabled = InputBox.IsEnabled = SendButton.IsEnabled = true;
             SetStatus("Ready.");
             var interpreter = new WorkflowInterpreter(_north!.Async(), Devices(), line => App.Log("[workflow] " + line));
             _running = interpreter.RunAsync(workflow, _stopping.Token);
+            // THE SCENE OF LAST TIME, BY ITS NAME: the Module opens what it kept (the one scene this application makes is called stage).
+            _ = Task.Run(async () => { await Task.Delay(2000); _sceneIn.Give(OpenStub("stage")); });
             try { await _running; }
             catch (OperationCanceledException) { }
             if (!_closing) SetStatus("Stopped.");
@@ -118,6 +124,7 @@ public partial class MainWindow : Window
         var devices = new DeviceRegistry();
         devices.RegisterDevice("Voice", _voiceDevice);
         devices.RegisterDevice("SoundIn", _soundIn);
+        devices.RegisterDevice("SceneIn", _sceneIn);
 
         // THE WORDS HEARD: shown; the Module is now working out the command, which takes a few seconds.
         devices.RegisterDevice("Heard", new ActingDevice("Heard", json =>
@@ -162,6 +169,9 @@ public partial class MainWindow : Window
         devices.RegisterPresent("screen", async data => { if (data.TryGetValue("Prompt", out var words)) await TellAsync(words); });
         return devices;
     }
+
+    // A scene asked for by its name alone: the Module opens it from where it keeps its scenes.
+    internal static string OpenStub(string name) => new JsonObject { ["Header"] = "OSD-ASD-V1.5", ["AudioSceneDescriptorsID"] = name }.ToJsonString();
 
     private static string TextOf(string json)
     {
@@ -299,6 +309,45 @@ public partial class MainWindow : Window
         try { _north?.Dispose(); } catch { }
         base.OnClosed(e);
     }
+
+    // ---- how long what is stored is kept: no duration unless the person gives a date ---------------------------------------------------------------------
+
+    private static string KeepFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "ASM", "keep-until.txt");
+    private bool _keepRestored;
+
+    private void RestoreKeep()
+    {
+        try
+        {
+            if (File.Exists(KeepFile) && DateTime.TryParse(File.ReadAllText(KeepFile).Trim(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var date))
+            { KeepDate.SelectedDate = date; KeepUntilDate.IsChecked = true; }
+        }
+        catch (Exception e) { App.Record("keep until", e); }
+        _keepRestored = true;
+        ApplyKeep();
+    }
+
+    private void Keep_Changed(object sender, RoutedEventArgs e) { if (_keepRestored) ApplyKeep(); }
+
+    // The date is asked of the Controller (SharedStorage_Keep), for what the Module writes from now on; "until it is deleted" states nothing.
+    private void ApplyKeep()
+    {
+        if (_north is null || _storageLocation is null) return;
+        try
+        {
+            var until = KeepUntilDate.IsChecked == true && KeepDate.SelectedDate is { } date ? date.ToString("yyyy-MM-dd") : null;
+            Directory.CreateDirectory(Path.GetDirectoryName(KeepFile)!);
+            File.WriteAllText(KeepFile, until ?? "deleted");
+            if (until is null && !_keptADate) return;
+            var time = until is null ? AIF.SharedStorage.StorageTime.Scope : AIF.SharedStorage.StorageTime.Parse("until " + until);
+            var done = _north.SharedStorageKeep(_storageLocation, "Data", time);
+            _keptADate = until is not null;
+            App.Log($"[window] keep {(until is null ? "until deleted" : "until " + until)}: {done}");
+            SetStatus(until is null ? "What is stored is kept until it is deleted." : "What is stored from now on is kept until " + until + ".");
+        }
+        catch (Exception ex) { App.Record("keep until", ex); SetStatus("The keeping time could not be set: " + ex.Message); }
+    }
+    private bool _keptADate;
 
     // ---- showing and saying -----------------------------------------------------------------------------------------------------------------------
 

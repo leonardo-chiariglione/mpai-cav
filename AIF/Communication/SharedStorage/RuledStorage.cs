@@ -29,34 +29,46 @@ public enum StorageOutcome
 
 // How long a datum is kept: until the Module instance that wrote it stops, until
 // the session of the User Agent ends, or as long as the scope is kept - and,
-// where given, no longer than a duration from its writing.
+// where given, no longer than a duration from its writing (Within) or beyond a date (Until:
+// "keep it until 31 December 2026"). Neither is ever forced: given none, a datum is kept until it is deleted.
 public enum StorageLifetime { Module, Session, Scope }
 
-public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scope, TimeSpan? Within = null)
+public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scope, TimeSpan? Within = null, DateTimeOffset? Until = null)
 {
     public static StorageTime Scope { get; } = new();
 
     // Not longer than other: a lifetime no longer, and a duration within other's.
     public bool NotLongerThan(StorageTime other) =>
         Lifetime <= other.Lifetime &&
-        (other.Within is null || (Within is { } mine && mine <= other.Within.Value));
+        (other.Within is null || (Within is { } mine && mine <= other.Within.Value)) &&
+        (other.Until is null || (Until is { } until && until <= other.Until.Value));
 
-    // "Module", "Session", "Scope", "200ms", "5s", "Module 5s".
+    // "Module", "Session", "Scope", "200ms", "5s", "Module 5s", "until 2026-12-31" (up to the end of that day, UTC).
     public static StorageTime Parse(string text)
     {
         var lifetime = StorageLifetime.Scope;
         TimeSpan? within = null;
+        DateTimeOffset? until = null;
+        var expectDate = false;
         foreach (var part in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (Enum.TryParse<StorageLifetime>(part, true, out var l)) lifetime = l;
+            if (expectDate)
+            {
+                if (!DateTimeOffset.TryParse(part, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var date)) throw new FormatException($"'{part}' is not a date.");
+                until = date.TimeOfDay == TimeSpan.Zero ? date.AddDays(1) : date;
+                expectDate = false;
+            }
+            else if (part.Equals("until", StringComparison.OrdinalIgnoreCase)) expectDate = true;
+            else if (Enum.TryParse<StorageLifetime>(part, true, out var l)) lifetime = l;
             else if (part.EndsWith("ms") && double.TryParse(part[..^2], System.Globalization.CultureInfo.InvariantCulture, out var ms)) within = TimeSpan.FromMilliseconds(ms);
             else if (part.EndsWith('s') && double.TryParse(part[..^1], System.Globalization.CultureInfo.InvariantCulture, out var s)) within = TimeSpan.FromSeconds(s);
             else throw new FormatException($"'{part}' is not a lifetime or a duration.");
         }
-        return new StorageTime(lifetime, within);
+        if (expectDate) throw new FormatException("'until' wants a date.");
+        return new StorageTime(lifetime, within, until);
     }
 
-    public override string ToString() => Lifetime + (Within is { } w ? $" {w.TotalMilliseconds:0.#}ms" : "");
+    public override string ToString() => Lifetime + (Within is { } w ? $" {w.TotalMilliseconds:0.#}ms" : "") + (Until is { } u ? $" until {u.UtcDateTime:yyyy-MM-ddTHH:mm:ss}" : "");
 }
 
 // The general rules of a category, set by a central control: who may write it,
@@ -207,6 +219,7 @@ public sealed class RuledStore
 
     private bool Expired(KeyInfo info) =>
         (info.WithinMs is { } ms && now() - new DateTimeOffset(info.StoredAt, TimeSpan.Zero) > TimeSpan.FromMilliseconds(ms)) ||
+        (info.Until is { } until && now() > until) ||
         (info.Lifetime == StorageLifetime.Module && !running.ContainsKey(info.ModuleInstance ?? "")) ||
         (info.Lifetime == StorageLifetime.Session && !running.ContainsKey(info.Session ?? ""));
 
@@ -264,7 +277,7 @@ public sealed class RuledStore
             {
                 StoredBy = holder.ToString(), RequestedBy = requestedBy, StoredAt = now().UtcDateTime, Length = data.LongLength,
                 Category = category, Readers = readers?.ToList(), Lifetime = effective.Lifetime,
-                WithinMs = effective.Within?.TotalMilliseconds, Rule = ruleText,
+                WithinMs = effective.Within?.TotalMilliseconds, Until = effective.Until, Rule = ruleText,
                 ModuleInstance = by.ModuleInstance, Session = by.Session
             };
             File.WriteAllBytes(infoPath + ".tmp", JsonSerializer.SerializeToUtf8Bytes(info));
@@ -322,7 +335,7 @@ public sealed class RuledStore
             if (Load(key) is not { } i) return StorageOutcome.NotFound;
             if (!MayRead(holder, i)) return StorageOutcome.NotAuthorised;
             trace = new StorageTrace(i.StoredBy, new DateTimeOffset(i.StoredAt, TimeSpan.Zero), i.Category ?? Default, i.Readers,
-                                     new StorageTime(i.Lifetime, i.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null), i.Rule ?? "the writer's");
+                                     new StorageTime(i.Lifetime, i.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null, i.Until), i.Rule ?? "the writer's");
             return StorageOutcome.OK;
         }
     }
