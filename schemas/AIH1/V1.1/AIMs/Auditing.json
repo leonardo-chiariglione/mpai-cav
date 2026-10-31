@@ -3,7 +3,7 @@
   "$id":              "https://schemas.mpai.community/AIH1/V1.1/AIMs/Auditing.json",
   "title":            "Auditing V1.1",
 
-  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "AIH-ADT-V1.1-I01", "AIMName": "AIH-ADT-V1.1"},
+  "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":           "AIH-ADT-V1.1",
 
   "APIProfile":       "Basic",
