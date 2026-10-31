@@ -13,7 +13,20 @@ namespace AIF.Channels;
 // its Channel has released it, or its MaxAge has passed. A reference means
 // nothing outside the Controller that issued it: where a Message leaves the
 // Controller it is inlined.
-public sealed class PayloadStore
+
+// WHAT A HUB NEEDS OF THE PAYLOADS OF ITS MODULE, to send them apart on the payload
+// channel (Communication 4, 7): the references a Message carries, their data, and
+// the Message with its references replaced by the data where it travels without a
+// payload channel.
+public interface IPayloadSource
+{
+    IReadOnlyList<string> ReferencesOf(string json);
+    byte[]? Get(string reference);
+    void Release(string reference);
+    string Inline(string json);
+}
+
+public sealed class PayloadStore : IPayloadSource
 {
     public const string Scheme = "aif:payload/";
 
@@ -25,7 +38,11 @@ public sealed class PayloadStore
 
     private sealed class Entry
     {
-        public required ReadOnlyMemory<byte> Data { get; init; }
+        public ReadOnlyMemory<byte> Data { get; set; }
+
+        // A payload that is on the other Controller until a reader asks for it: fetched
+        // then, over the payload channel (null: it could not be obtained).
+        public Func<byte[]?>? Fetch { get; set; }
         public required long Placed { get; init; }
         public required TimeSpan? MaxAge { get; init; }
         public int Unreleased;
@@ -56,13 +73,38 @@ public sealed class PayloadStore
         return reference;
     }
 
+    // A payload that stays on the Controller that wrote it and is fetched when its
+    // reader asks (Communication 7): placed for the Channel as any other.
+    public string PutRemote(ChannelSpec channel, Func<byte[]?> fetch)
+    {
+        var reference = Put(channel, ReadOnlyMemory<byte>.Empty);
+        held[reference].Fetch = fetch;
+        return reference;
+    }
+
     public bool TryGet(string reference, out ReadOnlyMemory<byte> data)
     {
         Sweep();
-        if (held.TryGetValue(reference, out var h)) { data = h.Data; return true; }
+        if (held.TryGetValue(reference, out var h))
+        {
+            if (h.Fetch is { } fetch)
+                lock (h)
+                    if (h.Fetch is { } again)
+                    {
+                        var got = again();
+                        if (got is null) { data = default; return false; }
+                        h.Data = got;
+                        h.Fetch = null;
+                    }
+            data = h.Data;
+            return true;
+        }
         data = default;
         return false;
     }
+
+    public IReadOnlyList<string> ReferencesOf(string json) => ReferencesIn(json);
+    public byte[]? Get(string reference) => TryGet(reference, out var data) ? data.ToArray() : null;
 
     // One reader is done with it; the last frees it.
     public void Release(string reference)

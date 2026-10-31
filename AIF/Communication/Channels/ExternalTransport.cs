@@ -85,7 +85,15 @@ public sealed class UdpDiscovery : IDiscoveryMedium
 }
 
 // A Message received on an External Input Port: its writer and the writer's stamp.
-public sealed record ExternalMessage(string DataType, int PortNumber, string Json, string From, DateTimeOffset Stamp);
+// A payload that travels apart from its Message (Communication 7): the reference the
+// writing Controller issued, and the length and the hash its signed Message states.
+public sealed record PayloadDescriptor(string Reference, long Length, string Hash);
+
+// payloads: what the Message states of the payloads that did not travel in it; fetch:
+// obtains one on the payload channel of the link, checked against its length and hash
+// (null where it cannot be obtained or does not match).
+public sealed record ExternalMessage(string DataType, int PortNumber, string Json, string From, DateTimeOffset Stamp,
+                                     IReadOnlyList<PayloadDescriptor>? Payloads = null, Func<PayloadDescriptor, byte[]?>? Fetch = null);
 
 // THE HUB OF ONE MODULE: its announcement, its links, its External Ports.
 public sealed class ExternalHub : IAsyncDisposable
@@ -102,6 +110,33 @@ public sealed class ExternalHub : IAsyncDisposable
         public TimeSpan AnnounceEvery { get; init; } = TimeSpan.FromMilliseconds(250);
         public TimeSpan LeaveAfter { get; init; } = TimeSpan.FromSeconds(3);
         public Func<DateTimeOffset> Clock { get; init; } = () => DateTimeOffset.UtcNow;
+
+        // Where other Controllers reach this one.
+        public string Host { get; init; } = "127.0.0.1";
+
+        // Whether a link is given a payload channel beside it (Communication 4).
+        public bool PayloadChannel { get; init; } = true;
+
+        // How long a payload offered on the payload channel waits to be fetched.
+        public TimeSpan PayloadKeep { get; init; } = TimeSpan.FromSeconds(60);
+
+        // WHERE A SERVICE ANSWERS MANY CLIENTS (a Health Back End; the server of a videoconference):
+        // a Message its Module gives goes only to the Controllers it concerns - the one that sent the
+        // Message it answers, found by an identifier the two Messages share, and any Controller the
+        // Message names by its controllerID. One that concerns none is not sent, and counted. Without
+        // it, as in a swarm, an External Output Port gives to every Controller linked.
+        public bool DirectedReplies { get; init; }
+
+        // The members of a Message by which an answer is matched to the request it answers (DirectedReplies): the Message's own identifier - RegisterID, AIHDataProcessID - and not
+        // those of the subjects it concerns (UserID): a question the Controller's own User Agent asks about a subject is not answered to that subject's Controller.
+        public IReadOnlyList<string> CorrelateBy { get; init; } = [];
+
+        // The members of a Message, at any depth, by which it names the Controller it is for - the Federated Learn request names the Front End by its HFEID. Only these name a Controller: a value
+        // that happens to equal a controllerID elsewhere in a Message (a user, a licensee) addresses no one.
+        public IReadOnlyList<string> AddressedBy { get; init; } = [];
+
+        // A client of a service has one Controller to speak to: what its Module gives waits, in the Module, until that Controller is linked - not sent to nobody.
+        public bool HoldUntilLinked { get; init; }
     }
 
     // What the hub gives its Module (writes to an External Input Port), and the
@@ -118,6 +153,95 @@ public sealed class ExternalHub : IAsyncDisposable
     public long Refused => Interlocked.Read(ref refused);
     private long refused;
     public Func<string, int, int, Task<(string Json, DateTimeOffset Stamp)?>>? ReadOutput { get; init; }
+
+    // THE PAYLOAD CHANNEL (Communication 4, 7): ReadOutputApart reads what an External
+    // Output Port gives with the references of its payloads kept, and PayloadSource gives
+    // their data; SignPayloads signs the Message with the length and hash of each, so
+    // that the receiving Controller can check what it fetches. Where any is missing, or
+    // a link has no payload channel, payloads travel in the Message.
+    public Func<string, int, int, Task<(string Json, DateTimeOffset Stamp)?>>? ReadOutputApart { get; init; }
+    public IPayloadSource? PayloadSource { get; init; }
+    public Func<string, IReadOnlyList<PayloadDescriptor>, string>? SignPayloads { get; init; }
+    // WHAT THE CONTROLLER CANNOT ROUTE (DirectedReplies): a Message its Module gave that concerns no Controller linked - an answer to a client that is not a Controller of the service. Where the
+    // Controller says what to do with it, it is given to the User Agent that serves that client; otherwise it is not sent, and counted.
+    public Func<string, int, string, Task>? Unrouted { get; init; }
+
+    // Messages not sent because they concern no Controller linked (DirectedReplies).
+    public long Undirected => Interlocked.Read(ref undirected);
+    private long undirected;
+    public long Fetched => Interlocked.Read(ref fetched);
+    public long Offered => Interlocked.Read(ref offeredCount);
+    public IReadOnlyCollection<string> PayloadLinked => payloadLinks.Keys.ToList();
+    private long fetched, offeredCount;
+    private readonly ConcurrentDictionary<string, RemoteLink> payloadLinks = new();
+
+    // The identifiers of the Messages received, and the Controller each came from, kept for the
+    // replies (DirectedReplies); the oldest are forgotten past a bound.
+    private const int RoutesKept = 20000;
+    private readonly ConcurrentDictionary<string, string> routes = new();
+    private readonly ConcurrentQueue<string> routeOrder = new();
+
+    // The values of the members named, at the top of a Message: the identifiers by which an answer is matched to its request.
+    private IEnumerable<string> CorrelatorsIn(string json)
+    {
+        if (options.CorrelateBy.Count == 0) return [];
+        try
+        {
+            return JsonNode.Parse(json) is JsonObject o
+                ? options.CorrelateBy.Select(name => o[name] is JsonValue v && v.TryGetValue<string>(out var id) && id.Length > 0 ? id : null).OfType<string>().ToList()
+                : [];
+        }
+        catch (System.Text.Json.JsonException) { return []; }
+    }
+
+    // The values of the members that name a Controller, at any depth, outside the signature.
+    private IEnumerable<string> AddresseesIn(string json)
+    {
+        var found = new List<string>();
+        if (options.AddressedBy.Count == 0) return found;
+        void Walk(JsonNode? node)
+        {
+            switch (node)
+            {
+                case JsonObject o:
+                    foreach (var (name, child) in o)
+                    {
+                        if (name == "DataXMData") continue;
+                        if (options.AddressedBy.Contains(name) && child is JsonValue v && v.TryGetValue<string>(out var text)) found.Add(text);
+                        Walk(child);
+                    }
+                    break;
+                case JsonArray a:
+                    foreach (var child in a) Walk(child);
+                    break;
+            }
+        }
+        try { Walk(JsonNode.Parse(json)); } catch (System.Text.Json.JsonException) { }
+        return found;
+    }
+
+    private void Remember(string json, string from)
+    {
+        foreach (var id in CorrelatorsIn(json))
+            if (routes.TryAdd(id, from)) { routeOrder.Enqueue(id); if (routeOrder.Count > RoutesKept && routeOrder.TryDequeue(out var old)) routes.TryRemove(old, out _); }
+            else routes[id] = from;
+    }
+
+    // The Controllers a Message concerns; every Controller where replies are not directed.
+    private IReadOnlyCollection<string> Concerned(string json, string? dataType = null, int portNumber = 1)
+    {
+        if (!options.DirectedReplies) return links.Keys.ToList();
+        var to = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var text in AddresseesIn(json)) if (links.ContainsKey(text)) to.Add(text);                 // it names a Controller
+        foreach (var id in CorrelatorsIn(json)) if (routes.TryGetValue(id, out var from) && links.ContainsKey(from)) to.Add(from);   // it answers a Message of one
+        if (to.Count == 0)
+        {
+            if (Unrouted is not null && dataType is not null) _ = Unrouted(dataType, portNumber, json);
+            else { Interlocked.Increment(ref undirected); Said?.Invoke("a Message concerns no Controller linked: not sent"); }
+        }
+        return to;
+    }
+    private readonly ConcurrentDictionary<string, (byte[] Data, DateTimeOffset Until)> offered = new();
 
     private readonly Options options;
     private readonly RemoteLink.Listener listener;
@@ -151,7 +275,7 @@ public sealed class ExternalHub : IAsyncDisposable
 
     private async Task AnnounceAsync()
     {
-        var me = new Announcement(options.ControllerId, options.ModuleType, "127.0.0.1", listener.Port);
+        var me = new Announcement(options.ControllerId, options.ModuleType, options.Host, listener.Port);
         while (!stop.IsCancellationRequested)
         {
             try { await options.Discovery.AnnounceAsync(me, stop.Token); } catch (Exception) when (!stop.IsCancellationRequested) { }
@@ -193,8 +317,10 @@ public sealed class ExternalHub : IAsyncDisposable
         try
         {
             var link = await RemoteLink.ConnectAsync(to.Host, to.Port, options.Admission, stop.Token);
-            await link.NoticeAsync(new JsonObject { ["Kind"] = "Hello", ["ControllerId"] = options.ControllerId });
+            // The link is ours, with its handlers, before the other end hears from us: what it sends the moment it has heard must find them set.
             Join(to.ControllerId, link);
+            await link.NoticeAsync(new JsonObject { ["Kind"] = "Hello", ["ControllerId"] = options.ControllerId });
+            if (options.PayloadChannel && ReadOutputApart is not null) await OpenPayloadChannelAsync(to, link);
         }
         catch (Exception e) when (e is UnauthorizedAccessException or IOException or SocketException)
         {
@@ -204,12 +330,80 @@ public sealed class ExternalHub : IAsyncDisposable
         finally { opening.TryRemove(to.ControllerId, out _); }
     }
 
+    // THE PAYLOAD CHANNEL OF A LINK: a second TLS connection, opened by the same Controller
+    // that opened the link, admitted by the same credentials. It carries requests for a
+    // payload and the payloads, raw; no Message.
+    private async Task OpenPayloadChannelAsync(Announcement to, RemoteLink main)
+    {
+        try
+        {
+            var channel = await RemoteLink.ConnectAsync(to.Host, to.Port, options.Admission, stop.Token);
+            AddPayloadLink(to.ControllerId, channel, main);
+            await channel.NoticeAsync(new JsonObject { ["Kind"] = "PayloadChannel", ["ControllerId"] = options.ControllerId });
+        }
+        catch (Exception e) when (e is UnauthorizedAccessException or IOException or SocketException)
+        {
+            Said?.Invoke($"{to.ControllerId}: no payload channel ({e.Message})");
+        }
+    }
+
+    private void AddPayloadLink(string id, RemoteLink channel, RemoteLink main)
+    {
+        if (!payloadLinks.TryAdd(id, channel)) { _ = channel.DisposeAsync().AsTask(); return; }
+        channel.OnRequest = ServePayload;
+        channel.Lost += why => { payloadLinks.TryRemove(new KeyValuePair<string, RemoteLink>(id, channel)); };
+        main.Lost += why => { if (payloadLinks.TryRemove(new KeyValuePair<string, RemoteLink>(id, channel))) _ = channel.DisposeAsync().AsTask(); };
+        Said?.Invoke($"{id} payload channel");
+    }
+
+    private Task<JsonObject?> ServePayload(JsonObject request)
+    {
+        var reference = (string?)request["Reference"];
+        if ((string?)request["Kind"] != "PayloadGet" || reference is null || !offered.TryGetValue(reference, out var held))
+            return Task.FromResult<JsonObject?>(new JsonObject { ["Ok"] = false });
+        Interlocked.Increment(ref fetched);
+        return Task.FromResult<JsonObject?>(RemoteLink.WithBody(new JsonObject { ["Ok"] = true }, held.Data));
+    }
+
+    // The payloads a signed Message states travel apart (DataXMData, Security, Integrity).
+    private static IReadOnlyList<PayloadDescriptor> PayloadsStated(string json) =>
+        (JsonNode.Parse(json)?["DataXMData"]?["Security"]?["Integrity"]?["Payloads"] as JsonArray)?
+            .Select(p => new PayloadDescriptor((string)p!["Reference"]!, (long)p["Length"]!, (string)p["Hash"]!)).ToList() ?? [];
+
+    // One payload of a Message, fetched on the payload channel of the link it came on,
+    // and checked against the length and the hash the signed Message states.
+    private byte[]? Fetch(string from, PayloadDescriptor wanted)
+    {
+        if (!payloadLinks.TryGetValue(from, out var channel)) return null;
+        byte[]? data;
+        try
+        {
+            var reply = channel.RequestAsync(new JsonObject { ["Kind"] = "PayloadGet", ["Reference"] = wanted.Reference }).GetAwaiter().GetResult();
+            data = reply["Ok"]?.GetValue<bool>() == true ? RemoteLink.BodyOf(reply) : null;
+        }
+        catch (Exception e) when (e is IOException or ObjectDisposedException or InvalidOperationException) { data = null; }
+        if (data is null) { Said?.Invoke($"from {from}, payload {wanted.Reference} not obtained"); return null; }
+        if (data.LongLength != wanted.Length || !string.Equals(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data)), wanted.Hash, StringComparison.OrdinalIgnoreCase))
+        {
+            Interlocked.Increment(ref refused);
+            Said?.Invoke($"from {from}, payload {wanted.Reference} refused: it is not the one the Message states");
+            return null;
+        }
+        return data;
+    }
+
     // A link another Controller opened: it names itself first.
     private void Accepted(RemoteLink link)
     {
         link.OnNotice = frame =>
         {
-            if ((string?)frame["Kind"] == "Hello" && (string?)frame["ControllerId"] is { } id)
+            if ((string?)frame["Kind"] == "PayloadChannel" && (string?)frame["ControllerId"] is { } payloadFrom)
+            {
+                // Only the Controller the link admitted may open the payload channel in its name.
+                if ((link.Peer is null || link.Peer == payloadFrom) && links.TryGetValue(payloadFrom, out var main)) AddPayloadLink(payloadFrom, link, main);
+                else { Said?.Invoke($"{payloadFrom} payload channel refused"); _ = link.DisposeAsync().AsTask(); }
+            }
+            else if ((string?)frame["Kind"] == "Hello" && (string?)frame["ControllerId"] is { } id)
             {
                 if (options.InRange(id)) Join(id, link);
                 else { Said?.Invoke($"{id} refused: not in range"); _ = link.DisposeAsync().AsTask(); }
@@ -236,8 +430,16 @@ public sealed class ExternalHub : IAsyncDisposable
             Said?.Invoke($"from {from}, refused: {why}");
             return;
         }
-        await Deliver(new ExternalMessage((string)frame["DataType"]!, (int)frame["PortNumber"]!, (string)frame["Json"]!, from,
-                                          DateTimeOffset.Parse((string)frame["Stamp"]!, System.Globalization.CultureInfo.InvariantCulture)));
+        var json = (string)frame["Json"]!;
+        if (options.DirectedReplies) Remember(json, from);
+        // What the Message states of its payloads: from the signed Message where it is
+        // verified, else from the frame.
+        IReadOnlyList<PayloadDescriptor> apart = Verify is not null
+            ? PayloadsStated(json)
+            : (frame["Payloads"] as JsonArray)?.Select(p => new PayloadDescriptor((string)p!["Reference"]!, (long)p["Length"]!, (string)p["Hash"]!)).ToList() ?? [];
+        await Deliver(new ExternalMessage((string)frame["DataType"]!, (int)frame["PortNumber"]!, json, from,
+                                          DateTimeOffset.Parse((string)frame["Stamp"]!, System.Globalization.CultureInfo.InvariantCulture),
+                                          apart.Count > 0 ? apart : null, d => Fetch(from, d)));
     };
 
     // WHAT AN EXTERNAL OUTPUT PORT GIVES, to every Controller linked.
@@ -246,10 +448,54 @@ public sealed class ExternalHub : IAsyncDisposable
         while (!stop.IsCancellationRequested)
         {
             (string Json, DateTimeOffset Stamp)? next;
-            try { next = await ReadOutput!(dataType, portNumber, 200); }
+            if (options.HoldUntilLinked && links.IsEmpty) { try { await Task.Delay(50, stop.Token); } catch (OperationCanceledException) { } continue; }
+            var apart = ReadOutputApart is not null && PayloadSource is not null && options.PayloadChannel;
+            try { next = await (apart ? ReadOutputApart! : ReadOutput!)(dataType, portNumber, 200); }
             catch (Exception) when (stop.IsCancellationRequested) { break; }
             if (next is not { } m) continue;
+            if (apart) { await SendWithPayloadsAsync(dataType, portNumber, m.Json, m.Stamp); continue; }
             await SendAsync(dataType, portNumber, Sign?.Invoke(m.Json) ?? m.Json, m.Stamp);
+        }
+    }
+
+    // A MESSAGE WHOSE PAYLOADS WERE WRITTEN BY REFERENCE (Communication 7): to a Controller
+    // with a payload channel it goes with the references, signed with the length and the
+    // hash of each payload, which wait to be fetched; to any other, with the data inlined.
+    private async Task SendWithPayloadsAsync(string dataType, int portNumber, string json, DateTimeOffset stamp)
+    {
+        var source = PayloadSource!;
+        var references = source.ReferencesOf(json);
+        var descriptors = new List<PayloadDescriptor>();
+        var until = options.Clock() + options.PayloadKeep;
+        foreach (var r in references)
+            if (source.Get(r) is { } data)
+            {
+                offered[r] = (data, until);
+                descriptors.Add(new PayloadDescriptor(r, data.LongLength, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data))));
+                Interlocked.Increment(ref offeredCount);
+            }
+        foreach (var gone in offered.Where(o => o.Value.Until < options.Clock()).Select(o => o.Key).ToList()) offered.TryRemove(gone, out _);
+
+        var apartJson = descriptors.Count == 0 ? json : SignPayloads is not null ? SignPayloads(json, descriptors) : Sign?.Invoke(json) ?? json;
+        var inlined = descriptors.Count == 0 || links.Keys.Any(id => !payloadLinks.ContainsKey(id)) ? source.Inline(json) : null;
+        // Released for this reader once: by Inline where it ran, else here.
+        if (inlined is null) foreach (var r in references) source.Release(r);
+        var inlineJson = inlined is null ? null : Sign?.Invoke(inlined) ?? inlined;
+
+        var concerned = Concerned(json, dataType, portNumber);
+        foreach (var (id, link) in links)
+        {
+            if (!concerned.Contains(id)) continue;
+            var viaChannel = descriptors.Count > 0 && payloadLinks.ContainsKey(id);
+            var frame = new JsonObject
+            {
+                ["Kind"] = "External", ["DataType"] = dataType, ["PortNumber"] = portNumber, ["Json"] = viaChannel ? apartJson : inlineJson,
+                ["Stamp"] = stamp.ToString("O", System.Globalization.CultureInfo.InvariantCulture)
+            };
+            if (viaChannel)
+                frame["Payloads"] = new JsonArray(descriptors.Select(d => (JsonNode)new JsonObject { ["Reference"] = d.Reference, ["Length"] = d.Length, ["Hash"] = d.Hash }).ToArray());
+            try { await link.NoticeAsync(frame); Interlocked.Increment(ref sent); }
+            catch (Exception e) when (e is IOException or ObjectDisposedException or InvalidOperationException) { Said?.Invoke($"{id}: not sent ({e.Message})"); }
         }
     }
 
@@ -260,8 +506,10 @@ public sealed class ExternalHub : IAsyncDisposable
             ["Kind"] = "External", ["DataType"] = dataType, ["PortNumber"] = portNumber, ["Json"] = json,
             ["Stamp"] = stamp.ToString("O", System.Globalization.CultureInfo.InvariantCulture)
         };
+        var concerned = Concerned(json, dataType, portNumber);
         foreach (var (id, link) in links)
         {
+            if (!concerned.Contains(id)) continue;
             try { await link.NoticeAsync(frame.DeepClone().AsObject()); Interlocked.Increment(ref sent); }
             catch (Exception e) when (e is IOException or ObjectDisposedException or InvalidOperationException) { Said?.Invoke($"{id}: not sent ({e.Message})"); }
         }
@@ -274,6 +522,8 @@ public sealed class ExternalHub : IAsyncDisposable
         try { await Task.WhenAll(running); } catch { }
         foreach (var link in links.Values) await link.DisposeAsync();
         links.Clear();
+        foreach (var channel in payloadLinks.Values) await channel.DisposeAsync();
+        payloadLinks.Clear();
         await listener.DisposeAsync();
     }
 }

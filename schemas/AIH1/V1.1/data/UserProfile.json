@@ -25,7 +25,14 @@
       "Age":              { "type": "integer", "minimum": 0, "description": "Age (years)." },
       "Nationality":      { "type": "string", "description": "Nationality (ISO 2-chr country code)." },
       "Address":          { "type": "string"},
-      "Email":            { "type": "string", "format": "email", "description": "Email address." } } } } },
+      "Email":            { "type": "string", "format": "email", "description": "Email address." },
+      "Membership":       { "type": "array", "minItems": 1, "description": "The organisations the individual is a member of. An individual who is a member of an organisation is a Third-Party User: the Health Front End and the Health Back End do for it what they do for a Third-Party User, and not what they do for an End User.",
+                            "items": { "type": "object", "required": [ "CompanyName" ], "additionalProperties": false, "properties": {
+        "CompanyName":    { "type": "string", "description": "Name of the organisation." },
+        "RegistrationCode": { "type": "string", "description": "RegistrationCode issued by country of company." },
+        "Country":        { "type": "string", "description": "Country of Company registration." },
+        "Type":           { "type": "array", "minItems": 1, "description": "Which kind of organisation, by the Taxonomy.", "items":
+                          { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataUser" } } } } } } } } },
 
                           { "type": "object", "description": "Organisation profile entry.", "required": [ "Organisation" ],
                             "additionalProperties": false, "properties": {

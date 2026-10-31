@@ -59,14 +59,17 @@ public sealed class ModuleSession : IDisposable
     private readonly Dictionary<string, ChannelDevice> devices = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource stopping = new();
     private readonly List<string> bound = [];
+    private readonly List<string> log = [];
     private readonly string workflowFile, storage;
+    private readonly (string Service, string Anchor, string Rendezvous, string KnownAs)? trusted;
     private readonly string[] names;
     private Task? running;
 
     // devices: the name of each device the workflow binds, and the Data Type of what it streams to the Module (its Data Type matters only for those).
-    public ModuleSession(IControllerApi api, string workflowFile, string storageLocation, params (string Device, string DataType)[] devices)
+    // trusted: a Trust Authority the User decided to trust - its service, its anchor, where it is reached - and the name this User Agent's Controller is known by there; a workflow joins it by name.
+    public ModuleSession(IControllerApi api, string workflowFile, string storageLocation, (string Service, string Anchor, string Rendezvous, string KnownAs)? trusted, params (string Device, string DataType)[] devices)
     {
-        this.api = api; this.workflowFile = workflowFile; storage = storageLocation;
+        this.api = api; this.workflowFile = workflowFile; storage = storageLocation; this.trusted = trusted;
         names = devices.Select(d => d.Device).ToArray();
         foreach (var (name, type) in devices) this.devices[name] = new ChannelDevice(type);
     }
@@ -74,13 +77,14 @@ public sealed class ModuleSession : IDisposable
     public void Start(int seconds = 90)
     {
         var registry = new DeviceRegistry();
+        if (trusted is { } t) registry.RegisterService(t.Service, t.Anchor, t.Rendezvous, t.KnownAs);
         foreach (var (name, device) in devices) registry.RegisterDevice(name, device);
         // What the owner chose: where the storage is.
         registry.RegisterAcquire("OSD-BTO-V1.5", (_, _) => Task.FromResult<string?>(MpaiJson.ToJson(BasicTextObject.FromText(storage))));
 
         var workflow = new WorkflowReader().Read(File.ReadAllText(workflowFile));
         var failure = new TaskCompletionSource<Exception?>();
-        var interpreter = new WorkflowInterpreter(api.Async(), registry, line => { lock (bound) if (line.StartsWith("device \"")) bound.Add(line); });
+        var interpreter = new WorkflowInterpreter(api.Async(), registry, line => { lock (bound) { log.Add(line); if (line.StartsWith("device \"")) bound.Add(line); } });
         running = Task.Run(async () =>
         {
             try { await interpreter.RunAsync(workflow, stopping.Token); }
@@ -96,17 +100,42 @@ public sealed class ModuleSession : IDisposable
             if (count >= names.Length) { Thread.Sleep(200); return; }
             Thread.Sleep(100);
         }
-        throw new InvalidOperationException($"The workflow {Path.GetFileName(workflowFile)} did not start the Module.");
+        string said; lock (bound) said = string.Join(" | ", log.TakeLast(12));
+        throw new InvalidOperationException($"The workflow {Path.GetFileName(workflowFile)} did not start the Module: {bound.Count} of {names.Length} devices bound; it said: {said}");
     }
 
     public void Send(string device, string json) => devices[device].Send(json);
 
     public string? Receive(string device, int milliseconds = 15_000) => devices[device].Receive(milliseconds);
 
-    public void Drain() { foreach (var d in devices.Values) d.Drain(); }
+    // The devices a User Agent serves all the time (what the Module asks of the Blockchain) are not drained with the answers it waits for.
+    private readonly HashSet<string> served = new(StringComparer.Ordinal);
+    private readonly CancellationTokenSource serving = new();
+    private readonly List<Task> servers = [];
+
+    public void Drain() { foreach (var (name, device) in devices) if (!served.Contains(name)) device.Drain(); }
+
+    // SERVES A DEVICE for the life of the session: what the Module gives it is handled as it comes - not within a request of the User Agent's, which does not know when the Module will ask.
+    public void Serve(string device, Action<string> handle)
+    {
+        served.Add(device);
+        servers.Add(Task.Run(() =>
+        {
+            while (!serving.IsCancellationRequested)
+            {
+                var asked = devices[device].Receive(200);
+                if (asked is null) continue;
+                try { handle(asked); } catch (Exception e) when (!serving.IsCancellationRequested) { Errors.Add($"{device}: {e.Message}"); }
+            }
+        }));
+    }
+
+    // What went wrong in what a served device was asked.
+    public ConcurrentBag<string> Errors { get; } = [];
 
     public void Dispose()
     {
+        try { serving.Cancel(); Task.WaitAll(servers.ToArray(), TimeSpan.FromSeconds(15)); } catch { }
         try { stopping.Cancel(); running?.Wait(TimeSpan.FromSeconds(20)); } catch { }
     }
 }

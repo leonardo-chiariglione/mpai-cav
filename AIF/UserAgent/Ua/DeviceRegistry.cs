@@ -81,6 +81,13 @@ public sealed class DeviceRegistry
 
     // ONE SOURCE PER DATA TYPE. Which device serves a Data Type is the User
     // Agent's own business; the request that reaches it says what is wanted.
+    // THE TRUST AUTHORITIES THE USER DECIDED TO TRUST, by the name of their service: the anchor of each (its Trust Anchor object, JSON) and where it is reached. A workflow joins a service by
+    // name (a step of the trust protocol); the User Agent knows how to trust it.
+    // as: the name by which this User Agent's Controller is known in the service, where the User Agent has one.
+    private readonly Dictionary<string, (string Anchor, string Rendezvous, string? As)> services = new(StringComparer.Ordinal);
+    public DeviceRegistry RegisterService(string name, string anchor, string rendezvous, string? knownAs = null) { services[name] = (anchor, rendezvous, knownAs); return this; }
+    public (string Anchor, string Rendezvous, string? As)? Service(string name) => services.TryGetValue(name, out var s) ? s : null;
+
     public DeviceRegistry RegisterAcquire(string dataType, Acquire how)
     {
         sources[dataType] = (viaVad, wanted, _) => how(viaVad, wanted);

@@ -34,6 +34,7 @@ public enum StepKind
     Status,           // ask Controller for status      - into the label Status
     StopAim,          // ask Controller to stop AIM A
     KeepStorage,      // ask Controller to keep storage in "where" - the Module's Shared Storage is where the User says (M3213 3.6)
+    JoinService,      // ask Controller to join "service" [as "name"] [role R] - a step of the trust protocol (MPAI_AIFU_External_Join): the User Agent knows the Trust Authorities its User decided to trust
 
     // --- the User Agent's own ---
     Acquire,          // acquire L (T) [via VAD] [or L (T) [via VAD] ...]
@@ -85,6 +86,8 @@ public sealed class Step
     // better test; but a person answering yes or no gives words, and an App that
     // asks a question must be able to read the answer.
     public string?  Contains      { get; init; }   // Branch
+    public string?  Name          { get; init; }   // JoinService: the name this Controller is known by in the service (Text is the service)
+    public string?  Role          { get; init; }   // JoinService: the role asked for
     public IReadOnlyList<Step> Body { get; init; } = Array.Empty<Step>();  // Loop, Branch
     public IReadOnlyList<Step> Else { get; init; } = Array.Empty<Step>();  // Branch
 
@@ -97,7 +100,7 @@ public sealed class Step
     public bool IsControllerRequest => Kind is
         StepKind.StartModule or StepKind.StopModule or StepKind.PauseModule or
         StepKind.ResumeModule or StepKind.Take or StepKind.Give or
-        StepKind.Status or StepKind.StopAim or StepKind.KeepStorage;
+        StepKind.Status or StepKind.StopAim or StepKind.KeepStorage or StepKind.JoinService;
 }
 
 // A workflow: the Modules it drives, what it does on Start, what on Stop, and

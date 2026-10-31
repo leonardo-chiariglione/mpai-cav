@@ -42,4 +42,14 @@ public interface IControllerApi
     AifError SharedStorageRead(string moduleName, string key, out byte[] data) { data = []; return AifError.Failed; }
     AifError SharedStorageDelete(string moduleName, string key) => AifError.Failed;
     IReadOnlyList<string> SharedStorageList(string moduleName, string prefix = "") => [];
+
+    // BETWEEN CONTROLLERS (Basic API 3.9; Communication 9): MPAI_AIFU_External_Join, _Leave and
+    // _Authority. The User Agent passes its User's decision to trust a Trust Authority to the
+    // Controller, or makes the Controller the Authority of a service; the Controller acts on no
+    // other occasion. A Controller that does not offer them (over MPAI-MAS) answers FAILED.
+    AifError ExternalAuthority(string moduleName, string policy, string host = "127.0.0.1", int port = 0) => AifError.Failed;
+    AifError ExternalJoin(string moduleName, string authority, string? rendezvous, string? role = null, string? controllerId = null) => AifError.Failed;
+    AifError ExternalLeave(string moduleName) => AifError.Failed;
+    string? ExternalAnchor(string moduleName) => null;
+    string? ExternalRendezvous(string moduleName) => null;
 }

@@ -1103,6 +1103,21 @@ public sealed class UserAgent
         return await module.Continuous.ReadBoundaryStampedAsync(dataType, portNumber, timeoutMs);
     }
 
+    // For the payload channel of an External Port (Communication 7): the Message with the
+    // references of its payloads kept, the store that holds them, and the adoption of the
+    // payloads of a Message that stay on the Controller that wrote it.
+    public async Task<(AifError, string?, DateTimeOffset)> ContinuousReadApartAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
+    {
+        if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null, default);
+        return await module.Continuous.ReadBoundaryApartAsync(dataType, portNumber, timeoutMs);
+    }
+
+    public AIF.Channels.IPayloadSource? PayloadSourceOf(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) ? module.Continuous?.Payloads : null;
+
+    public string AdoptPayloads(int moduleId, string dataType, int portNumber, string json, IEnumerable<(string Reference, Func<byte[]?> Fetch)> payloads) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run ? run.AdoptBoundaryPayloads(dataType, portNumber, json, payloads) : json;
+
     public async Task<(AifError, string?)> ContinuousReadAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
     {
         if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null);

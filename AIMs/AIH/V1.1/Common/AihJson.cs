@@ -42,13 +42,14 @@ public static class AihJson
     // ---- AIH Data Process -------------------------------------------------------------------------------------------------------------------------------
 
     // A response of the AIH Data Process Data Type: the identifiers of the AIH Data it concerns and whether the process was done.
-    public static JsonObject ProcessResponse(string userId, IEnumerable<string> aihDataIds, bool done) =>
-        ProcessResponse(userId, Strings(aihDataIds), done);
+    public static JsonObject ProcessResponse(string userId, IEnumerable<string> aihDataIds, bool done, string? processId = null) =>
+        ProcessResponse(userId, Strings(aihDataIds), done, processId);
 
     // The same, with items that are AIH Data or identifiers (JsonObject or string nodes).
-    public static JsonObject ProcessResponse(string userId, JsonArray items, bool done) => new()
+    // processId: the identifier of the request it answers, which the answer carries so that whoever sent the request can be given it (the Controller matches an answer to its request by it).
+    public static JsonObject ProcessResponse(string userId, JsonArray items, bool done, string? processId = null) => new()
     {
-        ["Header"] = Process, ["UserID"] = userId, ["AIHDataProcessID"] = NewId("ahp"), ["AIHDataProcessTime"] = Time(),
+        ["Header"] = Process, ["UserID"] = userId, ["AIHDataProcessID"] = processId ?? NewId("ahp"), ["AIHDataProcessTime"] = Time(),
         ["AIHDataProcess"] = new JsonArray(new JsonObject { ["Response"] = new JsonObject { ["AIHDataOrAIHDataID"] = items, ["ProcessingStatus"] = done } })
     };
 

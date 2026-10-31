@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
 using Mpai.Aif.Api;
 
 namespace Mpai.Aih.Hsp;
@@ -10,21 +11,26 @@ namespace Mpai.Aih.Hsp;
 // THE USER AGENT OF A HEALTH FRONT END - the End User's. It runs HFE.orch, which binds a device to every Port of the Module's boundary, and does what the End User
 // does with them: registers with the Back End, gives the Front End the Health Data it acquired from the End User's devices and the Model Licence the End User
 // provides, hears the alert, asks for the AIH Data of the Secure Data Vault, and sends it to the Back End. The Front End talks to the Back End only.
-public sealed class HfeUserAgent : IFrontEnd, IDisposable
+public sealed class HfeUserAgent : IDisposable
 {
+    public const string Module = "1AIH-HFE-V1.1-I01";
+
+    private readonly IControllerApi api;
     private readonly ModuleSession s;
     private readonly IBackEnd backEnd;
     private JsonObject? tokens;
 
     public string UserId { get; }
 
-    public HfeUserAgent(IControllerApi api, IBackEnd backEnd, string userId, string workflowFile, string vault)
+    // service: the Back End's Trust Authority this End User decided to trust - the name of its service, its anchor, where it is reached - and the name the Back End calls this Front End by (its
+    // HFEID). The workflow joins the service by name before anything is sent.
+    public HfeUserAgent(IControllerApi api, IBackEnd backEnd, string userId, string workflowFile, string vault, (string Service, string Anchor, string Rendezvous, string KnownAs)? service = null)
     {
-        this.backEnd = backEnd; UserId = userId;
-        s = new ModuleSession(api, workflowFile, vault,
-            ("RegisterIn", "AIH-REG-V1.1"), ("RegisterAnswerIn", "AIH-REG-V1.1"), ("LearnIn", "AIH-FDL-V1.1"), ("RequestIn", "AIH-AHP-V1.1"), ("ResponseIn", "AIH-AHP-V1.1"),
+        this.api = api; this.backEnd = backEnd; UserId = userId;
+        s = new ModuleSession(api, workflowFile, vault, service,
+            ("RegisterIn", "AIH-REG-V1.1"), ("RequestIn", "AIH-AHP-V1.1"),
             ("HealthIn", "AIH-HLD-V1.1"), ("LicenceIn", "AIH-MDL-V1.1"),
-            ("RegisterOut", ""), ("LearnOut", ""), ("RequestOut", ""), ("ResponseOut", ""), ("AraOut", ""));
+            ("RegisterAnswerOut", ""), ("ResponseOut", ""), ("AraOut", ""));
         s.Start();
     }
 
@@ -33,14 +39,13 @@ public sealed class HfeUserAgent : IFrontEnd, IDisposable
     // The Tokens the Back End gave (null before the End User registered).
     public JsonObject? Tokens => tokens;
 
-    // Registers with the Back End: the request goes out through the Front End, the Back End answers, and the answer goes in.
+    // Registers with the Back End: the request goes into the Front End, which sends it to the Back End; the Back End's answer comes back to the Front End, which gives it out. Between the
+    // Controllers, which joined the service first (the workflow did that); this User Agent carries nothing.
     public JsonObject Register(JsonObject request)
     {
         s.Drain();
         s.Send("RegisterIn", request.ToJsonString());
-        var forwarded = s.Receive("RegisterOut") ?? throw new TimeoutException("The Front End sent no registration.");
-        var answer = AihJson.Parse(backEnd.Register(forwarded), "Register");
-        s.Send("RegisterAnswerIn", answer.ToJsonString());
+        var answer = AihJson.Parse(s.Receive("RegisterAnswerOut", 60_000) ?? throw new TimeoutException("The Back End gave no answer to the registration."), "Register");
         tokens = AihJson.RegisterResponseOf(answer)?["Tokens"] as JsonObject;
         return answer;
     }
@@ -55,7 +60,7 @@ public sealed class HfeUserAgent : IFrontEnd, IDisposable
         s.Send("LicenceIn", modelLicence.ToJsonString());
         JsonObject? graver = null;
         // The first ARA Data is waited for; more may follow from the other AIMs that judge the AIH Data, and a moment is given them.
-        for (var wait = 6000; s.Receive("AraOut", wait) is { } json; wait = 1500)
+        for (var wait = 20_000; s.Receive("AraOut", wait) is { } json; wait = 3000)
         {
             var ara = AihJson.Parse(json, "ARA Data");
             if (graver is null || Rank(Risk(ara)) > Rank(Risk(graver))) graver = ara;
@@ -83,25 +88,22 @@ public sealed class HfeUserAgent : IFrontEnd, IDisposable
         return null;
     }
 
-    // Sends the AIH Data to the Back End to be kept: the Front End forwards the request, the Back End answers, and the answer goes in. Returns the Back End's answer.
+    // Sends the AIH Data to the Back End to be kept: the request goes into the Front End, which sends it to the Back End; the Back End makes the Smart Contract, keeps the AIH Data and answers, and
+    // the Front End gives the answer out. Between the Controllers; this User Agent carries nothing. Returns the Back End's answer.
     public JsonObject Upload(string aihDataId)
     {
         var data = Retrieve(aihDataId) ?? throw new InvalidOperationException($"No AIH Data '{aihDataId}' in the Secure Data Vault.");
         s.Drain();
         s.Send("RequestIn", Request("Store", [data]).ToJsonString());
-        var forwarded = s.Receive("RequestOut") ?? throw new TimeoutException("The Front End sent no request.");
-        var answer = backEnd.Process(forwarded);
-        s.Send("ResponseIn", answer);
-        var back = s.Receive("ResponseOut", 5000);                                  // the Front End gives the End User the Back End's answer
-        return AihJson.Parse(back ?? answer, "AIH Data Process");
+        return AihJson.Parse(s.Receive("ResponseOut", 60_000) ?? throw new TimeoutException("The Back End gave no answer to the upload."), "AIH Data Process");
     }
 
-    // The Back End asks for the model this Front End trained: the request goes into the Front End, the response comes out.
-    public string Learn(string federatedLearnRequest)
+    // A request for the Back End to process an AIH Data, as its licence prescribes (a Third-Party User's): answered with the AIH Data and what was found, or refused.
+    public JsonObject Process(string aihDataId)
     {
         s.Drain();
-        s.Send("LearnIn", federatedLearnRequest);
-        return s.Receive("LearnOut") ?? throw new TimeoutException("The Front End gave no model.");
+        s.Send("RequestIn", Request("AIHDataProcessing", [JsonValue.Create(aihDataId)!]).ToJsonString());
+        return AihJson.Parse(s.Receive("ResponseOut", 60_000) ?? throw new TimeoutException("The Back End gave no answer to the processing."), "AIH Data Process");
     }
 
     // A request for the Back End to de-identify or anonymise an AIH Data of this End User.

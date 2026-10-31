@@ -78,6 +78,14 @@ public sealed class RemoteLink : IAsyncDisposable
 
     private RemoteLink(Stream stream) => this.stream = stream;
 
+    // A FRAME'S BODY: bytes that follow its JSON on the link, raw - the payload channel
+    // (Communication 4) carries a payload so, not as text. The frame says how long its
+    // body is; it is attached to the frame for the one that sends it and read from the
+    // frame by the one that receives it.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<JsonObject, byte[]> Bodies = new();
+    public static JsonObject WithBody(JsonObject frame, byte[] body) { Bodies.AddOrUpdate(frame, body); return frame; }
+    public static byte[]? BodyOf(JsonObject frame) => Bodies.TryGetValue(frame, out var body) ? body : null;
+
     // ---- opening -------------------------------------------------------------
 
     public static Task<RemoteLink> ConnectAsync(string host, int port, string key, CancellationToken cancel = default) =>
@@ -269,6 +277,8 @@ public sealed class RemoteLink : IAsyncDisposable
 
     private async Task SendAsync(JsonObject frame, CancellationToken cancel)
     {
+        var raw = BodyOf(frame);
+        if (raw is not null) frame["BodyLength"] = raw.Length;
         var body = Encoding.UTF8.GetBytes(frame.ToJsonString());
         var length = new byte[4];
         System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(length, body.Length);
@@ -277,6 +287,7 @@ public sealed class RemoteLink : IAsyncDisposable
         {
             await stream.WriteAsync(length, cancel);
             await stream.WriteAsync(body, cancel);
+            if (raw is not null) await stream.WriteAsync(raw, cancel);
             await stream.FlushAsync(cancel);
         }
         catch (Exception failure) when (failure is IOException or ObjectDisposedException)
@@ -300,6 +311,12 @@ public sealed class RemoteLink : IAsyncDisposable
                 var body = new byte[System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(length)];
                 await stream.ReadExactlyAsync(body, closed.Token);
                 if (JsonNode.Parse(body) is not JsonObject frame) continue;
+                if (frame["BodyLength"] is { } bodyLength)
+                {
+                    var raw = new byte[bodyLength.GetValue<int>()];
+                    await stream.ReadExactlyAsync(raw, closed.Token);
+                    Bodies.AddOrUpdate(frame, raw);
+                }
 
                 if (frame["ReplyTo"] is { } replyTo)
                 {

@@ -64,7 +64,8 @@ public class AsmVciIntegrationTests
         Assert.All(answers.Responses, r => Assert.NotNull(r));                                  // each of the five answers
         Assert.Equal("Done", answers.Of(0)!.UserCommandRS!.Outcome);
         Assert.Contains(answers.Of(0)!.UserCommandRS!.Actions!, a => a.Action == "AcquiredObject" && a.Outcome == "Done");
-        Assert.Equal("Done", answers.Merged(acquire.UserCommandID).UserCommandRS!.Outcome);
+        Assert.True(answers.Merged(acquire.UserCommandID).UserCommandRS!.Actions!.Any(), string.Join(" | ", answers.Responses));
+        Assert.True(answers.Merged(acquire.UserCommandID).UserCommandRS!.Outcome == "Done", string.Join(" | ", answers.Responses));
 
         // The sound is placed in a scene: Audio Scene Editing does it; Speech Scene Editing says it keeps no such Object; one answer comes of them.
         var add = AsmRig.Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [AsmRig.Put("violin", 1)] } });
@@ -147,7 +148,7 @@ public class AsmVciIntegrationTests
     // ---- the JSON Interface gathers the answers ----------------------------------------------------------------------------------------------------------
 
     private static JsiAimProcessor Gathering(StructuredModel model, int responders) =>
-        new(JsiRig.Jsi, JsiRig.Ports(JsiRig.Jsi), JsiRig.Configuration() with { Responders = responders }, model);
+        new(JsiRig.Jsi, JsiRig.Ports(JsiRig.Jsi), JsiRig.Configuration() with { Responders = responders, Scene = (string)JsiRig.Scene()["name"]! }, model);
 
     private static readonly string Move = "{\"Working\":\"move\",\"Command\":{\"UserCommandRQ\":{\"MovedObjects\":{\"Objects\":[{\"ObjectID\":\"violin\",\"NewSpatialAttitude\":{\"Position\":{\"CartPosition\":[-1.5,2,0]},\"Orientation\":{\"Orientation\":[0,0,180]}}}]}}}}";
 
@@ -188,7 +189,7 @@ public class AsmVciIntegrationTests
     public void TheVoiceCommandInterfaceIsInsideTheModuleAndTheAmiAndTheAjiAreGone()
     {
         var l2 = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Schemas, "CAE3", "V1.0", "AIMs", "AudioSceneManager.json")))!;
-        var names = l2["SubAIMs"]!.AsArray().Select(s => (string)s!["Identifier"]!["AIMName"]!).ToList();
+        var names = l2["SubAIMs"]!.AsArray().Select(s => (string)s!["Header"]!).ToList();
         Assert.Contains("MMC-VCI-V2.5", names);
         Assert.DoesNotContain("CAE-AMI-V1.0", names);
         var text = l2.ToJsonString();

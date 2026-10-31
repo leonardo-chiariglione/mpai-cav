@@ -57,6 +57,9 @@ internal static class Program
         Step("The Health Back End starts: a Controller, and its Module on an AIM host");
         var hbe = new HbeUserAgent(Controller("hbe", "BackEnd"), chain, Orch("HBE.orch"), Path.Combine(Work, "hbe", "secure-storage"));
         Cleanup.Add(hbe);
+        Hbe = hbe;
+        if (hbe.StartService() != AifError.OK) throw new InvalidOperationException("the Back End's Controller is not the Trust Authority of its service.");
+        Say("The Back End's Controller is the Trust Authority of its service: the Front Ends' Controllers join it.");
         var trust = new BackEndTrust("hbe-1");
         var door = new TrustedBackEnd(hbe, trust);
         Say("The Back End is the Trust Authority: it admits the parties that will exchange data with it.");
@@ -73,6 +76,8 @@ internal static class Program
         var one = Front("user-1", Join("hfe:user-1", "user-1"));
         var two = Front("user-2", Join("hfe:user-2", "user-2"));
         var tpu = Join("tpu:tpu-1", "tpu-1");
+        var tpuFront = Front("tpu-1", tpu, "tpu-1");              // the Third-Party User runs a Health Front End too: its User Profile makes it do what a Third-Party User does
+
 
         Step("The End Users register with the Back End, each through their own Front End");
         var services = new[] { "Store", "DeIDAndAnonym", "Auditing" };
@@ -92,11 +97,11 @@ internal static class Program
         Say($"  user-2: {Ok(two.Upload("ahd-2"))}, Smart Contract {chain.ContractOf("ahd-2")}");
 
         Step("The Third-Party User registers and asks for the AIH Data to be processed");
-        var tpuTokens = (JsonObject)AihJson.RegisterResponseOf(JsonNode.Parse(tpu.Register(ThirdPartyRegistration("tpu-1")))!.AsObject())!["Tokens"]!;
+        var tpuTokens = (JsonObject)AihJson.RegisterResponseOf(tpuFront.Register(JsonNode.Parse(ThirdPartyRegistration("tpu-1"))!.AsObject()))!["Tokens"]!;
         Say($"  tpu-1 registered, Tokens: {string.Join(", ", AihJson.ServicesOf(tpuTokens))}");
-        var inside = JsonNode.Parse(tpu.Process(ProcessRequest("tpu-1", "AIHDataProcessing", tpuTokens, "ahd-1")))!.AsObject();
+        var inside = tpuFront.Process("ahd-1");
         Say($"  ahd-1 (licensed to tpu-1): {(Done(inside) ? "ANSWERED" : "refused")} - risk {AihJson.ResponseOf(inside)?["AIHDataOrAIHDataID"]?[0]?["AIHData"]?["ARAData"]?["ARAData"]?["Risk"]}");
-        var outside = JsonNode.Parse(tpu.Process(ProcessRequest("tpu-1", "AIHDataProcessing", tpuTokens, "ahd-2")))!.AsObject();
+        var outside = tpuFront.Process("ahd-2");
         Say($"  ahd-2 (not licensed to tpu-1): {(Done(outside) ? "answered?!" : "REFUSED")}");
 
         Step("Both End Users have the Back End de-identify their AIH Data; then they audit");
@@ -107,7 +112,7 @@ internal static class Program
         Say($"  audit of user-2: {unlicensed.Count} unlicensed operation(s): {string.Join(", ", unlicensed.Select(u => u!["AIHDataID"]))}");
 
         Step("A round of Federated Learning: the Back End asks each Front End for the model it trained, and averages them");
-        var model = hbe.FederatedLearning("model-0", ("hfe-1", one), ("hfe-2", two));
+        var model = hbe.FederatedLearning("model-0", "hfe-1", "hfe-2");
         var weights = new float[2];
         Buffer.BlockCopy(Convert.FromBase64String(model["MLModelData"]![0]!["Data"]!.ToString()), 0, weights, 0, 8);
         Say($"  new NN Model {model["MLModelObjectID"]}: weights [{weights[0]:0.###}, {weights[1]:0.###}]");
@@ -120,9 +125,12 @@ internal static class Program
 
     // ---- the parts ---------------------------------------------------------------------------------------------------------------------------------------
 
-    private static HfeUserAgent Front(string user, IBackEnd backEnd)
+    private static HbeUserAgent? Hbe;
+
+    private static HfeUserAgent Front(string user, IBackEnd backEnd, string? name = null)
     {
-        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), backEnd, user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"));
+        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), backEnd, user, Orch("HFE.orch"), Path.Combine(Work, "hfe-" + user, "secure-data-vault"),
+                                  ("AIH-HBE", Hbe!.Anchor!, Hbe.Rendezvous!, name ?? "hfe-" + user.Split('-')[1]));
         Cleanup.Add(ua);
         Say($"  Front End of {user}: started.");
         return ua;

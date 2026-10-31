@@ -82,6 +82,11 @@ public sealed class FrontEndHdpAimProcessor(string instanceId, AimPortReader rea
 {
     private readonly Dictionary<string, JsonObject> awaitingAra = new();
 
+    // WHAT THIS FRONT END DOES DEPENDS ON THE USER PROFILE IT INGESTED, with the registration it sends to the Back End. For an End User it holds the End User's AIH Data in the Vault, trains
+    // on it and has the Back End keep and process it - on that AIH Data only. For a Third-Party User (a Third-Party User Profile, or a User Profile of an individual who is a member of an
+    // organisation) it makes and keeps no AIH Data, trains nothing, and asks for AIH Data to be processed, as its licence prescribes - nothing else.
+    private bool thirdParty;
+
     // A Federated Learn request: the Front End trains on what it holds and answers with the model and the AIH Data it used (the last it made).
     private void Learn(JsonObject fdl, Dictionary<string, string> outputs)
     {
@@ -100,18 +105,25 @@ public sealed class FrontEndHdpAimProcessor(string instanceId, AimPortReader rea
 
     protected override void Handle(Message m, Dictionary<string, string> outputs)
     {
-        if (Take(m, P.FdlIn) is { } learn) Learn(AihJson.Parse(learn, "Federated Learn"), outputs);
-        if (Take(m, P.RegIn) is { } register) outputs[P.RegOut] = register;                       // to the Back End
+        if (Take(m, P.FdlIn) is { } learn && !thirdParty) Learn(AihJson.Parse(learn, "Federated Learn"), outputs);
+        if (Take(m, P.RegIn) is { } register)
+        {
+            thirdParty = Profiles.IsThirdParty(AihJson.RegisterRequestOf(AihJson.Parse(register, "Register")));
+            outputs[P.RegOut] = register;                                                           // to the Back End
+        }
         if (Take(m, P.RegBackIn) is { } registered) outputs[P.RegBackOut] = registered;           // to the End User
         if (Take(m, P.AhpRequestIn) is { } request)
         {
             var process = AihJson.Parse(request, "AIH Data Process");
-            if (AihStore.IsRetrieval(process, out var user, out var id)) Put(outputs, P.AhpResponseOut, AihStore.Answer(storage, user, id, ""));   // from the Vault
+            var asked = AihJson.RequestOf(process)?["ProcessingType"]?.GetValue<string>() ?? "";
+            if (thirdParty && asked != "AIHDataProcessing")                                                                                              // not what a Third-Party User may do
+                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(process["UserID"]?.GetValue<string>() ?? "", Array.Empty<string>(), false));
+            else if (AihStore.IsRetrieval(process, out var user, out var id)) Put(outputs, P.AhpResponseOut, AihStore.Answer(storage, user, id, ""));   // from the Vault
             else outputs[P.AhpStoreOut] = request;                                                                                                      // to the Back End
         }
         if (Take(m, P.AhpResponseIn) is { } response) outputs[P.AhpResponseOut] = response;       // to the End User
 
-        if (Take(m, P.AhdIn) is { } dataJson)
+        if (Take(m, P.AhdIn) is { } dataJson && !thirdParty)
         {
             var data = AihJson.Parse(dataJson, "AIH Data");
             if (data["AIHData"]?["ARAData"] is null && data["AIHDataID"]?.GetValue<string>() is { } id) awaitingAra[id] = data;
@@ -166,13 +178,15 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
     private static readonly string[] ThirdPartyServices = ["AIHDataProcessing"];
 
     private readonly Dictionary<string, string[]> registered = new();
+    private readonly HashSet<string> endUsers = new();                       // registered with the profile of an End User: it works on its own AIH Data only
     private readonly Dictionary<string, Upload> uploads = new();
     private readonly Dictionary<string, Processing> processing = new();
 
-    private sealed record Upload(string Requester, JsonObject Data);
-    private sealed class Processing(string requester, string confirmId)
+    private sealed record Upload(string Requester, JsonObject Data, string? RequestId);
+    private sealed class Processing(string requester, string confirmId, string? requestId)
     {
         public string Requester { get; } = requester;
+        public string? RequestId { get; } = requestId;
         public string ConfirmId { get; } = confirmId;
         public bool? Licensed { get; set; }
         public JsonObject? Data { get; set; }
@@ -194,7 +208,9 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
     {
         var id = register["RegisterID"]?.GetValue<string>() ?? AihJson.NewId("reg");
         var request = AihJson.RegisterRequestOf(register);
+        // THE USER PROFILE DECIDES WHAT THE USER MAY ASK FOR: an individual who is a member of an organisation, like a Third-Party User Profile, is a Third-Party User; any other individual is an End User.
         var (user, allowed) =
+            Profiles.IsThirdParty(request) && request?["UserProfile"] is JsonObject member ? (member["UserID"]?.GetValue<string>(), ThirdPartyServices) :
             request?["UserProfile"] is JsonObject end ? (end["UserID"]?.GetValue<string>(), EndUserServices) :
             request?["ThirdPartyUserProfile"] is JsonObject third ? (third["ThirdPartyUserID"]?.GetValue<string>(), ThirdPartyServices) : (null, []);
         var asked = (request?["RequestedServices"] as JsonArray)?.OfType<JsonObject>().Select(s => s["Service"]?.GetValue<string>() ?? "").ToArray() ?? [];
@@ -205,6 +221,7 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
             return;
         }
         registered[user] = granted;
+        if (allowed == EndUserServices) endUsers.Add(user); else endUsers.Remove(user);
         Put(outputs, P.RegBackOut, AihJson.RegisterResponse(id, true, AihJson.TokensFor(user, granted)));
     }
 
@@ -212,6 +229,7 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
     private void Request(JsonObject process, Dictionary<string, string> outputs)
     {
         var requester = process["UserID"]?.GetValue<string>() ?? "";
+        var requestId = process["AIHDataProcessID"]?.GetValue<string>();
         // The Back End itself retrieves what it keeps, for De-Identification and Auditing: it is not a user, and has no Tokens.
         if (backEndId.Length > 0 && requester == backEndId && AihStore.IsRetrieval(process, out _, out var wanted))
         {
@@ -226,7 +244,7 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         // THE TOKENS: the user is registered, was granted this service, and presents it. A request to audit names no AIH Data; the others name one.
         if (!registered.TryGetValue(requester, out var granted) || !granted.Contains(type) || !presented.Contains(type) || (type != "Auditing" && items.Count != 1))
         {
-            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, Array.Empty<string>(), false));
+            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, Array.Empty<string>(), false, requestId));
             return;
         }
 
@@ -237,30 +255,56 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
                 var id = data["AIHDataID"]?.GetValue<string>() ?? throw new FormatException("the AIH Data has no AIHDataID.");
                 var licence = data["AIHData"]?["ModelLicence"] ?? throw new FormatException("the AIH Data has no Model Licence.");
                 if (licence is JsonValue) throw new FormatException("the Model Licence is an identifier: the Back End needs the licence itself.");
-                uploads[id] = new Upload(requester, data);
+                uploads[id] = new Upload(requester, data, requestId);
                 Put(outputs, P.BclOut, AihJson.BlockchainRequest(data["UserID"]?.GetValue<string>() ?? requester, id, licence));
                 break;
             }
             // The Tokens of a request to De-Identify and Anonymise, or to audit, were checked here - HDP is where the End Users are registered and given them: the answer says whether
             // the User Agent may go on and have De-Identification and Anonymisation, or Auditing, serve it.
-            case "DeIDAndAnonym" or "Auditing":
-                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, items.Select(i => i?.ToString() ?? "").ToArray(), true));
+            // For an audit it also says which AIH Data are the user's - the originals and the copies made of them, which are the user's too: Auditing works on them.
+            case "DeIDAndAnonym":
+                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, items.Select(i => i?.ToString() ?? "").ToArray(), true, requestId));
+                break;
+            case "Auditing":
+                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, HeldFor(requester), true, requestId));
                 break;
             case "Store" when items[0] is JsonValue retrieveId:                                            // retrieval: the AIH Data of this End User
-                Put(outputs, P.AhpResponseOut, AihStore.Answer(storage, requester, retrieveId.GetValue<string>(), backEndId));
+                Put(outputs, P.AhpResponseOut, AihStore.Answer(storage, requester, retrieveId.GetValue<string>(), backEndId, requestId));
                 break;
             case "AIHDataProcessing" when items[0] is JsonValue idNode:
             {
                 var id = idNode.GetValue<string>();
+                // An End User works on its own AIH Data only; a Third-Party User on that of anybody whose licence allows it, which is checked next.
+                if (endUsers.Contains(requester) && AihStore.Get(storage, id)?["UserID"]?.GetValue<string>() != requester)
+                {
+                    Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, new[] { id }, false, requestId));
+                    break;
+                }
                 var confirm = AihJson.LicenceConfirmRequest("", id, type, requester);
-                processing[id] = new Processing(requester, confirm["LicenceConfirmID"]!.GetValue<string>());
+                processing[id] = new Processing(requester, confirm["LicenceConfirmID"]!.GetValue<string>(), requestId);
                 Put(outputs, P.LcfOut, confirm);
                 break;
             }
             default:
-                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, Array.Empty<string>(), false));        // the others are of other AIMs
+                Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, Array.Empty<string>(), false, requestId));        // the others are of other AIMs
                 break;
         }
+    }
+
+    // The AIH Data of a user: its own, and the copies made of them - De-Identification gives a copy another UserID (a pseudonym) and names its parent (ParentAIHDataID), and a copy of a copy
+    // names its own - first the AIH Data, then the copies, as Auditing is given them.
+    private List<string> HeldFor(string user)
+    {
+        var all = AihStore.All(storage).ToList();
+        var ids = all.Where(d => d["UserID"]?.GetValue<string>() == user).Select(d => d["AIHDataID"]!.GetValue<string>()).ToList();
+        for (var grew = true; grew;)
+        {
+            grew = false;
+            foreach (var d in all)
+                if (d["AIHData"]?["ParentAIHDataID"]?.GetValue<string>() is { } parent && ids.Contains(parent) && d["AIHDataID"]!.GetValue<string>() is { } id && !ids.Contains(id))
+                { ids.Add(id); grew = true; }
+        }
+        return ids;
     }
 
     // ---- the Smart Contract was made (or refused) ----
@@ -272,13 +316,13 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         var approved = response?["LicenceStatus"]?.GetValue<bool>() == true;
         if (!approved)
         {
-            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(upload.Requester, new[] { id }, false));
+            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(upload.Requester, new[] { id }, false, upload.RequestId));
             return;
         }
         // The Smart Contract's identifier goes into the AIH Data, which is kept in the Secure Storage.
         ((JsonObject)upload.Data["AIHData"]!)["SmartContractID"] = response!["BlockchainLicenceID"]!.GetValue<string>();
         AihStore.Put(storage, upload.Data);
-        Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(upload.Requester, new JsonArray(upload.Data.DeepClone()), true));
+        Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(upload.Requester, new JsonArray(upload.Data.DeepClone()), true, upload.RequestId));
     }
 
     // ---- the licence was confirmed (or not) ----
@@ -291,7 +335,7 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         if (status != true)
         {
             processing.Remove(entry.Key);
-            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Value.Requester, new[] { entry.Key }, false));
+            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Value.Requester, new[] { entry.Key }, false, entry.Value.RequestId));
             return;
         }
         entry.Value.Licensed = true;
@@ -300,7 +344,7 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         if (entry.Value.Data is null)
         {
             processing.Remove(entry.Key);
-            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Value.Requester, new[] { entry.Key }, false));
+            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Value.Requester, new[] { entry.Key }, false, entry.Value.RequestId));
             return;
         }
         Run(entry.Key, entry.Value, outputs);
@@ -327,6 +371,6 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         var id = ard["ARAData"]?["AIHDataID"]?.GetValue<string>() ?? "";
         if (!processing.Remove(id, out var entry) || entry.Data is null) return;
         ((JsonObject)entry.Data["AIHData"]!)["ARAData"] = ard;
-        Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Requester, new JsonArray(entry.Data.DeepClone()), true));
+        Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(entry.Requester, new JsonArray(entry.Data.DeepClone()), true, entry.RequestId));
     }
 }

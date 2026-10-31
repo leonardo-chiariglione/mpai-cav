@@ -10,20 +10,22 @@
 #  Module asks of it:
 #
 #    from the clients -
-#      RegisterIn      a registration              (End User or Third-Party User)
+#      RegisterIn      a registration              (an End User's arrives on the External Port from the Controller of its Front End;
+#                                                   a Third-Party User's, who is no Controller of the service, through this device)
 #      RequestIn       a request to HDP            (an upload, a processing)
 #      DeIdIn          a request to De-Identify or Anonymise
 #      AuditIn         a request to audit
 #      AhdAuditIn, AhdDeIdIn, AhdProcIn   AIH Data, to Auditing, to De-Identification and
 #                      Anonymisation, and to AIH Data Processing (to be kept)
-#      LearnAnswerIn   the NN Model a Front End trained
+#      LearnAnswerIn   the request to start a round (the NN Models the Front Ends trained arrive on the same Port,
+#                      from the Controllers of the Front Ends: External)
 #    from the Blockchain -
 #      ContractIn      the Smart Contract of a Model Licence
 #      ConfirmIn       the confirmation of a licence, for HDP
 #      AuditConfirmIn  the same, for Auditing
 #
 #    to the clients -
-#      RegisterOut, ResponseOut, DeIdOut, AhdDeIdOut (the copy), AuditOut, LearnOut, ModelOut
+#      RegisterOut, ResponseOut, DeIdOut, AhdDeIdOut (the copy), AuditOut, ModelOut
 #    to the Blockchain -
 #      ContractOut, ConfirmOut, AuditConfirmOut
 #
@@ -54,13 +56,12 @@ on Start:
     stream  ConfirmIn         (AIH-LCF-V1.1:2) from device "ConfirmIn"
     stream  AuditConfirmIn    (AIH-LCF-V1.1:1) from device "AuditConfirmIn"
 
-    deliver RegisterOut       (AIH-REG-V1.1)   to device "RegisterOut"
-    deliver ResponseOut       (AIH-AHP-V1.1:1) to device "ResponseOut"
+    deliver RegisterOut       (AIH-REG-V1.1:2) to device "RegisterOut"
+    deliver ResponseOut       (AIH-AHP-V1.1:2) to device "ResponseOut"
     deliver AraOut            (AIH-ARD-V1.1)   to device "AraOut"
     deliver DeIdOut           (AIH-DIA-V1.1)   to device "DeIdOut"
     deliver AhdDeIdOut        (AIH-AHD-V1.1:1) to device "AhdDeIdOut"
     deliver AuditOut          (AIH-ADT-V1.1)   to device "AuditOut"
-    deliver LearnOut          (AIH-FDL-V1.1)   to device "LearnOut"
     deliver ModelOut          (AIP-MLO-V1.0)   to device "ModelOut"
     deliver ContractOut       (AIH-BCL-V1.1)   to device "ContractOut"
     deliver ConfirmOut        (AIH-LCF-V1.1:2) to device "ConfirmOut"

@@ -119,23 +119,8 @@ public sealed class TrustedClient(PartyTrust party, IBackEnd gate) : IBackEnd
     public string Audit(string audit) => Call(gate.Audit, audit);
 }
 
-// THE FRONT END's DOOR, for the one thing the Back End asks of it: a request for the model it trained is heard only if the Back End signed it, and the answer is signed
-// by the Front End's party.
-public sealed class TrustedFrontEnd(IFrontEnd inner, PartyTrust party) : IFrontEnd
-{
-    public string Learn(string signedRequest) => party.Sign(inner.Learn(party.Verify(signedRequest)));
-}
-
-// WHAT THE BACK END HAS OF AN ADMITTED FRONT END: its request signed by the Back End, the answer verified as signed by the party it admitted.
-public sealed class TrustedFrontEndClient(IFrontEnd door, BackEndTrust trust, string partyId) : IFrontEnd
-{
-    public string Learn(string federatedLearnRequest)
-    {
-        var answer = door.Learn(trust.Sign(federatedLearnRequest));
-        return ExternalSigning.Verify(answer, partyId, trust.AnchorOf) == ExternalSigning.Outcome.Valid
-            ? answer : throw new UnauthorizedAccessException($"The answer is not signed by '{partyId}'.");
-    }
-}
+// The exchange the Back End has with a Front End about the model it trained is no longer here: the Back End's Controller is the Trust Authority of that exchange (HbeUserAgent.StartService),
+// the Front End's Controller joins it (HfeUserAgent.Join), and the Controllers sign and verify what the Modules' External Ports give.
 
 // THE BACK END's DOOR: what comes in is admitted only if it is signed by a party the Back End admitted, over the Object as it came, and concerns the subject that
 // party speaks for; what goes out is signed by the Back End.

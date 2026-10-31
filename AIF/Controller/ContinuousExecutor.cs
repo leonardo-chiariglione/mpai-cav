@@ -386,6 +386,27 @@ public sealed partial class ContinuousExecutor
         return message is null ? (AifError.NotProduced, null, default) : (AifError.OK, Payloads.Inline(message.Json), message.Stamp);
     }
 
+    // What an External Output Port gives, with the references of its payloads kept: the
+    // hub sends them apart on the payload channel (Communication 7), and releases them.
+    public async ValueTask<(AifError, string?, DateTimeOffset)> ReadBoundaryApartAsync(string dataType, int portNumber, int timeoutMs)
+    {
+        if (!readers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return (AifError.NoSuchPort, null, default);
+        var message = await ReadAnyAsync(ends, timeoutMs, CancellationToken.None);
+        return message is null ? (AifError.NotProduced, null, default) : (AifError.OK, message.Json, message.Stamp);
+    }
+
+    // A Message of another Controller whose payloads stay there until a reader asks
+    // (Communication 7): each reference it states is replaced by one of this Controller,
+    // for the Channel of the boundary Input Port, that fetches the payload when read.
+    public string AdoptBoundaryPayloads(string dataType, int portNumber, string json, IEnumerable<(string Reference, Func<byte[]?> Fetch)> payloads)
+    {
+        var spec = channels.FirstOrDefault(c => c.Writer == new PortEnd("", dataType, portNumber));
+        if (spec is null) return json;
+        foreach (var (reference, fetch) in payloads)
+            json = json.Replace("\"" + reference + "\"", "\"" + Payloads.PutRemote(spec, fetch) + "\"");
+        return json;
+    }
+
     // MPAI_AIFU_Payload_Put: the User Agent places a payload for a boundary Input
     // Port, and writes its Object with the reference returned.
     public (AifError, string?) PutBoundaryPayload(string dataType, int portNumber, ReadOnlyMemory<byte> data)

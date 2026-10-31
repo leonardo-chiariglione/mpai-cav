@@ -53,7 +53,16 @@ public static class ExternalSigning
 {
     public enum Outcome { Valid, Unsigned, NotTheSender, UnknownKey, Tampered, Invalid }
 
-    public static string Sign(string json, TrustAnchorKey anchor, ECDsa key, string authority, DateTimeOffset now)
+    // The payloads a signed Message states travel apart: reference, length, hash.
+    public static IReadOnlyList<(string Reference, long Length, string Hash)> PayloadsOf(string json) =>
+        (JsonNode.Parse(json)?["DataXMData"]?["Security"]?["Integrity"]?["Payloads"] as JsonArray)?
+            .Select(p => ((string)p!["Reference"]!, (long)p["Length"]!, (string)p["Hash"]!)).ToList() ?? [];
+
+    // payloads: the payloads that travel apart on the payload channel (Communication 7):
+    // for each, the reference the receiving Controller asks for, its length and its
+    // hash - in the Integrity, so that the signature covers them.
+    public static string Sign(string json, TrustAnchorKey anchor, ECDsa key, string authority, DateTimeOffset now,
+                              IReadOnlyList<(string Reference, long Length, string Hash)>? payloads = null)
     {
         var obj = JsonNode.Parse(json)!.AsObject();
         obj.Remove("DataXMData");
@@ -71,6 +80,9 @@ public static class ExternalSigning
                 ["Integrity"] = new JsonObject { ["Hash"] = new JsonObject { ["Algorithm"] = "PTF-ALGO-HASH-SHA256", ["Value"] = hash }, ["KeyID"] = anchor.AnchorId }
             }
         };
+        if (payloads is { Count: > 0 })
+            obj["DataXMData"]!["Security"]!["Integrity"]!["Payloads"] = new JsonArray(payloads.Select(p => (JsonNode)new JsonObject
+            { ["Reference"] = p.Reference, ["Length"] = p.Length, ["Hash"] = p.Hash }).ToArray());
         var signature = key.SignData(PtfCanonical.Bytes(obj), HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
         obj["DataXMData"]!["Security"]!["Integrity"]!["Signature"] = Convert.ToHexString(signature);
         return obj.ToJsonString();

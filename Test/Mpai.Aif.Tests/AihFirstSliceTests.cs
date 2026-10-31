@@ -119,12 +119,21 @@ public class AihFirstSliceTests : IDisposable
         var ua = new HbeUserAgent(Controller("hbe", "BackEnd"), chain, Orch("HBE.orch"), Path.Combine(work, "hbe", "secure-storage"), models: MpaiStore,
             frontEndL3: Apart(File.ReadAllText(Path.Combine(Repository.Amds, "1AIH-HFE-V1.1-I01.json")), FrontEndAims), modelLicence: ModelOffer());
         toDispose.Add(ua);
+        // The Back End's Controller is the Trust Authority of its service (the exchanges between the Controllers).
+        Assert.Equal(AifError.OK, ua.StartService());
+        backEndUa = ua;
         return ua;
     }
 
-    private HfeUserAgent FrontEnd(IBackEnd backEnd, string user)
+    private HbeUserAgent? backEndUa;
+
+    // The service of the Back End, as the End User decided to trust it (anchor: the Trust Authority's, unless the User decided to trust another), and the name the Back End calls this Front End by.
+    private (string Service, string Anchor, string Rendezvous, string KnownAs) ServiceOf(string user, string? anchor = null, string? name = null) =>
+        ("AIH-HBE", anchor ?? backEndUa!.Anchor!, backEndUa!.Rendezvous!, name ?? "hfe-" + user.Split('-')[1]);
+
+    private HfeUserAgent FrontEnd(IBackEnd backEnd, string user, string? anchor = null, string? name = null)
     {
-        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), backEnd, user, Orch("HFE.orch"), Path.Combine(work, "hfe-" + user, "secure-data-vault"));
+        var ua = new HfeUserAgent(Controller("hfe-" + user, "FrontEnd"), backEnd, user, Orch("HFE.orch"), Path.Combine(work, "hfe-" + user, "secure-data-vault"), ServiceOf(user, anchor, name));
         toDispose.Add(ua);
         return ua;
     }
@@ -177,8 +186,7 @@ public class AihFirstSliceTests : IDisposable
     [InlineData(true)]
     public void TheFirstSlice(bool trusted)
     {
-        using var hbe = BackEnd();
-        var trust = new BackEndTrust();
+        using var hbe = BackEnd(); var trust = new BackEndTrust();
         var parties = new Dictionary<string, PartyTrust>();
         IBackEnd Door(string party, string subject)
         {
@@ -187,10 +195,9 @@ public class AihFirstSliceTests : IDisposable
             parties[party] = admitted;
             return new TrustedClient(admitted, new TrustedBackEnd(hbe, trust));
         }
-        // What the Back End asks of a Front End goes through the Front End's door, signed both ways, when there is trust.
-        IFrontEnd Learner(string party, IFrontEnd front) => trusted ? new TrustedFrontEndClient(new TrustedFrontEnd(front, parties[party]), trust, party) : front;
         var one = FrontEnd(Door("hfe:user-1", "user-1"), "user-1");
         var two = FrontEnd(Door("hfe:user-2", "user-2"), "user-2");
+
         var tpu = Door("tpu:tpu-1", "tpu-1");
 
         // 1. The End Users register with the Back End, each through their own Front End.
@@ -216,12 +223,13 @@ public class AihFirstSliceTests : IDisposable
         Assert.StartsWith("sc-", chain.ContractOf("ahd-2"));
 
         // 4. A Third-Party User registers and processes: answered under the licence, refused outside it.
-        var tpuRegister = AihSamples.ThirdPartyRegisterRequest("tpu-1");
-        var tpuTokens = (JsonObject)AihJson.RegisterResponseOf(JsonNode.Parse(tpu.Register(tpuRegister.ToJsonString()))!.AsObject())!["Tokens"]!;
-        var inside = JsonNode.Parse(tpu.Process(Request("tpu-1", "AIHDataProcessing", tpuTokens, "ahd-1").ToJsonString()))!.AsObject();
+        // The Third-Party User runs a Health Front End too; its User Profile makes it do what a Third-Party User does: it registers, and asks for AIH Data to be processed as the licence prescribes.
+        var tpuFront = FrontEnd(tpu, "tpu-1", name: "tpu-1");
+        var tpuTokens = (JsonObject)AihJson.RegisterResponseOf(tpuFront.Register(AihSamples.ThirdPartyRegisterRequest("tpu-1")))!["Tokens"]!;
+        var inside = tpuFront.Process("ahd-1");
         Assert.True(Done(inside));
         Assert.Equal("Green", AihJson.ResponseOf(inside)!["AIHDataOrAIHDataID"]![0]!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
-        var outside = JsonNode.Parse(tpu.Process(Request("tpu-1", "AIHDataProcessing", tpuTokens, "ahd-2").ToJsonString()))!.AsObject();
+        var outside = tpuFront.Process("ahd-2");
         Assert.False(Done(outside));
 
         // 5. user-1 has the Back End de-identify (licensed: it states Pseudonymised) and user-2 the same (not licensed: it states Identified); the audit shows it.
@@ -229,6 +237,7 @@ public class AihFirstSliceTests : IDisposable
         Assert.True(AihJson.Parse(two.DeIdentify("ahd-2", "De-Identify", "Hashing").ToJsonString(), "r")["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
         Assert.Empty(one.Audit()["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray());
         var unlicensed = two.Audit()["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray();
+        Assert.Empty(hbe.Errors);                                                                    // what the Module asked of the Blockchain was answered
         Assert.Equal("ahd-2-deid", Assert.Single(unlicensed)!["AIHDataID"]!.ToString());
 
         // 5b. The Tokens are checked. A Third-Party User was granted the AIH Data Processing service only: a request to de-identify, or to audit, is not served - whoever carries it.
@@ -247,7 +256,7 @@ public class AihFirstSliceTests : IDisposable
         Assert.Empty(refusedAudit["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray());
 
         // 6. A round of Federated Learning: the Back End asks each Front End for the model it trained and averages them (user-1's data is Green, user-2's Yellow).
-        var model = hbe.FederatedLearning("model-0", ("hfe-1", Learner("hfe:user-1", one)), ("hfe-2", Learner("hfe:user-2", two)));
+        var model = hbe.FederatedLearning("model-0", "hfe-1", "hfe-2");
         Assert.Equal("model-0-federated-1", model["MLModelObjectID"]!.ToString());
         var weights = new float[2];
         Buffer.BlockCopy(Convert.FromBase64String(model["MLModelData"]![0]!["Data"]!.ToString()), 0, weights, 0, 8);
@@ -257,7 +266,7 @@ public class AihFirstSliceTests : IDisposable
         // What the Back End put in the MPAI Store is the AIM that wraps this model, and a new version of the Front End that has it as a Sub-AIM; the next round names the AIM.
         Assert.Equal("1AIH-NNM-V1.1-I01", hbe.ModelAimId);
         Assert.Equal("1.2", hbe.FrontEndVersion);
-        hbe.FederatedLearning("model-0", ("hfe-1", Learner("hfe:user-1", one)), ("hfe-2", Learner("hfe:user-2", two)));
+        hbe.FederatedLearning("model-0", "hfe-1", "hfe-2");
         Assert.Equal("1AIH-NNM-V1.1-I02", hbe.ModelAimId);
         Assert.Equal("1.3", hbe.FrontEndVersion);
 
@@ -271,7 +280,7 @@ public class AihFirstSliceTests : IDisposable
             Assert.Equal("1.1", repository.VersionOf(hfe));
             Assert.Empty(source.Obtained);
             one.Dispose();
-            using var restarted = new HfeUserAgent(controllers["hfe-user-1"], Door("hfe:user-1", "user-1"), "user-1", Orch("HFE.orch"), Path.Combine(work, "hfe-user-1", "secure-data-vault"));
+            using var restarted = new HfeUserAgent(controllers["hfe-user-1"], Door("hfe:user-1", "user-1"), "user-1", Orch("HFE.orch"), Path.Combine(work, "hfe-user-1", "secure-data-vault"), ServiceOf("user-1"));
             Assert.Equal("1.3", repository.VersionOf(hfe));
             Assert.Equal([hfe, "1AIH-NNM-V1.1-I02"], source.Obtained);
             Assert.True(repository.Holds("1AIH-NNM-V1.1-I02"));

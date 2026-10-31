@@ -64,9 +64,10 @@ public class AihFrontEndModuleTests : IDisposable
         Write(AihJson.Register, 1, register);
         Assert.Equal(register.ToJsonString(), Read(AihJson.Register, 1).ToJsonString());               // to the Back End (NB)
 
-        // The Back End's answer goes in; the Front End has no Port to give it on (the End User's User Agent has it from the Back End).
-        Write(AihJson.Register, 2, AihSamples.RegisterResponse("user-1"));
-        Assert.Equal(AifError.NoSuchPort, api.OutputRead(Hfe, AihJson.Register, 2, 500).Error);
+        // The Back End's answer goes in, and the Front End gives it out to the End User's User Agent, on its Output Port 2.
+        var response = AihSamples.RegisterResponse("user-1");
+        Write(AihJson.Register, 2, response);
+        Assert.Equal(response.ToJsonString(), Read(AihJson.Register, 2).ToJsonString());
     }
 
     [Fact]
@@ -99,6 +100,30 @@ public class AihFrontEndModuleTests : IDisposable
         Write(AihJson.Process, 1, ask);
         var response = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
         return response["AIHDataOrAIHDataID"]![0] as JsonObject;
+    }
+
+    // THE FRONT END DOES WHAT ITS USER PROFILE ALLOWS. Registered with a User Profile of an individual who is a member of an organisation - a Third-Party User - it makes and keeps no AIH Data,
+    // and a request to store or to de-identify is answered here, refused: it goes nowhere.
+    [Fact]
+    public void ForAThirdPartyUserTheFrontEndKeepsNoAihDataAndRefusesWhatIsNotProcessing()
+    {
+        var register = AihSamples.RegisterRequest("ada");
+        register["RegisterData"]![0]!["Request"]!["UserProfile"]!["UserProfileData"]![0]!["Human"]!["Membership"] = new JsonArray(new JsonObject { ["CompanyName"] = "Cardio Research Ltd" });
+        Write(AihJson.Register, 1, register);
+        Read(AihJson.Register, 1);                                                                      // to the Back End
+
+        Write(AihJson.HealthData, 1, HealthData(125));
+        Write(AihJson.ModelLicence, 1, AihSamples.ModelLicence("user-1", "ahd-1"));
+        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.AraData, 1, 1500).Error);          // no AIH Data was made: nothing to judge, no alert
+
+        var store = new JsonObject
+        {
+            ["Header"] = "AIH-AHP-V1.1", ["UserID"] = "ada", ["AIHDataProcessID"] = "r1", ["AIHDataProcessTime"] = AihJson.Time(),
+            ["AIHDataProcess"] = new JsonArray(new JsonObject { ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = new JsonArray("ahd-9"), ["ProcessingType"] = "Store", ["Tokens"] = AihSamples.Tokens() } })
+        };
+        Write(AihJson.Process, 1, store);
+        Assert.False(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());   // refused here
+        Assert.Equal(AifError.NotProduced, api.OutputRead(Hfe, AihJson.Process, 1, 500).Error);            // and not sent to the Back End
     }
 
     [Fact]

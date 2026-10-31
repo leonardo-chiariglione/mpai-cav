@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Aih.Chain;
 using Mpai.Aih.Nnm;
@@ -13,30 +14,32 @@ namespace Mpai.Aih.Hsp;
 // one of the Data Types of the Back End's boundary and gives its answer; the Data Types are the JSON instances of schemas/AIH1/V1.1.
 public interface IBackEnd
 {
-    string Register(string registerRequest);          // AIH-REG: an End User, or a Third-Party User
-    string Process(string aihDataProcess);            // AIH-AHP to HDP: an upload (Store, the AIH Data inline), a retrieval (Store, by identifier), a processing (AIHDataProcessing, by identifier)
+    // Registration and the AIH Data Process requests (an upload, a retrieval, a processing) are the Front End's: they reach the Back End Module on its External Ports, between the Controllers
+    // (the Health Back End's User Agent serves neither; a Third-Party User asks through a Health Front End too). The Register and Process calls of a door are for the trust protocol of the
+    // User Agents' exchanges, which tests use; the Back End's User Agent refuses them.
+    string Register(string registerRequest);
+    string Process(string aihDataProcess);
     string DeIdentify(string deIdAndAnonym);          // AIH-DIA
     string Audit(string audit);                       // AIH-ADT
 }
 
-// WHAT A HEALTH FRONT END OFFERS THE BACK END: to train its model on the AIH Data it holds when asked (the Back End never reaches into a Front End for anything else).
-public interface IFrontEnd
-{
-    string Learn(string federatedLearnRequest);        // AIH-FDL: the request in, the response (the model it trained) out
-}
-
-// THE USER AGENT OF THE HEALTH BACK END. It runs HBE.orch, which binds a device to every Port of the Module's boundary, and it does what the Back End's operator
-// does with them: it carries to the Blockchain what the Module asks of it and gives the Module the answer; it asks AIH Data Processing - which keeps the AIH Data in the Secure Storage
-// through the storage API, there is no Storage AIM - for the AIH Data that De-Identification and Auditing work on and hands it to them, and gives AIH Data Processing the copy
-// De-Identification made to keep; it hands each client the answer the Module gave.
+// THE USER AGENT OF THE HEALTH BACK END. It runs HBE.orch, which binds a device to every Port of the Module's boundary, and it does what the Back End's operator does with them: it carries to
+// the Blockchain, as the Module asks and all the time, what the Module asks of it and gives the Module the answer; it asks AIH Data Processing - which keeps the AIH Data in the Secure
+// Storage through the storage API, there is no Storage AIM, and knows whose each AIH Data and each copy is - for the AIH Data that De-Identification and Auditing work on and hands it to them,
+// and gives AIH Data Processing the copy De-Identification made to keep. The Front Ends' registrations and requests, and the answers to them, do not pass through it: they are between the
+// Controllers.
 public sealed class HbeUserAgent : IBackEnd, IDisposable
 {
+    // The Health Back End Module, and the policy of its service: the Back End is the Trust Authority of its Front Ends, which exchange with it and with no other (a Front End
+    // never speaks to another), and its answers go to the client they answer.
+    public const string Module = "1AIH-HBE-V1.1-I01";
+    public const string ServicePolicy = """{ "Roles": ["BackEnd", "FrontEnd"], "DefaultRole": "FrontEnd", "AuthorityRole": "BackEnd", "Exchange": [["BackEnd", "FrontEnd"]], "Directed": true, "Correlate": ["RegisterID", "AIHDataProcessID", "FederatedLearnID", "DeIDAndAnonymID", "AuditID"], "Address": ["HFEID"] }""";
+
+    private readonly IControllerApi api;
     private readonly ModuleSession s;
     private readonly IBlockchain chain;
     private readonly string me;
     private readonly object gate = new();
-    private readonly Dictionary<string, string> owners = new();          // the End User of each AIH Data kept
-    private readonly Dictionary<string, List<string>> copies = new();    // the copies made of each AIH Data
 
     private readonly ModelAimPublisher? models;
     private readonly string? frontEndL3;
@@ -50,72 +53,48 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
     // models: the MPAI Store, to which the Back End uploads the AIM that wraps each model it gets; without it the model is not uploaded. frontEndL3: the L3 of the Health Front End as the Back End has it, from which it publishes the new version that has the AIM for a Front End to take (the Controller of a Front End follows the Store, or not).
     public HbeUserAgent(IControllerApi api, IBlockchain chain, string workflowFile, string storageLocation, string backEndId = "hbe-1", ModelAimPublisher? models = null, string? frontEndL3 = null, JsonObject? modelLicence = null)
     {
-        this.chain = chain; me = backEndId; this.models = models; this.frontEndL3 = frontEndL3; this.modelLicence = modelLicence;
-        s = new ModuleSession(api, workflowFile, storageLocation,
+        this.api = api; this.chain = chain; me = backEndId; this.models = models; this.frontEndL3 = frontEndL3; this.modelLicence = modelLicence;
+        s = new ModuleSession(api, workflowFile, storageLocation, null,
             ("RegisterIn", "AIH-REG-V1.1"), ("RequestIn", "AIH-AHP-V1.1"), ("DeIdIn", "AIH-DIA-V1.1"), ("AuditIn", "AIH-ADT-V1.1"),
             ("AhdAuditIn", "AIH-AHD-V1.1"), ("AhdDeIdIn", "AIH-AHD-V1.1"), ("AhdProcIn", "AIH-AHD-V1.1"),
             ("LearnAnswerIn", "AIH-FDL-V1.1"), ("ContractIn", "AIH-BCL-V1.1"), ("ConfirmIn", "AIH-LCF-V1.1"), ("AuditConfirmIn", "AIH-LCF-V1.1"),
-            ("RegisterOut", ""), ("ResponseOut", ""), ("AraOut", ""), ("DeIdOut", ""), ("AhdDeIdOut", ""), ("AuditOut", ""), ("LearnOut", ""), ("ModelOut", ""),
+            ("RegisterOut", ""), ("ResponseOut", ""), ("AraOut", ""), ("DeIdOut", ""), ("AhdDeIdOut", ""), ("AuditOut", ""), ("ModelOut", ""),
             ("ContractOut", ""), ("ConfirmOut", ""), ("AuditConfirmOut", ""));
         s.Start();
+        // What the Module asks of the Blockchain it asks when it needs to, not when this User Agent expects it: each is served as it comes.
+        s.Serve("ContractOut", asked => s.Send("ContractIn", Contract(asked)));
+        s.Serve("ConfirmOut", asked => { Confirm(asked, out var answer); s.Send("ConfirmIn", answer); });
+        s.Serve("AuditConfirmOut", asked => { Confirm(asked, out var answer); s.Send("AuditConfirmIn", answer); });
     }
 
     public void Dispose() => s.Dispose();
 
-    private string Answer(string device, string what, int ms = 20_000) =>
+    // What went wrong in what the Module asked of the Blockchain.
+    public IReadOnlyCollection<string> Errors => s.Errors;
+
+    // THE BACK END'S SERVICE: this User Agent asks its Controller to be the Trust Authority of the External links of the Module (MPAI_AIFU_External_Authority). The Controller admits the Front
+    // Ends that ask to join, and exchanges with them what the Module's External Ports give (the Federated Learn requests and answers), signed. The anchor is what the User Agent publishes with
+    // the service, and the rendezvous is where a Front End presents itself.
+    public AifError StartService(string policy = ServicePolicy)
+    {
+        var error = api.ExternalAuthority(Module, policy);
+        Anchor = api.ExternalAnchor(Module);
+        Rendezvous = api.ExternalRendezvous(Module);
+        return error;
+    }
+
+    public string? Anchor { get; private set; }
+    public string? Rendezvous { get; private set; }
+
+    private string Answer(string device, string what, int ms = 60_000) =>
         s.Receive(device, ms) ?? throw new TimeoutException($"The Back End's Module gave no {what}.");
 
-    // ---- registration ----
-    public string Register(string registerRequest)
-    {
-        lock (gate)
-        {
-            s.Drain();
-            s.Send("RegisterIn", registerRequest);
-            return Answer("RegisterOut", "answer to the registration");
-        }
-    }
+    // ---- registration and requests: the Front Ends' (the Controllers carry them), not this User Agent's ----
+    public string Register(string registerRequest) =>
+        throw new NotSupportedException("Registration reaches the Back End Module on its External Ports, from the Front End's Controller.");
 
-    // ---- HDP ----
-    public string Process(string aihDataProcess)
-    {
-        lock (gate)
-        {
-            s.Drain();
-            var process = AihJson.Parse(aihDataProcess, "AIH Data Process");
-            var request = AihJson.RequestOf(process) ?? throw new FormatException("the request holds no Request.");
-            var type = request["ProcessingType"]?.GetValue<string>();
-            var items = (request["AIHDataOrAIHDataID"] as JsonArray)?.ToList() ?? [];
-            s.Send("RequestIn", aihDataProcess);
-
-            // AN UPLOAD: the Module asks for the Smart Contract; the Blockchain makes it; the AIH Data comes back with its identifier, kept in the Secure Storage.
-            if (type == "Store" && items.Count == 1 && items[0] is JsonObject)
-            {
-                if (s.Receive("ContractOut", 3000) is { } asked) s.Send("ContractIn", Contract(asked));
-                var response = Answer("ResponseOut", "answer to the upload");
-                var result = AihJson.ResponseOf(AihJson.Parse(response, "AIH Data Process"));
-                if (result?["ProcessingStatus"]?.GetValue<bool>() == true && result["AIHDataOrAIHDataID"]?[0] is JsonObject kept)
-                {
-                    owners[kept["AIHDataID"]!.GetValue<string>()] = kept["UserID"]?.GetValue<string>() ?? process["UserID"]?.GetValue<string>() ?? "";
-                    // what the client is told is the response as it is (the AIH Data with its Smart Contract)
-                }
-                return response;
-            }
-
-            // A PROCESSING: the Module asks whether the licence allows it; if so, it fetches the AIH Data from the Secure Storage and processes it.
-            if (type == "AIHDataProcessing" && items.Count == 1 && items[0] is JsonValue id)
-            {
-                if (s.Receive("ConfirmOut", 3000) is { } asked)
-                {
-                    Confirm(asked, out var answer);
-                    s.Send("ConfirmIn", answer);
-                }
-                return Answer("ResponseOut", "answer to the processing");
-            }
-
-            return Answer("ResponseOut", "answer");
-        }
-    }
+    public string Process(string aihDataProcess) =>
+        throw new NotSupportedException("An AIH Data Process request reaches the Back End Module on its External Ports, from the Front End's Controller.");
 
     // ---- De-Identification and Anonymisation ----
     public string DeIdentify(string deIdAndAnonym)
@@ -129,7 +108,7 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
             var id = asked["AIHDataID"]?.GetValue<string>() ?? throw new FormatException("the request names no AIH Data.");
             // The Tokens are checked where the End Users are registered, by AIH Data Processing; a request they do not grant is not served.
             var user = request["EndUserID"]?.GetValue<string>() ?? "";
-            if (!Authorised(user, "DeIDAndAnonym", asked["Tokens"] as JsonObject, JsonValue.Create(id)))
+            if (Authorised(user, "DeIDAndAnonym", asked["Tokens"] as JsonObject, JsonValue.Create(id)) is null)
                 return new JsonObject
                 {
                     ["Header"] = AihJson.DeId, ["DeIDAndAnonymID"] = AihJson.NewId("dia"), ["DeIDAndAnonymTime"] = AihJson.Time(), ["EndUserID"] = user,
@@ -144,8 +123,6 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
             {
                 s.Send("AhdProcIn", copy);
                 Answer("ResponseOut", "receipt of the copy kept");                      // kept before anything is asked of it
-                if (!copies.TryGetValue(id, out var list)) copies[id] = list = [];
-                list.Add(result["NewAIHDataID"]?.GetValue<string>() ?? AihJson.Parse(copy, "AIH Data")["AIHDataID"]!.GetValue<string>());      // the identifier the response gives the copy
             }
             return response;
         }
@@ -159,27 +136,19 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
             s.Drain();
             var auditRequest = AihJson.Parse(audit, "Audit");
             var user = auditRequest["UserID"]?.GetValue<string>() ?? "";
-            if (!Authorised(user, "Auditing", auditRequest["Audit"]?["Request"]?["Tokens"] as JsonObject))
+            var theirs = Authorised(user, "Auditing", auditRequest["Audit"]?["Request"]?["Tokens"] as JsonObject);
+            if (theirs is null)
                 return new JsonObject
                 {
                     ["Header"] = AihJson.Audit, ["UserID"] = user, ["AuditID"] = AihJson.NewId("adt"), ["AuditTime"] = AihJson.Time(),
                     ["Audit"] = new JsonObject { ["Response"] = new JsonObject { ["ProcessingState"] = false, ["AIHDataIDs"] = new JsonArray() } }
                 }.ToJsonString();
-            // Auditing sees the AIH Data of the End User and the copies made of it, which AIH Data Processing gives the User Agent to hand it.
-            foreach (var id in owners.Where(o => o.Value == user).Select(o => o.Key).ToList())
-            {
+            // Auditing sees the AIH Data of the End User and the copies made of it: AIH Data Processing, which keeps them and whose each is, said which with its authorisation; it gives them now.
+            foreach (var id in theirs)
                 s.Send("AhdAuditIn", Fetch(id) ?? throw new InvalidOperationException($"AIH Data Processing did not give the AIH Data {id} of {user} for the audit."));
-                foreach (var copyId in copies.GetValueOrDefault(id) ?? [])
-                    s.Send("AhdAuditIn", Fetch(copyId) ?? throw new InvalidOperationException($"AIH Data Processing did not give the copy {copyId} of {id} for the audit."));
-            }
             s.Drain();
             s.Send("AuditIn", audit);
-            // It asks one Licence Confirm at a time, of the Blockchain.
-            while (s.Receive("AuditConfirmOut", 2000) is { } asked)
-            {
-                Confirm(asked, out var answer);
-                s.Send("AuditConfirmIn", answer);
-            }
+            // Its Licence Confirms, one at a time, are asked of the Blockchain as they come (AuditConfirmOut is served).
             return Answer("AuditOut", "answer of the audit");
         }
     }
@@ -193,25 +162,27 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
         return request;
     }
 
-    // A round: the Module asks each Front End for the model it trained (the User Agent carries the request there and the answer back), and gives the new model when
-    // every answer is in. Returns the model (AIP-MLO-V1.0).
-    public JsonObject FederatedLearning(string preLearnModelId, params (string FrontEndId, IFrontEnd Front)[] fronts)
+    // A round: this User Agent asks the Module to start it, for each Front End by the name it joined the service under. The Module's request goes out on its External Port - the Controller
+    // sends it, signed, to the Controller it names - and each Front End's answer comes in on the External Port the same way; the Module gives the new model when every answer is in. The
+    // User Agent carries nothing between them. Returns the model (AIP-MLO-V1.0).
+    public JsonObject FederatedLearning(string preLearnModelId, params string[] frontEndIds)
     {
         lock (gate)
         {
             s.Drain();
-            var forwarded = new List<(IFrontEnd Front, string Request)>();
-            foreach (var (id, front) in fronts)
+            // The Module is paused while the requests are given, so that it has them all before the first answer can come: a round is complete when it has as many answers as requests.
+            api.Pause(Module);
+            try
             {
-                s.Send("LearnAnswerIn", new JsonObject
-                {
-                    ["Header"] = AihJson.FederatedLearn, ["FederatedLearnID"] = AihJson.NewId("fdl"), ["FederatedLearnTime"] = AihJson.Time(),
-                    ["FederatedLearnData"] = new JsonArray(new JsonObject { ["Request"] = Request(id, preLearnModelId) })
-                }.ToJsonString());
-                forwarded.Add((front, Answer("LearnOut", "request for the Front End")));
+                foreach (var id in frontEndIds)
+                    s.Send("LearnAnswerIn", new JsonObject
+                    {
+                        ["Header"] = AihJson.FederatedLearn, ["FederatedLearnID"] = AihJson.NewId("fdl"), ["FederatedLearnTime"] = AihJson.Time(),
+                        ["FederatedLearnData"] = new JsonArray(new JsonObject { ["Request"] = Request(id, preLearnModelId) })
+                    }.ToJsonString());
             }
-            foreach (var (front, request) in forwarded) s.Send("LearnAnswerIn", front.Learn(request));
-            var model = AihJson.Parse(Answer("ModelOut", "new NN Model"), "NN Model");
+            finally { api.Resume(Module); }
+            var model = AihJson.Parse(Answer("ModelOut", "new NN Model", 60_000), "NN Model");
             // What the Back End puts in the Store is the AIM that wraps the model; its identifier is what the Front Ends are told next.
             if (models is not null) { ModelAimId = models.Upload(model, aimLicence: modelLicence); if (frontEndL3 is not null) FrontEndVersion = models.PublishFrontEnd(frontEndL3, ModelAimId); }
             return model;
@@ -240,10 +211,11 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
         return allowed;
     }
 
-    // WHETHER THE TOKENS GRANT A SERVICE: asked of AIH Data Processing, which registered the user and gave them the Tokens. No Tokens, no service.
-    private bool Authorised(string user, string service, JsonObject? tokens, JsonNode? item = null)
+    // WHETHER THE TOKENS GRANT A SERVICE: asked of AIH Data Processing, which registered the user and gave them the Tokens. No Tokens, no service. Null where they do not; else the items
+    // of its answer (for an audit, the AIH Data of the user).
+    private List<string>? Authorised(string user, string service, JsonObject? tokens, JsonNode? item = null)
     {
-        if (tokens is null) return false;
+        if (tokens is null) return null;
         s.Drain();
         s.Send("RequestIn", new JsonObject
         {
@@ -253,7 +225,11 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
                 ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = item is null ? new JsonArray() : new JsonArray(item.DeepClone()), ["ProcessingType"] = service, ["Tokens"] = tokens.DeepClone() }
             })
         }.ToJsonString());
-        return s.Receive("ResponseOut", 10_000) is { } answer && AihJson.ResponseOf(AihJson.Parse(answer, "AIH Data Process"))?["ProcessingStatus"]?.GetValue<bool>() == true;
+        if (s.Receive("ResponseOut", 10_000) is not { } answer) return null;
+        var response = AihJson.ResponseOf(AihJson.Parse(answer, "AIH Data Process"));
+        return response?["ProcessingStatus"]?.GetValue<bool>() == true
+            ? (response["AIHDataOrAIHDataID"] as JsonArray)?.Select(i => i?.GetValue<string>() ?? "").ToList() ?? []
+            : null;
     }
 
     // The AIH Data AIH Data Processing keeps under an identifier, asked for as the Back End (which is not a user: it has no Tokens); null if it is not kept.

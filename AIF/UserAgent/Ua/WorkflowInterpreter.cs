@@ -461,6 +461,19 @@ public sealed class WorkflowInterpreter
                 break;
             }
 
+            case StepKind.JoinService:
+            {
+                var service = Fill(step.Text ?? "");
+                var trusted = devices.Service(service)
+                    ?? throw new NotSupportedException($"line {step.Line}: the User has not decided to trust a service called '{service}'.");
+                var name = step.Name is null ? trusted.As : Fill(step.Name);
+                var done = await north.ExternalJoinAsync(Module, trusted.Anchor, trusted.Rendezvous, step.Role, name);
+                if (done != AifError.OK)
+                    throw new NotSupportedException($"line {step.Line}: the Controller did not join the service '{service}' ({done}).");
+                say($"[C] {Module} joined the service '{service}'{(name is null ? "" : " as " + name)}");
+                break;
+            }
+
             case StepKind.StopAim:
             {
                 var done = await north.StopAimAsync(Module, step.Variable!);

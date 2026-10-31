@@ -39,6 +39,12 @@ public sealed class WorkflowReader
     private static readonly Regex AskStorage =
         new(@"^ask\s+Controller\s+to\s+keep\s+storage\s+in\s+(?<where>.+?)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // A STEP OF THE TRUST PROTOCOL, not a datum: 'ask Controller to join "<service>" [as "<name>"] [role <Role>]'. The service is one the User decided to trust; the User Agent knows its Trust
+    // Authority (the anchor) and where it is reached (the rendezvous), and passes them to the Controller. The workflow names the service and nothing of how to trust it.
+    private static readonly Regex AskJoin =
+        new(@"^ask\s+Controller\s+to\s+join\s+(?<service>""[^""]*""|\S+)(\s+as\s+(?<as>""[^""]*""|\S+))?(\s+role\s+(?<role>\S+))?\s*$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     private static readonly Regex AskStopAim =
         new(@"^ask\s+Controller\s+to\s+stop\s+AIM\s+(?<aim>\S+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -188,6 +194,15 @@ public sealed class WorkflowReader
         var storage = AskStorage.Match(line);
         if (storage.Success)
             return new Step { Kind = StepKind.KeepStorage, Text = storage.Groups["where"].Value.Trim().Trim('"'), Line = n };
+
+        var join = AskJoin.Match(line);
+        if (join.Success)
+            return new Step
+            {
+                Kind = StepKind.JoinService, Text = join.Groups["service"].Value.Trim('"'),
+                Name = join.Groups["as"].Success ? join.Groups["as"].Value.Trim('"') : null,
+                Role = join.Groups["role"].Success ? join.Groups["role"].Value : null, Line = n
+            };
 
         var stopAim = AskStopAim.Match(line);
         if (stopAim.Success)

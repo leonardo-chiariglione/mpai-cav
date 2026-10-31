@@ -73,6 +73,17 @@ public static class AihSamples
         })
     };
 
+    // An individual who is a member of an organisation.
+    public static JsonObject UserProfileOfAMember(string user = "ada")
+    {
+        var profile = UserProfile(user);
+        profile["UserProfileData"]![0]!["Human"]!["Membership"] = new JsonArray(new JsonObject
+        {
+            ["CompanyName"] = "Cardio Research Ltd", ["RegistrationCode"] = "GB-0001", ["Country"] = "GB", ["Type"] = new JsonArray("Non-Profit Entity")
+        });
+        return profile;
+    }
+
     public static JsonObject RegisterRequest(string user = "user-1") => new()
     {
         ["Header"] = "AIH-REG-V1.1", ["RegisterID"] = "reg-1", ["RegisterTime"] = Time("reg-t"),
@@ -262,6 +273,24 @@ public class AihSchemaTests
     {
         Assert.Equal("valid", Check("ThirdPartyUserProfile", AihSamples.ThirdPartyUserProfile()));
         Assert.Equal("valid", Check("Register", AihSamples.ThirdPartyRegisterRequest()));
+    }
+
+    // An individual may be a member of organisations; that makes it a Third-Party User (the Health Front End and the Health Back End do for it what they do for one). The membership names
+    // the organisation and, per the Taxonomies, its kind.
+    [Fact]
+    public void AnIndividualRegistersAsAMemberOfAnOrganisation()
+    {
+        Assert.Equal("valid", Check("UserProfile", AihSamples.UserProfileOfAMember()));
+        var register = AihSamples.RegisterRequest("ada");
+        register["RegisterData"]![0]!["Request"]!.AsObject()["UserProfile"] = AihSamples.UserProfileOfAMember();
+        Assert.Equal("valid", Check("Register", register));
+
+        var nameless = AihSamples.UserProfileOfAMember();
+        nameless["UserProfileData"]![0]!["Human"]!["Membership"]![0]!.AsObject().Remove("CompanyName");
+        Assert.StartsWith("not valid", Check("UserProfile", nameless));
+        var untyped = AihSamples.UserProfileOfAMember();
+        untyped["UserProfileData"]![0]!["Human"]!["Membership"]![0]!.AsObject()["Type"] = new JsonArray("Not A Kind");
+        Assert.StartsWith("not valid", Check("UserProfile", untyped));
     }
 
     [Fact]

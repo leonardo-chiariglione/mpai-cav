@@ -201,6 +201,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             _external.Remove(moduleName, out hubs);
         }
         foreach (var hub in hubs ?? []) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        ExternalLeave(moduleName);
     }
 
     // THE EXTERNAL PORTS OF A MODULE JOINED TO OTHER CONTROLLERS (M3205 3.3; M3241 3.2):
@@ -209,9 +210,21 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // written to its External Input Ports with their controllerID and stamp. sign and
     // verify: the Controller's trust (CityTrust). The hub ends when the Module stops.
     private readonly Dictionary<string, List<AIF.Channels.ExternalHub>> _external = new();
+    private readonly Dictionary<string, System.Collections.Concurrent.BlockingCollection<string>> _unrouted = new();
+
+    private System.Collections.Concurrent.BlockingCollection<string> UnroutedQueue(string moduleName, string dataType, int portNumber)
+    {
+        lock (_unrouted)
+        {
+            var key = moduleName + "|" + Key(dataType, portNumber);
+            if (!_unrouted.TryGetValue(key, out var queue)) _unrouted[key] = queue = new();
+            return queue;
+        }
+    }
 
     public AIF.Channels.ExternalHub StartExternal(string moduleName, AIF.Channels.ExternalHub.Options options,
-                                                  Func<string, string>? sign = null, Func<string, string, string?>? verify = null)
+                                                  Func<string, string>? sign = null, Func<string, string, string?>? verify = null,
+                                                  Func<string, IReadOnlyList<AIF.Channels.PayloadDescriptor>, string>? signPayloads = null)
     {
         int id;
         IReadOnlyList<RuntimePort> ports;
@@ -230,10 +243,24 @@ public sealed class ControllerApi : IControllerApi, IDisposable
                 var (error, json, stamp) = await _ua.ContinuousReadStampedAsync(id, dataType, portNumber, timeoutMs);
                 return error == AifError.OK && json is not null ? (json, stamp) : null;
             },
+            // The payload channel (Communication 4, 7): the references of the payloads of what an
+            // External Output Port gives are kept, and sent apart; those of what arrives stay
+            // on the Controller that wrote them until a reader asks.
+            ReadOutputApart = async (dataType, portNumber, timeoutMs) =>
+            {
+                var (error, json, stamp) = await _ua.ContinuousReadApartAsync(id, dataType, portNumber, timeoutMs);
+                return error == AifError.OK && json is not null ? (json, stamp) : null;
+            },
+            PayloadSource = _ua.PayloadSourceOf(id),
+            SignPayloads = signPayloads,
+            Unrouted = options.DirectedReplies ? (dataType, portNumber, json) => { UnroutedQueue(moduleName, dataType, portNumber).Add(json); return Task.CompletedTask; } : null,
             Deliver = async m =>
             {
                 if (!ports.Any(p => p.Direction == "Input" && p.Accepts(m.DataType))) return;
-                await _ua.ContinuousWriteAsync(id, m.DataType, m.PortNumber, m.Json, 1000, m.From, m.Stamp);
+                var json = m.Payloads is { Count: > 0 } && m.Fetch is { } fetch
+                    ? _ua.AdoptPayloads(id, m.DataType, m.PortNumber, m.Json, m.Payloads.Select(d => (d.Reference, (Func<byte[]?>)(() => fetch(d)))))
+                    : m.Json;
+                await _ua.ContinuousWriteAsync(id, m.DataType, m.PortNumber, json, 15_000, m.From, m.Stamp);
             },
             Sign = sign, Verify = verify
         };
@@ -244,6 +271,153 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         }
         hub.Start();
         return hub;
+    }
+
+    // ---- BETWEEN CONTROLLERS (Basic API 3.9; Communication 9) ---------------------------
+    // The User Agent passes its User's decision to trust a Trust Authority to the Controller
+    // (External_Join), or makes the Controller the Authority of a service (External_Authority).
+    // The Controller trusts and admits only at that request, and has no initiative of its own.
+
+    private readonly Dictionary<string, AIF.Controller.ExternalAuthorityService> _authorities = new();
+    private readonly Dictionary<string, AIF.Controller.ExternalMember> _members = new();
+
+    // The root of trust of this Controller, where it has one: a Controller that joins presents
+    // the Attestation Evidence a service requires of its role.
+    public AIF.Trust.IRootOfTrust? ExternalAttestor { get; set; }
+
+    // What a Controller that is an Authority judges the Attestation Evidence of the Controllers it
+    // admits by (the manufacturers it trusts and the code it approves).
+    public AIF.Trust.Attestation.Policy? ExternalAttestationPolicy { get; set; }
+
+    // Where the anchor of this Controller as an Authority is kept between runs (its identity and
+    // key); made there if absent. Without it, the anchor lasts as long as the Controller.
+    public string? ExternalAnchorFile { get; set; }
+
+    // Why the last External_Join or External_Authority did not succeed.
+    public string? ExternalError { get; private set; }
+
+    // MPAI_AIFU_External_Authority(MODULE_ID, policy): the Controller becomes the Trust Authority
+    // for the External links of the Module, admitting Controllers under policy. It is admitted to
+    // its own service in the role the policy gives it. Its anchor, the one its User Agent publishes
+    // with the service, is ExternalAnchor(moduleName); the rendezvous, ExternalRendezvous(moduleName).
+    public AifError ExternalAuthority(string moduleName, string policy, string host = "127.0.0.1", int port = 0)
+    {
+        ExternalError = null;
+        lock (_tables)
+        {
+            if (!_running.ContainsKey(moduleName)) return AifError.NotStarted;
+            if (_authorities.ContainsKey(moduleName) || _members.ContainsKey(moduleName)) { ExternalError = $"{moduleName} has External links already"; return AifError.Failed; }
+        }
+        try
+        {
+            var parsed = AIF.Controller.ExternalPolicy.Parse(policy);
+            AIF.Trust.TrustAnchorKey anchor;
+            System.Security.Cryptography.ECDsa key;
+            if (ExternalAnchorFile is { } file && System.IO.File.Exists(file)) (anchor, key) = AIF.Trust.TrustAnchorKey.Load(file);
+            else
+            {
+                key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+                var t = DateTimeOffset.UtcNow;
+                anchor = new AIF.Trust.TrustAnchorKey($"{moduleName}-Authority-{Guid.NewGuid():N}", key, t.AddMinutes(-5), t.AddDays(365));
+                if (ExternalAnchorFile is { } save) AIF.Trust.TrustAnchorKey.Save(save, anchor.AnchorId, key, t.AddMinutes(-5), t.AddDays(365));
+            }
+            var service = new AIF.Controller.ExternalAuthorityService(anchor, key, parsed, ExternalAttestationPolicy, host: host, port: port);
+            var (credential, discovery) = service.AdmitSelf(anchor.AnchorId);
+            var trust = new AIF.Controller.ExternalTrust(anchor, key, credential, anchor.Object(), parsed.AuthorityRole, parsed);
+            var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
+            {
+                ControllerId = anchor.AnchorId, ModuleType = anchor.AnchorId, Discovery = discovery, Admission = trust.Admission, Host = host,
+                DirectedReplies = parsed.Directed, CorrelateBy = parsed.Correlate ?? [], AddressedBy = parsed.Address ?? []
+            }, trust.Sign, trust.Verify, trust.SignPayloads);
+            lock (_tables) _authorities[moduleName] = service;
+            return AifError.OK;
+        }
+        catch (InvalidOperationException e) { ExternalError = e.Message; return AifError.Failed; }
+        catch (Exception e) when (e is System.Text.Json.JsonException or ArgumentException or FormatException) { ExternalError = "the policy is not valid: " + e.Message; return AifError.Failed; }
+    }
+
+    // The Trust Anchor object this Controller is the Authority by, to be published by its User
+    // Agent with the service; and the rendezvous where Controllers present themselves.
+    public string? ExternalAnchor(string moduleName) { lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.AnchorObject.ToJsonString() : null; }
+    public string? ExternalRendezvous(string moduleName) { lock (_tables) return _authorities.TryGetValue(moduleName, out var a) ? a.Rendezvous : null; }
+
+    // MPAI_AIFU_External_Join(MODULE_ID, authority, rendezvous): the External Ports of the Module are
+    // linked to the Controllers admitted by the Trust Authority whose anchor is authority (its Trust
+    // Anchor object, JSON) - the Authority the User decided to trust. The Controller presents itself
+    // at rendezvous (host:port) with its attestation and what the service requires, and receives its
+    // credential. NOT_TRUSTED where the Authority does not prove that it holds authority; NOT_AUTHORISED
+    // where it refuses admission. role: the role asked for (null: the Authority's default); controllerId:
+    // the name this Controller is known by in the service (null: one is made), which other Controllers may
+    // name in a Message to address it; rendezvous
+    // null (announcement in range) is not offered by this Controller.
+    public AifError ExternalJoin(string moduleName, string authority, string? rendezvous, string? role = null, string? controllerId = null)
+    {
+        ExternalError = null;
+        if (rendezvous is null) { ExternalError = "an Authority is reached at a rendezvous; admission by announcement in range is not offered"; return AifError.Failed; }
+        lock (_tables)
+        {
+            if (!_running.ContainsKey(moduleName)) return AifError.NotStarted;
+            if (_authorities.ContainsKey(moduleName) || _members.ContainsKey(moduleName)) { ExternalError = $"{moduleName} has External links already"; return AifError.Failed; }
+        }
+        AIF.Controller.ExternalMember member;
+        try
+        {
+            var anchor = System.Text.Json.Nodes.JsonNode.Parse(authority)?.AsObject() ?? throw new FormatException("the authority is not a Trust Anchor object");
+            member = AIF.Controller.ExternalMember.JoinAsync(controllerId ?? $"{moduleName}-{Guid.NewGuid():N}", anchor, rendezvous, role, ExternalAttestor).GetAwaiter().GetResult();
+        }
+        catch (AIF.Controller.ExternalJoinException e)
+        {
+            ExternalError = e.Message;
+            return e.Kind switch { AIF.Controller.AifErrorKind.NotTrusted => AifError.NotTrusted, AIF.Controller.AifErrorKind.NotAuthorised => AifError.NotAuthorised, _ => AifError.Failed };
+        }
+        catch (Exception e) when (e is System.Text.Json.JsonException or FormatException) { ExternalError = e.Message; return AifError.Failed; }
+        try
+        {
+            var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
+            {
+                ControllerId = member.Trust.ControllerId, ModuleType = AuthorityIdOf(authority), Discovery = member.Discovery, Admission = member.Trust.Admission,
+                DirectedReplies = false, HoldUntilLinked = true     // what its Module gives waits until a Controller of the service is linked
+            }, member.Trust.Sign, member.Trust.Verify, member.Trust.SignPayloads);
+            // Joined is admitted and reachable: the Controller waits, a while, for the Controller of the Authority to be linked.
+            var linking = System.Diagnostics.Stopwatch.StartNew();
+            while (hub.Linked.Count == 0 && linking.Elapsed < TimeSpan.FromSeconds(20)) System.Threading.Thread.Sleep(20);
+        }
+        catch (InvalidOperationException e)
+        {
+            member.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            ExternalError = e.Message;
+            return AifError.Failed;
+        }
+        lock (_tables) _members[moduleName] = member;
+        return AifError.OK;
+    }
+
+    // The hubs of the External Ports of a Module (what they linked, sent, received, refused).
+    public IReadOnlyList<AIF.Channels.ExternalHub> ExternalHubsOf(string moduleName)
+    {
+        lock (_tables) return _external.TryGetValue(moduleName, out var list) ? list.ToList() : [];
+    }
+
+    // The Controllers of a service are of one type - the service, named by its Authority - whatever Modules they run: a Back End and a Front End link.
+    private static string AuthorityIdOf(string authorityAnchor) => (string?)System.Text.Json.Nodes.JsonNode.Parse(authorityAnchor)?["AnchorID"] ?? "";
+
+    // MPAI_AIFU_External_Leave(MODULE_ID): the links of the Module are closed; its credential is discarded.
+    public AifError ExternalLeave(string moduleName)
+    {
+        List<AIF.Channels.ExternalHub>? hubs;
+        AIF.Controller.ExternalMember? member;
+        AIF.Controller.ExternalAuthorityService? service;
+        lock (_tables)
+        {
+            _external.Remove(moduleName, out hubs);
+            _members.Remove(moduleName, out member);
+            _authorities.Remove(moduleName, out service);
+        }
+        if (hubs is null && member is null && service is null) return AifError.NotFound;
+        foreach (var hub in hubs ?? []) hub.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        member?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        service?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        return AifError.OK;
     }
 
     // The boundary key the Controller routes on: DataType + PortNumber. Ports of
@@ -289,13 +463,30 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         Task<Result>? run;
         int? continuous = null;
+        System.Collections.Concurrent.BlockingCollection<string>? unroutedQueue = null;
         lock (_tables)
         {
             if (!_running.TryGetValue(moduleName, out var started)) return new Read(AifError.NotStarted, null);
-            if (PortOf(started, "Output", dataType, portNumber) is null) return new Read(AifError.NoSuchPort, null);
-            if (_ua.IsContinuous(started.Id)) { continuous = started.Id; run = null; }
-            else run = RunIfWritten(moduleName, started);
+
+            // AN EXTERNAL OUTPUT PORT IS READ BY THE CONTROLLER'S HUB, which sends what the Module gives to the Controllers it concerns. The User Agent that serves clients which are not
+            // Controllers of the service reads what the hub could not route to one.
+            if (_external.ContainsKey(moduleName) && (_ua.BoundaryPorts(started.Id) ?? Array.Empty<RuntimePort>())
+                    .Any(p => p.IsRemote && p.Direction == "Output" && p.DataType == dataType && (p.PortNumber ?? 1) == portNumber))
+            {
+                unroutedQueue = UnroutedQueue(moduleName, dataType, portNumber);
+                run = null;
+            }
+            else
+            {
+                if (PortOf(started, "Output", dataType, portNumber) is null) return new Read(AifError.NoSuchPort, null);
+                if (_ua.IsContinuous(started.Id)) { continuous = started.Id; run = null; }
+                else run = RunIfWritten(moduleName, started);
+            }
         }
+
+        // Waited for outside the table's lock: other calls of the User Agent are not held while it waits.
+        if (unroutedQueue is not null)
+            return unroutedQueue.TryTake(out var unrouted, timeoutMs < 0 ? System.Threading.Timeout.Infinite : timeoutMs) ? new Read(AifError.OK, unrouted) : new Read(AifError.NotProduced, null);
 
         // A Continuous Module: the oldest Message pending, within the timeout;
         // NOT_PRODUCED when none was (M3203 3.3).

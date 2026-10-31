@@ -31,6 +31,10 @@ public interface IAsyncControllerApi
     Task<AifError>             StopAimAsync(string moduleName, string aimName);
     Task<AifError>             SharedStorageInitAsync(string moduleName, string location);
 
+    // MPAI_AIFU_External_Join (Basic API 3.9): the Trust Authority the User decided to trust, by its anchor, and where it is reached. Not over MPAI-MAS.
+    Task<AifError> ExternalJoinAsync(string moduleName, string authority, string rendezvous, string? role, string? controllerId) =>
+        Task.FromResult(AifError.Failed);
+
     // A payload placed for a boundary Input Port, its reference returned (M3215
     // 3.6). Not over MPAI-MAS (Phase 15): there a payload goes inline.
     Task<(AifError Error, string? Reference)> PayloadPutAsync(string moduleName, string dataType, int portNumber, ReadOnlyMemory<byte> data) =>
@@ -77,5 +81,8 @@ public static class ControllerApiAsync
         public Task<AifError> StopAimAsync(string moduleName, string aimName) => Task.Run(() => api.StopAim(moduleName, aimName));
 
         public Task<AifError> SharedStorageInitAsync(string moduleName, string location) => Task.Run(() => api.SharedStorageInit(moduleName, location));
+
+        public Task<AifError> ExternalJoinAsync(string moduleName, string authority, string rendezvous, string? role, string? controllerId) =>
+            Task.Run(() => api.ExternalJoin(moduleName, authority, rendezvous, role, controllerId));
     }
 }

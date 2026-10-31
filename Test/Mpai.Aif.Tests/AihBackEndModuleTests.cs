@@ -64,7 +64,7 @@ public class AihBackEndModuleTests : IDisposable
     {
         request["RegisterData"]![0]!["Request"]!["RequestedServices"] = new JsonArray(services.Select(s => (JsonNode)new JsonObject { ["Service"] = s }).ToArray());
         Write(AihJson.Register, 1, request);
-        var response = Read(AihJson.Register, 1);
+        var response = Read(AihJson.Register, 2);                                                        // the answer leaves on Output 2: the Front End receives it on Input 2
         Assert.Equal("valid", Valid("Register", response));
         return (JsonObject)response["RegisterData"]![0]!["Response"]!["Tokens"]!;
     }
@@ -116,7 +116,7 @@ public class AihBackEndModuleTests : IDisposable
     {
         Write(AihJson.Process, 1, Request("user-1", "Store", endUserTokens, data));
         Write(AihJson.Blockchain, 1, Contract());
-        var response = Read(AihJson.Process, 1);
+        var response = Read(AihJson.Process, 2);
         Assert.Equal("valid", Valid("AIHDataProcess", response));
         var stored = AihJson.ResponseOf(response)!;
         Assert.True(stored["ProcessingStatus"]!.GetValue<bool>());
@@ -134,7 +134,7 @@ public class AihBackEndModuleTests : IDisposable
 
         // It is given back by its identifier.
         Write(AihJson.Process, 1, Request("user-1", "Store", tokens, "ahd-1"));
-        var back = AihJson.ResponseOf(Read(AihJson.Process, 1))!;
+        var back = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
         Assert.True(back["ProcessingStatus"]!.GetValue<bool>());
         Assert.Equal(kept["AIHData"]!["SmartContractID"]!.ToString(), back["AIHDataOrAIHDataID"]![0]!["AIHData"]!["SmartContractID"]!.ToString());
         Assert.True(chain.Verify());
@@ -167,7 +167,7 @@ public class AihBackEndModuleTests : IDisposable
     private JsonObject Fetch(string requester, JsonObject tokens, string id)
     {
         Write(AihJson.Process, 1, Request(requester, "Store", tokens, id));
-        var response = AihJson.ResponseOf(Read(AihJson.Process, 1))!;
+        var response = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
         Assert.True(response["ProcessingStatus"]!.GetValue<bool>(), $"{id} is not given to {requester}");
         return (JsonObject)response["AIHDataOrAIHDataID"]![0]!;
     }
@@ -196,7 +196,7 @@ public class AihBackEndModuleTests : IDisposable
             Assert.Equal(id + "-deid", copy["AIHDataID"]!.ToString());
             Assert.Equal(id + "-deid", done["DeIDAndAnonymData"]![0]!["Response"]!["NewAIHDataID"]!.ToString());     // and the response says what it is called
             Write(AihJson.AihData, 3, copy);                                                    // AIH Data Processing keeps it, and says so
-            Assert.True(AihJson.ResponseOf(Read(AihJson.Process, 1))!["ProcessingStatus"]!.GetValue<bool>());
+            Assert.True(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());
             copies[id] = copy;
         }
         Assert.Equal("ahd-1-deid", Fetch("hbe-1", new JsonObject(), "ahd-1-deid")["AIHDataID"]!.ToString());      // it is kept
@@ -223,6 +223,30 @@ public class AihBackEndModuleTests : IDisposable
             if (expectedUnlicensed == 1) Assert.Equal("ahd-2-deid", found[0]!["AIHDataID"]!.ToString());
         }
     }
+    // THE USER PROFILE DECIDES WHAT THE BACK END DOES FOR THE USER. An individual who is a member of an organisation is a Third-Party User: AIH Data Processing only. An End User - an individual
+    // with no membership - may process its own AIH Data and not that of another.
+    [SkippableFact]
+    public void AnIndividualWhoIsAMemberOfAnOrganisationIsAThirdPartyUserAndAnEndUserWorksOnItsOwnAihDataOnly()
+    {
+        var owner = Register(AihSamples.RegisterRequest("user-2"), "Store", "AIHDataProcessing");
+        Write(AihJson.Process, 1, Request("user-2", "Store", owner, UploadData("ahd-2", "user-2")));
+        Write(AihJson.Blockchain, 1, Contract());
+        Read(AihJson.Process, 2);                                                                      // kept, with its Smart Contract
+
+        var member = AihSamples.RegisterRequest("ada");
+        member["RegisterData"]![0]!["Request"]!["UserProfile"]!["UserProfileData"]![0]!["Human"]!["Membership"] = new JsonArray(new JsonObject
+        {
+            ["CompanyName"] = "Cardio Research Ltd", ["Country"] = "GB", ["Type"] = new JsonArray("Non-Profit Entity")
+        });
+        var tokens = Register(member, "Store", "DeIDAndAnonym", "AIHDataProcessing");
+        Assert.Equal(["AIHDataProcessing"], AihJson.ServicesOf(tokens));                                // Third-Party User: the rest is not granted
+
+        // An End User asks to process the AIH Data of another End User: refused, with no licence asked about.
+        var other = Register(AihSamples.RegisterRequest("user-3"), "Store", "AIHDataProcessing");
+        Write(AihJson.Process, 1, Request("user-3", "AIHDataProcessing", other, "ahd-2"));
+        Assert.False(AihJson.ResponseOf(Read(AihJson.Process, 2))!["ProcessingStatus"]!.GetValue<bool>());
+    }
+
     [SkippableFact]
     public void AThirdPartyUserIsAnsweredUnderTheLicenceAndRefusedOutsideIt()
     {
@@ -233,7 +257,7 @@ public class AihBackEndModuleTests : IDisposable
         var endUser2 = Register(AihSamples.RegisterRequest("user-2"), "Store");
         Write(AihJson.Process, 1, Request("user-2", "Store", endUser2, other));
         Write(AihJson.Blockchain, 1, Contract());
-        Read(AihJson.Process, 1);                                                            // kept, with its Smart Contract
+        Read(AihJson.Process, 2);                                                            // kept, with its Smart Contract
 
         var tpu = Register(AihSamples.ThirdPartyRegisterRequest("tpu-1"), "AIHDataProcessing");
         Assert.Equal(["AIHDataProcessing"], AihJson.ServicesOf(tpu));
@@ -241,14 +265,14 @@ public class AihBackEndModuleTests : IDisposable
         // Inside the licence: the licence is confirmed, AIH Data Processing fetches the AIH Data from the Secure Storage, and the answer carries what Anomaly and Risk Alerting found.
         Write(AihJson.Process, 1, Request("tpu-1", "AIHDataProcessing", tpu, "ahd-1"));
         Write(AihJson.LicenceConfirm, 2, Confirmation(2));
-        var answer = AihJson.ResponseOf(Read(AihJson.Process, 1))!;
+        var answer = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
         Assert.True(answer["ProcessingStatus"]!.GetValue<bool>());
         Assert.Equal("Green", answer["AIHDataOrAIHDataID"]![0]!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());
 
         // Outside the licence: the same Third-Party User asks for the AIH Data of the End User who licensed no one.
         Write(AihJson.Process, 1, Request("tpu-1", "AIHDataProcessing", tpu, "ahd-2"));
         Write(AihJson.LicenceConfirm, 2, Confirmation(2));
-        var refused = AihJson.ResponseOf(Read(AihJson.Process, 1))!;
+        var refused = AihJson.ResponseOf(Read(AihJson.Process, 2))!;
         Assert.False(refused["ProcessingStatus"]!.GetValue<bool>());
 
         Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "tpu-1" && e.AihDataId == "ahd-1" && e.Allowed);

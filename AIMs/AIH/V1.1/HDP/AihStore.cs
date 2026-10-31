@@ -48,12 +48,12 @@ internal static class AihStore
     }
 
     // The response to a retrieval: the AIH Data itself when it is kept and the requester may have it - its End User, and the Back End - else not done.
-    public static JsonObject Answer(ISharedStorage storage, string user, string id, string backEndId)
+    public static JsonObject Answer(ISharedStorage storage, string user, string id, string backEndId, string? processId = null)
     {
         var kept = Get(storage, id);
         var owner = kept?["UserID"]?.GetValue<string>() ?? "";
         return kept is not null && (user == owner || (backEndId.Length > 0 && user == backEndId))
-            ? AihJson.ProcessResponse(user, new JsonArray(kept), true)
-            : AihJson.ProcessResponse(user, new[] { id }, false);
+            ? AihJson.ProcessResponse(user, new JsonArray(kept), true, processId)
+            : AihJson.ProcessResponse(user, new[] { id }, false, processId);
     }
 }
