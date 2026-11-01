@@ -50,14 +50,8 @@ internal static class Program
             var damagedSections = Inputs.Sections(sections);
             if (damagedSections.Count != say.Count) throw new ArgumentException($"{damagedSections.Count} damaged section(s) and {say.Count} --say: one text for each section.");
 
-            var settings = new JsonObject();
-            if (!standIn)
-            {
-                settings["1CAE-SMC-V2.5-I01"] = new JsonObject { ["SpeechModel"] = "openvoice" };
-                settings["1MMC-TTS-V2.5-I01"] = new JsonObject { ["Tts"] = "piper", ["SpeechModel"] = "openvoice" };
-            }
             Console.WriteLine("Starting the Module (a first start takes a while)...");
-            using var module = ModuleHost.Start(Module, settings, Console.WriteLine);
+            using var module = ModuleHost.Start(Module, standIn ? null : "openvoice", Console.WriteLine);
             string? restored = null;
             var devices = new DeviceRegistry()
                 .RegisterDevice("Voice", new GivenDevice("OSD-BSO-V1.5", Inputs.SpeechObjectOf("voice", voice.ToArray())))

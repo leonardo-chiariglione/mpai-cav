@@ -9,7 +9,7 @@ namespace Mpai.Cae.Usc;
 // The Basic Audio Object (OSD-BAO-V1.5) as the AIMs of CAE-USC V2.5 that deal with audio (not speech) read and write it. What its data IS the Audio Qualifier (TFA-AUQ-V1.5) says:
 //   Formats.TransportFormat.FileFormats "WAV"                      each data item is a WAV file;
 //   Formats.ContentFormat.RawData.SampleSpace (TFA-PCM-V1.5)       each data item is raw PCM (16 bit, little endian, mono): PCM.SamplingFrequency, PCM.SamplePrecision;
-// and, if the Qualifier says neither, a WAV file. A data item is by Data (base64) or by DataURI (a local file); an item may carry an ID (the restoration it is the result of).
+// and, if the Qualifier says neither, a WAV file. A data item is by Data (base64) - an AIM reads no file; an item may carry an ID (the restoration it is the result of).
 // These are the forms THIS Implementation decodes - the standard restricts none: it says so for what it cannot decode.
 public static class AudioObject
 {
@@ -33,8 +33,7 @@ public static class AudioObject
         {
             byte[] bytes;
             if (item["Data"] is JsonValue data) bytes = Convert.FromBase64String(data.GetValue<string>());
-            else if (item["DataURI"] is JsonValue uri) bytes = File.ReadAllBytes(new Uri(uri.GetValue<string>()).LocalPath);
-            else throw new FormatException("A data item of the Audio Object has neither Data nor DataURI.");
+            else throw new FormatException("A data item of the Audio Object has no Data: an AIM is given its data in the Object, and reads no file (a file is read by the device that acquires it).");
             items.Add(new Item(item["ID"]?.GetValue<string>(), raw ? FromPcm(bytes, pcm!) : Audio.FromWav(bytes)));
         }
         return items;
@@ -61,8 +60,7 @@ public static class AudioObject
         {
             byte[] bytes;
             if (item["Data"] is JsonValue data) bytes = Convert.FromBase64String(data.GetValue<string>());
-            else if (item["DataURI"] is JsonValue uri) bytes = File.ReadAllBytes(new Uri(uri.GetValue<string>()).LocalPath);
-            else throw new FormatException($"A data item of the object has neither Data nor DataURI.");
+            else throw new FormatException("A data item of the object has no Data: an AIM is given its data in the Object, and reads no file (a file is read by the device that acquires it).");
             files.Add((item["ID"]?.GetValue<string>(), bytes));
         }
         return files;

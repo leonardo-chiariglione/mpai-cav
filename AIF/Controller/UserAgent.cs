@@ -169,6 +169,10 @@ public sealed class UserAgent
     // elsewhere; this says where.
     public Dictionary<string, string> AimHosts { get; } = new(StringComparer.Ordinal);
 
+    // A DEPLOYMENT THAT RUNS EVERY AIM OF A MODULE ON ITS AIM HOST - the Controller holds none - says so here, and names the host for the Module (AimHosts[module]). It need not know the AIMs
+    // of the Module, or rewrite the Relation in the Metadata: the Metadata is authoritative and stays as the Implementer wrote it.
+    public bool AllAimsApart { get; set; }
+
     // WHAT THIS CONTROLLER HANDS A HOST WHEN IT PLACES AN AIM there: the AIM's Metadata, the fingerprints the MPAI Store approved and the AIM Licence it holds for it (null for an AIM
     // that has none to hand over). A host with a repository of its own takes the AIM in from it.
     public Func<string, JsonObject?>? PackageForHost { get; set; }
@@ -299,7 +303,7 @@ public sealed class UserAgent
         {
             foreach (var child in node.Children)
             {
-                var away = elsewhere || (child.Relation.Length > 0 && child.Relation != "Internal");
+                var away = elsewhere || AllAimsApart || (child.Relation.Length > 0 && child.Relation != "Internal");
                 var at = AimHosts.GetValueOrDefault(child.AIMName) ?? host;
                 if (child.IsComposite) { Walk(child, away, at); continue; }
                 if (!away) continue;

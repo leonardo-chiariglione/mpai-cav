@@ -39,7 +39,17 @@ public sealed class UscProvider : IAimProvider
 
     public bool CanCreate(string aimName) => aimName is Smc or Sra or Tts or Sfa or Sfb or Efp or Pei or Nei or Aap or Vap or Tic or Tar or Pap or Aat or Sfd or Sds or Ncm or Ast or Amx;
 
-    public string? ImplementationOf(string aimName) => CanCreate(aimName) ? typeof(UscProvider).Assembly.Location : null;
+    // THE BINARY THAT IMPLEMENTS AN AIM, which the Controller has measured and the Store approved (the L3 names it by BinaryName): the project of the AIM, not of this provider.
+    public string? ImplementationOf(string aimName) => aimName switch
+    {
+        Smc => typeof(SmcAimProcessor).Assembly.Location,
+        Sra => typeof(SraAimProcessor).Assembly.Location,
+        Tts => typeof(TtsAimProcessor).Assembly.Location,
+        Sfa or Sfb or Efp or Pei or Nei => typeof(SfaAimProcessor).Assembly.Location,
+        Aap or Vap or Tic or Tar or Pap => typeof(AapAimProcessor).Assembly.Location,
+        Aat or Sfd or Sds or Ncm or Ast or Amx => typeof(AatAimProcessor).Assembly.Location,
+        _ => null
+    };
 
     public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
     {

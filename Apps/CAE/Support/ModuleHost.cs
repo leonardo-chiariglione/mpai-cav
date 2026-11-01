@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 using AIF.Controller;
+using AIF.Store;
 using Mpai.Aif.Api;
 
 namespace Mpai.Cae.Apps;
@@ -39,34 +40,48 @@ public sealed class ModuleHost : IDisposable
     // The provider that builds the AIMs of the Usc Modules; another Module names its own (assembly file, type) in `providers`.
     public static readonly (string Assembly, string Type)[] UscProviders = [("Mpai.Cae.Usc.dll", "Mpai.Cae.Usc.UscProvider")];
 
-    // providers: where the AIM host finds the AIMs of the Module (assembly in the folder of the App, type). storage: where the Controller keeps the Module's Shared Storage - the Controller's own business: the User Agent names no place.
-    public static ModuleHost Start(string module, JsonObject? settings = null, Action<string>? say = null, IReadOnlyList<(string Assembly, string Type)>? providers = null, string? storage = null)
+    // THE DEPLOYMENT OF A CONTROLLER AND THE HOST OF ITS AIMs, which the Apps of CAE use to run a Module: this is the Controller's side, not the User Agent's. It does not read the Metadata of the Module or name an AIM:
+    // the Controller runs every AIM of the Module on the AIM host (AllAimsApart), the Metadata stays as the Implementer wrote it, and the settings of the AIMs are a file of the deployment - the file
+    // of the folder AIMs, and, where the User Agent chose a profile of the deployment ("openvoice"), AIMs\aim-settings.<profile>.json over it.
+    //
+    // The Controller verifies each AIM before it runs (MPAI-AIF Zero Trust): the AIM host measures the binary that implements it, and the Controller asks the Store whether it is the one the Store
+    // approved. The Store here is the reference Store (ReferenceStore): it approves the binaries of this build when the host starts. providers: where the AIM host finds the AIMs of the Module
+    // (assembly in the folder of the App, type); storage: where the Controller keeps the Module's Shared Storage - the Controller's own business: the User Agent names no place.
+    public static ModuleHost Start(string module, string? profile = null, Action<string>? say = null, IReadOnlyList<(string Assembly, string Type)>? providers = null, string? storage = null)
     {
         var root = Root; say ??= _ => { };
         var work = Path.Combine(Path.GetTempPath(), "mpai-" + module + "-" + Guid.NewGuid().ToString("N")[..8]); Directory.CreateDirectory(work);
         var amds = Path.Combine(work, "amds"); Directory.CreateDirectory(amds);
         foreach (var file in Directory.EnumerateFiles(Path.Combine(root, "AIMs", "AMDs"), "*.json")) File.Copy(file, Path.Combine(amds, Path.GetFileName(file)));
-
-        var l3Path = Path.Combine(amds, module + ".json");
-        if (!File.Exists(l3Path)) throw new InvalidOperationException($"There is no L3 for {module} in AIMs\\AMDs.");
-        var l3 = File.ReadAllText(l3Path);
-        var aims = (JsonNode.Parse(l3)?["SubAIMs"] as JsonArray ?? []).Select(s => s?["Identifier"]?["AIMName"]?.GetValue<string>()).OfType<string>().ToArray();
-        foreach (var aim in aims) l3 = Regex.Replace(l3, "(\"AIMName\"\\s*:\\s*\"" + Regex.Escape(aim) + "\"\\s*,\\s*\"Relation\"\\s*:\\s*)\"Internal\"", "$1\"External\"");
-        File.WriteAllText(l3Path, l3);
+        var approved = ReferenceStore.ApproveBuild(amds, AppContext.BaseDirectory);
+        say($"The Store approved {approved} Implementation(s) of this build.");
 
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "AIMs", "aim-settings.json")))!.AsObject();
-        foreach (var (aim, own) in settings ?? [])
+        if (profile is not null)
         {
-            var merged = all[aim] as JsonObject ?? new JsonObject(); all[aim] = merged;
-            foreach (var (name, value) in own!.AsObject()) merged[name] = value?.DeepClone();
+            var overlay = Path.Combine(root, "AIMs", $"aim-settings.{profile}.json");
+            if (!File.Exists(overlay)) throw new InvalidOperationException($"The deployment has no settings profile '{profile}' ({overlay}).");
+            foreach (var (aim, own) in JsonNode.Parse(File.ReadAllText(overlay))!.AsObject())
+            {
+                var merged = all[aim] as JsonObject ?? new JsonObject(); all[aim] = merged;
+                foreach (var (name, value) in own!.AsObject()) merged[name] = value?.DeepClone();
+            }
         }
         var settingsPath = Path.Combine(work, "aim-settings.json"); File.WriteAllText(settingsPath, all.ToJsonString());
 
-        var key = Guid.NewGuid().ToString("N");
+        // THE TRUST ANCHORS of the Controller and of the AIM host, made for this run: the host serves only the Controller whose anchor it was given, and the Controller uses only the host whose anchor it
+        // holds; each proves it holds its key when the link opens (the Trust Protocol, MPAI-PTF). The key of each stays with its owner.
+        var now = DateTimeOffset.UtcNow;
+        var controllerKey = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var controllerAnchor = new AIF.Trust.TrustAnchorKey("controller-" + Guid.NewGuid().ToString("N")[..8], controllerKey, now.AddMinutes(-5), now.AddDays(1));
+        var hostKey = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var hostAnchor = new AIF.Trust.TrustAnchorKey("aimhost-" + Guid.NewGuid().ToString("N")[..8], hostKey, now.AddMinutes(-5), now.AddDays(1));
+        var hostAnchorFile = Path.Combine(work, "host-anchor.json"); AIF.Trust.TrustAnchorKey.Save(hostAnchorFile, hostAnchor.AnchorId, hostKey, now.AddMinutes(-5), now.AddDays(1));
+        var trustFile = Path.Combine(work, "controller-anchor.json"); File.WriteAllText(trustFile, controllerAnchor.Object().ToJsonString());
         var info = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true, WorkingDirectory = root };
         foreach (var arg in new[]
         {
-            Path.Combine(root, "AIF", "AimHost", "bin", "Debug", "net10.0", "AIF.AimHost.dll"), "--port", "0", "--key", key, "--amds", amds, "--settings", settingsPath,
+            Path.Combine(root, "AIF", "AimHost", "bin", "Debug", "net10.0", "AIF.AimHost.dll"), "--port", "0", "--anchor", hostAnchorFile, "--trust", trustFile, "--amds", amds, "--settings", settingsPath,
             "--storage", Path.Combine(work, "aimhost")
         }) info.ArgumentList.Add(arg);
         foreach (var (assembly, type) in providers ?? UscProviders) { info.ArgumentList.Add("--provider"); info.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, assembly) + ":" + type); }
@@ -87,8 +102,10 @@ public sealed class ModuleHost : IDisposable
             say($"The AIMs of {module} run on an AIM host at {address}.");
 
             var api = new ControllerApi(amds, settingsPath, _ => new CompositeProvider());
-            api.Controller.AimHostKey = key;
-            foreach (var aim in aims) api.Controller.AimHosts[aim] = address;
+            api.Controller.AimHosts[module] = address;
+            api.Controller.AllAimsApart = true;
+            api.Controller.Trust = new AIF.Trust.TrustDomain(controllerAnchor, controllerKey);
+            api.Controller.HostAnchors.Add(hostAnchor.Object());
             if (storage is not null)
             {
                 Directory.CreateDirectory(storage);

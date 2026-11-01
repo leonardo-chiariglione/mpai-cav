@@ -10,8 +10,10 @@ namespace Mpai.Cae.Usc;
 // or samples - the Speech Qualifier (TFA-SPQ-V1.5) says:
 //   Formats.TransportFormats.FileFormat "WAV"          each data item is a WAV file;
 //   Formats.ContentFormats.RawData (TFA-PCM-V1.5)      each data item is raw PCM: PCM.SamplingFrequency and PCM.SamplePrecision (16 bit, little endian, mono);
-// and, if the Qualifier says neither, a WAV file. These are the forms THIS Implementation decodes - the standard restricts none: another speech file format, or another precision, is\n// speech too, and an Implementation that decodes it can be put in its place. What this one cannot decode it says so. Attributes.Source says whether the speech is Real or Synthetic. A data item is by Data (base64) or by DataURI (a file the
-// reader can open); the standard says that data travels by reference when it is large, and how a reference is fetched is the Controller's (MPAI_AIFM_Payload_Get).
+// and, if the Qualifier says neither, a WAV file. These are the forms THIS Implementation decodes - the standard restricts none: another speech file format, or another precision, is
+// speech too, and an Implementation that decodes it can be put in its place. What this one cannot decode it says so. Attributes.Source says whether the speech is Real or Synthetic.
+// A data item is by Data (base64): an AIM reads no file. Data that travels by reference when it is large reaches the AIM in the Object - how a reference is fetched is the Controller's
+// (MPAI_AIFM_Payload_Get) - and a file is read by the device of the User Agent that acquires it.
 public static class SpeechObject
 {
     public const string Header = "OSD-BSO-V1.5";
@@ -32,8 +34,7 @@ public static class SpeechObject
         {
             byte[] bytes;
             if (item["Data"] is JsonValue data) bytes = Convert.FromBase64String(data.GetValue<string>());
-            else if (item["DataURI"] is JsonValue uri) bytes = File.ReadAllBytes(new Uri(uri.GetValue<string>()).LocalPath);
-            else throw new FormatException("A data item of the Speech Object has neither Data nor DataURI.");
+            else throw new FormatException("A data item of the Speech Object has no Data: an AIM is given its data in the Object, and reads no file (a file is read by the device that acquires it).");
             audio.Add(raw ? FromPcm(bytes, pcm!) : Audio.FromWav(bytes));
         }
         return audio;
