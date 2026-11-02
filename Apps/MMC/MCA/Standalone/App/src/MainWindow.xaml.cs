@@ -11,7 +11,7 @@ using Mpai.Aif.Api;     // ControllerApi, AvatarUtterance
 using Mpai.Ua;          // WorkflowInterpreter, DeviceRegistry
 using Mpai.Wdl;         // WorkflowReader
 
-using Mpai.Providers;
+using Mpai.Mas.Client;       // RemoteControllerApi: the Controller API of a Controller that is a program of its own
 
 namespace MmcMca;
 
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
     // The workflow of the App: the one source, read where the repository keeps it.
     private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "MCA", "MMC-MCA.orch");
 
-    private ControllerApi?            _north;
+    private IControllerApi?           _north;
     private AvatarUaHost?             _avatar;
     private SpeechListener?           _ears;
     private MachineVoice?             _voice;
@@ -61,9 +61,9 @@ public partial class MainWindow : Window
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
             _ears = new SpeechListener(_avatar);
-            _voice = new MachineVoice(_avatar, MachineName, () => new ControllerApi(AmdDir, SettingsPath, store => new AmqProvider(store)), Program.Record);
+            _voice = new MachineVoice(_avatar, MachineName, () => new RemoteControllerApi(Program.ControllerUrl), Program.Record);
             var workflow = new WorkflowReader().Read(File.ReadAllText(WorkflowPath));
-            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new McaProvider(store)));
+            _north = new RemoteControllerApi(Program.ControllerUrl);
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
 
             _stopping = new CancellationTokenSource();
@@ -101,7 +101,7 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         try { _voice?.Dispose(); } catch { }
-        try { _north?.Dispose(); } catch { }
+        try { (_north as IDisposable)?.Dispose(); } catch { }
         base.OnClosed(e);
     }
 

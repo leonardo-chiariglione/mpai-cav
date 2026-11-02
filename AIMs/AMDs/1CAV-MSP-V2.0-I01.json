@@ -5,6 +5,7 @@
   "InternalTypes":    [],
   "ExternalPorts":    [{"Name": "PathResponse", "Direction": "Input", "DataType": "CAV-INT-V2.0", "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FullEnvironmentDescriptors", "Direction": "Input", "DataType": "CAV-FED-V2.0", "Depth": 16, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "RoadStateBusIn", "Direction": "Input", "DataType": "CAV-RDS-V2.0", "IsOptional": true, "Depth": 1, "Overflow": "DropOldest", "AcceptedTransports": ["Bus"], "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "Trajectory", "Direction": "Output", "DataType": "OSD-TRJ-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],

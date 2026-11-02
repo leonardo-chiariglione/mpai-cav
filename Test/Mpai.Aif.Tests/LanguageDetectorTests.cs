@@ -15,6 +15,7 @@ public class LanguageDetectorTests
     [InlineData("es", "El periódico de la ciudad publicó ayer que los vecinos de la calle han pedido al alcalde una solución para el problema, pero no han recibido respuesta todavía.")]
     [InlineData("pt", "O jornal da cidade publicou ontem que os moradores da rua pediram ao prefeito uma solução para o problema, mas não receberam ainda nenhuma resposta.")]
     [InlineData("it", "Il giornale della città ha pubblicato ieri che gli abitanti della strada hanno chiesto al sindaco una soluzione per il problema, ma non hanno ancora ricevuto una risposta.")]
+    [InlineData("el", "Η εφημερίδα της πόλης δημοσίευσε χθες ότι οι κάτοικοι του δρόμου ζήτησαν από τον δήμαρχο μια λύση για το πρόβλημα.")]
     [InlineData("zh", "今天上海的街上有很多人在看報紙，他們說這件事情是昨天發生的。")]
     [InlineData("ja", "今日は東京の新聞に大きな記事が出ていて、みんながそれを読んでいます。")]
     public void TheLanguageIsFound(string expected, string text) => Assert.Equal(expected, LanguageDetector.Detect(text));

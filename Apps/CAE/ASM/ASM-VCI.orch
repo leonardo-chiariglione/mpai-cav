@@ -28,6 +28,7 @@ on Start:
 
     stream  Voice          (OSD-BSO-V1.5:1)  from device "Voice"
     stream  ObjectCommand  (CAE-UCM-V1.0:1)  from device "SoundIn"
+    stream  SceneCommand   (CAE-UCM-V1.0:2)  from device "SceneCommand"
     stream  OpenScene      (OSD-ASD-V1.5:1)  from device "SceneIn"
     stream  TypedText      (OSD-BTO-V1.5:1)  from device "TypedIn"
 
@@ -38,15 +39,18 @@ on Start:
     deliver Scene          (OSD-ASD-V1.5)    to device "Scene"
     deliver ObjectOut      (OSD-AUO-V1.5)    to device "Unused"
     deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "ObjectReport"
-    deliver SceneReport    (CAE-UCM-V1.0:2)  to device "Unused"
+    deliver SceneReport    (CAE-UCM-V1.0:2)  to device "SceneReport"
     deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "Unused"
     deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "Unused"
     deliver MultimodalOut  (OSD-MSD-V1.5)    to device "Unused"
-    deliver SpeechReport   (CAE-UCM-V1.0:3)  to device "Unused"
-    deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "Unused"
-    deliver MultimodalRep  (CAE-UCM-V1.0:5)  to device "Unused"
+    deliver SpeechReport   (CAE-UCM-V1.0:3)  to device "SpeechReport"
+    deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "SpeechSceneRep"
+    deliver MultimodalRep  (CAE-UCM-V1.0:5)  to device "MultimodalRep"
 
-    prompt "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+    # The Module is up when the Controller says so. The first request is the proof and the welcome: the Module answers it, in text and in speech.
+    offer   Welcome        (OSD-BTO-V1.5:1) = "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+    ask     WelcomeText    (OSD-BTO-V1.5:2), WelcomeSpeech (OSD-BSO-V1.5:1)
+    present WelcomeText, WelcomeSpeech
 
     loop until Stop:
         wait 1s

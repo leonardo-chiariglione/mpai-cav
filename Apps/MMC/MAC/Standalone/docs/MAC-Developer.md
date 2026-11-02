@@ -102,13 +102,12 @@ Visual acquisition uses **native Windows Media Capture** (no OpenCV).
 - **Framework (AIF):** `AIF/{Controller, Store, Communication/SharedStorage, Communication/GlobalStorage}`
 - **UA library / Controller API:** `UserAgent/UaKit`; `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`, and the leaves `PAF/V1.6/FIR`, `MMC/V2.5/SIR`,
-  `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; audio devices
-  `CAE3/V1.0/AOA(.Windows)`, `MMC/V2.5/SOD(.Windows)`, visual `CVE/V1.0/VOA.Windows`
+  `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; the Units (not AIMs) UNT-AOA, UNT-SOD and UNT-VOA are in `AIF/UserAgent/PhysicalLayer`
 - **L3s:** `AIMs/AMDs/1MMC-MAC-V2.5-I01.json` + the sub-AIM AMDs
 - **Orchestration:** `UserAgent/Orchestration/HCI-MAC.orch`
 - **Schemas:** the JSON schemas under `schemas/` reachable from MAC's data types
 - **Settings:** `AIMs/aim-settings.json` - `MMC-TTS-V2.5` (Piper voice),
-  `MMC-SOA-V2.5` (capture duration), and the FIR/SIR model settings.
+  the Speech Object Acquisition Unit (`UNT-SOA-V1.0`, capture duration), and the FIR/SIR model settings.
 - **Models (fetched separately):** SCRFD `scrfd_10g_bnkps.onnx`, ArcFace
   `glintr100.onnx`, ECAPA `ecapa-tdnn.onnx`, Piper voice `en_US-amy-medium`.
 

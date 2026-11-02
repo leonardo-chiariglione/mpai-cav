@@ -95,6 +95,7 @@ public static class MmmServer
         bool MayBeOfficer(HttpContext ctx) => identity is null || (ctx.Items["who"] is Identity.Who w && (w.Kind == "host" || (officers?.Contains(w.Name) ?? false)));
         var streams = new SpeechStreams();
         var screens = new ScreenStreams();
+        var animations = new AnimationStreams();
         var replies = new ConcurrentDictionary<string, (int Http, string Body, string? Tokens)>();
 
         string? Caller(HttpContext ctx) =>
@@ -139,7 +140,7 @@ public static class MmmServer
         // What a human that has not registered yet is shown: the Personae the M-Instance offers (Register takes the choice). No token: there is no User yet.
         // Registration options: the Account Levels, then (for the one chosen) the Personae the M-Instance makes available. No token: there is no User yet.
         app.MapGet("/api/v2.2/register/options", (HttpContext ctx) => Results.Json(m.AccountLevels.Where(l => l.Id != "Officer" || MayBeOfficer(ctx)).Select(l => new { id = l.Id, name = l.Name, description = l.Description, price = 0 })));
-        app.MapGet("/api/v2.2/register/personae", () => Results.Json(m.CatalogueEntries));
+        app.MapGet("/api/v2.2/register/personae", () => Results.Json(m.AvailableCatalogueEntries()));      // the Personae nobody has chosen
         app.MapGet("/api/v2.2/items", (HttpContext ctx, string? dataType) => Caller(ctx) is { } p
             ? Results.Json(m.List(dataType).Where(i => m.MayRead(p, i.ID)).Select(i => new { itemID = i.ID, dataType = i.DataType }))
             : Results.Unauthorized());
@@ -168,9 +169,28 @@ public static class MmmServer
             var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
             if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
             if (p is null) { ctx.Response.StatusCode = 401; return; }
-            if (m.StreamToFeed(p, itemID) is not { } end) { ctx.Response.StatusCode = 403; return; }   // only its User feeds a Speech Object, and only while it is a stream
+            if (!m.StreamToFeed(p, itemID)) { ctx.Response.StatusCode = 403; return; }   // only its User feeds a Speech Object, and only while it is a stream
             using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
-            await streams.FeedAsync(socket, itemID, end, m, ctx.RequestAborted);
+            await streams.FeedAsync(socket, itemID, m, ctx.RequestAborted);
+        });
+        // An Animation Stream that arrives as it is captured (the mouth of a Persona that follows the speech of its human): the feed of its User, and whoever may see the Persona watches.
+        app.Map("/ws/v2.2/animation/{itemID}", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (!m.AnimationToFeed(p, itemID)) { ctx.Response.StatusCode = 403; return; }
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            await animations.FeedAsync(socket, itemID, m, ctx.RequestAborted);
+        });
+        app.Map("/ws/v2.2/animation/{itemID}/watch", async (HttpContext ctx, string itemID) =>
+        {
+            var p = ctx.Request.Query["token"].ToString() is { Length: > 0 } t ? m.ProcessOf(t) : null;
+            if (!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode = 400; return; }
+            if (p is null) { ctx.Response.StatusCode = 401; return; }
+            if (!m.AnimationSeenBy(p, itemID)) { ctx.Response.StatusCode = 403; return; }
+            using var socket = await ctx.WebSockets.AcceptWebSocketAsync();
+            await animations.WatchAsync(socket, itemID, ctx.RequestAborted);
         });
         // A shared screen: the sharer's feed (its own Visual Object, a stream: only the User with the Right to share has placed one), and whoever may see it, in the room, watches.
         app.Map("/ws/v2.2/screen/{itemID}", async (HttpContext ctx, string itemID) =>
@@ -218,8 +238,14 @@ public static class MmmServer
             var root = Path.GetFullPath(viewer);
             app.MapGet("/viewer/state", () => Results.Json(state?.Invoke() ?? m.Snapshot()));
             // Who the person is, through Tailscale; and if it registered before (its browser was closed), its Process is given a new token and told where its Persona stands.
-            app.MapGet("/viewer/whoami", (HttpContext ctx) => ctx.Items["who"] is not Identity.Who w ? Results.NotFound()
-                : Results.Json(new { name = w.Name, kind = w.Kind, resume = m.Resume(w.Name) is { } r ? new { token = r.Token, persona = r.Info } : null }));
+            // On this machine (loopback), where nobody is told by Tailscale, the person is the one the address names (?user=): so that reloading the page does not lose its place either.
+            app.MapGet("/viewer/whoami", (HttpContext ctx) =>
+            {
+                var (name, kind) = ctx.Items["who"] is Identity.Who w ? (w.Name, w.Kind)
+                    : ctx.Connection.RemoteIpAddress is { } ip && System.Net.IPAddress.IsLoopback(ip) && ctx.Request.Query["user"].ToString() is { Length: > 0 } u ? (u, "local") : (null, "");
+                return name is null ? Results.NotFound()
+                    : Results.Json(new { name, kind, resume = m.Resume(name) is { } r ? new { token = r.Token, persona = r.Info } : null });
+            });
             app.MapPost("/viewer/next", () => { onNext?.Invoke(); return Results.Ok(); });
             app.MapPost("/viewer/back", () => { onBack?.Invoke(); return Results.Ok(); });
             app.MapGet("/viewer/{**path}", (HttpContext ctx, string? path) =>

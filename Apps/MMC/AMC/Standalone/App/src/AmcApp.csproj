@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Affective Multimodal Conversation on its own: the User Agent of the App - a window, the avatar, the microphone - and the Controller that runs
-       the Module in this process, with the leaf AIMs of its provider. No MAS, no launcher. -->
+  <!-- a User Agent: a window, the avatar, the microphone. The Controller is a program of its own (Apps/MMC/Controller) and is spoken to through the Controller API. -->
   <PropertyGroup>
     <AssemblyName>AmcApp</AssemblyName>
     <OutputType>WinExe</OutputType>
@@ -15,13 +14,11 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own (MmcController) -->
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <!-- The workflow interpreter and the parser of the Workflow Description -->
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />

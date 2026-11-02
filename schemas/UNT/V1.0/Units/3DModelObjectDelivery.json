@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-3OD-V1.0",
+  "Group": "Delivery",
+  "Category": "Media",
+  "Description": "3D Model Object Delivery: delivers 3D Model Objects, and the Scene Descriptors where the Data Type exists, to the real world through a 3D renderer, and may write or send them to a disk or a network, objects and scenes, Basic or full. Model and animation are inseparable at render time: the Face Descriptors and the Body Descriptors have each their own Port.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "3DModel",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-B3O-V1.5",
+        "OSD-3DO-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Scene",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-B3S-V1.5",
+        "OSD-3SD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "FaceAnimation",
+      "Direction": "Input",
+      "DataType": [
+        "PAF-FDO-V1.6"
+      ],
+      "PortNumber": 3,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "BodyAnimation",
+      "Direction": "Input",
+      "DataType": [
+        "PAF-BDO-V1.6"
+      ],
+      "PortNumber": 4,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Delivered3DModel",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-B3O-V1.5",
+        "OSD-3DO-V1.5",
+        "OSD-B3S-V1.5",
+        "OSD-3SD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "Stored3DModel",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-B3O-V1.5",
+        "OSD-3DO-V1.5",
+        "OSD-B3S-V1.5",
+        "OSD-3SD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

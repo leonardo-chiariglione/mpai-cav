@@ -27,8 +27,8 @@ internal static class JsiRig
 
     public static JsiConfiguration Configuration() => new(UserCommandUri, UserCommandFile, UserCommandUri, UserCommandFile, ContextFile, Repository.Schemas);
 
-    public static JsiAimProcessor Processor(StructuredModel? model, string aim = Jsi, bool refreshesState = false, bool grammar = false) =>
-        new(aim, Ports(aim), aim == Jsi ? Configuration() with { RefreshesState = refreshesState, UsesGrammar = grammar } : new JsiConfiguration("", null, "", null, null), model);
+    public static JsiAimProcessor Processor(StructuredModel? model, string aim = Jsi, bool refreshesState = false, bool grammar = false, string? scene = null) =>
+        new(aim, Ports(aim), aim == Jsi ? Configuration() with { RefreshesState = refreshesState, UsesGrammar = grammar, Scene = scene ?? (string)Scene()["name"]! } : new JsiConfiguration("", null, "", null, null), model);
 
     public static JsonNode Scene() => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "Test", "AsmVoice", "cases.json")))!["scene"]!;
 
@@ -57,7 +57,7 @@ internal static class JsiRig
     private static JsonObject Time() => new()
     {
         ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = Guid.NewGuid().ToString(),
-        ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 1, ["StartTime"] = 1.0, ["EndTime"] = 1.0, ["AccuracyPlusMinus"] = 0 })
+        ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 1, ["StartTime"] = 1.0, ["EndTime"] = 1.0, ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 0, ["TimeType"] = false, ["TimeUnit"] = "00" })
     };
 
     public static JsonObject Attitude(double[] position, double[] orientation) => new()

@@ -38,6 +38,9 @@ public sealed class WhisperAsrConfiguration
     // come out whole, cut short, or empty from one request to the next; "-nfa" (no flash attention)
     // gave the whole sentence every time. Null: nothing added.
     public string? ExtraArguments { get; init; }
+
+    // A file whose text is whisper's initial prompt, read at every request: what is likely to be said now (the names of the sounds a person has loaded, which no model knows). Absent or empty: none.
+    public string? PromptFile { get; init; }
 }
 
 // ---------------------------------------------------------------------------
@@ -62,12 +65,13 @@ public sealed class WhisperAsrAim : IAsrAim
     {
         var bytes = ToWavBytes(speech);
         int window = _config.AudioContext ?? Window(bytes);
+        var hint = Hint();
 
         if (_config.ServerPath is { Length: > 0 } server)
         {
             var language = EnglishOnly ? null : PrimaryLanguage(Language(speech));
             var said = await WhisperServer.For(server, _config.ModelPath, _config.Threads, _config.ExtraArguments)
-                                          .TranscribeAsync(bytes, language, window);
+                                          .TranscribeAsync(bytes, language, window, hint);
             return Heard(Clean(said.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None), out var noise), noise, speech);
         }
 
@@ -79,7 +83,7 @@ public sealed class WhisperAsrAim : IAsrAim
             var psi = new ProcessStartInfo
             {
                 FileName = _config.ExecutablePath,
-                Arguments = BuildArguments(wav, speech, window),
+                Arguments = BuildArguments(wav, speech, window, hint),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -141,7 +145,7 @@ public sealed class WhisperAsrAim : IAsrAim
             int byteRate = BitConverter.ToInt32(wav, 28);
             if (byteRate > 0) seconds = (wav.Length - 44) / (double)byteRate;
         }
-        return Math.Clamp((int)Math.Ceiling((seconds + 5) * 50), 512, 1500);
+        return Math.Clamp((int)Math.Ceiling((seconds + 5) * 50), 800, 1500);      // under 800 a short sentence loses a number ("x equal to 2" came out "x equal to") and may loop
     }
 
     private bool EnglishOnly =>
@@ -198,7 +202,13 @@ public sealed class WhisperAsrAim : IAsrAim
         return ms.ToArray();
     }
 
-    private string BuildArguments(string wav, BasicSpeechObject speech, int window)
+    private string? Hint()
+    {
+        try { return _config.PromptFile is { Length: > 0 } f && File.Exists(f) && File.ReadAllText(f).Trim() is { Length: > 0 } text ? text.Replace("\"", "'") : null; }
+        catch (IOException) { return null; }
+    }
+
+    private string BuildArguments(string wav, BasicSpeechObject speech, int window, string? hint = null)
     {
         var arguments = $"-m \"{_config.ModelPath}\" -f \"{wav}\" -ac {window}";
 
@@ -207,6 +217,9 @@ public sealed class WhisperAsrAim : IAsrAim
 
         if (_config.ExtraArguments is { Length: > 0 } extra)
             arguments += $" {extra}";
+
+        if (hint is not null)
+            arguments += $" --prompt \"{hint}\"";
 
         var language = Language(speech);
 

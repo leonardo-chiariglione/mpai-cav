@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-SDA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Space",
+  "Description": "Spatial Data Acquisition: acquires the measures of the devices that measure the motion of a vehicle - odometer, speedometer, accelerometer, inclinometer, gyroscope - and provides them as Spatial Data. It is not one device but a plurality of them, and a Spatial Data carries the measures its devices give: any of them may be missing.",
+  "ExternalPorts": [
+    {
+      "Name": "SensedSpatialData",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-SPD-V2.0"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredSpatialData",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-SPD-V2.0"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredSpatialData",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-SPD-V2.0"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

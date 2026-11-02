@@ -8,10 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Mpai.Aif.Api;
-using Mpai.Cae.AsmVoice;
 using Mpai.Core;
 using Mpai.Core.OSD;
-using Mpai.Providers;
 using Mpai.Ua;
 using Mpai.UaKit;
 using Mpai.Wdl;
@@ -34,26 +32,20 @@ public static class Driver
         catch (Exception e) { Say("FAILED: " + e); return 1; }
     }
 
+    private const string Asm = "1CAE-ASM-V1.0-I01";
     private static string? Value(string[] args, string name) { var at = Array.IndexOf(args, name); return at >= 0 && at + 1 < args.Length ? args[at + 1] : null; }
     private static IEnumerable<string> Values(string[] args, string name) { for (var i = 0; i + 1 < args.Length; i++) if (args[i] == name) yield return args[i + 1]; }
 
     private static async Task<int> RunAsync(string[] args, Action<string> say, Stopwatch clock)
     {
-        var run = Path.Combine(Path.GetTempPath(), "asm-ua-drive-" + DateTime.Now.ToString("HHmmss"));
-        Directory.CreateDirectory(run);
-        var prepared = AsmVoiceModules.Prepare(MpaiPaths.Root, Path.Combine(run, "module"));
-        using var api = AsmVoiceModules.Controller(prepared);
-        say("the Controller is built");
-        var started = api.StartFlow(AsmVoiceModules.Asm);
-        say("the Module starts: " + started);
-        api.SharedStorageInit(AsmVoiceModules.Asm, Value(args, "--storage") ?? Path.Combine(run, "storage"));
-        using var voice = new MachineVoice(null!, "Thalia", () => new ControllerApi(MpaiPaths.Amds, MpaiPaths.Settings, store => new AmqProvider(store)), (c, e) => say("voice error [" + c + "]: " + e.Message));
+        // THE CONTROLLER IS A PROGRAM OF ITS OWN (AsmController, started by whoever runs this: `--controller <url>`); the workflow, read below, asks it to start the Module.
+        using var api = new Mpai.Mas.Client.RemoteControllerApi(Value(args, "--controller") ?? App.ControllerUrl);
 
-        var speech = new GivingDevice("OSD-BSO-V1.5");
+        var speech = new GivingDevice("OSD-BSO-V1.5"); var typed = new GivingDevice("OSD-BTO-V1.5");
         var sounds = new GivingDevice("CAE-UCM-V1.0"); var sceneIn = new GivingDevice("OSD-ASD-V1.5");
         var heard = new List<string>(); var texts = new List<string>(); var spoken = new List<string>(); var scenes = new List<string>();
         var devices = new DeviceRegistry();
-        devices.RegisterDevice("Voice", speech).RegisterDevice("SoundIn", sounds).RegisterDevice("SceneIn", sceneIn);
+        devices.RegisterDevice("Voice", speech).RegisterDevice("TypedIn", typed).RegisterDevice("SoundIn", sounds).RegisterDevice("SceneIn", sceneIn);
         devices.RegisterDevice("Heard", new ActingDevice("Heard", j => { var t = Text(j); lock (heard) heard.Add(t); say("HEARD: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplyText", new ActingDevice("ReplyText", j => { var t = Text(j); lock (texts) texts.Add(t); say("RESPONSE TEXT: " + t); return Task.CompletedTask; }));
         devices.RegisterDevice("ReplySpeech", new ActingDevice("ReplySpeech", j => { lock (spoken) spoken.Add(j); say("RESPONSE SPEECH: " + (MpaiJson.FromJson<BasicSpeechObject>(j)?.Data?.Length ?? 0) + " bytes"); return Task.CompletedTask; }));
@@ -91,25 +83,23 @@ public static class Driver
             await Task.Delay(2500);
         }
 
+        foreach (var file in Values(args, "--speech"))          // a person's speech, recorded: a WAV file, given as the microphone would
+        {
+            int before; lock (texts) before = texts.Count;
+            say("SPEECH: " + file);
+            speech.Give(VoiceDevice.SpeechOf(await File.ReadAllBytesAsync(file)));
+            var waited = Stopwatch.StartNew();
+            while (waited.Elapsed < TimeSpan.FromSeconds(120)) { lock (texts) if (texts.Count > before) break; await Task.Delay(200); }
+            lock (texts) say(texts.Count > before ? $"answered after {waited.Elapsed.TotalSeconds:0.0} s" : "NO ANSWER within 120 s");
+            await Task.Delay(1500);
+        }
+
         foreach (var words in Values(args, "--say"))
         {
             int before; lock (texts) before = texts.Count;
             say("SAY: " + words);
-            byte[]? wav;
-            if (words.Contains('|'))                                                  // "first part|second part": what the microphone captures in two pieces, joined as the window joins them
-            {
-                var pieces = new List<byte[]>();
-                foreach (var part in words.Split('|')) if (await voice.SynthesizeAsync(part) is { } w) pieces.Add(w);
-                var data = pieces.SelectMany(w => w.Skip(44)).ToArray();
-                wav = pieces[0].Take(44).Concat(data).ToArray();
-                BitConverter.GetBytes(data.Length).CopyTo(wav, 40); BitConverter.GetBytes(data.Length + 36).CopyTo(wav, 4);
-                say($"{pieces.Count} parts joined: {data.Length / 2.0 / 22050:0.0} s");
-            }
-            else wav = await voice.SynthesizeAsync(words);
-            say("the typed words as speech: " + (wav?.Length ?? 0) + " bytes");
-            if (wav is null) continue;
-            speech.Give(VoiceDevice.SpeechOf(wav));
-            say("the speech is given to the Module");
+            typed.Give(MpaiJson.ToJson(BasicTextObject.FromText(words)));           // the words typed: the text Port of the Module (OSD-BTO #1)
+            say("the typed words are given to the Module");
             var waited = Stopwatch.StartNew();
             while (waited.Elapsed < TimeSpan.FromSeconds(120)) { lock (texts) if (texts.Count > before) break; await Task.Delay(200); }
             lock (texts) say(texts.Count > before ? $"answered after {waited.Elapsed.TotalSeconds:0.0} s" : "NO ANSWER within 120 s");

@@ -12,6 +12,7 @@ public sealed class MmmClient(HttpClient http, string processId, string? token =
 {
     public string ProcessID { get; } = processId;
     public string? Token { get; set; } = token;
+    public Uri? Server => http.BaseAddress;
 
     private static readonly Dictionary<string, string> PathOf =
         Api.Paths.ToDictionary(p => p.Value, p => p.Key);

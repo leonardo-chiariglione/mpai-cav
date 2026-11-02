@@ -90,7 +90,7 @@ public sealed class PmxAimProcessor : IAimProcessor
         // The Personal Status goes into the Entity State of the Portable Avatar - the Cognitive State, the Emotion and the Social Attitude of it, the other elements of
         // the Entity State not being used for the time being.
         if (In(_psPort) is { } eps) Put("EntityState", EntityStates.OfPersonalStatus(eps.ToJsonString()));
-        Put("AVSceneDescriptors", In(_scenePort));
+        Put("MultimodalSceneDescriptors", In(_scenePort));
         Put("AvatarSpatialAttitude", In(_attitudePort));
         Put("AvatarSpaceTime", In(_avatarSpaceTimePort));
         Put("AVSceneSpaceTime", _sceneSpaceTimePort != _avatarSpaceTimePort ? In(_sceneSpaceTimePort) : null);

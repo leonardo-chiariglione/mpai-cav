@@ -3,7 +3,7 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/AudioVisualSceneRendering.json",
   "title":                "Audio-Visual Scene Rendering V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-AVR-V1.6"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "PAF-AVR-V1.6",
 
   "APIProfile":           "Basic",
@@ -13,7 +13,7 @@
 
   "ExternalPorts":        [{"Name": "PointOfView",        "Direction": "Input",  "DataType": "OSD-OPV-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "PortableAvatar",     "Direction": "Input",  "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AVSceneDescriptors", "Direction": "Input",  "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MultimodalSceneDescriptors", "Direction": "Input",  "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpatialAttitude",    "Direction": "Input",  "DataType": "OSD-OSA-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpeechObject",       "Direction": "Output", "DataType": "OSD-SPO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObject",        "Direction": "Output", "DataType": "OSD-AUO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},

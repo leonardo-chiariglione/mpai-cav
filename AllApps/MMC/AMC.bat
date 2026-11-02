@@ -3,5 +3,6 @@ rem Runs AMC (affective conversation, standalone) from the source (the first run
 call "%~dp0..\_support\_settings.bat"
 call "%~dp0..\_support\_ollama.bat"
 cd /d %MPAI_ROOT%
+call "%~dp0..\_support\_controller.bat" Apps\MMC\Controller\MmcController.csproj Apps\MMC\Controller\bin\Debug\net10.0\MmcController.exe 5058 "MMC Controller"
 dotnet run --project Apps\MMC\AMC\Standalone\App\src\AmcApp.csproj
 pause

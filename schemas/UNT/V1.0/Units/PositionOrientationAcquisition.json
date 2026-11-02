@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-POA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Pointing",
+  "Description": "Position-Orientation Acquisition: acquires from a pointing or tracking device - a touch surface, a mouse, a 3D controller, a headset - the position and the orientation that a person selects, for instance the point from which a passenger wants to see the environment outside a vehicle, and provides them as a Point of View. The Point of View it provides carries the Position and the Orientation: its other attributes may be missing. The Unit does not interpret pointer events: the device gives, or the driver of the Unit reads from it, the position and the orientation that the person chose.",
+  "ExternalPorts": [
+    {
+      "Name": "SensedPositionOrientation",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-OPV-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredPositionOrientation",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-OPV-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredPositionOrientation",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-OPV-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

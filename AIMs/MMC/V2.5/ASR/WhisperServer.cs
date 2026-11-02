@@ -35,7 +35,7 @@ internal sealed class WhisperServer
         (_program, _model, _threads, _extra) = (program, model, threads, extraArguments);
 
     // What was said, as whisper-server writes it: plain text, captions included.
-    public async Task<string> TranscribeAsync(byte[] wav, string? language, int audioContext)
+    public async Task<string> TranscribeAsync(byte[] wav, string? language, int audioContext, string? prompt = null)
     {
         for (int attempt = 0; ; attempt++)
         {
@@ -49,6 +49,7 @@ internal sealed class WhisperServer
                     { new StringContent(audioContext.ToString()), "audio_ctx" }
                 };
                 if (!string.IsNullOrWhiteSpace(language)) form.Add(new StringContent(language), "language");
+                if (!string.IsNullOrWhiteSpace(prompt)) form.Add(new StringContent(prompt), "prompt");
 
                 using var response = await http.PostAsync("/inference", form).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();

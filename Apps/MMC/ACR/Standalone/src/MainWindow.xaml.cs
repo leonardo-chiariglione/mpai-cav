@@ -7,6 +7,7 @@ using System.Windows;
 
 using Mpai.Core;
 using Mpai.UaKit;         // AvatarUaHost, SpeechListener, TypedInput, StandardDevices
+using Mpai.Mas.Client;       // RemoteControllerApi: the Controller API of a Controller that is a program of its own
 using Mpai.Aif.Api;       // ControllerApi, AvatarUtterance
 using Mpai.Ua;            // WorkflowInterpreter, DeviceRegistry
 using Mpai.Wdl;           // WorkflowReader
@@ -34,7 +35,7 @@ public partial class MainWindow : Window
     // The workflow of the App: the one source, read where the repository keeps it.
     private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "ACR", "MMC-ACR.orch");
 
-    private ControllerApi?            _north;
+    private IControllerApi?           _north;
     private AvatarUaHost?             _avatar;
     private SpeechListener?           _ears;
     private readonly TypedInput       _typed;
@@ -57,7 +58,7 @@ public partial class MainWindow : Window
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
             _ears = new SpeechListener(_avatar);
-            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new AcrProvider(store)));
+            _north = new RemoteControllerApi(Program.ControllerUrl);   // the Controller is a program of its own; the workflow asks it to start the Module
             await Task.Delay(TimeSpan.FromSeconds(2.0));   // let the avatar/WebView settle before speaking
 
             SetStatus("Ready. Press Register to begin.");
@@ -116,7 +117,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        try { _north?.Dispose(); } catch { }
+        try { (_north as IDisposable)?.Dispose(); } catch { }
         base.OnClosed(e);
     }
 

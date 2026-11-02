@@ -3,7 +3,8 @@
   "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/REExperienceGeneration.json",
   "title":                "RE Experience Generation V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-REG-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":               "XRV-REG-V1.0",
 
   "APIProfile":           "Basic",
   "Description":          "The Real Environment Experience Generation (XRV-REG) AIM receives the RE Action IDs from the Action Generation AIM and outputs the appropriate commands from the Action Table via RE Data Out in accordance with the RE Venue Specifications and Script-Venue Associations, incorporating any required Show Descriptors.",

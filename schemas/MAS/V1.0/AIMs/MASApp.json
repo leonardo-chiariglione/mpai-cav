@@ -1,5 +1,5 @@
 {
-  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MAS-APP-V1.0"},
+  "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "Header":           "MAS-APP-V1.0",
 
@@ -15,8 +15,8 @@
                           {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": "", "IsOptional": true},
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": ""}],
 
-  "SubAIMs":          [{"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "Internal"}},
-                       {"Identifier": {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "Internal"}}],
+  "SubAIMs":          [{"Header": "PAF-RSR-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                       {"Header": "MMC-ASR-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-RSR-V1.6", "DataType": "MMC-EPS-V2.5"}},

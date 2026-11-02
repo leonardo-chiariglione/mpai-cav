@@ -17,7 +17,7 @@
                        {"Name": "BodyDescriptors", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AVSceneSpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "AVSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "MultimodalSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "InputPortableAvatar", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpatialAttitudes", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],

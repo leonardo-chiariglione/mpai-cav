@@ -1,0 +1,55 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/MMM4/V2.2/data/UserCommand.json",
+  "title":                  "User Command V2.2",
+  "description":            "DRAFT, not published. What a participant asks the Secretary of a meeting (a request, UserCommandRQ) and what the Secretary answers (a response, UserCommandRS) under the same UserCommandID. Exactly one of the two is present, as in the User Command (CAE-UCM). The Secretary is a User (a Process) that speaks with the User of a participant; its Voice Command Interface turns what the participant says into the request.",
+  "type":                   "object", "additionalProperties": false,
+  "required":               [ "Header", "UserCommandID" ],
+  "oneOf":                  [ { "required": [ "UserCommandRQ" ], "not": { "required": [ "UserCommandRS" ] } },
+                              { "required": [ "UserCommandRS" ], "not": { "required": [ "UserCommandRQ" ] } } ],
+  "properties": {
+
+    "Header":               { "type": "string", "const": "MMM-UCM-V2.2" },
+    "MInstanceID":          { "type": "string" },
+    "UserCommandID":   { "type": "string" },
+    "Confidence":           { "type": "number", "minimum": 0, "maximum": 1 },
+
+    "UserCommandRQ": { "type": "object", "additionalProperties": false, "minProperties": 1,
+      "description": "A request: one or more of the fields below. A field that is absent asks nothing.",
+      "properties": {
+
+        "Summary":          { "type": "object", "additionalProperties": false,
+          "description": "A summary of the meeting so far, for the participant that asks, and for nobody else. Language and Form are given when the participant says them; otherwise they are the ones of the earlier request, or English and spoken.",
+          "properties": {
+            "Language":     { "$ref": "#/$defs/Language" },
+            "Form":         { "type": "string", "enum": [ "Written", "Spoken" ],
+                              "description": "Written: the text is shown on the participant's display. Spoken: the Secretary reads it aloud (not in Japanese or Chinese: no voice speaks them, the text is shown)." } } },
+
+        "Display":          { "type": "string", "enum": [ "Hide", "StopReading" ],
+                              "description": "Hide: the summary on the display goes away. StopReading: the Secretary stops reading the summary." },
+
+        "Answers":          { "type": "string", "enum": [ "Spoken", "Written" ],
+                              "description": "How the Secretary answers the participant from now on: Spoken (the default, in a few words) or Written (also on the display)." },
+
+        "Hand":             { "type": "string", "enum": [ "Raise", "Lower" ], "description": "Raises or lowers the participant's hand: asks for the floor." },
+        "Microphone":       { "type": "string", "enum": [ "On", "Off" ], "description": "Switches the participant's microphone on or off." },
+        "Screen":           { "type": "string", "enum": [ "Share", "Stop" ], "description": "Starts or stops sharing the participant's screen in the room. Only the convener may share." },
+        "CloseMeeting":     { "type": "boolean", "description": "True: the convener closes the meeting, for everybody. The Secretary asks to be sure before it is done." },
+        "Confirm":          { "type": "boolean", "description": "True: yes, to the question the Secretary asked last (closing the meeting). False: no." },
+        "ReturnToMeeting":  { "type": "boolean", "description": "True: the participant is done with the Secretary, and what it says is heard by the room again." } } },
+
+    "UserCommandRS": { "type": "object", "additionalProperties": false, "required": [ "Outcome" ],
+      "description": "How the request was carried out.",
+      "properties": {
+        "Outcome":          { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ] },
+        "Actions":          { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ],
+          "properties": {
+            "Action":       { "type": "string", "enum": [ "Summary", "Display", "Answers", "Hand", "Microphone", "Screen", "CloseMeeting", "ReturnToMeeting" ] },
+            "Outcome":      { "type": "string", "enum": [ "Done", "Failed", "NotSupported", "Asked" ],
+                              "description": "Asked: the Secretary needs the participant to confirm first." },
+            "Reason":       { "type": "string", "maxLength": 1024, "description": "Why the action was not done." } } } },
+        "Summary":          { "type": "object", "additionalProperties": false, "description": "The summary made, when the request asked for one and it is to be shown.",
+          "properties": { "Language": { "$ref": "#/$defs/Language" }, "Text": { "type": "string" } } } } } },
+
+  "$defs": {
+    "Language":             { "type": "string", "enum": [ "en", "el", "fr", "de", "es", "pt", "it", "ja", "zh" ],
+                              "description": "ISO 639-1 code: English, Greek, French, German, Spanish, Portuguese, Italian, Japanese, Chinese." } } }

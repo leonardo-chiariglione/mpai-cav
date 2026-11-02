@@ -1,0 +1,35 @@
+{ "$schema":                          "https://json-schema.org/draft/2020-12/schema",
+  "$id":                              "https://schemas.mpai.community/CUI1/V2.1/data/PrimaryRiskDescriptors.json",
+  "title":                            "PrimaryRiskDescriptors",
+  "type":                             "object",
+  "properties":                       {
+
+    "Header":                         {    "type": "string", "const": "CUI-PRD-V2.1" },
+    "MInstanceID":                    { "type": "string" },
+    "UEnvironmentID":                 { "type": "string" },
+    "PrimaryRiskDescriptorsID":        { "type": "string" },
+    "PrimaryRiskDescriptorsTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "CyberRisk":                      {    "type": "object", "properties": {
+      "Regulations":                  {    "$ref": "https://schemas.mpai.community/TFA/V1.5/data/MLModelQualifier.json" },
+      "AttackerSourceIP":             {    "type": "object", "properties": {
+        "AttackDetectionTime":        {    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     {    "type": "string" },
+        "Type":                       {    "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackSourceIPAddress":      {    "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3},[.][0-9]{3}$" } } },
+
+      "DoSDestinationIP":             {    "type": "object", "properties": {
+        "AttackDetectionTime":        {    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     {    "type": "string" },
+        "Type":                       {    "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackDestinationIPAddress":
+                                      {    "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3},[.][0-9]{3}$" } } },
+
+      "SourcePort":                   {    "type": "object", "properties": {
+          "AttackDetectionTime":      {    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+          "VectorProviderOrSource":   {    "type": "string" },
+          "Type":                     {    },
+          "AttackSourcePortNumber":   {    "type": "integer" } } } } },
+
+    "Trace":                          { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":                  { "type": "string" } } }

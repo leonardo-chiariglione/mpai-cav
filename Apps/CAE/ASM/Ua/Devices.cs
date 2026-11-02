@@ -31,7 +31,7 @@ public sealed class ActingDevice(string name, Func<string, Task> act) : IDevice
 {
     public async Task DeliverAsync(string type, string json, CancellationToken cancel)
     {
-        App.Log($"[device {name}] delivered {type}: {(json.Length > 120 ? json[..120] + "..." : json)}");
+        App.Log($"[device {name}] delivered {type}: {(json.Length > 120 && !json.Contains("\"AddedObjects\"") ? json[..120] + "..." : json)}");
         try { await act(json); }
         catch (Exception e) { App.Record("device " + name, e); App.Log($"[device {name}] FAILED: {e.Message}"); }
     }
@@ -39,15 +39,13 @@ public sealed class ActingDevice(string name, Func<string, Task> act) : IDevice
     public Task SafeStopAsync() => Task.CompletedTask;
 }
 
-// WHAT THE PERSON SAYS: the microphone, with voice-activity detection, or the words they type, spoken by the machine's voice and given as speech. Either way the Module is given a
-// Speech Object at its Port; the recognition is the Module's.
+// WHAT THE PERSON SAYS: the microphone, with voice-activity detection. It takes in speech and nothing else; the Module is given a Speech Object at its Port and the recognition is the Module's.
+// What the person types is the text device's (TypedIn).
 public sealed class VoiceDevice : IDevice
 {
     private readonly SpeechListener _ears;
-    private readonly Func<string, Task<byte[]?>> _synthesise;
     private readonly Func<bool> _microphoneOn;
     private readonly Action<string> _say;
-    private readonly Channel<string> _typed = Channel.CreateUnbounded<string>();
 
     // ONE REQUEST AT A TIME IN THE RECOGNISER: what is given to the Module waits for its words (Heard) before the next is given; what the microphone hears meanwhile is dropped, not piled up.
     // If the words do not come in time, the recogniser is taken to be stuck: that is said, and the owner of this device is told (TimedOut).
@@ -60,7 +58,7 @@ public sealed class VoiceDevice : IDevice
 
     // ONE UTTERANCE, WHOLE: what the microphone captures in pieces - a person pauses to think, and the capture ends at 1.2 s of quiet - is joined while the pieces come within 1.5 s of one
     // another; the request goes when 1.5 s have passed with nothing more, and when the recogniser is free. Nothing is dropped for being busy: it waits.
-    public static readonly TimeSpan Joining = TimeSpan.FromSeconds(1.5);
+    public static readonly TimeSpan Joining = TimeSpan.FromSeconds(1.0);
     private BasicSpeechObject? _pending;
     private DateTime _pendingAt;
     private readonly object _gate = new();
@@ -68,10 +66,8 @@ public sealed class VoiceDevice : IDevice
     public static BasicSpeechObject Join(BasicSpeechObject first, BasicSpeechObject next) =>
         BasicSpeechObject.FromData([.. first.Data, .. next.Data], first.SpeechQualifier!);
 
-    public VoiceDevice(SpeechListener ears, Func<string, Task<byte[]?>> synthesise, Func<bool> microphoneOn, Action<string> say)
-    { _ears = ears; _synthesise = synthesise; _microphoneOn = microphoneOn; _say = say; }
-
-    public void Type(string words) { App.Log("[voice] typed: " + words); _typed.Writer.TryWrite(words); }
+    public VoiceDevice(SpeechListener ears, Func<bool> microphoneOn, Action<string> say)
+    { _ears = ears; _microphoneOn = microphoneOn; _say = say; }
 
     public Task DeliverAsync(string type, string json, CancellationToken cancel) => Task.CompletedTask;
     public Task SafeStopAsync() => Task.CompletedTask;
@@ -94,7 +90,7 @@ public sealed class VoiceDevice : IDevice
                     {
                         lock (_gate)
                         {
-                            var joined = _pending is not null && DateTime.UtcNow - _pendingAt < Joining;
+                            var joined = _pending is not null;      // whatever waits is the same sentence: it is sent only when nobody is speaking
                             App.Log($"[voice] capture of {speech.Data.Length} bytes ({speech.Data.Length / 2.0 / rate:0.0} s)" + (joined ? $", joined to the {_pending!.Data.Length} bytes before it" : ""));
                             _pending = joined ? Join(_pending!, speech) : _pending is null ? speech : _pending;
                             if (!joined && !ReferenceEquals(_pending, speech)) _pending = Join(_pending, speech);      // (a piece that waited a long while is still the same utterance if not sent)
@@ -110,18 +106,6 @@ public sealed class VoiceDevice : IDevice
                 }
             }
         }, CancellationToken.None);
-        var typing = Task.Run(async () =>
-        {
-            try
-            {
-                await foreach (var words in _typed.Reader.ReadAllAsync(cancel))
-                    if (await _synthesise(words) is { } wav) { App.Log("[voice] typed words spoken: " + wav.Length + " bytes, given to the Module"); _sentAt = DateTime.UtcNow; heard.Writer.TryWrite(SpeechOf(wav)); }
-                    else _say("I could not turn the typed words into speech.");
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception e) { App.Record("typed words", e); App.Log("[voice] typed words FAILED: " + e.Message); _say("The typed words could not be given: " + e.Message); }
-        }, CancellationToken.None);
-
         // THE UTTERANCE GOES when nothing has been joined to it for 1.5 s and the recogniser is free.
         var sender = Task.Run(async () =>
         {
@@ -130,7 +114,7 @@ public sealed class VoiceDevice : IDevice
                 await Task.Delay(100, CancellationToken.None);
                 BasicSpeechObject? send = null;
                 lock (_gate)
-                    if (_pending is not null && DateTime.UtcNow - _pendingAt >= Joining && !Busy) { send = _pending; _pending = null; }
+                    if (_pending is not null && DateTime.UtcNow - _pendingAt >= Joining && !Busy && !Mpai.PhysicalLayer.MicrophoneUnit.SpeechUnderway) { send = _pending; _pending = null; }
                 if (send is null) continue;
                 App.Log($"[voice] utterance of {send.Data.Length} bytes given to the Module");
                 _sentAt = DateTime.UtcNow;

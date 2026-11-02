@@ -50,18 +50,18 @@ public sealed class SpeechStreams
         }
     }
 
-    // The feed of a Speech Object: the client's WebSocket. Binary messages are PCM, as captured; the stream is over when the client closes, or when the time the Speech
-    // Object was declared for is over (a little after: the last frames are still on their way).
-    public async Task FeedAsync(WebSocket socket, string id, long declaredEnd, MInstance m, CancellationToken stop)
+    // The feed of a Speech Object: the client's WebSocket. Binary messages are PCM, as captured; the stream is over when the client closes - the speech has no duration fixed
+    // beforehand - or when nothing has arrived for IdleMs (a client that went away).
+    public const int IdleMs = 30_000;
+    public async Task FeedAsync(WebSocket socket, string id, MInstance m, CancellationToken stop)
     {
         var buffer = new byte[16384];
         try
         {
             while (socket.State == WebSocketState.Open && !stop.IsCancellationRequested)
             {
-                var wait = Math.Max(0, declaredEnd + 2000 - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stop);
-                timeout.CancelAfter((int)Math.Min(wait, int.MaxValue));
+                timeout.CancelAfter(IdleMs);
                 var got = new List<byte>();
                 WebSocketReceiveResult r;
                 do { r = await socket.ReceiveAsync(buffer, timeout.Token); got.AddRange(buffer.AsSpan(0, r.Count).ToArray()); } while (!r.EndOfMessage);

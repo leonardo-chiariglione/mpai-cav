@@ -2,7 +2,7 @@
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
   "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/GenerativeTextDescription.json",
   "title":                "Generative Text Description V2.5",
-  "Identifier":           {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-GTD-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "MMC-GTD-V2.5",
   "APIProfile":           "Basic",
   "Description":          "Generative Text Description: produces the Machine Text Descriptors from the Text - the subject of what the machine is to say - and, optionally, a Text Personal Status for expression; when the Text Personal Status is absent the text is neutral.",

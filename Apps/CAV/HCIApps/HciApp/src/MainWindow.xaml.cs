@@ -12,6 +12,7 @@ using Mpai.Core.OSD;
 using Mpai.PhysicalLayer;   // CameraUnit
 using Mpai.UaKit;
 using Mpai.Aif.Api;
+using Mpai.Mas.Client;       // RemoteControllerApi: the Controller API of a Controller that is a program of its own
 
 namespace HciApp;
 
@@ -57,7 +58,7 @@ public partial class MainWindow : Window
     private const string ConversePrompt =
         "While we have a comfortable travel, let us have a conversation. Say stop when you want to end it.";
 
-    private ControllerApi?     _north;
+    private IControllerApi?    _north;
     private AvatarUaHost? _avatar;
     private bool _ready, _started, _identified;
     private string? _userName;
@@ -79,7 +80,7 @@ public partial class MainWindow : Window
             SetStatus("loading...");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
             await _avatar.InitAsync();
-            await Task.Run(() => _north = new ControllerApi(AmdDir, SettingsPath, store => new HciProvider(store, GalleryJson)));
+            _north = new RemoteControllerApi(Program.ControllerUrl);   // the Controller is a program of its own (HciController)
             _ready = true;
             InstructionText.Text = "Press Start to meet the CAV.";
             SetStatus("Ready."); StartButton.IsEnabled = true;

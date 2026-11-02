@@ -6,7 +6,8 @@
 
   "InternalTypes":        [],
 
-  "ExternalPorts":        [{"Name": "InputAudioObject", "Direction": "Input",  "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "AudioSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "InputAudioObject", "Direction": "Input",  "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObjectID",    "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],

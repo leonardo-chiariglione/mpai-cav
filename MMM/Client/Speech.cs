@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -23,10 +24,9 @@ public static class Speech
 
     // The Speech Qualifier of the data (TFA-SPQ-V1.5): its own time - the same as the Speech Object's -, the content (raw PCM, 16 kHz, 16 bits), what it was captured with
     // (a microphone, one channel) and, if the data is a stream, the stream format it is delivered in - a parameter of the Qualifier.
-    private static JsonObject Qualifier(string id, long startMs, long endMs, string? streamFormat) => new()
+    private static JsonObject Qualifier(string id, string? streamFormat) => new()
     {
         ["Header"] = "TFA-SPQ-V1.5", ["MInstanceID"] = "MI1", ["SpeechQualifierID"] = $"{id}-Q",
-        ["SpeechQualifierTime"] = Time($"{id}-QT", startMs, endMs),
         ["SubTypes"] = new JsonObject(),
         ["Formats"] = new JsonObject
         {
@@ -53,20 +53,40 @@ public static class Speech
             ["Header"] = Header, ["MInstanceID"] = "MI1", ["BasicSpeechObjectID"] = id,
             ["BasicSpeechObjectTime"] = Time($"{id}-T", startMs, end),
             ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(pcm16k) }),
-            ["BasicSpeechDataQualifier"] = Qualifier(id, startMs, end, null)
+            ["BasicSpeechDataQualifier"] = Qualifier(id, null)
         };
     }
 
-    // A Speech Object that is a stream: declared when the speech starts, with the time it lasts (it does not have to be redefined until that time is over) and the address its
-    // data is delivered from; the data arrives as it is captured. The Qualifier says the stream format: WebSocket. Whoever wants to hear it - the receiver decides, from this User
-    // and not from that one - opens that address, so that it understands what it receives.
-    public static JsonObject Declare(string id, long startMs, long durationMs, string dataUri) => new()
+    // The Speech Qualifier of speech that is a stream, delivered over a WebSocket. It says what kind of data this is; how long the speech lasts is not its business but the Speech
+    // Object's, and a stream has no duration until it is over.
+    public static JsonObject StreamQualifier(string id) => Qualifier(id, "WebSocket");
+
+    // A USER'S SPEECH, AS THE STANDARD HAS IT (the Verification Use Cases of MMM-TEC V2.2: a human's captured Data becomes an Item and is placed in the M-Instance). The human's Device
+    // UM-Captures the speech at the human's U-Location, With the Speech Qualifier; the Import Service has the Data Identified as an Item (a Speech Object, its Identifier the one the Data was
+    // named with); the User MM-Adds it at its seat; the data follows, as it is captured, from the client to the M-Instance (a WebSocket). Returns the Result of the first Process Action that
+    // was refused, or that of the MM-Add; with the data complete in the Speech Object when it returns.
+    public static async Task<MmmClient.Result> CaptureAsync(MmmClient who, string id, string uLocation, string seat, byte[] pcm16k)
     {
-        ["Header"] = Header, ["MInstanceID"] = "MI1", ["BasicSpeechObjectID"] = id,
-        ["BasicSpeechObjectTime"] = Time($"{id}-T", startMs, startMs + durationMs),
-        ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["DataURI"] = dataUri }),
-        ["BasicSpeechDataQualifier"] = Qualifier(id, startMs, startMs + durationMs, "WebSocket")
-    };
+        var q = StreamQualifier(id);
+        var captured = await who.PerformAsync("UM-Capture", new Complements { Nil = id, At = uLocation, With = [q] });
+        if (captured.Http != 201) return captured;
+        var identified = await who.PerformAsync("Identify", new Complements { Nil = id, With = [q.DeepClone()] });
+        if (identified.Http != 201) return identified;
+        var added = await who.PerformAsync("MM-Add", new Complements { Nil = id, At = seat });
+        if (added.Http != 200) return added;
+        var origin = who.Server!;
+        using var feed = new ClientWebSocket();
+        await feed.ConnectAsync(new Uri($"ws://{origin.Authority}/ws/v2.2/speech/{id}?token={Uri.EscapeDataString(who.Token!)}"), CancellationToken.None);
+        for (var i = 0; i < pcm16k.Length; i += 3200)
+            await feed.SendAsync(pcm16k.AsMemory(i, Math.Min(3200, pcm16k.Length - i)), WebSocketMessageType.Binary, true, CancellationToken.None);
+        await feed.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+        for (var i = 0; i < 100; i++)                                                                  // the M-Instance closes the stream: the data is then the Speech Object's
+        {
+            if (PcmOf((await who.ReadAsync(id)).Item).Length > 0) break;
+            await Task.Delay(30);
+        }
+        return added;
+    }
 
     // The Speech Object as the M-Instance returns an Item (the Body is the first of its ItemValueOrRef), or as it is.
     private static JsonNode? Body(JsonObject? item) => item?["ItemValueOrRef"]?[0] ?? item;
@@ -95,6 +115,11 @@ public static class Speech
 
 // What recognises the words of PCM: whisper-server (from Access: the L3 of ASR declares it), or whatever a test puts in its place.
 public delegate Task<string> Recognizer(byte[] pcm16k);
+
+// What condenses a piece of the minutes into a summary (English), what translates it, and what speaks it (16 kHz, 16 bits, mono): the Processes the Secretary asks for a summary.
+public delegate Task<string> Summariser(string minutes);
+public delegate Task<string> Translator(string english, string language);
+public delegate Task<byte[]> Synthesiser(string text, string language);
 
 public sealed class WhisperAsr : IDisposable
 {

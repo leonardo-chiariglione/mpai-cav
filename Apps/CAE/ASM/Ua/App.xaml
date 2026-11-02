@@ -20,6 +20,10 @@
                                 <Setter TargetName="Face" Property="Background" Value="#1E3A8A"/>
                                 <Setter TargetName="Face" Property="BorderBrush" Value="#0B1B4A"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Face" Property="Background" Value="#9AA0A6"/>
+                                <Setter TargetName="Face" Property="BorderBrush" Value="#6B7076"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -27,6 +31,7 @@
         </Style>
         <!-- STOP SPEAKING: a momentary button. It is dark red; while the mouse holds it down it is a little darker; it never stays pressed, and it does not keep the focus. -->
         <Style x:Key="StopButton" TargetType="Button">
+            <Setter Property="Background" Value="#B00020"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Focusable" Value="False"/>
@@ -34,7 +39,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Face" Background="#C62828" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Face" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="White"/>
                         </Border>
                         <ControlTemplate.Triggers>

@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "MMC-TTS-V2.5",
 
   "APIProfile":       "Basic",
@@ -29,6 +29,8 @@
                       {"Name": "voice-config-fr", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:fr", "IsOptional": true, "Description": "The configuration of that voice."},
                       {"Name": "voice-it", "Uri": "/* URI of the voice for 'it' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:it", "IsOptional": true, "Description": "The voice for the language 'it'."},
                       {"Name": "voice-config-it", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:it", "IsOptional": true, "Description": "The configuration of that voice."},
+                      {"Name": "voice-el", "Uri": "/* URI of the voice for 'el' */", "Sha256": "/* SHA-256 */", "Setting": "Voice:el", "IsOptional": true, "Description": "The voice for the language 'el'."},
+                      {"Name": "voice-config-el", "Uri": "/* URI of the configuration of the voice */", "Sha256": "/* SHA-256 */", "Setting": "VoiceConfig:el", "IsOptional": true, "Description": "The configuration of that voice."},
                       {"Name": "tts-program", "Uri": "/* URI of the archive of the speech synthesis program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the program inside the archive */", "Setting": "PiperExecutable", "Description": "The program that speaks with the voices."}],
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",

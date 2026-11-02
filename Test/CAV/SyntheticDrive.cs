@@ -20,7 +20,7 @@ public sealed record DriveMessage(TimeSpan At, string DataType, int PortNumber, 
 // from the seed and the start time: the same seed, the same drive, byte for byte.
 public sealed class SyntheticDrive
 {
-    public const string Gnss = "CAV-GNO-V2.0", Attitude = "OSD-OSA-V1.5", Camera = "OSD-BVO-V1.5";
+    public const string Gnss = "CAV-NSO-V2.0", Attitude = "OSD-OSA-V1.5", Camera = "OSD-BVO-V1.5";
 
     // The camera: 640 x 360, a focal length of 500 pixels, 1.5 m above the road,
     // the horizon at row 140. The road three lanes of 3.5 m, the ego in the middle

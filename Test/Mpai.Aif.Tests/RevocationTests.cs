@@ -32,6 +32,7 @@ public class RevocationTests
     public void TheReportSaysWhetherTheAIMUndidIt(string outcome)
     {
         var report = Command("UCM000007", new JsonObject { ["RevokedUserCommandID"] = "UCM000005" });
+        report.Remove("UserCommandRQ");                                      // a report is the response half: one of the two halves, never both
         report["UserCommandRS"] = new JsonObject
         {
             ["Outcome"] = outcome == "Done" ? "Done" : outcome == "Failed" ? "Failed" : "Failed",

@@ -62,7 +62,7 @@ public class RevocationAimTests
             Assert.Equal("music", (string)Bao(opened)["BasicAudioObjectID"]!);
             var original = Level(opened);
 
-            var louder = Command(new Mpai.Core.UserCommandRQ { LUFS = -12 });
+            var louder = Command(new Mpai.Core.UserCommandRQ { ModifiedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = new Mpai.Core.ManagedObject { ObjectID = "music" }, LUFS = -12 }] } });
             var (changed, said) = await Run(aoe, objectOut, report, (command, Mpai.Core.MpaiJson.ToJson(louder)));
             Assert.Equal("music", (string)Bao(changed)["BasicAudioObjectID"]!);                          // the new version has the same name
             Assert.Equal(-12, Level(changed));                                                          // a new version

@@ -1,128 +1,875 @@
-{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
-  "$id":                        "https://schemas.mpai.community/CAE3/V1.0/data/UserCommand.json",
-  "title":                      "User Command V1.0",
-  "description":                "Audio or Visual Scene Editing Commands: a request (UserCommandRQ), input to the AIM that executes it, or the response to it (UserCommandRS), output by that AIM under the same UserCommandID. Exactly one of the two is present, as in the other Data Types with a request and a response.",
-  "type":                       "object",
-  "additionalProperties":       false,
-  "required":                   [ "Header", "UserCommandID", "UserCommandTime" ],
-  "oneOf":                      [ { "required": [ "UserCommandRQ" ], "not": { "required": [ "UserCommandRS" ] } }, { "required": [ "UserCommandRS" ], "not": { "required": [ "UserCommandRQ" ] } } ],
-  "properties":                 {
-
-    "Header":                   { "type": "string", "const": "CAE-UCM-V1.0" },
-    "MInstanceID":              { "type": "string" },
-    "UEnvironmentID":           { "type": "string" },
-    "UserCommandID":            { "type": "string" },
-    "UserCommandTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-
-    "Confidence":               { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says." },
-
-    "UserCommandRQ":            { "type": "object", "additionalProperties": false,
-                                  "description": "A request. Every amount in it is a number the request carries - where an Object is put or moved to, the loudness - and an AIM that finds none reports it, it does not guess one. Objects and Scenes are identified by the name the User gave them.",
-                                  "allOf": [ { "if": { "required": [ "ModifiedObjects" ] }, "then": { "anyOf": [ { "required": [ "LUFS" ] }, { "properties": {
-     "ModifiedObjects":         { "properties": { "Objects": { "items": { "anyOf": [ { "required": [ "AcousticProfile" ] }, { "required": [ "SpatialAttitude" ] } ] } } } } } } ] } } ], "properties": {
-       "UserPoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
-       "LUFS":                   { "type": "number", "description": "The loudness, in LUFS, as a number. Alone it sets the loudness of the open Object; with ModifiedObjects it is the amount the modification carries when no entry has an Acoustic Profile or a Spatial Attitude." },
-       "RevokedUserCommandID":   { "type": "string", "description": "The User Command to revoke, by its UserCommandID (the author, 2026/10/11: every User Command has an ID, and one can revoke an earlier one). It goes to the AIM that executed that command, which undoes it if it can; the report says whether it did: Done, Failed, or NotSupported where the AIM cannot undo it." },
-
-      "AcquiredObject":         { "$ref": "#/$defs/ManagedObject" },
-      "DeliveredObject":        { "$ref": "#/$defs/ManagedObject" },
-
-      "AddedObjects":           { "type": "object", "additionalProperties": false, "properties": {
-        "ObjectID":             { "type": "string", "minLength": 1, "description": "The name of the Audio Object, or of the Scene, that the command makes of the Objects it adds (the name the User gives it, such as \"concert\"). Required when the command makes one: an Audio Object composed of the Objects, or the Scene created when none is open. A name that is taken becomes the name followed by the next free number (\"concert 2\")." },
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "SpatialAttitude" ], "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is put: the position and the orientation, as numbers. Required." } } } } } },
-
-      "RemovedObjects":         { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "anyOf": [ { "required": [ "ObjectID" ] }, { "required": [ "SpatialAttitude" ] } ], "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
-
-      "DeletedObjects":         { "type": "object", "additionalProperties": false, "description": "Deletes, from where the Module keeps them, the Objects and Scenes named - the Audio Objects, Speech Objects, Audio Scenes, Speech Scenes and Multimodal Scenes, by the name the User gave them, with all their versions. Not the same as RemovedObjects, which takes an Object out of the open Scene and leaves it kept. An Object that is a member of a Scene is not deleted, and the response says so: the Scene is deleted first. Nothing is deleted that is not named.", "properties": {
-        "Objects":              { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID" ], "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" } } } } } },
-
-      "MovedObjects":           { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "NewSpatialAttitude" ], "anyOf": [ { "required": [ "ObjectID" ] }, { "required": [ "OldSpatialAttitude" ] } ], "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
-          "OldSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is now, as numbers; names the Object when ObjectID is absent." },
-          "NewSpatialAttitude": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is to be: the position and the orientation, as numbers. Required." } } } } } },
-
-      "ChangedObjects":         { "type": "object", "additionalProperties": false, "description": "Edits the features of the Objects named, each feature changed by a value. The features that can be changed are listed here by name, and nothing else is allowed; every edit is a new version, which has the name of the Object. The sound itself is not a feature: it is not edited. Of an Audio Object: Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, and Children (the SpaceTime of each child, named, inside the parent). Of a Basic Audio Object: Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata. SpatialAttitude, where an Object is in a Scene, and Qualifier, the Qualifier of a Speech Object, are the features of the Scene Editing and of the Speech Object Editing AIMs.", "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID" ],
-          "anyOf": [ { "required": [ "Name" ] }, { "required": [ "Time" ] }, { "required": [ "SpaceTime" ] }, { "required": [ "UserPoV" ] }, { "required": [ "ParentAudioObjectIDs" ] }, { "required": [ "DescrMetadata" ] }, { "required": [ "Children" ] },
-                     { "required": [ "DeviceID" ] }, { "required": [ "Level" ] }, { "required": [ "PerceptStatus" ] }, { "required": [ "AcousticProfile" ] }, { "required": [ "AudioQualifier" ] }, { "required": [ "SpatialAttitude" ] }, { "required": [ "Qualifier" ] } ],
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/CAE3/V1.0/data/UserCommand.json",
+  "title": "User Command V1.0",
+  "description": "Audio or Visual Scene Editing Commands: a request (UserCommandRQ), input to the AIM that executes it, or the response to it (UserCommandRS), output by that AIM under the same UserCommandID. Exactly one of the two is present, as in the other Data Types with a request and a response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "UserCommandID",
+    "UserCommandTime"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "UserCommandRQ"
+      ],
+      "not": {
+        "required": [
+          "UserCommandRS"
+        ]
+      }
+    },
+    {
+      "required": [
+        "UserCommandRS"
+      ],
+      "not": {
+        "required": [
+          "UserCommandRQ"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "CAE-UCM-V1.0"
+    },
+    "MInstanceID": {
+      "type": "string"
+    },
+    "UEnvironmentID": {
+      "type": "string"
+    },
+    "UserCommandID": {
+      "type": "string"
+    },
+    "UserCommandTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How likely it is that the User Command is what the User asked for - for instance, when it is interpreted from what the User says."
+    },
+    "UserCommandRQ": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A request. Every amount in it is a number the request carries - where an Object is put or moved to, the loudness - and an AIM that finds none reports it, it does not guess one. Objects and Scenes are identified by the name the User gave them.",
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "ModifiedObjects"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ModifiedObjects": {
+                "properties": {
+                  "Objects": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "AcousticProfile"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "SpatialAttitude"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "LUFS"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "UserPoV": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json"
+        },
+        "LUFS": {
+          "type": "number",
+          "description": "The loudness of the open Scene, the programme, in LUFS (integrated loudness as in ITU-R BS.1770; the Audio Definition Model, ITU-R BS.2076, gives loudness metadata to the programme and to the content of it). The loudness of an Object is the LUFS of its entry in ModifiedObjects, or the Level of ChangedObjects."
+        },
+        "RevokedUserCommandID": {
+          "type": "string",
+          "description": "The User Command to revoke, by its UserCommandID (the author, 2026/10/11: every User Command has an ID, and one can revoke an earlier one). It goes to the AIM that executed that command, which undoes it if it can; the report says whether it did: Done, Failed, or NotSupported where the AIM cannot undo it."
+        },
+        "AcquiredObject": {
+          "$ref": "#/$defs/ManagedObject"
+        },
+        "DeliveredObject": {
+          "$ref": "#/$defs/ManagedObject"
+        },
+        "AddedObjects": {
+          "type": "object",
+          "additionalProperties": false,
           "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject", "description": "The Object whose features are changed, by its name." },
-          "Name":               { "type": "string", "minLength": 1, "description": "The new name of the Object (its AudioObjectID or BasicAudioObjectID): it is the same Object, and the name stays unique - a name that is taken becomes the name followed by the next free number (\"violin 2\")." },
-          "Time":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "The time of the Object (AudioObjectTime, BasicAudioObjectTime)." },
-          "SpaceTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "The Space/Time of an Audio Object (AudioObjectSpaceTime): the frame its children are placed in." },
-          "UserPoV":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where the Object is heard from when it is heard alone." },
-          "ParentAudioObjectIDs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "The names of the Audio Objects the Audio Object is a child of." },
-          "DescrMetadata":      { "type": "string", "maxLength": 2048, "description": "The description of the Object." },
-          "Children":           { "type": "array", "minItems": 1, "description": "Where and when each child of an Audio Object, named, is inside the parent.", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "SpaceTime" ], "properties": {
-            "ObjectID":         { "type": "string", "minLength": 1, "description": "The name of the child, a Basic Audio Object or an Audio Object." },
-            "SpaceTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
-          "DeviceID":           { "type": "string", "description": "The device of a Basic Audio Object." },
-          "Level":              { "type": "number", "description": "The loudness of a Basic Audio Object, in LUFS." },
-          "PerceptStatus":      { "type": "boolean", "description": "The percept status of a Basic Audio Object." },
-          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
-          "AudioQualifier":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json", "description": "The Audio Qualifier of a Basic Audio Object." },
-          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Where the Object is in the open Scene: a Scene Editing feature." },
-          "Qualifier":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json", "description": "The Qualifier of a Speech Object: a Speech Object Editing feature." } } } } } },
-
-      "ModifiedObjects":        { "type": "object", "additionalProperties": false, "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "AcousticProfile":    { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object" },
-          "SpatialAttitude":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } } } } },
-
-      "ListedObjects":          { "type": "object", "additionalProperties": false, "required": [ "Kind" ], 
-                                  "description": "Asks the Editing AIM that keeps the Objects or Scenes of a Kind to list them: the response (UserCommandRS.ListedObjects) gives their names, never storage keys. For an Object it also gives its Duration, its number of children and its Version. All is sent to every Editing AIM, and their answers are merged into one response.",
-                                  "if": { "required": [ "ObjectID" ] }, "then": { "properties": { "Kind": { "not": { "const": "All" } } } }, "properties": {
-        "Kind":                 { "type": "string", "enum": [ "Audio Object", "Basic Audio Object", "Speech Object", "Basic Speech Object", "Audio Scene", "Speech Scene", "Multimodal Scene", "All" ], "description": "The Kind to list, or All for everything the AIM keeps. Required." },
-        "ObjectID":             { "type": "string", "minLength": 1, "description": "The name of the one Scene or Object to list, of the Kind given (not All). For a Scene the response gives the number of its members and, for each member, its name and its PoV - its position and orientation as provided in the Scene; no Object is touched. Absent, everything of the Kind is listed." } } },
-
-      "ClosedSpace":           { "type": "array", "minItems": 1, "maxItems": 1, "description": "The space the open Scene is in - a room built round its Objects: a Closed Space, by ID or in full. It replaces the one the Scene had.", "items": { "oneOf": [
-                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json" },
-                                { "type": "string" } ] } },
-
-      "ModifiedScene":          { "type": "object", "additionalProperties": false, "description": "The acoustics of the open Scene: what happens to the sound of its Objects on the way to the listener. The Acoustic Profile given is the one the Scene has from now on.", "properties": {
-        "AcousticProfile":      { "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene" } } },
-
-      "TranslatedObjects":      { "type": "object", "additionalProperties": false, "description": "Speech Objects to translate into another language, with Text and Speech Translation (MMC-TST). The source language is the one the Speech Object's own Qualifier states. The translated Speech Object replaces the original in the Scene, at its place: there is no Object in two versions, nor two Objects at one place.", "properties": {
-        "Objects":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "SpeechQualifier" ], "properties": {
-          "ObjectID":           { "$ref": "#/$defs/ManagedObject" },
-          "SpeechQualifier":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json", "description": "The Qualifier of the translated Speech Object: its Attributes.Metadata.Language states the target language." } } } } } } } },
-
-    "UserCommandRS":            { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "How the User Command was executed: output by the AIM that executed it.", "properties": {
-      "ReportTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-      "Outcome":                { "type": "string", "enum": [ "Done", "Partly", "Failed", "Ignored" ], "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes." },
-      "Actions":                { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Action", "Outcome" ], "properties": {
-        "Action":               { "type": "string", "enum": [ "UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "DeletedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects", "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects" ], "description": "The field of UserCommandRQ the action comes from." },
-        "ObjectID":             { "type": "string", "description": "The name of the Object or Scene acted on." },
-        "Outcome":              { "type": "string", "enum": [ "Done", "Failed", "NotSupported" ] },
-        "ResultID":             { "type": "string", "description": "The name of what the action produced: every edit is a new version, which has the name of the Object or Scene edited." },
-        "Reason":               { "type": "string", "maxLength": 1024, "description": "Why the action was not done." } } } },
-      "ListedObjects":          { "type": "array", "description": "The answer to a ListedObjects request: what the AIM keeps of the Kind asked for, by name - never a storage key.", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID", "Kind" ], "properties": {
-        "ObjectID":             { "type": "string", "description": "The name of the Object or Scene." },
-        "Kind":                 { "type": "string", "enum": [ "Audio Object", "Basic Audio Object", "Speech Object", "Basic Speech Object", "Audio Scene", "Speech Scene", "Multimodal Scene" ] },
-        "MemberObjectIDs":      { "type": "array", "items": { "type": "string" }, "description": "For an Audio Object, a Speech Object or a Scene: the names of the Objects it is made of." },
-        "Duration":             { "type": "number", "minimum": 0, "description": "Of an Object: how long it lasts, in seconds (that of its sound; for an Object made of others, the end of the child that lasts longest inside it). Absent where the AIM cannot tell." },
-        "ChildCount":           { "type": "integer", "minimum": 0, "description": "Of an Object: the number of children it is made of (0 for a Basic Object)." },
-        "Version":              { "type": "integer", "minimum": 1, "description": "Of an Object: its version - 1 for the first, one more for every edit." },
-        "ObjectCount":          { "type": "integer", "minimum": 0, "description": "Of a Scene named in the request: the number of its members." },
-        "Members":              { "type": "array", "description": "Of a Scene named in the request: each member by its name, with its PoV, the position and orientation it has as provided in the Scene.", "items": { "type": "object", "additionalProperties": false, "required": [ "ObjectID" ], "properties": {
-          "ObjectID":           { "type": "string", "description": "The name of the member." },
-          "PoV":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Its position and orientation as provided in the Scene." } } } } } } } } },
-
-    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-    "DescrMetadata":            { "type": "string", "maxLength": 2048 } },
-
-  "$defs":                      {
-  "ManagedObject":              { "anyOf": [
-                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/3DModelObjectOrID" },
-                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/AudioObjectOrID" },
-                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/SpeechObjectOrID" },
-                                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/VisualObjectOrID" } ] } } }
+            "ObjectID": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the Audio Object, or of the Scene, that the command makes of the Objects it adds (the name the User gives it, such as \"concert\"). Required when the command makes one: an Audio Object composed of the Objects, or the Scene created when none is open. A name that is taken becomes the name followed by the next free number (\"concert 2\")."
+            },
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ObjectID",
+                  "SpatialAttitude"
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "SpatialAttitude": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
+                    "description": "Where the Object is put: the position and the orientation, as numbers. Required."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "RemovedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "anyOf": [
+                  {
+                    "required": [
+                      "ObjectID"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "SpatialAttitude"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "SpatialAttitude": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "DeletedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Deletes, from where the Module keeps them, the Objects and Scenes named - the Audio Objects, Speech Objects, Audio Scenes, Speech Scenes and Multimodal Scenes, by the name the User gave them, with all their versions. Not the same as RemovedObjects, which takes an Object out of the open Scene and leaves it kept. An Object that is a member of a Scene is not deleted, and the response says so: the Scene is deleted first. Nothing is deleted that is not named.",
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "required": [
+                      "ObjectID"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "AcousticProfileID"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "AcousticProfileID": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "A kept Acoustic Profile, by its AcousticProfileID."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "MovedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "NewSpatialAttitude"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "ObjectID"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "OldSpatialAttitude"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "AcousticProfile": {
+                    "$ref": "#/$defs/ObjectAcousticProfileOrID"
+                  },
+                  "OldSpatialAttitude": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
+                    "description": "Where the Object is now, as numbers; names the Object when ObjectID is absent."
+                  },
+                  "NewSpatialAttitude": {
+                    "$ref": "#/$defs/SpatialAttitudeOrChange",
+                    "description": "Where, and when, the Object is to be: the position, the orientation and the time it sounds, as numbers. Required; it may state only the parts that change."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ChangedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Edits the features of the Objects named, each feature changed by a value. The features that can be changed are listed here by name, and nothing else is allowed; every edit is a new version, which has the name of the Object. The sound itself is not a feature: it is not edited. Of an Audio Object: Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, and Children (the SpaceTime of each child, named, inside the parent). Of a Basic Audio Object: Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata. SpatialAttitude, where an Object is in a Scene, and Qualifier, the Qualifier of a Speech Object, are the features of the Scene Editing and of the Speech Object Editing AIMs.",
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ObjectID"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "Name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "Time"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "SpaceTime"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "UserPoV"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "ParentAudioObjectIDs"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "DescrMetadata"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "Children"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "DeviceID"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "Level"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "PerceptStatus"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "AcousticProfile"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "AudioQualifier"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "SpatialAttitude"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "Qualifier"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject",
+                    "description": "The Object whose features are changed, by its name."
+                  },
+                  "Name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The new name of the Object (its AudioObjectID or BasicAudioObjectID): it is the same Object, and the name stays unique - a name that is taken becomes the name followed by the next free number (\"violin 2\")."
+                  },
+                  "Time": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                    "description": "The time of the Object (AudioObjectTime, BasicAudioObjectTime)."
+                  },
+                  "SpaceTime": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
+                    "description": "The Space/Time of an Audio Object (AudioObjectSpaceTime): the frame its children are placed in."
+                  },
+                  "UserPoV": {
+                    "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+                    "description": "Where the Object is heard from when it is heard alone."
+                  },
+                  "ParentAudioObjectIDs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "description": "The names of the Audio Objects the Audio Object is a child of."
+                  },
+                  "DescrMetadata": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "description": "The description of the Object."
+                  },
+                  "Children": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "Where and when each child of an Audio Object, named, is inside the parent.",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "ObjectID",
+                        "SpaceTime"
+                      ],
+                      "properties": {
+                        "ObjectID": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The name of the child, a Basic Audio Object or an Audio Object."
+                        },
+                        "SpaceTime": {
+                          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+                        }
+                      }
+                    }
+                  },
+                  "DeviceID": {
+                    "type": "string",
+                    "description": "The device of a Basic Audio Object."
+                  },
+                  "Level": {
+                    "type": "number",
+                    "description": "The loudness of a Basic Audio Object, in LUFS."
+                  },
+                  "PerceptStatus": {
+                    "type": "boolean",
+                    "description": "The percept status of a Basic Audio Object."
+                  },
+                  "AcousticProfile": {
+                    "$ref": "#/$defs/ObjectAcousticProfileOrID"
+                  },
+                  "AudioQualifier": {
+                    "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json",
+                    "description": "The Audio Qualifier of a Basic Audio Object."
+                  },
+                  "SpatialAttitude": {
+                    "$ref": "#/$defs/SpatialAttitudeOrChange",
+                    "description": "Where the Object is in the open Scene: a Scene Editing feature."
+                  },
+                  "Qualifier": {
+                    "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json",
+                    "description": "The Qualifier of a Speech Object: a Speech Object Editing feature."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ModifiedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "AcousticProfile": {
+                    "$ref": "#/$defs/ObjectAcousticProfileOrID"
+                  },
+                  "SpatialAttitude": {
+                    "$ref": "#/$defs/SpatialAttitudeOrChange"
+                  },
+                  "LUFS": {
+                    "type": "number",
+                    "description": "The loudness of the Object, in LUFS."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ListedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Kind"
+          ],
+          "description": "Asks the Editing AIM that keeps the Objects or Scenes of a Kind to list them: the response (UserCommandRS.ListedObjects) gives their names, never storage keys. For an Object it also gives its Duration, its number of children and its Version. All is sent to every Editing AIM, and their answers are merged into one response.",
+          "if": {
+            "required": [
+              "ObjectID"
+            ]
+          },
+          "then": {
+            "properties": {
+              "Kind": {
+                "not": {
+                  "const": "All"
+                }
+              }
+            }
+          },
+          "properties": {
+            "Kind": {
+              "type": "string",
+              "enum": [
+                "Audio Object",
+                "Basic Audio Object",
+                "Speech Object",
+                "Basic Speech Object",
+                "Audio Scene",
+                "Speech Scene",
+                "Multimodal Scene",
+                "Acoustic Profile",
+                "Listener",
+                "Closed Space",
+                "All"
+              ],
+              "description": "The Kind to list, or All for everything the AIM keeps (All does not include the Acoustic Profile, the Listener or the Closed Space). Acoustic Profile asks for the Acoustic Profile of the Scene named in ObjectID, or, with no ObjectID, for the Acoustic Profiles kept. Listener asks for the Point of View from which the open Scene, or the Scene named in ObjectID, is heard. Closed Space asks for the room of the open Scene, or of the Scene named in ObjectID. Required."
+            },
+            "ObjectID": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the one Scene or Object to list, of the Kind given (not All). For a Scene the response gives the number of its members and, for each member, its name and its PoV - its position and orientation as provided in the Scene; no Object is touched. Absent, everything of the Kind is listed."
+            }
+          }
+        },
+        "NewScene": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of a new, empty Audio Scene, which is opened. The Scene that was open stays kept, under its name. The name must be free. Audio Scene Editing's."
+        },
+        "OpenedScene": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of the Audio Scene to open. The Scene that was open stays kept, under its name. A Scene that is not kept is reported, not made. Audio Scene Editing's."
+        },
+        "NamedScene": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name the open Audio Scene is given: from now on it is kept under that name, and under no other. The name must be free. Audio Scene Editing's."
+        },
+        "ClosedSpace": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "description": "The space the open Scene is in - a room built round its Objects: a Closed Space, by ID or in full. It replaces the one the Scene had.",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "ModifiedScene": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The acoustics of the open Scene: what happens to the sound of its Objects on the way to the listener. The Acoustic Profile is given in full or by the AcousticProfileID of a kept one. The properties a profile in full states are set; the ones it does not state keep the value the Scene has. A profile given in full is kept under its AcousticProfileID. The walls of the room and their Materials are part of the profile (Walls, DefaultMaterial): the Walls given are merged into the ones the Scene has - a wall given replaces the wall with the same name and the other walls keep their Material.",
+          "properties": {
+            "AcousticProfile": {
+              "$ref": "#/$defs/SceneAcousticProfileOrID"
+            }
+          }
+        },
+        "TranslatedObjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Speech Objects to translate into another language, with Text and Speech Translation (MMC-TST). The source language is the one the Speech Object's own Qualifier states. The translated Speech Object replaces the original in the Scene, at its place: there is no Object in two versions, nor two Objects at one place.",
+          "properties": {
+            "Objects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ObjectID",
+                  "SpeechQualifier"
+                ],
+                "properties": {
+                  "ObjectID": {
+                    "$ref": "#/$defs/ManagedObject"
+                  },
+                  "SpeechQualifier": {
+                    "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json",
+                    "description": "The Qualifier of the translated Speech Object: its Attributes.Metadata.Language states the target language."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "UserCommandRS": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Outcome"
+      ],
+      "description": "How the User Command was executed: output by the AIM that executed it.",
+      "properties": {
+        "ReportTime": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+        },
+        "Outcome": {
+          "type": "string",
+          "enum": [
+            "Done",
+            "Partly",
+            "Failed",
+            "Ignored"
+          ],
+          "description": "Done: every action done; Partly: some; Failed: none; Ignored: the command names nothing this AIM executes."
+        },
+        "Actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "Action",
+              "Outcome"
+            ],
+            "properties": {
+              "Action": {
+                "type": "string",
+                "enum": [
+                  "UserPoV",
+                  "LUFS",
+                  "RevokedUserCommandID",
+                  "AcquiredObject",
+                  "DeliveredObject",
+                  "AddedObjects",
+                  "RemovedObjects",
+                  "DeletedObjects",
+                  "MovedObjects",
+                  "ChangedObjects",
+                  "ModifiedObjects",
+                  "ClosedSpace",
+                  "ModifiedScene",
+                  "TranslatedObjects",
+                  "ListedObjects",
+                  "NewScene",
+                  "OpenedScene",
+                  "NamedScene"
+                ],
+                "description": "The field of UserCommandRQ the action comes from."
+              },
+              "ObjectID": {
+                "type": "string",
+                "description": "The name of the Object or Scene acted on."
+              },
+              "Outcome": {
+                "type": "string",
+                "enum": [
+                  "Done",
+                  "Failed",
+                  "NotSupported"
+                ]
+              },
+              "ResultID": {
+                "type": "string",
+                "description": "The name of what the action produced: every edit is a new version, which has the name of the Object or Scene edited."
+              },
+              "Reason": {
+                "type": "string",
+                "maxLength": 1024,
+                "description": "Why the action was not done."
+              }
+            }
+          }
+        },
+        "ListedObjects": {
+          "type": "array",
+          "description": "The answer to a ListedObjects request: what the AIM keeps of the Kind asked for, by name - never a storage key.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ObjectID",
+              "Kind"
+            ],
+            "properties": {
+              "ObjectID": {
+                "type": "string",
+                "description": "The name of the Object or Scene."
+              },
+              "Kind": {
+                "type": "string",
+                "enum": [
+                  "Audio Object",
+                  "Basic Audio Object",
+                  "Speech Object",
+                  "Basic Speech Object",
+                  "Audio Scene",
+                  "Speech Scene",
+                  "Multimodal Scene",
+                  "Acoustic Profile",
+                  "Listener",
+                  "Closed Space"
+                ]
+              },
+              "MemberObjectIDs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "For an Audio Object, a Speech Object or a Scene: the names of the Objects it is made of."
+              },
+              "Duration": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Of an Object: how long it lasts, in seconds (that of its sound; for an Object made of others, the end of the child that lasts longest inside it). Of a Scene: how long it lasts, in seconds, to the end of the member that sounds last. Absent where the AIM cannot tell."
+              },
+              "ChildCount": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Of an Object: the number of children it is made of (0 for a Basic Object)."
+              },
+              "Version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Of an Object: its version - 1 for the first, one more for every edit."
+              },
+              "ObjectCount": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Of a Scene named in the request: the number of its members."
+              },
+              "AcousticProfile": {
+                "anyOf": [
+                  {
+                    "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene"
+                  },
+                  {
+                    "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object"
+                  }
+                ],
+                "description": "Of the Acoustic Profile asked for: the Profile the Scene has (Scene part), or a kept one (its part). Absent where the Scene has none."
+              },
+              "UserPoV": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+                "description": "Of the Listener asked for: the Point of View the Scene is heard from."
+              },
+              "ClosedSpace": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ClosedSpace.json",
+                "description": "Of the Closed Space asked for: the room of the Scene."
+              },
+              "Members": {
+                "type": "array",
+                "description": "Of a Scene named in the request: each member by its name, with its PoV, the position and orientation it has as provided in the Scene.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ObjectID"
+                  ],
+                  "properties": {
+                    "ObjectID": {
+                      "type": "string",
+                      "description": "The name of the member."
+                    },
+                    "PoV": {
+                      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
+                      "description": "Its position and orientation as provided in the Scene."
+                    },
+                    "Time": {
+                      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                      "description": "When it sounds in the Scene."
+                    },
+                    "Level": {
+                      "type": "number",
+                      "description": "Its loudness in the Scene, in LUFS."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "$defs": {
+    "SpatialAttitudeOrChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A Spatial Attitude in full, or only the parts of it that change: the position, the orientation and the time it sounds. At least one of the three is stated; what is not stated keeps its value.",
+      "anyOf": [
+        {
+          "required": [
+            "Position"
+          ]
+        },
+        {
+          "required": [
+            "Orientation"
+          ]
+        },
+        {
+          "required": [
+            "SpatialAttitudeTime"
+          ]
+        }
+      ],
+      "properties": {
+        "Header": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/Header"
+        },
+        "MInstanceID": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/MInstanceID"
+        },
+        "UEnvironmentID": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/UEnvironmentID"
+        },
+        "ObjectSpatialAttitudeID": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/ObjectSpatialAttitudeID"
+        },
+        "SpatialAttitudeTime": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/SpatialAttitudeTime"
+        },
+        "General": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/General"
+        },
+        "Position": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/Position"
+        },
+        "Orientation": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/Orientation"
+        },
+        "DataXMData": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/DataXMData"
+        },
+        "DescrMetadata": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json#/properties/DescrMetadata"
+        }
+      }
+    },
+    "ObjectAcousticProfileOrID": {
+      "description": "An Acoustic Profile of an Object in full, or the AcousticProfileID of a kept one. A profile given in full is kept under its AcousticProfileID.",
+      "oneOf": [
+        {
+          "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Object"
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "SceneAcousticProfileOrID": {
+      "description": "An Acoustic Profile of a Scene in full, or the AcousticProfileID of a kept one. A profile given in full is kept under its AcousticProfileID.",
+      "oneOf": [
+        {
+          "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene"
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "ManagedObject": {
+      "anyOf": [
+        {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/3DModelObjectOrID"
+        },
+        {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/AudioObjectOrID"
+        },
+        {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/SpeechObjectOrID"
+        },
+        {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/ObjectOrID.json#/$defs/VisualObjectOrID"
+        }
+      ]
+    }
+  }
+}

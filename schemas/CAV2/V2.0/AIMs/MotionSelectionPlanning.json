@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/MotionSelectionPlanning.json",
   "title": "Motion Selection Planning V2.0",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-MSP-V2.0" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-MSP-V2.0",
 
@@ -12,12 +12,13 @@
 
   "ExternalPorts":  [
     { "Name": "FullEnvironmentDescriptors", "Direction": "Input",   "DataType": "CAV-FED-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "PathRequest"               , "Direction": "Input",   "DataType": "CAV-INT-V2.0",  "Technology": "Software", "Protocol": "", "PortNumber": 1, "IsRemote": false },
     { "Name": "TrajectoryRequest"         , "Direction": "Input",   "DataType": "CAV-INT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "PortNumber": 2, "IsRemote": false },
     { "Name": "PathResponse"              , "Direction": "Output",  "DataType": "CAV-INT-V2.0", "PortNumber": 1, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "TrajectoryResponse"        , "Direction": "Output",  "DataType": "CAV-INT-V2.0", "PortNumber": 2, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "Trajectory"                , "Direction": "Output",  "DataType": "OSD-TRJ-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "Trajectory"                , "Direction": "Output",  "DataType": "OSD-TRJ-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateBusIn" , "Direction": "Input",  "DataType": "CAV-RDS-V2.0", "IsOptional": true, "AcceptedTransports": [ "Bus" ], "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateBusOut", "Direction": "Output", "DataType": "CAV-RDS-V2.0", "IsOptional": true, "Transport": "Bus", "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],

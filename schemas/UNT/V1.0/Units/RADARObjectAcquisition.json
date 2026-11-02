@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-ROA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Media",
+  "Description": "RADAR Object Acquisition: acquires RADAR Objects from the real world and provides them, and the Scene Descriptors of what it acquires where the Data Type exists. A RADAR sensor gives a Basic RADAR Object; a source on a disk or a network may give a Basic or a full RADAR Object, and Basic or full Scene Descriptors. Its Qualifier states the sensor, its calibration and its mounting pose.",
+  "ExternalPorts": [
+    {
+      "Name": "SensedRADAR",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BRO-V1.5",
+        "OSD-BRS-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredRADAR",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BRO-V1.5",
+        "OSD-RAO-V1.5",
+        "OSD-BRS-V1.5",
+        "OSD-RSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredRADAR",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BRO-V1.5",
+        "OSD-RAO-V1.5",
+        "OSD-BRS-V1.5",
+        "OSD-RSD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

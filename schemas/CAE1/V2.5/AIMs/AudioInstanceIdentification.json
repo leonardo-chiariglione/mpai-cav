@@ -4,14 +4,14 @@
   "title":                "Audio Instance Identification V2.5",
   "Header":               "CAE-AII-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-AII-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
-  "Description":          "Audio Instance Identification (CAE-AII) of CAE-USC V2.5: receives AudioSceneGeometry, AudioObjects and produces AudioInstanceIdentifier.",
+  "Description":          "Audio Instance Identification (CAE-AII) of CAE-USC V2.5: receives AudioSceneDescriptors, AudioObjects and produces AudioInstanceIdentifier.",
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "AudioSceneGeometry", "Direction": "Input", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "AudioSceneDescriptors", "Direction": "Input", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioObjects", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AudioInstanceIdentifier", "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":              [ ],

@@ -143,7 +143,7 @@ public class AsmNamesTests
         Assert.Equal(3, module.Storage.MPAI_AIFM_SharedStorage_List("BAO").Count);                        // three Objects, not four
 
         // An edit is a new version of the Object: it keeps its name, it is not a second Object.
-        var edit = await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { LUFS = -20 }))));
+        var edit = await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { ObjectID = "violin 3" }, LUFS = -20 }] } }))));
         Assert.Equal("violin 3", Opened(edit));
         Assert.Equal("violin 3", Report(edit, module.AoeReport).Actions[0].ObjectID);
 
@@ -223,7 +223,8 @@ public class AsmNamesTests
 
         // Modified: an Acoustic Profile, or the loudness as a number.
         Assert.False(Valid(schema, Rq("""{ "ModifiedObjects": { "Objects": [ { "ObjectID": "violin" } ] } }""")));
-        Assert.True(Valid(schema, Rq("""{ "LUFS": -18, "ModifiedObjects": { "Objects": [ { "ObjectID": "violin" } ] } }""")));
+        Assert.False(Valid(schema, Rq("""{ "LUFS": -18, "ModifiedObjects": { "Objects": [ { "ObjectID": "violin" } ] } }""")));      // the top-level LUFS is the Scene's: it is no amount for an entry
+        Assert.True(Valid(schema, Rq("""{ "ModifiedObjects": { "Objects": [ { "ObjectID": "violin", "LUFS": -18 } ] } }""")));
         Assert.False(Valid(schema, Rq("""{ "LUFS": "a bit louder" }""")));
         Assert.True(Valid(schema, Rq("""{ "LUFS": -12 }""")));
 
@@ -307,7 +308,7 @@ public class AsmNamesTests
         using var module = new Module();
         await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 1)))));
         await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("drums", 2)))));
-        await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { LUFS = -18 }))));            // a new version of drums: still one Object
+        await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { ObjectID = "drums" }, LUFS = -18 }] } }))));            // a new version of drums: still one Object
         await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "band", Objects = [Put("violin", 0), Put("drums", 2)] } }))));
         var stage = await module.Give(module.Ase, (module.AseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [Put("violin", 1), Put("drums", 3)] } }))));
         await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello")))));

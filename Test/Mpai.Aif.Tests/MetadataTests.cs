@@ -190,7 +190,7 @@ public class MetadataTests
                                       .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
         {
             var node = TryParse(file);
-            if (node?["Identifier"]?["AIMName"]?.GetValue<string>() is { } aim) l2[aim] = node;
+            if (node?["Header"]?.GetValue<string>() is { } aim) l2[aim] = node;   // an L2 is known by its Header, the AIM Type
         }
 
         var result = new Dictionary<string, string>();
@@ -340,10 +340,15 @@ public class MetadataTests
                                           .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
             {
                 var l2 = TryParse(file);
-                if (l2?["Identifier"]?["AIMName"]?.GetValue<string>() is not { } aim) continue;
+                if (l2?["Header"]?.GetValue<string>() is not { } aim) continue;
                 // What an L2 leaves to the Implementer ("IsRemote": "") is not topology.
                 foreach (var port in l2["ExternalPorts"]?.AsArray() ?? [])
                     if (port?["IsRemote"] is JsonValue v && v.GetValueKind() == JsonValueKind.String) port["IsRemote"] = false;
+                // The L2 stands for an L3 here, to see its topology load: named, as an L3 is, by ImplementerID + ImplementationID (the Implementer's, here empty and the AIM Type).
+                l2["Identifier"] = new JsonObject { ["ImplementerID"] = "", ["ImplementationID"] = aim, ["AIMName"] = aim };
+                foreach (var sub in l2["SubAIMs"]?.AsArray() ?? [])
+                    if (sub?["Header"]?.GetValue<string>() is { } type)
+                        sub["Identifier"] = new JsonObject { ["ImplementerID"] = "", ["ImplementationID"] = type, ["AIMName"] = type, ["Relation"] = sub["Identifier"]?["Relation"]?.DeepClone() ?? "" };
                 File.WriteAllText(Path.Combine(copy, aim + ".json"), l2.ToJsonString());
                 if (l2["Topology"] is JsonArray { Count: > 0 }) composites.Add(aim);
             }

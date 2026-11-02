@@ -10,6 +10,8 @@ namespace Mpai.Aif.Tests;
 // Schema and is an instance of the AIM Metadata (MET-1, MET-2, AIM-6), identifies its Ports by Data Type and Port Number (MET-4, MET-5), and states the Terms of what it obtains (MET-8 to MET-10)
 // - and the Workflows: each is read without error, names the one Module it is written against, and offers to and asks of Ports its Module declares (WDL-1, WDL-2, WDL-4, WDL-5).
 // What a test cannot see - the User Agent only through the Controller API (UA-1 to UA-7), an AIM that keeps no state between executions (AIM-4) - is reviewed in the source.
+// AIM-4, the author's reading (2026-11-01): in continuous execution the run of the Module is one execution, so the buffers the ARP AIMs (AAP, PAP, TIC, VAP) and SRA keep while the run lasts are not state
+// between executions. (Read strictly, with each run on a set of inputs an execution, they would be kept in Private Storage.)
 [Trait("Group", "Fast")]
 public class CaeUscAifConformanceTests
 {

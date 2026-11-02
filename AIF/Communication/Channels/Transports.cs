@@ -131,7 +131,10 @@ public abstract class ChannelTransport : IChannelTransport
 
     public abstract string Name { get; }
 
-    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(spec.Id, _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote,
+    // What identifies a Channel on this transport: the writer's end, as the Channel's Id says. A transport whose Channels have several writers says otherwise.
+    protected virtual string Key(ChannelSpec spec) => spec.Id;
+
+    internal ChannelCore Core(ChannelSpec spec) => channels.GetOrAdd(Key(spec), _ => new ChannelCore(spec, Clock, (s, m) => Lost?.Invoke(s, m), r => IsHere(spec, r), Remote,
                                                                                                    (s, r, m) => Delivered?.Invoke(s, r, m), () => Stamped));
 
     internal ChannelCore? Core(string channelId) => channels.TryGetValue(channelId, out var core) ? core : null;
@@ -186,6 +189,35 @@ public sealed class InProcessTransport : ChannelTransport
     private sealed class Writer(ChannelCore core) : IChannelWriter
     {
         public ChannelSpec Spec => core.Spec;
+        public long Written => core.Written;
+
+        public ValueTask<bool> WriteAsync(PortMessage message, int timeoutMs = -1, CancellationToken cancel = default)
+        {
+            core.Stamp(message);
+            return core.DeliverAsync(message, timeoutMs, cancel);
+        }
+    }
+}
+
+// BUS (M3287, agreed 2026/11/01): one Channel for a Data Type in a Module, with any number of writers and any number of readers; what a reader reads is the last
+// value written by anyone. The Ports on it are the Ports of the Module's AIMs that say so - an Output Port with the transport Bus, an Input Port accepting it
+// - and their Data Type is the Bus: no Topology joins them. Every writer puts into the same reader ends, which keep one value (Depth 1, DropOldest); nothing
+// relays the Message, as in InProcess.
+public sealed class BusTransport : ChannelTransport
+{
+    public BusTransport(IClock? clock = null) : base(clock) { }
+
+    public override string Name => "Bus";
+
+    // The Channel of a Bus is its Module's and its Data Type's, whoever writes.
+    protected override string Key(ChannelSpec spec) => $"{spec.Module}/bus/{spec.Writer.DataType}";
+
+    public override IChannelWriter OpenWriter(ChannelSpec spec) => new Writer(spec, Core(spec));
+
+    // A writer of the Bus is its own: its Spec is its Port's, the Channel it writes is the Bus's.
+    private sealed class Writer(ChannelSpec spec, ChannelCore core) : IChannelWriter
+    {
+        public ChannelSpec Spec => spec;
         public long Written => core.Written;
 
         public ValueTask<bool> WriteAsync(PortMessage message, int timeoutMs = -1, CancellationToken cancel = default)

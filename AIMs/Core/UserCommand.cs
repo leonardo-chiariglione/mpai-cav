@@ -139,6 +139,11 @@ public sealed class UserCommandRQ
     // the one the scene had. Audio Scene Editing's.
     public JsonArray?        ClosedSpace     { get; init; }
 
+    // THE SCENES BY NAME (the author, 2026/10/28): a new empty Scene is opened; a Scene kept is opened; the open Scene is given a name. The Scene that was open stays kept. Audio Scene Editing's.
+    public string?           NewScene        { get; init; }
+    public string?           OpenedScene     { get; init; }
+    public string?           NamedScene      { get; init; }
+
     // THE ACOUSTICS OF THE OPEN SCENE (the Scene part of the Acoustic Profile: reflectivity, reverberation, diffusion, absorption, Doppler), as the Scene is to have
     // them. Audio Scene Editing's, as ModifiedObjects, with the Object part of the profile, is Audio Object Editing's.
     public SceneChange?      ModifiedScene   { get; init; }
@@ -190,12 +195,23 @@ public static class Amounts
         : attitude.Position is not { } p || !(p.CartPosition is { Length: >= 3 } || p.SpherPosition is { Length: >= 3 }) ? "the position needs its coordinates (three numbers)"
         : attitude.Orientation is null ? "the orientation is required"
         : null;
+
+    // Why a Spatial Attitude that may state only the parts that change is not one (a move, a change), or null when it is: at least one of the position, the orientation and the time,
+    // and a position that is stated has its coordinates.
+    public static string? ChangeProblem(SpatialAttitude? attitude) =>
+        attitude is null ? "the new Spatial Attitude is required: the position, the orientation or the time, as numbers"
+        : !attitude.PositionStated && !attitude.OrientationStated && attitude.SpatialAttitudeTime is null ? "the new Spatial Attitude states nothing: a position, an orientation or a time is required"
+        : attitude.PositionStated && !(attitude.Position.CartPosition is { Length: >= 3 } || attitude.Position.SpherPosition is { Length: >= 3 }) ? "the position needs its coordinates (three numbers)"
+        : null;
 }
 
 public sealed class ObjectPlacement
 {
     public ManagedObject?    ObjectID        { get; init; }
     public SpatialAttitude?  SpatialAttitude { get; init; }
+
+    // A kept Acoustic Profile to delete, by its AcousticProfileID (DeletedObjects).
+    public string?           AcousticProfileID { get; init; }
 }
 
 public sealed class ObjectMovements
@@ -206,8 +222,11 @@ public sealed class ObjectMovements
 public sealed class ObjectMovement
 {
     public ManagedObject?   ObjectID           { get; init; }
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile    { get; init; }
     public SpatialAttitude? OldSpatialAttitude { get; init; }
+    // In full, or only the parts that change (Position, Orientation, SpatialAttitudeTime); what is not stated keeps its value.
+    [JsonConverter(typeof(SpatialAttitudeOrChangeConverter))]
     public SpatialAttitude? NewSpatialAttitude { get; init; }
 }
 
@@ -239,6 +258,8 @@ public sealed class ObjectTranslation
 
 public sealed class SceneChange
 {
+    // In full, or the AcousticProfileID of a kept one.
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile { get; init; }
 }
 
@@ -250,8 +271,13 @@ public sealed class ObjectChanges
 public sealed class ObjectChange
 {
     public ManagedObject?   ObjectID        { get; init; }
+    [JsonConverter(typeof(SpatialAttitudeOrChangeConverter))]
     public SpatialAttitude? SpatialAttitude { get; init; }
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile { get; init; }
+
+    // THE LOUDNESS OF THE OBJECT in a ModifiedObjects entry (M3282 UCM-5), in LUFS. Not a feature of ChangedObjects (its feature is Level).
+    public double?          LUFS            { get; init; }
 
     // THE FEATURES OF AN OBJECT THAT A ChangedObjects COMMAND EDITS (the author, 2026/10/26): a defined list, each feature changed by a value. The schema lists them by name,
     // so that nothing else is allowed; an AIM that finds another name reports it (Unknown). The sound itself is not a feature: it is not edited.
@@ -332,7 +358,7 @@ public static class CommandReader
 {
     public static readonly string[] Operations =
         ["UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "DeletedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects",
-         "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects"];
+         "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects", "NewScene", "OpenedScene", "NamedScene"];
 
     // The command; null when the JSON is not one, and then rejection is the report to give.
     public static UserCommand? Read(string json, out UserCommand? rejection)

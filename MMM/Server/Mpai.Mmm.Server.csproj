@@ -23,6 +23,11 @@
     <ProjectReference Include="..\Instance\Mpai.Mmm.csproj" />
     <!-- Use Case 2, which the server can play (demo mode) -->
     <ProjectReference Include="..\Client\Mpai.Mmm.Client.csproj" />
+    <!-- The summary on request: the language model (Ollama, of Entity Dialogue Processing) and the voices of Text-to-Speech -->
+    <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
+    <ProjectReference Include="..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <!-- What the Secretary understands: the JSON Interface of the Voice Command Interface -->
+    <ProjectReference Include="..\..\AIMs\MMC\V2.5\JSI\Mpai.Mmc.Jsi.csproj" />
   </ItemGroup>
 
 </Project>

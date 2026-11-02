@@ -53,7 +53,7 @@ public sealed class VideoconferenceClientReceiver(string instanceId, IReadOnlyDi
 
         var id = PdxAimProcessor.IdOf(update, update["AvatarOrAvatarID"] as JsonArray ?? new JsonArray());
         if (id.Length == 0) return made;
-        if (update["AVSceneDescriptors"] is JsonObject scene && (string?)scene["Header"] == Scene) room = scene.DeepClone();
+        if (update["MultimodalSceneDescriptors"] is JsonObject scene && (string?)scene["Header"] == Scene) room = scene.DeepClone();
 
         var at = avatars.FindIndex(a => a.Id == id);
         if (at < 0) { avatars.Add((id, new JsonObject())); at = avatars.Count - 1; }

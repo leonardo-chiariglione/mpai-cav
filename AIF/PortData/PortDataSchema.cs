@@ -51,7 +51,7 @@ public static class PortDataSchema
 
         // The Data Types of the Environment Sensing Subsystem (M3219 3.6).
         ["OSD-OSA-V1.5"] = "OSD/V1.5/data/SpatialAttitude.json",
-        ["CAV-GNO-V2.0"] = "CAV2/V2.0/data/GNSSObject.json",
+        ["CAV-NSO-V2.0"] = "CAV2/V2.0/data/GNSSObject.json",
         ["CAV-WDT-V2.0"] = "CAV2/V2.0/data/WeatherData.json",
         ["CAV-FED-V2.0"] = "CAV2/V2.0/data/FullEnvironmentDescriptors.json",
         ["CAV-BED-V2.0"] = "CAV2/V2.0/data/BasicEnvironmentDescriptors.json",
@@ -62,6 +62,10 @@ public static class PortDataSchema
         ["OSD-BAS-V1.5"] = "OSD/V1.5/data/BasicAudioSceneDescriptors.json",
         ["OSD-BSS-V1.5"] = "OSD/V1.5/data/BasicSpeechSceneDescriptors.json",
         ["OSD-AUO-V1.5"] = "OSD/V1.5/data/AudioObject.json",
+        ["OSD-ASD-V1.5"] = "OSD/V1.5/data/AudioSceneDescriptors.json",
+        ["OSD-SPO-V1.5"] = "OSD/V1.5/data/SpeechObject.json",
+        ["OSD-SSD-V1.5"] = "OSD/V1.5/data/SpeechSceneDescriptors.json",
+        ["OSD-MSD-V1.5"] = "OSD/V1.5/data/MultimodalSceneDescriptors.json",
         ["OSD-OPV-V1.5"] = "OSD/V1.5/data/PointOfView.json",
         ["CAE-UCM-V1.0"] = "CAE3/V1.0/data/UserCommand.json"
     };

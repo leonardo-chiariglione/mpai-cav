@@ -16,7 +16,7 @@
     "PositionSpaceTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Position applies." },
 
     "General":              { "type": "object", "additionalProperties": false, "required": [ "CoordType" ], "description": "General classification data of the Object.", "properties": {
-      "CoordType":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Geodesic, Toroidal." },
+      "CoordType":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Cylindrical, Geodetic, Toroidal." },
       "ObjectType":         { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json", "description": "Media type: one of Speech, Audio, Visual, 3D Model, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
 
@@ -35,6 +35,7 @@
     "SpherAccel":           { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical acceleration (r, φ, θ) in metres/s² and degrees/s²." },
     "SpherAccelAccuracy":   { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical acceleration component (r, φ, θ)." },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the frame, the axes and their handedness, the units and the conventions of this Position." },
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                               "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Position in a trusted data exchange context." },
     "DescrMetadata":        { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Position instance (plain text, max 2048 characters)." } } }

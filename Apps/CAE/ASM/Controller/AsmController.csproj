@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AsmController - THE CONTROLLER of Audio Scene Management by voice, a program of its own. The User Agent (the window) is another program and talks to this one through the
+       Controller API only (Mpai.Mas.Client on one side, Mpai.Mas.Server on the other); it tells this Controller to start the execution of the L3 and this Controller starts the Module and
+       its AIMs, as the L3 says. Nothing of the User Agent holds a Controller, a Module or an AIM. The same Controller also holds the Module that makes the machine's voice (PAF-RSR). -->
+
+  <PropertyGroup>
+    <AssemblyName>AsmController</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Mpai.Cae.Asm.Controller</RootNamespace>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\..\MAS\Service\src\ControllerApiRunner.cs" Link="ControllerApiRunner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <ProjectReference Include="..\..\..\MAS\Server\Mpai.Mas.Server.csproj" />
+    <ProjectReference Include="..\Voice\AsmVoice.csproj" />
+    <!-- the AIMs the Controller builds: those of the Voice Command Interface and of Audio Scene Management, and the leaves of the machine's voice -->
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
+  </ItemGroup>
+
+</Project>

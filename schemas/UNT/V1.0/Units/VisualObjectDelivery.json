@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-VOD-V1.0",
+  "Group": "Delivery",
+  "Category": "Media",
+  "Description": "Visual Object Delivery: delivers Visual Objects, and the Scene Descriptors where the Data Type exists, to the real world through a display, and may write or send them to a disk or a network, objects and scenes, Basic or full.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Visual",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Scene",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "DeliveredVisual",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5",
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredVisual",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5",
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

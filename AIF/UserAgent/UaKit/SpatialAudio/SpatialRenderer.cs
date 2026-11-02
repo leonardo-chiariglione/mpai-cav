@@ -18,8 +18,8 @@ namespace Mpai.SpatialAudio;
 // (counterclockwise seen from above), 0 facing ahead; its pitch raises the front.
 // Steam Audio's own frame - X right, Y up, -Z ahead - is reached by (X, Z, -Y).
 //
-// Not rendered yet: the room's reverberation (the Scene part of the Acoustic
-// Profile, or a Closed Space), the Doppler effect, and a source's roll.
+// The room (RoomAcoustics, the Scene part of the Acoustic Profile) is heard when one is given: reflections off its walls and its reverberation.
+// Not rendered yet: the Doppler effect, and a source's roll.
 public sealed class SpatialRenderer : IDisposable
 {
     public enum Layout { Binaural, Mono, Stereo, Quad, Surround51, Surround71 }
@@ -79,9 +79,11 @@ public sealed class SpatialRenderer : IDisposable
     }
 
     // The scene heard from the user, interleaved, Channels channels at Rate.
-    public float[] Render(IReadOnlyList<Source> sources, User user)
+    public float[] Render(IReadOnlyList<Source> sources, User user, RoomAcoustics? room = null)
     {
-        var length = sources.Count == 0 ? 0 : sources.Max(s => s.Samples.Length);
+        var dry = sources;
+        if (room is not null) sources = WithReflections(sources, user, room);
+        var length = sources.Count == 0 ? 0 : sources.Max(s => s.Samples.Length) + (room is null ? 0 : (int)((room.Time + room.Onset) * Rate));
         var frames = (length + Frame - 1) / Frame;
         var mix = new float[frames * Frame * Channels];
         var audio = Audio();
@@ -165,7 +167,45 @@ public sealed class SpatialRenderer : IDisposable
                 }
             }
         }
+        if (room is not null && dry.Count > 0) AddLate(mix, dry, user, room);
         return mix;
+    }
+
+    // THE FIRST REFLECTION OFF EACH WALL: a source in the mirror image of the room, quieter by what the wall takes and later by the longer way.
+    private static List<Source> WithReflections(IReadOnlyList<Source> sources, User user, RoomAcoustics room)
+    {
+        var all = new List<Source>(sources);
+        foreach (var s in sources)
+        {
+            var direct = Distance(s.Position, user.Position);
+            var face = 0;
+            foreach (var image in room.Images(s.Position))
+            {
+                var wall = face++;
+                var later = (Distance(image, user.Position) - direct) / RoomAcoustics.SpeedOfSound;
+                if (later < 0 || later > room.Onset) continue;      // the early part ends where the late sound begins
+                var lead = (int)Math.Round(later * Rate);
+                var samples = new float[lead + s.Samples.Length];
+                s.Samples.CopyTo(samples, lead);
+                all.Add(s with { Samples = samples, Position = image, Gain = s.Gain * room.Reflection(wall) });
+            }
+        }
+        return all;
+    }
+
+    private static double Distance(double[] a, double[] b) => Math.Sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
+
+    // THE LATE SOUND: what the sources give goes through the reverberator; both ears get theirs. Its level is the room's (the critical distance, from the volume and the time T60): the diffuse sound is
+    // the same wherever the source is, and the direct sound falls with the distance - so a listener far from a source hears more of the room.
+    private void AddLate(float[] mix, IReadOnlyList<Source> sources, User user, RoomAcoustics room)
+    {
+        var frames = mix.Length / Channels;
+        var feed = new float[frames];
+        foreach (var s in sources)
+            for (var i = 0; i < s.Samples.Length && i < frames; i++) feed[i] += (float)(s.Samples[i] * s.Gain);
+        var late = room.Late(feed, Rate, Channels == 2 ? 2 : 1);
+        for (var i = 0; i < frames; i++)
+            for (var c = 0; c < Channels; c++) mix[i * Channels + c] += late[late.Length == 2 ? c : 0][i];
     }
 
     public void Dispose()

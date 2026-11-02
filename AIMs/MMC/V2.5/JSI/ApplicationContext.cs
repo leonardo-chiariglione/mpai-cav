@@ -122,6 +122,10 @@ public sealed class ApplicationContext
     public IReadOnlyList<(IReadOnlyList<string> Words, string Say)> Asks =>
         (Root["Asks"] as JsonArray)?.OfType<JsonObject>().Select(a => ((IReadOnlyList<string>)Texts(a, "Words"), (string?)a["Say"] ?? "")).ToList() ?? [];
 
+    // A QUESTION FOR WHAT A REQUEST HALF SAYS: Asks that carry a Pattern (a regular expression the request matches) and, optionally, an Unless (one it must not match) - two coordinates given and not the third.
+    public IReadOnlyList<(string Pattern, string? Unless, string Say)> PatternAsks =>
+        (Root["Asks"] as JsonArray)?.OfType<JsonObject>().Where(a => a["Pattern"] is not null).Select(a => ((string)a["Pattern"]!, (string?)a["Unless"], (string?)a["Say"] ?? "")).ToList() ?? [];
+
     public IReadOnlyList<JsonObject> Examples => (Root["Examples"] as JsonArray)?.OfType<JsonObject>().ToList() ?? [];
 
     private string Text(string name) => (string?)Root[name] ?? "";

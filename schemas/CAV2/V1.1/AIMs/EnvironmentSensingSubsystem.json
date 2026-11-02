@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-ESS-V1.1"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "CAV-ESS-V1.1",
 
   "APIProfile":       "Basic",
@@ -19,14 +19,14 @@
                      {"Name": "BasicEnvironmentDescriptors", "Direction": "Output", "DataType": "CAV-BED-V1.1",                     "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "Alert",                       "Direction": "Output", "DataType": "CAV-ALT-V1.1",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
-  "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-SAG-V1.1", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-ASD-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-VSD-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-RSD-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-LSD-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-USD-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-OMS-V1.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-BED-V1.1", "Relation": "" } }],
+  "SubAIMs":         [{ "Header": "CAV-SAG-V1.1", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-ASD-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-VSD-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-RSD-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-LSD-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-USD-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "OSD-OMS-V1.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "CAV-BED-V1.1", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } }],
 
   "Topology":        [{ "Output": { "AIMName": "",             "PortName": "WeatherData"                  }, "Input": { "AIMName": "CAV-BED-V1.1", "PortName": "WeatherData" } },
                      { "Output": { "AIMName": "",             "PortName": "SpatialAttitude"              }, "Input": { "AIMName": "CAV-SAG-V1.1", "PortName": "SpatialAttitude" } },

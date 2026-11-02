@@ -46,7 +46,7 @@ public static class RequestGuards
             foreach (var part in name.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(p => p.Length >= 4))
                 if (tokens.Any(t => t.Length >= 4 && Distance(t, part) <= (Math.Min(t.Length, part.Length) >= 5 ? 2 : 1))) return null;
         var question = (string?)needs["Question"] ?? "Which object do you mean?";
-        return question + " " + string.Format((string?)needs["Names"] ?? "The objects are: {0}.", string.Join(", ", names));
+        return (string?)needs["Names"] is { Length: 0 } ? question : question + " " + string.Format((string?)needs["Names"] ?? "The objects are: {0}.", string.Join(", ", names.Take(5)));      // a long list of what is kept is not a help: Names empty says none of it
     }
 
     // The paths whose words are in the request (the same reading as the guide's Triggers).

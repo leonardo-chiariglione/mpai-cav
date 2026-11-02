@@ -78,15 +78,28 @@ public class HighwayOncomingTests
 
     // Drives the scenario, the CAV on perfect perception of what its own sensors can see - the truck hides what is behind it, and
     // nothing is seen beyond 150 m - and, if cooperate, hearing the CAVs that come the other way.
-    public static (List<Trace> Trace, HighwayWorld World) Drive(HighwayWorld world, int seconds, bool cooperate)
+    public static (List<Trace> Trace, HighwayWorld World) Drive(HighwayWorld world, int seconds, bool cooperate, double? roadFriction = null, double? decisionSeconds = null, string? planner = null)
     {
         var sim = new HighwaySimulation(world, HighwayScenarios.Planned);
         var settings = HighwayScenarios.Settings(sim, opposingLane: true);
+        if (decisionSeconds is not null || planner is not null)
+        {
+            var tuned = JsonNode.Parse(File.ReadAllText(settings))!.AsObject();
+            if (decisionSeconds is { } decision) tuned["1CAV-PSP-V2.0-I01"]!["DecisionSeconds"] = decision.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (planner is not null)
+            {
+                var msp = tuned["1CAV-MSP-V2.0-I01"] as JsonObject ?? new JsonObject();
+                msp["Planner"] = planner;
+                tuned["1CAV-MSP-V2.0-I01"] = msp;
+            }
+            File.WriteAllText(settings, tuned.ToJsonString());
+        }
         var remotes = world.Others.Where(v => v.CavId is not null).Select(v => new RemoteCav(v, sim.Map)).ToList();
         var trace = new List<Trace>();
         try
         {
             using var cav = new CavInTheLoop(sim.Map, "H1", settings, withEss: false);
+            if (roadFriction is { } friction) cav.RoadState(friction);
             double held = 0; double? north = null;
             for (var step = 0; step < seconds * 10 && !sim.Collided; step++)
             {
@@ -112,6 +125,23 @@ public class HighwayOncomingTests
         }
         finally { try { File.Delete(settings); } catch { } }
         return (trace, world);
+    }
+
+    // THE SPACE-TIME PLANNER ON THE TWO-WAY ROAD: behind the truck it keeps the safe distance of the Motion Constraints - not seconds more - so that the Path Selection Planning
+    // sees it held up; told by the other CAVs, it pulls out when the lane is free, speeds up to the speed it wants once out, passes and returns.
+    [Fact]
+    [Trait("Duration", "Long")]
+    public void TheSpaceTimePlannerPassesTheTruckToo()
+    {
+        var world = OncomingScenarios.TruckAndOncomingTraffic();
+        var (trace, _) = Drive(world, 100, cooperate: true, roadFriction: 0.9, decisionSeconds: 4, planner: "SpaceTime");
+        Assert.Empty(world.EgoCollisions);
+        Assert.Contains(trace, t => t.Y > 3.3);                                         // it pulled out
+        Assert.Contains(trace, t => t.Y > 3.3 && t.X > t.TruckX + 6);                  // and passed the truck in the other lane
+        var last = trace[^1];
+        Assert.True(last.Y < 0.2, $"back in its lane at the end: y = {last.Y:0.00}");
+        Assert.True(last.X > last.TruckX + 30, "ahead of the truck at the end");
+        Assert.True(world.NearestToEgo > 1.5, $"nearest approach {world.NearestToEgo:0.0} m");
     }
 
     private static void Report(string name, List<Trace> trace)

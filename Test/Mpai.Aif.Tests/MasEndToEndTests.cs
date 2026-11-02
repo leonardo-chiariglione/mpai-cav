@@ -435,11 +435,15 @@ public class MasDeliverTests
                 deliver Throttle (CAV-MRC-V2.0) to device "Vehicle"
                 deliver Steer (CAV-WHC-V2.0) to device "Vehicle"
             """;
-        foreach (var (name, fault, wait) in new[] { ("the workflow ends", (TimeSpan?)null, "4s"), ("the MAS degrades", TimeSpan.FromSeconds(2), "10s") })
+        // The interlock follows the Module's policy (OnDegraded): the vehicle is brought to its safe state when the workflow ends, and when the Module is stopped - by its policy, StopModule, here by
+        // the test; an AIM that only reports (the planner gives a Message with nothing to follow, which AMI reports) does not stop the Module under Continue, and the vehicle goes on until the
+        // workflow ends. What stops commanding is the device's own business: the Unit's timeout.
+        foreach (var (name, fault, wait, stopAt) in new[] { ("the workflow ends", (TimeSpan?)null, "4s", (TimeSpan?)null), ("the Module is stopped", (TimeSpan?)null, "10s", (TimeSpan?)TimeSpan.FromSeconds(2)), ("the MAS reports, OnDegraded Continue", (TimeSpan?)TimeSpan.FromSeconds(2), "5s", (TimeSpan?)null) })
         {
             var map = RoadMap.Grid(3);
             var sim = new Simulation(map, map.FastestRoute("W00", "W20")!, [], seed: 7, egoSpeed: 10);
             using var loop = new MasInTheLoop(sim.Path.At(0).Heading * 180 / Math.PI);
+            if (stopAt is { } at) _ = Task.Delay(at).ContinueWith(_ => loop.Api.StopFlow(mas));
             using var vehicle = new VehicleDevice(sim);
             var said = new List<string>();
             var devices = new DeviceRegistry().RegisterDevice("Vehicle", vehicle).RegisterDevice("Planner", new PlannerDevice(sim, fault));

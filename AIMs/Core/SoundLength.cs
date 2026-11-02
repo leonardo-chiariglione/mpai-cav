@@ -32,6 +32,14 @@ public static class SoundLength
         return Math.Round((double)data.Value / (channels * (bits / 8.0) * rate), 6);
     }
 
+    // The end, in seconds, that a Space/Time states: the end of its first relative time segment, when that is later than its start (an instant states no end); null when it states none.
+    public static double? EndOf(SpaceTime? placement)
+    {
+        var segment = placement?.Time?.SimpleTimeData?.FirstOrDefault(s => s.TimeType == false);
+        if (segment is null || segment.EndTime <= segment.StartTime) return null;
+        return segment.TimeUnit switch { "01" => segment.EndTime / 1e3, "10" => segment.EndTime / 1e6, "11" => segment.EndTime / 1e9, _ => segment.EndTime };
+    }
+
     // The start, in seconds, of a Space/Time's first Time segment: where in its parent (or in its Scene) a member begins (a relative time); 0 when it states none.
     public static double StartOf(SpaceTime? placement)
     {

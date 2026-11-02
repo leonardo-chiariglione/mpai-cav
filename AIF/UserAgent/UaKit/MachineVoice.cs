@@ -22,12 +22,12 @@ public sealed class MachineVoice : IDisposable
 
     private readonly AvatarUaHost _avatar;
     private readonly string _machineName;
-    private readonly Func<ControllerApi> _controller;
+    private readonly Func<IControllerApi> _controller;
     private readonly Action<string, Exception> _record;
-    private ControllerApi? _api;
+    private IControllerApi? _api;
     private bool _started;
 
-    public MachineVoice(AvatarUaHost avatar, string machineName, Func<ControllerApi> controller, Action<string, Exception> record)
+    public MachineVoice(AvatarUaHost avatar, string machineName, Func<IControllerApi> controller, Action<string, Exception> record)
     { _avatar = avatar; _machineName = machineName; _controller = controller; _record = record; }
 
     public async Task SayAsync(string words)
@@ -91,6 +91,6 @@ public sealed class MachineVoice : IDisposable
     public void Dispose()
     {
         try { if (_started) _api?.StopFlow(RsrModule); } catch { }
-        try { _api?.Dispose(); } catch { }
+        try { (_api as IDisposable)?.Dispose(); } catch { }
     }
 }

@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "MMC-NPR-V2.5-I01", "AIMName": "MMC-NPR-V2.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "MMC-NPR-V2.5",
 
   "APIProfile":           "Basic",
@@ -12,10 +12,10 @@
                            {"Name": "MachineID",    "Direction": "Input",  "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-OCR-V2.5", "Relation": "Internal"}},
-                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-CTS-V2.5", "Relation": "Internal"}},
-                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": "Internal"}},
-                           {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": "Internal"}}],
+  "SubAIMs":              [{"Header": "MMC-OCR-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "MMC-CTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "MMC-TTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "PAF-PMX-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "MMC-OCR-V2.5", "DataType": "OSD-BVO-V1.5"}},
                            {"Output": {"AIMName": "MMC-OCR-V2.5", "DataType": "OSD-TXO-V1.5"}, "Input": {"AIMName": "MMC-CTS-V2.5", "DataType": "OSD-TXO-V1.5"}},

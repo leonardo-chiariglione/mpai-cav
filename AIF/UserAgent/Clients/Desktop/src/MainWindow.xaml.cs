@@ -233,7 +233,7 @@ public partial class MainWindow : Window
 
     // THE VOICES THAT SPEAK: English, French, German, Spanish, Portuguese and Italian. The Japanese and Chinese voices are
     // configured but do not speak (they read "Japanese character"), so a text in those is shown and not spoken.
-    private static readonly HashSet<string> SpokenLanguages = new(StringComparer.OrdinalIgnoreCase) { "en", "fr", "de", "es", "pt", "it" };
+    private static readonly HashSet<string> SpokenLanguages = new(StringComparer.OrdinalIgnoreCase) { "en", "fr", "de", "es", "pt", "it", "el" };
 
     // The words as the Text Object the Module speaks: in their language when it is known, which chooses the voice.
     private static BasicTextObject WordsIn(string words, string? language) =>
@@ -1192,7 +1192,7 @@ public partial class MainWindow : Window
     private static readonly (string Code, string Name)[] Languages =
     {
         ("en", "English"),  ("it", "Italiano"), ("es", "Espanol"), ("pt", "Portugues"),
-        ("fr", "Francais"), ("de", "Deutsch"),  ("ja", "Nihongo"), ("zh", "Zhongwen")
+        ("fr", "Francais"), ("de", "Deutsch"),  ("el", "Ellinika"), ("ja", "Nihongo"), ("zh", "Zhongwen")
     };
 
     // A small window with the two languages, as a translation App offers them.

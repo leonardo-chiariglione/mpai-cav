@@ -120,7 +120,7 @@ public partial class RcaShell : ComponentBase
     private static readonly (string Code, string Name)[] Languages =
     {
         ("en", "English"),  ("it", "Italiano"), ("es", "Espanol"), ("pt", "Portugues"),
-        ("fr", "Francais"), ("de", "Deutsch"),  ("ja", "Nihongo"), ("zh", "Zhongwen")
+        ("fr", "Francais"), ("de", "Deutsch"),  ("el", "Ellinika"), ("ja", "Nihongo"), ("zh", "Zhongwen")
     };
 
     // ---- running ------------------------------------------------------------
@@ -227,8 +227,8 @@ public partial class RcaShell : ComponentBase
 
     private const string MasModule = "1MAS-APP-V1.0-I01";
 
-    // The voices that speak: English, French, German, Spanish, Portuguese, Italian. The Japanese and Chinese voices do not speak yet.
-    private static readonly HashSet<string> SpokenLanguages = new(StringComparer.OrdinalIgnoreCase) { "en", "fr", "de", "es", "pt", "it" };
+    // The voices that speak: English, French, German, Spanish, Portuguese, Italian, Greek. The Japanese and Chinese voices do not speak yet.
+    private static readonly HashSet<string> SpokenLanguages = new(StringComparer.OrdinalIgnoreCase) { "en", "fr", "de", "es", "pt", "it", "el" };
 
     private static BasicTextObject WordsIn(string words, string? language) =>
         BasicTextObject.FromText(words, language is null || !SpokenLanguages.Contains(language) ? null : new TextQualifier

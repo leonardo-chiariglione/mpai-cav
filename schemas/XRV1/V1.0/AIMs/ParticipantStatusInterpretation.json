@@ -3,7 +3,8 @@
   "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/ParticipantStatusInterpretation.json",
   "title":                "Participant Status Interpretation V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-PTI-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":               "XRV-PTI-V1.0",
 
   "APIProfile":           "Basic",
   "Description":          "The Participant Status Interpretation (XRV-PTI) AIM interprets the RE Participant Descriptors and VE Participant Descriptors to produce the RE and VE Participant Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",

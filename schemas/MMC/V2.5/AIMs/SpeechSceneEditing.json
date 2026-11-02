@@ -4,7 +4,7 @@
   "title":                "Speech Scene Editing V2.5",
   "Header":               "MMC-SSE-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-SSE-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
   "Description":          "Speech Scene Editing. One Speech Scene is open at a time: a Speech Scene arriving is opened, and the first Object added to no open Scene creates one. The User Command places Speech Objects - named as the User names them - (AddedObjects), moves them, changes where they are, takes them out and sets where the Scene is heard from (UserPoV). Every edit is a new version in Shared Storage; a member is held by its identifier and read from Shared Storage when the Scene is output. Outputs: the open Speech Scene, and the User Command, with its response (UserCommandRS) saying how each action was executed.",

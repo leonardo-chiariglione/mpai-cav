@@ -15,7 +15,7 @@ namespace Mpai.Aif.PortData;
 //
 // ONE CODEC PER DATA TYPE, AND NO APPLICATION ANYWHERE. A codec knows a Data
 // Type. It does not know which Module is running, which application asked, or
-// what any port is called. Adding OSD-3OD means adding a codec; it never means
+// what any port is called. Adding a Data Type means adding a codec; it never means
 // editing the server that three applications share.
 public interface IPortDataCodec
 {
@@ -66,6 +66,11 @@ public sealed class PortDataCodecs
             .Register(new JsonObjectCodec("OSD-BSS-V1.5"))
             .Register(new JsonObjectCodec("OSD-BMS-V1.5"))
             .Register(new JsonObjectCodec("OSD-AUO-V1.5"))
+            // the Audio Scene Descriptors and the other scenes the Module of ASM gives (ASM-VCI.orch)
+            .Register(new JsonObjectCodec("OSD-ASD-V1.5"))
+            .Register(new JsonObjectCodec("OSD-SPO-V1.5"))
+            .Register(new JsonObjectCodec("OSD-SSD-V1.5"))
+            .Register(new JsonObjectCodec("OSD-MSD-V1.5"))
             .Register(new JsonObjectCodec("OSD-OPV-V1.5"))
             .Register(new JsonObjectCodec("CAE-UCM-V1.0"))
             .Register(new BooleanCodec())

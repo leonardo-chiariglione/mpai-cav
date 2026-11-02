@@ -142,9 +142,12 @@ public sealed class EdpAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(Facts(message, facts, heardNow));
         }
         string? userText = ReadText(message, _textPort);
+        // A message that carries no text but something else - the geometry of a scene, say - is context, not words: nothing is said to it. An empty message is the error.
         if (userText is null)
             return System.Threading.Tasks.Task.FromResult(
-                Message.Error(message.MessageId, _instanceId, "no Text Object on input port"));
+                message.Ports.Values.Any(v => !string.IsNullOrWhiteSpace(v))
+                    ? new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = new Dictionary<string, string>() }
+                    : Message.Error(message.MessageId, _instanceId, "no Text Object on input port"));
 
         // NO WORDS - a sound, a silence - IS NOTHING SAID: no reply, and the
         // conversation's memory goes on as it came in.

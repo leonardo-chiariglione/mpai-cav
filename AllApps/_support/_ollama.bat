@@ -6,6 +6,7 @@ powershell -NoProfile -Command "if ((Get-NetTCPConnection -LocalPort 11434 -Stat
 if %errorlevel%==0 goto ready
 echo Starting Ollama...
 set OLLAMA_MODELS=%MPAI_ROOT%\Support\Ollama\models
+set OLLAMA_KEEP_ALIVE=-1
 start "Ollama" /min "%MPAI_ROOT%\Support\Ollama\bin\ollama.exe" serve
 :wait
 powershell -NoProfile -Command "Start-Sleep 2; if ((Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue)) { exit 0 } else { exit 1 }"

@@ -24,16 +24,20 @@
   #caption[hidden] { display: none; }
   #captionNote { margin-top: 6px; font-size: 15px; font-weight: 400; color: #f2c94c; max-width: 760px; }
   #captionNote:empty { display: none; }
+  /* THE BAR of the buttons of the meeting, bottom left: end, share, room window, mic, hand, summary. */
+  /* THE BAR: one line at the foot of the page, so that the room has almost the whole window. */
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 8px; padding: 3px 12px; background: color-mix(in srgb, var(--panel) 80%, transparent); overflow-x: auto; }
+  #bar:empty { display: none; }
+  #bar button, #bar select { background: var(--panel); color: inherit; border: 1px solid #5a8; border-radius: 8px; padding: 0 14px; font-size: 14px; line-height: 1.15; cursor: pointer; }
+  #handsList { position: fixed; right: 10px; top: 54px; z-index: 19; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  #handsList span { background: var(--panel); border-radius: 8px; padding: 4px 12px; font-size: 14px; }
+  #summary { position: fixed; right: 10px; top: 54px; z-index: 18; width: min(430px, calc(100vw - 20px)); max-height: 62vh; overflow: auto; background: var(--panel); border-radius: 10px; padding: 12px 14px; }
+  #summary[hidden] { display: none; }
+  #summary h2 { font-size: 14px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #summary h2 button { background: transparent; color: inherit; border: 1px solid #5a8; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+  #summaryText { white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
   #notice { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); background: var(--panel); border-radius: 8px; padding: 8px 18px; font-size: 16px; max-width: calc(100vw - 40px); text-align: center; z-index: 15; }
   #notice:empty { display: none; }
-  /* A SHARED SCREEN: it fills the window, and the room - the stage - is reduced to a stamp at the bottom right; a click on the stamp changes them over. */
-  #screenView { position: fixed; inset: 0; z-index: 5; background: #000; display: none; align-items: center; justify-content: center; }
-  #screenView img { max-width: 100%; max-height: 100%; }
-  body.screening #screenView { display: flex; }
-  body.screening:not(.swapped) #stage { position: fixed !important; inset: auto 12px 12px auto !important; width: 280px !important; height: auto !important; z-index: 12; border: 2px solid #fff; border-radius: 6px; cursor: pointer; }
-  body.screening:not(.swapped) #labels { display: none; }
-  body.screening.swapped #screenView { inset: auto 12px 12px auto; width: 280px; height: 158px; z-index: 12; border: 2px solid #fff; border-radius: 6px; cursor: pointer; }
-  body.screening.swapped #stage { z-index: 6; }
   .label { color: #fff; font: 12px system-ui, Arial; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 </style>
 <script type="importmap">
@@ -46,7 +50,10 @@
 <body>
 <div id="panel"><h1 id="title">M-Instance</h1><div id="recent" class="muted">waiting for the M-Instance...</div></div>
 <button id="voiceBtn" style="position:fixed;top:10px;right:10px;z-index:20;background:var(--panel);color:inherit;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:14px;cursor:pointer">Voice: on</button>
+<button id="ghostBtn" style="position:fixed;top:10px;right:130px;z-index:20;background:var(--panel);color:inherit;border:1px solid #444;border-radius:8px;padding:6px 14px;font-size:14px;cursor:pointer" title="G">Leave my body</button>
 <div id="notice"></div>
+<div id="bar"></div><div id="handsList"></div>
+<div id="summary" hidden><h2><span id="summaryTitle">Summary</span><button id="summaryUpdate" title="A new summary, from everything said until now">Update</button></h2><div id="summaryText"></div></div>
 <div id="screenView"><img id="screenImg" alt="shared screen"></div>
 <div id="caption" hidden><span id="captionText"></span><div id="captionNote"></div><small id="captionHint"></small></div>
 <script type="module">
@@ -105,7 +112,10 @@ function label(text) {
 // 3D Locations, rendered by their glTF; a door is a Right - the client asks the M-Instance to move its Persona through it (MM-Move) and the M-Instance refuses (403) a User that
 // has no Right to the Location behind it. What stops a walker is the walls; the door is shut until the M-Instance has let the Persona through.
 const W = new URLSearchParams(location.search).has('world') ? await (await fetch('world/world.json', { cache: 'no-store' })).json() : null;
-const solids = [], doors = [], origin = {}, buildingLabels = [];
+const solids = [], doors = [], origin = {}, buildingLabels = [], signBoards = [];
+// What the model of a building does when it has loaded can run before the rest of this page has: the things it uses are defined here, at the top.
+const seatChairs = new Map();                 // seat id -> { pivot, home: Vector3, yaw } - the chairs of the meeting room, one piece for each seat
+let chairsNote = 'not called';
 const blocked = (x, y) => {
   const R = 0.3;
   for (const r of solids) if (x > r[0] - R && x < r[2] + R && y > r[1] - R && y < r[3] + R) return true;
@@ -126,12 +136,12 @@ if (W) {
     origin[b.id] = [b.x, b.y];
     for (const r of b.rooms) origin[r.id] = [b.x + r.x, b.y + r.y];
     for (const r of b.solids) solids.push(r);
-    wl.load(b.model, g => { g.scene.position.set(b.x, 0, -b.y); scene.add(g.scene); });
+    wl.load(b.model, g => { g.scene.position.set(b.x, 0, -b.y); scene.add(g.scene); try { splitChairs(g.scene, b); } catch (e) { chairsNote = 'error: ' + e.message; console.warn('chairs', e); } });
     for (const sg of [b.sign, ...(b.signs ?? [])].filter(Boolean)) {      // a sign: a board with its picture (the logo and the name) on the roof or on a wall, facing the way world.json says
       new THREE.TextureLoader().load(sg.image, tex => {
         tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
         const board = new THREE.Mesh(new THREE.PlaneGeometry(sg.width, sg.height), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
-        board.position.set(sg.x, sg.z + sg.height / 2, -sg.y); board.rotation.y = sg.facing === 'west' ? -Math.PI / 2 : 0; scene.add(board);
+        board.position.set(sg.x, sg.z + sg.height / 2, -sg.y); board.rotation.y = sg.facing === 'west' ? -Math.PI / 2 : 0; board.userData.mmmSign = /mmm-sign/.test(sg.image); signBoards.push(board); scene.add(board);
       });
     }
     const l = label(b.name); l.position.set(b.x, b.height + 0.8, -b.y); scene.add(l); buildingLabels.push(l);
@@ -268,8 +278,33 @@ function armsOnTable(frame, reach, top) {
       if (Math.abs(gap) < 0.003) break;
       height -= gap;
     }
+    u.userData.tableQ = u.quaternion.clone(); f.userData.tableQ = f.quaternion.clone(); h.userData.tableQ = h.quaternion.clone();     // the arm on the table, kept: a raised hand comes back to it
   }
   frame.updateMatrixWorld(true);
+}
+// THE RAISED HAND (MC-3): the Persona's right arm goes straight up, the forearm and the hand as the model came. As for the arms down, nothing is assumed about the model: the upper arm is
+// turned about the Persona's front-to-back axis and the angle that points it upwards is looked for. Lowering it, the arm goes back to the table (seated) or to the side (standing).
+function handUp(g, up) {
+  if (!!g.userData.handRaised === up) return;
+  const u = boneOf(g, /R.?UpperArm$/i), f = boneOf(g, /R.?Forearm$/i), h = boneOf(g, /R.?Hand$/i);
+  if (!u || !f || !h || !u.userData.armRest) return;
+  g.userData.handRaised = up;
+  g.updateMatrixWorld(true);
+  if (!up) {
+    if (g.userData.sitting && u.userData.tableQ) { u.quaternion.copy(u.userData.tableQ); f.quaternion.copy(f.userData.tableQ); h.quaternion.copy(h.userData.tableQ); g.updateMatrixWorld(true); }
+    else armsAtRest(g);
+    return;
+  }
+  u.quaternion.copy(u.userData.armRest); f.quaternion.copy(f.userData.armRest ?? f.quaternion); h.quaternion.copy(h.userData.handRest ?? h.quaternion); g.updateMatrixWorld(true);
+  const out = Math.sign(placeOf(g, f).x - placeOf(g, u).x) || 1, z = axisOf(g, 0, 0, 1), rest = u.userData.armRest;
+  let best = { cost: 1e9, a: 0 };
+  for (let a = -180; a <= 180; a += 3) {
+    u.quaternion.copy(rest); swing(u, z, a); u.updateMatrixWorld(true);
+    const s = placeOf(g, u), e = placeOf(g, f), len = e.distanceTo(s) || 1;
+    const cost = Math.abs((e.x - s.x) * out / len - 0.1) + ((e.y - s.y) / len < 0.8 ? 5 : 0);          // straight up, a hair away from the head
+    if (cost < best.cost) best = { cost, a };
+  }
+  u.quaternion.copy(rest); swing(u, z, best.a); g.updateMatrixWorld(true);
 }
 function armsAtRest(frame) {
   for (const [u, f, h] of [[boneOf(frame, /L.?UpperArm$/i), boneOf(frame, /L.?Forearm$/i), boneOf(frame, /L.?Hand$/i)], [boneOf(frame, /R.?UpperArm$/i), boneOf(frame, /R.?Forearm$/i), boneOf(frame, /R.?Hand$/i)]]) {
@@ -307,7 +342,7 @@ const ELBOW_DROP = 0;   // the elbow (and with it the forearm and the upper arm)
 const HAND_SINK = 0.01;   // the lowest point of a hand on the table is this far (m) below its top, so that from a low eye it can never look as if it hovered
 const TABLE_REACH = 0.58;   // from the Persona's seat to where its wrists rest: the table's edge is 0.5 m ahead, the palms lie beyond it (SEAT_R - TABLE_R in MMM/World/make_world.py)
 function sitPose(g, on) {
-  const L = g.userData.legs; if (!L || !!g.userData.sitting === on) return; g.userData.sitting = on;
+  const L = g.userData.legs; if (!L || !!g.userData.sitting === on) return; g.userData.sitting = on; g.userData.handRaised = false;
   for (const k of ['lt', 'rt', 'lc', 'rc']) { const b = L[k]; if (b) b.quaternion.copy(b.userData.base ??= b.quaternion.clone()); }
   try { armsAtRest(g); } catch (e) { console.warn('arms', e); }
   if (!on) return;
@@ -321,6 +356,54 @@ function sitPose(g, on) {
   }
   try { armsOnTable(g, TABLE_REACH, 0.78 - (0.05 - SIT_DROP)); } catch (e) { console.warn('arms', e); }                                         // the hands on the table (its top 0.78 m high; the Persona is lowered by SIT_DROP)
 }
+
+// THE COMMAND BOARD (MC-1 to MC-5): a box on the table in front of each Persona that sits. On your own the buttons of the meeting are on its lid - end, share, room window, mic, hand, the form and
+// the language of a summary, the summary - and a click on one presses it; on the others' it is their name, and a raised hand. The buttons are the ones of the bar (which is not shown while the
+// board is): the board draws them as they now are and presses them.
+const BOARD_TOP = 0.78 - (0.05 - SIT_DROP);          // the table's top, in the frame of a seated Persona
+const boards = new Map(), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+const barCells = () => [...document.getElementById('bar').children].map((e, i) => ({ e, i })).sort((a, b) => (+a.e.style.order || 0) - (+b.e.style.order || 0) || a.i - b.i).map(x => x.e);
+function boardFor(id, owner) {
+  let b = boards.get(id); if (b) return b;
+  const own = owner === client.name;
+  const group = new THREE.Group(), inner = new THREE.Group();
+  inner.position.set(0, 0.03, own ? 0.72 : 0.78); inner.rotation.x = own ? -0.85 : -0.5; group.add(inner);                  // 0.5 rad towards the one who sits
+  inner.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(own ? 0.84 : 0.34, 0.03, own ? 0.23 : 0.17), new THREE.MeshStandardMaterial({ color: 0x20262e })), { castShadow: true }));
+  const canvas = document.createElement('canvas'); canvas.width = own ? 640 : 256; canvas.height = own ? 160 : 128;
+  const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const lid = new THREE.Mesh(new THREE.PlaneGeometry(own ? 0.82 : 0.32, own ? 0.205 : 0.16), new THREE.MeshBasicMaterial({ map: tex }));
+  lid.rotation.set(-Math.PI / 2, 0, Math.PI); lid.position.y = 0.0165; inner.add(lid);                      // lying on the box, its top edge away from the one who sits
+  scene.add(group);
+  b = { group, lid, canvas, tex, own, owner }; boards.set(id, b); return b;
+}
+function drawBoard(b) {
+  const c = b.canvas.getContext('2d'), w = b.canvas.width, h = b.canvas.height;
+  c.fillStyle = '#20262e'; c.fillRect(0, 0, w, h); c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (!b.own) { const up = client?.hands?.has(b.owner); c.fillStyle = up ? '#f2c94c' : '#aab'; c.font = 'bold 30px sans-serif'; c.fillText((up ? '\u270B ' : '') + b.owner, w / 2, h / 2, w - 16); b.tex.needsUpdate = true; return; }
+  const cw = w / 4, ch = h / 2;
+  barCells().slice(0, 8).forEach((e, i) => {
+    const x = (i % 4) * cw, y = Math.floor(i / 4) * ch, text = e.tagName === 'SELECT' ? (e.dataset.label ? e.dataset.label + ' ' : '') + (e.selectedOptions[0]?.text ?? '') : e.textContent;
+    c.fillStyle = '#2d3640'; c.strokeStyle = e.style.borderColor || '#5a8'; c.lineWidth = 4;
+    c.beginPath(); c.roundRect(x + 6, y + 6, cw - 12, ch - 12, 12); c.fill(); c.stroke();
+    c.fillStyle = '#fff'; c.font = `bold ${text.length > 11 ? 20 : 26}px sans-serif`; c.fillText(text, x + cw / 2, y + ch / 2, cw - 28);
+  });
+  b.tex.needsUpdate = true;
+}
+function boardCell(ev) {                                                                                // the button of your own board under the pointer, if any
+  const mine = [...boards.values()].find(b => b.own && b.group.visible); if (!mine) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObject(mine.lid)[0]; if (!hit) return null;
+  return Math.floor((1 - hit.uv.y) * 2) * 4 + Math.min(3, Math.floor(hit.uv.x * 4));
+}
+renderer.domElement.addEventListener('click', ev => {
+  const i = boardCell(ev), e = i == null ? null : barCells()[i]; if (!e) return;
+  if (e.tagName === 'SELECT') { e.selectedIndex = (e.selectedIndex + 1) % e.options.length; e.dispatchEvent(new Event('change')); } else e.click();
+  setTimeout(() => { for (const b of boards.values()) drawBoard(b); }, 50);
+});
+renderer.domElement.addEventListener('pointermove', ev => { renderer.domElement.style.cursor = boardCell(ev) == null ? '' : 'pointer'; });
+setInterval(() => { for (const b of boards.values()) if (b.group.visible) drawBoard(b); const mine = [...boards.values()].some(b => b.own && b.group.visible); document.getElementById('bar').style.display = ''; }, 300);
 
 // ---------------------------------------------------------------- the presenter
 // In a manual demonstration the server waits for this before the next step.
@@ -368,10 +451,10 @@ document.getElementById('voiceBtn').addEventListener('click', e => {
 // Actions on the MMM-API as its User: Register (once), MM-Add (its Persona at the Metaverse Square), MM-Capture (what it sees there, from its Point of View,
 // five times a second) and MM-Move (where it stands and which way it looks). What it draws is only what MM-Capture returned.
 // Through Tailscale the person is whoever Tailscale says - the server tells (./whoami) - and nothing is typed; otherwise the name is in the address (?user=).
-const me = await fetch('whoami', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+const me = await fetch('whoami?user=' + encodeURIComponent(new URLSearchParams(location.search).get('user') ?? ''), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
 const userName = me?.name ?? new URLSearchParams(location.search).get('user');
 const client = userName ? { name: userName, human: userName + '-human', persona: new URLSearchParams(location.search).get('persona') ?? userName + '-Persona', personae: [userName + '-Persona'], at: 'MVS', loc: 'MVS', ox: 0, oy: 0, seated: false, token: null, x: 0, y: 0, yaw: 0, sent: '', things: [], heard: [], status: 'joining...', keys: new Set() } : null;
-window.mmmClient = client; window.mmmCamera = camera; window.mmmDrawn = drawn;   // for the tests: they drive the keys of a client from outside
+window.mmmClient = client; window.mmmCamera = camera; window.mmmDrawn = drawn; window.mmmHandAndSummary = () => handAndSummary(); window.mmmSendTo = (to, id, text) => sendTo(to, id, text); window.mmmTakeSeat = seat => takeSeat(seat); window.mmmWalls = () => { ensureWalls(); return wallScreens; }; window.mmmBoards = boards; window.mmmSeatChairs = () => seatChairs;   // for the tests: they drive the keys of a client from outside
 const HALF = 3.8;   // the Square is 8 m across
 const spatial = (id, x, y, yaw) => ({ Header: 'OSD-OSA-V1.5', ObjectSpatialAttitudeID: id,
   Position: { Header: 'OSD-OPS-V1.5', PositionID: id + '-P', CartPosition: [x, y, 0] },
@@ -449,6 +532,15 @@ async function choosePersona() {
   for (const e of list) { const d = document.createElement('div'); d.dataset.name = e.Name; d.textContent = e.Name.replaceAll('_', ' '); Object.assign(d.style, { padding: '4px 8px', cursor: 'pointer', borderRadius: '4px' }); d.onclick = () => show(e.Name); d.ondblclick = () => { show(e.Name); go.click(); }; listEl.appendChild(d); }
   const spin = () => { if (!box.isConnected) return; if (shown) shown.rotation.y = (turn += 0.01); pr.render(ps, pc); requestAnimationFrame(spin); };
   spin(); show(list[0].Name);
+  // A Persona another human chooses meanwhile is no longer offered: it leaves the list, and if it was the one shown here, the choice is to be made again.
+  const poll = setInterval(async () => {
+    if (!box.isConnected) { clearInterval(poll); return; }
+    const now = await fetch('/api/v2.2/register/personae', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!now) return;
+    const free = new Set(now.map(e => e.Name));
+    for (const el of [...listEl.children]) if (!free.has(el.dataset.name)) el.remove();
+    if (current && !free.has(current)) { current = null; go.disabled = true; box.querySelector('#pcName').textContent = 'That Persona has just been chosen by someone else: choose another.'; }
+  }, 2000);
   return await new Promise(res => { go.onclick = () => { box.remove(); pr.dispose(); res(current); }; });
 }
 async function resume() {
@@ -463,15 +555,21 @@ async function resume() {
   }
   client.status = `${client.name}: back in ${client.loc}`;
   if (W) prepareSeat();
+  if (client.seated) { handAndSummary(); if (new URLSearchParams(location.search).get('mic') !== 'off' && !client.micOn) { client.micOn = true; microphone(); } }      // back in the seat: the hand, the Secretary and the microphone as before
   capture(); setInterval(capture, 200); setInterval(sendPose, 150);
 }
 async function join() {
   if (me?.resume) return resume();
   const form = await registrationOptions();
-  const choice = await choosePersona();
-  const profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
+  let choice, profile, reg;
+  for (;;) {                                                                  // a Persona chosen by someone else at the same moment is refused: the choice is made again
+  choice = await choosePersona();
+  profile = { Header: 'MMM-PPR-V2.2', MInstanceID: 'MI1', humanID: client.human, PersonalProfileID: 'Profile-' + client.human,
     PersonalProfile: { ...(form ? { AccountLevel: form.level } : {}), Data: [form ? { FirstName: form.first, LastName: form.last, Email: form.email } : { FirstName: client.name }], Processes: [{ ProcessIDOrProcess: [{ ProcessID: client.name }], PersonaIDOrPersona: [...new Set([userName + '-Persona', client.persona])].map(p => ({ PersonaID: p, ...(choice && p === userName + '-Persona' ? { PersonaChoice: choice } : {}) })) }] } };   // a User has its own Personae: the ones it registers with
-  const reg = await act('identity/register', client.human, { With: [profile] });
+  reg = await act('identity/register', client.human, { With: [profile] });
+  if (reg.http === 409 && /was chosen by/.test(reg.body?.paStatus?.detail ?? '')) continue;
+  break;
+  }
   if (reg.http !== 201) { client.status = `cannot register: ${reg.http} ${reg.body?.paStatus?.detail ?? ''}`; return; }
   client.token = (reg.tokens ?? '').split(',').map(p => p.split('=')).find(p => decodeURIComponent(p[0]) === client.name)?.[1];
   let h = 0; for (const c of client.name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -519,8 +617,8 @@ async function takeSeat(seat) {   // MM-Move of the Persona to its seat, from wh
   client.taking = false;
   if (mv.http !== 200) { client.status = `${client.name}: cannot sit: ${mv.http}`; return; }
   Object.assign(client, { loc: seat.seat, at: seat.room, ox: Number(seat.x), oy: Number(seat.y), x: Number(seat.x), y: Number(seat.y), yaw, seated: true, sent: '' });
-  client.status = `${client.name}: seated at ${seat.seat}`; client.notice = 'Seated. Q stands up.';
-  if (new URLSearchParams(location.search).has('mic') && !client.micOn) { client.micOn = true; microphone(); }
+  client.status = `${client.name}: seated at ${seat.seat}`; client.notice = 'Seated. Q stands up.'; handAndSummary();
+  if (new URLSearchParams(location.search).get('mic') !== 'off' && !client.micOn) { client.micOn = true; microphone(); }
 }
 
 // THE WORLD, THE CLIENT'S PART. The User asks the AVS Service for its seat as soon as it is in the world: invited, it is given the right to the seat and to the doors of the Town
@@ -537,16 +635,16 @@ function prepareSeat() {
 // THE END OF THE MEETING. The rights of a meeting - the doors, the seat, the speech - are valid for the meeting, and the AVS Service withdraws them when it ends: at its time, or when its
 // convener ends it (the button). A User whose rights are gone is refused by the M-Instance (403): its client sees that, and the Persona leaves to the Square.
 function endButton() {
-  const b = document.createElement('button'); b.textContent = 'End the meeting for everyone';
-  Object.assign(b.style, { position: 'fixed', left: '12px', bottom: '12px', zIndex: 20, background: 'var(--panel)', color: 'inherit', border: '1px solid #a55', borderRadius: '8px', padding: '8px 14px', fontSize: '14px', cursor: 'pointer' });
+  const b = document.createElement('button'); b.textContent = 'Close meeting';
+  Object.assign(b.style, { order: 1, background: 'var(--panel)', color: 'inherit', border: '1px solid #a55', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
   let armed = false;
   b.onclick = async () => {
-    if (!armed) { armed = true; b.textContent = 'Click again: the rights of all end'; setTimeout(() => { armed = false; b.textContent = 'End the meeting for everyone'; }, 4000); return; }
+    if (!armed) { armed = true; b.textContent = 'Click again to close it for all'; setTimeout(() => { armed = false; b.textContent = 'Close meeting'; }, 4000); return; }
     const id = `End-${client.name}-${Date.now()}`;
     await act('communicate/mm-send', client.name, { Nil: id, To: 'AVS', With: [message(id, 'end')] });
     b.remove(); client.notice = 'The meeting is ending.';
   };
-  document.body.appendChild(b);
+  document.getElementById('bar').appendChild(b);
 }
 // THE SHARED SCREEN. The convener has the Right to share one in the room (the AVS Service gave it with the seat); the others only see it. The sharer's browser captures its screen
 // (getDisplayMedia), declares a Visual Object that is a stream at the room (MM-Add) and sends its frames as JPEG over a WebSocket - only when the picture changes, so a slide costs
@@ -554,20 +652,58 @@ function endButton() {
 // room is reduced to a stamp at the bottom right; a click on the stamp changes them over.
 let sharing = null, watching = null;
 function shareButton() {
-  const b = document.createElement('button'); b.id = 'shareBtn'; b.textContent = 'Share my screen';
-  Object.assign(b.style, { position: 'fixed', left: '12px', bottom: '56px', zIndex: 20, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '8px 14px', fontSize: '14px', cursor: 'pointer' });
-  b.onclick = () => sharing ? stopShare() : startShare();
-  document.body.appendChild(b);
+  const b = document.createElement('button'); b.id = 'shareBtn'; b.textContent = 'Share screen';
+  Object.assign(b.style, { order: 2, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
+  b.onclick = () => sharing ? stopShare() : startShare(false);
+  document.getElementById('bar').appendChild(b);
+  // EDIT SLIDES: the same sharing, for working on the slides while the room watches. The browser asks which window - the one of the slides - and brings it to the front by itself, so the sharer
+  // is at once in its editor (PowerPoint), and what it does shows on the walls as it does it. Coming back to the meeting is the sharer's: the floating room, or the window of the meeting.
+  const e = document.createElement('button'); e.id = 'editBtn'; e.textContent = 'Edit slides'; e.title = 'Share the window of your slides and go to it: you edit, the room watches as you do';
+  Object.assign(e.style, { order: 2, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
+  e.onclick = () => sharing ? (sharing.helper && sharing.own ? helperCall('/front', {}) : stopShare()) : startShare(true);      // while a window is shared through the helper, Edit slides goes to that window
+  document.getElementById('bar').appendChild(e);
 }
-async function startShare() {
-  const b = document.getElementById('shareBtn');
-  let stream;
-  try { stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 5 }, audio: true }); } catch (e) { client.notice = 'Screen sharing was not allowed by the browser.'; return; }
+const screenObject = (id, proto) => ({ Header: 'OSD-BVO-V1.5', MInstanceID: 'MI1', BasicVisualObjectID: id,
+  BasicVisualObjectData: [{ DataURI: `${proto}://${location.host}/ws/v2.2/screen/${id}/watch` }],
+  VisualQualifier: { Header: 'TFA-VIQ-V1.5', MInstanceID: 'MI1', VisualQualifierID: id + '-Q', SubTypes: {}, Formats: {}, Attributes: { Source: { Real: 'Raster' } } } });
+
+// THE SCREEN HELPER. The browser shows a bar of its own ("Stop sharing") when a page captures a screen, and a page cannot take it away. The Screen Helper is a small program on the sharer's machine
+// (MMM/ScreenHelper): the sharer chooses in its window what to share, and it sends the picture to the M-Instance as the page would, with no browser capture at all. If it is running, the buttons
+// use it; if not, the browser's own capture is the way, bar included.
+const HELPER = 'http://127.0.0.1:7391';
+async function helperCall(path, body) {
+  try {
+    const r = await fetch(HELPER + path, { method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined, headers: body ? { 'Content-Type': 'application/json' } : undefined, cache: 'no-store',
+                                           signal: AbortSignal.timeout(path === '/pick' ? 120000 : 1500) });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+async function startShareWithHelper(editing) {
+  const b = document.getElementById('shareBtn'), eb = document.getElementById('editBtn');
+  client.notice = 'Choose what to share in the window of the screen helper.';
+  const picked = await helperCall('/pick', { server: location.origin, edit: editing });
+  if (!picked?.ok) { client.notice = picked ? 'Nothing was chosen to share.' : 'The screen helper did not answer.'; return; }
   const id = `Screen-${client.name}-${Date.now()}`, proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const so = { Header: 'OSD-BVO-V1.5', MInstanceID: 'MI1', BasicVisualObjectID: id,
-    BasicVisualObjectData: [{ DataURI: `${proto}://${location.host}/ws/v2.2/screen/${id}/watch` }],
-    VisualQualifier: { Header: 'TFA-VIQ-V1.5', MInstanceID: 'MI1', VisualQualifierID: id + '-Q', SubTypes: {}, Formats: {}, Attributes: { Source: { Real: 'Raster' } } } };
-  const r = await act('locate/mm-add', client.name, { Nil: id, At: client.at, With: [so] });
+  const r = await act('locate/mm-add', client.name, { Nil: id, At: client.at, With: [screenObject(id, proto)] });
+  if (r.http !== 200) { await helperCall('/stop', {}); client.notice = r.http === 403 ? 'You have no Right to share a screen here.' : r.http === 409 ? 'Somebody is sharing a screen already.' : `Cannot share a screen: ${r.http}`; return; }
+  const go = await helperCall('/share', { server: location.origin, token: client.token, id });
+  if (!go?.ok) { client.notice = 'The screen helper could not start: ' + (go?.error ?? 'no answer'); return; }
+  const timer = setInterval(async () => { const st = await helperCall('/status'); if (!st || !st.sharing) stopShare(); }, 1000);       // the sharer can stop it from the helper too
+  sharing = { id, helper: true, timer, own: picked.kind === 'window' };
+  b.textContent = 'Close screen'; b.style.borderColor = '#e55'; if (eb && picked.kind !== 'window') { eb.disabled = true; eb.style.opacity = '0.5'; }      // a window shared: Edit slides takes you to it
+  client.notice = 'You are sharing: ' + (picked.title ?? '');
+}
+async function startShare(editing = false) {
+  if ((await helperCall('/status'))?.helper) return startShareWithHelper(editing);
+  client.notice = 'The screen helper is not running: the browser shares, and shows its own "Stop sharing" bar. Start Run-ScreenHelper.cmd to share without it.';
+  const b = document.getElementById('shareBtn'), eb = document.getElementById('editBtn');
+  let stream;
+  const controller = typeof CaptureController !== 'undefined' ? new CaptureController() : null;       // Chrome: lets the page say where the focus goes
+  // the picker opens on the Windows (to edit slides) or on the whole screens (to share)
+  try { stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 5, displaySurface: editing ? 'window' : 'monitor' }, audio: true, ...(controller ? { controller } : {}) }); } catch (e) { client.notice = 'Screen sharing was not allowed by the browser.'; return; }
+  try { controller?.setFocusBehavior(editing ? 'focus-captured-surface' : 'no-focus-change'); } catch { }
+  const id = `Screen-${client.name}-${Date.now()}`, proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const r = await act('locate/mm-add', client.name, { Nil: id, At: client.at, With: [screenObject(id, proto)] });
   if (r.http !== 200) { stream.getTracks().forEach(t => t.stop()); client.notice = r.http === 403 ? 'You have no Right to share a screen here.' : r.http === 409 ? 'Somebody is sharing a screen already.' : `Cannot share the screen (${r.http}${r.body?.paStatus?.detail ? ': ' + r.body.paStatus.detail : ''}).`; return; }
   const ws = new WebSocket(`${proto}://${location.host}/ws/v2.2/screen/${id}?token=${encodeURIComponent(client.token)}`); ws.binaryType = 'arraybuffer';
   const video = document.createElement('video'); video.srcObject = stream; video.muted = true; await video.play().catch(() => {});
@@ -598,44 +734,82 @@ async function startShare() {
     };
     src.connect(proc); proc.connect(ac.destination); sound = ac;
   }
-  sharing = { id, ws, stream, timer, sound };
-  b.textContent = 'Stop sharing'; b.style.borderColor = '#e55';
+  // A window that is shared is seen by its sharer on the walls too, like by everybody; a whole screen, or the tab of the meeting, would show the room in itself.
+  sharing = { id, ws, stream, timer, sound, own: stream.getVideoTracks()[0].getSettings?.().displaySurface === 'window' };
+  b.textContent = 'Close screen'; b.style.borderColor = '#e55'; if (eb) { eb.disabled = true; eb.style.opacity = '0.5'; }      // all the buttons stay; the one that cannot be used now is dimmed
   client.notice = sound ? 'You are sharing your screen, with its sound.' : 'You are sharing your screen, without sound (to share the sound, tick "share tab audio" / "share system audio" when the browser asks).';
   stream.getVideoTracks()[0].onended = () => stopShare();
   ws.onclose = () => { if (sharing?.id === id) stopShare(); };
 }
 function stopShare() {
   if (!sharing) return;
-  clearInterval(sharing.timer); try { sharing.ws.close(); } catch { } sharing.stream.getTracks().forEach(t => t.stop()); try { sharing.sound?.close(); } catch { } sharing = null;
-  const b = document.getElementById('shareBtn'); if (b) { b.textContent = 'Share my screen'; b.style.borderColor = '#5a8'; }
+  clearInterval(sharing.timer);
+  if (sharing.helper) helperCall('/stop', {});
+  else { try { sharing.ws.close(); } catch { } sharing.stream.getTracks().forEach(t => t.stop()); try { sharing.sound?.close(); } catch { } }
+  sharing = null;
+  const b = document.getElementById('shareBtn'); if (b) { b.textContent = 'Share screen'; b.style.borderColor = '#5a8'; }
+  const eb = document.getElementById('editBtn'); if (eb) { eb.disabled = false; eb.style.opacity = ''; }
   client.notice = 'You stopped sharing your screen.';
 }
-function watchScreen(id) {          // the shared screen of the room, if there is one that this User does not share itself
+// THE SHARED SCREEN IS IN THE ROOM. All four walls of the meeting room show it (the east one, which has the door, a smaller one beside the door): a participant looks at the wall it likes - it turns
+// with A/D, the arrows or the wheel - and makes what it sees as big or as small as it wants with Ctrl and the wheel (zoom). Nobody leaves the room to see it: the board, the Secretary and the
+// display are where they were. What each client does with the Visual Object, where and how big, is its own decision, as what it hears is.
+const wallScreens = { walls: [] };         // each: { mesh, canvas, ctx, tex }
+function ensureWalls() {
+  if (wallScreens.walls.length || !W) return wallScreens.walls.length > 0;
+  const b = W.buildings.find(x => x.rooms?.some(r => r.id === 'MeetingRoom')), r = b?.rooms.find(x => x.id === 'MeetingRoom');
+  if (!r) return false;
+  const cx = b.x + r.x, cy = b.y + r.y, [x0, y0, x1, y1] = r.footprint, hw = (x1 - x0) / 2, hd = (y1 - y0) / 2, H = 3.1, zc = 1.6, PX = 160;
+  const door = (r.door?.width ?? 1.8) / 2 + 0.2, south = hd - 0.2 - door;                   // the east wall has the door: its screen is the part of the wall beside it
+  // [position on the floor, width of the wall it covers, rotation of the plane about the vertical so that it faces the room]. The north wall has a screen built on it: the picture stands before it.
+  const planes = [
+    { x: cx, y: cy + hd - 0.17, w: 2 * hw - 0.4, face: 0 },                                  // north
+    { x: cx, y: cy - hd + 0.12, w: 2 * hw - 0.4, face: Math.PI },                            // south
+    { x: cx - hw + 0.12, y: cy, w: 2 * hd - 0.4, face: Math.PI / 2 },                        // west
+    { x: cx + hw - 0.12, y: cy - hd + 0.2 + south / 2, w: south, face: -Math.PI / 2 }        // east, south of the door
+  ];
+  for (const q of planes) {
+    const canvas = document.createElement('canvas'); canvas.width = Math.round(q.w * PX); canvas.height = Math.round(H * PX);
+    const ctx = canvas.getContext('2d'); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(q.w, H), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    mesh.position.set(q.x, zc, -q.y); mesh.rotation.y = q.face; mesh.visible = false; scene.add(mesh);
+    wallScreens.walls.push({ mesh, canvas, ctx, tex });
+  }
+  return true;
+}
+function watchScreen(id, own = false) {          // the shared screen of the room; its sharer sees it too when it shares a window (without the sound: it has that already)
   if ((watching?.id ?? null) === id) return;
   if (watching) { try { watching.ws.close(); } catch { } watching = null; }
-  const img = document.getElementById('screenImg');
-  if (!id) { document.body.classList.remove('screening', 'swapped'); img.removeAttribute('src'); return; }
+  ensureWalls();
+  const show = on => { for (const w of wallScreens.walls) w.mesh.visible = on; for (const sb of signBoards) if (sb.userData.mmmSign) sb.visible = !on; };      // the logo gives way to the screen
+  if (!id) { show(false); return; }
   const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/screen/${id}/watch?token=${encodeURIComponent(client.token)}`); ws.binaryType = 'arraybuffer';
-  watching = { id, ws, url: null };
+  watching = { id, ws };
   let next = 0, gain = null;
-  ws.onmessage = e => {
+  ws.onmessage = async e => {
     const b = new Uint8Array(e.data);
+    if (b[0] === 2 && own) return;
     if (b[0] === 2 && b.length > 2) {          // the sound of the shared screen: 24 kHz mono PCM, played as it arrives, a little behind
       const ctx = ears(), n = (b.length - 1) >> 1, buf = ctx.createBuffer(1, n, 24000), ch = buf.getChannelData(0), dv = new DataView(b.buffer, b.byteOffset + 1);
       for (let i = 0; i < n; i++) ch[i] = dv.getInt16(2 * i, true) / 32768;
-      if (!gain) { gain = ctx.createGain(); gain.gain.value = 0.9; gain.connect(ctx.destination); }
+      if (!gain) { gain = ctx.createGain(); gain.gain.value = 0.9; gain.connect(roomOut(ctx)); }
       const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gain);
       const at = Math.max(next, ctx.currentTime + 0.2); src.start(at); next = at + n / 24000;
       return;
     }
-    if (b[0] !== 1) return;
-    const url = URL.createObjectURL(new Blob([b.subarray(1)], { type: 'image/jpeg' }));
-    img.onload = () => { if (watching?.url && watching.url !== url) URL.revokeObjectURL(watching.url); if (watching) watching.url = url; };
-    img.src = url; document.body.classList.add('screening');
+    if (b[0] !== 1 || !wallScreens.walls.length) return;
+    try {
+      const bmp = await createImageBitmap(new Blob([b.subarray(1)], { type: 'image/jpeg' }));
+      for (const { ctx, canvas, tex } of wallScreens.walls) {                  // each wall is wholly the screen: black, with the picture in it as large as it goes
+        const k = Math.min(canvas.width / bmp.width, canvas.height / bmp.height), w = bmp.width * k, h = bmp.height * k;
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bmp, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h); tex.needsUpdate = true;
+      }
+      bmp.close?.(); show(true);
+    } catch { }
   };
-  ws.onclose = () => { if (watching?.id === id) { watching = null; document.body.classList.remove('screening', 'swapped'); } };
+  ws.onclose = () => { if (watching?.id === id) { watching = null; show(false); } };
 }
-for (const el of ['stage', 'screenView']) document.getElementById(el).addEventListener('click', () => { if (document.body.classList.contains('screening')) document.body.classList.toggle('swapped'); });
 
 async function meetingOver() {
   if (client.leaving) return; client.leaving = true;
@@ -694,9 +868,9 @@ function roomEcho(ctx, pan) {
     }
     const conv = ctx.createConvolver(); conv.buffer = ir;
     const wet = ctx.createGain(); wet.gain.value = 0.4 * (1 - (ac?.Absorption ?? 0.3)) + (ac?.Diffusion ?? 0) * 0.1;
-    conv.connect(wet); wet.connect(ctx.destination); echo = { ctx, conv };
+    conv.connect(wet); wet.connect(roomOut(ctx)); echo = { ctx, conv };
   }
-  pan.connect(ctx.destination); pan.connect(echo.conv);
+  pan.connect(roomOut(ctx)); pan.connect(echo.conv);
 }
 
 // THE MICROPHONE (&mic): the client captures and streams. When the User starts to speak - a voice activity detection of the level - it declares a Speech Object at its seat at
@@ -710,36 +884,56 @@ async function microphone() {
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
     catch (e) { client.status += ' (no microphone)'; return; }
   }
+  const micBtn = document.createElement('button'); micBtn.id = 'micBtn'; micBtn.textContent = 'Mic: on';   // the User can switch its microphone off and on: muted, nothing is captured or sent
+  Object.assign(micBtn.style, { order: 4, background: 'var(--panel)', color: 'inherit', border: '1px solid #5a8', borderRadius: '8px', padding: '0 14px', fontSize: '14px', lineHeight: '1.15', cursor: 'pointer' });
+  const setMute = off => {
+    client.muted = off; stream?.getAudioTracks().forEach(t => { t.enabled = !client.muted; });
+    micBtn.textContent = 'Mic: ' + (client.muted ? 'off' : 'on'); micBtn.style.borderColor = client.muted ? '#e55' : '#5a8';
+  };
+  micBtn.onclick = () => setMute(!client.muted);
+  client.setMute = setMute;
+  document.getElementById('bar').appendChild(micBtn);
   const ctx = new AudioContext({ sampleRate: 16000 });
   let src;
   if (tone) { src = ctx.createGain(); const o = ctx.createOscillator(); o.frequency.value = 220; const g = ctx.createGain(); o.connect(g); g.connect(src); o.start(); setInterval(() => { g.gain.value = (Date.now() / 1000 | 0) % 6 < 3 ? 0.3 : 0; }, 100); }
   else src = ctx.createMediaStreamSource(stream);
   const node = ctx.createScriptProcessor(1024, 1, 1);
-  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, PRE = 0.2 * RATE, DURATION = 3000;
+  const RATE = ctx.sampleRate, THRESHOLD = 0.02, HANG = 0.7 * RATE, PRE = 0.2 * RATE;
   let pre = [], current = null, silent = 0, n = 0;
   const level = f => Math.sqrt(f.reduce((s, v) => s + v * v, 0) / f.length);
   const int16 = f => { const p = new Int16Array(f.length); for (let i = 0; i < f.length; i++) p[i] = Math.max(-1, Math.min(1, f[i])) * 32767; return p; };
   const time = (id, a, b) => ({ Header: 'OSD-STM-V1.5', SimpleTimeID: id, SimpleTimeData: [{ FlagsByte: 3, StartTime: a, EndTime: b, AccuracyMode: 'single', AccuracyPlusMinus: 1 }] });
-  function begin(first) {   // declares the Speech Object; its data follows as it is captured
-    const id = `Speech-${client.name}-${++n}-${Date.now()}`, start = Date.now() - Math.round(first.length * 1000 / RATE), end = start + DURATION;
-    const so = { Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id, BasicSpeechObjectTime: time(id + '-T', start, end),
-      BasicSpeechObjectData: [{ DataURI: `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${id}/listen` }],
-      BasicSpeechDataQualifier: { Header: 'TFA-SPQ-V1.5', MInstanceID: 'MI1', SpeechQualifierID: id + '-Q', SpeechQualifierTime: time(id + '-QT', start, end), SubTypes: {},
-        Formats: { ContentFormats: { RawData: { Header: 'TFA-PCM-V1.5', PCM: { SamplingFrequency: RATE, SamplePrecision: 16 } } }, TransportFormats: { StreamFormat: 'WebSocket' } },
-        Attributes: { Source: 'Real', Device: { DeviceRole: 'Capture', DeviceType: 'Microphone', CaptureConfiguration: { ChannelCount: 1, SamplingMode: 'Mono' } } } } };
-    const o = { id, end, queue: [int16(first)], ws: null, ready: false };
-    act('locate/mm-add', client.name, { Nil: id, At: client.loc, With: [so] }).then(r => {
-      if (r.http !== 200) { o.dead = true; return; }
+  // A speech, as the standard has it (the Verification Use Cases of MMM-TEC V2.2): this Device UM-Captures it at its human's U-Location, With the Speech Qualifier (the kind of data it is:
+  // a stream); the Import Service has the Data Identified as an Item, a Speech Object; the User MM-Adds it at its seat; the data follows, as it is captured, over a WebSocket. The speech
+  // has no duration fixed beforehand: it is one Speech Object from the moment the person starts to speak until they stop, however long that is (its Time is in it when it is over).
+  function begin(first) {
+    const id = `Speech-${client.name}-${++n}-${Date.now()}`;
+    const q = { Header: 'TFA-SPQ-V1.5', MInstanceID: 'MI1', SpeechQualifierID: id + '-Q', SubTypes: {},
+      Formats: { ContentFormats: { RawData: { Header: 'TFA-PCM-V1.5', PCM: { SamplingFrequency: RATE, SamplePrecision: 16 } } }, TransportFormats: { StreamFormat: 'WebSocket' } },
+      Attributes: { Source: 'Real', Device: { DeviceRole: 'Capture', DeviceType: 'Microphone', CaptureConfiguration: { ChannelCount: 1, SamplingMode: 'Mono' } } } };
+    const o = { id, queue: [int16(first)], ws: null, ready: false, dialogue: !!client.dialogue };
+    (async () => {
+      const captured = await act('import/um-capture', client.name, { Nil: id, At: 'ULoc-' + client.name, With: [q] });
+      if (captured.http !== 201) { o.dead = true; return; }
+      const identified = await act('identity/identify', client.name, { Nil: id, With: [q] });
+      if (identified.http !== 201) { o.dead = true; return; }
+      // To the room - MM-Add at its seat - or, in a dialogue with the Secretary, to the Secretary alone (MM-Send): the room does not hear it.
+      const added = o.dialogue
+        ? await act('communicate/mm-send', client.name, { Nil: 'Say-' + id, To: 'Secretary', With: [{ Header: 'OSD-BSO-V1.5', MInstanceID: 'MI1', BasicSpeechObjectID: id }] })
+        : await act('locate/mm-add', client.name, { Nil: id, At: client.loc });
+      if (added.http !== 200) { o.dead = true; return; }
       o.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${id}?token=${encodeURIComponent(client.token)}`);
       o.ws.binaryType = 'arraybuffer';
       o.ws.onopen = () => { o.ready = true; for (const p of o.queue.splice(0)) o.ws.send(p.buffer); if (o.closing) o.ws.close(); };
-    });
+    })();
     return o;
   }
   const feed = (o, f) => { const p = int16(f); if (o.ready) o.ws.send(p.buffer); else o.queue.push(p); };
   const finish = o => { o.closing = true; if (o.ready) o.ws.close(); };
   node.onaudioprocess = e => {
     if (!client.seated) return;
+    mouthSend(client.muted || client.dialogue ? null : e.inputBuffer.getChannelData(0));      // the mouth moves for the room, not for the Secretary
+    if (client.muted) { if (current) { finish(current); current = null; } pre = []; return; }
     const f = Array.from(e.inputBuffer.getChannelData(0)), loud = level(f) > THRESHOLD, now = Date.now();
     if (!current) {
       if (!loud) { pre.push(...f); if (pre.length > PRE) pre = pre.slice(pre.length - PRE); return; }
@@ -748,7 +942,6 @@ async function microphone() {
     if (current.dead) { current = null; return; }
     feed(current, f); silent = loud ? 0 : silent + f.length;
     if (silent >= HANG) { finish(current); current = null; }
-    else if (now >= current.end) { finish(current); current = begin(f); silent = 0; }   // the time is over and the User is still speaking: the next Speech Object takes over
   };
   src.connect(node); node.connect(ctx.destination);
   client.status += ' - listening';
@@ -757,8 +950,234 @@ async function capture() {   // MM-Capture: the Things of the M-Location that th
   const pov = { Header: 'OSD-OPV-V1.5', PointOfViewID: 'POV-' + client.name, CartPosition: [client.x, client.y, client.eye ?? 1.6], Orientation: [client.yaw, 0, 0] };
   const r = await act('locate/mm-capture', client.name, { At: client.at, With: [pov] });
   const scene = r.body?.complements?.With?.[0]?.ItemValueOrRef?.[0];
-  if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); watchScreen(scene.Things.find(t => t.Kind === 'Screen' && t.Owner !== client.name && t.Streaming)?.ID ?? null); }
+  if (r.http === 200 && scene) { client.things = scene.Things; for (const t of scene.Things) if (t.Kind === 'Speech') hear(t); { const sc = scene.Things.find(t => t.Kind === 'Screen' && (t.Owner !== client.name || sharing?.own) && t.Streaming); watchScreen(sc?.ID ?? null, sc?.Owner === client.name); } }
   else if (W && r.http === 403 && client.loc !== 'MVS') meetingOver();   // the rights of the meeting are gone
+}
+
+// THE BAR, THE HAND AND THE SUMMARY (M3283: MC-3, MC-4, MC-5).
+const barAdd = (el, order) => { el.style.order = order; document.getElementById('bar').appendChild(el); return el; };
+const sendTo = (to, id, text) => act('communicate/mm-send', client.name, { Nil: id, To: to, With: [message(id, text)] });
+const readMessage = async id => { const rs = await fetch(`/api/v2.2/items/${encodeURIComponent(id)}`, { headers: { Authorization: 'Bearer ' + client.token } }); return rs.ok ? (await rs.json()).ItemValueOrRef?.[0]?.MessageData?.[0]?.MessageData : null; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+let roomMaster = null;       // everything heard from the room goes through this gain: a spoken summary takes the place of it, for the User that asked, and nobody else
+function roomOut(ctx) { if (!roomMaster || roomMaster.context !== ctx) { roomMaster = ctx.createGain(); roomMaster.connect(ctx.destination); } return roomMaster; }
+let handAndSummaryStarted = false;
+function handAndSummary() {
+  if (handAndSummaryStarted || client.name === 'Secretary') return;
+  handAndSummaryStarted = true; startHand(); startSummary(); startSecretary();
+}
+// THE HAND (MC-3): the button asks the AVS Service to raise or lower it; the AVS Service tells everyone who has one up (a Message of its own to each, replaced at each change). The name over the Persona
+// is marked, and the list at the top right shows who asks for the floor; the convener lowers a hand by clicking its name. A hand comes down by itself after 5 s of its owner's speech.
+function startHand() {
+  client.hands = new Set();
+  const b = barAdd(document.createElement('button'), 5), list = document.getElementById('handsList');
+  b.textContent = 'Raise hand'; b.title = 'Ask for the floor. The hand comes down by itself once you have spoken for 5 seconds.';
+  b.onclick = () => sendTo('AVS', `Hand-${client.name}-${Date.now()}`, client.hands.has(client.name) ? 'hand;down' : 'hand;up');
+  setInterval(async () => {
+    const told = await readMessage(`Hands-for-${client.name}`);
+    if (!told?.startsWith('hands:')) return;
+    const names = told.slice(6).split(',').filter(Boolean);
+    if (names.join() === [...client.hands].join()) return;
+    client.hands = new Set(names);
+    const mine = client.hands.has(client.name);
+    b.textContent = mine ? 'Lower hand' : 'Raise hand'; b.style.borderColor = mine ? '#f2c94c' : '#5a8';
+    list.replaceChildren(...names.map(n => { const s = document.createElement('span'); s.textContent = '\u270B ' + n; if (client.seatInfo?.convener === '1') { s.style.cursor = 'pointer'; s.title = 'Lower this hand'; s.onclick = () => sendTo('AVS', `Hand-${n}-${Date.now()}`, 'hand;down;user=' + n); } return s; }));
+  }, 700);
+}
+// THE SUMMARY (MC-4, MC-5): nothing exists until somebody asks. The button asks the Secretary, for this User only, in a form (written or spoken) and a language; the answer is a Message of its own for
+// this User. Written, it is shown in the panel and the original voices go on. Spoken, it is read in the language chosen and, while it is read, this User does not hear the room. The same button
+// hides it (or stops the reading) and shows it again; Update asks for a new one.
+function startSummary() {
+  const form = document.createElement('select'), lang = document.createElement('select'), btn = document.createElement('button');      // not on the board: the Secretary is asked, by voice
+  for (const [v, t] of [['written', 'written'], ['spoken', 'spoken']]) form.add(new Option(t, v));
+  for (const [v, t] of [['en', 'English'], ['el', 'Ελληνικά'], ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español'], ['pt', 'Português'], ['it', 'Italiano'], ['ja', '日本語'], ['zh', '中文']]) lang.add(new Option(t, v));
+  const panel = document.getElementById('summary'), text = document.getElementById('summaryText'), title = document.getElementById('summaryTitle');
+  const sum = { text: null, key: '', audio: null, mode: 'written', shown: false, busy: false, source: null };
+  const key = () => form.value + '/' + lang.value;
+  const restore = () => { if (hearCtx) roomOut(hearCtx).gain.value = 1; };
+  function stopSpeech() { if (sum.source) { const s = sum.source; sum.source = null; s.onended = null; try { s.stop(); } catch { } } restore(); }
+  function hide() { sum.shown = false; panel.hidden = true; stopSpeech(); }
+  function play() {
+    const src = pcmSource(sum.audio);
+    roomOut(src.context).gain.value = 0; sum.source = src;
+    src.onended = () => { if (sum.source === src) { sum.source = null; restore(); sum.shown = false; } };
+    src.start();
+  }
+  function show() {
+    sum.shown = true;
+    if (sum.mode === 'spoken' && sum.audio) { panel.hidden = true; play(); return; }
+    title.textContent = 'Summary - ' + lang.selectedOptions[0].text; text.textContent = sum.text; panel.hidden = false;
+  }
+  async function request() {
+    sum.busy = true;
+    const id = `Summary-${client.name}-${Date.now()}`;
+    await sendTo('Secretary', id, `summary;lang=${lang.value};mode=${form.value}`);
+    let answer = null;
+    for (let i = 0; i < 600 && !answer; i++) { await wait(500); answer = await readMessage('Summary-for-' + id); }
+    sum.busy = false;
+    let reply = null; try { reply = JSON.parse(answer); } catch { }
+    if (reply?.Summary) { Object.assign(sum, { text: (reply.TranslatedSummary ?? reply.Summary).SummaryData[0].Data, audio: reply.Speech ?? null, mode: form.value, key: key() }); }
+    else { Object.assign(sum, { text: answer ?? 'No answer from the Secretary.', audio: null, mode: 'written', key: '' }); }
+    show();
+  }
+  document.getElementById('summaryUpdate').onclick = () => { if (!sum.busy) { stopSpeech(); request(); } };
+  // What the Secretary does for this participant: a summary in the language and the form asked, hidden, or its reading stopped.
+  client.summary = {
+    ask: (language, how) => { if (sum.busy) return; stopSpeech(); lang.value = language; form.value = how; request(); },
+    hide, stop: stopSpeech
+  };
+}
+// A buffer of 16 kHz, 16-bit mono PCM (base64), ready to play: what the Secretary says, and a summary read aloud.
+function pcmSource(b64) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), n = bytes.length >> 1, ctx = ears();
+  const buf = ctx.createBuffer(1, n, 16000), ch = buf.getChannelData(0), dv = new DataView(bytes.buffer);
+  for (let i = 0; i < n; i++) ch[i] = dv.getInt16(2 * i, true) / 32768;
+  const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
+  return src;
+}
+
+// THE SECRETARY (a User of the meeting, M3283). The button calls it: from then on what this participant says goes to the Secretary - MM-Send of its Speech Object - and not to the room,
+// which hears nothing of it. The Secretary answers in a few spoken words, for this participant only (a Message of its own: Secretary-<User>-<n>), and does what was asked: the summary, which
+// is shown on the display, the hand, the microphone, the end of the meeting. Pressed again, or when the participant says it has done, what it says is heard by the room again.
+function startSecretary() {
+  const b = barAdd(document.createElement('button'), 6);
+  b.textContent = 'Secretary'; b.title = 'Speak to the Secretary instead of the meeting: ask for a summary, raise your hand, mute yourself. Press again to go back to the meeting.';
+  client.dialogue = false; let next = 1, speaking = null;
+  const set = on => { client.dialogue = on; b.style.borderColor = on ? '#f2c94c' : '#5a8'; b.style.background = on ? '#4a4020' : 'var(--panel)'; if (!on) client.notice = 'Back to the meeting.'; else client.notice = 'The Secretary listens: what you say is not heard by the room.'; };
+  b.onclick = () => set(!client.dialogue);
+  const say = reply => {
+    if (reply.Written) { document.getElementById('summaryTitle').textContent = 'Secretary'; document.getElementById('summaryText').textContent = reply.Say; document.getElementById('summary').hidden = false; }
+    if (reply.Speech) {
+      if (speaking) { try { speaking.onended = null; speaking.stop(); } catch { } }
+      const src = pcmSource(reply.Speech); speaking = src;
+      roomOut(src.context).gain.value = 0;
+      src.onended = () => { if (speaking === src) { speaking = null; if (hearCtx) roomOut(hearCtx).gain.value = 1; } };
+      src.start();
+    }
+  };
+  const act_ = d => {
+    if (d.Summary) client.summary?.ask(d.Summary.Language, d.Summary.Form);
+    if (d.Display === 'Hide') client.summary?.hide();
+    if (d.Display === 'StopReading') client.summary?.stop();
+    if (d.Microphone) client.setMute?.(d.Microphone === 'Off');
+    if (d.Screen === 'Stop') stopShare();
+    if (d.Mode === 'meeting') set(false);
+  };
+  setInterval(async () => {
+    const told = await readMessage(`Secretary-${client.name}-${next}`);
+    if (!told) return;
+    next++;
+    let reply = null; try { reply = JSON.parse(told); } catch { }
+    if (!reply) return;
+    say(reply); act_(reply.Do ?? {});
+  }, 600);
+}
+
+// THE MOUTH FOLLOWS THE SPEECH (an Animation Stream of the AudioVisemeStream kind). The client of a User derives, from 16 ms of its human's speech at a time and as it is spoken, how open the mouth is
+// (the loudness) and which shape it has (the spectrum: a vowel from the first two formants of an LPC envelope; s or f from the noise; the lips parting at the start of a sound), in the viseme set
+// the Personae carry (the Oculus set, AA_VI_00 to AA_VI_14). It sends it as an Animation Stream: UM-Capture (Animation Qualifier TFA-AMQ, content format Viseme, transport format AudioVisemeStream),
+// Identify, MM-Animate the Persona; a text message of frames [viseme, weight] for each 64 ms of speech. Whoever may see the Persona watches the stream and applies it. Coarse - a shape for each
+// 16 ms, no words - and with no delay: nothing waits for a word or a sentence.
+const VIS_STEP = 256, LPC = 12, VIS_COUNT = 15;                                   // samples (16 ms at 16 kHz); the order of the envelope; the visemes
+const GRID = Array.from({ length: 70 }, (_, i) => 250 + 50 * i);                  // Hz
+const TAB = GRID.map(h => Array.from({ length: LPC + 1 }, (_, k) => [Math.cos(2 * Math.PI * h * k / 16000), Math.sin(2 * Math.PI * h * k / 16000)]));
+function formants(f) {
+  const n = f.length, x = new Float64Array(n);
+  for (let i = 0; i < n; i++) x[i] = (f[i] - (i ? 0.95 * f[i - 1] : 0)) * (0.54 - 0.46 * Math.cos(2 * Math.PI * i / (n - 1)));
+  const r = new Float64Array(LPC + 1);
+  for (let k = 0; k <= LPC; k++) { let acc = 0; for (let i = k; i < n; i++) acc += x[i] * x[i - k]; r[k] = acc; }
+  if (r[0] < 1e-9) return [0, 0];
+  r[0] *= 1.0001;
+  const a = new Float64Array(LPC + 1); a[0] = 1; let err = r[0];
+  for (let i = 1; i <= LPC; i++) {
+    let acc = r[i]; for (let j = 1; j < i; j++) acc += a[j] * r[i - j];
+    const k = -acc / err, was = a.slice();
+    for (let j = 1; j < i; j++) a[j] = was[j] + k * was[i - j];
+    a[i] = k; err *= 1 - k * k; if (err <= 0) break;
+  }
+  const power = TAB.map(row => { let re = 0, im = 0; for (let k = 0; k <= LPC; k++) { re += a[k] * row[k][0]; im -= a[k] * row[k][1]; } return 1 / (re * re + im * im + 1e-12); });
+  const peaks = []; for (let i = 1; i < power.length - 1; i++) if (power[i] > power[i - 1] && power[i] >= power[i + 1]) peaks.push(GRID[i]);
+  const f1 = peaks.find(h => h <= 1000) ?? 0, f2 = peaks.find(h => f1 && h > f1 + 250 && h <= 3300) ?? 0;
+  return [f1, f2];
+}
+function visemeOf(f, wasLoud) {                                                       // [viseme, weight] of 16 ms of speech
+  let e = 0; for (let i = 0; i < f.length; i++) e += f[i] * f[i];
+  const rms = Math.sqrt(e / f.length);
+  if (rms < 0.012) return [0, 0];                                                     // silence: the mouth closes
+  let z = 0; for (let i = 1; i < f.length; i++) if ((f[i] >= 0) !== (f[i - 1] >= 0)) z++;
+  const open = Math.min(1, (rms - 0.012) / 0.12);
+  if (z / f.length > 0.3) return [rms > 0.04 ? 7 : 2, Math.min(1, 0.4 + open)];        // noise: s (SS) when loud, f (FF)
+  if (!wasLoud && rms > 0.03) return [1, 0.8];                                        // the lips part at the start of a sound (PP)
+  const [f1, f2] = formants(f);
+  if (f1 === 0) return [10, Math.max(0.15, open * 0.5)];
+  if (f1 > 650) return [10, Math.max(0.2, open)];                                     // aa
+  if (f1 > 430) return f2 > 1700 ? [11, Math.max(0.2, open * 0.8)] : [13, Math.max(0.2, open * 0.8)];   // E, O
+  return f2 > 1900 ? [12, Math.max(0.2, open * 0.7)] : [14, Math.max(0.2, open * 0.7)];                 // I, U
+}
+// The out stream of this User: begun once it is seated and speaks; it ends with the page.
+let mouthOut = null, mouthStarting = false, mouthLoud = false, mouthSpeaking = false, mouthLastSent = 0;
+async function startMouth() {
+  if (mouthStarting || mouthOut || !client?.seated || !client.persona) return;
+  mouthStarting = true;
+  try {
+    const id = `Mouth-${client.name}-${Date.now()}`;
+    const q = { Header: 'TFA-AMQ-V1.5', AnimationQualifierID: id + '-Q', SubTypes: 'Animation', Formats: { ContentFormat: 'Viseme', TransportFormat: 'AudioVisemeStream' } };
+    if ((await act('import/um-capture', client.name, { Nil: id, At: 'ULoc-' + client.name, With: [q] })).http !== 201) return;
+    const identified = await act('identity/identify', client.name, { Nil: id, With: [q] });
+    const stream = identified.http === 201 ? (identified.body?.complements?.Nil ?? identified.body?.Complements?.Nil) : null;
+    if (!stream) return;
+    if ((await act('locate/mm-animate', client.name, { Nil: client.persona, With: [stream] })).http !== 200) return;
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/animation/${stream}?token=${encodeURIComponent(client.token)}`);
+    const out = { ws, ready: false };
+    ws.onopen = () => { out.ready = true; };
+    ws.onclose = () => { if (mouthOut === out) { mouthOut = null; setTimeout(startMouth, 1000); } };
+    mouthOut = out;
+  } finally { mouthStarting = false; }
+}
+function mouthSend(data) {                                                           // data: the Float32 samples of this chunk of the microphone, or null (muted)
+  if (!mouthOut?.ready) { startMouth(); return; }
+  const frames = []; let any = false;
+  for (let off = 0; data ? off + VIS_STEP <= data.length : off < 1024; off += VIS_STEP) {
+    const fr = data ? visemeOf(data.subarray(off, off + VIS_STEP), mouthLoud) : [0, 0];
+    mouthLoud = fr[0] !== 0; if (mouthLoud) any = true;
+    frames.push([fr[0], Math.round(fr[1] * 100) / 100]);
+  }
+  const now = Date.now();
+  if (any || mouthSpeaking || now - mouthLastSent > 4000) { mouthOut.ws.send(JSON.stringify({ f: frames })); mouthLastSent = now; }   // speech; its end (the mouth closes); a sign of life now and then
+  mouthSpeaking = any;
+}
+// The in streams: for each Persona that is animated by a stream, a watcher; its frames are applied to the morph targets of the Persona, a frame each 16 ms, eased.
+const mouthWatch = new Map();
+function watchMouth(d, t) {
+  const id = t.Animation;
+  if (!id || !client?.token || mouthWatch.has(id)) return;
+  const w = { object: d.object, queue: [], cur: new Float32Array(VIS_COUNT), target: [0, 0], acc: 0, index: null, ws: null };
+  w.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/animation/${id}/watch?token=${encodeURIComponent(client.token)}`);
+  w.ws.onmessage = ev => { try { for (const fr of JSON.parse(ev.data).f ?? []) w.queue.push(fr); if (w.queue.length > 40) w.queue.splice(0, w.queue.length - 40); } catch { } };
+  w.ws.onclose = () => { mouthWatch.delete(id); for (let i = 0; i < VIS_COUNT; i++) setViseme(w, i, 0); };
+  mouthWatch.set(id, w);
+}
+function visemeTargets(w) {                                                          // the morph targets of a Persona that are visemes: [mesh, index] for each of the 15
+  if (w.index) return w.index;
+  w.index = Array.from({ length: VIS_COUNT }, () => []);
+  w.object.traverse(o => {
+    if (!o.isMesh || !o.morphTargetDictionary) return;
+    for (const [name, at] of Object.entries(o.morphTargetDictionary)) { const m = /AA_VI_(\d\d)/.exec(name); if (m && +m[1] < VIS_COUNT) w.index[+m[1]].push([o, at]); }
+  });
+  return w.index;
+}
+function setViseme(w, v, value) { for (const [mesh, at] of visemeTargets(w)[v]) mesh.morphTargetInfluences[at] = value; }
+function applyMouths(dt) {
+  for (const w of mouthWatch.values()) {
+    w.acc += dt;
+    while (w.acc >= 0.016 && w.queue.length) { w.acc -= 0.016; w.target = w.queue.shift(); }
+    if (!w.queue.length) w.acc = Math.min(w.acc, 0.016);
+    for (let i = 0; i < VIS_COUNT; i++) {
+      const goal = i === w.target[0] ? w.target[1] : 0;
+      w.cur[i] += (goal - w.cur[i]) * (goal > w.cur[i] ? 0.6 : 0.25);
+      setViseme(w, i, w.cur[i] < 0.01 ? 0 : w.cur[i]);
+    }
+  }
 }
 
 // HEARING: a Speech Object in the room is what somebody said, or is saying. Hearing is the receiver's decision - from Anna, not from Carla: the panel lists who is in the room
@@ -785,7 +1204,7 @@ function hear(t) {
   const ctx = ears(), pan = ctx.createPanner(), ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/v2.2/speech/${t.ID}/listen?token=${encodeURIComponent(client.token)}`);
   pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 1;
   pan.positionX.value = t.X; pan.positionY.value = 1.5; pan.positionZ.value = -t.Y;   // x east, y up, z towards the south: the axes of the viewer
-  if (W) roomEcho(ctx, pan); else pan.connect(ctx.destination); ws.binaryType = 'arraybuffer';
+  if (W) roomEcho(ctx, pan); else pan.connect(roomOut(ctx)); ws.binaryType = 'arraybuffer';
   let carry = new Uint8Array(0), next = 0, first = true;
   ws.onmessage = e => {
     const value = new Uint8Array(e.data), bytes = new Uint8Array(carry.length + value.length); bytes.set(carry); bytes.set(value, carry.length);
@@ -809,11 +1228,23 @@ if (client) {
   renderer.domElement.addEventListener('wheel', e => {
     e.preventDefault();
     if (e.ctrlKey) { camera.fov = Math.max(15, Math.min(100, camera.fov * (e.deltaY < 0 ? 0.9 : 1 / 0.9))); camera.updateProjectionMatrix(); }
+    else if (client.ghost) client.ghost.yaw = (client.ghost.yaw + Math.max(-30, Math.min(30, -e.deltaY * 0.1)) + 360) % 360;
     else { client.yaw = (client.yaw + Math.max(-30, Math.min(30, -e.deltaY * 0.1)) + 360) % 360; if (client.path) { client.path = null; marker.visible = false; } }
   }, { passive: false });
   addEventListener('keydown', e => { if (e.key === '0' && !e.repeat && !/input|textarea/i.test(e.target.tagName)) { camera.fov = 70; camera.updateProjectionMatrix(); } });
-  addEventListener('keydown', e => { client.keys.add(e.key.toLowerCase()); if (W && !e.repeat) { const k = e.key.toLowerCase(); if (k === 'q' && client.seated) standUp(); else if (k === 'e' && !client.seated && client.loc === client.at && client.seatInfo && client.at === client.seatInfo.room) takeSeat(client.seatInfo); } });
+  addEventListener('keydown', e => { client.keys.add(e.key.toLowerCase()); if (W && !e.repeat && !client.ghost) { const k = e.key.toLowerCase(); if (k === 'q' && client.seated) standUp(); else if (k === 'e' && !client.seated && client.loc === client.at && client.seatInfo && client.at === client.seatInfo.room) takeSeat(client.seatInfo); } });
   addEventListener('keyup', e => client.keys.delete(e.key.toLowerCase()));
+  // OUT OF THE BODY (a participant's wish, 2026/10/29): the Persona stays where it is - seated, if it is - and the User's point of view leaves it: a camera that moves round the room, W/S forward and
+  // back, A/D or the wheel turn, R/F up and down, Q/E look up and down, and sees the Persona from outside. G or the button brings it back. What the User hears and says stays with the body.
+  const ghostBtn = document.getElementById('ghostBtn');
+  function toggleGhost() {
+    if (client.ghost) { client.ghost = null; ghostBtn.textContent = 'Leave my body'; client.notice = 'Back in your body.'; return; }
+    const rad = client.yaw * Math.PI / 180;
+    client.ghost = { x: client.x - Math.sin(rad) * 2.2, y: client.y + Math.cos(rad) * 2.2, eye: 2.0, yaw: (client.yaw + 180) % 360, pitch: -0.25 };
+    ghostBtn.textContent = 'Back in my body'; client.notice = 'Out of your body: W/S move, A/D or the wheel turn, R/F up and down, Q/E look up and down. G brings you back.';
+  }
+  ghostBtn.addEventListener('click', e => { toggleGhost(); ghostBtn.blur(); });
+  addEventListener('keydown', e => { if (e.key.toLowerCase() === 'g' && !e.repeat && !/input|textarea/i.test(e.target.tagName)) toggleGhost(); });
   join();
 }
 // CLICK TO GO THERE. A click on the floor - or on a wall (to the floor before it) or a door (through it) - walks the Persona to that point, round the walls, through the doors; a drag turns the
@@ -895,13 +1326,27 @@ function clickPoint(e) {         // where in the world a click on the picture is
   });
   addEventListener('pointerup', e => {
     if (!down) return; const d = down; down = null;
-    if (d.moved || !client || e.target !== renderer.domElement) return;
-    if (document.body.classList.contains('screening') && !document.body.classList.contains('swapped')) return;      // the room is a stamp: a click on it changes it over with the screen
+    if (d.moved || !client || client.ghost || e.target !== renderer.domElement) return;
     const p = clickPoint(e); if (p) goTo(p.x, p.y);
   });
 }
 
+function driveGhost(dt) {   // the camera of a User out of its body
+  const k = client.keys, g = client.ghost;
+  const fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
+  const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
+  const up = (k.has('r') ? 1 : 0) - (k.has('f') ? 1 : 0), look = (k.has('q') ? 1 : 0) - (k.has('e') ? 1 : 0);
+  g.yaw = (g.yaw + turn * 90 * dt + 360) % 360;
+  g.pitch = Math.max(-1.2, Math.min(1.2, g.pitch + look * 1.0 * dt));
+  g.eye = Math.max(0.3, Math.min(8, g.eye + up * 1.5 * dt));
+  const rad = g.yaw * Math.PI / 180;
+  g.x = Math.max(W.bounds[0], Math.min(W.bounds[2], g.x - Math.sin(rad) * fwd * 3 * dt));
+  g.y = Math.max(W.bounds[1], Math.min(W.bounds[3], g.y + Math.cos(rad) * fwd * 3 * dt));
+  camera.position.set(g.x, g.eye, -g.y); camera.rotation.set(g.pitch, rad, 0, 'YXZ');
+}
+
 function drive(dt) {   // the keys: W/S or up/down walk, A/D or left/right turn; the camera is the Persona's eyes
+  if (client.ghost) { driveGhost(dt); return; }
   const k = client.keys;
   let fwd = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0);
   const turn = (k.has('a') || k.has('arrowleft') ? 1 : 0) - (k.has('d') || k.has('arrowright') ? 1 : 0);
@@ -941,8 +1386,8 @@ async function refresh() {
     document.getElementById('title').textContent = client.status;
     renderEars();
     document.getElementById('notice').textContent = W ? (client.notice ?? '') : '';
-    document.title = client.heard.length ? 'heard: ' + client.heard.join(', ') : 'M-Instance viewer';   // what the tab says: what this User has heard
-    document.getElementById('recent').textContent = (W ? 'W/S walk, A/D turn, Q stand up, E sit. ' : 'W/S walk, A/D turn. ') + 'You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.join(', ') : '');
+    document.title = client.heard.length ? 'heard: ' + client.heard.slice(-3).join(', ') : 'M-Instance viewer';   // what the tab says: what this User has heard
+    document.getElementById('recent').textContent = (W ? 'W/S walk, A/D turn, Q stand up, E sit. ' : 'W/S walk, A/D turn. ') + 'You see what MM-Capture returns: ' + client.things.filter(t => t.Kind === 'Persona').map(t => t.ID).join(', ') + (client.heard.length ? ' - heard: ' + client.heard.slice(-3).join(', ') : '');   // the last three only: the list grows with every sound heard, and would fill the screen
   } else {
     try { state = await (await fetch('state', { cache: 'no-store' })).json(); } catch { return; }
   }
@@ -961,6 +1406,7 @@ async function refresh() {
 
   const hidden = new Set(state.Hidden ?? []);   // not drawn yet: a demonstration brings them in
   const seen = new Set();
+  screenShownNow = window.mmmForceScreen ?? state.Things.some(x => x.Kind === 'Screen' && x.Streaming);      // (mmmForceScreen: for trying the room without a screen)
   for (const t of state.Things) {
     seen.add(t.ID);
     const isRoom = t.Kind === 'Location' && t.At;
@@ -979,27 +1425,119 @@ async function refresh() {
     }
     d.target.set(t.X, (t.Z ?? 0) + (isRoom ? 0.06 : 0), -t.Y);
     d.yaw = t.Yaw ?? null;
+    if (t.Kind === 'Persona' && W) { d.real = { x: d.target.x, y: d.target.y, z: d.target.z, yaw: d.yaw }; d.aside = /-S\d+$/.test(t.At ?? '') ? asideOf(t) : null; } else { d.aside = null; }      // where it is, and where it is drawn while you look at the screen
     if (t.Kind === 'Persona' && t.At) {
       const at = state.Things.find(x => x.ID === t.At);
       const sits = W && /-S\d+$/.test(t.At);                       // at a seat of a meeting room
       d.target.y = W ? (sits ? 0.05 - SIT_DROP : 0.05) : (t.Depth ?? (at?.At ? 2 : 1)) >= 2 ? 0.14 : 0.06;   // standing on a room's floor, or on a pad; sitting, lowered onto the chair
       sitPose(d.object, sits);
+      handUp(d.object, !!client?.hands?.has(t.Owner));          // the hand raised: the Persona's arm goes up
+      if (W && client && t.Animation) watchMouth(d, t);          // the mouth: the Animation Stream that animates it
+      if (W && client && sits) boardFor(t.ID, t.Owner ?? t.ID);   // the command board on the table before it
     }
     // Shown: what is perceptible and placed - a Persona once added, a Location that is
     // a place of its own or has been placed (a Room on its Parcel).
-    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID) && !(client && t.ID === client.persona);   // you do not see your own Persona from inside it
+    d.object.visible = t.Perceptible !== false && (t.Kind !== 'Persona' || !!t.At) && !hidden.has(t.ID) && !(client && t.ID === client.persona && !client.ghost);   // you do not see your own Persona from inside it - out of its body, you do
     const l = d.object.userData.label;
     if (l) l.visible = d.object.visible && (!W || !client || t.Kind !== 'Persona' || !t.At || t.At.replace(/-S\d+$/, '') === client.at);   // in the world, the name of a Persona is shown only in the place you are in, not through the walls
-    if (l) l.element.textContent = t.Kind === 'Persona' ? `${W ? (t.Owner ?? t.ID) : t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
+    if (l) l.element.textContent = t.Kind === 'Persona' ? `${client?.hands?.has(t.Owner) ? '\u270B ' : ''}${W ? (t.Owner ?? t.ID) : t.ID}${t.Animation ? ' (animated)' : ''}` : `${t.ID}${t.Owner ? ' - ' + t.Owner : ''}${t.Public ? ' (open)' : ''}`;
   }
   for (const [id, d] of drawn) if (!seen.has(id)) { d.object.visible = false; if (d.object.userData.label) d.object.userData.label.visible = false; }
+}
+
+// WHILE A SCREEN IS SHOWN, AND ONLY WHILE YOU LOOK AT IT, the room is drawn for you without what stands between you and the screen: the three seats of the north side (between the table and the
+// north wall), with their chairs - the chairs of the room are one piece of the model of the building, cut into one piece for each seat of the meeting room - and the Personae that sit in them are
+// drawn aside, at the two ends of the wall. It is only a drawing, for the one who looks: nobody moves in the M-Instance, nobody else's view is changed, and when you turn away from the screen you
+// see the room as it is - they are back in their seats, the chairs with them. Your own view is never moved for you.
+let screenShownNow = false;
+function splitChairs(root, b) {
+  const room = b.rooms.find(r => r.id === 'MeetingRoom'); if (!room) { chairsNote = 'no room in ' + b.id; return; }
+  let chairs = null, n = 0, names = []; root.traverse(o => { if (o.isMesh) { names.push(o.material?.name ?? '?'); if (o.material?.name === 'chair') { chairs = o; n++; } } });
+  if (!chairs) { chairsNote = 'no chair mesh; materials ' + names.join(','); return; }
+  const g = chairs.geometry, pos = g.attributes.position, idx = g.index; if (!idx) { chairsNote = 'chair mesh not indexed'; return; }
+  chairsNote = `chair meshes ${n}, tris ${idx.count / 3}`;
+  const seats = (room.seats ?? []).map(q => ({ q, x: room.x + q.x, z: -(room.y + q.y) }));      // in the frame of the building: x east, z south
+  const groups = new Map(), rest = [];
+  for (let i = 0; i < idx.count; i += 3) {
+    const t = [idx.getX(i), idx.getX(i + 1), idx.getX(i + 2)];
+    const cx = (pos.getX(t[0]) + pos.getX(t[1]) + pos.getX(t[2])) / 3, cz = (pos.getZ(t[0]) + pos.getZ(t[1]) + pos.getZ(t[2])) / 3;
+    let best = null, bd = 0.7;
+    for (const q of seats) { const d = Math.hypot(cx - q.x, cz - q.z); if (d < bd) { bd = d; best = q; } }
+    if (best) { if (!groups.has(best.q.id)) groups.set(best.q.id, []); groups.get(best.q.id).push(...t); } else rest.push(...t);
+  }
+  // All or nothing: the pieces are made first; only when every one is made are they put in the room and taken out of the chairs of the model - a chair is never lost.
+  const made = [];
+  for (const q of seats) {
+    const list = groups.get(q.q.id); if (!list) continue;
+    const ng = new THREE.BufferGeometry();
+    for (const [name, attr] of Object.entries(g.attributes)) ng.setAttribute(name, attr);
+    ng.setIndex(list);
+    const mesh = new THREE.Mesh(ng, chairs.material); mesh.castShadow = chairs.castShadow; mesh.receiveShadow = chairs.receiveShadow; mesh.position.set(-q.x, 0, -q.z);
+    const pivot = new THREE.Group(); pivot.position.set(q.x, 0, q.z); pivot.add(mesh);
+    made.push({ id: q.q.id, pivot, q: q.q });
+  }
+  chairsNote += `, made ${made.length}, rest ${rest.length / 3}`;
+  chairs.geometry.setIndex(rest);                                                                // the chairs of the other rooms stay where they are
+  for (const m of made) { root.add(m.pivot); seatChairs.set(m.id, { pivot: m.pivot, home: m.pivot.position.clone(), yaw: m.q.yaw, q: m.q }); }
+}
+let seatTable = null;
+function seatInfoOf(seatId) {
+  if (!W) return null;
+  if (!seatTable) {
+    const b = W.buildings.find(x => x.rooms?.some(r => r.id === 'MeetingRoom')), r = b?.rooms.find(x => x.id === 'MeetingRoom');
+    if (!r) return null;
+    seatTable = { cx: b.x + r.x, cy: b.y + r.y, seats: new Map((r.seats ?? []).map(q => [q.id, q])) };
+  }
+  const q = seatTable.seats.get(seatId);
+  return q ? { cx: seatTable.cx, cy: seatTable.cy, q } : null;
+}
+// Where a seat of the north side goes while a screen is shown, in metres from the centre of the table (x east, y north), and the yaw that looks at the table from there; null for the others.
+function compactSeat(q) {
+  if (q.y < 0.5) return null;                                                                      // only the north side: the seats between the table and the screen
+  const to = q.x > 0.5 ? [1.8, 1.2] : q.x < -0.5 ? [-1.7, 1.2] : [-2.4, 0.9];                      // beside the picture, in the view of who looks at it: east, west, and further out on the west - each on a line of sight of its own, so that they are seen one by one
+  return { x: to[0], y: to[1], yaw: (Math.atan2(to[0], -to[1]) * 180 / Math.PI + 360) % 360 };
+}
+function asideOf(t) {                         // [x, y, yaw] where the Persona of a seat of the north side is drawn while you look at the screen, or null
+  if (!t.At) return null;
+  const k = seatInfoOf(t.At); if (!k) return null;
+  const c = compactSeat(k.q); if (!c) return null;
+  return [k.cx + c.x, k.cy + c.y, c.yaw];
+}
+let lookingAtScreen = false, dbgEl = null, dbgAt = 0;
+function moveSeats(dt) {
+  if (new URLSearchParams(location.search).has('dbg') && Date.now() - dbgAt > 500) {                       // &dbg in the address: what the chairs are doing, in a line at the foot of the page
+    dbgAt = Date.now();
+    if (!dbgEl) { dbgEl = document.createElement('div'); Object.assign(dbgEl.style, { position: 'fixed', left: '8px', bottom: '34px', zIndex: 30, background: 'rgba(0,0,0,.7)', color: '#ff0', font: '12px monospace', padding: '2px 6px' }); document.body.appendChild(dbgEl); }
+    const first = [...seatChairs.values()][0];
+    dbgEl.textContent = `[${chairsNote}] chairs ${seatChairs.size}  moved ${[...seatChairs.values()].filter(c => Math.abs(c.pivot.position.x - c.home.x) + Math.abs(c.pivot.position.z - c.home.z) > 0.05).length}  look ${lookingAtScreen}  shown ${screenShownNow}  walls ${wallScreens.walls.length ? wallScreens.walls[0].mesh.visible : 'none'}  yaw ${client ? Math.round(client.yaw) : '-'}` + (first ? `  S?:${first.pivot.position.x.toFixed(1)},${first.pivot.position.z.toFixed(1)} vis ${first.pivot.visible}` : '');
+  }
+  // Looking at the screen: a screen is shown and you face the north wall (within 55 degrees; it lets go beyond 70, so that it does not flutter at the edge).
+  const vy = client ? (client.ghost ? client.ghost.yaw : client.yaw) : 0;
+  const off = Math.min(Math.abs(((vy % 360) + 360) % 360), 360 - Math.abs(((vy % 360) + 360) % 360));      // degrees from north, 0 to 180
+  const pictured = wallScreens.walls.length > 0 && wallScreens.walls[0].mesh.visible;                      // a picture is on the walls: not just a screen that is said to be there
+  lookingAtScreen = screenShownNow && pictured && !!client && (lookingAtScreen ? off < 70 : off < 55);
+  const k = 1 - Math.exp(-dt * 4);
+  for (const [id, sc] of seatChairs) {
+    const c = lookingAtScreen ? compactSeat(sc.q) : null;
+    const tx = c ? sc.home.x + (c.x - sc.q.x) : sc.home.x, tz = c ? sc.home.z - (c.y - sc.q.y) : sc.home.z, ty = c ? ((c.yaw - sc.q.yaw + 540) % 360 - 180) * Math.PI / 180 : 0;
+    sc.pivot.position.x += (tx - sc.pivot.position.x) * k; sc.pivot.position.z += (tz - sc.pivot.position.z) * k;
+    const cur = sc.pivot.rotation.y; sc.pivot.rotation.y = cur + (((ty - cur + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) * k;
+  }
 }
 
 // Personae walk to where they now are, at about 2 m/s, facing the way they go.
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.1);
+  applyMouths(dt);
+  moveSeats(dt);
+  for (const [id, b] of boards) {                                                                      // each board follows the Persona that sits at it, and is shown when it is
+    const d = drawn.get(id), here = !!d?.object.userData.sitting;
+    b.group.visible = here && (b.own ? false : d.object.visible && !!d.object.userData.label?.visible);      // the own board is the bar at the foot of the page, not a box on the table
+    if (here) { b.group.position.set(d.object.position.x, d.object.position.y + BOARD_TOP, d.object.position.z); b.group.rotation.y = d.object.rotation.y; }
+  }
   for (const d of drawn.values()) {
+    if (d.aside && d.real) { const on = lookingAtScreen; d.target.set(on ? d.aside[0] : d.real.x, d.real.y, on ? -d.aside[1] : d.real.z); d.yaw = on ? d.aside[2] : d.real.yaw; }
     const p = d.object.position, to = d.target, dist = p.distanceTo(to);
     if (dist > 0.01) {
       const step = Math.min(dist, 2.0 * dt * Math.max(1, dist / 3));
@@ -1010,6 +1548,7 @@ renderer.setAnimationLoop(() => {
     if (d.yaw != null) d.object.rotation.y = Math.PI + d.yaw * Math.PI / 180;   // a Persona looks where its yaw says (the model faces +z at rest; yaw 0 is north, -z)
   }
   if (W && client) for (const l of buildingLabels) l.visible = client.loc === 'MVS';
+  if (W && client) for (const d of doors) if (d.open && Math.hypot(client.x - d.x, client.y - d.y) > 2) { d.open = false; d.leaf.visible = true; }      // the door closes behind whoever went through it
   if (W && client) for (const d of doors) if (d.label) d.label.visible = (d.from === client.at && client.at !== 'MVS' || d.to === client.at && d.from !== 'MVS') && Math.hypot(client.x - d.x, client.y - d.y) < 13;   // the doors of the place it is in   // the names of the buildings are for whoever is outside
   if (client) drive(dt); else controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });

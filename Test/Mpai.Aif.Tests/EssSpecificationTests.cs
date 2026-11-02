@@ -21,12 +21,7 @@ public class EssSpecificationTests
     private static readonly string[] L2s =
     [
         "CAV2/V2.0/AIMs/EnvironmentSensingSubsystem.json",
-        "CAV2/V2.0/AIMs/AudioSensors.json", "CAV2/V2.0/AIMs/VisualSensors.json", "CAV2/V2.0/AIMs/RADARSensors.json",
-        "CAV2/V2.0/AIMs/LiDARSensors.json", "CAV2/V2.0/AIMs/UltrasoundSensors.json",
         "CAV2/V2.0/AIMs/SpatialAttitudeGeneration.json", "CAV2/V2.0/AIMs/BasicEnvironmentDescription.json",
-        "CAE3/V1.0/AIMs/AudioObjectAcquisition.json", "CVE/V1.0/AIMs/VisualObjectAcquisition.json",
-        "OSD/V1.5/AIMs/RADARObjectAcquisition.json", "OSD/V1.5/AIMs/LiDARObjectAcquisition.json",
-        "OSD/V1.5/AIMs/UltrasoundObjectAcquisition.json",
         "OSD/V1.5/AIMs/BasicAudioSceneDescription.json", "OSD/V1.5/AIMs/BasicVisualSceneDescription.json",
         "OSD/V1.5/AIMs/BasicRADARSceneDescription.json", "OSD/V1.5/AIMs/BasicLiDARSceneDescription.json",
         "OSD/V1.5/AIMs/BasicUltrasoundSceneDescription.json", "OSD/V1.5/AIMs/BasicOfflineMapSceneDescription.json",
@@ -93,7 +88,7 @@ public class EssSpecificationTests
             foreach (var p in composite["ExternalPorts"]!.AsArray().Concat(composite["InternalTypes"]?.AsArray() ?? []))
                 labels[(string)p!["Name"]!] = Types(p["DataType"]).ToList();
 
-            var subs = composite["SubAIMs"]!.AsArray().Select(s => (string)s!["Identifier"]!["AIMName"]!).ToList();
+            var subs = composite["SubAIMs"]!.AsArray().Select(s => (string)s!["Header"]!).ToList();   // in an L2, a Sub-AIM is its Header
             foreach (var s in subs.Where(s => !l2s.ContainsKey(s))) problems.Add($"{s} has no L2");
 
             var fed = new HashSet<(string Aim, string Type)>();

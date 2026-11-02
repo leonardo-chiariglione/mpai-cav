@@ -34,6 +34,8 @@ Used by all four Apps. The program: `piper_windows_amd64.zip` from <https://gith
 | `Piper\piper_windows_amd64\piper\piper.exe` | 510.0 KB | `96F3DA3811151580073E40BB4DD20EB0FB8115F5F5F76E2FB54282B3EDFA5C1F` |
 | `Piper\voices\de_DE-eva_k-x_low\de_DE-eva_k-x_low.onnx` | 20.6 MB | `E88CF290FBFB768BF111330D2E8A46E376B0D85E3423A28BFEBBC863A260DAD8` |
 | `Piper\voices\de_DE-eva_k-x_low\de_DE-eva_k-x_low.onnx.json` | 4.2 KB | `EF14B3DCB279AB4B18422A7A132877BEE7A148821BD91152FB7AE9C4B3D79625` |
+| `Piper\voices\el_GR-rapunzelina-medium\el_GR-rapunzelina-medium.onnx` | 60.0 MB | `3CA9FB3092215EE92EDFC019B43FEB0115FF4DFE638EB34474833AB1DE840952` |
+| `Piper\voices\el_GR-rapunzelina-medium\el_GR-rapunzelina-medium.onnx.json` | 4.9 KB | `3A6182EC7C7550E14EF15E5D9BADBB18F973A434086AC9658A1B10991FD192F8` |
 | `Piper\voices\en_US-amy-medium\en_US-amy-medium.onnx` | 63.2 MB | `B3A6E47B57B8C7FBE6A0CE2518161A50F59A9CDD8A50835C02CB02BDD6206C18` |
 | `Piper\voices\en_US-amy-medium\en_US-amy-medium.onnx.json` | 4.9 KB | `95A23EB4D42909D38DF73BB9AC7F45F597DBFCDE2D1BF9526FDEAF5466977D77` |
 | `Piper\voices\es_ES-davefx-medium\es_ES-davefx-medium.onnx` | 63.2 MB | `6658B03B1A6C316EE4C265A9896ABC1393353C2D9E1BCA7D66C2C442E222A917` |

@@ -28,14 +28,16 @@ public static class LanguageDetector
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
 
-        int kana = 0, han = 0, letters = 0;
+        int kana = 0, han = 0, greek = 0, letters = 0;
         foreach (var c in text)
         {
             if (c >= '぀' && c <= 'ヿ') kana++;
             else if (c >= '一' && c <= '鿿') han++;
+            else if ((c >= 'Ͱ' && c <= 'Ͽ') || (c >= 'ἀ' && c <= '῿')) greek++;
             if (char.IsLetter(c)) letters++;
         }
         if (letters > 0 && kana + han >= 0.3 * letters) return kana > 0 ? "ja" : "zh";
+        if (letters > 0 && greek >= 0.5 * letters) return "el";
 
         var words = text.Split(Separators, StringSplitOptions.RemoveEmptyEntries).Where(w => w.All(char.IsLetter)).ToList();
         if (words.Count < 8) return null;

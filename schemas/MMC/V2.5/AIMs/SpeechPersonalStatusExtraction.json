@@ -5,7 +5,7 @@
 
   "Header":       "MMC-SPE-V2.5",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-SPE-V2.5" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "APIProfile":   "Basic",
   "Description":  "This composite AIM extracts the Personal Status conveyed by Speech.",
@@ -17,8 +17,8 @@
   ],
 
   "SubAIMs":  [
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ESD-V2.5" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PSI-V2.5" } }
+    { "Header": "MMC-ESD-V2.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "MMC-PSI-V2.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } }
   ],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ESD-V2.5", "DataType": "OSD-BSO-V1.5"}},

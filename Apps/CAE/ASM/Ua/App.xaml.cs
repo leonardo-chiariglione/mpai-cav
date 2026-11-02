@@ -15,6 +15,8 @@ public partial class App : Application
     // --script <file>: the real window is driven by the lines of the file and what it shows is written to <file>.dump.txt.
     public static bool Live, Silent;
     public static string? Script, Storage;
+    // THE CONTROLLER this User Agent talks to (a program of its own, started by whoever launches the App): `--controller <url>`.
+    public static string ControllerUrl = "http://127.0.0.1:5057";
 
     public static void Record(string context, Exception error)
     {
@@ -30,6 +32,8 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // DIAGNOSTICS ARE ALWAYS ON in this window, before anything reads them: every capture leaves its levels (mic.log) and its audio (mic_*.wav) in <temporary folder>\mpai-diag.
+        Environment.SetEnvironmentVariable("MPAI_DIAG", "1");
         base.OnStartup(e);
         if (Array.IndexOf(e.Args, "--drive") >= 0) { Shutdown(Task.Run(() => Driver.Run(e.Args)).GetAwaiter().GetResult()); return; }
         // The microphone button, on and off, to a file: `AsmUa.exe --mic-png <file>`.
@@ -44,6 +48,20 @@ public partial class App : Application
             shot.Render(row);
             var enc = new System.Windows.Media.Imaging.PngBitmapEncoder(); enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(shot));
             using (var file = File.Create(e.Args[mic + 1])) enc.Save(file);
+            Shutdown(0); return;
+        }
+        // The whole window as it is laid out, to a file, nothing started (no avatar, no sound): `AsmUa.exe --window-png <file> [--mode voice|text]`.
+        var win = Array.IndexOf(e.Args, "--window-png");
+        if (win >= 0 && win + 1 < e.Args.Length)
+        {
+            var preview = new Mpai.Cae.AsmUa.MainWindow();
+            var mode = Array.IndexOf(e.Args, "--mode"); if (mode >= 0 && mode + 1 < e.Args.Length) preview.ShowMode(e.Args[mode + 1]);
+            var content = (FrameworkElement)preview.Content;
+            content.Measure(new Size(1180, 740)); content.Arrange(new Rect(0, 0, 1180, 740)); content.UpdateLayout();
+            var picture = new System.Windows.Media.Imaging.RenderTargetBitmap(1180, 740, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+            picture.Render(content);
+            var png = new System.Windows.Media.Imaging.PngBitmapEncoder(); png.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(picture));
+            using (var file = File.Create(e.Args[win + 1])) png.Save(file);
             Shutdown(0); return;
         }
         // A picture of the room, to a file, with nothing else started (no avatar, no sound): `AsmUa.exe --scene-png <file>`.
@@ -65,6 +83,7 @@ public partial class App : Application
         }
         Live = e.Args.Contains("--live"); Silent = e.Args.Contains("--silent");
         var script = Array.IndexOf(e.Args, "--script"); if (script >= 0 && script + 1 < e.Args.Length) Script = e.Args[script + 1];
+        var controller = Array.IndexOf(e.Args, "--controller"); if (controller >= 0 && controller + 1 < e.Args.Length) ControllerUrl = e.Args[controller + 1];
         var store = Array.IndexOf(e.Args, "--storage"); if (store >= 0 && store + 1 < e.Args.Length) Storage = e.Args[store + 1];
         var window = new MainWindow();
         if (Script is not null) { window.WindowStartupLocation = WindowStartupLocation.Manual; window.Left = -3000; window.Top = 0; window.ShowActivated = false; }

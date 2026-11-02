@@ -33,6 +33,9 @@ public sealed class HighwayVehicle
     public double BaseSpeed { get; init; }                      // m/s, what the driver wants
     public int Direction { get; init; } = 1;                    // 1: with the road (east); -1: against it, the traffic of a two-way road's other lane
     public string? CavId { get; init; }                         // a CAV that reports what it perceives to the CAVs around it
+    public string Class { get; init; } = "car";                 // car, truck, person, bicycle
+    public double MovesFrom { get; init; }                      // a scripted vehicle stands still until this time (s)
+    public double SeenWithin { get; init; } = double.PositiveInfinity;   // seen only by one this near (m): it comes out from behind something
 
     public double X { get; internal set; }                      // m along the road, of the centre
     public double Y { get; internal set; }                      // m to the left of the right lane's centreline
@@ -173,6 +176,19 @@ public sealed class HighwayWorld
             Direction = Math.Cos(heading) >= 0 ? 1 : -1, Path = path, Profile = profile, Intends = intends,
             SignalFrom = Math.Max(0, path.TurnSpan().Begin - signalAhead),
             Length = truck ? 12 : 4.5, Width = truck ? 2.5 : 1.8, Height = truck ? 3.6 : 1.45, Paint = paint ?? (truck ? TruckWhite : CameraRenderer.Silver)
+        };
+    }
+
+    // A ROAD USER on foot or on a cycle that goes straight on from where it stands, from a time, for as far as it is told to: a person is half a metre
+    // across, a cycle 1.8 m by 0.6.
+    public static HighwayVehicle RoadUser(string id, string cls, double x, double y, double heading, double speed, double movesFrom, double metres, double seenWithin = double.PositiveInfinity)
+    {
+        var (length, width) = cls == "bicycle" ? (1.8, 0.6) : (0.5, 0.5);
+        return new HighwayVehicle
+        {
+            Id = id, Class = cls, BaseSpeed = speed, X = x, Y = y, Heading = heading, Speed = 0, Direction = Math.Cos(heading) >= 0 ? 1 : -1,
+            Path = new HighwayPath(x, y, heading).Line(metres), Profile = new SpeedProfile((0, speed)), MovesFrom = movesFrom, SeenWithin = seenWithin,
+            Length = length, Width = width, Height = cls == "bicycle" ? 1.7 : 1.75, Paint = (90, 60, 40)
         };
     }
 
@@ -345,7 +361,7 @@ public sealed class HighwayWorld
     {
         if (a.Path is not null && a.Profile is not null)
         {
-            var speed = a.Profile.At(a.PathS) * a.SpeedFactor;
+            var speed = time < a.MovesFrom ? 0 : a.Profile.At(a.PathS) * a.SpeedFactor;
             a.Acceleration = (speed - a.Speed) / Step; a.Speed = speed;
             a.PathS += speed * Step;
             var (px, py, ph) = a.Path.At(a.PathS);

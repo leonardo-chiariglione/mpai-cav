@@ -27,7 +27,7 @@ namespace Mpai.Cav.Ess;
 // frame is the odometry's, and the accuracy says it is not anchored.
 public sealed class SpatialAttitudeGeneration(string instanceId, IReadOnlyDictionary<string, string> settings) : IAimProcessor, IAimRunner
 {
-    public const string Attitude = "OSD-OSA-V1.5", Gnss = "CAV-GNO-V2.0", Map = "OSD-BOO-V1.5";
+    public const string Attitude = "OSD-OSA-V1.5", Gnss = "CAV-NSO-V2.0", Map = "OSD-BOO-V1.5";
     private const double Earth = 6_371_000, GnssSigma = 1.5, Unanchored = 1000;
 
     private readonly double weight = EssJson.Setting(settings, "GnssWeight", 0.1),

@@ -1,8 +1,8 @@
 {
   "Identifier": {
-    "ImplementerID": "IIDRA-assigned",
-    "ImplementationID": "MMC-MQA-V2.5-I01",
-    "AIMName": "MMC-MQA-V2.5"
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
   },
   "Header": "MMC-MQA-V2.5",
   "APIProfile": "Basic",
@@ -62,50 +62,50 @@
   ],
   "SubAIMs": [
     {
-      "Identifier": {
+      "Header": "CVE-VII-V1.0", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "CVE-VII-V1.0",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     },
     {
-      "Identifier": {
+      "Header": "MMC-ASR-V2.5", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-ASR-V2.5",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     },
     {
-      "Identifier": {
+      "Header": "MMC-NLU-V2.5", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-NLU-V2.5",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     },
     {
-      "Identifier": {
+      "Header": "MMC-QAM-V2.5", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-QAM-V2.5",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     },
     {
-      "Identifier": {
+      "Header": "MMC-AQM-V2.5", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "MMC-AQM-V2.5",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     },
     {
-      "Identifier": {
+      "Header": "PAF-PMX-V1.6", "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String from Implementer */",
-        "AIMName": "PAF-PMX-V1.6",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
         "Relation": "Internal"
       }
     }

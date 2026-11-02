@@ -3,7 +3,8 @@
   "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/EnvironmentDescription.json",
   "title":                "Environment Description V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-END-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":               "XRV-END-V1.0",
 
   "APIProfile":           "Basic",
   "Description":          "The Environment Description (XRV-END) AIM captures raw Data from the Real and Virtual Environments including audio, visual, and other data in a variety of formats defined by the Qualifier standard; using Script-Venue Associations, identifies and separates the Performance elements, Participant elements and Operator elements that are relevant to subsequent processing; packages them into Performance, Participant, and Operator Descriptors for both the Real and Virtual Environments, and a combination of all Descriptors called Show Descriptors; and passes the Descriptors to downstream AIMs.",

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-AOA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Media",
+  "Description": "Audio Object Acquisition: acquires Audio Objects from the real world and provides them, and the Scene Descriptors of what it acquires where the Data Type exists. A microphone or microphone array gives a Basic Audio Object; a source on a disk or a network may give a Basic or a full Audio Object, and Basic or full Scene Descriptors.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "SensedAudio",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BAO-V1.5",
+        "OSD-BAS-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredAudio",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BAO-V1.5",
+        "OSD-AUO-V1.5",
+        "OSD-BAS-V1.5",
+        "OSD-ASD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredAudio",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BAO-V1.5",
+        "OSD-AUO-V1.5",
+        "OSD-BAS-V1.5",
+        "OSD-ASD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

@@ -3962,7 +3962,7 @@
       }
      },
      "MicrophoneAttributes": {
-      "description": "PerÃ¢â‚¬â€˜microphone configuration entries.",
+      "description": "Per-microphone configuration entries.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -4000,12 +4000,10 @@
     "type": "object",
     "required": [
      "Header",
-     "AcousticProfileID",
-     "FrequencyRange",
-     "Loudness"
+     "AcousticProfileID"
     ],
     "additionalProperties": false,
-    "description": "The acoustics of an Object: what it sounds like, and how it radiates.",
+    "description": "The acoustics of an Object: what it sounds like, and how it radiates. Only the identifier is required, so that a command can state the one property it changes.",
     "properties": {
      "Header": {
       "type": "string",
@@ -4044,11 +4042,12 @@
       }
      },
      "Spectrogram": {
-      "$ref": "#/components/schemas/OSD_V15_Plot"
+      "$ref": "#/components/schemas/OSD_V15_Plot",
+      "description": "A 3D Plot of triples: time in seconds, frequency in Hz, level in dB."
      },
      "Loudness": {
       "type": "number",
-      "description": "Perceptual loudness (e.g., LUFS in dB)"
+      "description": "Perceptual loudness, in LUFS."
      },
      "DirectionalPatterns": {
       "$ref": "#/components/schemas/OSD_V15_Plot",
@@ -4132,6 +4131,12 @@
     ],
     "additionalProperties": false,
     "properties": {
+     "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How likely it is that the Cognitive State is the one the Entity has; Degree is its intensity."
+     },
      "Header": {
       "type": "string",
       "const": "MMC-ECS-V2.5"
@@ -4304,6 +4309,12 @@
     ],
     "additionalProperties": false,
     "properties": {
+     "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How likely it is that the Emotion is the one the Entity has; Degree is its intensity."
+     },
      "Header": {
       "type": "string",
       "const": "MMC-EEM-V2.5"
@@ -4512,7 +4523,7 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1,
-      "description": "Optional intensity/confidence of the chosen Emotion label, in [0,1]."
+      "description": "Optional intensity of the chosen Emotion label, in [0,1]; how likely the label is right is its Confidence."
      },
      "DataXMData": {
       "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata"
@@ -4578,6 +4589,12 @@
     ],
     "additionalProperties": false,
     "properties": {
+     "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How likely it is that the Social Attitude is the one the Entity has; Degree is its intensity."
+     },
      "Header": {
       "type": "string",
       "const": "MMC-ESA-V2.5"
@@ -5069,7 +5086,7 @@
            "seductive": {
             "type": "string",
             "enum": [
-             "suggestive/risquÃ©/naughty"
+             "suggestive/risqué/naughty"
             ]
            },
            "lewd/bawdy/indecent": {
@@ -5435,7 +5452,7 @@
      },
      {
       "const": "Register",
-      "description": "The Action of a human opening an Account based on the humanÃ¢â‚¬â„¢s Personal Data."
+      "description": "The Action of a human opening an Account based on the human’s Personal Data."
      },
      {
       "const": "Resolve",
@@ -6086,7 +6103,9 @@
         "$ref": "#/components/schemas/MMM4_V22_AnyItem"
        },
        "Confidence": {
-        "type": "number"
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
        }
       }
      },
@@ -8046,7 +8065,6 @@
      "ForeignProcessId",
      "EventType",
      "Severity",
-     "Confidence",
      "ReportCreationTime",
      "RuleContext",
      "Evidence",
@@ -17158,6 +17176,221 @@
      }
     }
    },
+   "MMM4_V22_UserCommand": {
+    "title": "User Command V2.2",
+    "description": "DRAFT, not published. What a participant asks the Secretary of a meeting (a request, UserCommandRQ) and what the Secretary answers (a response, UserCommandRS) under the same UserCommandID. Exactly one of the two is present, as in the User Command (CAE-UCM). The Secretary is a User (a Process) that speaks with the User of a participant; its Voice Command Interface turns what the participant says into the request.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "Header",
+     "UserCommandID"
+    ],
+    "oneOf": [
+     {
+      "required": [
+       "UserCommandRQ"
+      ],
+      "not": {
+       "required": [
+        "UserCommandRS"
+       ]
+      }
+     },
+     {
+      "required": [
+       "UserCommandRS"
+      ],
+      "not": {
+       "required": [
+        "UserCommandRQ"
+       ]
+      }
+     }
+    ],
+    "properties": {
+     "Header": {
+      "type": "string",
+      "const": "MMM-UCM-V2.2"
+     },
+     "MInstanceID": {
+      "type": "string"
+     },
+     "UserCommandID": {
+      "type": "string"
+     },
+     "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+     },
+     "UserCommandRQ": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "A request: one or more of the fields below. A field that is absent asks nothing.",
+      "properties": {
+       "Summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "A summary of the meeting so far, for the participant that asks, and for nobody else. Language and Form are given when the participant says them; otherwise they are the ones of the earlier request, or English and spoken.",
+        "properties": {
+         "Language": {
+          "$ref": "#/components/schemas/MMM4_V22_UserCommand__Language"
+         },
+         "Form": {
+          "type": "string",
+          "enum": [
+           "Written",
+           "Spoken"
+          ],
+          "description": "Written: the text is shown on the participant's display. Spoken: the Secretary reads it aloud (not in Japanese or Chinese: no voice speaks them, the text is shown)."
+         }
+        }
+       },
+       "Display": {
+        "type": "string",
+        "enum": [
+         "Hide",
+         "StopReading"
+        ],
+        "description": "Hide: the summary on the display goes away. StopReading: the Secretary stops reading the summary."
+       },
+       "Answers": {
+        "type": "string",
+        "enum": [
+         "Spoken",
+         "Written"
+        ],
+        "description": "How the Secretary answers the participant from now on: Spoken (the default, in a few words) or Written (also on the display)."
+       },
+       "Hand": {
+        "type": "string",
+        "enum": [
+         "Raise",
+         "Lower"
+        ],
+        "description": "Raises or lowers the participant's hand: asks for the floor."
+       },
+       "Microphone": {
+        "type": "string",
+        "enum": [
+         "On",
+         "Off"
+        ],
+        "description": "Switches the participant's microphone on or off."
+       },
+       "Screen": {
+        "type": "string",
+        "enum": [
+         "Share",
+         "Stop"
+        ],
+        "description": "Starts or stops sharing the participant's screen in the room. Only the convener may share."
+       },
+       "CloseMeeting": {
+        "type": "boolean",
+        "description": "True: the convener closes the meeting, for everybody. The Secretary asks to be sure before it is done."
+       },
+       "Confirm": {
+        "type": "boolean",
+        "description": "True: yes, to the question the Secretary asked last (closing the meeting). False: no."
+       },
+       "ReturnToMeeting": {
+        "type": "boolean",
+        "description": "True: the participant is done with the Secretary, and what it says is heard by the room again."
+       }
+      }
+     },
+     "UserCommandRS": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "Outcome"
+      ],
+      "description": "How the request was carried out.",
+      "properties": {
+       "Outcome": {
+        "type": "string",
+        "enum": [
+         "Done",
+         "Partly",
+         "Failed",
+         "Ignored"
+        ]
+       },
+       "Actions": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "Action",
+          "Outcome"
+         ],
+         "properties": {
+          "Action": {
+           "type": "string",
+           "enum": [
+            "Summary",
+            "Display",
+            "Answers",
+            "Hand",
+            "Microphone",
+            "Screen",
+            "CloseMeeting",
+            "ReturnToMeeting"
+           ]
+          },
+          "Outcome": {
+           "type": "string",
+           "enum": [
+            "Done",
+            "Failed",
+            "NotSupported",
+            "Asked"
+           ],
+           "description": "Asked: the Secretary needs the participant to confirm first."
+          },
+          "Reason": {
+           "type": "string",
+           "maxLength": 1024,
+           "description": "Why the action was not done."
+          }
+         }
+        }
+       },
+       "Summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "The summary made, when the request asked for one and it is to be shown.",
+        "properties": {
+         "Language": {
+          "$ref": "#/components/schemas/MMM4_V22_UserCommand__Language"
+         },
+         "Text": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "MMM4_V22_UserCommand__Language": {
+    "type": "string",
+    "enum": [
+     "en",
+     "el",
+     "fr",
+     "de",
+     "es",
+     "pt",
+     "it",
+     "ja",
+     "zh"
+    ],
+    "description": "ISO 639-1 code: English, Greek, French, German, Spanish, Portuguese, Italian, Japanese, Chinese."
+   },
    "MMM4_V22_ValidatePA": {
     "title": "Validate PA V2.2",
     "type": "object",
@@ -17572,7 +17805,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-3DO-V1.5",
-      "description": "3D Model Object Header â€“ Standard OSD-3MO-Vx.y"
+      "description": "3D Model Object Header – Standard OSD-3MO-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -18578,6 +18811,13 @@
        "BasicVisualObjectSpaceTime": {
         "$ref": "#/components/schemas/OSD_V15_SpaceTime"
        },
+       "TurnIndicator": {
+        "enum": [
+         "Left",
+         "Right"
+        ],
+        "description": "Which way a vehicle signals that it will turn: its direction indicator, seen lit."
+       },
        "PerceptStatus": {
         "type": "boolean"
        },
@@ -18663,10 +18903,16 @@
      "BBXContentFormats"
     ],
     "properties": {
+     "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How likely it is that the Bounding Box contains what it is said to contain."
+     },
      "Header": {
       "type": "string",
       "const": "OSD-BBX-V1.5",
-      "description": "Bounding Box Header â€“ Standard OSD-BBX-Vx.y"
+      "description": "Bounding Box Header – Standard OSD-BBX-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -18923,6 +19169,12 @@
        "type": "object",
        "additionalProperties": false,
        "properties": {
+        "Confidence": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1,
+         "description": "How likely it is that the Event happened as described."
+        },
         "SceneOrSceneID": {
          "description": "Either an embedded SceneDescriptors object or a SceneDescriptors ID.",
          "type": "array",
@@ -18965,7 +19217,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-IID-V1.5",
-      "description": "Instance Identifier Header â€“ Standard OSD-IID-Vx.y"
+      "description": "Instance Identifier Header – Standard OSD-IID-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -19194,7 +19446,7 @@
      },
      "Intensity": {
       "type": "number",
-      "description": "The light sourceâ€™s intensity measured in Watt."
+      "description": "The light source’s intensity measured in Watt."
      },
      "LightSourceRights": {
       "$ref": "#/components/schemas/OSD_V15_LightSource__Rights"
@@ -19531,7 +19783,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-OOR-V1.5",
-      "description": "Orientation Header â€“ Standard OSD-OOR-Vx.y"
+      "description": "Orientation Header – Standard OSD-OOR-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -19575,7 +19827,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation (degrees)."
+      "description": "Euler angles (α, β, γ) representing the Object's orientation (degrees)."
      },
      "OrientAccuracy": {
       "type": "array",
@@ -19584,7 +19836,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)."
+      "description": "Estimated accuracy of each Euler angle (α, β, γ) in Orientation (degrees)."
      },
      "OrientVelocity": {
       "type": "array",
@@ -19593,7 +19845,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Angular velocity of the Object's orientation (Î±, Î², Î³) (degrees/s)."
+      "description": "Angular velocity of the Object's orientation (α, β, γ) (degrees/s)."
      },
      "OrientVelocityAccuracy": {
       "type": "array",
@@ -19602,7 +19854,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each angular velocity component (Î±, Î², Î³) (degrees/s)."
+      "description": "Estimated accuracy of each angular velocity component (α, β, γ) (degrees/s)."
      },
      "OrientAccel": {
       "type": "array",
@@ -19611,7 +19863,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Angular acceleration of the Object's orientation (Î±, Î², Î³) (degrees/sÂ²)."
+      "description": "Angular acceleration of the Object's orientation (α, β, γ) (degrees/s²)."
      },
      "OrientAccelAccuracy": {
       "type": "array",
@@ -19620,7 +19872,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each angular acceleration component (Î±, Î², Î³) (degrees/sÂ²)."
+      "description": "Estimated accuracy of each angular acceleration component (α, β, γ) (degrees/s²)."
      },
      "DataXMData": {
       "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata",
@@ -19646,7 +19898,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-OOR-V1.5",
-      "description": "Orientation Header â€“ Standard OSD-OOR-Vx.y"
+      "description": "Orientation Header – Standard OSD-OOR-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -19690,7 +19942,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation (degrees)."
+      "description": "Euler angles (α, β, γ) representing the Object's orientation (degrees)."
      },
      "OrientAccuracy": {
       "type": "array",
@@ -19699,7 +19951,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)."
+      "description": "Estimated accuracy of each Euler angle (α, β, γ) in Orientation (degrees)."
      },
      "OrientVelocity": {
       "type": "array",
@@ -19708,7 +19960,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Angular velocity of the Object's orientation (Î±, Î², Î³) (degrees/s)."
+      "description": "Angular velocity of the Object's orientation (α, β, γ) (degrees/s)."
      },
      "OrientVelocityAccuracy": {
       "type": "array",
@@ -19717,7 +19969,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each angular velocity component (Î±, Î², Î³) (degrees/s)."
+      "description": "Estimated accuracy of each angular velocity component (α, β, γ) (degrees/s)."
      },
      "OrientAccel": {
       "type": "array",
@@ -19726,7 +19978,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Angular acceleration of the Object's orientation (Î±, Î², Î³) (degrees/sÂ²)."
+      "description": "Angular acceleration of the Object's orientation (α, β, γ) (degrees/s²)."
      },
      "OrientAccelAccuracy": {
       "type": "array",
@@ -19735,7 +19987,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Estimated accuracy of each angular acceleration component (Î±, Î², Î³) (degrees/sÂ²)."
+      "description": "Estimated accuracy of each angular acceleration component (α, β, γ) (degrees/s²)."
      },
      "DescrMetadata": {
       "type": "string",
@@ -19757,7 +20009,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-PCE-V1.5",
-      "description": "Perceptible Entity Header â€“ Standard OSD-PCE-Vx.y"
+      "description": "Perceptible Entity Header – Standard OSD-PCE-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -19786,15 +20038,15 @@
       "properties": {
        "Object": {
         "$ref": "#/components/schemas/OSD_V15_Object",
-        "description": "One of the supported Object types: 3D Model, Audio, Audio-Visual, Speech, Text, or Visual Object."
+        "description": "One of the supported Object types: 3D Model, Audio, Multimodal, Speech, Text, or Visual Object."
        },
        "SceneDescriptors": {
         "$ref": "#/components/schemas/OSD_V15_SceneDescriptors",
-        "description": "One of the supported Scene Descriptor types: 3D Model, Audio, Audio-Visual, Speech, or Visual Scene."
+        "description": "One of the supported Scene Descriptor types: 3D Model, Audio, Multimodal, Speech, or Visual Scene."
        },
        "EventDescriptors": {
         "$ref": "#/components/schemas/OSD_V15_EventDescriptors",
-        "description": "One of the supported Event Descriptor types: 3D Model, Audio, Audio-Visual, Speech, or Visual Event."
+        "description": "One of the supported Event Descriptor types: 3D Model, Audio, Multimodal, Speech, or Visual Event."
        }
       }
      },
@@ -19893,7 +20145,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-OPV-V1.5",
-      "description": "Point of View Header â€“ Standard OSD-OPV-Vx.y"
+      "description": "Point of View Header – Standard OSD-OPV-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -19960,7 +20212,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical position (r, Ï†, Î¸) in metres and degrees."
+      "description": "Spherical position (r, φ, θ) in metres and degrees."
      },
      "SpherAccuracy": {
       "type": "array",
@@ -19969,7 +20221,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical position component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical position component (r, φ, θ)."
      },
      "Orientation": {
       "type": "array",
@@ -19978,7 +20230,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation in degrees."
+      "description": "Euler angles (α, β, γ) representing the Object's orientation in degrees."
      },
      "OrientAccuracy": {
       "type": "array",
@@ -19987,7 +20239,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)."
+      "description": "Accuracy of each Euler angle (α, β, γ) in Orientation (degrees)."
      },
      "Aperture": {
       "type": "array",
@@ -20034,11 +20286,23 @@
      "Header",
      "PositionID"
     ],
+    "anyOf": [
+     {
+      "required": [
+       "CartPosition"
+      ]
+     },
+     {
+      "required": [
+       "SpherPosition"
+      ]
+     }
+    ],
     "properties": {
      "Header": {
       "type": "string",
       "const": "OSD-OPS-V1.5",
-      "description": "Position Header â€“ Standard OSD-OPS-Vx.y"
+      "description": "Position Header – Standard OSD-OPS-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -20107,7 +20371,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical position (r, Ï†, Î¸) in metres and degrees."
+      "description": "Spherical position (r, φ, θ) in metres and degrees."
      },
      "SpherPositionAccuracy": {
       "type": "array",
@@ -20116,7 +20380,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical position component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical position component (r, φ, θ)."
      },
      "CartVelocity": {
       "type": "array",
@@ -20143,7 +20407,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical velocity (r, Ï†, Î¸) in metres/s and degrees/s."
+      "description": "Spherical velocity (r, φ, θ) in metres/s and degrees/s."
      },
      "SpherVelocityAccuracy": {
       "type": "array",
@@ -20152,7 +20416,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical velocity component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical velocity component (r, φ, θ)."
      },
      "CartAccel": {
       "type": "array",
@@ -20161,7 +20425,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Cartesian acceleration (X, Y, Z) in metres/sÂ²."
+      "description": "Cartesian acceleration (X, Y, Z) in metres/s²."
      },
      "CartAccelAccuracy": {
       "type": "array",
@@ -20170,7 +20434,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/sÂ²."
+      "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/s²."
      },
      "SpherAccel": {
       "type": "array",
@@ -20179,7 +20443,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical acceleration (r, Ï†, Î¸) in metres/sÂ² and degrees/sÂ²."
+      "description": "Spherical acceleration (r, φ, θ) in metres/s² and degrees/s²."
      },
      "SpherAccelAccuracy": {
       "type": "array",
@@ -20188,7 +20452,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical acceleration component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical acceleration component (r, φ, θ)."
      },
      "DataXMData": {
       "$ref": "#/components/schemas/PTF_V10_DataExchangeMetadata",
@@ -20209,11 +20473,23 @@
      "Header",
      "PositionID"
     ],
+    "anyOf": [
+     {
+      "required": [
+       "CartPosition"
+      ]
+     },
+     {
+      "required": [
+       "SpherPosition"
+      ]
+     }
+    ],
     "properties": {
      "Header": {
       "type": "string",
       "const": "OSD-OPS-V1.5",
-      "description": "Position Header â€“ Standard OSD-OPS-Vx.y"
+      "description": "Position Header – Standard OSD-OPS-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -20282,7 +20558,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical position (r, Ï†, Î¸) in metres and degrees."
+      "description": "Spherical position (r, φ, θ) in metres and degrees."
      },
      "SpherPositionAccuracy": {
       "type": "array",
@@ -20291,7 +20567,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical position component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical position component (r, φ, θ)."
      },
      "CartVelocity": {
       "type": "array",
@@ -20318,7 +20594,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical velocity (r, Ï†, Î¸) in metres/s and degrees/s."
+      "description": "Spherical velocity (r, φ, θ) in metres/s and degrees/s."
      },
      "SpherVelocityAccuracy": {
       "type": "array",
@@ -20327,7 +20603,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical velocity component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical velocity component (r, φ, θ)."
      },
      "CartAccel": {
       "type": "array",
@@ -20336,7 +20612,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Cartesian acceleration (X, Y, Z) in metres/sÂ²."
+      "description": "Cartesian acceleration (X, Y, Z) in metres/s²."
      },
      "CartAccelAccuracy": {
       "type": "array",
@@ -20345,7 +20621,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/sÂ²."
+      "description": "Accuracy of each Cartesian acceleration component (X, Y, Z) in metres/s²."
      },
      "SpherAccel": {
       "type": "array",
@@ -20354,7 +20630,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Spherical acceleration (r, Ï†, Î¸) in metres/sÂ² and degrees/sÂ²."
+      "description": "Spherical acceleration (r, φ, θ) in metres/s² and degrees/s²."
      },
      "SpherAccelAccuracy": {
       "type": "array",
@@ -20363,7 +20639,7 @@
       "items": {
        "type": "number"
       },
-      "description": "Accuracy of each spherical acceleration component (r, Ï†, Î¸)."
+      "description": "Accuracy of each spherical acceleration component (r, φ, θ)."
      },
      "DescrMetadata": {
       "type": "string",
@@ -20660,7 +20936,7 @@
      },
      "SimpleTimeData": {
       "type": "array",
-      "description": "Time segments w/ flags & absolute Ãƒâ€šÃ‚Â± TimeUnit accuracy.",
+      "description": "Time segments w/ flags & absolute ± TimeUnit accuracy.",
       "items": {
        "description": "Time segment w/ accuracy parameters & decoded flag fields.",
        "type": "object",
@@ -20692,22 +20968,22 @@
           "separate"
          ],
          "default": "single",
-         "description": "single: one Ãƒâ€šÃ‚Â± applies to both Start/End; separate: distinct Ãƒâ€šÃ‚Â± for Start/End."
+         "description": "single: one ± applies to both Start/End; separate: distinct ± for Start/End."
         },
         "AccuracyPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=single: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) applying to both StartTime and EndTime."
+         "description": "If AccuracyMode=single: absolute ± tolerance (in TimeUnit) applying to both StartTime and EndTime."
         },
         "AccuracyStartPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=separate: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) for StartTime only."
+         "description": "If AccuracyMode=separate: absolute ± tolerance (in TimeUnit) for StartTime only."
         },
         "AccuracyEndPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=separate: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) for EndTime only."
+         "description": "If AccuracyMode=separate: absolute ± tolerance (in TimeUnit) for EndTime only."
         },
         "TimeType": {
          "type": "boolean",
@@ -20733,6 +21009,9 @@
        "allOf": [
         {
          "if": {
+          "required": [
+           "AccuracyMode"
+          ],
           "properties": {
            "AccuracyMode": {
             "const": "single"
@@ -20747,6 +21026,9 @@
         },
         {
          "if": {
+          "required": [
+           "AccuracyMode"
+          ],
           "properties": {
            "AccuracyMode": {
             "const": "separate"
@@ -20757,6 +21039,20 @@
           "required": [
            "AccuracyStartPlusMinus",
            "AccuracyEndPlusMinus"
+          ]
+         }
+        },
+        {
+         "if": {
+          "not": {
+           "required": [
+            "AccuracyMode"
+           ]
+          }
+         },
+         "then": {
+          "required": [
+           "AccuracyPlusMinus"
           ]
          }
         }
@@ -20799,7 +21095,7 @@
      },
      "SimpleTimeData": {
       "type": "array",
-      "description": "Time segments w/ flags & absolute Ãƒâ€šÃ‚Â± TimeUnit accuracy.",
+      "description": "Time segments w/ flags & absolute ± TimeUnit accuracy.",
       "items": {
        "description": "Time segment w/ accuracy parameters & decoded flag fields.",
        "type": "object",
@@ -20831,22 +21127,22 @@
           "separate"
          ],
          "default": "single",
-         "description": "single: one Ãƒâ€šÃ‚Â± applies to both Start/End; separate: distinct Ãƒâ€šÃ‚Â± for Start/End."
+         "description": "single: one ± applies to both Start/End; separate: distinct ± for Start/End."
         },
         "AccuracyPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=single: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) applying to both StartTime and EndTime."
+         "description": "If AccuracyMode=single: absolute ± tolerance (in TimeUnit) applying to both StartTime and EndTime."
         },
         "AccuracyStartPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=separate: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) for StartTime only."
+         "description": "If AccuracyMode=separate: absolute ± tolerance (in TimeUnit) for StartTime only."
         },
         "AccuracyEndPlusMinus": {
          "type": "number",
          "minimum": 0,
-         "description": "If AccuracyMode=separate: absolute Ãƒâ€šÃ‚Â± tolerance (in TimeUnit) for EndTime only."
+         "description": "If AccuracyMode=separate: absolute ± tolerance (in TimeUnit) for EndTime only."
         },
         "TimeType": {
          "type": "boolean",
@@ -20872,6 +21168,9 @@
        "allOf": [
         {
          "if": {
+          "required": [
+           "AccuracyMode"
+          ],
           "properties": {
            "AccuracyMode": {
             "const": "single"
@@ -20886,6 +21185,9 @@
         },
         {
          "if": {
+          "required": [
+           "AccuracyMode"
+          ],
           "properties": {
            "AccuracyMode": {
             "const": "separate"
@@ -20896,6 +21198,20 @@
           "required": [
            "AccuracyStartPlusMinus",
            "AccuracyEndPlusMinus"
+          ]
+         }
+        },
+        {
+         "if": {
+          "not": {
+           "required": [
+            "AccuracyMode"
+           ]
+          }
+         },
+         "then": {
+          "required": [
+           "AccuracyPlusMinus"
           ]
          }
         }
@@ -20954,7 +21270,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-OSA-V1.5",
-      "description": "Spatial Attitude Header â€“ Standard OSD-OSA-Vx.y"
+      "description": "Spatial Attitude Header – Standard OSD-OSA-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -21027,7 +21343,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-OSA-V1.5",
-      "description": "Spatial Attitude Header â€“ Standard OSD-OSA-Vx.y"
+      "description": "Spatial Attitude Header – Standard OSD-OSA-Vx.y"
      },
      "MInstanceID": {
       "type": "string",
@@ -21474,7 +21790,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-TIM-V1.5",
-      "description": "Time Header â€“ Standard OSD-TIM-Vx.y."
+      "description": "Time Header – Standard OSD-TIM-Vx.y."
      },
      "MInstanceID": {
       "type": "string",
@@ -21588,7 +21904,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-TIM-V1.5",
-      "description": "Time Header â€“ Standard OSD-TIM-Vx.y."
+      "description": "Time Header – Standard OSD-TIM-Vx.y."
      },
      "MInstanceID": {
       "type": "string",
@@ -21698,7 +22014,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-TRJ-V1.5",
-      "description": "Trajectory Header â€“ Standard OSD-TRJ-Vx.y."
+      "description": "Trajectory Header – Standard OSD-TRJ-Vx.y."
      },
      "MInstanceID": {
       "type": "string",
@@ -21723,6 +22039,12 @@
        "type": "object",
        "additionalProperties": false,
        "properties": {
+        "Confidence": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1,
+         "description": "How likely it is that the CAV will be at the Expected Space-Time."
+        },
         "ExpectedSpaceTime": {
          "$ref": "#/components/schemas/OSD_V15_SpaceTime",
          "description": "Expected Spatial Attitude and Time of a Trajectory segment."
@@ -21980,7 +22302,7 @@
      "Header": {
       "type": "string",
       "const": "OSD-VIO-V1.5",
-      "description": "Visual Object Header â€“ Standard OSD-VIO-Vx.y."
+      "description": "Visual Object Header – Standard OSD-VIO-Vx.y."
      },
      "MInstanceID": {
       "type": "string",
@@ -24845,7 +25167,7 @@
     "oneOf": [
      {
       "const": "OGC API Records",
-      "description": "REST API for discovering metadata records/cataloÃ‰Â¡s of geospatial resources."
+      "description": "REST API for discovering metadata records/catalogs of geospatial resources."
      },
      {
       "const": "STAC",
@@ -24861,7 +25183,7 @@
      },
      {
       "const": "OpenSearch Description",
-      "description": "XML descriptor advertising onÃ¢â‚¬â€˜site search endpoints and result formats."
+      "description": "XML descriptor advertising on‑site search endpoints and result formats."
      },
      {
       "const": "Sitemaps",
@@ -24873,7 +25195,7 @@
      },
      {
       "const": "WebFinger",
-      "description": "WellÃ¢â‚¬â€˜known endpoint for JSON Resource Descriptors; resolves actors/services."
+      "description": "Well‑known endpoint for JSON Resource Descriptors; resolves actors/services."
      },
      {
       "const": "ActivityPub Actor Discovery",
@@ -25028,7 +25350,7 @@
      },
      {
       "const": "Glottocode",
-      "description": "GlottologÃ¢â‚¬â„¢s stable identifiers for languages, dialects, and families (e.g., 'stan1293'); complementary to ISO 639-3."
+      "description": "Glottolog’s stable identifiers for languages, dialects, and families (e.g., 'stan1293'); complementary to ISO 639-3."
      }
     ]
    },
@@ -25038,19 +25360,19 @@
     "oneOf": [
      {
       "const": "LAS",
-      "description": "ASPRS standard binary LiDAR pointÃ¢â‚¬â€˜cloud format storing XYZ, intensity, classification, GPS time, RGB, etc. Industry default."
+      "description": "ASPRS standard binary LiDAR point‑cloud format storing XYZ, intensity, classification, GPS time, RGB, etc. Industry default."
      },
      {
       "const": "LAZ",
-      "description": "Lossless compressed version of LAS (LASzip), reducing size by 70Ã¢â‚¬â€œ90% while preserving all LiDAR attributes."
+      "description": "Lossless compressed version of LAS (LASzip), reducing size by 70–90% while preserving all LiDAR attributes."
      },
      {
       "const": "DSM",
-      "description": "Digital Surface Model (highestÃ¢â‚¬â€˜return LiDAR raster surface: includes buildings, vegetation, objects)."
+      "description": "Digital Surface Model (highest‑return LiDAR raster surface: includes buildings, vegetation, objects)."
      },
      {
       "const": "DTM",
-      "description": "Digital Terrain Model (bareÃ¢â‚¬â€˜earth raster derived from classified ground returns). Often interchangeable with DEM."
+      "description": "Digital Terrain Model (bare‑earth raster derived from classified ground returns). Often interchangeable with DEM."
      },
      {
       "const": "DEM",
@@ -25058,19 +25380,19 @@
      },
      {
       "const": "GeoTIFF",
-      "description": "Raster georeferenced TIFF used for storing DEM/DSM/CHM and other LiDARÃ¢â‚¬â€˜derived surfaces."
+      "description": "Raster georeferenced TIFF used for storing DEM/DSM/CHM and other LiDAR‑derived surfaces."
      },
      {
       "const": "ASCII XYZ",
-      "description": "PlainÃ¢â‚¬â€˜text XYZ (or XYZI, XYZR) point format for simple exchange and processing workflows."
+      "description": "Plain‑text XYZ (or XYZI, XYZR) point format for simple exchange and processing workflows."
      },
      {
       "const": "E57",
-      "description": "NonÃ¢â‚¬â€˜proprietary pointÃ¢â‚¬â€˜cloud format widely used for LiDAR scanning, photogrammetry, and multiÃ¢â‚¬â€˜sensor pointÃ¢â‚¬â€˜cloud interchange."
+      "description": "Non‑proprietary point‑cloud format widely used for LiDAR scanning, photogrammetry, and multi‑sensor point‑cloud interchange."
      },
      {
       "const": "COPC",
-      "description": "CloudÃ¢â‚¬â€˜Optimized Point Cloud (LAZÃ¢â‚¬â€˜based pointÃ¢â‚¬â€˜cloud structure enabling spatially indexed, cloudÃ¢â‚¬â€˜native streaming of very large datasets)."
+      "description": "Cloud‑Optimized Point Cloud (LAZ‑based point‑cloud structure enabling spatially indexed, cloud‑native streaming of very large datasets)."
      }
     ]
    },
@@ -25147,11 +25469,11 @@
      },
      {
       "const": "S2 Cells",
-      "description": "GoogleÃ¢â‚¬â„¢s hierarchical spherical cell decomposition for global spatial indexing, coverings, and distributed queries."
+      "description": "Google’s hierarchical spherical cell decomposition for global spatial indexing, coverings, and distributed queries."
      },
      {
       "const": "H3",
-      "description": "UberÃ¢â‚¬â„¢s hexagonal hierarchical global grid (64-bit cell IDs) for analytics, aggregation, and scalable spatial joins."
+      "description": "Uber’s hexagonal hierarchical global grid (64-bit cell IDs) for analytics, aggregation, and scalable spatial joins."
      },
      {
       "const": "Geohash",
@@ -25287,6 +25609,16 @@
      }
     ]
    },
+   "TFA_V15_MLModelFileFormats_InDEM": {
+    "title": "ML Model File Formats V1.5",
+    "description": "How an ML Model is stored as a unit for delivery: the container of the model file and of its assets.",
+    "type": "string",
+    "enum": [
+     "TAR",
+     "TAR.GZ",
+     "ZIP"
+    ]
+   },
    "TFA_V15_MLModelQualifier_InDEM": {
     "title": "ML Model Qualifier V1.5",
     "description": "Characteristics and regulatory attributes of a machine learning model.",
@@ -25339,6 +25671,18 @@
        },
        "Exchange": {
         "$ref": "#/components/schemas/TFA_V15_NNModelExchange_InDEM"
+       },
+       "TransportFormat": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "FileFormats": {
+          "$ref": "#/components/schemas/TFA_V15_MLModelFileFormats_InDEM"
+         },
+         "StreamFormats": {
+          "$ref": "#/components/schemas/TFA_V15_MLModelStreamFormats_InDEM"
+         }
+        }
        }
       }
      },
@@ -25383,6 +25727,18 @@
       "$ref": "#/components/schemas/OSD_V15_SimpleTime_InDEM"
      }
     }
+   },
+   "TFA_V15_MLModelStreamFormats_InDEM": {
+    "title": "ML Model Stream Formats V1.5",
+    "description": "The protocol by which an ML Model is delivered as a stream.",
+    "type": "string",
+    "enum": [
+     "gRPC",
+     "HTTPS",
+     "MQTT",
+     "QUIC",
+     "WebSocket"
+    ]
    },
    "TFA_V15_MLModelTypes_InDEM": {
     "title": "ML Model Types V1.5",
@@ -25542,15 +25898,15 @@
     "oneOf": [
      {
       "const": "JSON",
-      "description": "JavaScript Object Notation Ã¢â‚¬â€ a lightweight, human-readable data structure format often used for declarative specifications, configurations, and contract-like documents that describe fields, constraints, or terms but contain no executable logic."
+      "description": "JavaScript Object Notation — a lightweight, human-readable data structure format often used for declarative specifications, configurations, and contract-like documents that describe fields, constraints, or terms but contain no executable logic."
      },
      {
       "const": "RDF",
-      "description": "Resource Description Framework Ã¢â‚¬â€ a semantic-graph representation used to declare relationships, vocabularies, and contract semantics in a machine-interpretable but non-executable form."
+      "description": "Resource Description Framework — a semantic-graph representation used to declare relationships, vocabularies, and contract semantics in a machine-interpretable but non-executable form."
      },
      {
       "const": "XML",
-      "description": "Extensible Markup Language Ã¢â‚¬â€ a structured markup system for defining declarative schemas, rules, or contract documents where the content expresses semantics but cannot perform computation."
+      "description": "Extensible Markup Language — a structured markup system for defining declarative schemas, rules, or contract documents where the content expresses semantics but cannot perform computation."
      }
     ]
    },
@@ -25576,11 +25932,11 @@
     "oneOf": [
      {
       "const": "GeoJSON",
-      "description": "Lightweight JSONÃ¢â‚¬â€˜based geospatial format used to store vector map layers such as roads, POIs, lane polygons, and navigation attributes."
+      "description": "Lightweight JSON‑based geospatial format used to store vector map layers such as roads, POIs, lane polygons, and navigation attributes."
      },
      {
       "const": "GML",
-      "description": "XMLÃ¢â‚¬â€˜based OGC Geography Markup Language, widely used for exchanging highly structured map, traffic, and infrastructure datasets."
+      "description": "XML‑based OGC Geography Markup Language, widely used for exchanging highly structured map, traffic, and infrastructure datasets."
      },
      {
       "const": "GPX",
@@ -25612,7 +25968,7 @@
      },
      {
       "const": "VTPK",
-      "description": "Vector Tile Package (Esri) providing compact offline vector tiles for dynamic rendering in highÃ¢â‚¬â€˜resolution automotive displays."
+      "description": "Vector Tile Package (Esri) providing compact offline vector tiles for dynamic rendering in high‑resolution automotive displays."
      }
     ]
    },
@@ -26271,55 +26627,55 @@
     "oneOf": [
      {
       "const": "G711A",
-      "description": "ITUÃ¢â‚¬â€˜T G.711 AÃ¢â‚¬â€˜law: 8 kHz, 8Ã¢â‚¬â€˜bit logarithmic PCM companding at 64 kbit/s; widely used in telephony outside North America/Japan."
+      "description": "ITU‑T G.711 A‑law: 8 kHz, 8‑bit logarithmic PCM companding at 64 kbit/s; widely used in telephony outside North America/Japan."
      },
      {
       "const": "G711mu",
-      "description": "ITUÃ¢â‚¬â€˜T G.711 ÃŽÂ¼Ã¢â‚¬â€˜law: 8 kHz, 8Ã¢â‚¬â€˜bit logarithmic PCM companding at 64 kbit/s; commonly used in North America and Japan."
+      "description": "ITU‑T G.711 μ‑law: 8 kHz, 8‑bit logarithmic PCM companding at 64 kbit/s; commonly used in North America and Japan."
      },
      {
       "const": "MP3",
-      "description": "MPEGÃ¢â‚¬â€˜1/2 Layer III perceptual audio codec; frequently used to distribute speech at low to medium bitrates."
+      "description": "MPEG‑1/2 Layer III perceptual audio codec; frequently used to distribute speech at low to medium bitrates."
      },
      {
       "const": "AAC",
-      "description": "Advanced Audio Coding (MPEGÃ¢â‚¬â€˜4/2 AAC); higher efficiency than MP3 for speech and general audio at comparable bitrates."
+      "description": "Advanced Audio Coding (MPEG‑4/2 AAC); higher efficiency than MP3 for speech and general audio at comparable bitrates."
      },
      {
       "const": "G722",
-      "description": "ITUÃ¢â‚¬â€˜T wideband speech codec (16 kHz sampling, 64/56/48 kbit/s) used for HDÃ¢â‚¬â€˜Voice in telephony."
+      "description": "ITU‑T wideband speech codec (16 kHz sampling, 64/56/48 kbit/s) used for HD‑Voice in telephony."
      },
      {
       "const": "G7231",
-      "description": "ITUÃ¢â‚¬â€˜T lowÃ¢â‚¬â€˜bitrate VoIP codec (5.3/6.3 kbit/s) based on CELP/MPÃ¢â‚¬â€˜MLQ, narrowband 8 kHz sampling."
+      "description": "ITU‑T low‑bitrate VoIP codec (5.3/6.3 kbit/s) based on CELP/MP‑MLQ, narrowband 8 kHz sampling."
      },
      {
       "const": "G726",
-      "description": "ITUÃ¢â‚¬â€˜T ADPCM speech codec (16/24/32/40 kbit/s) used in legacy telephony and embedded systems."
+      "description": "ITU‑T ADPCM speech codec (16/24/32/40 kbit/s) used in legacy telephony and embedded systems."
      },
      {
       "const": "G729",
-      "description": "ITUÃ¢â‚¬â€˜T CSÃ¢â‚¬â€˜ACELP narrowband speech codec at 8 kbit/s; widely deployed in VoIP; Annex B adds VAD/CNG."
+      "description": "ITU‑T CS‑ACELP narrowband speech codec at 8 kbit/s; widely deployed in VoIP; Annex B adds VAD/CNG."
      },
      {
       "const": "GSM-FR",
-      "description": "GSM FullÃ¢â‚¬â€˜Rate narrowband codec (~13 kb/s) used in early GSM networks."
+      "description": "GSM Full‑Rate narrowband codec (~13 kb/s) used in early GSM networks."
      },
      {
       "const": "GSM-EFR",
-      "description": "GSM Enhanced FullÃ¢â‚¬â€˜Rate (12.2 kb/s) improved speech quality over GSMÃ¢â‚¬â€˜FR in 2G networks."
+      "description": "GSM Enhanced Full‑Rate (12.2 kb/s) improved speech quality over GSM‑FR in 2G networks."
      },
      {
       "const": "GSM-HR",
-      "description": "GSM HalfÃ¢â‚¬â€˜Rate (~5.6 kb/s) for increased capacity with lower bitrates."
+      "description": "GSM Half‑Rate (~5.6 kb/s) for increased capacity with lower bitrates."
      },
      {
       "const": "AMR",
-      "description": "Adaptive MultiÃ¢â‚¬â€˜Rate (NB) 3GPP codec (4.75Ã¢â‚¬â€œ12.2 kb/s, 8 kHz) for mobile voice with mode adaptation and VAD/CNG."
+      "description": "Adaptive Multi‑Rate (NB) 3GPP codec (4.75–12.2 kb/s, 8 kHz) for mobile voice with mode adaptation and VAD/CNG."
      },
      {
       "const": "AMR-WB",
-      "description": "Adaptive MultiÃ¢â‚¬â€˜Rate Wideband (G.722.2) 3GPP/ITU codec (6.6Ã¢â‚¬â€œ23.85 kb/s, 16 kHz) for HDÃ¢â‚¬â€˜voice in 3G/4G."
+      "description": "Adaptive Multi‑Rate Wideband (G.722.2) 3GPP/ITU codec (6.6–23.85 kb/s, 16 kHz) for HD‑voice in 3G/4G."
      },
      {
       "const": "iLBC",
@@ -26327,11 +26683,11 @@
      },
      {
       "const": "Speex",
-      "description": "OpenÃ¢â‚¬â€˜source CELP speech codec (NB/WB modes) designed for VoIP; supports VAD/DTX/PLC."
+      "description": "Open‑source CELP speech codec (NB/WB modes) designed for VoIP; supports VAD/DTX/PLC."
      },
      {
       "const": "Opus",
-      "description": "IETF fullÃ¢â‚¬â€˜band speech/audio codec (8Ã¢â‚¬â€œ48 kHz, wide bitrate range) used in WebRTC; supports NBÃ¢â€ â€™FB, low delay, VBR/CBR."
+      "description": "IETF full‑band speech/audio codec (8–48 kHz, wide bitrate range) used in WebRTC; supports NB→FB, low delay, VBR/CBR."
      },
      {
       "const": "EVS",
@@ -26339,11 +26695,11 @@
      },
      {
       "const": "SILK",
-      "description": "Skype/3rdÃ¢â‚¬â€˜party ultraÃ¢â‚¬â€˜wideband speech codec (basis for OpusÃ¢â‚¬â„¢ speech layer) optimized for conversational voice."
+      "description": "Skype/3rd‑party ultra‑wideband speech codec (basis for Opus’ speech layer) optimized for conversational voice."
      },
      {
       "const": "iSAC",
-      "description": "Internet Speech Audio Codec (wideband) used in WebRTC for lowÃ¢â‚¬â€˜delay, adaptive bitrate speech."
+      "description": "Internet Speech Audio Codec (wideband) used in WebRTC for low‑delay, adaptive bitrate speech."
      }
     ]
    },
@@ -26353,11 +26709,11 @@
     "oneOf": [
      {
       "const": "WAV",
-      "description": "Waveform Audio File Format (WAV): an uncompressed or losslessly compressed audio container commonly used for highÃ¢â‚¬â€˜quality speech recordings."
+      "description": "Waveform Audio File Format (WAV): an uncompressed or losslessly compressed audio container commonly used for high‑quality speech recordings."
      },
      {
       "const": "MP4",
-      "description": "MPEGÃ¢â‚¬â€˜4 Part 14 (MP4): a multimedia container that can carry AAC/ALAC/Opus audio tracks, widely used for speech in mobile and web applications."
+      "description": "MPEG‑4 Part 14 (MP4): a multimedia container that can carry AAC/ALAC/Opus audio tracks, widely used for speech in mobile and web applications."
      }
     ]
    },
@@ -26701,11 +27057,15 @@
      },
      {
       "const": "SRT",
-      "description": "Secure Reliable Transport (SRT), a modern low-latency, packet-lossÃ¢â‚¬â€œresilient streaming protocol suitable for live speech contribution."
+      "description": "Secure Reliable Transport (SRT), a modern low-latency, packet-loss–resilient streaming protocol suitable for live speech contribution."
      },
      {
       "const": "HDS",
-      "description": "HTTP Dynamic Streaming (HDS), AdobeÃ¢â‚¬â„¢s segmented streaming protocol, historically used for audio and video distribution."
+      "description": "HTTP Dynamic Streaming (HDS), Adobe’s segmented streaming protocol, historically used for audio and video distribution."
+     },
+     {
+      "const": "WebSocket",
+      "description": "WebSocket (RFC 6455), a persistent, full-duplex connection over HTTP, used to carry a continuous stream of speech or audio between a client and a server."
      }
     ]
    },
@@ -26847,7 +27207,7 @@
      },
      {
       "const": "MIDI/MTC",
-      "description": "MIDI Time Code (MTC), a musical timeÃ¢â‚¬â€˜synchronization format representing SMPTEÃ¢â‚¬â€˜style time positions using MIDI messages."
+      "description": "MIDI Time Code (MTC), a musical time‑synchronization format representing SMPTE‑style time positions using MIDI messages."
      },
      {
       "const": "ISO 8601",
@@ -26859,23 +27219,23 @@
      },
      {
       "const": "LTC",
-      "description": "Linear Time Code Ã¢â‚¬â€ SMPTE timecode encoded as an audioÃ¢â‚¬â€˜like waveform for frameÃ¢â‚¬â€˜accurate synchronization in audio/video systems."
+      "description": "Linear Time Code — SMPTE timecode encoded as an audio‑like waveform for frame‑accurate synchronization in audio/video systems."
      },
      {
       "const": "VITC",
-      "description": "Vertical Interval Time Code Ã¢â‚¬â€ SMPTE timecode embedded in the vertical blanking interval of a video signal for frame labeling."
+      "description": "Vertical Interval Time Code — SMPTE timecode embedded in the vertical blanking interval of a video signal for frame labeling."
      },
      {
       "const": "ATC_LTC",
-      "description": "Ancillary Time Code (LTC variant) Ã¢â‚¬â€ packetized SMPTE LTC stored in the ancillary space of HDÃ¢â‚¬â€˜SDI streams."
+      "description": "Ancillary Time Code (LTC variant) — packetized SMPTE LTC stored in the ancillary space of HD‑SDI streams."
      },
      {
       "const": "ATC_VITC",
-      "description": "Ancillary Time Code (VITC variant) Ã¢â‚¬â€ packetized SMPTE VITC embedded in the ancillary data space of HDÃ¢â‚¬â€˜SDI streams."
+      "description": "Ancillary Time Code (VITC variant) — packetized SMPTE VITC embedded in the ancillary data space of HD‑SDI streams."
      },
      {
       "const": "IRIG-B",
-      "description": "IRIGÃ¢â‚¬â€˜B Ã¢â‚¬â€ a widely used InterÃ¢â‚¬â€˜Range Instrumentation Group timecode format for precise timeÃ¢â‚¬â€˜ofÃ¢â‚¬â€˜day distribution in instrumentation and aerospace systems."
+      "description": "IRIG‑B — a widely used Inter‑Range Instrumentation Group timecode format for precise time‑of‑day distribution in instrumentation and aerospace systems."
      }
     ]
    },
@@ -26893,7 +27253,7 @@
      },
      {
       "const": "MIDI/MTC",
-      "description": "MIDI Time Code (MTC), a musical timeÃ¢â‚¬â€˜synchronization format representing SMPTEÃ¢â‚¬â€˜style time positions using MIDI messages."
+      "description": "MIDI Time Code (MTC), a musical time‑synchronization format representing SMPTE‑style time positions using MIDI messages."
      },
      {
       "const": "ISO 8601",
@@ -26905,23 +27265,23 @@
      },
      {
       "const": "LTC",
-      "description": "Linear Time Code Ã¢â‚¬â€ SMPTE timecode encoded as an audioÃ¢â‚¬â€˜like waveform for frameÃ¢â‚¬â€˜accurate synchronization in audio/video systems."
+      "description": "Linear Time Code — SMPTE timecode encoded as an audio‑like waveform for frame‑accurate synchronization in audio/video systems."
      },
      {
       "const": "VITC",
-      "description": "Vertical Interval Time Code Ã¢â‚¬â€ SMPTE timecode embedded in the vertical blanking interval of a video signal for frame labeling."
+      "description": "Vertical Interval Time Code — SMPTE timecode embedded in the vertical blanking interval of a video signal for frame labeling."
      },
      {
       "const": "ATC_LTC",
-      "description": "Ancillary Time Code (LTC variant) Ã¢â‚¬â€ packetized SMPTE LTC stored in the ancillary space of HDÃ¢â‚¬â€˜SDI streams."
+      "description": "Ancillary Time Code (LTC variant) — packetized SMPTE LTC stored in the ancillary space of HD‑SDI streams."
      },
      {
       "const": "ATC_VITC",
-      "description": "Ancillary Time Code (VITC variant) Ã¢â‚¬â€ packetized SMPTE VITC embedded in the ancillary data space of HDÃ¢â‚¬â€˜SDI streams."
+      "description": "Ancillary Time Code (VITC variant) — packetized SMPTE VITC embedded in the ancillary data space of HD‑SDI streams."
      },
      {
       "const": "IRIG-B",
-      "description": "IRIGÃ¢â‚¬â€˜B Ã¢â‚¬â€ a widely used InterÃ¢â‚¬â€˜Range Instrumentation Group timecode format for precise timeÃ¢â‚¬â€˜ofÃ¢â‚¬â€˜day distribution in instrumentation and aerospace systems."
+      "description": "IRIG‑B — a widely used Inter‑Range Instrumentation Group timecode format for precise time‑of‑day distribution in instrumentation and aerospace systems."
      }
     ]
    },
@@ -27086,159 +27446,159 @@
     "oneOf": [
      {
       "const": "ADA",
-      "description": "ADA â€” native token of the Cardano blockchain platform."
+      "description": "ADA — native token of the Cardano blockchain platform."
      },
      {
       "const": "ALGO",
-      "description": "ALGO â€” utility token of the Algorand blockchain."
+      "description": "ALGO — utility token of the Algorand blockchain."
      },
      {
       "const": "ARKM",
-      "description": "ARKM â€” token used within the Arkham intelligence platform."
+      "description": "ARKM — token used within the Arkham intelligence platform."
      },
      {
       "const": "AUR",
-      "description": "AUR â€” token historically associated with the Auroracoin project."
+      "description": "AUR — token historically associated with the Auroracoin project."
      },
      {
       "const": "AVAX",
-      "description": "AVAX â€” native asset of the Avalanche smartâ€‘contract platform."
+      "description": "AVAX — native asset of the Avalanche smart‑contract platform."
      },
      {
       "const": "BCH",
-      "description": "BCH â€” Bitcoin Cash, a fork of Bitcoin focused on larger block sizes."
+      "description": "BCH — Bitcoin Cash, a fork of Bitcoin focused on larger block sizes."
      },
      {
       "const": "BTC",
-      "description": "BTC â€” Bitcoin, the original decentralized digital currency."
+      "description": "BTC — Bitcoin, the original decentralized digital currency."
      },
      {
       "const": "CKB",
-      "description": "CKB â€” Common Knowledge Base token of the Nervos Network."
+      "description": "CKB — Common Knowledge Base token of the Nervos Network."
      },
      {
       "const": "DASH",
-      "description": "DASH â€” digital cashâ€“oriented cryptocurrency offering fast settlement."
+      "description": "DASH — digital cash–oriented cryptocurrency offering fast settlement."
      },
      {
       "const": "DESO",
-      "description": "DESO â€” token supporting decentralized socialâ€‘network applications."
+      "description": "DESO — token supporting decentralized social‑network applications."
      },
      {
       "const": "DOGE",
-      "description": "DOGE â€” memetic proofâ€‘ofâ€‘work cryptocurrency based on the Dogecoin protocol."
+      "description": "DOGE — memetic proof‑of‑work cryptocurrency based on the Dogecoin protocol."
      },
      {
       "const": "DOT",
-      "description": "DOT â€” token of the Polkadot multiâ€‘chain interoperability platform."
+      "description": "DOT — token of the Polkadot multi‑chain interoperability platform."
      },
      {
       "const": "EOS",
-      "description": "EOS â€” token used for resources and governance on the EOSIO platform."
+      "description": "EOS — token used for resources and governance on the EOSIO platform."
      },
      {
       "const": "ETC",
-      "description": "ETC â€” Ethereum Classic, maintaining Ethereum's original chain state."
+      "description": "ETC — Ethereum Classic, maintaining Ethereum's original chain state."
      },
      {
       "const": "ETH",
-      "description": "ETH â€” native asset of the Ethereum smartâ€‘contract network."
+      "description": "ETH — native asset of the Ethereum smart‑contract network."
      },
      {
       "const": "FIRO",
-      "description": "FIRO â€” privacyâ€‘oriented cryptocurrency previously known as Zcoin."
+      "description": "FIRO — privacy‑oriented cryptocurrency previously known as Zcoin."
      },
      {
       "const": "GRC",
-      "description": "GRC â€” Gridcoin, associated with distributed computing participation."
+      "description": "GRC — Gridcoin, associated with distributed computing participation."
      },
      {
       "const": "LTC",
-      "description": "LTC â€” Litecoin, a peerâ€‘toâ€‘peer cryptocurrency based on faster block times."
+      "description": "LTC — Litecoin, a peer‑to‑peer cryptocurrency based on faster block times."
      },
      {
       "const": "MZC",
-      "description": "MZC â€” Mazacoin, historically linked to communityâ€‘based digital currency projects."
+      "description": "MZC — Mazacoin, historically linked to community‑based digital currency projects."
      },
      {
       "const": "NEO",
-      "description": "NEO â€” token powering the Neo smartâ€‘economy blockchain."
+      "description": "NEO — token powering the Neo smart‑economy blockchain."
      },
      {
       "const": "NMC",
-      "description": "NMC â€” Namecoin, used for decentralized naming and identity."
+      "description": "NMC — Namecoin, used for decentralized naming and identity."
      },
      {
       "const": "NXT",
-      "description": "NXT â€” early proofâ€‘ofâ€‘stake cryptocurrency platform."
+      "description": "NXT — early proof‑of‑stake cryptocurrency platform."
      },
      {
       "const": "PPC",
-      "description": "PPC â€” Peercoin, one of the earliest proofâ€‘ofâ€‘stake systems."
+      "description": "PPC — Peercoin, one of the earliest proof‑of‑stake systems."
      },
      {
       "const": "SAFEMOON",
-      "description": "SAFEMOON â€” token recognized for its redistribution and feeâ€‘based model."
+      "description": "SAFEMOON — token recognized for its redistribution and fee‑based model."
      },
      {
       "const": "SHIB",
-      "description": "SHIB â€” Shiba Inu token, an ERCâ€‘20 memetic digital asset."
+      "description": "SHIB — Shiba Inu token, an ERC‑20 memetic digital asset."
      },
      {
       "const": "SOL",
-      "description": "SOL â€” native token of the Solana highâ€‘throughput blockchain."
+      "description": "SOL — native token of the Solana high‑throughput blockchain."
      },
      {
       "const": "TIT",
-      "description": "TIT â€” token name associated with smaller or experimental cryptocurrency projects."
+      "description": "TIT — token name associated with smaller or experimental cryptocurrency projects."
      },
      {
       "const": "TRX",
-      "description": "TRX â€” Tron network token supporting smartâ€‘contract applications."
+      "description": "TRX — Tron network token supporting smart‑contract applications."
      },
      {
       "const": "USDT",
-      "description": "USDT â€” Tether, a U.S.â€‘dollarâ€“linked stablecoin."
+      "description": "USDT — Tether, a U.S.‑dollar–linked stablecoin."
      },
      {
       "const": "VTC",
-      "description": "VTC â€” Vertcoin, a proofâ€‘ofâ€‘work cryptocurrency emphasizing mining accessibility."
+      "description": "VTC — Vertcoin, a proof‑of‑work cryptocurrency emphasizing mining accessibility."
      },
      {
       "const": "XBT",
-      "description": "XBT â€” alternative ticker widely used to denote Bitcoin."
+      "description": "XBT — alternative ticker widely used to denote Bitcoin."
      },
      {
       "const": "XDG",
-      "description": "XDG â€” exchange ticker variant used for Dogecoin."
+      "description": "XDG — exchange ticker variant used for Dogecoin."
      },
      {
       "const": "XLM",
-      "description": "XLM â€” Stellar Lumens, token used on the Stellar payments network."
+      "description": "XLM — Stellar Lumens, token used on the Stellar payments network."
      },
      {
       "const": "XMR",
-      "description": "XMR â€” Monero, a privacyâ€‘preserving cryptocurrency."
+      "description": "XMR — Monero, a privacy‑preserving cryptocurrency."
      },
      {
       "const": "XNO",
-      "description": "XNO â€” Nano, a lowâ€‘latency digital currency using blockâ€‘lattice design."
+      "description": "XNO — Nano, a low‑latency digital currency using block‑lattice design."
      },
      {
       "const": "XPM",
-      "description": "XPM â€” Primecoin, mined via primeâ€‘number search algorithms."
+      "description": "XPM — Primecoin, mined via prime‑number search algorithms."
      },
      {
       "const": "XRP",
-      "description": "XRP â€” digital asset used on the XRP Ledger for crossâ€‘ledger transfers."
+      "description": "XRP — digital asset used on the XRP Ledger for cross‑ledger transfers."
      },
      {
       "const": "XVG",
-      "description": "XVG â€” Verge, a privacyâ€‘focused cryptocurrency."
+      "description": "XVG — Verge, a privacy‑focused cryptocurrency."
      },
      {
       "const": "ZEC",
-      "description": "ZEC â€” Zcash, a cryptocurrency offering zeroâ€‘knowledge privacy features."
+      "description": "ZEC — Zcash, a cryptocurrency offering zero‑knowledge privacy features."
      }
     ]
    },
@@ -27248,159 +27608,159 @@
     "oneOf": [
      {
       "const": "ADA",
-      "description": "ADA â€” native token of the Cardano blockchain platform."
+      "description": "ADA — native token of the Cardano blockchain platform."
      },
      {
       "const": "ALGO",
-      "description": "ALGO â€” utility token of the Algorand blockchain."
+      "description": "ALGO — utility token of the Algorand blockchain."
      },
      {
       "const": "ARKM",
-      "description": "ARKM â€” token used within the Arkham intelligence platform."
+      "description": "ARKM — token used within the Arkham intelligence platform."
      },
      {
       "const": "AUR",
-      "description": "AUR â€” token historically associated with the Auroracoin project."
+      "description": "AUR — token historically associated with the Auroracoin project."
      },
      {
       "const": "AVAX",
-      "description": "AVAX â€” native asset of the Avalanche smartâ€‘contract platform."
+      "description": "AVAX — native asset of the Avalanche smart‑contract platform."
      },
      {
       "const": "BCH",
-      "description": "BCH â€” Bitcoin Cash, a fork of Bitcoin focused on larger block sizes."
+      "description": "BCH — Bitcoin Cash, a fork of Bitcoin focused on larger block sizes."
      },
      {
       "const": "BTC",
-      "description": "BTC â€” Bitcoin, the original decentralized digital currency."
+      "description": "BTC — Bitcoin, the original decentralized digital currency."
      },
      {
       "const": "CKB",
-      "description": "CKB â€” Common Knowledge Base token of the Nervos Network."
+      "description": "CKB — Common Knowledge Base token of the Nervos Network."
      },
      {
       "const": "DASH",
-      "description": "DASH â€” digital cashâ€“oriented cryptocurrency offering fast settlement."
+      "description": "DASH — digital cash–oriented cryptocurrency offering fast settlement."
      },
      {
       "const": "DESO",
-      "description": "DESO â€” token supporting decentralized socialâ€‘network applications."
+      "description": "DESO — token supporting decentralized social‑network applications."
      },
      {
       "const": "DOGE",
-      "description": "DOGE â€” memetic proofâ€‘ofâ€‘work cryptocurrency based on the Dogecoin protocol."
+      "description": "DOGE — memetic proof‑of‑work cryptocurrency based on the Dogecoin protocol."
      },
      {
       "const": "DOT",
-      "description": "DOT â€” token of the Polkadot multiâ€‘chain interoperability platform."
+      "description": "DOT — token of the Polkadot multi‑chain interoperability platform."
      },
      {
       "const": "EOS",
-      "description": "EOS â€” token used for resources and governance on the EOSIO platform."
+      "description": "EOS — token used for resources and governance on the EOSIO platform."
      },
      {
       "const": "ETC",
-      "description": "ETC â€” Ethereum Classic, maintaining Ethereum's original chain state."
+      "description": "ETC — Ethereum Classic, maintaining Ethereum's original chain state."
      },
      {
       "const": "ETH",
-      "description": "ETH â€” native asset of the Ethereum smartâ€‘contract network."
+      "description": "ETH — native asset of the Ethereum smart‑contract network."
      },
      {
       "const": "FIRO",
-      "description": "FIRO â€” privacyâ€‘oriented cryptocurrency previously known as Zcoin."
+      "description": "FIRO — privacy‑oriented cryptocurrency previously known as Zcoin."
      },
      {
       "const": "GRC",
-      "description": "GRC â€” Gridcoin, associated with distributed computing participation."
+      "description": "GRC — Gridcoin, associated with distributed computing participation."
      },
      {
       "const": "LTC",
-      "description": "LTC â€” Litecoin, a peerâ€‘toâ€‘peer cryptocurrency based on faster block times."
+      "description": "LTC — Litecoin, a peer‑to‑peer cryptocurrency based on faster block times."
      },
      {
       "const": "MZC",
-      "description": "MZC â€” Mazacoin, historically linked to communityâ€‘based digital currency projects."
+      "description": "MZC — Mazacoin, historically linked to community‑based digital currency projects."
      },
      {
       "const": "NEO",
-      "description": "NEO â€” token powering the Neo smartâ€‘economy blockchain."
+      "description": "NEO — token powering the Neo smart‑economy blockchain."
      },
      {
       "const": "NMC",
-      "description": "NMC â€” Namecoin, used for decentralized naming and identity."
+      "description": "NMC — Namecoin, used for decentralized naming and identity."
      },
      {
       "const": "NXT",
-      "description": "NXT â€” early proofâ€‘ofâ€‘stake cryptocurrency platform."
+      "description": "NXT — early proof‑of‑stake cryptocurrency platform."
      },
      {
       "const": "PPC",
-      "description": "PPC â€” Peercoin, one of the earliest proofâ€‘ofâ€‘stake systems."
+      "description": "PPC — Peercoin, one of the earliest proof‑of‑stake systems."
      },
      {
       "const": "SAFEMOON",
-      "description": "SAFEMOON â€” token recognized for its redistribution and feeâ€‘based model."
+      "description": "SAFEMOON — token recognized for its redistribution and fee‑based model."
      },
      {
       "const": "SHIB",
-      "description": "SHIB â€” Shiba Inu token, an ERCâ€‘20 memetic digital asset."
+      "description": "SHIB — Shiba Inu token, an ERC‑20 memetic digital asset."
      },
      {
       "const": "SOL",
-      "description": "SOL â€” native token of the Solana highâ€‘throughput blockchain."
+      "description": "SOL — native token of the Solana high‑throughput blockchain."
      },
      {
       "const": "TIT",
-      "description": "TIT â€” token name associated with smaller or experimental cryptocurrency projects."
+      "description": "TIT — token name associated with smaller or experimental cryptocurrency projects."
      },
      {
       "const": "TRX",
-      "description": "TRX â€” Tron network token supporting smartâ€‘contract applications."
+      "description": "TRX — Tron network token supporting smart‑contract applications."
      },
      {
       "const": "USDT",
-      "description": "USDT â€” Tether, a U.S.â€‘dollarâ€“linked stablecoin."
+      "description": "USDT — Tether, a U.S.‑dollar–linked stablecoin."
      },
      {
       "const": "VTC",
-      "description": "VTC â€” Vertcoin, a proofâ€‘ofâ€‘work cryptocurrency emphasizing mining accessibility."
+      "description": "VTC — Vertcoin, a proof‑of‑work cryptocurrency emphasizing mining accessibility."
      },
      {
       "const": "XBT",
-      "description": "XBT â€” alternative ticker widely used to denote Bitcoin."
+      "description": "XBT — alternative ticker widely used to denote Bitcoin."
      },
      {
       "const": "XDG",
-      "description": "XDG â€” exchange ticker variant used for Dogecoin."
+      "description": "XDG — exchange ticker variant used for Dogecoin."
      },
      {
       "const": "XLM",
-      "description": "XLM â€” Stellar Lumens, token used on the Stellar payments network."
+      "description": "XLM — Stellar Lumens, token used on the Stellar payments network."
      },
      {
       "const": "XMR",
-      "description": "XMR â€” Monero, a privacyâ€‘preserving cryptocurrency."
+      "description": "XMR — Monero, a privacy‑preserving cryptocurrency."
      },
      {
       "const": "XNO",
-      "description": "XNO â€” Nano, a lowâ€‘latency digital currency using blockâ€‘lattice design."
+      "description": "XNO — Nano, a low‑latency digital currency using block‑lattice design."
      },
      {
       "const": "XPM",
-      "description": "XPM â€” Primecoin, mined via primeâ€‘number search algorithms."
+      "description": "XPM — Primecoin, mined via prime‑number search algorithms."
      },
      {
       "const": "XRP",
-      "description": "XRP â€” digital asset used on the XRP Ledger for crossâ€‘ledger transfers."
+      "description": "XRP — digital asset used on the XRP Ledger for cross‑ledger transfers."
      },
      {
       "const": "XVG",
-      "description": "XVG â€” Verge, a privacyâ€‘focused cryptocurrency."
+      "description": "XVG — Verge, a privacy‑focused cryptocurrency."
      },
      {
       "const": "ZEC",
-      "description": "ZEC â€” Zcash, a cryptocurrency offering zeroâ€‘knowledge privacy features."
+      "description": "ZEC — Zcash, a cryptocurrency offering zero‑knowledge privacy features."
      }
     ]
    },
@@ -27409,52 +27769,28 @@
     "type": "string",
     "oneOf": [
      {
-      "const": "DASH",
-      "description": "Dynamic Adaptive Streaming over HTTP (DASH) Ã¢â‚¬â€ segment-based adaptive streaming used for stable speech/audio playback over HTTP."
+      "const": "AVC",
+      "description": "Advanced Video Coding (ITU-T H.264 | ISO/IEC 14496-10)."
      },
      {
-      "const": "HLS",
-      "description": "HTTP Live Streaming (HLS) Ã¢â‚¬â€ AppleÃ¢â‚¬â„¢s segmented streaming protocol widely used across web and mobile for speech/audio delivery."
+      "const": "AV1",
+      "description": "AOMedia Video 1 (Alliance for Open Media)."
      },
      {
-      "const": "RTMP",
-      "description": "Real-Time Messaging Protocol (RTMP) Ã¢â‚¬â€ a low-latency live-streaming protocol traditionally used for speech/audio ingest and contribution."
+      "const": "EVC",
+      "description": "Essential Video Coding (ISO/IEC 23094-1)."
      },
      {
-      "const": "RTSP",
-      "description": "Real-Time Streaming Protocol (RTSP) Ã¢â‚¬â€ a session control protocol enabling interactive, bidirectional streaming of speech/audio."
+      "const": "HEVC",
+      "description": "High Efficiency Video Coding (ITU-T H.265 | ISO/IEC 23008-2)."
      },
      {
-      "const": "WebRTC",
-      "description": "Web Real-Time Communication (WebRTC) Ã¢â‚¬â€ peer-to-peer, ultra-low-latency speech and audio streaming used for calls, conferencing, and real-time voice interaction."
+      "const": "LCEVC",
+      "description": "Low Complexity Enhancement Video Coding (ISO/IEC 23094-2)."
      },
      {
-      "const": "Icecast",
-      "description": "Icecast Ã¢â‚¬â€ a live audio broadcasting protocol (HTTP-based) used for speech radio streams, continuous speech feeds, and internet broadcast channels."
-     },
-     {
-      "const": "MPEG-TS",
-      "description": "MPEG Transport Stream Ã¢â‚¬â€ a broadcasting and IP-delivered audio transport format used for resilient streaming of speech and program audio."
-     },
-     {
-      "const": "SRT",
-      "description": "Secure Reliable Transport (SRT) Ã¢â‚¬â€ a modern, packet-loss-resilient low-latency streaming protocol used for high-quality speech contribution."
-     },
-     {
-      "const": "HDS",
-      "description": "HTTP Dynamic Streaming (HDS) Ã¢â‚¬â€ AdobeÃ¢â‚¬â„¢s segmented HTTP streaming format, historically used for continuous audio and speech delivery."
-     },
-     {
-      "const": "RTP",
-      "description": "Real-time Transport Protocol (RTP) Ã¢â‚¬â€ a foundational protocol for transporting speech/audio frames in low-latency VoIP, conferencing, and media pipelines."
-     },
-     {
-      "const": "FLV-Streaming",
-      "description": "FLV-over-HTTP or FLV streaming Ã¢â‚¬â€ a lightweight streaming method used in some legacy systems for continuous audio or speech playback."
-     },
-     {
-      "const": "ICY",
-      "description": "ICY/Shoutcast protocol Ã¢â‚¬â€ a metadata-enabled continuous audio streaming format commonly used for speech radio and talk broadcasting."
+      "const": "VVC",
+      "description": "Versatile Video Coding (ITU-T H.266 | ISO/IEC 23090-3)."
      }
     ]
    },
@@ -27464,39 +27800,39 @@
     "oneOf": [
      {
       "const": "BMP",
-      "description": "Bitmap (BMP) Ã¢â‚¬â€ an uncompressed raster image format storing pixel data directly; widely used for simple, device-independent bitmaps."
+      "description": "Bitmap (BMP) — an uncompressed raster image format storing pixel data directly; widely used for simple, device-independent bitmaps."
      },
      {
       "const": "BoundingBox",
-      "description": "BoundingBox Ã¢â‚¬â€ a minimal axis-aligned or oriented rectangle describing the spatial extent of a 2D object."
+      "description": "BoundingBox — a minimal axis-aligned or oriented rectangle describing the spatial extent of a 2D object."
      },
      {
       "const": "JPEG",
-      "description": "JPEG Ã¢â‚¬â€ a widely used DCTÃ¢â‚¬â€˜compressed raster image format, forming one of the base encodings for EXIF and digital photography."
+      "description": "JPEG — a widely used DCT‑compressed raster image format, forming one of the base encodings for EXIF and digital photography."
      },
      {
       "const": "JPEG2000",
-      "description": "JPEG 2000 Ã¢â‚¬â€ a wavelet-based image format offering improved compression and quality over JPEG, supporting both lossy and lossless modes."
+      "description": "JPEG 2000 — a wavelet-based image format offering improved compression and quality over JPEG, supporting both lossy and lossless modes."
      },
      {
       "const": "JPEGXS",
-      "description": "JPEG XS Ã¢â‚¬â€ ISO/IEC 21122 visually lossless, low-latency image codec suitable for high-performance still-image and frame workflows."
+      "description": "JPEG XS — ISO/IEC 21122 visually lossless, low-latency image codec suitable for high-performance still-image and frame workflows."
      },
      {
       "const": "PNG",
-      "description": "Portable Network Graphics (PNG) Ã¢â‚¬â€ a lossless raster format supporting transparency; widely used for high-quality 2D graphics."
+      "description": "Portable Network Graphics (PNG) — a lossless raster format supporting transparency; widely used for high-quality 2D graphics."
      },
      {
       "const": "RAW",
-      "description": "RAW Ã¢â‚¬â€ a generic class of unprocessed sensor data formats produced by digital cameras, preserving full sensor information for editing."
+      "description": "RAW — a generic class of unprocessed sensor data formats produced by digital cameras, preserving full sensor information for editing."
      },
      {
       "const": "SVG",
-      "description": "Scalable Vector Graphics (SVG) Ã¢â‚¬â€ an XML-based, resolution-independent 2D vector graphics format used extensively on the web."
+      "description": "Scalable Vector Graphics (SVG) — an XML-based, resolution-independent 2D vector graphics format used extensively on the web."
      },
      {
       "const": "TIFF",
-      "description": "Tagged Image File Format (TIFF) Ã¢â‚¬â€ a flexible raster format supporting high bit depths, multiple pages, and metadata such as EXIF."
+      "description": "Tagged Image File Format (TIFF) — a flexible raster format supporting high bit depths, multiple pages, and metadata such as EXIF."
      }
     ]
    },
@@ -27506,31 +27842,31 @@
     "oneOf": [
      {
       "const": "FBX",
-      "description": "Filmbox (FBX) Ã¢â‚¬â€ a widely used Autodesk 3D scene format supporting complex animation, skeletal rigs, deformers, cameras, lighting, and full scene hierarchies."
+      "description": "Filmbox (FBX) — a widely used Autodesk 3D scene format supporting complex animation, skeletal rigs, deformers, cameras, lighting, and full scene hierarchies."
      },
      {
       "const": "G-PCC",
-      "description": "Geometry-based Point Cloud Compression Ã¢â‚¬â€ an ISO/MPEG standard for compressing static and dynamic point cloud geometry."
+      "description": "Geometry-based Point Cloud Compression — an ISO/MPEG standard for compressing static and dynamic point cloud geometry."
      },
      {
       "const": "V-PCC",
-      "description": "Video-based Point Cloud Compression Ã¢â‚¬â€ an ISO/MPEG standard that encodes dynamic point clouds using video blocks for efficient animated 3D content delivery."
+      "description": "Video-based Point Cloud Compression — an ISO/MPEG standard that encodes dynamic point clouds using video blocks for efficient animated 3D content delivery."
      },
      {
       "const": "USD",
-      "description": "Universal Scene Description Ã¢â‚¬â€ PixarÃ¢â‚¬â„¢s extensible 3D scene format supporting time-sampled animated geometry, transforms, rigging, and layered scene composition."
+      "description": "Universal Scene Description — Pixar’s extensible 3D scene format supporting time-sampled animated geometry, transforms, rigging, and layered scene composition."
      },
      {
       "const": "USDZ",
-      "description": "USDZ Ã¢â‚¬â€ a packaged, compressed delivery format based on USD, supporting textured and animated 3D objects for AR and mobile experiences."
+      "description": "USDZ — a packaged, compressed delivery format based on USD, supporting textured and animated 3D objects for AR and mobile experiences."
      },
      {
       "const": "GLTF",
-      "description": "glTF Ã¢â‚¬â€ an open standard by the Khronos Group supporting keyframe and skeletal animation, PBR materials, and efficient runtime delivery of 3D scenes."
+      "description": "glTF — an open standard by the Khronos Group supporting keyframe and skeletal animation, PBR materials, and efficient runtime delivery of 3D scenes."
      },
      {
       "const": "GLB",
-      "description": "Binary glTF (GLB) Ã¢â‚¬â€ a compact, single-file version of glTF containing geometry, animation, materials, and textures optimized for real-time engines and web delivery."
+      "description": "Binary glTF (GLB) — a compact, single-file version of glTF containing geometry, animation, materials, and textures optimized for real-time engines and web delivery."
      }
     ]
    },
@@ -27544,39 +27880,39 @@
      },
      {
       "const": "G-PCC",
-      "description": "Geometry-based Point Cloud Compression Ã¢â‚¬â€ an ISO/MPEG standard for compressing static 3D point clouds."
+      "description": "Geometry-based Point Cloud Compression — an ISO/MPEG standard for compressing static 3D point clouds."
      },
      {
       "const": "OBJ",
-      "description": "Wavefront OBJ Ã¢â‚¬â€ a widely adopted static mesh format storing vertices, faces, normals, and UVs; ideal for geometry interchange."
+      "description": "Wavefront OBJ — a widely adopted static mesh format storing vertices, faces, normals, and UVs; ideal for geometry interchange."
      },
      {
       "const": "USD",
-      "description": "Universal Scene Description Ã¢â‚¬â€ PixarÃ¢â‚¬â„¢s extensible 3D scene format supporting static meshes, materials, and large-scale scenes."
+      "description": "Universal Scene Description — Pixar’s extensible 3D scene format supporting static meshes, materials, and large-scale scenes."
      },
      {
       "const": "STL",
-      "description": "STereoLithography format Ã¢â‚¬â€ a simple, universal triangulated-surface format commonly used for 3D printing and static geometry."
+      "description": "STereoLithography format — a simple, universal triangulated-surface format commonly used for 3D printing and static geometry."
      },
      {
       "const": "PLY",
-      "description": "Polygon File Format (PLY) Ã¢â‚¬â€ a mesh/point-cloud format used for 3D scanning and static geometry, supporting vertex colors and attributes."
+      "description": "Polygon File Format (PLY) — a mesh/point-cloud format used for 3D scanning and static geometry, supporting vertex colors and attributes."
      },
      {
       "const": "GLTF",
-      "description": "glTF Ã¢â‚¬â€ an efficient, open Khronos static 3D model format optimized for web and real-time engines, supporting PBR materials."
+      "description": "glTF — an efficient, open Khronos static 3D model format optimized for web and real-time engines, supporting PBR materials."
      },
      {
       "const": "GLB",
-      "description": "Binary glTF (GLB) Ã¢â‚¬â€ a single-file binary packaging of glTF containing geometry, materials, and textures for optimized delivery."
+      "description": "Binary glTF (GLB) — a single-file binary packaging of glTF containing geometry, materials, and textures for optimized delivery."
      },
      {
       "const": "FBX",
-      "description": "Filmbox (FBX) Ã¢â‚¬â€ AutodeskÃ¢â‚¬â„¢s widely supported 3D exchange format capable of storing static meshes and complete scenes."
+      "description": "Filmbox (FBX) — Autodesk’s widely supported 3D exchange format capable of storing static meshes and complete scenes."
      },
      {
       "const": "USDZ",
-      "description": "USDZ Ã¢â‚¬â€ a compressed, packageable variant of USD designed by Apple and Pixar, widely used for static AR and 3D visualization."
+      "description": "USDZ — a compressed, packageable variant of USD designed by Apple and Pixar, widely used for static AR and 3D visualization."
      }
     ]
    },
@@ -27586,43 +27922,43 @@
     "oneOf": [
      {
       "const": "AVI",
-      "description": "Audio Video Interleave Ã¢â‚¬â€ a RIFF-based multimedia container introduced by Microsoft in 1992 that stores synchronized audio and video streams."
+      "description": "Audio Video Interleave — a RIFF-based multimedia container introduced by Microsoft in 1992 that stores synchronized audio and video streams."
      },
      {
       "const": "EXIF",
-      "description": "Exchangeable Image File Format Ã¢â‚¬â€ a metadata standard embedded within image formats such as JPEG and TIFF, containing camera settings, timestamps, and optional GPS data."
+      "description": "Exchangeable Image File Format — a metadata standard embedded within image formats such as JPEG and TIFF, containing camera settings, timestamps, and optional GPS data."
      },
      {
       "const": "JPEGXS",
-      "description": "JPEG XS Ã¢â‚¬â€ an ISO/IEC 21122 low-latency, visually lossless image and video compression format suitable for professional video transport and real-time applications."
+      "description": "JPEG XS — an ISO/IEC 21122 low-latency, visually lossless image and video compression format suitable for professional video transport and real-time applications."
      },
      {
       "const": "MP4",
-      "description": "MPEG-4 Part 14 Ã¢â‚¬â€ a multimedia container format based on the ISO Base Media File Format (ISOBMFF) used to store video, audio, subtitles, and other timed media."
+      "description": "MPEG-4 Part 14 — a multimedia container format based on the ISO Base Media File Format (ISOBMFF) used to store video, audio, subtitles, and other timed media."
      },
      {
       "const": "MOV",
-      "description": "QuickTime File Format Ã¢â‚¬â€ an Apple-developed multimedia container that forms the foundation of the ISO Base Media File Format and MP4."
+      "description": "QuickTime File Format — an Apple-developed multimedia container that forms the foundation of the ISO Base Media File Format and MP4."
      },
      {
       "const": "MKV",
-      "description": "Matroska Video Ã¢â‚¬â€ an open, flexible multimedia container supporting multiple audio/video/subtitle tracks, widely used for complex visual content."
+      "description": "Matroska Video — an open, flexible multimedia container supporting multiple audio/video/subtitle tracks, widely used for complex visual content."
      },
      {
       "const": "WEBM",
-      "description": "WebM Ã¢â‚¬â€ a web-focused, open media container format using modern codecs such as VP8/VP9/AV1 for efficient video delivery."
+      "description": "WebM — a web-focused, open media container format using modern codecs such as VP8/VP9/AV1 for efficient video delivery."
      },
      {
       "const": "FLV",
-      "description": "Flash Video Ã¢â‚¬â€ a container format historically used for online video streaming, still encountered in legacy systems."
+      "description": "Flash Video — a container format historically used for online video streaming, still encountered in legacy systems."
      },
      {
       "const": "3GP",
-      "description": "3GP Ã¢â‚¬â€ a multimedia container format derived from the ISO Base Media File Format, used in 3GPP mobile/telecom video and audio applications."
+      "description": "3GP — a multimedia container format derived from the ISO Base Media File Format, used in 3GPP mobile/telecom video and audio applications."
      },
      {
       "const": "TIFF",
-      "description": "Tagged Image File Format Ã¢â‚¬â€ a flexible, high-quality raster image format widely used in photography, scanning, and professional imaging workflows."
+      "description": "Tagged Image File Format — a flexible, high-quality raster image format widely used in photography, scanning, and professional imaging workflows."
      }
     ]
    },
@@ -27632,15 +27968,15 @@
     "oneOf": [
      {
       "const": "DublinCore",
-      "description": "Dublin Core Ã¢â‚¬â€ a general-purpose metadata standard providing descriptive fields such as title, creator, subject, and format, commonly used for cataloging visual resources."
+      "description": "Dublin Core — a general-purpose metadata standard providing descriptive fields such as title, creator, subject, and format, commonly used for cataloging visual resources."
      },
      {
       "const": "IPTC",
-      "description": "IPTC (International Press Telecommunications Council) metadata Ã¢â‚¬â€ widely used in digital photography to embed structured information such as captions, keywords, usage rights, and authorship."
+      "description": "IPTC (International Press Telecommunications Council) metadata — widely used in digital photography to embed structured information such as captions, keywords, usage rights, and authorship."
      },
      {
       "const": "XMP",
-      "description": "XMP (Extensible Metadata Platform) Ã¢â‚¬â€ an Adobe framework for embedding standardized and custom metadata directly into image files using RDF/XML structures."
+      "description": "XMP (Extensible Metadata Platform) — an Adobe framework for embedding standardized and custom metadata directly into image files using RDF/XML structures."
      }
     ]
    },
@@ -27992,43 +28328,43 @@
     "oneOf": [
      {
       "const": "DASH",
-      "description": "Dynamic Adaptive Streaming over HTTP â€” an ISO-standard segmented visual streaming protocol for adaptive video delivery."
+      "description": "Dynamic Adaptive Streaming over HTTP — an ISO-standard segmented visual streaming protocol for adaptive video delivery."
      },
      {
       "const": "HLS",
-      "description": "HTTP Live Streaming â€” Appleâ€™s segmented streaming protocol used for visual content delivery across web and mobile platforms."
+      "description": "HTTP Live Streaming — Apple’s segmented streaming protocol used for visual content delivery across web and mobile platforms."
      },
      {
       "const": "MPEG-2TS",
-      "description": "MPEG-2 Transport Stream â€” an ISO/IEC format for packetized video/audio transport widely used in broadcasting and IPTV."
+      "description": "MPEG-2 Transport Stream — an ISO/IEC format for packetized video/audio transport widely used in broadcasting and IPTV."
      },
      {
       "const": "NDI",
-      "description": "Network Device Interface â€” a lowâ€‘latency IP-based visual transport protocol used in production environments."
+      "description": "Network Device Interface — a low‑latency IP-based visual transport protocol used in production environments."
      },
      {
       "const": "SDI",
-      "description": "Serial Digital Interface â€” a professional broadcast standard carrying uncompressed digital video over coaxial or fiber links."
+      "description": "Serial Digital Interface — a professional broadcast standard carrying uncompressed digital video over coaxial or fiber links."
      },
      {
       "const": "SMPTE ST 2110",
-      "description": "SMPTE ST 2110 â€” a broadcast suite enabling essenceâ€‘based IP transport of video, audio, and metadata for professional workflows."
+      "description": "SMPTE ST 2110 — a broadcast suite enabling essence‑based IP transport of video, audio, and metadata for professional workflows."
      },
      {
       "const": "ATC_LTC",
-      "description": "Ancillary Time Code (LTC variant) â€” packet-based SMPTE timecode embedded in HDâ€‘SDI and IP streams for frame-accurate video synchronization."
+      "description": "Ancillary Time Code (LTC variant) — packet-based SMPTE timecode embedded in HD‑SDI and IP streams for frame-accurate video synchronization."
      },
      {
       "const": "ATC_VITC",
-      "description": "Ancillary Time Code (VITC variant) â€” SMPTE timecode carried as ancillary packets inside HDâ€‘SDI/IP streams, used for synchronized visual playback."
+      "description": "Ancillary Time Code (VITC variant) — SMPTE timecode carried as ancillary packets inside HD‑SDI/IP streams, used for synchronized visual playback."
      },
      {
       "const": "RTP",
-      "description": "Real-time Transport Protocol â€” a foundational transport protocol for realâ€‘time visual media streaming over IP networks."
+      "description": "Real-time Transport Protocol — a foundational transport protocol for real‑time visual media streaming over IP networks."
      },
      {
       "const": "WebRTC",
-      "description": "Web Real-Time Communication â€” a realâ€‘time, peerâ€‘toâ€‘peer streaming mechanism used for interactive visual communication."
+      "description": "Web Real-Time Communication — a real‑time, peer‑to‑peer streaming mechanism used for interactive visual communication."
      }
     ]
    }

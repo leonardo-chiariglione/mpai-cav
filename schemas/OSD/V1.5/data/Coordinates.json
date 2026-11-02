@@ -1,0 +1,26 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$id":                  "https://schemas.mpai.community/OSD/V1.5/data/Coordinates.json",
+  "title":                "Coordinates V1.5",
+  "type":                 "object",
+  "additionalProperties": false,
+  "required":             [ "Header", "CoordinatesID", "CoordinatesType", "Coordinates" ],
+  "properties":           {
+
+    "Header":             { "type": "string", "const": "OSD-CRD-V1.5",
+                            "description": "Coordinates Header â€“ Standard OSD-CRD-Vx.y" },
+    "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where these Coordinates are located." },
+    "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) where these Coordinates are located." },
+    "CoordinatesID":      { "type": "string", "description": "Unique identifier of this Coordinates instance." },
+    "CoordinatesTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Coordinates instance was produced." },
+
+    "CoordinatesSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Space/Time where/when this Coordinates instance applies." },
+
+    "CoordinatesType":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/CoordinateTypes.json", "description": "Coordinate system used: one of Cartesian, Spherical, Cylindrical, Geodetic, Toroidal." },
+
+    "Coordinates":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
+                            "description": "Three numbers representing the position of a point in the coordinate system specified by CoordinatesType." },
+
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the frame, the axes and their handedness, the units and the conventions of these Coordinates." },
+    "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                            "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Coordinates instance in a trusted data exchange context." },
+    "DescrMetadata":      { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Coordinates instance (plain text, max 2048 characters)." } } }

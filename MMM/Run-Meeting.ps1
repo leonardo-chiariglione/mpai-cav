@@ -41,8 +41,8 @@ if ($Group) {
     if (-not $Chair) { $Chair = if ($chairs) { $chairs[0] } else { $HostName } }
     if (-not $Guests) { $Guests = ($people.Keys | Where-Object { $_ -ne $HostName } | Sort-Object) -join ',' }
 }
-if (-not $HostName) { $HostName = $Chair }
 if (-not $Chair) { $Chair = Read-Host 'Your name in the meeting (the chair)' }
+if (-not $HostName) { $HostName = $Chair }      # after the chair is known: asked at the prompt, it was empty here and the host had no name
 if (-not $Guests) { $Guests = Read-Host 'The guests, their names separated by commas (for example Anna,Bruno,Carla)' }
 $names = @($Guests -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $HostName })
 if ($names.Count -lt 1) { Write-Host 'No guests.'; exit 1 }
@@ -52,7 +52,7 @@ $tokens = @{}
 foreach ($n in $names) { $b = New-Object byte[] 9; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $tokens[$n] = ([BitConverter]::ToString($b) -replace '-', '').ToLower() }
 # the host has a link of its own too, for another device (a laptop away from this PC); on this PC it needs none
 $b = New-Object byte[] 9; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $hostToken = ([BitConverter]::ToString($b) -replace '-', '').ToLower()
-$invites = (($names | ForEach-Object { "$_=$($tokens[$_])" }) + "$HostName=$hostToken") -join ','
+$invites = (@($names | ForEach-Object { "$_=$($tokens[$_])" }) + "$HostName=$hostToken") -join ','      # @(): with ONE guest the pipeline gives a string, and + would glue the host's token onto it
 
 function Get-Mails($base) {
     $subject = "MPAI $($grp.Id) meeting" + $(if ($When) { " - $When" } else { '' })

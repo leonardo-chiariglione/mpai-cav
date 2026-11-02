@@ -42,7 +42,7 @@ public sealed class MicrophoneUnit
     // spoken; recognition reads it from there). One capture, one fresh device: a
     // lingering one keeps buffered audio that would start the next capture at once.
     public TimeSpan StartTimeout { get; init; } = TimeSpan.FromSeconds(8);
-    public TimeSpan Hangover { get; init; } = TimeSpan.FromMilliseconds(1200);
+    public TimeSpan Hangover { get; init; } = TimeSpan.FromMilliseconds(1000);
     public TimeSpan RunawayGuard { get; init; } = TimeSpan.FromSeconds(30);
     public double SpeakLevel { get; init; } = 0.004;   // the level is the RMS of a short chunk: a quiet USB microphone, whose speech peaks at -24 dBFS, gives about 0.01
     public double SilenceLevel { get; init; } = 0.0028;   // the room, at a peak of -42 dBFS, gives about 0.003
@@ -53,8 +53,12 @@ public sealed class MicrophoneUnit
     // 0.8 s after it), so it is not taken for the person's.
     public TimeSpan PrerollSpan { get; init; } = TimeSpan.FromMilliseconds(700);
 
+    // TRUE WHILE A PERSON IS SPEAKING INTO A CAPTURE: what has been captured before it is not sent on while this is true - a pause inside a sentence is not its end.
+    public static volatile bool SpeechUnderway;
+
     public async Task<BasicSpeechObject> AcquireSpeechAsync(Language? language = null, CancellationToken cancel = default)
     {
+        SpeechUnderway = false;
         RingMicrophone.EnsureOpen(SamplingFrequency);
         var start = DateTime.UtcNow;
 
@@ -69,6 +73,7 @@ public sealed class MicrophoneUnit
         var preroll = RingMicrophone.Last(PrerollSpan).Where(c => c.At >= ignoreBefore).ToList();
         var kept = new List<byte[]>();
         bool started = preroll.Any(c => c.Level > speakLevel), early = started;
+        SpeechUnderway = started;
         if (started) kept.AddRange(RingMicrophone.Last(TimeSpan.FromMilliseconds(900)).Select(c => c.Pcm));   // with what lies at the edge of her last word: the person's first word may
         var lastAt = RingMicrophone.Last(TimeSpan.FromSeconds(1)).Select(c => c.At).DefaultIfEmpty(start).Max();
         double maxLevel = before.Select(c => c.Level).DefaultIfEmpty(0).Max();
@@ -85,7 +90,7 @@ public sealed class MicrophoneUnit
                 if (c.At < RingMicrophone.IgnoreBefore) continue;          // her own voice, still coming out of the loudspeakers
                 if (!started)
                 {
-                    if (c.Level > speakLevel) { started = true; kept.AddRange(RingMicrophone.Last(TimeSpan.FromMilliseconds(900)).Select(x => x.Pcm)); }
+                    if (c.Level > speakLevel) { started = true; SpeechUnderway = true; kept.AddRange(RingMicrophone.Last(TimeSpan.FromMilliseconds(900)).Select(x => x.Pcm)); }
                     continue;
                 }
                 kept.Add(c.Pcm);
@@ -99,6 +104,7 @@ public sealed class MicrophoneUnit
             if (!started && now - start > StartTimeout) break;
         }
     Done:
+        SpeechUnderway = false;
         var pcm = kept.SelectMany(k => k).ToArray();
         pcm = NormaliseIfQuiet(pcm);
         // WHAT THE MICROPHONE GAVE, kept at every capture (with MPAI_DIAG=1, in the folder of Mpai.Core.MpaiDiag): the levels it was judged by, whether

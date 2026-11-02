@@ -2,7 +2,7 @@
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
   "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/GenerativeSpeechDescription.json",
   "title":                "Generative Speech Description V2.5",
-  "Identifier":           {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-GSD-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "MMC-GSD-V2.5",
   "APIProfile":           "Basic",
   "Description":          "Generative Speech Description: produces the Machine Speech Descriptors from the Text and, optionally, a Speech Personal Status for expression; the Descriptors drive the synthesis of the Machine Speech; when the Speech Personal Status is absent the speech is neutral.",

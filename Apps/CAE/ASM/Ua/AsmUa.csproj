@@ -29,13 +29,8 @@
     <ProjectReference Include="..\..\..\..\AIF\UserAgent\UaKit\SpatialAudio\Mpai.SpatialAudio.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
-    <ProjectReference Include="..\Voice\AsmVoice.csproj" />
-    <!-- the Modules' AIMs, built by the providers the Controller is given; the speech of the avatar (PAF-RSR leaves) and the Voice Command Interface's own -->
-    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
-    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own (AsmController): the User Agent holds no Controller, no Module and no AIM -->
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
   </ItemGroup>
 
 </Project>

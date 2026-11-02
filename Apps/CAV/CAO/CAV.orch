@@ -1,0 +1,73 @@
+# =============================================================================
+#  CAV.orch - the Connected Autonomous Vehicle (MPAI-CAV V2.0, Connected Autonomous Operation)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module - the CAV, 1CAV-CAO-V2.0-I01 - which executes continuously: its subsystems
+#  (HCI, ESS, AMS, MAS) feed one another, and what one gives another is the Topology's business, never the
+#  User Agent's. The User Agent binds a device to every Port of the Module's boundary, each to one Port,
+#  by Data Type and Port Number:
+#
+#    what the vehicle gives the CAV -
+#      Camera, Gnss, SpatialData, Weather   what its sensors read
+#      BrakeResponse, MotorResponse,
+#      WheelResponse                        what its brakes, motor and steering did: the Responses
+#                                           of the one device that acts on the world and answers
+#      OfflineMap                           the Offline Map, given once
+#
+#    what the cabin gives the CAV -
+#      CabinVoice (OSD-BAO:2)               what the passenger says
+#      PointOfView (OSD-OPV)                the point of view the passenger selects to see the environment outside - Position and Orientation -,
+#                                           read by the User Agent from the Point of View Acquisition Unit (UNT-POA)
+#      AvatarModel                          the avatar the CAV answers with
+#
+#    what the CAV gives -
+#      BrakeCommand, MotorCommand,
+#      WheelCommand                         to the vehicle: slow down, move, turn
+#      CabinText (OSD-BTO:1)                what the CAV says, in words
+#      CabinAvatar (PAF-PAV)                what the CAV says, as its avatar: speech and face
+#      UserID                               who the CAV took the passenger to be
+#      Recognised (OSD-BTO:2)               what the CAV heard
+#      Decision (CAV-AMD)                   the decision of the Autonomous Motion Subsystem on each frame
+#
+#  The vehicle is a device that acts on the world: when the Module stops or degrades, the User Agent
+#  brings it to its safe state - stopped - whatever it was last told (the interlock of the interpreter).
+#  The User Agent names no AIM and no subsystem, and depends on nothing of the Module but its boundary.
+#  The Controller keeps the Module's Shared Storage where the User decides (Storage).
+# =============================================================================
+
+workflow CAV over 1CAV-CAO-V2.0-I01
+
+on Start:
+
+    type    Storage (OSD-BTO-V1.5)
+    ask Controller to start
+    ask Controller to keep storage in "{Storage}"
+
+    stream  Camera         (OSD-BVO-V1.5:1)  from device "Vehicle"
+    stream  Gnss           (CAV-NSO-V2.0)    from device "Vehicle"
+    stream  SpatialData    (CAV-SPD-V2.0)    from device "Vehicle"
+    stream  Weather        (CAV-WDT-V2.0)    from device "Vehicle"
+    stream  BrakeResponse  (CAV-BRR-V2.0)    from device "Vehicle"
+    stream  MotorResponse  (CAV-MRP-V2.0)    from device "Vehicle"
+    stream  WheelResponse  (CAV-WHR-V2.0)    from device "Vehicle"
+    deliver BrakeCommand   (CAV-BRC-V2.0)    to device "Vehicle"
+    deliver MotorCommand   (CAV-MRC-V2.0)    to device "Vehicle"
+    deliver WheelCommand   (CAV-WHC-V2.0)    to device "Vehicle"
+
+    stream  OfflineMap     (OSD-BOO-V1.5)    from device "Map"
+
+    stream  CabinVoice     (OSD-BAO-V1.5:2)  from device "Cabin"
+    stream  PointOfView    (OSD-OPV-V1.5)    from device "PointOfView"
+    stream  AvatarModel    (OSD-B3O-V1.5)    from device "Cabin"
+    deliver CabinText      (OSD-BTO-V1.5:1)  to device "Cabin"
+    deliver CabinAvatar    (PAF-PAV-V1.6)    to device "Cabin"
+    deliver UserID         (OSD-IID-V1.5)    to device "Cabin"
+    deliver Recognised     (OSD-BTO-V1.5:2)  to device "Hearing"
+
+    deliver Decision       (CAV-AMD-V2.0)    to device "Journal"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

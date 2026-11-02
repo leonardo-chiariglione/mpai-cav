@@ -19,7 +19,7 @@ public class CaeUscV25Tests
             try
             {
                 var l2 = JsonDocument.Parse(File.ReadAllText(file)).RootElement.Clone();
-                if (l2.TryGetProperty("Identifier", out var id) && id.TryGetProperty("AIMName", out var n) && n.GetString() is { Length: > 0 } name) all[name] = l2;
+                if (l2.TryGetProperty("Header", out var n) && n.ValueKind == JsonValueKind.String && n.GetString() is { Length: > 0 } name) all[name] = l2;   // an L2 is known by its Header
             }
             catch (JsonException) { }
         }
@@ -64,8 +64,9 @@ public class CaeUscV25Tests
         foreach (var file in Directory.EnumerateFiles(Folder, "*.json"))
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(file)); var r = doc.RootElement;
-            var name = r.GetProperty("Identifier").GetProperty("AIMName").GetString()!;
-            Assert.Equal(name, r.GetProperty("Header").GetString());
+            var name = r.GetProperty("Header").GetString()!;                                    // the AIM Type; the Identifier is that of L1
+            Assert.Matches(@"^[A-Z0-9]{3}-[A-Z0-9]{3}-V[0-9]+\.[0-9]+$", name);               // the canonical form
+            Assert.StartsWith("/*", r.GetProperty("Identifier").GetProperty("AIMName").GetString());   // not filled in: the Implementer's
             Assert.EndsWith("-V2.5", name);
             Assert.Equal($"https://schemas.mpai.community/CAE1/V2.5/AIMs/{Path.GetFileName(file)}", r.GetProperty("$id").GetString());
         }
@@ -77,10 +78,10 @@ public class CaeUscV25Tests
         var all = AllL2s(); var problems = new List<string>();
         foreach (var file in Directory.EnumerateFiles(Folder, "*.json"))
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(file)); var r = doc.RootElement; var me = r.GetProperty("Identifier").GetProperty("AIMName").GetString()!;
+            using var doc = JsonDocument.Parse(File.ReadAllText(file)); var r = doc.RootElement; var me = r.GetProperty("Header").GetString()!;
             if (r.GetProperty("SubAIMs").GetArrayLength() == 0) continue;
             AIF.Store.TopologyNormaliser.Normalise(r).Dispose();                                 // the Topology resolves into Data Types and Port Numbers
-            var subs = r.GetProperty("SubAIMs").EnumerateArray().Select(s => s.GetProperty("Identifier").GetProperty("AIMName").GetString()!).ToList();
+            var subs = r.GetProperty("SubAIMs").EnumerateArray().Select(s => s.GetProperty("Header").GetString()!).ToList();
             foreach (var s in subs) if (!all.ContainsKey(s)) problems.Add($"{me}: SubAIM {s} has no L2");
             var own = Ports(r);
             foreach (var c in r.GetProperty("Topology").EnumerateArray())

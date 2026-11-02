@@ -6,8 +6,8 @@
   "required":             [ "Header", "GNSSObjectID", "GNSSData" ],
   "properties":           {
 
-    "Header":             { "type": "string", "const": "CAV-GNO-V2.0",
-                            "description": "GNSS Object Header – Standard CAV-GNO-Vx.y" },
+    "Header":             { "type": "string", "const": "CAV-NSO-V2.0",
+                            "description": "GNSS Object Header – Standard CAV-NSO-Vx.y" },
     "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) associated with this GNSS Object." },
     "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) associated with this GNSS Object." },
     "GNSSObjectID":       { "type": "string", "description": "Unique identifier of this GNSS Object instance." },

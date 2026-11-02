@@ -17,6 +17,9 @@ public sealed record RecordedMessage(TimeSpan At, string DataType, int PortNumbe
 
 // A SOURCE OF RECORDED DATA (M3219 3.5): a device of the Physical Layer, as a
 // microphone is. Playing a record is the User Agent's act, not the Controller's.
+// What a record holds of media - a Basic Visual Object a camera gave, say - is what the Stored Port of an
+// Acquisition Unit (MPAI-UNT, UNT-xOA) reads from a disk; the rest of it (GNSS, Spatial Attitude) is not media
+// and has no Unit. The User Agent gives all of it to the Ports of the Module through the Controller.
 public interface IRecordSource
 {
     // The Messages written to the boundary Input Ports, in the order they

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-BMA-V1.0",
+  "Group": "Actuation",
+  "Category": "Motion",
+  "Description": "Brake-Motor-Wheel Actuation: acts on the brakes, the motor and the wheels - the steering - of a vehicle as the Brake Commands, Motor Commands and Wheel Commands it is given say, and gives back what they did as Brake Responses, Motor Responses and Wheel Responses. It is the Unit through which the Motion Actuation Subsystem of a CAV moves, turns and slows the vehicle. It both delivers and acquires: the Responses are those of the device the commands were delivered to. It has a safe state, to which it takes the vehicle without the Module, and the safety rules of its page.",
+  "ExternalPorts": [
+    {
+      "Name": "BrakeCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-BRC-V2.0"
+      ],
+      "Technology": "Software"
+    },
+    {
+      "Name": "MotorCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-MRC-V2.0"
+      ],
+      "Technology": "Software"
+    },
+    {
+      "Name": "WheelCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-WHC-V2.0"
+      ],
+      "Technology": "Software"
+    },
+    {
+      "Name": "SensedBrakeResponse",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-BRR-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "SensedMotorResponse",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-MRP-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "SensedWheelResponse",
+      "Direction": "Input",
+      "DataType": [
+        "CAV-WHR-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "DeliveredBrakeCommand",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-BRC-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "DeliveredMotorCommand",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-MRC-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "DeliveredWheelCommand",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-WHC-V2.0"
+      ],
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "BrakeResponse",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-BRR-V2.0"
+      ],
+      "Technology": "Software"
+    },
+    {
+      "Name": "MotorResponse",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-MRP-V2.0"
+      ],
+      "Technology": "Software"
+    },
+    {
+      "Name": "WheelResponse",
+      "Direction": "Output",
+      "DataType": [
+        "CAV-WHR-V2.0"
+      ],
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

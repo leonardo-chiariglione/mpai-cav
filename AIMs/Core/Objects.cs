@@ -163,6 +163,11 @@ public sealed class SpatialAttitude
 
     public DataExchangeMetadata? DataXMData { get; init; }
     public string? DescrMetadata { get; init; }
+
+    // WHICH PARTS A COMMAND STATES (CAE-UCM, M3282 UCM-1): a command may give only the parts of a Spatial Attitude that change - Position, Orientation, SpatialAttitudeTime -
+    // and what it does not state keeps its value. A Spatial Attitude built by code states both, as it always did; one read from a command that leaves a part out says so here.
+    [System.Text.Json.Serialization.JsonIgnore] public bool PositionStated { get; init; } = true;
+    [System.Text.Json.Serialization.JsonIgnore] public bool OrientationStated { get; init; } = true;
 }
 
 // OSD/V1.5/data/Position.json
@@ -380,7 +385,7 @@ public sealed class BasicSpeechObject
 //  borrowed SpeechQualifier.
 //
 //  .Data and .Qualifier below are a COMPATIBILITY SURFACE, not the real
-//  storage: every existing AOA/AOD backend (Alsa/Wasapi/File acquisition,
+//  storage: every existing UNT-AOA/UNT-AOD backend (Alsa/Wasapi/File acquisition,
 //  Aplay/File/Winmm delivery) and FromData() reads/writes through them, so
 //  none of that code needs to change for this fix. They project to/from the
 //  schema-correct fields underneath.
@@ -573,9 +578,15 @@ public sealed class AcousticProfile
     public double? Diffusion { get; init; }
     public double? Absorption { get; init; }
     public List<Doppler>? Doppler { get; init; }
+    // The walls of the Closed Space of the Scene and their Materials (CAE-ACP): each wall a face of a Right Parallelepiped (with a Region), a Polygon or a SurfaceID, with MaterialIDOrMaterial.
+    public System.Text.Json.Nodes.JsonArray? Walls { get; init; }
+    public System.Text.Json.Nodes.JsonArray? DefaultMaterial { get; init; }
 
     public DataExchangeMetadata? DataXMData { get; init; }
     public string? DescrMetadata { get; init; }
+
+    // A command may give the identifier of a kept profile instead of the profile (CAE-UCM, M3282 UCM-4): then this holds only its AcousticProfileID, and is a reference.
+    [System.Text.Json.Serialization.JsonIgnore] public bool Reference { get; init; }
 }
 
 public sealed class FrequencyRange { public double MinFrequencyHz { get; init; } public double MaxFrequencyHz { get; init; } }

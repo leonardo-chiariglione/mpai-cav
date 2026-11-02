@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ACR-V2.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "MMC-ACR-V2.5",
 
   "APIProfile":       "Basic",
@@ -14,9 +14,9 @@
                         {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "", "Protocol": "", "IsRemote": "", "IsOptional": true},
                         {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "", "Protocol": "", "IsRemote": ""}],
 
-  "SubAIMs":         [{ "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-EFD-V1.6", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ESD-V2.5", "Relation": "" } },
-                     { "Identifier": { "ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6", "Relation": "" } }],
+  "SubAIMs":         [{ "Header": "PAF-EFD-V1.6", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "MMC-ESD-V2.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                     { "Header": "PAF-RSR-V1.6", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } }],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "PAF-EFD-V1.6", "DataType": "OSD-BVO-V1.5"}},
                         {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ESD-V2.5", "DataType": "OSD-BSO-V1.5"}},

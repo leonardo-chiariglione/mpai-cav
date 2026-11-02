@@ -14,9 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Framework -->
-    <ProjectReference Include="..\..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\..\Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
     <!-- The Human-CAV Interaction avatar surface (WebView renderer + present) -->
     <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
@@ -26,22 +23,15 @@
     <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
     <!-- The HCI API -->
     <ProjectReference Include="..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <!-- Description AIMs (kept) -->
-    <ProjectReference Include="..\..\..\..\..\AIMs\PAF\V1.6\EFD\Mpai.Paf.Efd.csproj" />
-    <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\ESD\Mpai.Mmc.Esd.csproj" />
     <!-- Reconciliation: the reused fusion (HCI-IDR) + the new OSD-IDR (verdict + Personal Status) -->
-    <ProjectReference Include="..\..\..\..\..\AIMs\OSD\V1.5\IDR\Mpai.Osd.Idr.csproj" />
     <!-- Recognition AIMs (CAV-MAC leaves) -->
-    <ProjectReference Include="..\..\..\..\..\AIMs\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />
-    <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\SIR\Mpai.Mmc.Sir.csproj" />
-    <ProjectReference Include="..\..\..\..\..\AIMs\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
     <!-- Response and Scene Rendering leaves (PAF-RSR = PSD + TTS + GFD) -->
-    <ProjectReference Include="..\..\..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
-    <ProjectReference Include="..\..\..\..\..\AIMs\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
     <!-- Webcam capture (VOA.Windows) -->
     <ProjectReference Include="..\..\..\..\..\AIMs\CVE\V1.0\VOA.Windows\Mpai.Cve.Voa.Windows.csproj" />
-    <!-- Spoken prompts: MMC-TTS + MMC-SOD (speech delivery) -->
-    <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <!-- Spoken prompts: MMC-TTS + the Speech Object Delivery Unit (UNT-SOD) -->
     <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
     <!-- Live mic capture -->
     <ProjectReference Include="..\..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />

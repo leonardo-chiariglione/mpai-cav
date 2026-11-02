@@ -9,9 +9,10 @@ namespace Mpai.Cav.Ams;
 // on the Offline Map.
 public static class AmsTypes
 {
+    public const string RoadState = "CAV-RDS-V2.0";
     public const string Bed = "CAV-BED-V2.0", Fed = "CAV-FED-V2.0", Map = "OSD-BOO-V1.5", Hci = "CAV-AHM-V2.0", Interaction = "CAV-INT-V2.0",
                         Route = "CAV-RTE-V2.0", Path = "OSD-PAT-V1.5", Trajectory = "OSD-TRJ-V1.5", Alert = "CAV-ALT-V2.0",
-                        Message = "CAV-AMM-V2.0", Data = "CAV-AMD-V2.0";
+                        Message = "CAV-AMM-V2.0", Data = "CAV-AMD-V2.0", Bms = "OSD-BMS-V1.5";
 
     public static long Ms(JsonNode? simpleTime) => EssJson.Milliseconds(simpleTime) ?? 0;
 

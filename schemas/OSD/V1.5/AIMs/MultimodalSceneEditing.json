@@ -4,7 +4,7 @@
   "title":                "Multimodal Scene Editing V1.5",
   "Header":               "OSD-MSE-V1.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "OSD-MSE-V1.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
   "Description":          "Multimodal Scene Editing: Scenes and Objects of at least two media - Audio, Visual, Speech, LiDAR, 3D Model, RADAR, Ultrasound, Offline Map - composed into a Multimodal Scene (a voice over music is an MSD of an ASD and an SSD, or of an AUO and an SPO). Each of its two Scene Ports takes a Scene of any medium, and each of its two Object Ports an Object of any medium, kept as it arrives. One Multimodal Scene is open at a time: the User Command places the Scenes and Objects, named as the User names them, in its common frame (AddedObjects), moves them, changes where they are, takes them out and sets where the Multimodal Scene is heard and seen from (UserPoV). The Scenes and Objects being edited are followed: a member that is the version last arrived on its Port is replaced by the new version. Every edit is a new version in Shared Storage. Outputs: the open Multimodal Scene - when its members are of at least two media - and the User Command, with its response (UserCommandRS) saying how each action was executed.",

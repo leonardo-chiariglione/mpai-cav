@@ -44,11 +44,15 @@ public sealed class AseAim
 
     public NameBook Names { get; }
 
+    // The Acoustic Profiles the Module keeps, by their AcousticProfileID (M3282 UCM-4).
+    public KeptProfiles Profiles { get; }
+
     public AseAim(ISharedStorage storage, string mInstanceId = "ASM")
     {
         this.storage = storage;
         this.mInstanceId = mInstanceId;
         Names = new NameBook(storage);
+        Profiles = new KeptProfiles(storage);
     }
 
     // A Scene not yet placed is at the origin of its space.
@@ -94,6 +98,17 @@ public sealed class AseAim
     // The key of the Audio Object (Basic, here) that Audio Object Editing keeps under a name.
     public string? ObjectKey(string? name) => Names.KeyOf(NamedKind.AudioObject, name);
     public string? ObjectName(string? key) => Names.NameOf(key);
+
+    // THE OPEN SCENE IS GIVEN A NAME (the author, 2026/10/28): from now on it is kept under that name, and under no other; its earlier versions keep the name they had. The name must be free.
+    // Null when it was done, else why not.
+    public string? RenameScene(string key, string? newName)
+    {
+        if (NameBook.Clean(newName) is not { } clean) return "a name is needed";
+        if (Names.KeyOf(NamedKind.AudioScene, clean) is not null) return "a Scene of that name is kept";
+        if (Names.NameOf(key) is { } old) Names.Release(NamedKind.AudioScene, old);
+        Names.Point(NamedKind.AudioScene, clean, key);
+        return null;
+    }
 
     // The name designates this version of the Scene (an earlier one put back by a revocation).
     public void Select(string? key)
@@ -166,8 +181,12 @@ public sealed class AseAim
     public RepositoryAsset? ReplaceInBasicScene(string sceneKey, string memberName, SpaceTime? placement) =>
         RebuildBasicScene(sceneKey, memberName, e => new BasicAudioSceneEntry
         {
-            AudioObjectIDOrAudioObject = e.AudioObjectIDOrAudioObject, UserPoV = e.UserPoV, AudioObjectSpaceTime = placement ?? e.AudioObjectSpaceTime
+            AudioObjectIDOrAudioObject = e.AudioObjectIDOrAudioObject, UserPoV = e.UserPoV, AudioObjectSpaceTime = Placed(placement, e.AudioObjectSpaceTime)
         });
+
+    // A member moved keeps the time it sounds at unless the move states another: moving a sound does not make it sound from the start.
+    private static SpaceTime? Placed(SpaceTime? placement, SpaceTime? before) =>
+        placement is not null && placement.Time?.SimpleTimeData.Count is null or 0 && before?.Time?.SimpleTimeData.Count > 0 ? new SpaceTime { SpatialAttitude1 = placement.SpatialAttitude1, Time = before.Time } : placement ?? before;
 
     public RepositoryAsset? RemoveFromBasicScene(string sceneKey, string memberName) =>
         RebuildBasicScene(sceneKey, memberName, _ => null);
@@ -198,10 +217,60 @@ public sealed class AseAim
     }
 
     // Sets the acoustics of a Basic scene (the Scene part of the Acoustic Profile): a NEW version, as every edit.
+    // The properties the Profile given states are set; the ones it does not state keep the value the Scene has.
     public RepositoryAsset SetBasicSceneAcousticProfile(string sceneKey, AcousticProfile acousticProfile)
     {
         var existing = Existing(sceneKey);
-        return Store(sceneKey, existing, existing.BasicAudioSceneDescriptorsEntries, existing.UserPoV, existing.ClosedSpace, acousticProfile);
+        var before = existing.AcousticProfile;
+        var merged = before is null ? acousticProfile : new AcousticProfile
+        {
+            Header = acousticProfile.Header, MInstanceID = acousticProfile.MInstanceID ?? before.MInstanceID, UEnvironmentID = acousticProfile.UEnvironmentID ?? before.UEnvironmentID,
+            AcousticProfileID = string.IsNullOrEmpty(acousticProfile.AcousticProfileID) ? before.AcousticProfileID : acousticProfile.AcousticProfileID,
+            AcousticProfileTime = acousticProfile.AcousticProfileTime ?? before.AcousticProfileTime,
+            FrequencyRange = acousticProfile.FrequencyRange ?? before.FrequencyRange, Spectrogram = acousticProfile.Spectrogram ?? before.Spectrogram,
+            Loudness = acousticProfile.Loudness ?? before.Loudness, DirectionalPatterns = acousticProfile.DirectionalPatterns ?? before.DirectionalPatterns,
+            Reflectivity = acousticProfile.Reflectivity ?? before.Reflectivity, Reverberation = acousticProfile.Reverberation ?? before.Reverberation,
+            Diffusion = acousticProfile.Diffusion ?? before.Diffusion, Absorption = acousticProfile.Absorption ?? before.Absorption, Doppler = acousticProfile.Doppler ?? before.Doppler,
+            Walls = MergedWalls(before.Walls, acousticProfile.Walls), DefaultMaterial = acousticProfile.DefaultMaterial ?? before.DefaultMaterial,
+            DataXMData = acousticProfile.DataXMData ?? before.DataXMData, DescrMetadata = acousticProfile.DescrMetadata ?? before.DescrMetadata
+        };
+        return Store(sceneKey, existing, existing.BasicAudioSceneDescriptorsEntries, existing.UserPoV, existing.ClosedSpace, merged);
+    }
+
+    // The Acoustic Profile a Scene holds (null where it has none).
+    public AcousticProfile? AcousticProfileOf(string sceneKey) => Existing(sceneKey).AcousticProfile;
+
+    // Where, and when, a member of the Scene is (null when the Scene has no member of that name): a change that states only some of the parts keeps the rest of this.
+    public SpaceTime? PlacementOf(string sceneKey, string memberName)
+    {
+        foreach (var e in Existing(sceneKey).BasicAudioSceneDescriptorsEntries)
+            if (ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID) == memberName) return e.AudioObjectSpaceTime;
+        return null;
+    }
+
+    // THE LISTENER and THE ROOM of a Scene, as the list tells them (M3282 UCM-2).
+    public ListedObject ListedListener(string sceneKey) =>
+        new() { ObjectID = SceneName(sceneKey) ?? "", Kind = ListKinds.Listener, UserPoV = Existing(sceneKey).UserPoV };
+
+    public ListedObject ListedClosedSpace(string sceneKey) =>
+        new()
+        {
+            ObjectID = SceneName(sceneKey) ?? "", Kind = ListKinds.ClosedSpace,
+            ClosedSpace = Existing(sceneKey).ClosedSpace is { Count: > 0 } room && room[0] is System.Text.Json.Nodes.JsonObject own ? (System.Text.Json.Nodes.JsonObject)own.DeepClone() : null
+        };
+
+    // THE WALLS GIVEN are merged into the walls the Scene has (CAE-ACP): a wall given replaces the wall with the same name - the same Right Parallelepiped, Face and Region, or the same Polygon,
+    // or the same SurfaceID - and the others keep their Material: "the floor is carpet" does not undo "the ceiling is wood". None given, the walls the Scene has.
+    private static System.Text.Json.Nodes.JsonArray? MergedWalls(System.Text.Json.Nodes.JsonArray? had, System.Text.Json.Nodes.JsonArray? given)
+    {
+        if (given is null) return had;
+        static string Key(System.Text.Json.Nodes.JsonNode? w) =>
+            w?["SurfaceID"] is { } surface ? "S|" + (string?)surface
+            : w?["Polygon"] is { } polygon ? "P|" + polygon.ToJsonString()
+            : $"F|{(string?)w?["RightParallelepipedID"]}|{(string?)w?["Face"]}|{w?["Region"]?.ToJsonString()}";
+        var walls = had?.Where(w => w is not null && !given.Any(g => Key(g) == Key(w))).Select(w => w!.DeepClone()).ToList() ?? [];
+        walls.AddRange(given.Where(g => g is not null).Select(g => g!.DeepClone()));
+        return new System.Text.Json.Nodes.JsonArray(walls.ToArray());
     }
 
     // Sets the space a Basic scene is in - a room built round its members: a NEW version, as every edit.
@@ -299,12 +368,31 @@ public sealed class AseAim
             if (named is not null && name != named) continue;
             var entries = storage.Exists(key) ? Deserialize<BasicAudioSceneDescriptors>(storage.Get(key)).BasicAudioSceneDescriptorsEntries : null;
             var members = entries?.Select(e => ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID)).Where(n => n is not null).Select(n => n!).ToList();
+            double? duration = null;
+            List<ListedMember>? told = null;
+            if (named is not null && entries is not null)
+            {
+                told = [];
+                foreach (var e in entries)
+                {
+                    var memberKey = e.AudioObjectIDOrAudioObject?.BasicAudioObjectID;
+                    var sound = memberKey is not null && storage.Exists(memberKey) ? Deserialize<BasicAudioObject>(storage.Get(memberKey)) : null;
+                    told.Add(new ListedMember
+                    {
+                        ObjectID = ObjectName(memberKey) ?? "", PoV = e.AudioObjectSpaceTime?.SpatialAttitude1,
+                        Time = e.AudioObjectSpaceTime?.Time is { SimpleTimeData.Count: > 0 } time ? time : null,
+                        Level = sound?.BasicAudioObjectProperties?.Level
+                    });
+                    var end = SoundLength.EndOf(e.AudioObjectSpaceTime) ?? SoundLength.StartOf(e.AudioObjectSpaceTime) + (SoundLength.Seconds(sound?.Data) ?? 0);
+                    duration = Math.Max(duration ?? 0, end);
+                }
+                if (duration is { } d) duration = Math.Round(d, 6);
+            }
             found.Add(new ListedObject
             {
                 ObjectID = name, Kind = ListKinds.AudioScene, MemberObjectIDs = members,
-                ObjectCount = named is null ? null : entries?.Count,
-                Members = named is null || entries is null ? null
-                    : entries.Select(e => new ListedMember { ObjectID = ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID) ?? "", PoV = e.AudioObjectSpaceTime?.SpatialAttitude1 }).ToList()
+                ObjectCount = named is null ? null : entries?.Count, Duration = duration,
+                Members = told
             });
         }
         return found;

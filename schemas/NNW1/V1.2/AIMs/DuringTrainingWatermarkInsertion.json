@@ -3,7 +3,7 @@
   "$id":                  "https://schemas.mpai.community/NNW1/V1.2/AIMs/DuringTrainingWatermarkInsertion.json",
   "title":                "During-Training Watermark Insertion V1.2",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "NNW-DWI-V1.2"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "NNW-DWI-V1.2",
 
   "APIProfile":           "Basic",

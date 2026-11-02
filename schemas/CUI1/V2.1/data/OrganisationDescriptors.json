@@ -1,0 +1,25 @@
+{ "$schema":                          "https://json-schema.org/draft/2020-12/schema",
+  "$id":                              "https://schemas.mpai.community/CUI1/V2.1/data/OrganisationDescriptors.json",
+  "title":                            "Organisation Descriptors V2.1",
+  "type":                             "object",
+  "properties":                       {
+
+    "Header":                         { "type": "string", "const": "CUI-ORD-V2.1" },
+    "MInstanceID":                    { "type": "string" },
+    "UEnvironmentID":                 { "type": "string" },
+    "OrganisationDescriptorsID":      { "type": "string" },
+    "OrganisationDescriptorsTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+
+    "OrganisationDescriptors":        { "type": "array", "items": { "type": "object", "properties": {
+
+      "ImpactOnDefault":              { "type": "number" },
+
+      "GovernanceDescriptorsImpact":  { "type": "array", "items": { "type": "object", "properties": {
+
+        "GovernaceDescriptorID":      { "type": "string" },
+
+        "GovernanceDescriptorImpact": { "type": "number" } } } } } } },
+
+    "Trace":                          { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":                  { "type": "string" } } }

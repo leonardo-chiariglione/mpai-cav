@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-UOA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Media",
+  "Description": "Ultrasound Object Acquisition: acquires Ultrasound Objects from the real world and provides them, and the Scene Descriptors of what it acquires where the Data Type exists. A ultrasound sensor gives a Basic Ultrasound Object; a source on a disk or a network may give a Basic or a full Ultrasound Object, and Basic or full Scene Descriptors. Its Qualifier states the sensor, its calibration and its mounting pose.",
+  "ExternalPorts": [
+    {
+      "Name": "SensedUltrasound",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BUO-V1.5",
+        "OSD-BUS-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredUltrasound",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BUO-V1.5",
+        "OSD-USO-V1.5",
+        "OSD-BUS-V1.5",
+        "OSD-USD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredUltrasound",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BUO-V1.5",
+        "OSD-USO-V1.5",
+        "OSD-BUS-V1.5",
+        "OSD-USD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

@@ -16,7 +16,7 @@
                        {"Name": "SpeechModel", "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Output", "DataType": "MMC-EPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AVSceneSpaceTime", "Direction": "Output", "DataType": "OSD-SPT-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                       {"Name": "AVSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                       {"Name": "MultimodalSceneDescriptors", "Direction": "Output", "DataType": "OSD-BMS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 

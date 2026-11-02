@@ -4,7 +4,7 @@
   "title":                "Audio Separation and Enhancement V2.5",
   "Header":               "CAE-ASE-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-ASE-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
   "Description":          "Audio Separation and Enhancement (CAE-ASE) of CAE-USC V2.5: receives AudioObject, AudioSpatialAttitudes and produces EnhancedAudioObject, AudioSceneGeometry.",

@@ -118,10 +118,10 @@ public class AbvTests
             var pav = await Vct(a, who, introduction: true, says: null, n: 0);
             Assert.Equal(who, (string)pav["AvatarOrAvatarID"]!.AsArray().OfType<JsonValue>().Single());                  // the ID, and the model beside it
             Assert.NotNull(pav["AvatarOrAvatarID"]!.AsArray().OfType<JsonObject>().SingleOrDefault());
-            Assert.Null(pav["AVSceneDescriptors"]);                                                                     // the participant's avatar has no room
+            Assert.Null(pav["MultimodalSceneDescriptors"]);                                                                     // the participant's avatar has no room
             Assert.Null(pav["AvatarSpatialAttitude"]);                                                                  // and no seat
             var served = await Avs(a, pav);
-            Assert.Equal("meeting-room", (string)served["AVSceneDescriptors"]!["BasicMultimodalSceneDescriptorsID"]!);          // the server added the room
+            Assert.Equal("meeting-room", (string)served["MultimodalSceneDescriptors"]!["BasicMultimodalSceneDescriptorsID"]!);          // the server added the room
             Assert.Equal($"osa-{who}", (string)served["AvatarSpatialAttitude"]!["ObjectSpatialAttitudeID"]!);           // and the seat
             Assert.NotNull(served["AvatarOrAvatarID"]!.AsArray().OfType<JsonObject>().SingleOrDefault());               // the model the participant sent was not lost
             introduced.Add(served);

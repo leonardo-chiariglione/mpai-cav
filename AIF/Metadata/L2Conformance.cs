@@ -38,8 +38,8 @@ public sealed class L2Conformance
             try
             {
                 var l2 = JsonDocument.Parse(File.ReadAllText(file)).RootElement.Clone();
-                if (l2.TryGetProperty("Identifier", out var id) && id.TryGetProperty("AIMName", out var n) &&
-                    n.GetString() is { Length: > 0 } name)
+                // An L2 is known by its Header, the AIM Type; its Identifier is that of L1 (ImplementerID, ImplementationID and AIMName still to be filled in).
+                if (l2.TryGetProperty("Header", out var h) && h.ValueKind == JsonValueKind.String && h.GetString() is { Length: > 0 } name)
                     l2s[name] = l2;
             }
             catch { /* not an L2 */ }
@@ -279,8 +279,13 @@ public sealed class L2Conformance
     {
         if (!aim.TryGetProperty("SubAIMs", out var subs) || subs.ValueKind != JsonValueKind.Array) yield break;
         foreach (var s in subs.EnumerateArray())
-            if (s.TryGetProperty("Identifier", out var i) && i.TryGetProperty("AIMName", out var n) && n.GetString() is { Length: > 0 } name)
+        {
+            // In an L2 a Sub-AIM is its Header, the AIM Type (its Identifier is that of L1, still to be filled in); in an L3 it is its AIMName.
+            if (s.TryGetProperty("Header", out var h) && h.ValueKind == JsonValueKind.String && h.GetString() is { Length: > 0 } type)
+                yield return type;
+            else if (s.TryGetProperty("Identifier", out var i) && i.TryGetProperty("AIMName", out var n) && n.GetString() is { Length: > 0 } name)
                 yield return name;
+        }
     }
 
     // Name is only shown to the person reading the report; nothing matches on it.

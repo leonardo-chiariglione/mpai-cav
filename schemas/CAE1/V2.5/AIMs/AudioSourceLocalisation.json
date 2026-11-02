@@ -4,7 +4,7 @@
   "title":                "Audio Source Localisation V2.5",
   "Header":               "CAE-ASL-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAE-ASL-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
   "Description":          "Audio Source Localisation (CAE-ASL) of CAE-USC V2.5: receives AudioObject and produces AudioSpatialAttitudes.",

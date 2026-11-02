@@ -25,7 +25,7 @@ public class JsiTests
     private const string MoveViolin =
         "{\"Working\":\"MovedObjects violin: x=-1.5-1=-2.5.\",\"Command\":{\"UserCommandRQ\":{\"MovedObjects\":{\"Objects\":[{\"ObjectID\":\"violin\",\"NewSpatialAttitude\":{\"Position\":{\"CartPosition\":[-2.5,2,0]},\"Orientation\":{\"Orientation\":[0,0,180]}}}]}}}}";
     private const string MoveViolinWithoutOrientation =
-        "{\"Working\":\"x\",\"Command\":{\"UserCommandRQ\":{\"MovedObjects\":{\"Objects\":[{\"ObjectID\":\"violin\",\"NewSpatialAttitude\":{\"Position\":{\"CartPosition\":[-2.5,2,0]}}}]}}}}";
+        "{\"Working\":\"x\",\"Command\":{\"UserCommandRQ\":{\"MovedObjects\":{\"Objects\":[{\"ObjectID\":\"violin\",\"NewSpatialAttitude\":{\"Position\":{\"CartPosition\":[-2.5,2,0]},\"Orientation\":{\"Orientation\":[0,0]}}}]}}}}";
 
     private sealed record Call(string System, List<(string Role, string Content)> Turns, JsonNode Schema);
 
@@ -126,7 +126,7 @@ public class JsiTests
         Assert.Equal("CAE-UCM-V1.0", (string?)completed["Header"]);
         Assert.False(string.IsNullOrEmpty((string?)completed["UserCommandID"]));
         Assert.NotNull(completed["UserCommandTime"]);
-        Assert.Equal("OSD-OSA-V1.5", (string?)completed["UserCommandRQ"]!["MovedObjects"]!["Objects"]![0]!["NewSpatialAttitude"]!["Header"]);
+        // The new Spatial Attitude states only the parts that change (CAE-UCM, M3282 UCM-1): its Header and identifier are not required, so they are not filled in.
         Assert.Empty(check.Violations(completed.ToJsonString())!);
         // The model's own values are not touched.
         Assert.Equal(-2.5, completed["UserCommandRQ"]!["MovedObjects"]!["Objects"]![0]!["NewSpatialAttitude"]!["Position"]!["CartPosition"]![0]!.GetValue<double>());
@@ -274,7 +274,6 @@ public class JsiTests
     }
 
     [Theory]
-    [InlineData("save the scene")]
     [InlineData("stop")]
     [InlineData("what is the weather like")]
     public async Task ARequestThatIsNotForTheApplicationIsAnsweredWithoutTheModel(string words)
@@ -290,7 +289,7 @@ public class JsiTests
     [InlineData("move it 1 metre to the left")]
     [InlineData("rotate the guitar to 90 degrees")]
     [InlineData("move the instrument 1 metre closer")]
-    public async Task AnObjectThatIsNotNamedIsAskedForWithTheNamesThereAre(string words)
+    public async Task AnObjectThatIsNotNamedIsAskedFor(string words)
     {
         var (model, calls) = Fake(MoveViolin);
         var answer = await Ask(JsiRig.Processor(model), words, Context());
@@ -298,7 +297,7 @@ public class JsiTests
         Assert.Null(JsiRig.CommandOf(answer, Ports));
         var facts = JsiRig.FactsOf(answer, Ports)!;
         Assert.Contains("Which object do you mean?", facts);
-        Assert.Contains("violin, cello, voice, drums, piano", facts);                       // the names the application told
+        Assert.DoesNotContain("The objects are", facts);                                    // the guide of ASM lists none (its Names is empty): the person sees them in the window
     }
 
     [Theory]
@@ -416,7 +415,7 @@ public class JsiTests
         var command = JsiRig.CommandOf(answer, Ports);
         Assert.NotNull(command);
         Assert.Equal("Audio Scene", (string?)command!["UserCommandRQ"]!["ListedObjects"]!["Kind"]);
-        Assert.Equal("stage", (string?)command["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
+        Assert.Equal("concert", (string?)command["UserCommandRQ"]!["ListedObjects"]!["ObjectID"]);
         Assert.Empty(new SchemaCheck(JsiRig.UserCommandUri, JsiRig.UserCommandFile, Repository.Schemas).Violations(command.ToJsonString())!);
     }
 
@@ -466,7 +465,7 @@ public class JsiTests
     public async Task AnApplicationThatIsConnectedIsAskedForTheStateBeforeARequestIsWorkedOut()
     {
         var (model, calls) = Fake(MoveViolin);
-        var jsi = JsiRig.Processor(model, JsiRig.Jsi, refreshesState: true);
+        var jsi = JsiRig.Processor(model, JsiRig.Jsi, refreshesState: true, scene: "stage");
         JsonObject Answer(JsonObject command, JsonArray listed)
         {
             var aji = JsiRig.ResponseTo((string)command["UserCommandID"]!, "Done");
@@ -528,10 +527,10 @@ public class JsiTests
     public async Task WithoutAStateNoObjectCanBeNamedAndTheModelIsToldSo()
     {
         var (model, calls) = Fake(MoveViolin);
-        var answer = await Ask(JsiRig.Processor(model), "play the scene");
+        var answer = await Ask(JsiRig.Processor(model), "move the violin 1 metre to the left");
         Assert.Contains("The scene is not known", calls[0].Turns[^1].Content);
         var properties = calls[0].Schema["anyOf"]![0]!["properties"]!["Command"]!["properties"]!["UserCommandRQ"]!["properties"]!;
-        Assert.Null(properties["DeliveredObject"]!["enum"]);                                       // nothing to limit the name to
+        Assert.Null(properties["MovedObjects"]!["properties"]!["Objects"]!["items"]!["properties"]!["ObjectID"]!["enum"]);                                       // nothing to limit the name to
     }
 
     // ---- a response becomes facts ---------------------------------------------------------------------------------------------------------------------

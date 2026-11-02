@@ -14,14 +14,12 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Framework -->
-    <ProjectReference Include="..\..\..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\Store\AIF.Store.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <!-- Avatar surface + HCI API -->
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own (MmcController) -->
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <!-- The workflow interpreter and the parser of the Workflow Description -->
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
     <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />

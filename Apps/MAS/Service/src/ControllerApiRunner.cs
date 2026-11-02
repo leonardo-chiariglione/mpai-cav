@@ -96,6 +96,9 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
         return read;
     }
 
+    // Said once a Module has been started (by whoever asked): what the Controller itself does then, such as binding the Module's Shared Storage where it keeps it.
+    public event Action<string>? Started;
+
     public string? Start(
         string moduleName)
     {
@@ -111,6 +114,7 @@ internal sealed class ControllerApiRunner : IModuleRunner, IContinuousModuleRunn
 
             lock (holders)
                 holders[moduleName] = holders.GetValueOrDefault(moduleName) + 1;
+            Started?.Invoke(moduleName);
             return null;
         }
         catch (Exception failure)

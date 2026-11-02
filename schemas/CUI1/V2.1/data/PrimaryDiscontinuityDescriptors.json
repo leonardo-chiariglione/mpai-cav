@@ -1,0 +1,22 @@
+{ "$schema":                                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                        "https://schemas.mpai.community/CUI1/V2.1/data/PrimaryDiscontinuityDescriptors.json",
+  "title":                                      "PrimaryDiscontinuityDescriptors",
+  "type":                                       "object",
+  "properties":                                 {
+
+    "Header":                                   { "type": "string", "const": "CUI-PSD-V2.1" },
+    "MInstanceID":                              { "type": "string" },
+    "UEnvironmentID":                           { "type": "string" },
+    "PrimaryDiscontinuityDescriptorsID":        { "type": "string" },
+    "PrimaryDiscontinuityDescriptorsTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "PrimaryDiscontinuityDescriptors":          { "type": "array", "items": { "type": "object", "properties": {
+        "PrimaryRiskID":                        { "type": "string" },
+        "PrimaryRisk":                          { "type": "string" },
+        "PrimaryDiscontinuityProbability":      { "type": "number" },
+        "PrimaryDiscontinuityDescriptorImpacts":{ "type": "array", "items": { "type": "object", "properties": {
+            "PrimaryRiskID":                    { "type": "string" },
+            "PrimaryRiskDescriptorImpact":      { "type": "number" }  } } } } } },
+
+    "Trace":                                    { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":                            { "type": "string" } } }

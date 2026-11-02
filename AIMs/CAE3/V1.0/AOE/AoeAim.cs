@@ -46,11 +46,15 @@ public sealed class AoeAim
 
     public NameBook Names { get; }
 
+    // The Acoustic Profiles the Module keeps, by their AcousticProfileID (M3282 UCM-4).
+    public KeptProfiles Profiles { get; }
+
     public AoeAim(ISharedStorage storage, string mInstanceId = "ASM")
     {
         this.storage = storage;
         this.mInstanceId = mInstanceId;
         Names = new NameBook(storage);
+        Profiles = new KeptProfiles(storage);
     }
 
     private static readonly JsonSerializerOptions DataOptions = new() { Converters = { new JsonStringEnumConverter() } };
@@ -355,6 +359,14 @@ public sealed class AoeAim
             return (null, $"{string.Join(", ", wrong)} {(wrong.Count == 1 ? "is" : "are")} not {(basic ? "a feature of a Basic Audio Object (it is of an Audio Object)" : "a feature of an Audio Object (it is of a Basic Audio Object)")}");
         if (change.Name is not null && NameBook.Clean(change.Name) is null) return (null, "Name: the new name is empty");
         if (change.Level is { } level && (double.IsNaN(level) || double.IsInfinity(level))) return (null, "Level: a number (LUFS) is required");
+        // The Acoustic Profile of the Object, in full (and then kept under its identifier) or the identifier of a kept one.
+        var profile = change.AcousticProfile;
+        if (profile is { Reference: true })
+        {
+            profile = Profiles.Get(profile.AcousticProfileID);
+            if (profile is null) return (null, $"the Module keeps no Acoustic Profile named \"{change.AcousticProfile!.AcousticProfileID}\"");
+        }
+        else if (profile is not null) Profiles.Keep(profile);
 
         var name = Names.NameOf(key) ?? throw new InvalidOperationException("The Object has no name.");
         var newName = name;
@@ -399,7 +411,7 @@ public sealed class AoeAim
                     BasicAudioObjectSpaceTime = props.BasicAudioObjectSpaceTime,
                     Level = change.Level ?? props.Level,
                     PerceptStatus = change.PerceptStatus ?? props.PerceptStatus,
-                    AcousticProfile = change.AcousticProfile ?? props.AcousticProfile,
+                    AcousticProfile = profile ?? props.AcousticProfile,
                     BasicAudioObjectIdentifier = props.BasicAudioObjectIdentifier
                 },
                 AudioQualifier = change.AudioQualifier ?? bao.AudioQualifier,

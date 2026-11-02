@@ -54,8 +54,8 @@ public class SystemTests
         var l2s = Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
                            .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs")
                            .Select(MetadataTests.TryParse)
-                           .Where(n => n?["Identifier"]?["AIMName"] is not null)
-                           .ToDictionary(n => n!["Identifier"]!["AIMName"]!.GetValue<string>(), n => n!);
+                           .Where(n => n?["Header"] is not null)
+                           .ToDictionary(n => n!["Header"]!.GetValue<string>(), n => n!);
         // An AIM has code if a plugin or a provider creates it (CodeIndex).
         var code = new CodeIndex(Repository.Root);
 
@@ -72,7 +72,7 @@ public class SystemTests
             if (l2s.TryGetValue(standard, out var l2))
             {
                 var subs = (l2["SubAIMs"]?.AsArray() ?? new JsonArray())
-                           .Select(s => s?["Identifier"]?["AIMName"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();
+                           .Select(s => s?["Header"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();   // an L2 Sub-AIM is its Header
                 var withCode = subs.Where(code.HasCode).ToList();
                 parts.Add($"L2 {standard} present; code for {withCode.Count} of {subs.Count} Sub-AIMs" +
                           (withCode.Count > 0 ? $" ({string.Join(", ", withCode)})" : ""));
@@ -128,7 +128,7 @@ public class SystemTests
                 : [p.GetProperty("DataType").GetString() ?? ""],
             Number: p.TryGetProperty("PortNumber", out var n) && n.ValueKind == JsonValueKind.Number ? n.GetInt32() : 1)).ToList();
         var subs = amd.TryGetProperty("SubAIMs", out var s) && s.ValueKind == JsonValueKind.Array
-            ? s.EnumerateArray().Select(x => x.GetProperty("Identifier").GetProperty("AIMName").GetString() ?? "").ToList()
+            ? s.EnumerateArray().Select(x => (x.TryGetProperty("Header", out var h) && h.ValueKind == JsonValueKind.String ? h.GetString() : x.GetProperty("Identifier").GetProperty("AIMName").GetString()) ?? "").ToList()   // an L2 Sub-AIM is its Header
             : [];
 
         if (subs.Count == 0)

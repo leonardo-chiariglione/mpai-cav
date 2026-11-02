@@ -104,13 +104,13 @@ public interface IAmqAim : IAim
     string IAim.AimIdentifier  => "MMC-AMQ-V2.5";
 }
 
-// Request to an Audio Object Acquisition AIM (how much to acquire).
+// Request to the Audio Object Acquisition Unit (how much to acquire).
 public sealed class AcquisitionRequest
 {
     public TimeSpan Duration { get; init; } = TimeSpan.FromSeconds(10);
 }
 
-// Request to a Visual Object Acquisition AIM (which source to acquire from).
+// Request to the Visual Object Acquisition Unit (which source to acquire from).
 public sealed class VisualAcquisitionRequest
 {
     public string? SourcePath { get; init; }   // file path for the file source

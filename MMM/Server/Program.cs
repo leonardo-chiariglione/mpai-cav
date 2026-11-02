@@ -138,6 +138,12 @@ var meetingDemo = Array.IndexOf(args, "--meeting-demo");
 var meetingPause = meetingDemo >= 0 && meetingDemo + 1 < args.Length && double.TryParse(args[meetingDemo + 1], out var mp) ? mp : 5.0;
 var inside = new HttpClient { BaseAddress = new Uri(url) }; inside.DefaultRequestHeaders.Add("X-Mmm-Internal", internalKey);
 var meeting = new MeetingServices(inside, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
+// The summary, for who asks (--no-summary: none): the language model and the voices are asked only when somebody does.
+using var summary = new SummaryServices(repo);
+if (!args.Contains("--no-summary")) { meeting.Summarise = summary.SummariseAsync; meeting.Translate = summary.TranslateAsync; meeting.Synthesise = summary.SynthesiseAsync; }
+// What the Secretary understands when a participant speaks to it: the JSON Interface of the Voice Command Interface, with the Application Context of the Secretary (the language model is loaded at the first request).
+using var secretaryUnderstands = new SecretaryInterpreter(repo, "llama3.1");
+if (!args.Contains("--no-summary")) meeting.Interpret = secretaryUnderstands.InterpretAsync;
 await meeting.StartAsync();
 meeting.Preinvite(invite);
 if (invite.Length > 0) Console.WriteLine($"Invited from the start: {string.Join(", ", invite)} (the first convenes the meeting).");
@@ -147,6 +153,8 @@ else if (Arg("--hours") is { } hours && double.TryParse(hours, System.Globalizat
 if (meeting.EndsAt is { } ends) Console.WriteLine($"The meeting ends at {ends.ToLocalTime():HH:mm}: its rights end with it.");                                      // the first of --invite is the convener, the others are invited
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 var minutesShown = 0;
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpSummaryAsync(); } catch (Exception e) { Console.Error.WriteLine("summary: " + e.Message); } await Task.Delay(300); } });
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpDialogueAsync(); } catch (Exception e) { Console.Error.WriteLine("dialogue: " + e.Message); } await Task.Delay(300); } });
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });
 _ = Task.Run(async () => { while (true) { var minutes = meeting.TheMinutes; while (minutesShown < minutes.Count) Console.WriteLine("minutes: " + minutes[minutesShown++]); await Task.Delay(200); } });
 if (meetingDemo >= 0)

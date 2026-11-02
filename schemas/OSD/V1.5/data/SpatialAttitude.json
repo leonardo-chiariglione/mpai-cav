@@ -14,7 +14,7 @@
 
     "General":                 { "type": "object", "additionalProperties": false, "required": [ "CoordType" ],
                                  "description": "General classification data of the Object.", "properties": {
-      "CoordType":             { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Geodesic, Toroidal." },
+      "CoordType":             { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Cylindrical, Geodetic, Toroidal." },
       "ObjectType":            { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":             { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json",
                                  "description": "Media type: one of Speech, Audio, Visual, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
@@ -22,6 +22,8 @@
     "Position":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json", "description": "Position of the Object as specified by the Position Data Type." },
 
     "Orientation":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Orientation.json", "description": "Orientation of the Object as specified by the Orientation Data Type." },
+
+    "SpatialQualifier":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions by which the Position and the Orientation of this Spatial Attitude are to be read." },
 
     "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                                  "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Spatial Attitude instance in a trusted data exchange context." },

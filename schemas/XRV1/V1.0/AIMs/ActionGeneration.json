@@ -3,7 +3,8 @@
   "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/ActionGeneration.json",
   "title":                "Action Generation V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-ACG-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":               "XRV-ACG-V1.0",
 
   "APIProfile":           "Basic",
   "Description":          "The Action Generation (XRV-ACG) AIM uses Performance Status, Participant Status, and Operator Status to produce the RE Action IDs and VE Action IDs that instantiate Actions from the Action Table in the RE Experience Generation and VE Experience Generation AIMs per the Script, and the next Cue Point ID that informs the Performance, Participant, and Operator Status Interpretation AIMs to look for the next Cue Conditions.",

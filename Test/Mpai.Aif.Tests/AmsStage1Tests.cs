@@ -99,6 +99,18 @@ public sealed class CavInTheLoop : IDisposable
             throw new InvalidOperationException($"the Ego-Remote AMS Message was not accepted: {result}");
     }
 
+    // What the MAS's Ice Condition Analysis tells the AMS of the road, as an AMS-MAS Message (M3287): the friction the road gives. A loop without a MAS says it once, to be known.
+    public void RoadState(double friction, int timeoutMs = 5000)
+    {
+        var message = new JsonObject
+        {
+            ["Header"] = "CAV-AMM-V2.0", ["AMSMASMessageID"] = "AMM-road",
+            ["MASMessage"] = new JsonObject { ["RoadState"] = new JsonObject { ["Header"] = "CAV-RDS-V2.0", ["SurfaceCondition"] = new JsonObject { ["FrictionCoefficientEstimate"] = friction } } }
+        };
+        if (api.InputWrite(Ams, "CAV-AMM-V2.0", 1, message.ToJsonString(), timeoutMs) is var result && result != AifError.OK)
+            throw new InvalidOperationException($"the Road State was not accepted: {result}");
+    }
+
     public (List<JsonNode> Alerts, JsonNode? Command, double LatencyMs) Step(Simulation.Sensed sensed, int timeoutMs = 5000)
     {
         var (alerts, command, latency, _) = StepWithBed(sensed, timeoutMs);
@@ -555,15 +567,16 @@ public class AmsStage1Tests
             result["each AMS Data carries the Route, the Path, the Trajectory, the FED"] =
                 data.Count > 0 && data.All(d => d["RouteID"] is not null && d["Path"] is not null && d["Trajectory"] is not null && d["FED"] is not null) ? "yes" : "no";
 
-            // The decisions, in the Private Storage, each with the FED it was taken on.
+            // The decisions, in the Shared Storage, each with the FED it was taken on.
             var storage = api.ModuleStorageAt(ams, location);
-            var keys = storage.MPAI_AIFM_RuledStorage_List("AMSData", "decisions/");
-            var kinds = keys.Select(k => k[(k.IndexOf('-') + 1)..]).ToHashSet();
+            var shared = AIF.SharedStorage.RuledStore.SharedAt(location, () => DateTimeOffset.UtcNow).For(AIF.SharedStorage.StorageHolder.UserAgent, "", "session");
+            var keys = shared.MPAI_AIFM_RuledStorage_List(null, AmsData.Prefix + "decisions/");
+            var kinds = keys.Select(k => k[(k.LastIndexOf('/') + 1)..]).Select(k => k[(k.IndexOf('-') + 1)..]).ToHashSet();
             result["decisions kept"] = string.Join(", ", new[] { (AmsTypes.Route, "Route"), (AmsTypes.Path, "Path"), (AmsTypes.Message, "AMS-MAS Message") }
                 .Select(k => $"{k.Item2} {(kinds.Contains(k.Item1) ? "yes" : "no")}"));
             var withFed = 0;
             foreach (var key in keys)
-                if (storage.MPAI_AIFM_RuledStorage_Get(key, out var bytes) == AIF.SharedStorage.StorageOutcome.OK &&
+                if (shared.MPAI_AIFM_RuledStorage_Get(key, out var bytes) == AIF.SharedStorage.StorageOutcome.OK &&
                     JsonNode.Parse(bytes) is { } record && record["FED"] is { } fed && record["Decision"] is { } decision &&
                     AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]) <= Math.Max(AmsTypes.Ms(decision["RouteTime"]), Math.Max(AmsTypes.Ms(decision["PathTime"]), AmsTypes.Ms(decision["AMSMASMessageTime"]))) + 1)
                     withFed++;

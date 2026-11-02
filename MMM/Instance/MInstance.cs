@@ -33,6 +33,8 @@ public sealed class MInstance
         public string Status { get; set; } = "Final";
         public JsonNode? SpatialAttitude { get; set; }
         public string? Animation { get; set; }       // the Animation Stream animating it
+        public JsonObject? Qualifier { get; set; }   // Data UM-Captured and not yet Identified: the Qualifier it was captured with
+        public long Started { get; set; }            // Data UM-Captured: when (Unix milliseconds); a streamed Speech Object has no duration until its stream is over, and then this is its start
         public double[]? Place { get; set; }         // a Location's place, x (east) and y (north) in metres: in the
                                                      // M-Environment, or in the Location it is at
         public double Size { get; set; }             // a Location's side, metres
@@ -131,6 +133,20 @@ public sealed class MInstance
     public IReadOnlySet<string> Catalogue { get; set; } = new HashSet<string>(StringComparer.Ordinal);
     // What the M-Instance shows a human that is about to register: the entries of the catalogue (Name, Group, Gender). It is the M-Instance's to offer; the human is not yet in it.
     public JsonArray CatalogueEntries { get; set; } = [];
+
+    // A Persona of the catalogue is one human's: once chosen it is no longer offered, and a second choice of it is refused (409 Clash). It is the M-Instance's decision to offer
+    // each Persona once, so that two people do not meet as the same avatar.
+    public bool PersonaTaken(string name)
+    {
+        var model = CatalogueModel(name);
+        lock (gate) return items.Values.Any(i => i.DataType == "OSD-3DO-V1.5" && i.Model == model);
+    }
+
+    // The entries of the catalogue that nobody has chosen.
+    public JsonArray AvailableCatalogueEntries()
+    {
+        lock (gate) return new JsonArray(CatalogueEntries.Where(e => e?["Name"]?.GetValue<string>() is { } n && !items.Values.Any(i => i.DataType == "OSD-3DO-V1.5" && i.Model == CatalogueModel(n))).Select(e => e!.DeepClone()).ToArray());
+    }
     // THE ACCOUNT LEVELS the Register Service offers (MMM-TEC Register, step 2): what a human is shown when it selects Registration. Both are free: there is no Service Pricing Model to pay.
     // Visitor: the public places of the MPAI building. Participant: the meetings the chair invited it to (the AVS Service gives the Rights to those on the chair's list that hold a Participant Account).
     public IReadOnlyList<(string Id, string Name, string Description)> AccountLevels { get; set; } =
@@ -226,12 +242,10 @@ public sealed class MInstance
     }
 
     // ---------------------------------------------------------------- Speech Objects that are streams
-    // The Speech Object a Process may feed: its own, still a stream. Its declared end (Unix milliseconds), or null.
-    public long? StreamToFeed(string process, string id)
+    // The Speech Object a Process may feed: its own, still a stream. A streamed Speech Object has no duration: its Time is not in it until the stream is over.
+    public bool StreamToFeed(string process, string id)
     {
-        lock (gate)
-            return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Owner == process && it.Streaming
-                   && it.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0]?["EndTime"] is JsonNode e ? e.GetValue<long>() : null;
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Owner == process && it.Streaming;
     }
 
     // The stream is over: what arrived is the Speech Object's data, and it is no longer a stream.
@@ -241,6 +255,13 @@ public sealed class MInstance
         {
             if (!items.TryGetValue(id, out var it) || it.Body?["BasicSpeechObjectData"]?[0] is not JsonObject data) return;
             data["Data"] = Convert.ToBase64String(pcm);
+            // The duration of the speech is known now, and it is the Speech Object's own Time: from when its Data was captured to the end of the stream.
+            if (it.Body["BasicSpeechObjectTime"] is null)
+                it.Body["BasicSpeechObjectTime"] = new JsonObject
+                {
+                    ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = id + "-T",
+                    ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = it.Started, ["EndTime"] = Math.Max(it.Started, it.Started + pcm.Length / 32), ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
+                };
             it.Streaming = false;
         }
     }
@@ -254,6 +275,41 @@ public sealed class MInstance
     }
 
     public bool IsStream(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Streaming; }
+
+    // ---------------------------------------------------------------- Animation Streams that arrive as they are captured
+    // The Animation Stream a Process may feed: its own, still a stream (its Animation Qualifier names a stream format).
+    public bool AnimationToFeed(string process, string id)
+    {
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "PAF-AMO-V1.6" && it.Owner == process && it.Streaming;
+    }
+
+    // An Animation Stream is seen by whoever has an Item in the Room around the seat of the Persona it animates, unless a Right bars it from the places in it (May Not).
+    public bool AnimationSeenBy(string process, string id)
+    {
+        lock (gate)
+        {
+            if (!items.TryGetValue(id, out var stream) || !stream.Streaming) return false;
+            var persona = items.Values.FirstOrDefault(i => i.Animation == id);
+            if (persona is null) return false;
+            if (persona.Owner == process) return true;
+            if (persona.Location is null || !items.TryGetValue(persona.Location, out var seat) || seat.Location is null) return false;
+            var room = seat.Location;
+            bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
+            if (!items.Values.Any(i => i.Owner == process && InRoom(i.Location))) return false;
+            return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                             .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
+        }
+    }
+
+    // The stream is over: it no longer animates anything, and it is gone.
+    public void AnimationEnded(string id)
+    {
+        lock (gate)
+        {
+            foreach (var i in items.Values.Where(i => i.Animation == id)) i.Animation = null;
+            items.Remove(id);
+        }
+    }
 
     // ---------------------------------------------------------------- the screen shared in a room
     // A SHARED SCREEN is a Visual Object (OSD-BVO) that is a stream: its User - the one with the Right to place it in the room - declares it with the address its frames are delivered
@@ -358,8 +414,11 @@ public sealed class MInstance
                     if (i.Animation is not null) o["Animation"] = i.Animation;
                     if (i.DataType == ScreenHeader) o["Streaming"] = i.Streaming;
                     // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
-                    if (i.DataType == "OSD-BSO-V1.5" && i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0] is JsonNode st)
-                    { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming; }
+                    if (i.DataType == "OSD-BSO-V1.5")
+                    {
+                        var st = i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0];
+                        o["Start"] = st?["StartTime"]?.DeepClone() ?? JsonValue.Create(i.Started); o["End"] = st?["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming;    // a stream has no end yet
+                    }
                     return (JsonNode)o;
                 }).ToArray())
             };
@@ -428,8 +487,8 @@ public sealed class MInstance
             "Register" => Register(service, with),
             "Transact" => Transact(service, rq.SourceProcessID, with),
             "MM-Add" => MMAdd(service, rq.SourceProcessID, c, with),
-            "UM-Capture" => UMCapture(service, rq.SourceProcessID, c, refs),
-            "Identify" => Identify(service, rq.SourceProcessID, c, refs),
+            "UM-Capture" => UMCapture(service, rq.SourceProcessID, c, refs, with),
+            "Identify" => Identify(service, rq.SourceProcessID, c, refs, with),
             "MM-Animate" => MMAnimate(service, rq.SourceProcessID, c, refs, with),
             "MM-Send" => MMSend(service, rq.SourceProcessID, c, with),
             "MM-Move" => MMMove(service, rq.SourceProcessID, c, with),
@@ -455,8 +514,11 @@ public sealed class MInstance
         if (level is not null && !AccountLevels.Any(l => l.Id == level)) return Fail(422, service, "FaultyPA", $"{level} is not an Account Level of this M-Instance");
         foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
             foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
-                if (e?["PersonaChoice"]?.GetValue<string>() is { } pick && !Catalogue.Contains(pick))
-                    return Fail(422, service, "FaultyPA", $"{pick} is not in the catalogue of Personae: a Persona is chosen from it, not brought");
+            {
+                if (e?["PersonaChoice"]?.GetValue<string>() is not { } pick) continue;
+                if (!Catalogue.Contains(pick)) return Fail(422, service, "FaultyPA", $"{pick} is not in the catalogue of Personae: a Persona is chosen from it, not brought");
+                if (PersonaTaken(pick)) return Fail(409, service, "Clash", $"{pick} was chosen by another human");
+            }
 
         processes[human] = new Process { ID = human, Kind = "Human" };
         var account = $"Account-{human}";
@@ -604,7 +666,7 @@ public sealed class MInstance
             return false;
         }
         var heardSince = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 60_000;   // a Speech Object is heard while it lasts: what was said more than a minute ago is not returned
-        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false && ((string?)t["Kind"] != "Speech" || (t["End"]?.GetValue<long>() ?? 0) >= heardSince)).Select(t => (JsonNode)t.DeepClone()).ToArray();
+        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false && ((string?)t["Kind"] != "Speech" || (bool?)t["Streaming"] == true || (t["End"]?.GetValue<long>() ?? 0) >= heardSince)).Select(t => (JsonNode)t.DeepClone()).ToArray();
         var item = new JsonObject
         {
             ["ItemName"] = $"Scene-{c.At}", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID,
@@ -636,27 +698,47 @@ public sealed class MInstance
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }
 
-    // EISrvc. UM-Capture captures Data at a U-Location: the Data becomes an Item of the
-    // requesting Process.
-    private Outcome UMCapture(string service, string source, Complements c, List<string> refs)
+    // EISrvc (the Import Service). UM-Capture: a Process of a human - its Device - asks that a scene at a U-Location be captured as Data, With the Qualifier the Data is to have.
+    // The Data is named by the requester (Nil) and belongs to it; it is not yet an Item of the M-Instance: Identify makes it one. A Qualifier whose transport is a stream says that
+    // the Data arrives as it is captured (a Speech Qualifier, TFA-SPQ, names the stream format of the speech and the time it lasts).
+    private Outcome UMCapture(string service, string source, Complements c, List<string> refs, List<JsonObject> with)
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (Need(service, c.At, "At") is { } f2) return f2;
         if (items.ContainsKey(c.Nil!)) return Fail(409, service, "Clash", $"{c.Nil} exists already");
-        items[c.Nil!] = new Item { ID = c.Nil!, DataType = "MMM-DAT", Owner = source, Location = c.At };
+        var qualifier = with.FirstOrDefault(i => Header(i)?.StartsWith("TFA-", StringComparison.Ordinal) == true);
+        items[c.Nil!] = new Item { ID = c.Nil!, DataType = "MMM-DAT", Owner = source, Location = c.At, Qualifier = qualifier, Started = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
         return Ok(201, service, new Complements { Nil = c.Nil, With = refs.Select(r => (JsonNode?)JsonValue.Create(r)).ToList() });
     }
 
-    // IDSrvc. Identify says what captured Data is: here, the Animation Stream of the
-    // human captured.
-    private Outcome Identify(string service, string source, Complements c, List<string> refs)
+    // IDSrvc. Identify makes an Item of Data and its Qualifier. Speech captured (a Speech Qualifier, TFA-SPQ) becomes a Speech Object (OSD-BSO): its time is the Qualifier's, its data
+    // is delivered as the stream the Qualifier names, and its Identifier is the one the Data was named with; the Item is its requester's, and is not anywhere until MM-Added.
+    // Any other Data is, here, the Animation Stream of the human captured.
+    private Outcome Identify(string service, string source, Complements c, List<string> refs, List<JsonObject> with)
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (!items.TryGetValue(c.Nil!, out var data)) return Fail(404, service, "IncID", $"no Data {c.Nil}");
         if (data.Owner != source) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
-        var stream = $"{c.Nil}-Stream";
-        items[stream] = new Item { ID = stream, DataType = "PAF-AMO-V1.6", Owner = source };
-        return Ok(201, service, new Complements { Nil = stream });
+        var qualifier = with.FirstOrDefault(i => Header(i) == "TFA-SPQ-V1.5") ?? (data.Qualifier is { } q && Header(q) == "TFA-SPQ-V1.5" ? q : null);
+        if (data.DataType == "MMM-DAT" && qualifier is not null)
+        {
+            var stream = qualifier["Formats"]?["TransportFormats"]?["StreamFormat"] is not null;
+            if (!stream) return Fail(422, service, "IncDQ", "the Data of a speech arrives as a stream: its Speech Qualifier names the stream format");
+            var id = data.ID;
+            data.Body = new JsonObject
+            {
+                ["Header"] = "OSD-BSO-V1.5", ["MInstanceID"] = ID, ["BasicSpeechObjectID"] = id,
+                ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["DataURI"] = $"/ws/v2.2/speech/{id}/listen" }),
+                ["BasicSpeechDataQualifier"] = qualifier.DeepClone()
+            };
+            data.DataType = "OSD-BSO-V1.5"; data.Streaming = true; data.Location = null; data.Qualifier = null;
+            return Ok(201, service, new Complements { Nil = id });
+        }
+        // Any other Data is the Animation Stream of the human captured; if its Animation Qualifier (TFA-AMQ) names a stream format, it arrives as it is captured.
+        var animation = with.FirstOrDefault(i => Header(i) == "TFA-AMQ-V1.5") ?? (data.Qualifier is { } aq && Header(aq) == "TFA-AMQ-V1.5" ? aq : null);
+        var streamId = $"{c.Nil}-Stream";
+        items[streamId] = new Item { ID = streamId, DataType = "PAF-AMO-V1.6", Owner = source, Qualifier = animation, Streaming = animation?["Formats"]?["TransportFormat"] is not null };
+        return Ok(201, service, new Complements { Nil = streamId });
     }
 
     // COSrvc. MM-Send conveys a Message to a Process: the Message reaches its inbox and
@@ -668,6 +750,13 @@ public sealed class MInstance
         if (!processes.ContainsKey(c.To!)) return Fail(404, service, "IncID", $"no Process {c.To}");
         // What is sent: a Message, or a Speech Object - a User's own capture of what it said, with the time it lasts (a Basic Speech Object, OSD-BSO).
         var message = with.FirstOrDefault(i => Header(i) is "MMM-MSG-V2.2" or "OSD-BSO-V1.5");
+        // A Speech Object the sender already has - its own capture, still a stream - is sent as it is: the recipient is given that Item (it may read it, and listen to it), not a copy.
+        if (message is not null && Header(message) == "OSD-BSO-V1.5" && message["BasicSpeechObjectID"]?.GetValue<string>() is { } own && items.TryGetValue(own, out var sent) && sent.Owner == source)
+        {
+            var inbox = inboxes.TryGetValue(c.To!, out var ib) ? ib : inboxes[c.To!] = [];
+            if (!inbox.Contains(own)) inbox.Add(own);
+            return Ok(200, service, new Complements { With = GrantAll(with, c.To!) });
+        }
         items[c.Nil!] = new Item { ID = c.Nil!, DataType = message is null ? "MMM-MSG-V2.2" : Header(message)!, Body = message, Owner = source };
         var box = inboxes.TryGetValue(c.To!, out var b) ? b : inboxes[c.To!] = [];
         if (!box.Contains(c.Nil!)) box.Add(c.Nil!);          // a Message sent again under the same identifier replaces the first

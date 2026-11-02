@@ -1,0 +1,85 @@
+{ "$schema":                           "https://json-schema.org/draft/2020-12/schema",
+  "$id":                               "https://schemas.mpai.community/CUI1/V2.1/data/CyberRiskDescriptors.json",
+  "title":                             "Cyber Risk Descriptors V2.1",
+  "type":                              "object",
+  "properties":                        {
+
+    "Header":                          { "type": "string", "const": "CUI-CRD-V2.1" },
+    "MInstanceID":                     { "type": "string" },
+    "UEnvironmentID":                  { "type": "string" },
+    "CyberRiskDescriptorsID":          { "type": "string" },
+    "CyberRiskDescriptorsTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "CyberRisk":                       { "type": "object", "properties": {
+
+      "Regulations":                   { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/MLModelQualifier.json" },
+
+      "AttackerSourceIP":              { "type": "object", "properties": {
+        "AttackDetectionTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":      { "type": "string" },
+        "Type":                        { "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackSourceIPAddress":       { "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3},[.][0-9]{3}$" } } },
+
+      "DoSDestinationIP":              { "type": "object", "properties": {
+        "AttackDetectionTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":      { "type": "string" },
+        "Type":                        { "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackDestinationIPAddress":  { "type": "string", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3},[.][0-9]{3}$" } } },
+
+      "SourcePort":                    { "type": "object", "properties": {
+        "AttackDetectionTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":      { "type": "string" },
+        "Type":                        { },
+        "AttackSourcePortNumber":      { "type": "integer" } } },
+
+      "DestinationPort":               { "type": "object", "properties": {
+        "AttackDetectionTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":      { "type": "string" },
+        "Type":                        { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackDestinationPortNumber": { "type": "integer" } } },
+
+      "Protocol":                     { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "CommunicationProtocol":      { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CommunicationProtocolTypes.json" } } },
+
+      "Duration":                     { "type": "object", "properties": {
+        "StartAndEndTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "AttackDuration":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } },
+
+      "Packets":                      { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "TransmittedPacktetsNumber":  { "type": "integer" } } },
+
+      "Bytes":                        { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "DataTransferVolume":         { "type": "integer" } } },
+
+      "RequestFrequency":             { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "OccurrenceOfFlowRate":       { "type": "integer" } } },
+
+      "IPAddressEntropy":             { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "integer", "pattern": "^[0-9]{3},[.][0-9]{3},[.][0-9]{3}$" },
+        "SourceDiversity":            { "type": "integer" } } },
+
+      "TCPFlag":                      { "type": "object", "properties": {
+        "AttackDetectionTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "VectorProviderOrSource":     { "type": "string" },
+        "Type":                       { "type": "string" },
+        "TCPPacketsFlag":             { "type": "string" } } } } },
+
+    "Trace":                          { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":                  { "type": "string" } } }
+

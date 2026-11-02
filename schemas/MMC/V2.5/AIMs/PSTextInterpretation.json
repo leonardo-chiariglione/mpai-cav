@@ -5,7 +5,7 @@
 
   "Header":               "MMC-PTI-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PTI-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
   "Description":          "This AIM extracts the Text Personal Status from the Text Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Text Description (Port 2).",

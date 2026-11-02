@@ -17,7 +17,18 @@ public sealed class ApplicationState
     public IReadOnlyList<Scene> Scenes { get; init; } = [];
     public IReadOnlyList<string> Stored { get; init; } = [];
     public bool ListsStored { get; init; }
+    public IReadOnlyList<string> Saved { get; init; } = [];            // the names of all the scenes the listing gave, the one open or not
+    public bool ListsOnlyScenes { get; init; }                          // the listing was of scenes alone
     public IReadOnlyList<string> Seen { get; init; } = [];            // the sounds kept, in the order they were first seen: the one seen last is the one just loaded
+
+    // The same state without some names among what is kept: the scene's own object is not a sound, whatever the application lists it as.
+    public ApplicationState Without(IReadOnlyCollection<string> names) => names.Count == 0 ? this : new ApplicationState
+    {
+        Scenes = Scenes, ListsStored = ListsStored,
+        Stored = Stored.Where(n => !names.Contains(n)).ToList(), Seen = Seen.Where(n => !names.Contains(n)).ToList()
+    };
+
+    public static Action<string>? Trace { get; set; }
 
     public bool IsKnown => Scenes.Count > 0 || Stored.Count > 0;
 
@@ -43,10 +54,11 @@ public sealed class ApplicationState
             if (s.Detailed || older.Scenes.FirstOrDefault(o => o.Name == s.Name) is not { } before) return s;
             return s with { Members = s.Members.Select(m => before.Members.FirstOrDefault(b => b.Name == m.Name) ?? m).ToList() };
         }).ToList();
-        var stored = ListsStored ? Stored : older.Stored;
+        var allScenes = scenes.Count > 0 ? scenes : older.Scenes;
+        var stored = (ListsStored ? Stored : older.Stored).Where(n => !IsCopyOfAScene(n, allScenes)).ToList();      // a copy of the scene the application makes ("scene 1 2") is not a sound
         return new ApplicationState
         {
-            Scenes = scenes.Count > 0 ? scenes : older.Scenes,
+            Scenes = allScenes,
             Stored = stored,
             ListsStored = ListsStored || older.ListsStored,
             Seen = older.Seen.Concat(stored.Where(n => !older.Seen.Contains(n))).ToList()
@@ -56,7 +68,8 @@ public sealed class ApplicationState
     public static bool IsListing(JsonNode? instance, ApplicationContext guide) =>
         guide.Context is { } context && instance is not null && Select(instance, (string?)context["Items"] ?? "").Any();
 
-    public static ApplicationState Read(JsonNode? instance, ApplicationContext guide)
+    // Only the scenes named in currentScenes count, when any are: a store keeps the scenes of every earlier session, and the sounds in those are kept sounds, not sounds in this scene.
+    public static ApplicationState Read(JsonNode? instance, ApplicationContext guide, IReadOnlyCollection<string>? currentScenes = null)
     {
         if (guide.Context is not { } context || instance is null) return new ApplicationState();
         var itemsPath = (string?)context["Items"] ?? "";
@@ -71,12 +84,16 @@ public sealed class ApplicationState
         var scenes = new List<Scene>();
         var listed = new List<(string Name, bool IsScene)>();
         var inScenes = new HashSet<string>(StringComparer.Ordinal);
+        var composites = new HashSet<string>(StringComparer.Ordinal);
+        var saved = new List<string>();
         foreach (var item in Elements(instance, itemsPath))
         {
             if (item is not JsonObject o || (string?)o[nameKey] is not { Length: > 0 } name) continue;
             var isScene = sceneKinds.Contains((string?)o[kindKey] ?? "");
             listed.Add((name, isScene));
-            if (!isScene) continue;
+            if (isScene) saved.Add(name);
+            if (isScene && currentScenes is { Count: > 0 } && !currentScenes.Contains(name)) continue;      // the scene of an earlier session
+            if (!isScene) { if (memberNamesKey.Length > 0 && Select(o, memberNamesKey).Any()) composites.Add(name); continue; }      // an object made of others is not a sound
             var members = new List<Member>();
             foreach (var m in Elements(o, membersKey))
             {
@@ -94,9 +111,13 @@ public sealed class ApplicationState
                     if ((string?)n is { Length: > 0 } named) { members.Add(new Member(named, [])); inScenes.Add(named); }
             scenes.Add(new Scene(name, members, detailed));
         }
-        var stored = listed.Where(l => !l.IsScene && !inScenes.Contains(l.Name)).Select(l => l.Name).Distinct(StringComparer.Ordinal).ToList();
-        return new ApplicationState { Scenes = scenes, Stored = stored, ListsStored = listed.Any(l => !l.IsScene) };
+        var stored = listed.Where(l => !l.IsScene && !inScenes.Contains(l.Name) && !composites.Contains(l.Name)).Select(l => l.Name).Distinct(StringComparer.Ordinal).ToList();
+        stored = stored.Where(n => !IsCopyOfAScene(n, scenes)).ToList();
+        return new ApplicationState { Scenes = scenes, Stored = stored, ListsStored = listed.Any(l => !l.IsScene), Saved = saved.Distinct(StringComparer.Ordinal).ToList(), ListsOnlyScenes = listed.Count > 0 && listed.All(l => l.IsScene) };
     }
+
+    // A name that is a scene's name and a number ("scene 120102 2"): what the application makes when it is told again to put something in a scene that exists.
+    private static bool IsCopyOfAScene(string name, IEnumerable<Scene> scenes) => scenes.Any(sc => name.StartsWith(sc.Name + " ", StringComparison.Ordinal));
 
     // The state, told to the language model.
     public string Tell(ApplicationContext guide)

@@ -1,0 +1,33 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/CUI1/V2.1/data/RiskTaxonomy.json",
+  "title":                          "Risk Taxonomy V2.1",
+  "type":                           "object",
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "CUI-RTX-V2.1" },
+    "RiskTaxonomy":                 { "type": "object", "properties": {
+      "Business Area":              { "type": "object", "properties": {
+        "Risk Managements":         { "type": "string", "enum": [ "Fundamental Markets", "Theft Risk", "Fire Risk", "Legislative/Policy", "Keyman",
+                                                                  "Key Customers" ] },
+        "Finance":                  { "type": "string", "enum": [ "Exchange rate risk", "Interest rate risk", "Credit from banks",
+                                                                  "Fluctuation in raw material prices", "Credit from third parties" ] },
+        "Strategic/Operational":    { "type": "string", "enum": [ "Contractual constraints Ã¢â‚¬â€œ deliveries", "Product compliance", "New successful competitors",
+                                                                  "Revocation of distribution/concession contracts", "Suppliers", "Credit from members" ] },
+        "Compliance":               { "type": "string", "enum": [ "Governance", "Conflict of interest", "Corporate group risk", "Third party protection",
+                                                                  "Employee/Director/Collaborator protection", "Complicity risk", "Respect for human rights",
+                                                                  "Tax accounting error risk", "Counterfeiting & Sabotage" ] } } },
+
+      "Climate Area":               { "type": "object", "properties": {
+        "Physical Risks":           { "type": "string", "enum": [ "Business interruption - natural events", "Risk of natural disasters", "Seismic events",
+                                                                  "Floods" ] },
+        "Transitional Risks":       { "type": "string", "enum": [ "Emission of harmful gases", "Environment/Pollution", "Energy management", "Market demand" ] },
+        "ESG":                      { "type": "string", "enum": [ "Water Management", "Waste Management", "Stakeholder Involvement", "Workplace Safety & Hygiene",
+                                                                  "Relationships & Working Conditions", "Discrimination Risk", "GDPR", "Corruption Prevention",
+                                                                  "Anti-Money Laundering", "Violation of national regulations", "Image & Ethics",
+                                                                  "Complicity risk" ] } } },
+
+      "Cyber Area":                { "type": "object", "properties": {
+        "Digitalisation":          { "type": "string", "enum": [ "Data Loss and Backup", "Business interruption - IT events", "Credential loss" ] },
+        "Embedded Systems & IoT":  { "type": "string", "enum": [ "Data Loss and Backup", "Risk of unauthorized access" ] },
+        "Cyber":                   { "type": "string", "enum": [ "Risk of enabling remote tools", "Risk of unauthorized access" ] },
+        "Legal":                   { "type": "string", "enum": [ "AI act", "Accessibility act" ] } } } } } } }

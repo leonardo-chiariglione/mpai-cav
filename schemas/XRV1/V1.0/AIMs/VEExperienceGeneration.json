@@ -3,7 +3,8 @@
   "$id":                  "https://schemas.mpai.community/XRV1/V1.0/AIMs/VEExperienceGeneration.json",
   "title":                "VE Experience Generation V1.0",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "XRV-VEG-V1.0"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":               "XRV-VEG-V1.0",
 
   "APIProfile":           "Basic",
   "Description":          "The Virtual Environment Experience Generation (XRV-VEG) AIM receives the VE Action IDs from the Action Generation AIM and outputs the appropriate commands from the Action Table via VE Data Out in accordance with the VE Venue Specifications and Script-Venue Associations, incorporating any required Show Descriptors.",

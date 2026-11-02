@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/AMSMemory.json",
   "title": "AMS Memory V2.0",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-AMM-V2.0" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-AMM-V2.0",
 
@@ -16,12 +16,11 @@
     { "Name": "Path"                      , "Direction": "Input",   "DataType": "OSD-PAT-V1.5", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Trajectory"                , "Direction": "Input",   "DataType": "OSD-TRJ-V1.5", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Alert"                     , "Direction": "Input",   "DataType": "CAV-ALT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "RoadState"                 , "Direction": "Input",   "DataType": "CAV-RDS-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadState"                 , "Direction": "Input",   "DataType": "CAV-RDS-V2.0", "IsOptional": true, "AcceptedTransports": [ "Controller", "Bus" ],  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "CAVState"                  , "Direction": "Input",   "DataType": "CAV-CST-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSMASMessage"             , "Direction": "Input",   "DataType": "CAV-AMM-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V2.0", "PortNumber": 1, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                   , "Direction": "Input",   "DataType": "CAV-AMD-V2.0", "PortNumber": 2, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                   , "Direction": "Output",  "DataType": "CAV-AMD-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "AMSData"                   , "Direction": "Output",  "DataType": "CAV-AMD-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateBusOut", "Direction": "Output", "DataType": "CAV-RDS-V2.0", "IsOptional": true, "Transport": "Bus", "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],

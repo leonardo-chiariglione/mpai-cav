@@ -282,7 +282,8 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         if (_open is null)
         {
-            if (data.UserPoV is not null || data.ModifiedObjects is { Objects.Count: > 0 } || data.LUFS is not null)
+            // The listener alone (UserPoV) is Scene Editing's: with no Object open there is nothing here to edit, and nothing to report.
+            if (data.ModifiedObjects is { Objects.Count: > 0 })
                 report.Failed("ModifiedObjects", null, "no Basic Audio Object is open");
             return;
         }
@@ -293,21 +294,31 @@ public sealed class AoeAimProcessor : IAimProcessor
             report.Done("UserPoV", N(_open), N(_open));
         }
 
-        // What the Object is like: its loudness and its Acoustic Profile (Object part). The Object is the one open, or the one the entry gives (the Object itself, or its
-        // name), which is then open. The amount is the command's: an entry that carries neither a loudness nor an Acoustic Profile asks for nothing that can be done.
+
+        // WHAT THE OBJECTS ARE LIKE (ModifiedObjects): each entry names its Object - itself, or its name - which is then the one open - or, naming none, is the open one. The loudness of an
+        // Object is the LUFS of its entry (M3282 UCM-5); the top-level LUFS is the loudness of the Scene, which is Audio Scene Editing's.
         if (data.ModifiedObjects is { Objects.Count: > 0 } modified)
             foreach (var entry in modified.Objects)
             {
-                if (entry.AcousticProfile is null && data.LUFS is null)
+                if (entry.ObjectID is { } named)
+                {
+                    var given = IdOf(named);
+                    var key = _aoe.KeyOf(given);
+                    if (key is not null && key.StartsWith("BAO", StringComparison.Ordinal)) _open = key;
+                    else { report.Failed("ModifiedObjects", given, key is null ? "the Module keeps no Basic Audio Object of that name" : "only a Basic Audio Object is modified here"); continue; }
+                }
+                if (entry.AcousticProfile is null && entry.LUFS is null)
                 { report.Failed("ModifiedObjects", N(_open), "nothing to modify: an Acoustic Profile, or a loudness (LUFS) as a number, is required"); continue; }
-                _open = _aoe.EditBasicObjectProperties(_open, level: data.LUFS, acousticProfile: entry.AcousticProfile).AssetId;
+                AcousticProfile? profile = null;
+                if (entry.AcousticProfile is { } wanted)
+                {
+                    profile = wanted.Reference ? _aoe.Profiles.Get(wanted.AcousticProfileID) : wanted;
+                    if (profile is null) { report.Failed("ModifiedObjects", N(_open), $"the Module keeps no Acoustic Profile named \"{wanted.AcousticProfileID}\""); continue; }
+                    if (!wanted.Reference) _aoe.Profiles.Keep(wanted);
+                }
+                _open = _aoe.EditBasicObjectProperties(_open, level: entry.LUFS, acousticProfile: profile).AssetId;
                 report.Done("ModifiedObjects", N(_open), N(_open));
             }
-        else if (data.LUFS is { } lufs)
-        {
-            _open = _aoe.EditBasicObjectProperties(_open, level: lufs).AssetId;
-            report.Done("LUFS", N(_open), N(_open));
-        }
     }
 
     private static string? IdOf(ManagedObject? managed) =>

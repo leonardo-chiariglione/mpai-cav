@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mpai.Mmm.ScreenHelper: shares a window or a screen in an MMM meeting WITHOUT the browser's own capture (and so without the
+       browser's "Stop sharing" bar). It runs on the machine of the sharer, apart from the browser. The page of the meeting asks it
+       over http://127.0.0.1:7391; the sharer chooses what to share in a window of this program; it sends the picture to the M-Instance
+       over the same WebSocket the page uses. -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Mmm.ScreenHelper</RootNamespace>
+    <AssemblyName>Mpai.Mmm.ScreenHelper</AssemblyName>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- No .exe: an unsigned program the antivirus may quarantine; run it with Run-ScreenHelper.cmd (dotnet Mpai.Mmm.ScreenHelper.dll) -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+</Project>

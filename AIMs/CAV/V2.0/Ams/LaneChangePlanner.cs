@@ -83,6 +83,7 @@ public sealed class LaneChangePlanner
     }
 
     private readonly bool enabled;
+    private readonly double decisionSeconds;                // the time gap in which it considers passing, besides DecisionDistance: a strategy that follows farther behind (a longer time gap) is not left behind what it could pass; 0: none
     private readonly double decisionDistance, leftAheadClear, behindDistance, behindSeconds, behindMargin, changeSeconds, returnBehind,
                             rightAheadClear, slowerBy, egoLength, memory, maxLeft;
     private readonly bool opposing;
@@ -101,6 +102,7 @@ public sealed class LaneChangePlanner
     {
         enabled = EssJson.Setting(settings, "LaneChange", 0) > 0;
         decisionDistance = EssJson.Setting(settings, "DecisionDistance", 60);
+        decisionSeconds = EssJson.Setting(settings, "DecisionSeconds", 0);
         leftAheadClear = EssJson.Setting(settings, "LeftAheadClear", 80);
         behindDistance = EssJson.Setting(settings, "BehindDistance", 30);
         behindSeconds = EssJson.Setting(settings, "BehindSeconds", 16);
@@ -332,7 +334,7 @@ public sealed class LaneChangePlanner
         Seen? lead = null;
         foreach (var t in seen.Values)
             if (t.LastSeen == now && t.X > 0 && Math.Abs(t.Y) < 1.75 && (lead is null || t.X < lead.X)) lead = t;
-        if (lead is null || lead.X > decisionDistance || lead.Speed is not { } ls || (ls > planned - slowerBy && !lead.TurnsRight)) return null;   // one that turns off is going to slow
+        if (lead is null || lead.X > Math.Max(decisionDistance, decisionSeconds * egoSpeed) || lead.Speed is not { } ls || (ls > planned - slowerBy && !lead.TurnsRight)) return null;   // one that turns off is going to slow
         if (lanes < 2) { Status = "following: no lane to the left"; return null; }
 
         if (opposing)

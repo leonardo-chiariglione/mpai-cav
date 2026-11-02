@@ -40,6 +40,11 @@ public static class AsrFactory
                 Threads      = Number(settings, "Threads"),
                 AudioContext = Number(settings, "AudioContext"),
 
+                PromptFile =
+                    settings.TryGetValue("PromptFile", out var promptFile) && !string.IsNullOrWhiteSpace(promptFile)
+                        ? promptFile.Trim()
+                        : null,
+
                 ExtraArguments =
                     settings.TryGetValue("ExtraArguments", out var extra) && !string.IsNullOrWhiteSpace(extra)
                         ? extra.Trim()

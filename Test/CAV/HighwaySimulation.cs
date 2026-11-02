@@ -146,7 +146,7 @@ public sealed class HighwaySimulation
         }
 
         var (lat, lon) = Map.Geodetic(ego.X + Gaussian(GnssSigma), ego.Y + Gaussian(GnssSigma));
-        messages.Add(("CAV-GNO-V2.0", Gnss(ms0, lat, lon)));
+        messages.Add(("CAV-NSO-V2.0", Gnss(ms0, lat, lon)));
 
         if (camera)
         {
@@ -242,7 +242,7 @@ public sealed class HighwaySimulation
         var nmea = Nmea.Gga(utc, lat, lon) + "\r\n";
         return new JsonObject
         {
-            ["Header"] = "CAV-GNO-V2.0", ["GNSSObjectID"] = $"GNO{ms}", ["GNSSObjectTime"] = SimpleTime($"GNO{ms}-T", ms),
+            ["Header"] = "CAV-NSO-V2.0", ["GNSSObjectID"] = $"GNO{ms}", ["GNSSObjectTime"] = SimpleTime($"GNO{ms}-T", ms),
             ["GNSSData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(Encoding.ASCII.GetBytes(nmea)) }),
             ["GNSSDataQualifier"] = new JsonObject
             {

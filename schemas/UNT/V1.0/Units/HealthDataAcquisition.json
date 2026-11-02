@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-HDA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Health",
+  "Description": "Health Data Acquisition: acquires the health data of a person - from an electrocardiograph, an electroencephalograph, medical imaging devices, wearable sensors, and from the systems that hold electronic health records - and provides it as Health Data, its Health Data Qualifier stating which kind each is. It is not one device but a plurality of them, and a Health Data carries the data its devices give: any of them may be missing.",
+  "ExternalPorts": [
+    {
+      "Name": "SensedHealthData",
+      "Direction": "Input",
+      "DataType": [
+        "AIH-HLD-V1.1"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredHealthData",
+      "Direction": "Input",
+      "DataType": [
+        "AIH-HLD-V1.1"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredHealthData",
+      "Direction": "Output",
+      "DataType": [
+        "AIH-HLD-V1.1"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}
