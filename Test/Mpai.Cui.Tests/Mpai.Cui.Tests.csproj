@@ -22,6 +22,9 @@
     <ProjectReference Include="..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
     <ProjectReference Include="..\..\AIF\Metadata\AIF.Metadata.csproj" />
     <ProjectReference Include="..\..\AIMs\CUI\V2.1\Mpai.Cui.csproj" />
+    <!-- The App is built with the tests and run as programs (CompanyAppTests): nothing of it is linked. -->
+    <ProjectReference Include="..\..\Apps\CUI\CPP\Controller\CuiController.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CUI\CPP\Ua\CuiUa.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

@@ -73,6 +73,17 @@ public sealed class PortDataCodecs
             .Register(new JsonObjectCodec("OSD-MSD-V1.5"))
             .Register(new JsonObjectCodec("OSD-OPV-V1.5"))
             .Register(new JsonObjectCodec("CAE-UCM-V1.0"))
+            // Company Performance Prediction (MPAI-CUI CPP V2.1): the descriptors and statements are written and read as the JSON instance of their schema, inside and on the wire.
+            .Register(new JsonObjectCodec("CUI-FND-V2.1"))
+            .Register(new JsonObjectCodec("CUI-GVS-V2.1"))
+            .Register(new JsonObjectCodec("CUI-LRD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-CRD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-SRS-V2.1"))
+            .Register(new JsonObjectCodec("CUI-ORD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-PDD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-PSD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-SRM-V2.1"))
+            .Register(new NumberCodec())
             .Register(new BooleanCodec())
             .Register(new StringCodec());
 

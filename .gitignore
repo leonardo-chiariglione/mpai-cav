@@ -27,6 +27,8 @@ Test/Data/CUI/Bankruptcy/Taiwanese/
 # large model binaries - not source (kept locally; use Git LFS in the
 # distribution repo if they must ship)
 Models/
+# the demonstration financial model of CUI-CPP is Access data obtained from this repository (2.3 KB, SHA-256 pinned in the L3 of its AIMs)
+!AIMs/CUI/V2.1/Models/
 
 # OS
 Thumbs.db

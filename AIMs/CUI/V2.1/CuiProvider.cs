@@ -18,9 +18,9 @@ public sealed class CuiProvider : IAimProvider
     {
         Fna => new FinancialAssessment(aimName),
         Gva => new GovernanceAssessment(aimName),
-        Cdp => new PrimaryDefaultPrediction(aimName),
-        Oma => new OrganisationModelAssessment(aimName),
-        Pdp => new PrimaryDiscontinuityPrediction(aimName),
+        Cdp => new PrimaryDefaultPrediction(aimName, PdModel.FromSettings(settings)),
+        Oma => new OrganisationModelAssessment(aimName, PdModel.FromSettings(settings)),
+        Pdp => new PrimaryDiscontinuityPrediction(aimName, PdModel.FromSettings(settings)),
         Rmg => new RiskMatrixGeneration(aimName),
         Prp => new PredictionResultPerturbation(aimName),
         _ => throw new ArgumentException($"{aimName} is not an AIM of CUI-CPP V2.1.")

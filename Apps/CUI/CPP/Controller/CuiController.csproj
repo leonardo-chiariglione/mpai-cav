@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CuiController - THE CONTROLLER of Company Performance Prediction, a program of its own. The User Agent (a console program) speaks to it through the Controller API only (carried over the
+       routes of Mpai.Mas.Server); this Controller starts the Module (1CUI-CPP-V2.1-I01) and its AIMs as the L3 says. -->
+
+  <PropertyGroup>
+    <AssemblyName>CuiController</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Mpai.Cui.Controller</RootNamespace>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\..\MAS\Service\src\ControllerApiRunner.cs" Link="ControllerApiRunner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <ProjectReference Include="..\..\..\MAS\Server\Mpai.Mas.Server.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CUI\V2.1\Mpai.Cui.csproj" />
+  </ItemGroup>
+
+</Project>

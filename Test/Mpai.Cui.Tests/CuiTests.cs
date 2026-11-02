@@ -21,6 +21,18 @@ internal static class Repo
         throw new InvalidOperationException("Repository root not found");
     }
     public static string Amds => Path.Combine(Root, "AIMs", "AMDs");
+
+    // A copy of the AIM Metadata whose AccessSources of the financial model name a file on this machine (or none that exists): what the Controller obtains is what the test gives it, never the network.
+    public static string AmdsWithModel(string work, string? modelFile)
+    {
+        var folder = Path.Combine(work, "amds");
+        Directory.CreateDirectory(folder);
+        var uri = modelFile is null ? new Uri(Path.Combine(work, "no-such-model.json")).AbsoluteUri : new Uri(modelFile).AbsoluteUri;
+        foreach (var file in Directory.EnumerateFiles(Amds, "*.json"))
+            File.WriteAllText(Path.Combine(folder, Path.GetFileName(file)),
+                System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(file), "\"https://raw[.]githubusercontent[.]com/[^\"]*FinancialDefault-Polish5y[.]json\"", "\"" + uri + "\""));
+        return folder;
+    }
     public static string Schemas => Path.Combine(Root, "schemas");
 
     // The datum validates against the schema of its Data Type in CUI1/V2.1.
@@ -116,6 +128,7 @@ internal static class Companies
     public static Dictionary<string, JsonNode> In(params (string Type, JsonNode Json)[] items) => items.ToDictionary(i => i.Type, i => i.Json);
 }
 
+[Collection("cui")]
 public class AimTests
 {
     private static JsonNode Only(IEnumerable<(string Type, JsonNode Json)> outputs, string type) => outputs.Single(o => o.Type == type).Json;
@@ -257,6 +270,7 @@ public class DataTypeTests
 }
 
 // THE MODULE: Company Performance Prediction, run by the Controller from its Metadata - the composites built from their Sub-AIMs - on the data of a company.
+[Collection("cui")]
 public class ModuleTests
 {
     private const string Module = "1CUI-CPP-V2.1-I01";
@@ -268,7 +282,9 @@ public class ModuleTests
     public void TheModuleGivesTheDescriptorsOfACompany()
     {
         ReferenceModels.AsOf = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        using var api = new ControllerApi(Repo.Amds, Path.Combine(Repo.Root, "AIMs", "aim-settings.json"), new CuiProvider());
+        var work = Path.Combine(Path.GetTempPath(), "cui-module-" + Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("MPAI_ACCESS", Path.Combine(work, "access"));
+        using var api = new ControllerApi(Repo.AmdsWithModel(work, null), Path.Combine(Repo.Root, "AIMs", "aim-settings.json"), new CuiProvider());
         Assert.Equal(AifError.OK, api.StartFlow(Module));
         try
         {
@@ -293,6 +309,6 @@ public class ModuleTests
             Assert.True(pc >= pd - 1e-9, $"discontinuity {pc:F3} at least the default {pd:F3}");
             Assert.True(sd > pd, $"the secondary risks perturb the default {pd:F3} to {sd:F3}");
         }
-        finally { api.StopFlow(Module); }
+        finally { api.StopFlow(Module); Environment.SetEnvironmentVariable("MPAI_ACCESS", null); try { Directory.Delete(work, true); } catch { } }
     }
 }

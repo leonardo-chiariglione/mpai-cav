@@ -9,14 +9,9 @@ namespace Mpai.Cui;
 // The descriptors the models read are some of the codes of the Financial and Governance Descriptors, by the semantics of CUI-CPP's Data Type pages; what a company does not give, the model leaves out.
 public static class ReferenceModels
 {
-    // ---- Financial: the ratios of the questionnaire's balance sheet and income statement.
-    // Descriptor, mean, scale, weight: a positive weight raises the risk of default. The intercept makes the annual default probability of a company at the means 2%.
-    public static readonly (string Name, double Mean, double Scale, double Weight)[] Financial =
-    [
-        ("CurrentRatio", 1.3, 0.6, -0.45), ("QuickRatio", 1.0, 0.5, -0.25), ("EBITDAMargin", 0.10, 0.08, -0.35), ("ROA", 0.04, 0.05, -0.50), ("ROE", 0.08, 0.12, -0.25),
-        ("ROS", 0.05, 0.06, -0.20), ("DebtOnSales", 0.8, 0.6, 0.40), ("LongTermLiabilityRatio", 0.25, 0.2, 0.25), ("InterestCoverageRatio", 4, 4, -0.35), ("InterestOnSales", 0.02, 0.02, 0.30)
-    ];
-    public const double FinancialIntercept = -3.9;
+    // ---- Financial: the ratios of the questionnaire's balance sheet and income statement. The model that weighs them is a PdModel: the reference one below, or a trained one that is Access data.
+    public static PdModel Reference => PdModel.Reference;
+    public static readonly string[] RatioNames = ["CurrentRatio", "QuickRatio", "EBITDAMargin", "ROA", "ROE", "ROS", "DebtOnSales", "LongTermLiabilityRatio", "InterestCoverageRatio", "InterestOnSales"];
 
     // The ratios of a company from its Financial Descriptors: the codes are SPACTOT total current assets, SPACITOT inventories, SPPDTOTENTRO liabilities due within 12 months, SPPDTOTOLTRE liabilities due
     // after, SPPDTOT total liabilities, SPPATOT shareholders' equity, SPPTOT total liabilities and equity (the total assets), CEA1 revenues, CEBDIFFVAL operating result (EBIT), CEB5abc depreciation and
@@ -34,7 +29,7 @@ public static class ReferenceModels
         Put("QuickRatio", Div(current - inventories, shortTerm));
         Put("EBITDAMargin", Div(ebitda, revenues));
         Put("ROA", Div(ebit, assets));
-        Put("ROE", Div(profit, equity));
+        Put("ROE", equity is > 0 ? Div(profit, equity) : null);          // a return on equity that is negative or zero has no meaning: with the equity gone, a loss over it would look like a profit
         Put("ROS", Div(ebit, revenues));
         Put("DebtOnSales", Div(debts, revenues));
         Put("LongTermLiabilityRatio", Div(longTerm, assets));
@@ -44,15 +39,10 @@ public static class ReferenceModels
     }
 
     // The terms of the financial score: the weight times how far the ratio is from its mean in scales, within three.
-    public static List<(string Name, double Term)> FinancialTerms(JsonNode? financial)
-    {
-        var ratios = Ratios(financial);
-        return Financial.Where(f => ratios.ContainsKey(f.Name)).Select(f => (f.Name, f.Weight * CuiAim.Clamp((ratios[f.Name] - f.Mean) / f.Scale, -3, 3))).ToList();
-    }
+    public static List<(string Name, double Term)> FinancialTerms(JsonNode? financial, PdModel? model = null) => (model ?? PdModel.Reference).Terms(Ratios(financial));
 
     // The probability of default within `months`, from the annual one.
-    public static double DefaultProbability(IEnumerable<(string Name, double Term)> terms, double months) =>
-        1 - Math.Pow(1 - CuiAim.Sigmoid(FinancialIntercept + terms.Sum(t => t.Term)), months / 12.0);
+    public static double DefaultProbability(IEnumerable<(string Name, double Term)> terms, double months, PdModel? model = null) => (model ?? PdModel.Reference).Probability(terms, months);
 
     // Each term's share of the whole, in percent: the descriptor's importance.
     public static IEnumerable<(string Name, double Percent)> Shares(IReadOnlyList<(string Name, double Term)> terms)
@@ -87,27 +77,27 @@ public static class ReferenceModels
 }
 
 // PRIMARY DEFAULT PREDICTION (CUI-CDP): the Primary Default Descriptors - the probability of default within the Prediction Horizon and the importance of each Financial Descriptor to it.
-public sealed class PrimaryDefaultPrediction(string instanceId) : CuiAim(instanceId)
+public sealed class PrimaryDefaultPrediction(string instanceId, PdModel? model = null) : CuiAim(instanceId)
 {
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.FinancialDescriptors, true)];
 
     public override IEnumerable<(string, JsonNode)> Compute(IReadOnlyDictionary<string, JsonNode> inputs)
     {
         var months = Horizon(inputs);
-        var terms = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors]);
+        var terms = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors], model);
         if (terms.Count == 0) throw new CuiDataException("The Financial Descriptors give none of the codes the model reads.");
         var impacts = new JsonArray(ReferenceModels.Shares(terms).Select(s => (JsonNode)new JsonObject { ["PrimaryDefaultDescriptorID"] = s.Name, ["PrimaryDefaultDescriptorImpact"] = s.Percent }).ToArray());
         yield return (CuiTypes.PrimaryDefault, new JsonObject
         {
             ["PrimaryDefaultDescriptorsID"] = "",
-            ["PrimaryDefaultDescriptors"] = new JsonArray(new JsonObject { ["PrimaryDefaultProbability"] = Round(ReferenceModels.DefaultProbability(terms, months)), ["PrimaryDefaultDescriptorImpacts"] = impacts })
+            ["PrimaryDefaultDescriptors"] = new JsonArray(new JsonObject { ["PrimaryDefaultProbability"] = Round(ReferenceModels.DefaultProbability(terms, months, model)), ["PrimaryDefaultDescriptorImpacts"] = impacts })
         });
     }
 }
 
 // ORGANISATION MODEL ASSESSMENT (CUI-OMA): the Organisation Descriptors - what the organisation does to the probability of default within the horizon, and the importance of each Governance Descriptor
 // to it. A weaker organisation raises it, and weaker finances amplify that. (The names of the properties are those of the V2.0 schema, GovernaceDescriptorID included.)
-public sealed class OrganisationModelAssessment(string instanceId) : CuiAim(instanceId)
+public sealed class OrganisationModelAssessment(string instanceId, PdModel? model = null) : CuiAim(instanceId)
 {
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.GovernanceDescriptors, true), (CuiTypes.FinancialDescriptors, true)];
 
@@ -117,8 +107,8 @@ public sealed class OrganisationModelAssessment(string instanceId) : CuiAim(inst
         var terms = ReferenceModels.OrganisationTerms(inputs[CuiTypes.GovernanceDescriptors], Now);
         if (terms.Count == 0) throw new CuiDataException("The Governance Descriptors give none of the codes the model reads.");
         var index = ReferenceModels.OrganisationIndex(terms);
-        var fin = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors]);
-        var p = fin.Count > 0 ? ReferenceModels.DefaultProbability(fin, months) : 0;
+        var fin = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors], model);
+        var p = fin.Count > 0 ? ReferenceModels.DefaultProbability(fin, months, model) : 0;
         var impacts = new JsonArray(ReferenceModels.Shares(terms).Select(s => (JsonNode)new JsonObject { ["GovernaceDescriptorID"] = s.Name, ["GovernanceDescriptorImpact"] = s.Percent }).ToArray());
         yield return (CuiTypes.Organisation, new JsonObject
         {
@@ -131,7 +121,7 @@ public sealed class OrganisationModelAssessment(string instanceId) : CuiAim(inst
 // PRIMARY DISCONTINUITY PREDICTION (CUI-PDP): the probability that operations are interrupted within the horizon from the risks that have descriptors - financial, governance and, where given, climate
 // and cyber - and what each contributes. The risks combine as independent ones; the Climate and Cyber Risk Descriptors are optional, as the Primary Risks that have AIMs are. The first entry of the
 // descriptors is the company's, each contribution a category of descriptors; one entry follows for each Primary Risk given, with the impact of its descriptors.
-public sealed class PrimaryDiscontinuityPrediction(string instanceId) : CuiAim(instanceId)
+public sealed class PrimaryDiscontinuityPrediction(string instanceId, PdModel? model = null) : CuiAim(instanceId)
 {
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.ClimateRisk, false), (CuiTypes.CyberRisk, false), (CuiTypes.GovernanceDescriptors, true), (CuiTypes.FinancialDescriptors, true)];
 
@@ -155,11 +145,11 @@ public sealed class PrimaryDiscontinuityPrediction(string instanceId) : CuiAim(i
     public override IEnumerable<(string, JsonNode)> Compute(IReadOnlyDictionary<string, JsonNode> inputs)
     {
         var months = Horizon(inputs);
-        var fin = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors]);
+        var fin = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors], model);
         var gov = ReferenceModels.OrganisationTerms(inputs[CuiTypes.GovernanceDescriptors], Now);
         var year = Math.Min(1, months / 12.0);
         var categories = new List<(string Category, double Risk, List<(string Name, double Weight)> Parts)>();
-        if (fin.Count > 0) categories.Add(("Financial", ReferenceModels.DefaultProbability(fin, months), fin.Select(t => (t.Name, Math.Abs(t.Term))).ToList()));
+        if (fin.Count > 0) categories.Add(("Financial", ReferenceModels.DefaultProbability(fin, months, model), fin.Select(t => (t.Name, Math.Abs(t.Term))).ToList()));
         if (gov.Count > 0) categories.Add(("Governance", 0.3 * (1 - ReferenceModels.OrganisationIndex(gov)) * year, gov.Select(t => (t.Name, Math.Abs(t.Term))).ToList()));
         List<(string Name, double Risk)>? climate = null, cyber = null;
         if (inputs.TryGetValue(CuiTypes.ClimateRisk, out var l)) { climate = Climate(l["ClimateRiskDescriptorsData"]); categories.Add(("Climate", climate.Sum(c => c.Risk) * year, climate.Select(c => (c.Name, c.Risk)).ToList())); }

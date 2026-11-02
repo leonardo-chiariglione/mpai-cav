@@ -67,7 +67,18 @@ public static class PortDataSchema
         ["OSD-SSD-V1.5"] = "OSD/V1.5/data/SpeechSceneDescriptors.json",
         ["OSD-MSD-V1.5"] = "OSD/V1.5/data/MultimodalSceneDescriptors.json",
         ["OSD-OPV-V1.5"] = "OSD/V1.5/data/PointOfView.json",
-        ["CAE-UCM-V1.0"] = "CAE3/V1.0/data/UserCommand.json"
+        ["CAE-UCM-V1.0"] = "CAE3/V1.0/data/UserCommand.json",
+
+        // The Data Types of Company Performance Prediction (the Governance Descriptors carry the Header of the Governance Statements).
+        ["CUI-FND-V2.1"] = "CUI1/V2.1/data/FinancialDescriptors.json",
+        ["CUI-GVS-V2.1"] = "CUI1/V2.1/data/GovernanceDescriptors.json",
+        ["CUI-LRD-V2.1"] = "CUI1/V2.1/data/ClimateRiskDescriptors.json",
+        ["CUI-CRD-V2.1"] = "CUI1/V2.1/data/CyberRiskDescriptors.json",
+        ["CUI-SRS-V2.1"] = "CUI1/V2.1/data/SecondaryRiskStatements.json",
+        ["CUI-ORD-V2.1"] = "CUI1/V2.1/data/OrganisationDescriptors.json",
+        ["CUI-PDD-V2.1"] = "CUI1/V2.1/data/PrimaryDefaultDescriptors.json",
+        ["CUI-PSD-V2.1"] = "CUI1/V2.1/data/PrimaryDiscontinuityDescriptors.json",
+        ["CUI-SRM-V2.1"] = "CUI1/V2.1/data/SecondaryRiskMatrix.json"
     };
 
     // ONE EVALUATION AT A TIME, under the lock of the published schemas: the
