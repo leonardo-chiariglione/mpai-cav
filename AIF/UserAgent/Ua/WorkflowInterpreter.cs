@@ -239,18 +239,24 @@ public sealed class WorkflowInterpreter
             say($"device \"{group.Key}\": " + string.Join(", ", group.Select(s => (s.Kind == StepKind.Deliver ? "deliver " : "stream ") + s.Port)));
         }
 
-        // A MODULE THAT DEGRADES stops acting on the world: its devices are brought
+        // A MODULE THAT IS STOPPED - by its OnDegraded policy, StopModule - stops acting on the world: its devices are brought
         // to their safe state (the interlock), and the workflow goes on as it says.
         playing.Add(Task.Run(async () =>
         {
             try
             {
+                var answered = false;                  // a link that has never answered a Status (a remote Controller refuses it) tells nothing: only a Module that was there can be no longer there
                 while (!token.IsCancellationRequested && safeStopped == 0)
                 {
                     await Task.Delay(500, token);
                     var status = await north.StatusAsync(Module);
-                    if (status.Ok && status.Aims.Any(a => a.Status != AimStatus.Alive))
-                        await SafeStopAsync("an AIM of " + Module + " is " + status.Aims.First(a => a.Status != AimStatus.Alive).Status);
+                    if (!answered && !status.Ok) return;
+                    answered = true;
+                    // THE MODULE'S POLICY DECIDES (OnDegraded): an AIM that degrades under Continue, or StopAIM, is the Module's business and the Module goes on; what acts on the world is brought to its
+                    // safe state when the Module is stopped - by its policy, StopModule - or is no longer there. A critical AIM that dies and leaves its device without commands is the device's own
+                    // business: its timeout.
+                    if (!status.Ok || status.Stopped)
+                        await SafeStopAsync(status.Ok ? Module + " is stopped by its OnDegraded policy" : Module + " is no longer there: " + status.Error);
                 }
             }
             catch (OperationCanceledException) { }

@@ -29,12 +29,16 @@ public sealed class LicenceBook
     public int Count { get { lock (gate) return entries.Count; } }
 
     // The AIM Licence for the AIM and the holder (and Controller, if one is named) - the one issued before, or the one issue() makes now. Created says which.
-    public (string Licence, bool Created) GetOrIssue(string aimName, string trustAnchorId, string? controllerId, Func<JsonObject> issue)
+    // maxControllers: the offer limits the Controllers one licensee may have (Grant.MaxControllers); the Store refuses a Controller beyond it (InvalidOperationException).
+    public (string Licence, bool Created) GetOrIssue(string aimName, string trustAnchorId, string? controllerId, Func<JsonObject> issue, int? maxControllers = null)
     {
         lock (gate)
         {
             var found = entries.FirstOrDefault(e => e.AimName == aimName && e.TrustAnchorId == trustAnchorId && e.ControllerId == controllerId);
             if (found is not null) return (File.ReadAllText(LicenceFile(found.Id)), false);
+            if (maxControllers is { } max && controllerId is not null &&
+                entries.Where(e => e.AimName == aimName && e.TrustAnchorId == trustAnchorId && e.ControllerId is not null).Select(e => e.ControllerId).Distinct().Count() >= max)
+                throw new InvalidOperationException($"{aimName}: the offer allows {max} Controller(s) under one Trust Anchor, and {trustAnchorId} has them; {controllerId} is one more.");
             var licence = issue();
             var id = (string)licence["AIMLicenceID"]!;
             File.WriteAllText(LicenceFile(id), licence.ToJsonString());

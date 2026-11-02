@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Mpai.Aif.Tests;
 
 // AN AIM HOST IN A PROCESS OF ITS OWN (M3217 3.6), standing in for another
-// machine: the AIF.AimHost program, given the L3s of Test/Data/Phase5 and the test
+// machine: the AIF.AimHost program, given the L3s of AIMs/TST/Phase5 and the test
 // AIMs of this assembly as its provider. The port it listens on is read from what
 // it prints.
 public sealed class HostProcess : IDisposable

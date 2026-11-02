@@ -159,7 +159,7 @@ app.MapPost("/MPAI/Store/L3", async (HttpRequest request) =>
         }
 
         // THE FINGERPRINTS (STR-3): what is approved is recorded with its SHA-256, as the Implementer submitted it.
-        findings.AddRange(await packages.RecordFingerprintsAsync(l3, id, fingerprints));
+        findings.AddRange(await packages.RecordFingerprintsAsync(l3, id, fingerprints, repository.NextVersion(id).ToString()));
 
         var entry = repository.Publish(id, text, findings);
         // Who submitted it, and the signature, are kept with the version.
@@ -191,7 +191,7 @@ app.MapPost("/MPAI/Store/Implementer", async (HttpRequest request) =>
 });
 
 app.MapGet("/MPAI/Store/Implementer/{id}", (string id) =>
-    implementers.Find(id) is { } who ? Results.Json(new { implementerId = who.Id, name = who.Name, organisation = who.Organisation, kind = who.Kind, status = who.Status, credential = who.Credential })
+    implementers.Find(id) is { } who ? Results.Json(new { implementerId = who.Id, assigned = who.Status == ImplementerRegistry.Approved, name = who.Name, organisation = who.Organisation, kind = who.Kind, status = who.Status, credential = who.Credential })
                                      : Results.NotFound(new { missing = $"Implementer ID {id} has not been assigned." }));
 
 app.MapGet("/MPAI/Store/Implementer", (HttpRequest request) =>
@@ -265,12 +265,25 @@ app.MapPost("/MPAI/Store/L3/{id}/verify", async (HttpRequest request, string id)
         var answer = new JsonObject
         {
             ["AIMName"] = id, ["BinaryName"] = S("BinaryName"), ["Fingerprint"] = S("Fingerprint"), ["Nonce"] = S("Nonce"),
-            ["Result"] = fingerprints.Verify(id, S("BinaryName"), S("Fingerprint")).ToString(), ["Time"] = AIF.Trust.PtfIdentity.Time(DateTimeOffset.UtcNow)
+            // For the version the Controller holds, if it says (the version the Store published it as); the answer names it.
+            ["Result"] = fingerprints.Verify(id, S("BinaryName"), S("Fingerprint"), S("Version").Length > 0 ? S("Version") : null).ToString(), ["Time"] = AIF.Trust.PtfIdentity.Time(DateTimeOffset.UtcNow)
         };
+        if (S("Version").Length > 0) answer["Version"] = S("Version");
         AIF.Trust.PtfSignature.Sign(answer, storeKey.Key, StoreIdentity.KeyId);
         return Results.Text(answer.ToJsonString(), "application/json");
     }
     catch (JsonException ex) { return Results.BadRequest(new { refused = "Not JSON: " + ex.Message }); }
+});
+
+// THE PRICE MADE KNOWN BEFORE THE AIM LICENCE IS ISSUED (STR-9): the sale price the Implementer proposed with the mark-up of the Store applied - the price the AIM Licence will state - signed by the Store.
+app.MapGet("/MPAI/Store/L3/{id}/quote", (string id) =>
+{
+    if (repository.Text(id, null) is not { } text) return Results.NotFound(new { missing = $"{id} is not in the Store." });
+    if (JsonNode.Parse(text)!.AsObject()["AIMLicence"] is not JsonObject offer || AIF.Store.AimLicences.Quote(offer, markup) is not { } payment)
+        return Results.NotFound(new { missing = $"{id} has no price: it offers no AIM Licence with a Payment." });
+    var quote = new JsonObject { ["AIMName"] = id, ["Payment"] = payment, ["MarkupPercent"] = markup, ["Time"] = AIF.Trust.PtfIdentity.Time(DateTimeOffset.UtcNow) };
+    AIF.Trust.PtfSignature.Sign(quote, storeKey.Key, StoreIdentity.KeyId);
+    return Results.Text(quote.ToJsonString(), "application/json");
 });
 
 // MPAI_AIFS_GetLicence: the Store sublicenses the AIM to the holder of the Trust Anchor, under the Implementer's AIMLicence in the L3 it published, at the price with its mark-up, signed
@@ -293,7 +306,8 @@ app.MapPost("/MPAI/Store/Licence", async (HttpRequest request) =>
             if ((string?)item?["BinaryName"] is { } binary && fingerprints.Approved(aim, binary) is { } fingerprint) approved[binary] = fingerprint;
         var (licence, created) = licences.GetOrIssue(aim, anchor, controller.Length > 0 ? controller : null, () =>
             AIF.Store.AimLicences.Issue(offer.DeepClone().AsObject(), aim, AIF.Store.AimRepository.VersionIn(JsonDocument.Parse(text).RootElement), approved, anchor,
-                                        controller.Length > 0 ? controller : null, licenceIssuer, DateTimeOffset.UtcNow, (string?)l3["Identifier"]?["ImplementerID"] ?? ""));
+                                        controller.Length > 0 ? controller : null, licenceIssuer, DateTimeOffset.UtcNow, (string?)l3["Identifier"]?["ImplementerID"] ?? ""),
+            offer["Grant"]?["MaxControllers"] is JsonValue mc && mc.TryGetValue<int>(out var maxControllers) ? maxControllers : (int?)null);
         if (created) Console.WriteLine($"[Store] issued an AIM Licence for {aim} to the Trust Anchor {anchor}");
         return Results.Text(licence, "application/json", statusCode: created ? 201 : 200);
     }

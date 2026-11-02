@@ -47,6 +47,7 @@ public sealed class UserAgent
                 ContinuousExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
         };
         InProcessTransport  = new InProcessTransport(Clock);
+        BusTransport        = new BusTransport(Clock);
         RemoteTransport     = new RemoteTransport(LinkFor, Clock);
     }
 
@@ -160,6 +161,7 @@ public sealed class UserAgent
     // its Output Ports declare, DefaultTransport where they declare none.
     public ControllerTransport ControllerTransport { get; }
     public InProcessTransport  InProcessTransport  { get; }
+    public BusTransport        BusTransport        { get; }
     public RemoteTransport     RemoteTransport     { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
@@ -331,6 +333,7 @@ public sealed class UserAgent
     {
         [ControllerTransport.Name] = ControllerTransport,
         [InProcessTransport.Name]  = InProcessTransport,
+        [BusTransport.Name]        = BusTransport,
         [RemoteTransport.Name]     = RemoteTransport
     };
 
@@ -498,6 +501,7 @@ public sealed class UserAgent
         _controller.SetSharedStorageRoot(_sharedStorageRoot);
         _controller.InstanceOf = module => _instances.GetValueOrDefault(module, "");
         _controller.SessionOf  = module => _sessions.TryGetValue(module, out var s) ? s : _session;
+        _controller.ClientOf   = module => _sessions.TryGetValue(module, out var s) ? s : "";
         _controller.Now        = () => Clock.Now;
         return AifError.OK;
     }
@@ -638,6 +642,7 @@ public sealed class UserAgent
                     if (!entry.IsOptional)
                         throw new InvalidOperationException($"{name}: {leaf.AIMName}: the Access '{entry.Name}' is valid only with data {missing}, which could not be obtained");
                     leaf.AccessSources.Remove(entry);
+                    fetcher?.Withhold(entry, leaf.AIMName);   // and what was obtained for it is not read by it (STO-10)
                 }
         }
 
@@ -866,6 +871,7 @@ public sealed class UserAgent
         hostModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
         AIF.SharedStorage.RuledStore.Ended(module.HostModule);
+        AIF.SharedStorage.RuledStore.SweepAll();   // what was kept as long as the Module ran goes with it (Storage 3)
         Trust?.TransitionModule(module.HostModule, "Terminated");
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
@@ -885,7 +891,7 @@ public sealed class UserAgent
     {
         private AIF.SharedStorage.IRuledStorage Now() =>
             (ua._stores.TryGetValue(module, out var store) ? store : throw new InvalidOperationException($"{module} is not running."))
-            .For(new AIF.SharedStorage.StorageHolder(module, aim), ua._instances.GetValueOrDefault(module, ""), ua._session);
+            .For(new AIF.SharedStorage.StorageHolder(module, aim), ua._instances.GetValueOrDefault(module, ""), ua._sessions.TryGetValue(module, out var served) ? served : ua._session);   // the session the exchange serves (Basic API 3.7.1)
 
         public string Holder => $"{module}/{aim}";
         public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, AIF.SharedStorage.StorageTime? time = null) =>
@@ -1016,6 +1022,12 @@ public sealed class UserAgent
 
     private static IEnumerable<string> Leaves(DescriptorNode node) =>
         node.Children.SelectMany(c => c.IsComposite ? Leaves(c) : [c.AIMName]);
+
+    // The External Ports of a running Continuous Module, as its AIMs call them (Basic API 5); and what the Controller of the Module asks of it to serve them.
+    public void SetExternal(int moduleId, AIF.Channels.IExternalPorts? external) { if (_running.TryGetValue(moduleId, out var module) && module.Continuous is { } run) run.External = external; }
+    public bool HasAim(int moduleId, string name) => _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run && run.HasAim(name);
+    public async Task<bool> ContinuousReadableAsync(int moduleId, string dataType, int portNumber, int timeoutMs) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run && await run.BoundaryReadableAsync(dataType, portNumber, timeoutMs);
 
     // The boundary Ports of a running Module, as its Metadata declares them.
     public IReadOnlyList<RuntimePort>? BoundaryPorts(int moduleId) =>

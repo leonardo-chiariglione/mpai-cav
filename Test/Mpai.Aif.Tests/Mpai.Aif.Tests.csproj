@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\CAV\Mpai.Cav.Recordings.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAV\V2.0\Vrv\Mpai.Cav.Vrv.csproj" />
     <ProjectReference Include="..\..\AIMs\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ess\Mpai.Cav.Ess.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Ams\Mpai.Cav.Ams.csproj" />
@@ -38,6 +39,7 @@
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\JSI\Mpai.Mmc.Jsi.csproj" />
     <ProjectReference Include="..\..\AIMs\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />
+    <ProjectReference Include="..\..\Apps\CAV\CAO\Ua\Mpai.Cav.Ua.csproj" />
     <ProjectReference Include="..\..\AIMs\PAF\V1.6\VCR\Mpai.Paf.Vcr.csproj" />
     <ProjectReference Include="..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />

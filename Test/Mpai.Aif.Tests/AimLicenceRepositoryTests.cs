@@ -351,4 +351,98 @@ public class AimLicenceRepositoryTests : IDisposable
         var error = Assert.Throws<InvalidOperationException>(() => repository.CheckLicence(aim));
         Assert.Contains("OfferHash", error.Message);
     }
+
+    // STR-9: the price with the mark-up is made known before the AIM Licence is issued; the Entity accepts it; the AIM Licence states that price.
+    [Fact]
+    public void ThePriceWithTheMarkupIsKnownBeforeTheLicenceIsIssuedAndTheLicenceStatesIt()
+    {
+        var aim = Publish();
+        var org = Org("acme");
+        var source = new StoreAimSource(StoreFolder, org.Anchor.AnchorId, new AimLicences.Issuer(storeKey, "store-key-1", "mpai-store", null, MarkupPercent: 10)) { Clock = () => now };
+        var proposed = AimLicences.PricesOf(AimLicenceSchemaTests.Offer()["Payment"] as JsonObject);
+        var quote = source.Quote(aim)!;
+        var quoted = AimLicences.PricesOf(quote);
+        Assert.Equal(proposed.Keys, quoted.Keys);
+        foreach (var (where, price) in proposed) Assert.Equal(Math.Round(price * 1.10m, 2), quoted[where]);          // the Implementer's price with the mark-up
+        Assert.Empty(source.Issued);                                                                                   // nothing issued by asking
+
+        // The Entity does not accept it: nothing is issued.
+        var refusing = Repo(Controller(org, "c-1"), "c-1"); refusing.AcceptPrice = (_, _) => false;
+        Assert.Contains("not accepted", Assert.Throws<InvalidOperationException>(() => refusing.Obtain(aim, source)).Message);
+        Assert.Empty(source.Issued);
+
+        // It accepts it: the AIM Licence states that price.
+        string? seen = null;
+        var repository = Repo(Controller(org, "c-2"), "c-2"); repository.AcceptPrice = (name, _) => { seen = name; return true; };
+        Assert.True(repository.Obtain(aim, source));
+        Assert.Equal(aim, seen);
+        Assert.Equal(quoted, AimLicences.PricesOf(repository.LicenceOf(aim)!["Payment"] as JsonObject));
+    }
+
+    [Fact]
+    public void ALicenceThatStatesAnotherPriceThanTheOneQuotedIsRefused()
+    {
+        var aim = Publish();
+        var org = Org("acme");
+        var real = new StoreAimSource(StoreFolder, org.Anchor.AnchorId, new AimLicences.Issuer(storeKey, "store-key-1", "mpai-store", null, MarkupPercent: 10)) { Clock = () => now };
+        var repository = Repo(Controller(org, "c-1"), "c-1");
+        var error = Assert.Throws<InvalidOperationException>(() => repository.Obtain(aim, new Understating(real)));
+        Assert.Contains("other than the one the Store made known", error.Message);
+    }
+
+    // A Store that quotes less than it charges.
+    private sealed class Understating(StoreAimSource inner) : IAimSource
+    {
+        public AimPackage? Get(string aimName) => inner.Get(aimName);
+        public string? GetLicence(string aimName) => inner.GetLicence(aimName);
+        public string? CurrentVersion(string aimName) => inner.CurrentVersion(aimName);
+        public bool? IsRevoked(string aimLicenceId) => inner.IsRevoked(aimLicenceId);
+        public VerifyResult Verify(string aimName, string binaryName, string fingerprint) => inner.Verify(aimName, binaryName, fingerprint);
+        public JsonObject? Quote(string aimName)
+        {
+            var quote = inner.Quote(aimName)!;
+            if (quote["OneTime"] is JsonObject one) one["Price"] = 0.01;
+            return quote;
+        }
+    }
+
+    // STR-3, Verification: what the Store approved for a version stays approved for that version when a newer one is published.
+    [Fact]
+    public void ANewVersionDoesNotTakeAwayTheApprovalOfTheVersionAControllerHolds()
+    {
+        var fingerprints = new ImplementationFingerprints(Path.Combine(folder, "fp"));
+        fingerprints.Approve("1TST-X-V1.0-I01", "bin", "AAAA", now, "1");
+        fingerprints.Approve("1TST-X-V1.0-I01", "bin", "BBBB", now, "2");
+        Assert.Equal(VerifyResult.Same, fingerprints.Verify("1TST-X-V1.0-I01", "bin", "AAAA", "1"));
+        Assert.Equal(VerifyResult.Same, fingerprints.Verify("1TST-X-V1.0-I01", "bin", "BBBB", "2"));
+        Assert.Equal(VerifyResult.Different, fingerprints.Verify("1TST-X-V1.0-I01", "bin", "BBBB", "1"));
+        Assert.Equal(VerifyResult.NotRecorded, fingerprints.Verify("1TST-X-V1.0-I01", "bin", "AAAA", "3"));
+        Assert.Equal(VerifyResult.Same, fingerprints.Verify("1TST-X-V1.0-I01", "bin", "BBBB"));                       // no version said: the latest
+    }
+
+    // All communication with the Store is over HTTPS (Store API 5): a Store elsewhere than on this machine is not reached over plain HTTP.
+    [Fact]
+    public void TheStoreIsReachedOverHttpsOnly()
+    {
+        Assert.Throws<ArgumentException>(() => new HttpAimSource("http://store.example.com"));
+        using var secure = new HttpAimSource("https://store.example.com");
+        using var local = new HttpAimSource("http://127.0.0.1:5020");                                                   // a Store run on this machine for a trial
+    }
+
+    // The legacy in-process Store: a published version is kept when a new one replaces it, and a Sub-AIM that is nowhere is refused.
+    [Fact]
+    public void TheLocalStoreKeepsEveryVersionAndRefusesAMissingSubAim()
+    {
+        var aim = Publish();
+        var store = new MpaiStore(StoreFolder, l3 => conformance.Check(l3));
+        var l3 = JsonNode.Parse(store.Retrieve(aim))!.AsObject();
+        l3["Implementations"]![0]!["Version"] = "1.9";
+        Assert.True(store.Publish(l3.ToJsonString(), replace: true).WasPublished);
+        Assert.Single(Directory.GetFiles(Path.Combine(StoreFolder, "versions", store.List().First(n => n == aim)), "*.json"));   // the first version is kept
+        var composite = JsonNode.Parse(store.Retrieve(aim))!.AsObject();
+        composite["Identifier"]!["AIMName"] = "1AIH-COMPOSITE-V1.1-I01";
+        composite["SubAIMs"] = new JsonArray(new JsonObject { ["Identifier"] = new JsonObject { ["ImplementerID"] = "1", ["ImplementationID"] = "X", ["AIMName"] = "1AIH-NOWHERE-V1.1-I01", ["Relation"] = "Internal" } });
+        var refused = store.Validate(composite.ToJsonString());
+        Assert.Contains(refused.Errors, e => e.Contains("1AIH-NOWHERE-V1.1-I01"));
+    }
 }

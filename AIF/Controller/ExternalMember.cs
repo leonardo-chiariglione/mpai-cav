@@ -19,6 +19,11 @@ public sealed class ExternalTrust
     private readonly ECDsa key;
     private readonly string authority;
     private readonly Func<DateTimeOffset> now;
+    private readonly TrustOperations operations;
+
+    // THE TRACE of what this Controller decides about the service it joined: links checked, Messages refused, links closed (Zero Trust 2.9).
+    public TrustTrace Trace => operations.Trace;
+    public void Record(string type, string targetType, string targetId, string? failure) => operations.Operation(type, targetType, targetId, failure);
 
     public string ControllerId => anchor.AnchorId;
     public string Role { get; }
@@ -34,18 +39,23 @@ public sealed class ExternalTrust
         authority = (string)authorityAnchor["AnchorID"]!;
         Role = role;
         Policy = policy;
-        protocol = new TrustProtocol(anchor, key, [authorityAnchor], this.now, credential: credential);
+        operations = new TrustOperations(anchor, key, this.now);
+        protocol = new TrustProtocol(anchor, key, [authorityAnchor], this.now, record: operations.Recorder, credential: credential);
         Admission = new RoleCheckedLink(new TrustedLink(protocol), role, policy);
     }
 
-    public string Sign(string json) => ExternalSigning.Sign(json, anchor, key, authority, now());
+    public string Sign(string json, string? binding = null) => ExternalSigning.Sign(json, anchor, key, authority, now(), binding: binding);
 
-    public string SignPayloads(string json, IReadOnlyList<PayloadDescriptor> payloads) =>
-        ExternalSigning.Sign(json, anchor, key, authority, now(), payloads.Select(p => (p.Reference, p.Length, p.Hash)).ToList());
+    public string SignPayloads(string json, IReadOnlyList<PayloadDescriptor> payloads, string? binding = null) =>
+        ExternalSigning.Sign(json, anchor, key, authority, now(), payloads.Select(p => (p.Reference, p.Length, p.Hash)).ToList(), binding);
 
-    public string? Verify(string from, string json)
+    // Whether the Controller a link admitted is still trusted: its anchor and its credential are valid now.
+    public string? StillTrusted(string from) => protocol.StillTrusted(from);
+
+    public string? Verify(string from, string json, string? binding = null)
     {
-        var outcome = ExternalSigning.Verify(json, from, protocol.AnchorOf);
+        if (protocol.StillTrusted(from) is { } expired) return expired;
+        var outcome = ExternalSigning.Verify(json, from, protocol.AnchorOf, binding);
         return outcome == ExternalSigning.Outcome.Valid ? null : outcome.ToString();
     }
 }
@@ -118,7 +128,7 @@ public sealed class ExternalMember : IAsyncDisposable
     // Throws ExternalJoinException: NotTrusted where the Authority does not prove that it
     // holds the anchor; NotAuthorised where it refuses admission.
     public static async Task<ExternalMember> JoinAsync(string controllerId, JsonObject authorityAnchor, string rendezvous, string? role = null,
-                                                       IRootOfTrust? attestor = null, Func<DateTimeOffset>? now = null, CancellationToken cancel = default)
+                                                       IRootOfTrust? attestor = null, Func<DateTimeOffset>? now = null, CancellationToken cancel = default, ECDsa? key = null)
     {
         now ??= () => DateTimeOffset.UtcNow;
         var authorityId = (string?)authorityAnchor["AnchorID"] ?? throw new ExternalJoinException(AifErrorKind.Failed, "the anchor given names no AnchorID");
@@ -148,23 +158,25 @@ public sealed class ExternalMember : IAsyncDisposable
             // 1. The Authority proves that it holds the anchor: it signs the nonce.
             var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
             var begin = await link.RequestAsync(new JsonObject { ["Kind"] = "EnrolBegin", ["Nonce"] = nonce, ["Role"] = role }, cancel);
-            if (begin["Ok"]?.GetValue<bool>() != true) throw new ExternalJoinException(AifErrorKind.NotAuthorised, (string?)begin["Error"] ?? "refused");
+            // The Authority proves that it holds the anchor first - in its refusal too: one that does not prove it is not believed (NOT_TRUSTED), one that does and refuses is NOT_AUTHORISED.
             if (Proven(begin, "Nonce", nonce) is { } bad)
                 throw new ExternalJoinException(AifErrorKind.NotTrusted, $"the Authority at {rendezvous} does not prove that it holds the anchor {authorityId} ({bad})");
+            if (begin["Ok"]?.GetValue<bool>() != true) throw new ExternalJoinException(AifErrorKind.NotAuthorised, (string?)begin["Error"] ?? "refused");
             var challenge = (string)begin["Challenge"]!;
             var granted = (string)begin["Role"]!;
 
             // 2. This Controller: its anchor, the key it holds, and the Challenge signed.
             var t = now();
-            var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+            // The key is the Controller's: it comes back with the same one when it joins again (an Authority admits an id to one key only).
+            key ??= ECDsa.Create(ECCurve.NamedCurves.nistP256);
             var anchor = new TrustAnchorKey(controllerId, key, t.AddMinutes(-5), t.AddDays(30));
             var proof = PtfSignature.Sign(new JsonObject { ["Header"] = ExternalAuthorityService.Header, ["Kind"] = "EnrolProof", ["Challenge"] = challenge, ["AuthorityID"] = authorityId, ["Role"] = granted }, key, controllerId);
             var enrol = new JsonObject { ["Kind"] = "Enrol", ["Anchor"] = anchor.Object(), ["Proof"] = proof };
             if (attestor is not null) enrol["Evidence"] = attestor.Evidence(controllerId, Convert.FromHexString(challenge));
             var enrolled = await link.RequestAsync(enrol, cancel);
-            if (enrolled["Ok"]?.GetValue<bool>() != true) throw new ExternalJoinException(AifErrorKind.NotAuthorised, (string?)enrolled["Error"] ?? "refused");
             if (Proven(enrolled, "Challenge", challenge) is { } worse)
                 throw new ExternalJoinException(AifErrorKind.NotTrusted, $"the admission is not signed by the anchor {authorityId} ({worse})");
+            if (enrolled["Ok"]?.GetValue<bool>() != true) throw new ExternalJoinException(AifErrorKind.NotAuthorised, (string?)enrolled["Error"] ?? "refused");
 
             var credential = enrolled["Credential"]?.AsObject() ?? throw new ExternalJoinException(AifErrorKind.NotAuthorised, "no credential was issued");
             if (PtfCredential.CheckCredential(credential, anchor.Object(), id => id == authorityId ? authorityKey : null, now()) != PtfCredential.Outcome.Valid)

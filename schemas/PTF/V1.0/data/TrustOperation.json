@@ -46,7 +46,11 @@
         "AttestationEvidence",
         "PolicyBinding",
         "Profile",
-        "TrustMessage"
+        "TrustMessage",
+        "Controller",
+        "ExternalLink",
+        "ExternalMessage",
+        "Payload"
       ],
       "description": "Type of object on which the operation was performed."
     },

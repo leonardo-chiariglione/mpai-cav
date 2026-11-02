@@ -4,7 +4,7 @@ using Mpai.Aif.Api;
 namespace Mpai.Aif.Tests;
 
 // The communication core of Phase 4 (M3215 3.8), on test Modules made for the
-// purpose. Their L3s are in Test/Data/Phase4.
+// purpose. Their L3s are in AIMs/TST/Phase4.
 //
 // Step 1 records what the Controller does with them today; each later step
 // changes the record as it changes the Controller.
@@ -15,7 +15,7 @@ public class ContinuousTests
 {
     public const string Text = "TST-TXT-V1.0";
 
-    public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase4");
+    public static string Amds => Path.Combine(Repository.Root, "AIMs", "TST", "Phase4");
 
     private static ControllerApi Api() =>
         new(Amds, Path.Combine(Amds, "no-settings.json"), new ContinuousAims());
@@ -179,6 +179,43 @@ public class ContinuousTests
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
     }
 
+    // THE BUS (M3287): one Channel for a Data Type, many writers, many readers, the last value wins.
+    [Fact]
+    public async Task TheBusHasManyWritersAndManyReadersAndTheLastValueWins()
+    {
+        // the transport: two writers, one reader end that keeps one value
+        var transport = new AIF.Channels.BusTransport();
+        var reader = new AIF.Channels.PortEnd("1TST-R-V1.0-I01", Text);
+        var first = new AIF.Channels.ChannelSpec("TST", new AIF.Channels.PortEnd("1TST-W1-V1.0-I01", Text),
+            [new AIF.Channels.ChannelReaderSpec(reader, new AIF.Channels.PortBehaviour(1, AIF.Channels.Overflow.DropOldest, null))], "Bus");
+        var second = new AIF.Channels.ChannelSpec("TST", new AIF.Channels.PortEnd("1TST-W2-V1.0-I01", Text), [], "Bus");
+        var w1 = transport.OpenWriter(first); var w2 = transport.OpenWriter(second);
+        var read = transport.OpenReader(first, reader);
+        await w1.WriteAsync(new AIF.Channels.PortMessage { DataType = Text, Json = "a" });
+        await w2.WriteAsync(new AIF.Channels.PortMessage { DataType = Text, Json = "b" });
+        await w1.WriteAsync(new AIF.Channels.PortMessage { DataType = Text, Json = "c" });
+        Assert.Equal("c", (await read.ReadAsync(0))!.Json);
+        Assert.Equal(0, read.Pending);
+        Assert.Equal(2, read.Dropped);                                          // a and b were overwritten
+
+        // the Module: two writers and two readers, joined by no Topology
+        using var api = Api();
+        const string module = "1TST-BUS-V1.0-I01";
+        Assert.Equal(AifError.OK, api.StartFlow(module));
+        api.InputWrite(module, Text, 1, "from one", 2000);
+        var got = api.OutputRead(module, Text, 1, 3000);
+        Assert.True(got.Ok, got.Error.ToString());
+        Assert.Equal("from one", got.Json);       // both readers read what the first writer wrote
+        Assert.Equal("from one", api.OutputRead(module, Text, 2, 3000).Json);
+        api.InputWrite(module, Text, 2, "from two", 2000);
+        Assert.Equal("from two", api.OutputRead(module, Text, 1, 3000).Json);       // and what the second wrote
+        Assert.Equal("from two", api.OutputRead(module, Text, 2, 3000).Json);
+        var accounts = string.Join(" | ", api.ChannelAccounts(module));
+        Assert.Contains("1TST-BWA-V1.0-I01.TST-TXT-V1.0#1 (Bus) wrote 2", accounts);      // one Bus carries what both wrote: its count is shared
+        Assert.Contains("1TST-BWB-V1.0-I01.TST-TXT-V1.0#1 (Bus) wrote 2", accounts);
+        api.StopFlow(module);
+    }
+
     // TIME (M3215 3.5): the Controller stamps on the clock plugged in; a Period
     // kept; a Deadline missed; what the Controller refuses; a required Port that
     // delivers nothing within its MaxAge.
@@ -308,7 +345,7 @@ public class ContinuousTests
             var (_, outcome) = await ua.RunAsync(id, new Dictionary<string, string> { [Text + "#1"] = "x" });
             foreach (var (key, value) in outcome!.Completed.Ports.OrderBy(p => p.Key))
                 result[key == Text + "#1" ? "TST-PVA" : "TST-PVB"] = value;
-            result["held at"] = string.Join(", ", Directory.GetDirectories(Path.Combine(root, "private"))
+            result["held at"] = string.Join(", ", Directory.GetDirectories(Path.Combine(root, "private")).SelectMany(Directory.GetDirectories)   // private/<Module>/<AIM Instance>
                 .Select(d => "private/" + Uri.UnescapeDataString(Path.GetFileName(d))).OrderBy(d => d));
             ua.MPAI_AIFU_MODULE_Stop(id);
         }
@@ -396,6 +433,7 @@ public sealed class ContinuousAims : IAimProvider
             "1TST-RDB-V1.0-I01" or "1TST-RDO-V1.0-I01" or "1TST-RDN-V1.0-I01" or "1TST-RDA-V1.0-I01" =>
                 Aim(aimName, async m => { await Task.Delay(50); return Out((T1, In(m, T1))); }),
             "1TST-TXO-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1)))),
+            "1TST-BWA-V1.0-I01" or "1TST-BWB-V1.0-I01" or "1TST-BRA-V1.0-I01" or "1TST-BRB-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1)))),
             "1TST-TXC-V1.0-I01" => Aim(aimName, m => Out((T1, In(m, T1)))),
             "1TST-TIK-V1.0-I01" => Aim(aimName, m => Out((T1, Interlocked.Increment(ref ticks).ToString()))),
             "1TST-DLN-V1.0-I01" => Aim(aimName, async m => { await Task.Delay(60); return Out((T1, In(m, T1))); }),

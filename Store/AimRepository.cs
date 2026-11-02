@@ -19,6 +19,9 @@ public interface IAimSource : IImplementationVerifier
     // Controller asks it after it has seen the offer and price in the Metadata. Null where the AIM's Metadata has no AIMLicence.
     string? GetLicence(string aimName);
 
+    // THE PRICE WITH THE MARK-UP, made known before the AIM Licence is issued (STR-9): the Payment the Store will state in the AIM Licence; null where the AIM has no price, or the Store gives no quote.
+    JsonObject? Quote(string aimName) => null;
+
     // The version the Store now has of an AIM, without obtaining it; null where it does not have it.
     string? CurrentVersion(string aimName);
 
@@ -52,6 +55,9 @@ public sealed class AimRepository
     public Func<string, ECDsa?>? StoreKeys { get; set; }
 
     public Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
+
+    // The Entity that runs the Controller decides whether it pays the price the Store quoted, before the AIM Licence is asked for (STR-9; Workflow step 6). Null: it accepts.
+    public Func<string, JsonObject, bool>? AcceptPrice { get; set; }
 
     // True in the repository of what keeps AIMs that execute apart from the Controller: the identity is that of what controls their execution, and the AIM Licence has to allow it
     // - under the licensee's Trust Anchor, or, if not, under the control of another party.
@@ -198,7 +204,20 @@ public sealed class AimRepository
         var package = source.Get(aim) ?? throw new FileNotFoundException($"{aim} is neither in the repository nor in the Store.");
         string? licence = null;
         using (var l3 = JsonDocument.Parse(package.L3Json))
-            if (l3.RootElement.TryGetProperty("AIMLicence", out _)) licence = source.GetLicence(aim);
+            if (l3.RootElement.TryGetProperty("AIMLicence", out _))
+            {
+                // The price with the mark-up is known before the AIM Licence is asked for; the Entity accepts it, and the AIM Licence states that price (STR-9).
+                var quote = source.Quote(aim);
+                if (quote is not null && AcceptPrice is { } accept && !accept(aim, quote)) throw new InvalidOperationException($"NOT_LICENSED: the price of the AIM Licence of {aim} was not accepted.");
+                licence = source.GetLicence(aim);
+                if (quote is not null && licence is not null)
+                {
+                    var quoted = AimLicences.PricesOf(quote);
+                    var stated = AimLicences.PricesOf(JsonNode.Parse(licence)?["Payment"] as JsonObject);
+                    if (quoted.Count != stated.Count || quoted.Any(p => !stated.TryGetValue(p.Key, out var s) || s != p.Value))
+                        throw new InvalidOperationException($"NOT_LICENSED: the AIM Licence of {aim} states a price other than the one the Store made known.");
+                }
+            }
         Keep(package, licence, fetch, (binary, fingerprint) => source.Verify(aim, binary, fingerprint));
     }
 
@@ -299,6 +318,13 @@ public sealed class StoreAimSource(string folder, string trustAnchorId, AimLicen
     public IReadOnlyList<string> Issued => _issued;
 
     public Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
+
+    public JsonObject? Quote(string aimName)
+    {
+        var path = Path.Combine(folder, aimName + ".json");
+        if (!File.Exists(path) || JsonNode.Parse(File.ReadAllText(path)) is not JsonObject l3 || l3["AIMLicence"] is not JsonObject offer) return null;
+        return AimLicences.Quote(offer, issuer?.MarkupPercent ?? 0);
+    }
 
     // Whether the Store can be reached: where it cannot, a Controller is not told of a revocation.
     public bool Reachable { get; set; } = true;

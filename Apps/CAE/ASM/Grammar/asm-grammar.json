@@ -1,0 +1,1184 @@
+{
+  "Header": "ASM-GRAMMAR-V1",
+  "Description": "What a person says to Audio Scene Management, as DATA: the words of the verbs, of the directions and of the properties, the amounts they carry, and what each sentence comes to in CAE-UCM. compile.py turns it into the Rules of the Application Context (MMC-APC) of CAE-ASM, which the JSON Interface (MMC-JSI) runs without a language model. The entities, the verbs and the properties are those of M3281; the commands are those of CAE-UCM and CAE-ACP as M3282 changed them. Edit this file, run compile.py, never the rules.",
+  "Verbs": {
+    "Place": [
+      "bring in",
+      "move",
+      "shift",
+      "push",
+      "bring",
+      "place",
+      "put",
+      "position",
+      "set",
+      "slide",
+      "drag",
+      "relocate",
+      "take",
+      "nudge",
+      "add",
+      "insert"
+    ],
+    "PlaceMove": [
+      "move",
+      "shift",
+      "push",
+      "slide",
+      "drag",
+      "relocate",
+      "take",
+      "nudge",
+      "bring",
+      "place",
+      "put",
+      "position",
+      "set"
+    ],
+    "PlaceAdd": [
+      "bring in",
+      "add",
+      "insert",
+      "bring",
+      "place",
+      "put",
+      "position",
+      "set"
+    ],
+    "Turn": [
+      "turn",
+      "rotate",
+      "orient",
+      "spin",
+      "swivel"
+    ],
+    "Raise": [
+      "raise",
+      "lift"
+    ],
+    "Lower": [
+      "lower",
+      "drop"
+    ],
+    "Approach": [
+      "bring",
+      "move",
+      "put",
+      "push",
+      "pull",
+      "place"
+    ],
+    "Make": [
+      "place",
+      "create",
+      "make",
+      "build",
+      "put",
+      "set up",
+      "add",
+      "give me"
+    ],
+    "Set": [
+      "set",
+      "make",
+      "change",
+      "put",
+      "give"
+    ],
+    "Level": [
+      "set",
+      "make"
+    ],
+    "Remove": [
+      "remove",
+      "take out",
+      "take away",
+      "get rid of",
+      "clear"
+    ],
+    "Delete": [
+      "delete",
+      "erase",
+      "forget",
+      "wipe"
+    ],
+    "Listener": [
+      "move",
+      "put",
+      "place",
+      "take",
+      "bring",
+      "let"
+    ],
+    "TurnListener": [
+      "turn",
+      "rotate",
+      "face",
+      "orient",
+      "spin"
+    ],
+    "NewScene": [
+      "start",
+      "create",
+      "make",
+      "begin",
+      "open",
+      "set up",
+      "give me"
+    ],
+    "OpenScene": [
+      "open",
+      "load",
+      "go to",
+      "go back to",
+      "switch to",
+      "recall",
+      "bring up",
+      "use",
+      "restore",
+      "continue with",
+      "work on",
+      "take me to",
+      "show"
+    ],
+    "SaveScene": [
+      "save",
+      "name",
+      "call",
+      "rename",
+      "store",
+      "keep"
+    ],
+    "Undo": [
+      "undo",
+      "go back",
+      "take that back"
+    ],
+    "Play": [
+      "play",
+      "let me hear"
+    ],
+    "Translate": [
+      "translate",
+      "say",
+      "render"
+    ]
+  },
+  "Pronouns": [
+    "it",
+    "that",
+    "the sound"
+  ],
+  "Listener": [
+    "me",
+    "the listener",
+    "myself"
+  ],
+  "NotAName": [
+    "it",
+    "that",
+    "this",
+    "them",
+    "me",
+    "myself",
+    "the listener"
+  ],
+  "Directions": {
+    "right": {
+      "Words": [
+        "right"
+      ],
+      "Vector": [
+        1,
+        0,
+        0
+      ]
+    },
+    "left": {
+      "Words": [
+        "left"
+      ],
+      "Vector": [
+        -1,
+        0,
+        0
+      ]
+    },
+    "forward": {
+      "Words": [
+        "forward",
+        "forwards",
+        "ahead",
+        "front"
+      ],
+      "Vector": [
+        0,
+        1,
+        0
+      ]
+    },
+    "back": {
+      "Words": [
+        "back",
+        "backwards",
+        "behind"
+      ],
+      "Vector": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "up": {
+      "Words": [
+        "up",
+        "upwards"
+      ],
+      "Vector": [
+        0,
+        0,
+        1
+      ]
+    },
+    "down": {
+      "Words": [
+        "down",
+        "downwards"
+      ],
+      "Vector": [
+        0,
+        0,
+        -1
+      ]
+    }
+  },
+  "TowardsWords": [
+    "to the",
+    "towards the",
+    "in the",
+    "on the"
+  ],
+  "Me": {
+    "Words": {
+      "right": [
+        "on my right",
+        "to my right",
+        "at my right"
+      ],
+      "left": [
+        "on my left",
+        "to my left",
+        "at my left"
+      ],
+      "forward": [
+        "in front of me",
+        "ahead of me",
+        "in front"
+      ],
+      "back": [
+        "behind me",
+        "at my back"
+      ]
+    }
+  },
+  "Centre": [
+    "here",
+    "at the centre",
+    "at the center",
+    "in the centre",
+    "in the center",
+    "at the middle",
+    "in the middle",
+    "at the origin",
+    "at zero"
+  ],
+  "Steps": {
+    "Move": 1,
+    "Add": 2
+  },
+  "Levels": {
+    "Units": [
+      "lufs",
+      "db"
+    ]
+  },
+  "Times": {
+    "StartOf": [
+      "start",
+      "beginning"
+    ],
+    "EndOf": [
+      "end"
+    ],
+    "Words": [
+      "duration",
+      "timing",
+      "time",
+      "length",
+      "times"
+    ]
+  },
+  "Room": {
+    "Height": 2.5,
+    "Words": [
+      "room",
+      "area",
+      "space"
+    ],
+    "Make": [
+      "place",
+      "create",
+      "make",
+      "build",
+      "put",
+      "set up",
+      "add",
+      "give me"
+    ]
+  },
+  "Scene": {
+    "Name": "stage"
+  },
+  "PhraseSynonyms": {
+    "show": [
+      "display"
+    ]
+  },
+  "Listings": [
+    {
+      "Phrases": [
+        "what is in the scene",
+        "what's in the scene",
+        "what is in the room",
+        "list the objects",
+        "which objects",
+        "what objects",
+        "show me the scene",
+        "what is playing",
+        "list what is in the scene",
+        "list the scene contents"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Audio Scene",
+            "ObjectID": "{scene}"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "what sounds",
+        "which sounds",
+        "what do i have",
+        "list the sounds",
+        "what have i loaded",
+        "in store",
+        "in stock",
+        "are stored",
+        "what is stored",
+        "what do you have",
+        "list saved",
+        "list stored",
+        "list kept",
+        "list all",
+        "list everything",
+        "list sounds",
+        "list objects",
+        "show the sounds",
+        "show sounds",
+        "show everything",
+        "show me everything",
+        "show what is stored",
+        "show what is saved",
+        "what is saved",
+        "what has been saved",
+        "what did i save",
+        "what i saved"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "All"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "which scenes",
+        "what scenes",
+        "scenes do i have",
+        "scenes that you have",
+        "audio scenes",
+        "saved scenes",
+        "stored scenes",
+        "kept scenes",
+        "list scenes",
+        "list the scenes",
+        "show scenes",
+        "my scenes",
+        "list my scenes",
+        "show my scenes",
+        "all scenes",
+        "scenes have i saved",
+        "scenes are saved",
+        "scenes are kept",
+        "show the scenes",
+        "list saved scenes",
+        "list the saved scenes"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Audio Scene"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "list the acoustic profiles",
+        "which acoustic profiles",
+        "what acoustic profiles",
+        "list my acoustic profiles",
+        "show the acoustic profiles",
+        "saved acoustic profiles",
+        "kept acoustic profiles",
+        "list the kept acoustics",
+        "which acoustics are kept"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Acoustic Profile"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "list the properties of the acoustic profile",
+        "list the acoustic profile",
+        "show the acoustic profile",
+        "show me the acoustic profile",
+        "what is the acoustic profile",
+        "what are the acoustic properties",
+        "list the acoustic properties",
+        "show the acoustic properties",
+        "list the properties of the walls",
+        "show the properties of the walls",
+        "list the wall properties",
+        "show the wall properties",
+        "list the properties of the room",
+        "show the properties of the room",
+        "list the room properties",
+        "show the room properties",
+        "acoustic profile",
+        "acoustic properties",
+        "room acoustics",
+        "show the room acoustics",
+        "list the room acoustics"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Acoustic Profile",
+            "ObjectID": "{scene}"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "where am i",
+        "where is the listener",
+        "where is the user",
+        "list the listener",
+        "show the listener",
+        "where am i standing",
+        "where am i listening from",
+        "what is the listener's position"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Listener",
+            "ObjectID": "{scene}"
+          }
+        }
+      }
+    },
+    {
+      "Phrases": [
+        "how big is the room",
+        "what size is the room",
+        "what are the room dimensions",
+        "what are the dimensions of the room",
+        "list the room",
+        "show the room",
+        "list the closed space",
+        "what is the room"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ListedObjects": {
+            "Kind": "Closed Space",
+            "ObjectID": "{scene}"
+          }
+        }
+      }
+    }
+  ],
+  "ProfileId": "walls",
+  "Profiles": {
+    "Apply": [
+      "apply",
+      "use"
+    ],
+    "Save": [
+      "save",
+      "keep",
+      "store",
+      "name",
+      "call"
+    ],
+    "Delete": [
+      "delete",
+      "erase",
+      "forget",
+      "wipe"
+    ]
+  },
+  "SetVerbs": [
+    "set",
+    "change",
+    "modify",
+    "make",
+    "give"
+  ],
+  "Materials": {
+    "_": "Nominal absorption coefficients by octave band (125 Hz to 4 kHz) of common surfaces, from the usual tables of room acoustics; edit them freely - they are data.",
+    "Bands": [
+      125,
+      250,
+      500,
+      1000,
+      2000,
+      4000
+    ],
+    "concrete": [
+      0.01,
+      0.01,
+      0.02,
+      0.02,
+      0.02,
+      0.02
+    ],
+    "brick": [
+      0.03,
+      0.03,
+      0.03,
+      0.04,
+      0.05,
+      0.07
+    ],
+    "plaster": [
+      0.29,
+      0.1,
+      0.05,
+      0.04,
+      0.07,
+      0.09
+    ],
+    "glass": [
+      0.35,
+      0.25,
+      0.18,
+      0.12,
+      0.07,
+      0.04
+    ],
+    "wood": [
+      0.15,
+      0.11,
+      0.1,
+      0.07,
+      0.06,
+      0.07
+    ],
+    "carpet": [
+      0.02,
+      0.06,
+      0.14,
+      0.37,
+      0.6,
+      0.65
+    ],
+    "curtain": [
+      0.07,
+      0.31,
+      0.49,
+      0.75,
+      0.7,
+      0.6
+    ],
+    "foam": [
+      0.2,
+      0.65,
+      0.95,
+      0.9,
+      0.85,
+      0.8
+    ]
+  },
+  "Faces": {
+    "floor": "Floor",
+    "ceiling": "Ceiling",
+    "left wall": "Left",
+    "right wall": "Right",
+    "front wall": "Front",
+    "back wall": "Back"
+  },
+  "Languages": {
+    "english": "en",
+    "french": "fr",
+    "german": "de",
+    "spanish": "es",
+    "portuguese": "pt",
+    "italian": "it"
+  },
+  "PropertyTable": [
+    {
+      "Id": "object.position",
+      "Entity": "Object",
+      "Target": "Members",
+      "Words": [
+        "position",
+        "place",
+        "location"
+      ],
+      "Value": "xyz",
+      "Command": "moved.position"
+    },
+    {
+      "Id": "object.orientation",
+      "Entity": "Object",
+      "Target": "Members",
+      "Words": [
+        "orientation",
+        "heading",
+        "direction it faces"
+      ],
+      "Value": "degrees",
+      "Command": "moved.orientation"
+    },
+    {
+      "Id": "object.sounding",
+      "Entity": "Object",
+      "Target": "Members",
+      "Words": [
+        "time",
+        "timing",
+        "duration",
+        "playing time",
+        "time in the scene"
+      ],
+      "Value": "pair",
+      "Command": "moved.time"
+    },
+    {
+      "Id": "object.level",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "level",
+        "loudness",
+        "volume"
+      ],
+      "Value": "number",
+      "Unit": "(?:lufs|db)",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "Level": "{v}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.name",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "name"
+      ],
+      "Value": "text",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "Name": "{text}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.description",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "description",
+        "comment",
+        "note"
+      ],
+      "Value": "text",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "DescrMetadata": "{text}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.device",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "device"
+      ],
+      "Value": "text",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "DeviceID": "{text}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.percept",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "percept status"
+      ],
+      "Value": "onoff",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "PerceptStatus": "{flag}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.own-time",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "own time",
+        "recording time",
+        "time of the recording"
+      ],
+      "Value": "pair",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "Time": "{time}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.pov",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "point of view",
+        "listening position"
+      ],
+      "Value": "xyz",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "UserPoV": {
+                "Header": "OSD-OPV-V1.5",
+                "PointOfViewID": "{name}",
+                "CartPosition": [
+                  "{x}",
+                  "{y}",
+                  "{z}"
+                ],
+                "Orientation": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.parent",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "parent",
+        "parents"
+      ],
+      "Value": "text",
+      "Command": {
+        "ChangedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "ParentAudioObjectIDs": [
+                "{text}"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.frequency-range",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "frequency range",
+        "frequencies"
+      ],
+      "Value": "pair",
+      "Unit": "(?:hz|hertz)",
+      "Command": {
+        "ModifiedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "AcousticProfile": {
+                "AcousticProfileID": "{name}",
+                "FrequencyRange": {
+                  "MinFrequencyHz": "{a}",
+                  "MaxFrequencyHz": "{b}"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "object.profile-loudness",
+      "Entity": "Object",
+      "Target": "Kept",
+      "Words": [
+        "profile loudness",
+        "acoustic loudness"
+      ],
+      "Value": "number",
+      "Unit": "(?:lufs|db)",
+      "Command": {
+        "ModifiedObjects": {
+          "Objects": [
+            {
+              "ObjectID": "{name}",
+              "AcousticProfile": {
+                "AcousticProfileID": "{name}",
+                "Loudness": "{v}"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "listener.position",
+      "Entity": "Listener",
+      "Words": [
+        "position",
+        "place",
+        "location"
+      ],
+      "Value": "xy",
+      "Command": "listener.position"
+    },
+    {
+      "Id": "listener.orientation",
+      "Entity": "Listener",
+      "Words": [
+        "orientation",
+        "heading"
+      ],
+      "Value": "degrees",
+      "Command": "listener.orientation"
+    },
+    {
+      "Id": "scene.name",
+      "Entity": "Scene",
+      "Words": [
+        "name"
+      ],
+      "Value": "text",
+      "Command": {
+        "NamedScene": "{text}"
+      }
+    },
+    {
+      "Id": "room.size",
+      "Entity": "Room",
+      "Words": [
+        "size",
+        "dimensions"
+      ],
+      "Value": "size3",
+      "Command": "room.size"
+    },
+    {
+      "Id": "room.height",
+      "Entity": "Room",
+      "Words": [
+        "height",
+        "ceiling height"
+      ],
+      "Value": "number",
+      "Unit": "(?:metres?|m)",
+      "Command": "room.height"
+    },
+    {
+      "Id": "face.material",
+      "Entity": "Face",
+      "Words": [
+        "material",
+        "surface"
+      ],
+      "Value": "material",
+      "Command": "face.material"
+    },
+    {
+      "Id": "face.absorption",
+      "Entity": "Face",
+      "Words": [
+        "absorption"
+      ],
+      "Value": "number",
+      "Command": "face.absorption"
+    },
+    {
+      "Id": "walls.material",
+      "Entity": "Walls",
+      "Words": [
+        "material",
+        "surface"
+      ],
+      "Value": "material",
+      "Command": "walls.material"
+    },
+    {
+      "Id": "profile.absorption",
+      "Entity": "Profile",
+      "Words": [
+        "absorption"
+      ],
+      "Suffix": [
+        "coefficient"
+      ],
+      "Value": "number",
+      "Command": {
+        "Absorption": "{v}"
+      }
+    },
+    {
+      "Id": "profile.diffusion",
+      "Entity": "Profile",
+      "Words": [
+        "diffusion"
+      ],
+      "Suffix": [
+        "coefficient"
+      ],
+      "Value": "number",
+      "Command": {
+        "Diffusion": "{v}"
+      }
+    },
+    {
+      "Id": "profile.rt60",
+      "Entity": "Profile",
+      "Words": [
+        "reverberation",
+        "reverb",
+        "rt ?60"
+      ],
+      "Suffix": [
+        "time"
+      ],
+      "Value": "number",
+      "Unit": "seconds?",
+      "Command": {
+        "Reverberation": [
+          {
+            "RT60": {
+              "PlotID": "rt60",
+              "Plot": {
+                "2D": [
+                  [
+                    1000,
+                    "{v}"
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.rt30",
+      "Entity": "Profile",
+      "Words": [
+        "rt ?30"
+      ],
+      "Value": "number",
+      "Unit": "seconds?",
+      "Command": {
+        "Reverberation": [
+          {
+            "RT30": {
+              "PlotID": "rt30",
+              "Plot": {
+                "2D": [
+                  [
+                    1000,
+                    "{v}"
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.rt20",
+      "Entity": "Profile",
+      "Words": [
+        "rt ?20"
+      ],
+      "Value": "number",
+      "Unit": "seconds?",
+      "Command": {
+        "Reverberation": [
+          {
+            "RT20": {
+              "PlotID": "rt20",
+              "Plot": {
+                "2D": [
+                  [
+                    1000,
+                    "{v}"
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.edt",
+      "Entity": "Profile",
+      "Words": [
+        "early decay time",
+        "edt"
+      ],
+      "Value": "number",
+      "Unit": "seconds?",
+      "Command": {
+        "Reverberation": [
+          {
+            "EDT": "{v}"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.reflections",
+      "Entity": "Profile",
+      "Words": [
+        "reflection times?"
+      ],
+      "Value": "pair",
+      "Pair": [
+        "early",
+        "late"
+      ],
+      "Unit": "seconds?",
+      "Command": {
+        "Reflectivity": [
+          {
+            "EarlyReflectionTime": "{a}",
+            "LateReflectionTime": "{b}"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.doppler-direct",
+      "Entity": "Profile",
+      "Words": [
+        "doppler direct sound factor",
+        "direct sound doppler",
+        "doppler of the direct sound"
+      ],
+      "Value": "number",
+      "Command": {
+        "Doppler": [
+          {
+            "DirectSoundFactor": "{v}"
+          }
+        ]
+      }
+    },
+    {
+      "Id": "profile.doppler-indirect",
+      "Entity": "Profile",
+      "Words": [
+        "doppler indirect sound",
+        "indirect sound doppler",
+        "doppler of the reflected sound"
+      ],
+      "Value": "number",
+      "Command": {
+        "Doppler": [
+          {
+            "IndirectSound": "{v}"
+          }
+        ]
+      }
+    }
+  ]
+}

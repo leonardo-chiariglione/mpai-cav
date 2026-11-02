@@ -157,7 +157,37 @@ public sealed class AseAimProcessor : IAimProcessor
         var listener = data.UserPoV ?? pov;
 
         if (data.ListedObjects is { } listing) List(listing, report);
+        if (data.DeliveredObject is { } delivered) Deliver(delivered, report);
+
+        // THE SCENES BY NAME (the author, 2026/10/28): a new empty Scene is opened, a Scene kept is opened, the open Scene is given a name. The Scene that was open stays kept.
+        if (NameBook.Clean(data.NewScene) is { } fresh)
+        {
+            if (_ase.SceneKey(fresh) is not null) report.Failed("NewScene", fresh, "a Scene of that name is kept");
+            else
+                try { _open = _ase.CreateEmptyBasicScene(listener ?? Origin(), fresh).AssetId; report.Done("NewScene", fresh, N(_open)); }
+                catch (Exception failure) { report.Failed("NewScene", fresh, failure.Message); }
+        }
+        if (NameBook.Clean(data.OpenedScene) is { } wanted)
+        {
+            if (_ase.SceneKey(wanted) is not { } held) report.Failed("OpenedScene", wanted, "the Module has no saved Audio Scene of that name");
+            else { _open = held; _ase.Select(held); report.Done("OpenedScene", wanted, N(_open)); }
+        }
+        if (NameBook.Clean(data.NamedScene) is { } given)
+        {
+            if (_open is null) report.Failed("NamedScene", given, "no Basic Audio Scene is open");
+            else if (_ase.RenameScene(_open, given) is { } problem) report.Failed("NamedScene", given, problem);
+            else report.Done("NamedScene", given, N(_open));
+        }
         { var gone = Deletions.Apply(data, _ase.Names, NamedKind.AudioScene, "Audio Scene", report); if (_open is not null && gone.Contains(_open)) _open = null; }
+        foreach (var entry in data.DeletedObjects?.Objects ?? [])
+            if (entry.ObjectID is null && NameBook.Clean(entry.AcousticProfileID) is { } kept)
+            {
+                if (_ase.Profiles.Delete(kept)) report.Done("DeletedObjects", kept);
+                else report.Failed("DeletedObjects", kept, "the Module keeps no Acoustic Profile of that name");
+            }
+        // THE LOUDNESS OF A SCENE (M3282 UCM-5, the programme): the Audio Scene Descriptors carry no loudness of a Scene, so it is not set here; the Level of each Object is.
+        if (data.LUFS is not null)
+            report.NotSupported("LUFS", N(_open), "the loudness of a Scene is not carried by the Audio Scene Descriptors: set the loudness of each Object (Level, or LUFS in a ModifiedObjects entry)");
         if (data.ModifiedObjects is { Objects.Count: > 0 })
             report.NotSupported("ModifiedObjects", N(_open), "what an Object is like is Audio Object Editing's");
         if (data.TranslatedObjects is { Objects.Count: > 0 })
@@ -233,8 +263,15 @@ public sealed class AseAimProcessor : IAimProcessor
         // The acoustics of the Scene: its Acoustic Profile, as given.
         if (data.ModifiedScene?.AcousticProfile is { } acoustics)
         {
-            _open = _ase.SetBasicSceneAcousticProfile(_open, acoustics).AssetId;
-            report.Done("ModifiedScene", N(_open), N(_open));
+            var toApply = acoustics.Reference ? _ase.Profiles.Get(acoustics.AcousticProfileID) : acoustics;
+            if (toApply is null) report.Failed("ModifiedScene", N(_open), $"the Module keeps no Acoustic Profile named \"{acoustics.AcousticProfileID}\"");
+            else
+            {
+                _open = _ase.SetBasicSceneAcousticProfile(_open, toApply).AssetId;
+                // A profile given in full is kept under its identifier - as the Scene now has it, with what the Scene had and the profile did not state.
+                if (!acoustics.Reference && _ase.AcousticProfileOf(_open) is { } now) _ase.Profiles.Keep(now);
+                report.Done("ModifiedScene", N(_open), N(_open));
+            }
         }
 
         // The room: the space the Scene is in, replaced as given.
@@ -307,17 +344,66 @@ public sealed class AseAimProcessor : IAimProcessor
     // A move or a change is the member re-placed at the new attitude.
     private void Place(string action, string? id, SpatialAttitude? attitude, CommandReport report)
     {
-        // The amount is the command's: where the member is to be is a position and an orientation it carries; none is not guessed.
-        if (Amounts.PlaceProblem(attitude) is { } problem) { report.Failed(action, id, problem); return; }
-        var result = id is null ? null : _ase.ReplaceInBasicScene(_open!, id, Placement(attitude));
+        // The amount is the command's: a position, an orientation or a time it carries; none is not guessed. A command may state only the parts that change: the others keep the value the
+        // member has in the Scene (M3282 UCM-1).
+        if (Amounts.ChangeProblem(attitude) is { } problem) { report.Failed(action, id, problem); return; }
+        var before = id is null ? null : _ase.PlacementOf(_open!, id);
+        if (id is null || before is null) { report.Failed(action, id, "the open Scene has no such member"); return; }
+        var result = _ase.ReplaceInBasicScene(_open!, id, Placement(Merged(attitude!, before)));
         if (result is null) { report.Failed(action, id, "the open Scene has no such member"); return; }
         _open = result.AssetId;
         report.Done(action, id, N(_open));
     }
 
+    // The attitude the member is to have: what the command states, and for what it does not state what the member has.
+    private static SpatialAttitude Merged(SpatialAttitude change, SpaceTime before)
+    {
+        var old = before.SpatialAttitude1;
+        return new SpatialAttitude
+        {
+            Header = change.Header, MInstanceID = change.MInstanceID ?? old?.MInstanceID, UEnvironmentID = change.UEnvironmentID ?? old?.UEnvironmentID,
+            ObjectSpatialAttitudeID = string.IsNullOrEmpty(change.ObjectSpatialAttitudeID) ? old?.ObjectSpatialAttitudeID ?? "" : change.ObjectSpatialAttitudeID,
+            SpatialAttitudeTime = change.SpatialAttitudeTime ?? (before.Time is { SimpleTimeData.Count: > 0 } ? before.Time : null),
+            General = change.General ?? old?.General,
+            Position = change.PositionStated ? change.Position : old?.Position ?? new Position(),
+            Orientation = change.OrientationStated ? change.Orientation : old?.Orientation ?? new Orientation(),
+            DataXMData = change.DataXMData ?? old?.DataXMData, DescrMetadata = change.DescrMetadata ?? old?.DescrMetadata
+        };
+    }
+
+    // PLAYING (the author, 2026/11/02: "play clip777"): the Module does not play - the User Agent has the loudspeakers. It says which it is to play: the open Scene (named, or "stage", the name
+    // the grammar gives the whole of it) or one Object that is a member of it. The report is Done for either; a name that is neither, and no Scene open, are failed with the reason.
+    private void Deliver(ManagedObject delivered, CommandReport report)
+    {
+        var name = NameBook.Clean(IdOf(delivered));
+        if (name is null) { report.Failed("DeliveredObject", null, "what is to be played is named: the Scene, or an Object in it"); return; }
+        if (_open is null) { report.Failed("DeliveredObject", name, "no Basic Audio Scene is open"); return; }
+        var scene = N(_open);
+        if (name == "stage" || name == scene) { report.Done("DeliveredObject", scene); return; }
+        var members = _ase.Listing(ListKinds.AudioScene, scene).FirstOrDefault()?.Members;
+        if (members is not null && members.Any(m => m.ObjectID == name)) report.Done("DeliveredObject", name);
+        else report.Failed("DeliveredObject", name, "the open Scene has no such member");
+    }
+
     private void List(ObjectListing listing, CommandReport report)
     {
         if (!ListKinds.Known(listing.Kind)) { report.Failed("ListedObjects", null, $"the Kind is required: one of {string.Join(", ", ListKinds.Every)}"); return; }
+        if (listing.Kind == ListKinds.AcousticProfile && NameBook.Clean(listing.ObjectID) is null)
+        {
+            // No Scene named: the Acoustic Profiles the Module keeps, by their identifiers (M3282 UCM-4).
+            report.Listed(_ase.Profiles.All().Select(p => new ListedObject { ObjectID = p.AcousticProfileID, Kind = ListKinds.AcousticProfile, AcousticProfile = p }).ToList());
+            return;
+        }
+        if (listing.Kind is ListKinds.AcousticProfile or ListKinds.Listener or ListKinds.ClosedSpace)
+        {
+            // Of the Scene named in the request, else of the open one: the Acoustic Profile it has, the Point of View it is heard from, the room it is in.
+            var key = listing.ObjectID is { } named && NameBook.Clean(named) is { } clean ? _ase.SceneKey(clean) : _open;
+            if (key is null || !_ase.Has(key)) { report.Failed("ListedObjects", listing.ObjectID, listing.ObjectID is null ? "no Basic Audio Scene is open" : "the Module keeps no Audio Scene of that name"); return; }
+            report.Listed([listing.Kind == ListKinds.Listener ? _ase.ListedListener(key)
+                         : listing.Kind == ListKinds.ClosedSpace ? _ase.ListedClosedSpace(key)
+                         : new ListedObject { ObjectID = _ase.SceneName(key) ?? "", Kind = ListKinds.AcousticProfile, AcousticProfile = _ase.AcousticProfileOf(key) }]);
+            return;
+        }
         if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.AudioScene)
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
         if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }

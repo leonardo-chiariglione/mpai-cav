@@ -25,11 +25,14 @@ public sealed class CityTrust
     public string CavId => admission.Anchor.AnchorId;
     public ILinkAdmission Admission => new TrustedLink(protocol);
 
-    public string Sign(string json) => ExternalSigning.Sign(json, admission.Anchor, admission.Key, city, now());
+    public string Sign(string json, string? binding = null) => ExternalSigning.Sign(json, admission.Anchor, admission.Key, city, now(), binding: binding);
 
-    public string? Verify(string from, string json)
+    public string? StillTrusted(string from) => protocol.StillTrusted(from);
+
+    public string? Verify(string from, string json, string? binding = null)
     {
-        var outcome = ExternalSigning.Verify(json, from, protocol.AnchorOf);
+        if (protocol.StillTrusted(from) is { } expired) return expired;
+        var outcome = ExternalSigning.Verify(json, from, protocol.AnchorOf, binding);
         return outcome == ExternalSigning.Outcome.Valid ? null : outcome.ToString();
     }
 }

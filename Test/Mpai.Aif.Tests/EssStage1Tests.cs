@@ -404,7 +404,7 @@ public class EssStage1Tests
         const string ess = "1CAV-ESS-V2.0-I01";
         var location = Path.Combine(Path.GetTempPath(), "mpai-phase7-" + Guid.NewGuid().ToString("N"));
         var store = new AIF.SharedStorage.RuledStore(() => Path.Combine(location, "private", ess), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
-        var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, "SyntheticDrive"), "", ""), messages);
+        var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, AIF.SharedStorage.RuledStore.Controller), "", ""), messages);
 
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
         Assert.Equal(AifError.OK, api.StartFlow(ess));
@@ -418,7 +418,7 @@ public class EssStage1Tests
             on Start:
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
-                stream Gnss (CAV-GNO-V2.0) from record "drive"
+                stream Gnss (CAV-NSO-V2.0) from record "drive"
                 wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
             """), CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(19));

@@ -160,7 +160,9 @@ public sealed class ModelAimPublisher
             Directory.CreateDirectory(Path.Combine(_folder, "versions"));
             File.WriteAllText(Path.Combine(_folder, "versions", $"{name}.{current}.json"), _store.Retrieve(name));
         }
-        var published = _store.Publish(l3.ToJsonString(), replace: true);
+        // The Front End is submitted with its Sub-AIMs: their Metadata is in the package of the Front End (and with the Controllers that run it), not in this Store.
+        var withIt = (l3["SubAIMs"] as JsonArray ?? []).Select(x => (string?)x?["Identifier"]?["AIMName"]).OfType<string>().ToList();
+        var published = _store.Publish(l3.ToJsonString(), replace: true, submittedWith: withIt);
         if (!published.WasPublished) throw new InvalidOperationException($"The Store did not publish the new {name}: {string.Join("; ", published.Errors)}");
         return (string)implementation["Version"]!;
     }

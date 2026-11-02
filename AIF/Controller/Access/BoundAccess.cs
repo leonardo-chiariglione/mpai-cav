@@ -151,11 +151,14 @@ public sealed record AccessEntry(
         var view = Path.Combine(folder, Path.GetFileName(name));
         var source = new FileInfo(kept);
         if (File.Exists(view) && new FileInfo(view) is var have && have.Length == source.Length && have.LastWriteTimeUtc == source.LastWriteTimeUtc) return view;
+        if (File.Exists(view)) File.SetAttributes(view, FileAttributes.Normal);      // the view is read-only: replaced, never edited
         File.Delete(view);
         if (!System.OperatingSystem.IsWindows() || !CreateHardLink(view, kept, IntPtr.Zero))
         {
             File.Copy(kept, view, true);
+            File.SetAttributes(view, FileAttributes.Normal);
             File.SetLastWriteTimeUtc(view, source.LastWriteTimeUtc);
+            File.SetAttributes(view, FileAttributes.ReadOnly);
         }
         return view;
     }
@@ -185,6 +188,9 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
 {
     public const string Writer = AccessStore.Controller;
     private readonly HttpClient http = http ?? Client();
+
+    // An entry the AIM is not given (its data is valid only with data that is missing): the AIM no longer reads what was obtained for it.
+    public void Withhold(AccessEntry entry, string reader) => store.Withdraw(entry.Uri, reader);
 
     // The Trust Protocol of this Controller, where it requires Providers to be admitted; null: as it has always been.
     public AIF.Trust.TrustProtocol? Trust { get; set; }
@@ -281,7 +287,13 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
     {
         if (!store.Recall(hash, out var from, out var fromKey) || (from == source && fromKey == key) || !Holds(from, fromKey, hash)) return false;
         if (store.Version(source) < 0) store.Create(source);
-        if (store.Trace(source, key, out _) == AccessOutcome.OK) return store.Allow(source, key, [reader]) == AccessOutcome.OK;
+        if (store.Trace(source, key, out var existing) == AccessOutcome.OK)
+        {
+            if (Holds(source, key, hash)) return store.Allow(source, key, [reader]) == AccessOutcome.OK;
+            // What the Uri holds is not what the entry pins: it is replaced by the data found by its SHA-256, and its readers are kept (a Source only moves forward).
+            var readers = existing!.Readers?.Append(reader).Distinct().ToList();
+            return store.PutFrom(source, key, from, fromKey, readers: readers, sha256: hash) == AccessOutcome.OK;
+        }
         return store.PutFrom(source, key, from, fromKey, readers: [reader], sha256: hash) == AccessOutcome.OK;
     }
 
@@ -342,6 +354,23 @@ public sealed class AccessFetcher(AccessStore store, HttpClient? http = null)
             return Obtain(entry.Uri, key, entry.Locations.Select(l => new Uri(new Uri(l), key).ToString()), expected, reader, out _);
         }
         catch { return AccessOutcome.NotFound; }
+    }
+
+    // THE ITEM OF A SET IS READ AGAINST THE MANIFEST AS IT IS NOW: an item whose SHA-256 is no longer the one the manifest names (the manifest was refreshed) is obtained again before it is read;
+    // when it cannot be, what is held is not given (it is stale). OK also when there is no manifest or the item is not in it: the read goes on under the rules of the data.
+    public AccessOutcome CheckItem(AccessEntry entry, string key, string reader)
+    {
+        if (!entry.IsSet || store.Get(entry.Uri, AccessEntry.ManifestKey, out var manifest) != AccessOutcome.OK) return AccessOutcome.OK;
+        string? expected;
+        try
+        {
+            using var doc = JsonDocument.Parse(manifest);
+            expected = doc.RootElement.TryGetProperty("Items", out var items) && items.TryGetProperty(key, out var h) ? h.GetString() : null;
+        }
+        catch { return AccessOutcome.OK; }
+        if (expected is null || store.Trace(entry.Uri, key, out _) != AccessOutcome.OK) return AccessOutcome.OK;
+        if (Holds(entry.Uri, key, expected)) return AccessOutcome.OK;
+        return FetchItem(entry, key, reader) == AccessOutcome.OK ? AccessOutcome.OK : AccessOutcome.NotFound;
     }
 
     private AccessOutcome Keep(string source, string key, string file, string reader, string hash, string from)
@@ -428,6 +457,7 @@ public sealed class BoundAccess(IAccessReader inner, IReadOnlyList<AccessEntry> 
     {
         data = [];
         if (Authorise(source, ref key, out var e) is var denied && denied != AccessOutcome.OK) return denied;
+        if (e is { IsSet: true } && fetcher is not null && fetcher.CheckItem(e, key, reader) is var stale && stale != AccessOutcome.OK) return stale;
         var outcome = inner.Get(source, key, out data);
         if (outcome != AccessOutcome.OK && e is { IsSet: true } && fetcher is not null && fetcher.FetchItem(e, key, reader) == AccessOutcome.OK)
             outcome = inner.Get(source, key, out data);
@@ -437,7 +467,8 @@ public sealed class BoundAccess(IAccessReader inner, IReadOnlyList<AccessEntry> 
     public AccessOutcome LocalPath(string source, string key, out string path)
     {
         path = "";
-        if (Authorise(source, ref key, out _) is var denied && denied != AccessOutcome.OK) return denied;
+        if (Authorise(source, ref key, out var e) is var denied && denied != AccessOutcome.OK) return denied;
+        if (e is { IsSet: true } && fetcher is not null && fetcher.CheckItem(e, key, reader) is var stale && stale != AccessOutcome.OK) return stale;
         return inner.LocalPath(source, key, out path);
     }
 
@@ -446,6 +477,7 @@ public sealed class BoundAccess(IAccessReader inner, IReadOnlyList<AccessEntry> 
     {
         stream = Stream.Null;
         if (Authorise(source, ref key, out var e) is var denied && denied != AccessOutcome.OK) return denied;
+        if (e is { IsSet: true } && fetcher is not null && fetcher.CheckItem(e, key, reader) is var stale && stale != AccessOutcome.OK) return stale;
         var outcome = inner.Open(source, key, out stream);
         if (outcome != AccessOutcome.OK && e is { IsSet: true } && fetcher is not null && fetcher.FetchItem(e, key, reader) == AccessOutcome.OK)
             outcome = inner.Open(source, key, out stream);

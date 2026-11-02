@@ -8,7 +8,7 @@ namespace Mpai.Aif.Tests;
 // Private Storage of the Module and recorded data (M3219): a Module's own storage
 // under rules its writers set, or its central control; Shared Storage reachable
 // by several Modules; the record of what crosses a Module's boundary, and its
-// playback. The test Modules are in Test/Data/Phase6.
+// playback. The test Modules are in AIMs/TST/Phase6.
 //
 // Step 1 records what happens today: every AIM of a Module reads what any other
 // wrote, and so does every Module given the same location; the Metadata fields of
@@ -21,7 +21,7 @@ public class StorageTests
 {
     public const string Text = "TST-TXT-V1.0";
 
-    public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase6");
+    public static string Amds => Path.Combine(Repository.Root, "AIMs", "TST", "Phase6");
 
     private static ControllerApi Api() => new(Amds, Path.Combine(Amds, "no-settings.json"), new StorageAims());
 
@@ -92,7 +92,7 @@ public class StorageTests
             using var api = Api();
             const string esb = "1TST-ESB-V1.0-I01";
             api.StartFlow(esb);
-            api.InputWrite(esb, "CAV-GNO-V2.0", 1, """{"Header":"CAV-GNO-V2.0","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
+            api.InputWrite(esb, "CAV-NSO-V2.0", 1, """{"Header":"CAV-NSO-V2.0","GNSSObjectID":"g1","GNSSData":[{"Data":"JEdQR0dB"}]}""", 2000);
             var counts = api.OutputRead(esb, Text, 1, 2000);
             api.StopFlow(esb);
             result["TST-ESB: a GNSS Object written"] = $"{counts.Error} '{counts.Json}'";
@@ -382,7 +382,7 @@ public sealed class StorageAims : IAimProvider
     // TST-SNK: what arrived on each input of the boundary of ESS Stage 1, counted.
     private sealed class Sink(string id) : IAimProcessor, IAimRunner
     {
-        private static readonly string[] Inputs = ["OSD-BVO-V1.5", "OSD-OSA-V1.5", "CAV-GNO-V2.0", "CAV-WDT-V2.0", "CAV-FED-V2.0"];
+        private static readonly string[] Inputs = ["OSD-BVO-V1.5", "OSD-OSA-V1.5", "CAV-NSO-V2.0", "CAV-WDT-V2.0", "CAV-FED-V2.0"];
         public string InstanceId { get; } = id;
         public Task<Message> ProcessAsync(Message message) => throw new NotSupportedException("TST-SNK runs continuously.");
 

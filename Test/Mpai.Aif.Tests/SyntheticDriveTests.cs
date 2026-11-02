@@ -72,7 +72,7 @@ public class SyntheticDriveTests
         // As a record, played by a StoredRecord.
         var location = Path.Combine(Path.GetTempPath(), "mpai-phase6-" + Guid.NewGuid().ToString("N"), "private", "1CAV-ESS-V2.0-I01");
         var store = new RuledStore(() => location, () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
-        var id = drive.WriteRecord(store.For(new StorageHolder("1CAV-ESS-V2.0-I01", "SyntheticDrive"), "", ""), messages);
+        var id = drive.WriteRecord(store.For(new StorageHolder("1CAV-ESS-V2.0-I01", RuledStore.Controller), "", ""), messages);
         var ua = store.For(StorageHolder.UserAgent, "", "");
         var inputs = await new StoredRecord(ua, id).InputsAsync();
         ua.MPAI_AIFM_RuledStorage_Trace(id + "/header", out var trace);
@@ -107,7 +107,7 @@ public class SyntheticDriveTests
 
         // The drive, a record of the boundary of ESS Stage 1 at the location.
         var essStore = new RuledStore(() => Path.Combine(location, "private", ess), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
-        var driveId = drive.WriteRecord(essStore.For(new StorageHolder(ess, "SyntheticDrive"), "", ""), messages);
+        var driveId = drive.WriteRecord(essStore.For(new StorageHolder(ess, RuledStore.Controller), "", ""), messages);
 
         using var api = new Mpai.Aif.Api.ControllerApi(StorageTests.Amds, Path.Combine(StorageTests.Amds, "no-settings.json"), new StorageAims());
         api.StartFlow(esb);
@@ -121,7 +121,7 @@ public class SyntheticDriveTests
             on Start:
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
-                stream Gnss (CAV-GNO-V2.0) from record "drive"
+                stream Gnss (CAV-NSO-V2.0) from record "drive"
                 wait 7s
             """), CancellationToken.None);
         Thread.Sleep(200);

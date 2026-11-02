@@ -20,6 +20,9 @@ public enum VerifyResult { Same, Different, NotRecorded }
 public interface IImplementationVerifier
 {
     VerifyResult Verify(string aimName, string binaryName, string fingerprint);
+
+    // For the version of the AIM Instance Metadata the Controller holds (the version the Store published it as): what the Store approved for that version. A verifier that keeps no versions answers as for the latest.
+    VerifyResult Verify(string aimName, string binaryName, string fingerprint, string? version) => Verify(aimName, binaryName, fingerprint);
 }
 
 public sealed class ImplementationFingerprints : IImplementationVerifier
@@ -47,16 +50,23 @@ public sealed class ImplementationFingerprints : IImplementationVerifier
     }
 
     // Records the fingerprint of the binary that implements an AIM, as approved.
-    public void Approve(string aimName, string binaryName, string fingerprint, DateTimeOffset at)
+    public void Approve(string aimName, string binaryName, string fingerprint, DateTimeOffset at, string? version = null)
     {
         Directory.CreateDirectory(folder);
         var path = PathOf(aimName);
         var record = File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path))!.AsObject()
                                        : new JsonObject { ["AIMName"] = aimName, ["Implementations"] = new JsonObject() };
-        record["Implementations"]![binaryName] = new JsonObject
+        var approved = new JsonObject { ["Algorithm"] = "SHA-256", ["Fingerprint"] = fingerprint, ["Approved"] = at.ToString("O") };
+        record["Implementations"]![binaryName] = approved.DeepClone();              // the latest
+        if (version is not null)
         {
-            ["Algorithm"] = "SHA-256", ["Fingerprint"] = fingerprint, ["Approved"] = at.ToString("O")
-        };
+            // Every version keeps what was approved for it: a new version does not take away the approval of the one a Controller still holds (STR-3; Verification, 2).
+            var versions = record["Versions"] as JsonObject ?? new JsonObject();
+            var of = versions[version] as JsonObject ?? new JsonObject();
+            of[binaryName] = approved.DeepClone();
+            versions[version] = of;
+            record["Versions"] = versions;
+        }
         File.WriteAllText(path, record.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -64,6 +74,15 @@ public sealed class ImplementationFingerprints : IImplementationVerifier
     public VerifyResult Verify(string aimName, string binaryName, string fingerprint) =>
         Approved(aimName, binaryName) is not { } recorded ? VerifyResult.NotRecorded
         : string.Equals(recorded, fingerprint, StringComparison.OrdinalIgnoreCase) ? VerifyResult.Same : VerifyResult.Different;
+
+    public VerifyResult Verify(string aimName, string binaryName, string fingerprint, string? version)
+    {
+        var path = PathOf(aimName);
+        // A record made before versions were kept has none: it answers as for the latest.
+        if (version is null || !File.Exists(path) || JsonNode.Parse(File.ReadAllText(path))?["Versions"] is not JsonObject versions) return Verify(aimName, binaryName, fingerprint);
+        return (string?)versions[version]?[binaryName]?["Fingerprint"] is not { } recorded ? VerifyResult.NotRecorded
+             : string.Equals(recorded, fingerprint, StringComparison.OrdinalIgnoreCase) ? VerifyResult.Same : VerifyResult.Different;
+    }
 
     // The binaries of an AIM the Store has a fingerprint of (their names; the fingerprints stay with the Store).
     public IReadOnlyList<string> Binaries(string aimName)

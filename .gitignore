@@ -20,6 +20,10 @@ Test/Reports/
 /AIF/Access/
 TestData/
 
+# third-party bankruptcy datasets (CC BY 4.0, 30 MB): re-fetched from UCI, see the README
+Test/Data/CUI/Bankruptcy/Polish/
+Test/Data/CUI/Bankruptcy/Taiwanese/
+
 # large model binaries - not source (kept locally; use Git LFS in the
 # distribution repo if they must ship)
 Models/

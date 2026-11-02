@@ -87,6 +87,12 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
     private readonly Attestation.Policy? attestation;
     private readonly RemoteLink.Listener listener;
     private readonly ConcurrentDictionary<string, Member> members = new();
+    private readonly ConcurrentDictionary<string, string> issuedTo = new(StringComparer.Ordinal);    // controllerID -> the key it was admitted with, for the run
+
+    private readonly TrustOperations operations;
+
+    // THE TRACE of what the Authority decides - each Controller admitted or refused, with why (Zero Trust 2.9: every trust decision is recorded).
+    public TrustTrace Trace => operations.Trace;
 
     public ExternalPolicy Policy { get; }
     public string AnchorId => anchor.AnchorId;
@@ -106,6 +112,7 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
         Policy = policy;
         this.attestation = attestation;
         this.now = now ?? (() => DateTimeOffset.UtcNow);
+        operations = new TrustOperations(anchor, key, this.now);
         listener = new RemoteLink.Listener(port, new OpenAdmission(), Accepted);
         listener.Failed += why => Said?.Invoke($"an enrolment not completed: {why}");
         Rendezvous = $"{host}:{listener.Port}";
@@ -169,16 +176,17 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
                 case "EnrolBegin":
                     nonce = (string?)frame["Nonce"];
                     role = (string?)frame["Role"] is { Length: > 0 } asked ? asked : Policy.DefaultRole;
-                    if (nonce is null || !Policy.Roles.Contains(role)) return Refusal("NOT_AUTHORISED", $"the service admits no role {role}");
+                    if (nonce is null || !Policy.Roles.Contains(role)) return Refused("NOT_AUTHORISED", $"the service admits no role {role}", nonce, null);
                     challenge = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
                     return Signed(new JsonObject { ["Kind"] = "EnrolChallenge", ["Ok"] = true, ["Nonce"] = nonce, ["Challenge"] = challenge, ["Role"] = role });
 
                 case "Enrol":
-                    if (challenge is null || role is null) return Refusal("NOT_AUTHORISED", "no EnrolBegin");
+                    if (challenge is null || role is null) return Refused("NOT_AUTHORISED", "no EnrolBegin", null, null);
                     var used = challenge;
                     var refused = Enrol(frame, challenge, role, out var credential, out var memberId);
                     challenge = null;                                  // a Challenge serves once
-                    if (refused is not null) { Said?.Invoke($"refused: {refused}"); return Refusal("NOT_AUTHORISED", refused); }
+                    operations.Operation(refused is null ? "AdmitController" : "RefuseController", "Controller", memberId ?? (string?)(frame["Anchor"] as JsonObject)?["AnchorID"] ?? "unknown", refused);
+                    if (refused is not null) { Said?.Invoke($"refused: {refused}"); return Refused("NOT_AUTHORISED", refused, null, used); }
                     enrolled = memberId;
                     members[memberId!] = new Member(memberId!, role, link, null);
                     Said?.Invoke($"{memberId} admitted as {role}");
@@ -198,6 +206,13 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
         if (frame["Anchor"] is not JsonObject presented || (string?)presented["AnchorID"] is not { } id) return "it presents no Trust Anchor";
         if (members.TryGetValue(id, out var already) && already.Link is { IsClosed: false }) return $"{id} is admitted already";
         if (TrustAnchorKey.KeyOf(presented) is not { } holderKey) return "its Trust Anchor is not one";
+        // A controllerID is not reused for another Controller within a run (Basic API 5): one that left is admitted again only by the key it had.
+        var fingerprint = Convert.ToHexString(SHA256.HashData(holderKey.ExportSubjectPublicKeyInfo()));
+        if (!issuedTo.GetOrAdd(id, fingerprint).Equals(fingerprint, StringComparison.Ordinal))
+        {
+            holderKey.Dispose();
+            return $"{id} was admitted before to another Controller";
+        }
         using (holderKey)
         {
             var t = now();
@@ -227,10 +242,44 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
         return PtfSignature.Sign(reply, key, anchor.AnchorId);
     }
 
-    private static JsonObject Refusal(string code, string why) => new() { ["Ok"] = false, ["Code"] = code, ["Error"] = why };
+    // A refusal is the Authority's too: signed, and echoing the nonce or the Challenge it answers, so that the Controller that asks can tell a refusal by the Authority (NOT_AUTHORISED)
+    // from an answer of one that does not hold the anchor (NOT_TRUSTED) - Basic API 3.9.1.
+    private JsonObject Refused(string code, string why, string? nonce, string? challenge)
+    {
+        var reply = new JsonObject { ["Kind"] = "Refused", ["Ok"] = false, ["Code"] = code, ["Error"] = why };
+        if (nonce is not null) reply["Nonce"] = nonce;
+        if (challenge is not null) reply["Challenge"] = challenge;
+        return Signed(reply);
+    }
+
+    // BY ANNOUNCEMENT IN RANGE (Basic API 3.9.1, rendezvous NULL): the Authority says, to those in range, where it admits. What is announced is not believed: the Controller that hears it
+    // is admitted only by an Authority that proves it holds the anchor, as at any rendezvous.
+    private CancellationTokenSource? announcing;
+    public void Announce(int port, string groupAddress = AuthorityAnnouncement.DefaultGroup)
+    {
+        announcing = new CancellationTokenSource();
+        var cancel = announcing.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var sender = new System.Net.Sockets.UdpClient(System.Net.Sockets.AddressFamily.InterNetwork) { MulticastLoopback = true };
+                sender.Client.SetSocketOption(System.Net.Sockets.SocketOptionLevel.IP, System.Net.Sockets.SocketOptionName.MulticastInterface, System.Net.IPAddress.Loopback.GetAddressBytes());
+                var group = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(groupAddress), port);
+                var bytes = System.Text.Encoding.UTF8.GetBytes(new JsonObject { ["Kind"] = AuthorityAnnouncement.Kind, ["AuthorityID"] = anchor.AnchorId, ["Rendezvous"] = Rendezvous }.ToJsonString());
+                while (!cancel.IsCancellationRequested)
+                {
+                    await sender.SendAsync(bytes, group, cancel);
+                    await Task.Delay(250, cancel);
+                }
+            }
+            catch (Exception e) when (e is OperationCanceledException or System.Net.Sockets.SocketException or ObjectDisposedException) { }
+        });
+    }
 
     public async ValueTask DisposeAsync()
     {
+        announcing?.Cancel();
         foreach (var m in members.Values) if (m.Link is not null) await m.Link.DisposeAsync();
         members.Clear();
         await listener.DisposeAsync();
@@ -249,4 +298,36 @@ public sealed class ExternalAuthorityService : IAsyncDisposable
     }
 
     internal static ILinkAdmission Open() => new OpenAdmission();
+}
+
+// WHERE AN AUTHORITY ADMITS, heard in range: the announcement of the Authority whose anchor the User decided to trust.
+public static class AuthorityAnnouncement
+{
+    public const string Kind = "MPAI-AIF-AuthorityAnnouncement";
+    public const string DefaultGroup = "239.255.41.11";
+    public const int DefaultPort = 41041;
+
+    // The rendezvous the Authority named announces, or null if none was heard within the time.
+    public static async Task<string?> FindAsync(string authorityId, int port, TimeSpan within, string groupAddress = DefaultGroup)
+    {
+        using var cancel = new CancellationTokenSource(within);
+        try
+        {
+            using var receiver = new System.Net.Sockets.UdpClient(System.Net.Sockets.AddressFamily.InterNetwork);
+            receiver.Client.SetSocketOption(System.Net.Sockets.SocketOptionLevel.Socket, System.Net.Sockets.SocketOptionName.ReuseAddress, true);
+            receiver.Client.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Any, port));
+            receiver.JoinMulticastGroup(System.Net.IPAddress.Parse(groupAddress), System.Net.IPAddress.Loopback);
+            while (true)
+            {
+                var got = await receiver.ReceiveAsync(cancel.Token);
+                try
+                {
+                    if (JsonNode.Parse(System.Text.Encoding.UTF8.GetString(got.Buffer)) is JsonObject o && (string?)o["Kind"] == Kind && (string?)o["AuthorityID"] == authorityId && (string?)o["Rendezvous"] is { Length: > 0 } rendezvous)
+                        return rendezvous;
+                }
+                catch (System.Text.Json.JsonException) { }
+            }
+        }
+        catch (Exception e) when (e is OperationCanceledException or System.Net.Sockets.SocketException) { return null; }
+    }
 }

@@ -116,12 +116,14 @@ public sealed class MpaiStore
         return StoreResult.Valid(identifier.ToString(), reported);
     }
 
+    // submittedWith: the AIMs whose Metadata is in the same submission as this one (a Composite AIM is submitted with its Sub-AIMs, unless they are in the Store already).
     public StoreResult Publish(
         string amdJson,
-        bool replace = false)
+        bool replace = false,
+        IReadOnlyCollection<string>? submittedWith = null)
     {
         var result =
-            Validate(amdJson);
+            Validate(amdJson, submittedWith);
 
         if (!result.IsValid)
         {
@@ -144,6 +146,14 @@ public sealed class MpaiStore
                     $"{identifier} is already published. " +
                     "Publish a new version, or replace it deliberately."
                 });
+        }
+
+        // A published version is never overwritten (STR-2): the one the Store had stays under versions/, and the new one is the latest.
+        if (File.Exists(path))
+        {
+            var kept = Path.Combine(folder, "versions", identifier.ToString());
+            Directory.CreateDirectory(kept);
+            File.Copy(path, Path.Combine(kept, (Directory.EnumerateFiles(kept, "*.json").Count() + 1) + ".json"));
         }
 
         File.WriteAllText(
@@ -184,7 +194,8 @@ public sealed class MpaiStore
     // published. Before it, what import will do to the L3: its names resolved to
     // Data Types (TopologyNormaliser) - an L3 it refuses is refused here.
     public StoreResult Validate(
-        string amdJson)
+        string amdJson,
+        IReadOnlyCollection<string>? submittedWith = null)
     {
         var errors = new List<string>();
         var warnings = new List<string>();
@@ -211,8 +222,8 @@ public sealed class MpaiStore
             if (root.TryGetProperty("SubAIMs", out var subAims) && subAims.ValueKind == JsonValueKind.Array)
                 foreach (var subAim in subAims.EnumerateArray())
                     if (subAim.TryGetProperty("Identifier", out var subIdentifier) &&
-                        Text(subIdentifier, "AIMName") is { Length: > 0 } subName && subName != aimName && !Exists(subName))
-                        warnings.Add($"SubAIM {subName} is not in the store yet; publish it before running this AIM.");
+                        Text(subIdentifier, "AIMName") is { Length: > 0 } subName && subName != aimName && !Exists(subName) && submittedWith?.Contains(subName) != true)
+                        errors.Add($"SubAIM {subName} is in neither the submission nor the Store: without it the Composite AIM could not be built.");
 
             return errors.Count == 0
                 ? StoreResult.Valid(aimName, warnings)

@@ -7,7 +7,7 @@ using Mpai.Aif.Api;
 namespace Mpai.Aif.Tests;
 
 // The Controller API of Phase 3 (M3213 3.8), on test Modules made for the purpose
-// from test AIMs whose behaviour is exact. Their L3s are in Test/Data/Phase3, not
+// from test AIMs whose behaviour is exact. Their L3s are in AIMs/TST/Phase3, not
 // in AIMs/AMDs: they are not AIMs anybody would use.
 //
 // Step 1 records what the Controller does today, failures included; each later
@@ -19,7 +19,7 @@ public class ControllerTests
 {
     public const string Text = "TST-TXT-V1.0";
 
-    public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase3");
+    public static string Amds => Path.Combine(Repository.Root, "AIMs", "TST", "Phase3");
 
     private static ControllerApi Api() =>
         new(Amds, Path.Combine(Amds, "no-settings.json"), new TestAims());

@@ -50,6 +50,46 @@ public sealed class JsiAimProcessor : IAimProcessor
     private readonly SemaphoreSlim _one = new(1, 1);
 
     private ApplicationState _state = new();
+    // WHAT THE APPLICATION IS IN NOW, in words (the scene it works on): the rules and the questions about its state say {scene}; it changes only when the application says that a command
+    // that opens, names or starts a scene was done.
+    private readonly Dictionary<string, string> _vars = new(StringComparer.Ordinal) { ["scene"] = "stage" };
+    private readonly Dictionary<string, Dictionary<string, string>> _awaiting = new(StringComparer.Ordinal);      // by command: what the application will be in if the command is done
+    private readonly Dictionary<string, string> _matchSets = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, PropertyQuestions.Asked> _propertyAsks = new(StringComparer.Ordinal);      // the listings asked for to answer a question about a property of a member of the scene, by command
+    private readonly HashSet<string> _sceneListings = new(StringComparer.Ordinal);      // the commands that ask for the list of the scenes, not for what is in one
+
+    private JsonNode Vars(JsonNode node)
+    {
+        switch (node)
+        {
+            case JsonObject o: { var copy = new JsonObject(); foreach (var (k, v) in o) copy[k] = v is null ? null : Vars(v); return copy; }
+            case JsonArray a: return new JsonArray(a.Select(x => x is null ? null : Vars(x)).ToArray());
+            case JsonValue v when v.TryGetValue<string>(out var s) && s.Contains('{'):
+                foreach (var (name, value) in _vars) s = s.Replace("{" + name + "}", value, StringComparison.Ordinal);
+                return JsonValue.Create(s)!;
+            default: return node.DeepClone();
+        }
+    }
+
+    private string? _focus; private int _focusAt;      // the sound the person last spoke of by name, and how many sounds were known then: "it" is that one until another sound is loaded
+
+    // THE SOUNDS KNOWN, in the order they were first seen: what is kept or in a scene, but not a scene.
+    private List<string> SoundsSeen(IReadOnlyDictionary<string, IReadOnlyList<string>> sets)
+    {
+        var members = sets.GetValueOrDefault("Members") ?? [];
+        var scenes = (sets.GetValueOrDefault("Present") ?? []).Except(members).ToHashSet(StringComparer.Ordinal);
+        var known = members.Concat(sets.GetValueOrDefault("Stored") ?? []).ToHashSet(StringComparer.Ordinal);
+        return _state.Seen.Concat(members).Distinct(StringComparer.Ordinal).Where(n => known.Contains(n) && !scenes.Contains(n)).ToList();
+    }
+
+    // THE NAMES, with Newest: the sound "it" and "that" mean - the one last spoken of, or else the one loaded last (in the scene or not).
+    private IReadOnlyDictionary<string, IReadOnlyList<string>> Sets()
+    {
+        var sets = new Dictionary<string, IReadOnlyList<string>>(_state.NameSets);
+        var sounds = SoundsSeen(sets);
+        sets["Newest"] = _focus is not null && sounds.Count <= _focusAt && sounds.Contains(_focus) ? [_focus] : sounds.Count == 0 ? [] : [sounds[^1]];
+        return sets;
+    }
     private readonly Dictionary<string, double> _memory = new(StringComparer.Ordinal);      // numbers a rule of the grammar keeps for the next request (the size of the room)
 
     // THE STATE KEPT FRESH (an application is connected: the setting RefreshState): the commands the guide gives for asking the application what it holds (StateRequests) are sent
@@ -72,18 +112,20 @@ public sealed class JsiAimProcessor : IAimProcessor
     public JsiAimProcessor(string instanceId, AimPortReader ports, JsiConfiguration configuration, StructuredModel? model)
     {
         InstanceId = instanceId;
+        if (configuration.Scene is { } startScene) _vars["scene"] = startScene;
+        RuleGrammar.Trace = m => AimLog.Write(instanceId, "[grammar] " + m);
         _configuration = configuration;
         _model = model;
         _requestIn = ports.Input("OSD-BTO-V1.5");
-        _responseIn = ports.InputOrDefault(Ucm, 1, "");
+        _responseIn = ports.InputOrDefault(configuration.CommandDataType, 1, "");   // the command Data Type is the application's: CAE-UCM for Audio Scene Management, MMM-UCM for the Secretary of a meeting
         _contextIn = ports.InputOrDefault(ContextDataType, 1, "");
         _schemasRoot = configuration.SchemasRoot;
-        _commandOut = ports.OutputOrDefault(Ucm, 1, "");
+        _commandOut = ports.OutputOrDefault(configuration.CommandDataType, 1, "");
         _hintOut = ports.Output("OSD-BTO-V1.5");
 
         if (configuration.ContextFile is { } guideFile && File.Exists(guideFile))
         {
-            try { _guide = ApplicationContext.Parse(File.ReadAllText(guideFile)); }
+            try { _guide = ApplicationContext.Parse(File.ReadAllText(guideFile)); SeedMemory(_guide); }
             catch (Exception e) when (e is JsonException or FormatException or IOException) { _guide = null; }
         }
         if (configuration.CommandSchemaUri.Length > 0 && !configuration.CommandSchemaUri.TrimStart().StartsWith("/*", StringComparison.Ordinal))
@@ -129,6 +171,7 @@ public sealed class JsiAimProcessor : IAimProcessor
                         _stale = true;
                         if (_chain < 0) { command = StateRequest(_chain = 0); asked = command is not null; if (!asked) _chain = -1; }
                     }
+                    else if (outcome == ResponseKind.Foreign) _stale = true;          // the person's user agent changed what the application holds (a sound loaded): the next request is worked out from the state as it is then
                     else if (outcome == ResponseKind.State && _chain >= 0)
                     {
                         if (++_chain < _guide!.StateRequests.Count) { command = StateRequest(_chain); asked = command is not null; }
@@ -206,9 +249,22 @@ public sealed class JsiAimProcessor : IAimProcessor
             var parsed = ApplicationContext.Parse(json);
             if (parsed.Root["Header"]?.GetValue<string>() != "MMC-APC-V2.5") return;
             _guide = parsed;
+            SeedMemory(parsed);
             _stale = true;
         }
         catch (Exception e) when (e is JsonException or FormatException or InvalidOperationException) { }
+    }
+
+    // THE NAMES OF THE SCENES the guide asks for (its StateRequests that list a scene by its name): the application lists the scene's object among what it keeps, but it is not a sound.
+    private IReadOnlyCollection<string> SceneIds() =>
+        _guide is null ? [] : [_vars["scene"]];
+
+    // WHAT THE RULES KEEP, before any of them has kept it (the listener at the centre, facing ahead): the Memory of the guide.
+    private void SeedMemory(ApplicationContext guide)
+    {
+        if (guide.Root["Memory"] is not JsonObject firsts) return;
+        foreach (var entry in firsts)
+            if (entry.Value is JsonValue jv && double.TryParse(jv.ToJsonString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var first)) _memory.TryAdd(entry.Key, first);
     }
 
     private static readonly HashSet<string> Fillers = new(StringComparer.OrdinalIgnoreCase)
@@ -217,6 +273,9 @@ public sealed class JsiAimProcessor : IAimProcessor
     // A NOISE THE RECOGNISER WROTE WORDS FOR: a lone word or a filler it makes up of silence ("you", "thank you for watching"), a lone word of fewer than four letters. A longer lone word ("undo", "stop") is a command.
     public static bool IsNoise(string text)
     {
+        // A caption of a sound, as the recogniser writes it for what is not speech: *snoring*, (water splashing), [typing sounds], [Click].
+        var trimmed = text.Trim().TrimEnd('.');
+        if (trimmed.Length > 1 && ((trimmed[0] == '*' && trimmed[^1] == '*') || (trimmed[0] == '[' && trimmed[^1] == ']') || (trimmed[0] == '(' && trimmed[^1] == ')'))) return true;
         var plain = new string(text.Where(c => char.IsLetterOrDigit(c) || c == ' ' || c == (char)39).ToArray()).Trim();
         if (plain.Length == 0) return true;
         if (Fillers.Contains(plain)) return true;
@@ -225,12 +284,42 @@ public sealed class JsiAimProcessor : IAimProcessor
     }
 
     // WHAT IS SAID WHEN A REQUEST DID NOT BECOME A COMMAND: never a language model's account of it, but the words heard and what to try, with the names of what the application holds.
+    // What is asked when a request says only part of what is needed (the Asks of the guide that carry a Pattern), or null.
+    private static string? PatternQuestion(string lower, ApplicationContext guide)
+    {
+        foreach (var (pattern, unless, say) in guide.PatternAsks)
+            try { if (Regex.IsMatch(lower, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(100)) && (unless is null || !Regex.IsMatch(lower, unless, RegexOptions.None, TimeSpan.FromMilliseconds(100)))) return say; }
+            catch (ArgumentException) { }
+        return null;
+    }
+
+    // The sentence of the application that a request is nearest to, if it is near: the phrases of its shortcuts, by the share of the pairs of letters they have in common (Dice), at least 0.8.
+    public static string? NearestSentence(string request, ApplicationContext guide)
+    {
+        static HashSet<string> Pairs(string t) { t = t.ToLowerInvariant(); var set = new HashSet<string>(StringComparer.Ordinal); for (var i = 0; i + 1 < t.Length; i++) set.Add(t.Substring(i, 2)); return set; }
+        var mine = Pairs(request);
+        if (request.Length < 6 || mine.Count == 0) return null;
+        string? best = null; var score = 0.0;
+        foreach (var shortcut in (guide.Root["Shortcuts"] as JsonArray)?.OfType<JsonObject>() ?? [])
+            foreach (var phrase in (shortcut["Phrases"] as JsonArray)?.Select(x => (string?)x).OfType<string>() ?? [])
+            {
+                var theirs = Pairs(phrase);
+                var dice = 2.0 * mine.Intersect(theirs).Count() / (mine.Count + theirs.Count);
+                if (dice > score) { score = dice; best = phrase; }
+            }
+        return score >= 0.8 ? best : null;
+    }
+
     private string DidNotUnderstand(string text, ApplicationContext guide)
     {
-        var names = _state.NameSets;
-        var one = (names.GetValueOrDefault("Latest") ?? []).LastOrDefault() ?? (names.GetValueOrDefault("Members") ?? []).FirstOrDefault() ?? (names.GetValueOrDefault("Stored") ?? []).FirstOrDefault(n => !(names.GetValueOrDefault("Present") ?? []).Contains(n));
-        var tryLine = one is null ? guide.Try : $"Try for example: put the {one} at x 2, y 1, z 0, move the {one} one metre ahead, place a room of 4 by 4 metres, or what is in the scene.";
-        return Said($"I did not understand: {text.Trim().TrimEnd('.')}. {tryLine}");
+        var names = Sets();
+        static bool IsASound(string n) => !n.StartsWith("scene", StringComparison.OrdinalIgnoreCase) && !n.StartsWith("stage", StringComparison.OrdinalIgnoreCase);      // the scene itself is not a sound to suggest
+        var one = (names.GetValueOrDefault("Latest") ?? []).LastOrDefault(IsASound) ?? (names.GetValueOrDefault("Members") ?? []).FirstOrDefault(IsASound) ?? (names.GetValueOrDefault("Stored") ?? []).FirstOrDefault(n => IsASound(n) && !(names.GetValueOrDefault("Present") ?? []).Contains(n));
+        var tryLine = one is null ? guide.Try : $"Try: put the {one} at x 2, y 1, or place a room of 4 by 4 metres.";      // short: what is said is heard to its end
+        // What was heard is told back, and, if it is near enough a sentence the application knows (a listing it answers to), that sentence: "display the acoustic provile" is one letter from one.
+        var heard = text.Trim().TrimEnd('?', '.', '!');
+        if (NearestSentence(heard, guide) is { } near) return Said($"I did not understand \"{heard}\". Did you mean: {near}?");
+        return Said($"I did not understand \"{heard}\". {tryLine}");
     }
 
     // What the interface itself says to the person, as it is: said as it is where the dialogue is not asked (SayPlainly).
@@ -244,6 +333,18 @@ public sealed class JsiAimProcessor : IAimProcessor
     // The identifier the application knows a command by (the property the guide names as Earlier: the UserCommandID).
     private string? IdOf(JsonNode? command) => (command as JsonObject)?[_guide?.Earlier is { Length: > 0 } key ? key : "UserCommandID"] is JsonValue v && v.TryGetValue<string>(out var id) && id.Length > 0 ? id : null;
 
+    // The listing of the open scene the guide gives among its state requests, completed and checked as any command is; it asks for the facts a question about a property is answered from.
+    private JsonObject? SceneListingCommand(ApplicationContext guide)
+    {
+        if (_commandCheck is null || !_commandCheck.Available || _library is null) return null;
+        var request = guide.StateRequests.OfType<JsonObject>().FirstOrDefault(r => r["UserCommandRQ"]?["ListedObjects"] is JsonObject l && (string?)l["Kind"] == "Audio Scene" && l["ObjectID"] is not null);
+        if (request is null) return null;
+        var whole = new ModelView(_library, guide, _state.NameSets);
+        if (whole.Build(_commandCheck.Uri) is null) return null;
+        var completed = whole.Complete(Vars(request));
+        return _commandCheck.Violations(completed.ToJsonString()) is { Count: 0 } ? completed as JsonObject : null;
+    }
+
     // The question about the state that the guide gives at that place, as a command of the application, completed and checked as any command is;
     // it is not remembered as one of the person's.
     private JsonObject? StateRequest(int index)
@@ -252,7 +353,7 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (_guide is null || _commandCheck is null || _library is null || index >= _guide.StateRequests.Count) return null;
         var view = new ModelView(_library, _guide, _state.NameSets);
         if (view.Build(_commandCheck.Uri) is null) return null;
-        var completed = view.Complete(_guide.StateRequests[index].DeepClone());
+        var completed = view.Complete(Vars(_guide.StateRequests[index]));
         if (_commandCheck.Violations(completed.ToJsonString()) is not { Count: 0 }) return null;
         if (IdOf(completed) is not { } id) return null;
         _stateAsked.Add(id);
@@ -267,16 +368,24 @@ public sealed class JsiAimProcessor : IAimProcessor
             return (null, "No command was formed: this JSON Interface has no application to serve (its Access names no schemas and no guide).");
         var guide = _guide!;
 
+        // A QUESTION ABOUT A PROPERTY of a member of the scene ("what is the duration of clip777?"): the application is asked for the listing of its scene and the one fact asked for is said.
+        if (_configuration.UsesGrammar && PropertyQuestions.Match(text, guide, _state) is { } property && SceneListingCommand(guide) is { } listing && IdOf(listing) is { Length: > 0 } askedId)
+        {
+            _propertyAsks[askedId] = property; _requestOf[askedId] = text;
+            return (listing, null);
+        }
+
         // A change by an amount the person did not give is asked for, not guessed.
-        if (NeedsNumber(text, guide)) return (null, "No command was formed. " + guide.NeedsNumberQuestion);
+        if (NeedsNumber(text, guide)) return (null, Said(guide.NeedsNumberQuestion));
 
         // A request that is not for the application, or that works on an object and names none that the application has, is answered without the model.
-        if (RequestGuards.Refused(text, guide) is { } refusal) return (null, "No command was formed. " + refusal);
-        var names = _state.NameSets;
-        var forTheLatest = _configuration.UsesGrammar && (names.GetValueOrDefault("Latest") ?? []).Count > 0
-                           && RuleGrammar.Match(text, guide.Rules.Where(r => r["Implicit"] is not null).ToList(), names, _state) is not null;      // "two metres to the right": about the sound just loaded
-        if (!forTheLatest && RequestGuards.NamesNothing(text, guide, RequestGuards.Asked(text, guide, names), (names.GetValueOrDefault("Present") ?? []).Concat(names.GetValueOrDefault("Stored") ?? []).ToList()) is { } unnamed)
-            return (null, "No command was formed. " + unnamed);
+        if (RequestGuards.Refused(text, guide) is { } refusal) return (null, Said(refusal));
+        if (_configuration.UsesGrammar && PatternQuestion(text.ToLowerInvariant(), guide) is { } half) return (null, Said(half));      // two coordinates and not the third: the third is asked for
+
+        var names = Sets();
+        var forTheLatest = _configuration.UsesGrammar && RuleGrammar.Match(text, guide.Rules, names, _state, strings: _vars) is not null;      // "two metres to the right", "put it at x 1, y 3": a rule has the sound ("it", the newest) - nothing is asked
+        if (!forTheLatest && RequestGuards.NamesNothing(text, guide, RequestGuards.Asked(text, guide, names), (names.GetValueOrDefault("Members") ?? []).Concat(names.GetValueOrDefault("Present") ?? []).Concat(names.GetValueOrDefault("Stored") ?? []).Distinct(StringComparer.Ordinal).ToList()) is { } unnamed)
+            return (null, Said(unnamed));
 
         if (_commandCheck is null || !_commandCheck.Available || _library is null)
             return (null, "No command was formed: the schema of the commands of the application is not available, so a command cannot be checked.");
@@ -287,12 +396,17 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (view.Build(_commandCheck.Uri) is null)
             return (null, "No command was formed: the schema of the commands of the application cannot be read.");
 
+        // WHAT THE GRAMMAR AND THE SHORTCUTS GIVE IS COMPLETED WITH THE WHOLE SCHEMA, not with the part the words of the request point to (that is for the model): "pluto at the centre" has no verb.
+        var whole = new ModelView(_library, guide, _state.NameSets);
+        if (whole.Build(_commandCheck.Uri) is null) whole = view;
+
         // A request that is always the same command is that command, whatever the model would make of it.
         if (guide.ShortcutFor(text) is { } shortcut)
         {
-            var completed = view.Complete(shortcut.DeepClone());
+            var completed = whole.Complete(Vars(shortcut));
             if (_commandCheck.Violations(completed.ToJsonString()) is { Count: 0 })
             {
+                if (completed["UserCommandRQ"]?["ListedObjects"] is JsonObject asked && (string?)asked["Kind"] == "Audio Scene" && asked["ObjectID"] is null && IdOf(completed) is { Length: > 0 } listId) _sceneListings.Add(listId);
                 if (completed["UserCommandRQ"]?["ListedObjects"] is null) Remember(completed, text);
                 else if (IdOf(completed) is { Length: > 0 } listingId) _requestOf[listingId] = text;      // its answer is told, but a listing is not one of the person's commands to be undone
                 return (completed, null);
@@ -302,15 +416,18 @@ public sealed class JsiAimProcessor : IAimProcessor
         // THE GRAMMAR OF THE APPLICATION FIRST (no language model): a request one of its rules matches is a command at once, checked against the schema as any is.
         var watch = System.Diagnostics.Stopwatch.StartNew();
         var last = _sent.LastOrDefault(x => x.Id.Length > 0).Id;
-        if (_configuration.UsesGrammar && guide.Rules.Count > 0 && RuleGrammar.Match(text, guide.Rules, _state.NameSets, _state, string.IsNullOrEmpty(last) ? null : last, _memory) is { } ruled)
+        _matchSets.Clear();
+        JsonObject? MatchOne(string words) => RuleGrammar.Match(words, guide.Rules, Sets(), _state, string.IsNullOrEmpty(last) ? null : last, _memory, n => { _focus = n; _focusAt = SoundsSeen(_state.NameSets).Count; }, _vars, (k, v) => _matchSets[k] = v);
+        if (_configuration.UsesGrammar && guide.Rules.Count > 0 && (MatchOne(text) ?? Compound(text, MatchOne)) is { } ruled)
         {
-            var completed = view.Complete(ruled);
+            var completed = whole.Complete(ruled);
             var violated = _commandCheck.Violations(completed.ToJsonString());
-            if (violated.Count > 0) AimLog.Write(InstanceId, "[grammar] the command of a rule does not conform: " + string.Join("; ", violated.Take(3)));
+            if (violated.Count > 0) AimLog.Write(InstanceId, "[grammar] the command of a rule does not conform: " + string.Join("; ", violated.Take(3)) + " | " + completed.ToJsonString());
             if (violated.Count == 0)
             {
                 AimLog.Write(InstanceId, $"[timing] understood by the grammar: {watch.ElapsedMilliseconds} ms");
                 Remember(completed, text);
+                if (_matchSets.Count > 0 && IdOf(completed) is { Length: > 0 } sceneCommand) _awaiting[sceneCommand] = new Dictionary<string, string>(_matchSets);
                 return (completed, null);
             }
         }
@@ -319,6 +436,7 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (_configuration.UsesGrammar && guide.Rules.Count > 0)
         {
             var lower = text.ToLowerInvariant();
+            if (PatternQuestion(lower, guide) is { } partial) return (null, Said(partial));
             if (guide.Asks.FirstOrDefault(a => a.Words.Any(w => lower.Contains(w.ToLowerInvariant()))) is { Say.Length: > 0 } ask) return (null, Said(ask.Say));
             var known = guide.Triggers.SelectMany(t => t.Words).Concat(_state.NameSets.Values.SelectMany(v => v)).Where(w => w.Length > 2 && !w.StartsWith("{"))
                              .Any(w => Regex.IsMatch(lower, @"\b" + Regex.Escape(w.Trim().ToLowerInvariant())));
@@ -504,12 +622,23 @@ public sealed class JsiAimProcessor : IAimProcessor
         if (instance is null || IdOf(instance) is not { } id)
             return "The application sent a response that this interface cannot read.";
 
+        // A COMMAND THAT CHANGES WHAT THE APPLICATION IS IN (a scene opened, named, started): it counts only when the application says it was done.
+        if (_awaiting.TryGetValue(id, out var becomes) && instance["UserCommandRS"]?["Actions"] is JsonArray done
+            && done.OfType<JsonObject>().Any(a => (string?)a["Outcome"] == "Done" && ((string?)a["Action"] is "NewScene" or "OpenedScene" or "NamedScene")))
+        {
+            _awaiting.Remove(id);
+            foreach (var (variable, value) in becomes) _vars[variable] = value;
+            AimLog.Write(InstanceId, "[scene] the application is now in " + _vars["scene"]);
+            _focus = null; _stale = true;
+        }
+        while (_awaiting.Count > 20) _awaiting.Remove(_awaiting.Keys.First());
+
         var known = _stateAsked.Contains(id) || _requestOf.ContainsKey(id) || _sent.Any(s => s.Id == id);
         if (!known)
         {
             // An answer to a command that this interface did not send was asked for by the application's user agent: it is not for the person. A listing in it is the state.
             outcome = ResponseKind.Foreign;
-            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide, SceneIds()).OnTopOf(_state).Without(SceneIds());
             return null;
         }
 
@@ -539,29 +668,58 @@ public sealed class JsiAimProcessor : IAimProcessor
         }
     }
 
+    // TWO THINGS SAID IN ONE SENTENCE ("pippo from 0 to 5 and pluto from 5 to 10"): when no rule takes the whole, and each part is a command of its own that changes or moves objects, they are one command of both.
+    private static JsonObject? Compound(string text, Func<string, JsonObject?> matchOne)
+    {
+        var parts = Regex.Split(text, @"\s+(?:and then|and|then)\s+|\s*;\s*").Where(p => p.Trim().Length > 0).ToList();
+        if (parts.Count < 2 || parts.Count > 6) return null;
+        JsonObject? first = null; JsonArray? objects = null; string? key = null;
+        foreach (var part in parts)
+        {
+            if (matchOne(part.Trim()) is not { } one || one["UserCommandRQ"] is not JsonObject rq || rq.Count != 1) return null;
+            var (name, body) = rq.First();
+            if (body is not JsonObject list || list.Count != 1 || list["Objects"] is not JsonArray items) return null;
+            if (first is null) { first = one; key = name; objects = items; continue; }
+            if (name != key) return null;
+            foreach (var item in items.ToList()) objects!.Add(item?.DeepClone());
+        }
+        return first;
+    }
+
     private string? Tell(JsonObject instance, string id, out ResponseKind outcome)
     {
         outcome = ResponseKind.Told;
         if (_stateAsked.Remove(id))
         {
             outcome = ResponseKind.State;
-            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            if (_guide is not null && ApplicationState.IsListing(instance, _guide)) _state = ApplicationState.Read(instance, _guide, SceneIds()).OnTopOf(_state).Without(SceneIds());
             return null;
         }
+        if (_propertyAsks.Remove(id, out var property) && _guide is not null && ApplicationState.IsListing(instance, _guide))
+        {
+            _state = ApplicationState.Read(instance, _guide, SceneIds()).OnTopOf(_state).Without(SceneIds());
+            return ResponseFacts.SayAsItIs + PropertyQuestions.Answer(property, _state, _guide);
+        }
+        if (_configuration.SaysPlainly && instance["UserCommandRS"]?["ListedObjects"] is JsonArray profiles && profiles.OfType<JsonObject>().Any(x => (string?)x["Kind"] == "Acoustic Profile")) return ResponseFacts.SayAsItIs + "The Acoustic Profile is shown in the panel.";
         if (_guide is null) return "The application sent a response, but this interface has no guide to tell it.";
         if (_responseCheck is { Available: true } && _responseCheck.Violations(instance.ToJsonString()) is { Count: > 0 } violations)
             return "The application sent a response that does not conform to its own schema: " + string.Join("; ", violations.Take(3)) + ".";
 
         var asked = _requestOf.TryGetValue(id, out var r) ? r : _sent.FirstOrDefault(s => s.Id == id).Request;
         // WHAT IS IN THE SCENE IS SAID AS IT IS (no language model re-tells a listing): the names the application listed, with where each is.
+        if (_configuration.SaysPlainly && !ApplicationState.IsListing(instance, _guide) && _sceneListings.Remove(id)) return ResponseFacts.SayAsItIs + "No scene is saved yet.";     // nothing listed: nothing kept
         if (_configuration.SaysPlainly && ApplicationState.IsListing(instance, _guide))
         {
-            _state = ApplicationState.Read(instance, _guide).OnTopOf(_state);
+            var incoming = ApplicationState.Read(instance, _guide, SceneIds());
+            _state = incoming.OnTopOf(_state).Without(SceneIds());
+            if (_sceneListings.Remove(id))          // "list my scenes": the scenes the application keeps, and the one it is in
+                return ResponseFacts.SayAsItIs + (incoming.Saved.Count == 0 ? "No scene is saved yet." : "Saved scenes: " + string.Join(", ", incoming.Saved) + ". Open: " + _vars["scene"] + ".");
             var parts = new List<string>();
             foreach (var scene in _state.Scenes.Where(sc => sc.Members.Count > 0))
                 parts.Add("in the scene " + string.Join(", ", scene.Members.Select(m => m.Name + (m.Facts.FirstOrDefault().Value is { Length: > 0 } where ? " " + where.Replace("[", "").Replace("]", "") : ""))));
+            if (!_state.Scenes.Any(sc => sc.Members.Count > 0)) parts.Add("nothing is in the scene");
             var kept = _state.Stored.Where(n => !_state.Scenes.Any(sc => sc.Name == n || sc.Members.Any(m => m.Name == n))).ToList();
-            if (kept.Count > 0) parts.Add("kept and not in the scene: " + string.Join(", ", kept));
+            if (kept.Count > 0) parts.Add("kept and not in the scene: " + string.Join(", ", kept.Take(10)) + (kept.Count > 10 ? $" and {kept.Count - 10} more" : ""));
             return ResponseFacts.SayAsItIs + (parts.Count == 0 ? "There are no sounds in the scene and none kept yet." : char.ToUpperInvariant(parts[0][0]) + string.Join("; ", parts)[1..] + ".");
         }
         var told = ResponseFacts.Tell(instance, _guide, asked, _configuration.SaysPlainly);

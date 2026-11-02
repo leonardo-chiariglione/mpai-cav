@@ -16,7 +16,7 @@
       "type": "string",
       "const": "PTF-ERR-V1.0"
     },
-    "MINstance": {
+    "MInstanceID": {
       "type": "string"
     },
     "ErrorID": {

@@ -90,6 +90,24 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     private void Save(SourceInfo info) =>
         File.WriteAllText(Path.Combine(Folder(info.Source), "source.json"), JsonSerializer.Serialize(info));
 
+    // WHAT LEFT ACCESS IS NOT FORGOTTEN: a Source is never brought back to an earlier state, also when an item was deleted or the Source removed (and made again). The ledger keeps, per Source, the last
+    // Version it had and, per item, the SHA-256 of what it held; data with one of those is refused, and a Source made again goes on from its Version.
+    private sealed record Ledger(Dictionary<string, long> Versions, Dictionary<string, List<string>> Hashes);
+    private string LedgerFile => Path.Combine(root, "retired.json");
+    private Ledger LoadLedger() => File.Exists(LedgerFile) ? JsonSerializer.Deserialize<Ledger>(File.ReadAllText(LedgerFile)) ?? new(new(), new()) : new(new(), new());
+    private void SaveLedger(Ledger ledger) => File.WriteAllText(LedgerFile, JsonSerializer.Serialize(ledger));
+    private static string LedgerKey(string source, string key) => source + (char)9 + key;
+    private static void Retire(Ledger ledger, string source, string key, ItemInfo item)
+    {
+        var k = LedgerKey(source, key);
+        ledger.Hashes[k] = (ledger.Hashes.GetValueOrDefault(k) ?? []).Concat(item.Earlier ?? []).Append(item.Sha256 ?? "").Where(h => h.Length > 0)
+            .Select(h => h.ToUpperInvariant()).Distinct().ToList();
+    }
+
+    // The Controller wrote the file, and it is read, not written, by whoever reads it (Access_Path): a file is made writable only to be replaced or deleted.
+    private static void Writable(string file) { if (File.Exists(file)) File.SetAttributes(file, FileAttributes.Normal); }
+    private static string HashFile(string path) { using var s = File.OpenRead(path); return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(s)); }
+
     // ---- the Controller's: creating a Source and writing it -----------------------------
 
     public AccessOutcome Create(string source)
@@ -99,7 +117,7 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         {
             if (Info(source) is not null) return AccessOutcome.Exists;
             Directory.CreateDirectory(Folder(source));
-            Save(new SourceInfo(source, Controller, 0));
+            Save(new SourceInfo(source, Controller, LoadLedger().Versions.GetValueOrDefault(source, 0)));      // a Source made again goes on from the Version it had
             return AccessOutcome.OK;
         }
     }
@@ -109,6 +127,7 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     public AccessOutcome Put(string source, string key, byte[] data, string category = "Data", IReadOnlyCollection<string>? readers = null) =>
         Write(source, key, Hash(data), (info, earlier) =>
         {
+            Writable(Item(source, key) + ".data");
             File.WriteAllBytes(Item(source, key) + ".data", data);
             File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Sha256: Hash(data), Earlier: earlier)));
             return AccessOutcome.OK;
@@ -117,8 +136,9 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     // The same, the data being a file (a large item is never held in memory): it is copied into the Source. sha256: the hash
     // the file was checked to have.
     public AccessOutcome PutFile(string source, string key, string path, string category = "Data", IReadOnlyCollection<string>? readers = null, string? sha256 = null, string from = "") =>
-        Write(source, key, sha256, (info, earlier) =>
+        Write(source, key, sha256 ??= HashFile(path), (info, earlier) =>      // a hash not given is the file's own: what was held before is never put back
         {
+            Writable(Item(source, key) + ".data");
             File.Copy(path, Item(source, key) + ".data", true);
             File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Earlier: earlier, From: from), Item(source, key) + ".data", sha256)));
             return AccessOutcome.OK;
@@ -131,8 +151,11 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         {
             var from = Item(fromSource, fromKey) + ".data";
             if (!File.Exists(from)) return AccessOutcome.NotFound;
+            Writable(Item(source, key) + ".data");
             File.Copy(from, Item(source, key) + ".data", true);
-            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Earlier: earlier), Item(source, key) + ".data", sha256)));
+            // where the Controller obtained it: where the item it is copied from was obtained
+            var origin = File.Exists(Item(fromSource, fromKey) + ".info") ? JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(Item(fromSource, fromKey) + ".info"))!.From : "";
+            File.WriteAllText(Item(source, key) + ".info", JsonSerializer.Serialize(Checked(new ItemInfo(key, Controller, now(), info.Version, category, readers?.ToList(), Earlier: earlier, From: origin), Item(source, key) + ".data", sha256)));
             return AccessOutcome.OK;
         });
 
@@ -205,6 +228,10 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         Write(source, key, null, (_, _) =>
         {
             if (!File.Exists(Item(source, key) + ".data")) return AccessOutcome.NotFound;
+            var ledger = LoadLedger();
+            if (File.Exists(Item(source, key) + ".info")) Retire(ledger, source, key, JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(Item(source, key) + ".info"))!);
+            SaveLedger(ledger);
+            Writable(Item(source, key) + ".data");
             File.Delete(Item(source, key) + ".data");
             File.Delete(Item(source, key) + ".info");
             return AccessOutcome.OK;
@@ -219,6 +246,12 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         {
             if (Info(source) is not { } info) return AccessOutcome.NotFound;
             var items = List(source);
+            var ledger = LoadLedger();
+            ledger.Versions[source] = info.Version;
+            foreach (var infoFile in Directory.EnumerateFiles(Folder(source), "*.info"))
+                if (JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(infoFile)) is { } gone) Retire(ledger, source, gone.Key, gone);
+            SaveLedger(ledger);
+            foreach (var file in Directory.EnumerateFiles(Folder(source), "*", SearchOption.AllDirectories)) Writable(file);
             Directory.Delete(Folder(source), true);
             var by = Path.Combine(root, "by-hash");
             if (Directory.Exists(by))
@@ -246,6 +279,7 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
         {
             if (Info(source) is not { } info) return AccessOutcome.NotFound;
             List<string>? earlier = null;
+            if (hash is not null && LoadLedger().Hashes.GetValueOrDefault(LedgerKey(source, key)) is { } retired && retired.Contains(hash.ToUpperInvariant())) return AccessOutcome.Refused;   // a step back, past a deletion
             var file = Item(source, key) + ".info";
             if (File.Exists(file))
             {
@@ -286,7 +320,9 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     public AccessOutcome LocalPath(string source, string key, out string path)
     {
         path = Item(source, key) + ".data";
-        return File.Exists(path) ? AccessOutcome.OK : AccessOutcome.NotFound;
+        if (!File.Exists(path)) return AccessOutcome.NotFound;
+        File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.ReadOnly);     // the file is read, not written (Storage 6.2)
+        return AccessOutcome.OK;
     }
 
     public IReadOnlyList<string> List(string source, string prefix = "")
@@ -329,6 +365,20 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
             var more = info.Readers.Union(readers).ToList();
             if (more.Count != info.Readers.Count) File.WriteAllText(file, JsonSerializer.Serialize(info with { Readers = more }));
             return AccessOutcome.OK;
+        }
+    }
+
+    // The Controller takes a reader away from every item of a Source: data an AIM was not to be given (its partner is missing) is not read by it.
+    public void Withdraw(string source, string reader)
+    {
+        lock (one)
+        {
+            if (Info(source) is null) return;
+            foreach (var file in Directory.EnumerateFiles(Folder(source), "*.info", SearchOption.AllDirectories))
+            {
+                if (JsonSerializer.Deserialize<ItemInfo>(File.ReadAllText(file)) is not { Readers: { } named } info || !named.Contains(reader)) continue;
+                File.WriteAllText(file, JsonSerializer.Serialize(info with { Readers = named.Where(r => r != reader).ToList() }));
+            }
         }
     }
 

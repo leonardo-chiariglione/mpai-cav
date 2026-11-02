@@ -21,8 +21,17 @@ public sealed class HttpAimSource : IAimSource, IDisposable
     // it asks the licence for. The Store checks them; it issues nothing to a caller it cannot authenticate.
     public sealed record AimCaller(JsonObject Cii, JsonObject Credential, IReadOnlyList<AIF.Trust.PtfCredential.Link> Chain, System.Security.Cryptography.ECDsa Key);
 
-    public HttpAimSource(string storeUrl, HttpMessageHandler? handler = null, string? trustAnchorId = null, string? controllerId = null, AimCaller? caller = null)
+    // storeKeys: the keys of the Store this Controller knows (by KeyID). Given, the key that signs the answers and the AIM Licences of the Store is one of these - never one the Store gives of itself,
+    // which would prove nothing; not given, the Store is asked for its key (for experiments only).
+    private readonly Func<string, System.Security.Cryptography.ECDsa?>? pinnedKeys;
+
+    public HttpAimSource(string storeUrl, HttpMessageHandler? handler = null, string? trustAnchorId = null, string? controllerId = null, AimCaller? caller = null,
+                         Func<string, System.Security.Cryptography.ECDsa?>? storeKeys = null)
     {
+        // ALL COMMUNICATION WITH THE STORE IS OVER HTTPS (Store API 5). The one exception is a Store on the same machine (a loopback address), which a developer runs to try the Service.
+        if (!Uri.TryCreate(storeUrl, UriKind.Absolute, out var parsed) || (parsed.Scheme != Uri.UriSchemeHttps && !(parsed.Scheme == Uri.UriSchemeHttp && parsed.IsLoopback)))
+            throw new ArgumentException($"{storeUrl}: all communication with the MPAI Store is over HTTPS.", nameof(storeUrl));
+        pinnedKeys = storeKeys;
         this.trustAnchorId = trustAnchorId; this.controllerId = controllerId; this.caller = caller;
         http = handler is null ? new HttpClient() : new HttpClient(handler);
         http.BaseAddress = new Uri(storeUrl.TrimEnd('/') + "/");
@@ -43,9 +52,24 @@ public sealed class HttpAimSource : IAimSource, IDisposable
         catch (TaskCanceledException) { Reachable = false; return null; }
     }
 
+    // The version the Store published each AIM's Metadata as, when this source obtained it: what the Controller holds, and what the Store is asked to verify its Implementations against.
+    private readonly Dictionary<string, string> heldVersions = [];
+
     public AimPackage? Get(string aimName)
     {
-        var l3 = Text($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}");
+        string? l3 = null;
+        try
+        {
+            using var answer = http.GetAsync($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}").GetAwaiter().GetResult();
+            Reachable = true;
+            if (answer.IsSuccessStatusCode)
+            {
+                l3 = answer.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                if (answer.Headers.TryGetValues("MPAI-Store-Version", out var published) && published.FirstOrDefault() is { Length: > 0 } number) heldVersions[aimName] = number;
+            }
+        }
+        catch (HttpRequestException) { Reachable = false; }
+        catch (TaskCanceledException) { Reachable = false; }
         if (l3 is null) return null;
         var binaries = Text($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}/implementations") is { } list
             ? ((JsonArray?)JsonNode.Parse(list)?["binaries"] ?? []).Select(b => (string)b!).ToList() : [];
@@ -58,7 +82,9 @@ public sealed class HttpAimSource : IAimSource, IDisposable
         try
         {
             var nonce = Guid.NewGuid().ToString("N");
-            using var content = new StringContent(new JsonObject { ["BinaryName"] = binaryName, ["Fingerprint"] = fingerprint, ["Nonce"] = nonce }.ToJsonString(), Encoding.UTF8, "application/json");
+            var question = new JsonObject { ["BinaryName"] = binaryName, ["Fingerprint"] = fingerprint, ["Nonce"] = nonce };
+            if (heldVersions.TryGetValue(aimName, out var held)) question["Version"] = held;           // verified for the version this Controller holds
+            using var content = new StringContent(question.ToJsonString(), Encoding.UTF8, "application/json");
             using var answer = http.PostAsync($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}/verify", content).GetAwaiter().GetResult();
             Reachable = true;
             if (!answer.IsSuccessStatusCode) return VerifyResult.NotRecorded;
@@ -67,10 +93,19 @@ public sealed class HttpAimSource : IAimSource, IDisposable
             if (JsonNode.Parse(answer.Content.ReadAsStringAsync().GetAwaiter().GetResult()) is not JsonObject said) return VerifyResult.NotRecorded;
             if (AIF.Trust.PtfSignature.Verify(said, id => StoreKey(id)) != AIF.Trust.PtfSignature.Outcome.Valid) return VerifyResult.NotRecorded;
             if ((string?)said["AIMName"] != aimName || (string?)said["BinaryName"] != binaryName || (string?)said["Fingerprint"] != fingerprint || (string?)said["Nonce"] != nonce) return VerifyResult.NotRecorded;
+            if (heldVersions.TryGetValue(aimName, out var asked) && (string?)said["Version"] != asked) return VerifyResult.NotRecorded;
             return Enum.TryParse<VerifyResult>((string?)said["Result"], out var result) ? result : VerifyResult.NotRecorded;
         }
         catch (HttpRequestException) { Reachable = false; return VerifyResult.NotRecorded; }       // a Store that cannot be asked has not said it is the same
         catch (TaskCanceledException) { Reachable = false; return VerifyResult.NotRecorded; }
+    }
+
+    // The price with the mark-up (STR-9), asked before the AIM Licence is: the Payment the Store states, signed by it; null where the AIM has no price, the Store gives none, or its answer is not signed by its key.
+    public JsonObject? Quote(string aimName)
+    {
+        if (Text($"MPAI/Store/L3/{Uri.EscapeDataString(aimName)}/quote") is not { } text || JsonNode.Parse(text) is not JsonObject said) return null;
+        if (AIF.Trust.PtfSignature.Verify(said, id => StoreKey(id)) != AIF.Trust.PtfSignature.Outcome.Valid || (string?)said["AIMName"] != aimName) return null;
+        return said["Payment"] as JsonObject;
     }
 
     // MPAI_AIFS_GetLicence over HTTPS: the AIM Licence the Store issues for the AIM to the holder of the Trust Anchor (the same one when asked again); null where the AIM has no
@@ -107,6 +142,7 @@ public sealed class HttpAimSource : IAimSource, IDisposable
     // The public key of the Store a KeyID of an AIM Licence names, for a Controller to check the signature with; null where the Store does not have it or cannot be reached.
     public System.Security.Cryptography.ECDsa? StoreKey(string keyId)
     {
+        if (pinnedKeys is not null) return pinnedKeys(keyId);
         if (keys.TryGetValue(keyId, out var known)) return known;
         if (Text($"MPAI/Store/Key/{Uri.EscapeDataString(keyId)}") is not { } text || (string?)JsonNode.Parse(text)?["publicKey"] is not { } hex) return null;
         var key = System.Security.Cryptography.ECDsa.Create();

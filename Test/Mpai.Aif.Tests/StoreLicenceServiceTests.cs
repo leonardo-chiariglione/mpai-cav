@@ -105,6 +105,37 @@ public class StoreLicenceServiceTests
         Assert.NotEqual(id, (string?)JsonNode.Parse(other.Body)!["AIMLicenceID"]);
     }
 
+    // STR-9: the Store makes the price with its mark-up known before it issues the AIM Licence, signed; and a Store that limits the Controllers of a licensee (the offer's MaxControllers) refuses one more.
+    [SkippableFact]
+    public async Task ThePriceIsQuotedBeforeTheLicenceAndTheOffersLimitOnControllersIsKept()
+    {
+        using var store = new StoreTests.RunningStore("--MarkupPercent 10");
+        var (aim, _) = await Publish(store, AimLicenceSchemaTests.Offer());                                // MaxControllers 2
+        var (org, _, caller) = Controller(store);
+        using var source = new HttpAimSource(store.Url, null, org.Anchor.AnchorId, null, caller);
+
+        var quote = source.Quote(aim)!;
+        Assert.Equal(132.0, (double)quote["OneTime"]!["Price"]!);                                          // 120 proposed, with the 10%
+        using var raw = await store.Http.GetAsync($"/MPAI/Store/L3/{aim}/quote");
+        var said = JsonNode.Parse(await raw.Content.ReadAsStringAsync())!.AsObject();
+        Assert.NotNull(said["Signature"]);                                                                 // the Store's own answer
+        Assert.DoesNotContain("issued an AIM Licence", store.Log);                                         // asking for the price issued nothing
+
+        // Each Controller asks as itself: its credential is under the organisation's Trust Anchor.
+        async Task<(HttpStatusCode Status, string Body)> Ask(string controller)
+        {
+            var admission = org.Admit(controller, TimeSpan.FromDays(400), DateTimeOffset.UtcNow);
+            var as_ = new HttpAimSource.AimCaller(admission.Anchor.Object(), admission.Credential, [], admission.Key);
+            return await Post(store.Http, "/MPAI/Store/Licence", Signed(new JsonObject { ["AIMName"] = aim, ["TrustAnchorID"] = org.Anchor.AnchorId, ["ControllerID"] = controller }, as_));
+        }
+        Assert.Equal(HttpStatusCode.Created, (await Ask("c-1")).Status);
+        Assert.Equal(HttpStatusCode.Created, (await Ask("c-2")).Status);
+        var third = await Ask("c-3");
+        Assert.Equal(HttpStatusCode.Forbidden, third.Status);                                              // the offer allows two Controllers under one Trust Anchor
+        Assert.Contains("c-3", third.Body);
+        Assert.Equal(HttpStatusCode.OK, (await Ask("c-1")).Status);                                        // one it has: the same licence, again
+    }
+
     [SkippableFact]
     public async Task TheStatusSaysValidUntilTheOperatorRevokesAndARevokedLicenceIsRefused()
     {

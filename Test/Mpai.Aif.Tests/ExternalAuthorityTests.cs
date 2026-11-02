@@ -58,14 +58,17 @@ public class ExternalAuthorityTests
         public readonly ConcurrentQueue<ExternalMessage> Got = new();
         public readonly Store Payloads = new();
         public readonly ExternalHub Hub;
+        public AIF.Trust.TrustTrace? Trace { get; init; }
 
-        public Module(string id, ILinkAdmission admission, IDiscoveryMedium discovery, Func<string, string> sign, Func<string, string, string?> verify,
-                      Func<string, IReadOnlyList<PayloadDescriptor>, string> signPayloads, bool directed = false, IReadOnlyList<string>? correlate = null, IReadOnlyList<string>? address = null)
+        public Module(string id, ILinkAdmission admission, IDiscoveryMedium discovery, Func<string, string, string> sign, Func<string, string, string, string?> verify,
+                      Func<string, IReadOnlyList<PayloadDescriptor>, string, string> signPayloads, bool directed = false, IReadOnlyList<string>? correlate = null, IReadOnlyList<string>? address = null,
+                      Func<string, string?>? stillTrusted = null, Action<string, string, string, string?>? decided = null)
         {
             Hub = new ExternalHub(new ExternalHub.Options
             {
                 ControllerId = id, ModuleType = Service, Discovery = discovery, Admission = admission,
-                AnnounceEvery = TimeSpan.FromMilliseconds(100), LeaveAfter = TimeSpan.FromSeconds(2), DirectedReplies = directed, CorrelateBy = correlate ?? [], AddressedBy = address ?? []
+                AnnounceEvery = TimeSpan.FromMilliseconds(100), LeaveAfter = TimeSpan.FromSeconds(2), DirectedReplies = directed, CorrelateBy = correlate ?? [], AddressedBy = address ?? [],
+                StillTrusted = stillTrusted, Decided = decided
             })
             {
                 Outputs = [(Data, 1)],
@@ -100,7 +103,8 @@ public class ExternalAuthorityTests
     {
         var (credential, discovery) = service.AdmitSelf(id);
         var trust = new ExternalTrust(anchor, key, credential, anchor.Object(), service.Policy.AuthorityRole, service.Policy);
-        return new Module(anchor.AnchorId, trust.Admission, discovery, trust.Sign, trust.Verify, trust.SignPayloads, service.Policy.Directed, service.Policy.Correlate, service.Policy.Address);
+        return new Module(anchor.AnchorId, trust.Admission, discovery, trust.Sign, trust.Verify, trust.SignPayloads, service.Policy.Directed, service.Policy.Correlate, service.Policy.Address,
+                          trust.StillTrusted, trust.Record) { Trace = trust.Trace };
     }
 
     private static Module Guest(ExternalMember member) =>
@@ -253,7 +257,7 @@ public class ExternalAuthorityTests
         await using var member = await ExternalMember.JoinAsync("guest", anchor.Object(), service.Rendezvous);
         // This guest states the wrong hash for what it offers.
         await using var guest = new Module(member.Trust.ControllerId, member.Trust.Admission, member.Discovery, member.Trust.Sign, member.Trust.Verify,
-            (json, payloads) => member.Trust.SignPayloads(json, payloads.Select(p => p with { Hash = new string('0', 64) }).ToList()));
+            (json, payloads, binding) => member.Trust.SignPayloads(json, payloads.Select(p => p with { Hash = new string('0', 64) }).ToList(), binding));
         Assert.True(await Until(() => guest.Hub.PayloadLinked.Count == 1 && host.Hub.PayloadLinked.Count == 1));
 
         guest.Payloads.Held["aif:payload/TST/7"] = [1, 2, 3, 4];
@@ -357,5 +361,145 @@ public class ExternalAuthorityTests
         Assert.True(await Until(() => hubServer.Linked.Count == 0), "the server's link closed");
         foreach (var api in new[] { server, client, stranger }) api.StopFlow(module);
         Directory.Delete(dir, true);
+    }
+
+    // THE EXTERNAL PORTS AS AN AIM OF A CONTROLLER CALLS THEM (Basic API 5): the Controllers linked and the Metadata of their Modules (External_List), a probe, a write to an External Input Port and a
+    // read of an External Output Port of an AIM of the Module of the other Controller, by controllerID, AIM_name, Data Type and Port Number. What is read carries the stamp of the Controller that wrote
+    // it and its signature; a Port that is not an External Port of an AIM of the Module is not reached.
+    [Fact]
+    public async Task AnAimWritesReadsAndProbesTheExternalPortsOfAnotherController()
+    {
+        const string module = "1TST-PAY-V1.0-I01";
+        var dir = Path.Combine(Path.GetTempPath(), "mpai-external-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        foreach (var f in Directory.EnumerateFiles(ContinuousTests.Amds, "*.json"))
+            File.Copy(f, Path.Combine(dir, Path.GetFileName(f)));
+        var amd = Path.Combine(dir, module + ".json");
+        File.WriteAllText(amd, File.ReadAllText(amd)
+            .Replace("\"Name\": \"Input\",   \"Direction\": \"Input\",  \"DataType\": \"TST-TXT-V1.0\",                  \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": false",
+                     "\"Name\": \"Input\",   \"Direction\": \"Input\",  \"DataType\": \"TST-TXT-V1.0\",                  \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true")
+            .Replace("\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": false", "\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true"));
+        ControllerApi Make() => new(dir, Path.Combine(dir, "no-settings.json"), new ContinuousAims()) { ExternalPull = true };
+        using var server = Make();
+        using var client = Make();
+        foreach (var api in new[] { server, client }) Assert.Equal(AifError.OK, api.StartFlow(module));
+        Assert.Equal(AifError.OK, server.ExternalAuthority(module, Open));
+        Assert.Equal(AifError.OK, client.ExternalJoin(module, server.ExternalAnchor(module)!, server.ExternalRendezvous(module)!));
+        var toServer = Assert.Single(client.ExternalHubsOf(module));
+        var atServer = Assert.Single(server.ExternalHubsOf(module));
+        Assert.True(await Until(() => toServer.List().Count == 1 && atServer.List().Count == 1 && toServer.List()[0].Metadata.Length > 0));
+
+        // External_List: the Controllers linked, with the Metadata of their Modules; the controllerID is the link's, and the Messages carry the Controller's name.
+        var peer = toServer.List()[0];
+        Assert.True(peer.ControllerID > 0);
+        Assert.Contains(module, peer.Metadata);
+
+        var said = new ConcurrentQueue<string>();
+        toServer.Said += said.Enqueue;
+        atServer.Said += said.Enqueue;
+        var text = ContinuousTests.Text;
+        Assert.Equal(ExternalOutcome.Ok, await toServer.ProbeAsync(peer.ControllerID, module, text, 1, 500));                        // an Input Port an AIM can write to
+        Assert.Equal(ExternalOutcome.NoSuchPort, await toServer.ProbeAsync(peer.ControllerID, "1NOT-AN-AIM-V1.0-I01", text, 1, 500));
+        Assert.Equal(ExternalOutcome.NoSuchPort, await toServer.ProbeAsync(peer.ControllerID, module, text, 9, 500));
+        Assert.Equal(ExternalOutcome.NoSuchController, await toServer.ProbeAsync(peer.ControllerID + 1000, module, text, 1, 500));
+
+        // Nothing is produced yet: the Output Port gives nothing within the time.
+        var empty = await toServer.ReadAsync(peer.ControllerID, module, text, 1, 100);
+        Assert.Equal(ExternalOutcome.NotProduced, empty.Outcome);
+
+        // A write to an External Input Port of the Module of the other Controller; its AIM answers on its External Output Port, which is read from here.
+        Assert.Equal(ExternalOutcome.NoSuchPort, await toServer.WriteAsync(peer.ControllerID, "1NOT-AN-AIM-V1.0-I01", text, 1, ContinuousAims.Entry(System.Text.Encoding.UTF8.GetBytes("hello"), null, 5), 1000));
+        Assert.Equal(ExternalOutcome.Ok, await toServer.WriteAsync(peer.ControllerID, module, text, 1, ContinuousAims.Entry(System.Text.Encoding.UTF8.GetBytes("hello"), null, 5), 2000));
+        var read = await toServer.ReadAsync(peer.ControllerID, module, text, 1, 5000);
+        Assert.Equal(ExternalOutcome.Ok, read.Outcome);
+        Assert.False(string.IsNullOrEmpty(read.Json));
+        Assert.True((DateTimeOffset.UtcNow - read.Stamp).Duration() < TimeSpan.FromMinutes(1));               // the stamp of the Controller that wrote it
+        Assert.True(atServer.Refused + toServer.Refused == 0, string.Join("; ", said));
+        Assert.Equal(1, server.ExternalDropped(module));                                                       // the write to an AIM the Module does not have: dropped, and counted
+
+        // The link closes, and so does the controllerID: nothing is reached through it.
+        Assert.Equal(AifError.OK, client.ExternalLeave(module));
+        Assert.Equal(ExternalOutcome.NoSuchController, await toServer.ProbeAsync(peer.ControllerID, module, text, 1, 500));
+        foreach (var api in new[] { server, client }) api.StopFlow(module);
+        Directory.Delete(dir, true);
+    }
+
+    // MPAI_AIFU_External_Join with rendezvous NULL (Basic API 3.9.1): the Controller presents itself by announcement in range - the Authority named by the anchor says where it admits - and is
+    // admitted as at a rendezvous; where the Authority of that anchor announces nothing in range, the Join fails and says why.
+    [Fact]
+    public async Task AControllerJoinsByAnnouncementInRange()
+    {
+        const string module = "1TST-PAY-V1.0-I01";
+        var dir = Path.Combine(Path.GetTempPath(), "mpai-external-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        foreach (var f in Directory.EnumerateFiles(ContinuousTests.Amds, "*.json"))
+            File.Copy(f, Path.Combine(dir, Path.GetFileName(f)));
+        var amd = Path.Combine(dir, module + ".json");
+        File.WriteAllText(amd, File.ReadAllText(amd)
+            .Replace("\"Name\": \"Input\",   \"Direction\": \"Input\",  \"DataType\": \"TST-TXT-V1.0\",                  \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": false",
+                     "\"Name\": \"Input\",   \"Direction\": \"Input\",  \"DataType\": \"TST-TXT-V1.0\",                  \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true")
+            .Replace("\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": false", "\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true"));
+        var port = 41100 + Random.Shared.Next(800);
+        ControllerApi Make() => new(dir, Path.Combine(dir, "no-settings.json"), new ContinuousAims()) { ExternalAnnouncementPort = port, ExternalAnnouncementWait = TimeSpan.FromSeconds(3) };
+        using var server = Make();
+        using var client = Make();
+        using var stranger = Make();
+        foreach (var api in new[] { server, client, stranger }) Assert.Equal(AifError.OK, api.StartFlow(module));
+
+        Assert.Equal(AifError.OK, server.ExternalAuthority(module, Open));
+        var anchor = server.ExternalAnchor(module)!;
+
+        var (other, _) = NewAnchor("Another-Authority");
+        stranger.ExternalAnnouncementWait = TimeSpan.FromSeconds(1);
+        Assert.Equal(AifError.Failed, stranger.ExternalJoin(module, other.Object().ToJsonString(), null));      // nothing of that Authority is announced in range
+        Assert.Contains("announcement", stranger.ExternalError);
+
+        var joined = client.ExternalJoin(module, anchor, null);
+        Assert.True(joined == AifError.OK, client.ExternalError);
+        var hubServer = Assert.Single(server.ExternalHubsOf(module));
+        var hubClient = Assert.Single(client.ExternalHubsOf(module));
+        Assert.True(await Until(() => hubServer.Linked.Count == 1 && hubClient.Linked.Count == 1), "linked");
+
+        foreach (var api in new[] { server, client, stranger }) api.StopFlow(module);
+        Directory.Delete(dir, true);
+    }
+
+    // TRUST IS NOT KEPT FROM THE OPENING OF A LINK (Zero Trust: no caching of trust; Communication 9: a link lasts until the credential expires): a Controller whose credential has
+    // expired is no longer linked, and the decision is in the Trace of the Controller that made it, with the admissions in the Trace of the Authority.
+    [Fact]
+    public async Task ALinkEndsWhenTheCredentialOfTheControllerItAdmittedExpiresAndTheDecisionsAreInTheTrace()
+    {
+        var (anchor, key) = NewAnchor("Server-Authority");
+        await using var service = new ExternalAuthorityService(anchor, key, ExternalPolicy.Parse("""{ "Roles": ["Host", "Participant"], "DefaultRole": "Participant", "AuthorityRole": "Host", "Exchange": [["Host", "Participant"]], "LifetimeMinutes": 0.05 }"""));
+        await using var host = Host(service, anchor, key);
+        await using var member = await ExternalMember.JoinAsync("guest", anchor.Object(), service.Rendezvous);
+        await using var guest = Guest(member);
+        Assert.True(await Until(() => host.Hub.PayloadLinked.Count == 1 && guest.Hub.PayloadLinked.Count == 1));    // linked while the credential holds (3 s)
+
+        Assert.True(await Until(() => host.Hub.ClosedOnExpiry >= 1, 20000));                                          // then the link ends: the credential of the guest has expired
+        Assert.True(await Until(() => host.Hub.PayloadLinked.Count == 0));
+
+        var closed = host.Trace!.Records.Select(r => r["TrustOperation"]!.AsObject()).Where(o => (string?)o["OperationType"] == "CloseLink").ToList();
+        Assert.Single(closed);
+        Assert.Contains("expired", (string?)closed[0]["FailureReason"]);
+        Assert.Null(AIF.Trust.TrustTrace.Verify(host.Trace.Records, anchor.Object()));                                // the Trace is a signed, hash-chained record
+        var admitted = service.Trace.Records.Select(r => r["TrustOperation"]!.AsObject()).Where(o => (string?)o["OperationType"] == "AdmitController").ToList();
+        Assert.Contains(admitted, o => (string?)o["TargetID"] == "guest" && (string?)o["Status"] == "Success");
+        Assert.Null(AIF.Trust.TrustTrace.Verify(service.Trace.Records, anchor.Object()));
+    }
+
+    // A controllerID is not reused for another Controller within one run (Basic API 5): the one that left may come back with its key, another may not take the id.
+    [Fact]
+    public async Task AControllerIdIsNotTakenByAnotherControllerAfterItsOwnerLeft()
+    {
+        var (anchor, key) = NewAnchor("Server-Authority");
+        await using var service = new ExternalAuthorityService(anchor, key, ExternalPolicy.Parse(Open));
+        var first = await ExternalMember.JoinAsync("guest", anchor.Object(), service.Rendezvous);
+        await first.DisposeAsync();
+        Assert.True(await Until(() => !service.Members.Contains("guest")));
+        var other = await Assert.ThrowsAsync<ExternalJoinException>(() => ExternalMember.JoinAsync("guest", anchor.Object(), service.Rendezvous));   // a new key under the same id
+        Assert.Equal(AifErrorKind.NotAuthorised, other.Kind);
+        Assert.Contains("admitted before", other.Message);
+        Assert.Contains(service.Trace.Records.Select(r => r["TrustOperation"]!.AsObject()), o => (string?)o["OperationType"] == "RefuseController" && (string?)o["TargetID"] == "guest");
     }
 }

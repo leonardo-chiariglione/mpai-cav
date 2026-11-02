@@ -128,6 +128,9 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     {
         public bool Ok => Error == AifError.OK;
 
+        // True when the Module's own policy stopped it (OnDegraded StopModule): it takes no more, and what acts on the world through it is to be brought to its safe state.
+        public bool Stopped { get; init; }
+
         // The state of the Module: Running, or Suspended between Pause and Resume.
         public ModuleState State { get; init; } = ModuleState.Running;
 
@@ -188,9 +191,17 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             // The AIM Licence of every AIM of the Module that has one: good, and - the Store being asked - not revoked.
             foreach (var aim in seen) Repository.CheckLicence(aim, Source);
         }
-        catch (InvalidOperationException) { return AifError.NotTrusted; }         // NOT_TRUSTED, or NOT_LICENSED
+        catch (InvalidOperationException e)
+        {
+            // NOT_TRUSTED only where an Implementation or a model is not what the Store approved (Basic API 2.3); a licence refused, or Metadata or files that cannot be obtained, is FAILED with its reason.
+            PrepareError = e.Message;
+            return e.Message.StartsWith("NOT_TRUSTED", StringComparison.Ordinal) ? AifError.NotTrusted : AifError.Failed;
+        }
         return AifError.OK;
     }
+    // Why the last Module was refused in preparing its AIMs: the reason that goes with FAILED or NOT_TRUSTED.
+    public string? PrepareError { get; private set; }
+
     public void StopFlow(string moduleName)
     {
         List<AIF.Channels.ExternalHub>? hubs;
@@ -223,8 +234,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     }
 
     public AIF.Channels.ExternalHub StartExternal(string moduleName, AIF.Channels.ExternalHub.Options options,
-                                                  Func<string, string>? sign = null, Func<string, string, string?>? verify = null,
-                                                  Func<string, IReadOnlyList<AIF.Channels.PayloadDescriptor>, string>? signPayloads = null)
+                                                  Func<string, string, string>? sign = null, Func<string, string, string, string?>? verify = null,
+                                                  Func<string, IReadOnlyList<AIF.Channels.PayloadDescriptor>, string, string>? signPayloads = null)
     {
         int id;
         IReadOnlyList<RuntimePort> ports;
@@ -235,9 +246,33 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             id = started.Id;
             ports = (_ua.BoundaryPorts(id) ?? Array.Empty<RuntimePort>()).Where(p => p.IsRemote).ToList();
         }
-        var hub = new AIF.Channels.ExternalHub(options)
+        var metadata = _amds.FindByAimName(moduleName) is { } identifier ? _amds.GetOriginal(identifier).RootElement.GetRawText() : null;
+        var hub = new AIF.Channels.ExternalHub(options with { ModuleMetadata = metadata, Pump = !ExternalPull })
         {
             Outputs = ports.Where(p => p.Direction == "Output").Select(p => (p.DataType, p.PortNumber ?? 1)).ToList(),
+            // THE EXTERNAL PORTS ASKED BY AN AIM OF ANOTHER CONTROLLER (Basic API 5): the Port is an External Port of an AIM of this Module, or it is not reached.
+            ServeRead = async (aim, dataType, portNumber, timeoutMs) =>
+            {
+                if (!_ua.HasAim(id, aim) || !ports.Any(p => p.Direction == "Output" && p.DataType == dataType && (p.PortNumber ?? 1) == portNumber)) return (AIF.Channels.ExternalOutcome.NoSuchPort, null, default);
+                if (!ExternalPull) return (AIF.Channels.ExternalOutcome.Refused, null, default);          // its Messages go to the Controllers linked as they are given
+                var (error, json, stamp) = await _ua.ContinuousReadStampedAsync(id, dataType, portNumber, timeoutMs);
+                return (error switch { AifError.OK => AIF.Channels.ExternalOutcome.Ok, AifError.NotProduced => AIF.Channels.ExternalOutcome.NotProduced, AifError.NoSuchPort => AIF.Channels.ExternalOutcome.NoSuchPort, _ => AIF.Channels.ExternalOutcome.Failed }, json, stamp);
+            },
+            ServeWrite = async (aim, dataType, portNumber, json, stamp, from, timeoutMs) =>
+            {
+                if (!_ua.HasAim(id, aim) || !ports.Any(p => p.Direction == "Input" && p.Accepts(dataType) && (p.PortNumber ?? 1) == portNumber)) { _externalDropped.AddOrUpdate(moduleName, 1, (_, n) => n + 1); return AIF.Channels.ExternalOutcome.NoSuchPort; }
+                var error = await _ua.ContinuousWriteAsync(id, dataType, portNumber, json, timeoutMs, from, stamp);
+                if (error != AifError.OK) _externalDropped.AddOrUpdate(moduleName, 1, (_, n) => n + 1);
+                return error switch { AifError.OK => AIF.Channels.ExternalOutcome.Ok, AifError.Timeout => AIF.Channels.ExternalOutcome.Timeout, AifError.NoSuchPort => AIF.Channels.ExternalOutcome.NoSuchPort, _ => AIF.Channels.ExternalOutcome.Failed };
+            },
+            ServeProbe = async (aim, dataType, portNumber, timeoutMs) =>
+            {
+                if (!_ua.HasAim(id, aim)) return AIF.Channels.ExternalOutcome.NoSuchPort;
+                if (ports.Any(p => p.Direction == "Input" && p.Accepts(dataType) && (p.PortNumber ?? 1) == portNumber)) return AIF.Channels.ExternalOutcome.Ok;          // an Input Port an AIM can write to
+                if (ports.Any(p => p.Direction == "Output" && p.DataType == dataType && (p.PortNumber ?? 1) == portNumber))
+                    return await _ua.ContinuousReadableAsync(id, dataType, portNumber, timeoutMs) ? AIF.Channels.ExternalOutcome.Ok : AIF.Channels.ExternalOutcome.Timeout;
+                return AIF.Channels.ExternalOutcome.NoSuchPort;
+            },
             ReadOutput = async (dataType, portNumber, timeoutMs) =>
             {
                 var (error, json, stamp) = await _ua.ContinuousReadStampedAsync(id, dataType, portNumber, timeoutMs);
@@ -256,11 +291,11 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             Unrouted = options.DirectedReplies ? (dataType, portNumber, json) => { UnroutedQueue(moduleName, dataType, portNumber).Add(json); return Task.CompletedTask; } : null,
             Deliver = async m =>
             {
-                if (!ports.Any(p => p.Direction == "Input" && p.Accepts(m.DataType))) return;
+                if (!ports.Any(p => p.Direction == "Input" && p.Accepts(m.DataType))) { _externalDropped.AddOrUpdate(moduleName, 1, (_, n) => n + 1); return; }
                 var json = m.Payloads is { Count: > 0 } && m.Fetch is { } fetch
                     ? _ua.AdoptPayloads(id, m.DataType, m.PortNumber, m.Json, m.Payloads.Select(d => (d.Reference, (Func<byte[]?>)(() => fetch(d)))))
                     : m.Json;
-                await _ua.ContinuousWriteAsync(id, m.DataType, m.PortNumber, json, 15_000, m.From, m.Stamp);
+                if (await _ua.ContinuousWriteAsync(id, m.DataType, m.PortNumber, json, 15_000, m.From, m.Stamp) != AifError.OK) _externalDropped.AddOrUpdate(moduleName, 1, (_, n) => n + 1);
             },
             Sign = sign, Verify = verify
         };
@@ -269,6 +304,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             if (!_external.TryGetValue(moduleName, out var list)) _external[moduleName] = list = new();
             list.Add(hub);
         }
+        _ua.SetExternal(id, hub);
         hub.Start();
         return hub;
     }
@@ -280,6 +316,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
 
     private readonly Dictionary<string, AIF.Controller.ExternalAuthorityService> _authorities = new();
     private readonly Dictionary<string, AIF.Controller.ExternalMember> _members = new();
+    private readonly Dictionary<string, System.Security.Cryptography.ECDsa> _externalKeys = new();
 
     // The root of trust of this Controller, where it has one: a Controller that joins presents
     // the Attestation Evidence a service requires of its role.
@@ -292,6 +329,17 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // Where the anchor of this Controller as an Authority is kept between runs (its identity and
     // key); made there if absent. Without it, the anchor lasts as long as the Controller.
     public string? ExternalAnchorFile { get; set; }
+
+    // The Messages of the External Output Ports of the Modules wait to be read by an AIM of another Controller (Basic API 5.3) instead of being sent to the Controllers linked as they are given.
+    public bool ExternalPull { get; set; }
+
+    // Where Authorities announce where they admit, and how long a Controller that joins by announcement listens (Basic API 3.9.1; 0 switches announcing off).
+    public int ExternalAnnouncementPort { get; set; } = AIF.Controller.AuthorityAnnouncement.DefaultPort;
+    public TimeSpan ExternalAnnouncementWait { get; set; } = TimeSpan.FromSeconds(10);
+
+    // Messages from other Controllers that were not given to the Module (no External Input Port accepts them, or the Port did not take them in time): dropped, and counted (COM-8).
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _externalDropped = new();
+    public long ExternalDropped(string moduleName) => _externalDropped.GetValueOrDefault(moduleName);
 
     // Why the last External_Join or External_Authority did not succeed.
     public string? ExternalError { get; private set; }
@@ -323,11 +371,13 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             }
             var service = new AIF.Controller.ExternalAuthorityService(anchor, key, parsed, ExternalAttestationPolicy, host: host, port: port);
             var (credential, discovery) = service.AdmitSelf(anchor.AnchorId);
+            if (ExternalAnnouncementPort > 0) service.Announce(ExternalAnnouncementPort);          // Controllers in range find where it admits (External_Join, rendezvous NULL)
             var trust = new AIF.Controller.ExternalTrust(anchor, key, credential, anchor.Object(), parsed.AuthorityRole, parsed);
             var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = anchor.AnchorId, ModuleType = anchor.AnchorId, Discovery = discovery, Admission = trust.Admission, Host = host,
-                DirectedReplies = parsed.Directed, CorrelateBy = parsed.Correlate ?? [], AddressedBy = parsed.Address ?? []
+                DirectedReplies = parsed.Directed, CorrelateBy = parsed.Correlate ?? [], AddressedBy = parsed.Address ?? [],
+                StillTrusted = trust.StillTrusted, Decided = trust.Record
             }, trust.Sign, trust.Verify, trust.SignPayloads);
             lock (_tables) _authorities[moduleName] = service;
             return AifError.OK;
@@ -353,7 +403,6 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     public AifError ExternalJoin(string moduleName, string authority, string? rendezvous, string? role = null, string? controllerId = null)
     {
         ExternalError = null;
-        if (rendezvous is null) { ExternalError = "an Authority is reached at a rendezvous; admission by announcement in range is not offered"; return AifError.Failed; }
         lock (_tables)
         {
             if (!_running.ContainsKey(moduleName)) return AifError.NotStarted;
@@ -363,7 +412,14 @@ public sealed class ControllerApi : IControllerApi, IDisposable
         try
         {
             var anchor = System.Text.Json.Nodes.JsonNode.Parse(authority)?.AsObject() ?? throw new FormatException("the authority is not a Trust Anchor object");
-            member = AIF.Controller.ExternalMember.JoinAsync(controllerId ?? $"{moduleName}-{Guid.NewGuid():N}", anchor, rendezvous, role, ExternalAttestor).GetAwaiter().GetResult();
+            // rendezvous NULL: by announcement in range - the Authority named by the anchor says where it admits; what it says is not believed until it proves the anchor.
+            rendezvous ??= AIF.Controller.AuthorityAnnouncement.FindAsync((string?)anchor["AnchorID"] ?? "", ExternalAnnouncementPort, ExternalAnnouncementWait).GetAwaiter().GetResult();
+            if (rendezvous is null) { ExternalError = "no announcement of the Authority was heard in range"; return AifError.Failed; }
+            var asId = controllerId ?? $"{moduleName}-{Guid.NewGuid():N}";
+            // This Controller keeps the key of each identity it joined under, for as long as it runs: it joins again (after Leave, or when its credential lapsed) as itself.
+            System.Security.Cryptography.ECDsa own;
+            lock (_tables) { if (!_externalKeys.TryGetValue(asId, out own!)) _externalKeys[asId] = own = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256); }
+            member = AIF.Controller.ExternalMember.JoinAsync(asId, anchor, rendezvous, role, ExternalAttestor, key: own).GetAwaiter().GetResult();
         }
         catch (AIF.Controller.ExternalJoinException e)
         {
@@ -376,7 +432,8 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             var hub = StartExternal(moduleName, new AIF.Channels.ExternalHub.Options
             {
                 ControllerId = member.Trust.ControllerId, ModuleType = AuthorityIdOf(authority), Discovery = member.Discovery, Admission = member.Trust.Admission,
-                DirectedReplies = false, HoldUntilLinked = true     // what its Module gives waits until a Controller of the service is linked
+                DirectedReplies = false, HoldUntilLinked = true,    // what its Module gives waits until a Controller of the service is linked
+                StillTrusted = member.Trust.StillTrusted, Decided = member.Trust.Record
             }, member.Trust.Sign, member.Trust.Verify, member.Trust.SignPayloads);
             // Joined is admitted and reachable: the Controller waits, a while, for the Controller of the Authority to be linked.
             var linking = System.Diagnostics.Stopwatch.StartNew();
@@ -546,7 +603,7 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             if (!_running.TryGetValue(moduleName, out var started)) return new ModuleStatus(AifError.NotStarted, Array.Empty<AimReport>());
             var err = _ua.MPAI_AIFU_MODULE_GetStatus(started.Id, out var aims);
             _ua.MPAI_AIFU_MODULE_GetState(started.Id, out var state);
-            return new ModuleStatus(err, aims) { State = state, Record = _ua.RecordStatus(started.Id)?.Totals };
+            return new ModuleStatus(err, aims) { State = state, Stopped = started.Stopped || _ua.ModuleStopped(started.Id), Record = _ua.RecordStatus(started.Id)?.Totals };
         }
     }
 

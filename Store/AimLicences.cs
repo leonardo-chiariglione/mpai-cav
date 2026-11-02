@@ -137,6 +137,27 @@ public static class AimLicences
     // The hash of the Implementer's offer: the PTF-JSON-CANON-V1 form of the AIMLicence field, SHA-256, in capitals.
     public static string OfferHash(JsonObject offer) => Convert.ToHexString(SHA256.HashData(PtfCanonical.Bytes(offer)));
 
+    // THE PRICE MADE KNOWN BEFORE THE AIM LICENCE IS ISSUED (STR-9): the Payment of the offer with the mark-up of the MPAI Store applied; null where the offer has no Payment.
+    public static JsonObject? Quote(JsonObject offer, decimal markupPercent)
+    {
+        if (offer["Payment"] is not JsonObject payment) return null;
+        var quoted = payment.DeepClone().AsObject();
+        Markup(quoted, markupPercent);
+        return quoted;
+    }
+
+    // The prices a Payment states, by where it is: what a quote and the licence issued are compared by.
+    public static IReadOnlyDictionary<string, decimal> PricesOf(JsonObject? payment)
+    {
+        var prices = new Dictionary<string, decimal>();
+        void Add(string holder, string name)
+        {
+            if (payment?[holder] is JsonObject h && h[name] is JsonValue v && v.TryGetValue<double>(out var amount)) prices[holder + "." + name] = Math.Round((decimal)amount, 2);
+        }
+        Add("OneTime", "Price"); Add("Subscription", "RecurringPrice"); Add("PayPerUse", "Rate"); Add("PayPerTime", "Price");
+        return prices;
+    }
+
     // The MPAI Store's mark-up on the price the Implementer proposed, where the pricing model has a price: percent of the amount, to the cent.
     private static void Markup(JsonObject payment, decimal percent)
     {

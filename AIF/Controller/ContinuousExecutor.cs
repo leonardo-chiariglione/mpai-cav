@@ -195,11 +195,16 @@ public sealed partial class ContinuousExecutor
         // nothing. Followed through: in a CAV whose cabin has no camera, the visual
         // branch of HCI writes nothing, and the audio-visual alignment fires on the
         // audio alone.
+        // An AIM that reads a Bus somebody writes is fed by it, though no Topology says so.
+        var onBus = leaves.Values.SelectMany(l => l.Ports.Where(p => p.Direction == "Output" && p.Transport == "Bus").Select(p => p.DataType)).ToHashSet();
+        var fedByBus = leaves.Values.Where(l => l.Ports.Any(p => p.Direction == "Input" && p.AcceptedTransports?.Contains("Bus") == true && onBus.Contains(p.DataType)))
+                                    .Select(l => l.AIMName).ToHashSet();
         var silent = new HashSet<string>();
         for (var changed = true; changed;)
         {
             changed = false;
             var fed = byWriter.Where(w => w.Key.IsBoundary || !silent.Contains(w.Key.Aim)).SelectMany(w => w.Value).Select(t => t.Aim).ToHashSet();
+            fed.UnionWith(fedByBus);
             foreach (var leaf in leaves.Values)
             {
                 if (silent.Contains(leaf.AIMName) || fed.Contains(leaf.AIMName) || leaf.Period is not null || !runsHere(leaf.AIMName)) continue;
@@ -237,6 +242,38 @@ public sealed partial class ContinuousExecutor
                 specs.Add(new ChannelReaderSpec(end, BehaviourOf(port)));
             }
             channels.Add(new ChannelSpec(module, writer, specs, transport));
+        }
+
+        PlanBuses(byWriter.Keys.ToHashSet());
+    }
+
+    // THE BUSES (M3287): for each Data Type, the Output Ports of the Module's AIMs with the transport Bus and the Input Ports that accept it. One Channel,
+    // whoever writes: each writer has a Channel spec of its own - its Writer end - and the first carries the readers, which are all the Input Ports on the Bus
+    // (the writer's own included: it reads what it wrote, as any reader does). The Topology says nothing of them. A writer the Topology also connects is a
+    // Channel of its own, as before.
+    private void PlanBuses(HashSet<PortEnd> inTopology)
+    {
+        const string bus = "Bus";
+        var writers = leaves.Values
+            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Output" && p.Transport == bus).Select(p => new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
+            .Where(end => !inTopology.Contains(end)).ToList();
+        var readers = leaves.Values
+            .SelectMany(leaf => leaf.Ports.Where(p => p.Direction == "Input" && p.AcceptedTransports?.Contains(bus) == true).Select(p => new PortEnd(leaf.AIMName, p.DataType, NumberOf(leaf, p))))
+            .ToList();
+
+        foreach (var group in writers.GroupBy(w => w.DataType))
+        {
+            var members = group.Select(w => w.Aim).Concat(readers.Where(r => r.DataType == group.Key).Select(r => r.Aim)).Distinct();
+            if (members.Any(a => !runsHere(a)))
+                throw new InvalidOperationException($"{module}: the Bus of {group.Key} reaches an AIM on another machine; a Bus is within one Module here.");
+            var onBus = readers.Where(r => r.DataType == group.Key)
+                .Select(r => new ChannelReaderSpec(r, new PortBehaviour(1, Overflow.DropOldest, null))).ToList();
+            var first = true;
+            foreach (var writer in group)
+            {
+                channels.Add(new ChannelSpec(module, writer, first ? onBus : new List<ChannelReaderSpec>(), bus));
+                first = false;
+            }
         }
     }
 
@@ -354,6 +391,25 @@ public sealed partial class ContinuousExecutor
     }
 
     // ---- the boundary (M3215 3.3) ------------------------------------------------
+
+    // The External Ports of the Module's AIMs, by the links the Controller opened (Basic API 5); set when the Module's External Ports are joined.
+    public IExternalPorts? External { get; set; }
+
+    // Does the Module have an AIM of this name (itself, a composite or a leaf)?
+    public bool HasAim(string name) => name == module || leaves.ContainsKey(name) || parent.Values.Any(n => n.AIMName == name);
+
+    // Can a Message be read from the boundary Port within the time (a Message is pending at once, or comes)?
+    public async ValueTask<bool> BoundaryReadableAsync(string dataType, int portNumber, int timeoutMs)
+    {
+        if (!readers.TryGetValue(new PortEnd("", dataType, portNumber), out var ends)) return false;
+        var until = Environment.TickCount64 + Math.Max(0, timeoutMs);
+        while (true)
+        {
+            if (ends.Any(r => r.Pending > 0)) return true;
+            if (Environment.TickCount64 >= until) return false;
+            await Task.Delay(10);
+        }
+    }
 
     public async ValueTask<AifError> WriteBoundaryAsync(string dataType, int portNumber, string json, int timeoutMs,
                                                         string? from = null, DateTimeOffset? fromStamp = null)
@@ -744,6 +800,43 @@ public sealed partial class ContinuousExecutor
 
         public DateTimeOffset Now => executor.clock.Now;
 
+        // EXTERNAL PORTS (Basic API 5): by the links the Controller of the Module opened. An AIM that declares no External Port reaches none (NOT_AUTHORISED).
+        private bool DeclaresExternal => leaf.Ports.Any(p => p.IsRemote);
+
+        private static AifError Of(ExternalOutcome outcome) => outcome switch
+        {
+            ExternalOutcome.Ok => AifError.OK,
+            ExternalOutcome.NoSuchController => AifError.NotFound,
+            ExternalOutcome.NoSuchPort => AifError.NoSuchPort,
+            ExternalOutcome.Timeout => AifError.Timeout,
+            ExternalOutcome.NotProduced => AifError.NotProduced,
+            ExternalOutcome.Refused => AifError.NotAuthorised,
+            _ => AifError.Failed
+        };
+
+        public (int NumInRange, IReadOnlyList<(int ControllerID, string Metadata)> Controllers) ExternalList()
+        {
+            if (!DeclaresExternal || executor.External is not { } external) return (0, []);
+            var peers = external.List().Select(p => (p.ControllerID, p.Metadata)).ToList();
+            return (peers.Count, peers);
+        }
+
+        public async ValueTask<AifError> ExternalProbeAsync(int controllerId, string aimName, string dataType, int portNumber, int timeoutMs) =>
+            !DeclaresExternal ? AifError.NotAuthorised : executor.External is not { } external ? AifError.NotFound : Of(await external.ProbeAsync(controllerId, aimName, dataType, portNumber, timeoutMs));
+
+        public async ValueTask<(AifError Error, PortMessage? Message)> ExternalOutputReadAsync(int controllerId, string aimName, string dataType, int portNumber, int timeoutMs)
+        {
+            if (!DeclaresExternal) return (AifError.NotAuthorised, null);
+            if (executor.External is not { } external) return (AifError.NotFound, null);
+            var (outcome, json, stamp, from) = await external.ReadAsync(controllerId, aimName, dataType, portNumber, timeoutMs);
+            if (outcome != ExternalOutcome.Ok || json is null) return (Of(outcome), null);
+            // A copy of the Message as the Controller that wrote it stamped and signed it.
+            return (AifError.OK, new PortMessage { DataType = dataType, PortNumber = portNumber, Json = json, Payloads = PayloadStore.ReferencesIn(json), From = from, FromStamp = stamp });
+        }
+
+        public async ValueTask<AifError> ExternalInputWriteAsync(int controllerId, string aimName, string dataType, int portNumber, string json, int timeoutMs) =>
+            !DeclaresExternal ? AifError.NotAuthorised : executor.External is not { } external ? AifError.NotFound : Of(await external.WriteAsync(controllerId, aimName, dataType, portNumber, json, timeoutMs));
+
         public string PutPayload(string dataType, int portNumber, ReadOnlyMemory<byte> data)
         {
             var end = End("Output", dataType, portNumber);
@@ -752,11 +845,21 @@ public sealed partial class ContinuousExecutor
             return executor.Payloads.Put(spec, data);
         }
 
-        public ReadOnlyMemory<byte> GetPayload(string reference) =>
-            executor.Payloads.TryGet(reference, out var data)
+        // MPAI_AIFM_Payload_Get: NOT_AUTHORISED (here UnauthorizedAccessException) unless the caller is at the far end of the Channel; NOT_FOUND (KeyNotFoundException) if it is not held.
+        public ReadOnlyMemory<byte> GetPayload(string reference)
+        {
+            if (!PayloadStore.IsAtFarEnd(reference, leaf.AIMName, executor.channels))
+                throw new UnauthorizedAccessException($"{leaf.AIMName} is not at the far end of the Channel of {reference}.");
+            return executor.Payloads.TryGet(reference, out var data)
                 ? data
                 : throw new KeyNotFoundException($"{reference} is not held: released, past its MaxAge, or not issued by this Controller.");
+        }
 
-        public void ReleasePayload(string reference) => executor.Payloads.Release(reference);
+        public void ReleasePayload(string reference)
+        {
+            if (!PayloadStore.IsAtFarEnd(reference, leaf.AIMName, executor.channels))
+                throw new UnauthorizedAccessException($"{leaf.AIMName} is not at the far end of the Channel of {reference}.");
+            executor.Payloads.Release(reference, leaf.AIMName);
+        }
     }
 }

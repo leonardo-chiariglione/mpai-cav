@@ -12,11 +12,16 @@ public sealed class SharedStorageHandle : ISharedStorage, IRuledStorage
     private readonly StorageHolder holder;
     private readonly Func<string> moduleInstance;
     private readonly Func<string> session;
-    private readonly string requestedBy;
+    private readonly Func<string> requestedBy;
     private readonly Func<DateTimeOffset> now;
 
     public SharedStorageHandle(Func<string?> location, StorageHolder holder, Func<string> moduleInstance, Func<string> session,
                                string requestedBy, Func<DateTimeOffset> now)
+        : this(location, holder, moduleInstance, session, () => requestedBy, now) { }
+
+    // The client on whose behalf a write is made is asked at each call: the session a Module's exchange serves.
+    public SharedStorageHandle(Func<string?> location, StorageHolder holder, Func<string> moduleInstance, Func<string> session,
+                               Func<string> requestedBy, Func<DateTimeOffset> now)
     {
         this.location = location;
         this.holder = holder;
@@ -32,7 +37,7 @@ public sealed class SharedStorageHandle : ISharedStorage, IRuledStorage
     {
         var root = location() ?? throw new InvalidOperationException(
             "No Shared Storage is initialised for this Module (MPAI_AIFU_SharedStorage_Init).");
-        return (IRuledStorage)RuledStore.SharedAt(root, now).PlainFor(holder, moduleInstance(), session(), requestedBy);
+        return (IRuledStorage)RuledStore.SharedAt(root, now).PlainFor(holder, moduleInstance(), session(), requestedBy());
     }
 
     public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data) => Plain().MPAI_AIFM_SharedStorage_Put(key, data);

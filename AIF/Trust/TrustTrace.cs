@@ -84,6 +84,9 @@ public sealed class TrustTrace
     }
 
     // The hash that begins a chain: of the Controller's Trust Anchor object.
+    // The sequence of a record, whether it was made here (a number of any size) or loaded from a file.
+    private static long? SequenceOf(JsonObject record) => record["Sequence"] is { } s && long.TryParse(s.ToJsonString(), out var v) ? v : null;
+
     public static string Genesis(JsonObject anchorObject) => Convert.ToHexString(SHA256.HashData(PtfCanonical.Bytes(anchorObject)));
 
     public static string HashOf(JsonObject record) => Convert.ToHexString(SHA256.HashData(PtfCanonical.Bytes(record)));
@@ -106,7 +109,7 @@ public sealed class TrustTrace
             if ((string?)r["Header"] != Header) return $"record {n}: not a Trace";
             if (PtfSignature.Verify(r, id => id == anchorId ? anchorKey : null) != PtfSignature.Outcome.Valid)
                 return $"record {n}: altered, or not the Controller's (its signature does not verify)";
-            if ((long?)r["Sequence"] != n)
+            if (SequenceOf(r) != n)
                 return $"record {n}: its sequence is {r["Sequence"]} - records are missing, or out of their order";
             if (!string.Equals((string?)r["Previous"]?["Hash"], expected, StringComparison.OrdinalIgnoreCase))
                 return $"record {n}: it does not follow record {n - 1} - a record was removed, reordered or changed";

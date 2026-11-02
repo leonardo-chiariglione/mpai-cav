@@ -46,6 +46,8 @@ public sealed class PayloadStore : IPayloadSource
         public required long Placed { get; init; }
         public required TimeSpan? MaxAge { get; init; }
         public int Unreleased;
+        // The readers that have released it: a reader releases once (Basic API 4.8: freed when every reader has released it).
+        public readonly ConcurrentDictionary<string, byte> Released = new();
     }
 
     public PayloadStore(IClock? clock = null) => this.clock = clock ?? SystemClock.Instance;
@@ -106,12 +108,29 @@ public sealed class PayloadStore : IPayloadSource
     public IReadOnlyList<string> ReferencesOf(string json) => ReferencesIn(json);
     public byte[]? Get(string reference) => TryGet(reference, out var data) ? data.ToArray() : null;
 
-    // One reader is done with it; the last frees it.
-    public void Release(string reference)
+    // One reader is done with it; the last frees it. A reader that is named counts once however often it releases (Basic API 4.8).
+    public void Release(string reference) => Release(reference, null);
+
+    public void Release(string reference, string? reader)
     {
-        if (held.TryGetValue(reference, out var h) && Interlocked.Decrement(ref h.Unreleased) <= 0)
+        if (!held.TryGetValue(reference, out var h)) return;
+        if (reader is not null && !h.Released.TryAdd(reader, 0)) return;
+        if (Interlocked.Decrement(ref h.Unreleased) <= 0)
             held.TryRemove(reference, out _);
     }
+
+    // The Channel a reference was placed for: its identity, as ChannelSpec.Id gives it.
+    public static string? ChannelOf(string reference)
+    {
+        if (!IsReference(reference)) return null;
+        var rest = reference[Scheme.Length..];
+        var slash = rest.LastIndexOf('/');
+        return slash < 0 ? null : Uri.UnescapeDataString(rest[..slash]);
+    }
+
+    // Whether the caller is at the far end of the Channel the reference was placed for - a reader of it (Basic API 4.8: MPAI_AIFM_Payload_Get is NOT_AUTHORISED otherwise).
+    public static bool IsAtFarEnd(string reference, string aim, IEnumerable<ChannelSpec> channels) =>
+        ChannelOf(reference) is { } id && channels.Any(c => c.Id == id && c.Readers.Any(r => r.Reader.Aim == aim));
 
     // A JSON instance with every reference this store holds replaced by the data
     // itself - { DataLength, DataURI } becoming { Data } - and released for the

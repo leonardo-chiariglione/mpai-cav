@@ -6,7 +6,7 @@ namespace Mpai.Aif.Tests;
 // Remote AIMs (M3217): one Controller runs one Module, wherever its AIMs run; an
 // AIM placed on another machine - Relation External - is instantiated there by an
 // AIM host and reached through the Remote transport. The test Modules are in
-// Test/Data/Phase5, each with an Internal twin for comparison.
+// AIMs/TST/Phase5, each with an Internal twin for comparison.
 //
 // Today: a Module with an AIM placed elsewhere and no AIM host named for it is
 // refused; its Internal twin is built by the Controller. Placed: the AIMs placed
@@ -18,7 +18,7 @@ public class RemoteTests
 {
     public const string Text = "TST-TXT-V1.0";
 
-    public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase5");
+    public static string Amds => Path.Combine(Repository.Root, "AIMs", "TST", "Phase5");
 
     public static readonly (string Module, bool Continuous)[] Modules =
         [("TST-RXC", false), ("TST-RXL", false), ("TST-RLP", true), ("TST-RLL", true), ("TST-RCP", false), ("TST-RPY", true)];

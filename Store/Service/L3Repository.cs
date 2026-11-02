@@ -62,6 +62,12 @@ public sealed class L3Repository
         }
     }
 
+    // The version the next publication of this L3 will be.
+    public int NextVersion(string id)
+    {
+        lock (gate) return index.TryGetValue(id, out var list) ? list.Max(e => e.Version) + 1 : 1;
+    }
+
     public IReadOnlyList<Entry> Latest(string? name)
     {
         lock (gate)
