@@ -1,0 +1,594 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCDAC.json",
+  "title": "Domain Access Request and Response V1.0",
+  "description": "The Data Type exchanged between A-User Control (AUC) and Domain Access (DAC). It has two modes, told apart by Mode: Request (RQ), sent by AUC to DAC (previously DAC Directive), and Response (RS), sent by DAC to AUC (previously DAC Status). Domain Access provides domain semantics for capture-level grounding and for reasoning, without perception or reasoning of its own. A-User Control drives it at operation level and may ask it to validate the feasibility of an intended behaviour. A failure of an external source is reported so that AUC can decide. Every Request is answered by a Response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "AUCDACID",
+    "AUCDACTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-UCD-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request (AUC to DAC), the old DAC Directive. RS: Response (DAC to AUC), the old DAC Status."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "AUCDACID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "AUCDACTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "Instruction": {
+      "type": "string",
+      "enum": [
+        "PED",
+        "GLA",
+        "PKQ",
+        "GII",
+        "PRF",
+        "PCE",
+        "CME",
+        "AFR"
+      ],
+      "description": "Request only. The Instruction under which AUC issues the Request."
+    },
+    "Exchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Phase": {
+          "type": "string",
+          "enum": [
+            "new",
+            "continuation"
+          ]
+        },
+        "ResponseID": {
+          "type": "string",
+          "description": "ID of the Response to which a continuation Request follows."
+        }
+      },
+      "required": [
+        "Phase"
+      ],
+      "description": "Request only."
+    },
+    "Storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Write": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Category": {
+                "type": "string"
+              },
+              "Readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "Time": {
+                "type": "string",
+                "enum": [
+                  "module",
+                  "session",
+                  "persistent"
+                ]
+              }
+            },
+            "required": [
+              "Category"
+            ]
+          }
+        },
+        "Read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. What the AIM may write to and read from the Private Storage of the Module, under the rules set by AUC."
+    },
+    "ProcessActionOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "PAStatus": {
+          "type": "string"
+        },
+        "Complements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Constraint": {
+          "type": "string",
+          "description": "Resulting constraint on the Goal."
+        }
+      },
+      "description": "Request only. Outcome of a Process Action performed by AUC in the M-Instance, conveyed so that the AIM operates knowing the current M-Instance state."
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "achieved",
+        "achieved_differently",
+        "not_achieved"
+      ],
+      "description": "Response only. The outcome reached."
+    },
+    "Reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Code": {
+          "type": "string",
+          "enum": [
+            "none",
+            "service_unavailable",
+            "constraint_conflict",
+            "insufficient_context",
+            "deadline_exceeded",
+            "not_permitted"
+          ]
+        },
+        "Description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Code"
+      ],
+      "description": "Response only. Structured reason, required when Outcome is not 'achieved'."
+    },
+    "StorageOutcome": {
+      "type": "array",
+      "description": "Response only. Outcome of the writes instructed by the Request.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string"
+          },
+          "Result": {
+            "type": "string",
+            "enum": [
+              "written",
+              "not_authorised",
+              "not_attempted"
+            ]
+          }
+        },
+        "required": [
+          "Category",
+          "Result"
+        ]
+      }
+    },
+    "Goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Objective": {
+          "type": "string"
+        },
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "Objective"
+      ],
+      "description": "Request only. Binding as to the objective and the constraints."
+    },
+    "DomainContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "DomainType": {
+          "type": "string"
+        },
+        "DomainInstance": {
+          "type": "string"
+        },
+        "OntologyRef": {
+          "type": "string"
+        },
+        "ConstraintSet": {
+          "type": "string"
+        },
+        "InteractionMode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "DomainType",
+        "DomainInstance"
+      ],
+      "description": "In a Request: The domain in which interpretation must occur. in a Response: The domain context used."
+    },
+    "Operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ResolveAmbiguities": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "ApplyConstraints": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "SemanticEnrichment": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "CrossModalResolution": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        }
+      },
+      "description": "Request only. The domain operations requested, at operation level."
+    },
+    "Serving": {
+      "type": "string",
+      "enum": [
+        "capture",
+        "reasoning",
+        "both"
+      ],
+      "description": "Request only. Whether Domain Access serves capture-level grounding, reasoning-level semantics or both."
+    },
+    "Feasibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ProcessActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Step": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "Statement": {
+                "type": "string",
+                "description": "A Process Action statement conforming with the grammar of MMM-TEC V2.2."
+              }
+            },
+            "required": [
+              "Step",
+              "Statement"
+            ]
+          }
+        },
+        "SceneContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "SceneID": {
+              "type": "string"
+            },
+            "UserFocus": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "ProcessActions"
+      ],
+      "description": "Request only. Validation of the feasibility of Process Actions that are being considered (used under the PRF and PCE Instructions)."
+    },
+    "Sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ExternalAllowed": {
+          "type": "boolean"
+        },
+        "Allowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. External domain knowledge sources that Domain Access may use."
+    },
+    "GoalUnderstood": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Objective": {
+          "type": "string"
+        },
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "Objective"
+      ],
+      "description": "Response only. The goal as the AIM understood it."
+    },
+    "Fulfilment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ResolveAmbiguities": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        },
+        "ApplyConstraints": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        },
+        "SemanticEnrichment": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        },
+        "CrossModalResolution": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        }
+      },
+      "description": "Response only. Fulfilment of the requested operations."
+    },
+    "FeasibilityResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Step": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "PAStatus": {
+                "type": "string",
+                "enum": [
+                  "Ack",
+                  "Clash",
+                  "FaultyReq",
+                  "IncID",
+                  "IncDQ",
+                  "InsRights",
+                  "InsValue",
+                  "LocOOR",
+                  "PostRef",
+                  "QualNS"
+                ],
+                "description": "Ack: the Process Action can be performed. Otherwise the PA Status it would receive."
+              },
+              "Detail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Step",
+              "PAStatus"
+            ]
+          }
+        },
+        "Result": {
+          "type": "string",
+          "enum": [
+            "feasible",
+            "not_feasible",
+            "deferred"
+          ]
+        }
+      },
+      "required": [
+        "Steps",
+        "Result"
+      ],
+      "description": "Response only. Outcome of the feasibility validation, expressed with the PA Status vocabulary of MMM-TEC V2.2."
+    },
+    "ServiceFailures": {
+      "type": "array",
+      "description": "Response only. Failures of external domain knowledge sources.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Service": {
+            "type": "string"
+          },
+          "RequestID": {
+            "type": "string"
+          },
+          "Kind": {
+            "type": "string",
+            "enum": [
+              "transient",
+              "permanent"
+            ]
+          }
+        },
+        "required": [
+          "Service",
+          "Kind"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RQ"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "Instruction",
+          "Exchange",
+          "Goal",
+          "DomainContext"
+        ],
+        "properties": {
+          "RequestID": false,
+          "Outcome": false,
+          "Reason": false,
+          "StorageOutcome": false,
+          "GoalUnderstood": false,
+          "Fulfilment": false,
+          "FeasibilityResult": false,
+          "ServiceFailures": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RS"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "RequestID",
+          "Outcome",
+          "GoalUnderstood"
+        ],
+        "properties": {
+          "Instruction": false,
+          "Exchange": false,
+          "Storage": false,
+          "ProcessActionOutcome": false,
+          "Goal": false,
+          "Operations": false,
+          "Serving": false,
+          "Feasibility": false,
+          "Sources": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RS"
+          },
+          "Outcome": {
+            "enum": [
+              "achieved_differently",
+              "not_achieved"
+            ]
+          }
+        },
+        "required": [
+          "Mode",
+          "Outcome"
+        ]
+      },
+      "then": {
+        "required": [
+          "Reason"
+        ]
+      }
+    }
+  ]
+}

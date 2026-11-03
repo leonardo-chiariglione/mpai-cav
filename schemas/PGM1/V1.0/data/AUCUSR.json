@@ -1,0 +1,596 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCUSR.json",
+  "title": "User State Refinement Request and Response V1.0",
+  "description": "The Data Type exchanged between A-User Control (AUC) and User State Refinement (USR). It has two modes, told apart by Mode: Request (RQ), sent by AUC to USR (previously USR Directive), and Response (RS), sent by USR to AUC (previously USR Status). User State Refinement is a reasoning AIM: it decides its own conclusion, and says whether it adopted the correction proposed by AUC. A-User Control directs the evidence it may use and the properties it produces, whether it is Basic or Composite. Every Request is answered by a Response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "AUCUSRID",
+    "AUCUSRTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-UCU-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request (AUC to USR), the old USR Directive. RS: Response (USR to AUC), the old USR Status."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "AUCUSRID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "AUCUSRTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "Instruction": {
+      "type": "string",
+      "enum": [
+        "PED",
+        "GLA",
+        "PKQ",
+        "GII",
+        "PRF",
+        "PCE",
+        "CME",
+        "AFR"
+      ],
+      "description": "Request only. The Instruction under which AUC issues the Request."
+    },
+    "Exchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Phase": {
+          "type": "string",
+          "enum": [
+            "new",
+            "continuation"
+          ]
+        },
+        "ResponseID": {
+          "type": "string",
+          "description": "ID of the Response to which a continuation Request follows."
+        }
+      },
+      "required": [
+        "Phase"
+      ],
+      "description": "Request only."
+    },
+    "Storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Write": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Category": {
+                "type": "string"
+              },
+              "Readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "Time": {
+                "type": "string",
+                "enum": [
+                  "module",
+                  "session",
+                  "persistent"
+                ]
+              }
+            },
+            "required": [
+              "Category"
+            ]
+          }
+        },
+        "Read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. What the AIM may write to and read from the Private Storage of the Module, under the rules set by AUC."
+    },
+    "ProcessActionOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "PAStatus": {
+          "type": "string"
+        },
+        "Complements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Constraint": {
+          "type": "string",
+          "description": "Resulting constraint on the Goal."
+        }
+      },
+      "description": "Request only. Outcome of a Process Action performed by AUC in the M-Instance, conveyed so that the AIM operates knowing the current M-Instance state."
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "achieved",
+        "achieved_differently",
+        "not_achieved"
+      ],
+      "description": "Response only. The outcome reached."
+    },
+    "Reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Code": {
+          "type": "string",
+          "enum": [
+            "none",
+            "ambiguity_unresolved",
+            "partner_unavailable",
+            "constraint_conflict",
+            "insufficient_context",
+            "deadline_exceeded",
+            "not_permitted"
+          ]
+        },
+        "Description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Code"
+      ],
+      "description": "Response only. Structured reason, required when Outcome is not 'achieved'."
+    },
+    "StorageOutcome": {
+      "type": "array",
+      "description": "Response only. Outcome of the writes instructed by the Request.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string"
+          },
+          "Result": {
+            "type": "string",
+            "enum": [
+              "written",
+              "not_authorised",
+              "not_attempted"
+            ]
+          }
+        },
+        "required": [
+          "Category",
+          "Result"
+        ]
+      }
+    },
+    "Operation": {
+      "type": "string",
+      "enum": [
+        "estimate",
+        "update",
+        "reset"
+      ],
+      "description": "Request only."
+    },
+    "Goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Objective": {
+          "type": "string"
+        },
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "Objective"
+      ],
+      "description": "Request only. Binding as to the objective and the constraints."
+    },
+    "Urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "description": "Request only."
+    },
+    "ControlMode": {
+      "type": "string",
+      "enum": [
+        "Overseer",
+        "Micromanager"
+      ],
+      "description": "Request only. The mode in which AUC controls User State Refinement."
+    },
+    "Properties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Engagement": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "EntityState": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        }
+      },
+      "description": "Request only. The properties to be produced, at property level."
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Modalities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Text",
+              "Audio",
+              "Visual",
+              "Speech"
+            ]
+          },
+          "description": "Modalities of the evidence to consider, in decreasing order of weight."
+        },
+        "History": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Include": {
+              "type": "boolean"
+            },
+            "MaxTurns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "TimeWindow": {
+              "type": "string"
+            }
+          },
+          "description": "How much of the Interaction History is used."
+        },
+        "MInstanceServices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "M-Instance services (e.g., Authenticate) that User State Refinement may consult."
+        }
+      },
+      "description": "Request only. The evidence User State Refinement may use."
+    },
+    "Correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Proposal": {
+          "type": "string"
+        },
+        "Weight": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "Rationale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Proposal",
+        "Weight"
+      ],
+      "description": "Request only. A correction proposed by AUC. The AIM may adopt it, adopt it partially or decline it, and says so in the Response."
+    },
+    "Override": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Decision": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "override"
+          ]
+        },
+        "Engagement": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Level": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "Mode": {
+              "type": "string"
+            }
+          }
+        },
+        "EntityState": {
+          "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json"
+        },
+        "Rationale": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "description": "Request only. Override conditions: whether AUC accepts the refined User State or overrides it with the one provided."
+    },
+    "GoalUnderstood": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Objective": {
+          "type": "string"
+        },
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "Objective"
+      ],
+      "description": "Response only. The goal as the AIM understood it."
+    },
+    "UserStateID": {
+      "type": "string",
+      "description": "Response only. Identifier of the refined User State sent to Personality Alignment and made available to A-User Formation."
+    },
+    "PropertyFulfilment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Engagement": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        },
+        "EntityState": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "missing",
+            "not_requested"
+          ]
+        }
+      },
+      "description": "Response only. Fulfilment of the requested properties."
+    },
+    "CorrectionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Decision": {
+          "type": "string",
+          "enum": [
+            "none",
+            "adopted",
+            "partial",
+            "declined"
+          ]
+        },
+        "Reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Decision"
+      ],
+      "description": "Response only. Treatment of the Correction proposed by AUC."
+    },
+    "Engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "Mode": {
+          "type": "string"
+        }
+      },
+      "description": "Response only. Current engagement."
+    },
+    "OverrideReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Applied": {
+          "type": "boolean"
+        },
+        "Type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Applied"
+      ],
+      "description": "Response only."
+    },
+    "Provenance": {
+      "type": "array",
+      "description": "Response only. Provenance of the refinement.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Source": {
+            "type": "string"
+          },
+          "Kind": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Source"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RQ"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "Instruction",
+          "Exchange",
+          "Operation",
+          "Goal"
+        ],
+        "properties": {
+          "RequestID": false,
+          "Outcome": false,
+          "Reason": false,
+          "StorageOutcome": false,
+          "GoalUnderstood": false,
+          "UserStateID": false,
+          "PropertyFulfilment": false,
+          "CorrectionResponse": false,
+          "Engagement": false,
+          "OverrideReport": false,
+          "Provenance": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RS"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "RequestID",
+          "Outcome",
+          "GoalUnderstood",
+          "Engagement"
+        ],
+        "properties": {
+          "Instruction": false,
+          "Exchange": false,
+          "Storage": false,
+          "ProcessActionOutcome": false,
+          "Operation": false,
+          "Goal": false,
+          "Urgency": false,
+          "ControlMode": false,
+          "Properties": false,
+          "Evidence": false,
+          "Correction": false,
+          "Override": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "Mode": {
+            "const": "RS"
+          },
+          "Outcome": {
+            "enum": [
+              "achieved_differently",
+              "not_achieved"
+            ]
+          }
+        },
+        "required": [
+          "Mode",
+          "Outcome"
+        ]
+      },
+      "then": {
+        "required": [
+          "Reason"
+        ]
+      }
+    }
+  ]
+}
