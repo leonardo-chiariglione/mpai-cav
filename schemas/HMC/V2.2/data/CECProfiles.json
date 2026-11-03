@@ -1,0 +1,11 @@
+{
+  "$schema":        "https://json-schema.org/draft/2020-12/schema",
+  "$id":            "https://schemas.mpai.community/HMC/V2.2/data/CECProfiles.json",
+  "title":          "CEC Profiles V2.2",
+  "type":           "object",
+  "properties":     {
+    "Header":       { "type": "string", "const": "HMC-PRF-V2.2" },
+    "CECProfileID": { "type": "string" },
+    "Profile":      { "type": "string",
+                      "pattern": "^(ALL|NUL)([+-](MMS|UND|TRN|EPS|DIS)|@MMS#(TXO|SPO|AUO|VIO|3MO|PAF(#(AVA|LNG|NNM|EPS|SPC|(TXO|SPO)#([a-z]{3})(<->|->)([a-z]{3})))?)|@UND#(TXO|SPO|FCO|BDO|SPC)|@TRN#(TXO|SPO|FCO|BDO)#([a-z]{3})(<->|->)([a-z]{3})|@EPS#(TXO|PSO|FCO|BDO)|@DIS#(TXO|PSO|FCO|BDO))+$" } } }
+
