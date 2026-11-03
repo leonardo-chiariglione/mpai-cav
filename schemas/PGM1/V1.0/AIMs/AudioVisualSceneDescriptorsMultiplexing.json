@@ -1,0 +1,170 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "PGM-AVM-V1.0",
+  "APIProfile": "Basic",
+  "Description": "Audio-Visual Scene Descriptors Multiplexing",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AudioVisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "JointSalience",
+      "Direction": "Input",
+      "DataType": "PGM-JSL-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVACXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-CAV-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVACXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-CAV-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVADomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVAInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioVisualSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVACXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-CAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVADomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVAInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-visual-scene-descriptors-multiplexing/"
+    }
+  ]
+}

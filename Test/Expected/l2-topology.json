@@ -47,5 +47,16 @@
   "PAF-SAF-V1.6": "loads",
   "PAF-VCT-V1.6": "loads",
   "PAF-VMS-V1.6": "loads",
+  "PGM-ASE-V1.0": "loads",
+  "PGM-ATU-V1.0": "loads",
+  "PGM-AUF-V1.0": "loads",
+  "PGM-AVA-V1.0": "loads",
+  "PGM-CXT-V1.0": "loads",
+  "PGM-DAC-V1.0": "loads",
+  "PGM-PAL-V1.0": "loads",
+  "PGM-PRC-V1.0": "loads",
+  "PGM-USD-V1.0": "loads",
+  "PGM-USR-V1.0": "loads",
+  "PGM-VSE-V1.0": "loads",
   "XRV-LTP-V1.0": "fails: XRV-LTP-V1.0: Topology end 'XRV-END-V1.0.ParticipantData' uses the label 'ParticipantData', which XRV-LTP-V1.0 does not declare. Declare it in its InternalTypes (or ExternalPorts), or state the end's ..."
 }

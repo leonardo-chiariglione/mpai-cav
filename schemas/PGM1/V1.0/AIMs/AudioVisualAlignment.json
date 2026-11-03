@@ -1,0 +1,662 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "PGM-AVA-V1.0",
+  "APIProfile": "Basic",
+  "Description": "Audio-Visual Alignment",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "EnhancedAudioSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-EAS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "EnhancedVisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-EVS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVACXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-CAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVADomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVAInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioVisualSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVACXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-CAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVADomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AVAInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IAV-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Header": "PGM-CCA-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-CRE-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-SGC-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-AVR-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-AVM-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "OSD-EAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "OSD-EVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-ASC-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-ASC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "OSD-EAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "OSD-EVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-ECO-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "PGM-ECO-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-UME-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "PGM-UME-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "OSD-EAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "OSD-EVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "OSD-EAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "OSD-EVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-JSL-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-JSL-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-SGC-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-CAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-CAV-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVR-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-DAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CCA-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CRE-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AVM-V1.0",
+        "DataType": "PGM-IAV-V1.0"
+      }
+    }
+  ],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-visual-alignment/"
+    }
+  ]
+}

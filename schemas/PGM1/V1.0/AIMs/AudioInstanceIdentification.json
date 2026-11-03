@@ -1,0 +1,152 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "PGM-AII-V1.0",
+  "APIProfile": "Basic",
+  "Description": "The Audio Instance Identification (PGM-AII) AIM is a Sub-AIM of Audio Scene Enhancement (PGM-ASE). It identifies the Audio Objects of the scene and assigns them Audio Object Types, using classification models, domain knowledge, and Interaction History. It is the PGM-AUA counterpart of Audio Object Identification (CAE-AOI) of CAE-USC V2.5, which receives Audio Objects and their Audio Scene Geometry and produces the Audio Instance Identifiers. Each Sub-AIM of Audio Scene Enhancement independently generates a Audio CXT Response, a Audio Domain Request and a Audio Interaction History Request. Enha",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AudioCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-CAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BAS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioDomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-CAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioObjectTypes",
+      "Direction": "Output",
+      "DataType": "PGM-AOT-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioDomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/audio-instance-identification/"
+    }
+  ]
+}

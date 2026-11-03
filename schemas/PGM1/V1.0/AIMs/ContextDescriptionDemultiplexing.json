@@ -1,0 +1,216 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "PGM-CDD-V1.0",
+  "APIProfile": "Basic",
+  "Description": "The Context Description Demultiplexing (PGM-CDD) AIM is a Sub-AIM of Context Description. It demultiplexes the AUC-CXT Request, Domain Response and Interaction History Response into their Audio, Visual and User components, and routes the Audio and Visual Objects to the enhancement Sub-AIMs. [Template: to be completed.] The Context Description Demultiplexing AIM:",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "CXTInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-ICX-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioObject",
+      "Direction": "Input",
+      "DataType": "OSD-BAO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioObject",
+      "Direction": "Output",
+      "DataType": "OSD-BAO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObject",
+      "Direction": "Output",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioCXTRequest",
+      "Direction": "Output",
+      "DataType": "PGM-CAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTRequest",
+      "Direction": "Output",
+      "DataType": "PGM-CVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTRequest",
+      "Direction": "Output",
+      "DataType": "PGM-CUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioDomainResponse",
+      "Direction": "Output",
+      "DataType": "PGM-DAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainResponse",
+      "Direction": "Output",
+      "DataType": "PGM-DVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserDomainResponse",
+      "Direction": "Output",
+      "DataType": "PGM-DUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioCXTInteractionHistoryResponse",
+      "Direction": "Output",
+      "DataType": "PGM-IAU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTInteractionHistoryResponse",
+      "Direction": "Output",
+      "DataType": "PGM-IVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTInteractionHistoryResponse",
+      "Direction": "Output",
+      "DataType": "PGM-IUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/context-description-demultiplexing/"
+    }
+  ]
+}

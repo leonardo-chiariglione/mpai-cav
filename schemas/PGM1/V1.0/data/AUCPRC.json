@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCPRC.json",
-  "title": "Prompt Creation Request and Response V1.0",
+  "title": "AUC-PRC V1.0",
   "description": "The Data Type exchanged between A-User Control (AUC) and Prompt Creation (PRC). It has two modes, told apart by Mode: Request (RQ), sent by AUC to PRC (previously PRC Directive), and Response (RS), sent by PRC to AUC (previously PRC Status). Prompt Creation assembles the PC Prompt from Intent, Propositions, Goal and Personality, and does not perform perception, interpretation or reasoning. A-User Control drives each element at property level, whether Prompt Creation is Basic or Composite. Every Request is answered by a Response.",
   "type": "object",
   "additionalProperties": false,

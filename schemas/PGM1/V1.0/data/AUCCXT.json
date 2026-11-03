@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCCXT.json",
-  "title": "Context Description Request and Response V1.0",
+  "title": "AUC-CXT V1.0",
   "description": "The Data Type exchanged between A-User Control (AUC) and Context Description (CXT). It has two modes, told apart by Mode: Request (RQ), sent by AUC to CXT (previously CXT Directive), and Response (RS), sent by CXT to AUC (previously CXT Status). Context Description is an executor AIM: A-User Control drives the capture and the processing of each medium (Audio, Visual, Text, Speech) and of the User, at property level, whether Context Description is Basic or Composite, and the Response reports the outcome per medium and per property and, where a goal could not be met, the world condition that prevented it. Every Request is answered by a Response.",
   "type": "object",
   "additionalProperties": false,

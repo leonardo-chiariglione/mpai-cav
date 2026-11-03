@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCUSR.json",
-  "title": "User State Refinement Request and Response V1.0",
+  "title": "AUC-USR V1.0",
   "description": "The Data Type exchanged between A-User Control (AUC) and User State Refinement (USR). It has two modes, told apart by Mode: Request (RQ), sent by AUC to USR (previously USR Directive), and Response (RS), sent by USR to AUC (previously USR Status). User State Refinement is a reasoning AIM: it decides its own conclusion, and says whether it adopted the correction proposed by AUC. A-User Control directs the evidence it may use and the properties it produces, whether it is Basic or Composite. Every Request is answered by a Response.",
   "type": "object",
   "additionalProperties": false,

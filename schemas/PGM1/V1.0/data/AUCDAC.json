@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCDAC.json",
-  "title": "Domain Access Request and Response V1.0",
+  "title": "AUC-DAC V1.0",
   "description": "The Data Type exchanged between A-User Control (AUC) and Domain Access (DAC). It has two modes, told apart by Mode: Request (RQ), sent by AUC to DAC (previously DAC Directive), and Response (RS), sent by DAC to AUC (previously DAC Status). Domain Access provides domain semantics for capture-level grounding and for reasoning, without perception or reasoning of its own. A-User Control drives it at operation level and may ask it to validate the feasibility of an intended behaviour. A failure of an external source is reported so that AUC can decide. Every Request is answered by a Response.",
   "type": "object",
   "additionalProperties": false,

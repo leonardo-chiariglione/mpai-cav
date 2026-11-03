@@ -1,0 +1,589 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "PGM-VSE-V1.0",
+  "APIProfile": "Basic",
+  "Description": "Visual Scene Enhancement",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "VisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-CVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "EnhancedVisualSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-EVS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-CVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IVI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Header": "PGM-VSD-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-VII-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-VEA-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-VSM-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PGM-VEM-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "OSD-EVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-EVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-VOT-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-VOT-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "OSD-IAP-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "OSD-IAP-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-VOT-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-VOT-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-CVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-DVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IVI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "PGM-IVI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSM-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "OSD-AFT-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VEA-V1.0",
+        "DataType": "OSD-IAP-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-VEM-V1.0",
+        "DataType": "OSD-IAP-V1.5"
+      }
+    }
+  ],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/visual-scene-enhancement/"
+    }
+  ]
+}

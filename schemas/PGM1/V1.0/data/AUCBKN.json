@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCBKN.json",
-  "title": "Basic Knowledge Request and Response V1.0",
+  "title": "AUC-BKN V1.0",
   "description": "The Data Type exchanged between A-User Control (AUC) and Basic Knowledge (BKN). It has two modes, told apart by Mode: Request (RQ), sent by AUC to BKN (previously BKN Directive), and Response (RS), sent by BKN to AUC (previously BKN Status). Basic Knowledge is a reasoning AIM and is not Composite: it decides its own conclusion, and says whether it adopted the correction proposed by AUC. AUC may ask it to propose Process Actions in addition to the Final Response; the Final Response and the Process Actions are sent on its output Ports and the Response only reports them. Every Request is answered by a Response.",
   "type": "object",
   "additionalProperties": false,
