@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AUDIO SCENE MANAGEMENT BY VOICE: what the User Agent that runs ASM-VCI.orch needs to hold the two Modules - the Voice Command Interface (MMC-VCI) and Audio Scene Management
+       (CAE-ASM) - in one Controller: a folder of the Modules' L3s whose Access is read from the files of this software, and the provider that builds the AIMs of both. It has no window: the
+       window of the User Agent and the tests use it. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Cae.AsmVoice</RootNamespace>
+    <AssemblyName>Mpai.Cae.AsmVoice</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\ASM\Mpai.Cae.Asm.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Providers\Mpai.Providers.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "OSD-VOI-V1.5-I01", "AIMName": "OSD-VOI-V1.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "OSD-VOI-V1.5",
 
   "APIProfile":       "Basic",
@@ -14,6 +14,8 @@
   "SubAIMs":              [],
 
   "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

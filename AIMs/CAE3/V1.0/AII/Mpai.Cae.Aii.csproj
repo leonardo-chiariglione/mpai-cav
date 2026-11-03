@@ -9,7 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Onnx\Mpai.Onnx.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
   </ItemGroup>
 </Project>

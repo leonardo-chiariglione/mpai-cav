@@ -15,8 +15,9 @@
 
     "Audit":                      { "type": "object", "oneOf": [
                                   { "type": "object", "additionalProperties": false, "required": [ "Request" ], "properties": {
-      "Request":                  { "type": "object", "additionalProperties": false, "required": [ "AuditPeriod", "ProcessingOperations" ],
+      "Request":                  { "type": "object", "additionalProperties": false, "required": [ "AuditPeriod", "ProcessingOperations", "Tokens" ],
                                     "properties": {
+        "Tokens":                 { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Tokens.json", "description": "The Tokens the End User was given on registering: the request is served if they grant the Auditing service." },
         "AuditPeriod":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
         "ProcessingOperations":   { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
                                     "required": [ "ProcessingOperation" ], "properties": {
@@ -24,7 +25,8 @@
           "DataClass":            { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/AIHTaxonomies.json#/properties/DataClass" } } } } } } } },
                                   { "type": "object", "additionalProperties": false, "required": [ "Response" ], "properties": {
       "Response":                 { "type": "object", "additionalProperties": false, "required": [ "AIHDataIDs" ], "properties": {
-        "AIHDataIDs":             { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false,
+        "ProcessingState":        { "type": "boolean", "description": "False if the request was refused (its Tokens do not grant the Auditing service); omitted or true if it was served." },
+        "AIHDataIDs":             { "type": "array", "description": "The AIH Data processed against the licence; none where the audit found no violations.", "items": { "type": "object", "additionalProperties": false,
                                     "required": [ "AIHDataID" ], "properties": {
           "AIHDataID":            { "type": "string" },
           "ProcessTime":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },

@@ -1,0 +1,5 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id":     "https://schemas.mpai.community/TFA/V1.5/formats/MLModelFileFormats.json",
+  "title":   "ML Model File Formats V1.5",
+  "description": "How an ML Model is stored as a unit for delivery: the container of the model file and of its assets.",
+  "type":    "string", "enum": [ "TAR", "TAR.GZ", "ZIP" ] }

@@ -1,4 +1,5 @@
 {
-  "the MAS degrades": "the vehicle followed the Trajectory; stopped by the interlock; device \"Vehicle\" brought to its safe state: an AIM of 1CAV-MAS-V2.0-I01 is Degraded",
+  "the MAS reports, OnDegraded Continue": "the vehicle followed the Trajectory; stopped by the interlock; device \"Vehicle\" brought to its safe state: the workflow ends",
+  "the Module is stopped": "the vehicle followed the Trajectory; stopped by the interlock; device \"Vehicle\" brought to its safe state: 1CAV-MAS-V2.0-I01 is no longer there: NotStarted",
   "the workflow ends": "the vehicle followed the Trajectory; stopped by the interlock; device \"Vehicle\" brought to its safe state: the workflow ends"
 }

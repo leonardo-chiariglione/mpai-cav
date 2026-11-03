@@ -1,4 +1,7 @@
-﻿using System;
+﻿// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
+using System;
 using System.Collections.Generic;
 
 using SixLabors.ImageSharp;
@@ -29,7 +32,6 @@ public sealed class FaceIdentityRecognitionAim : IDisposable
 {
     private readonly ArcFaceRecogniser _recogniser;
     private readonly SubjectGallery _gallery;
-    private const string TaxonomyUri = "https://schemas.mpai.community/taxonomies/visual.json";
 
     public FaceIdentityRecognitionAim(ArcFaceRecogniser recogniser, SubjectGallery gallery)
     {
@@ -56,8 +58,7 @@ public sealed class FaceIdentityRecognitionAim : IDisposable
                 LabelConfidenceLevel = m.Similarity,
                 Taxonomy = new InstanceTaxonomy
                 {
-                    TaxonomyLevelIDs = new List<string> { "visual", "face", "person" },
-                    TaxonomyDataURI = TaxonomyUri
+                    TaxonomyLevelIDs = new List<string> { "visual", "face", "person" }
                 },
                 TaxonomyConfidenceLevel = 1.0
             };
@@ -71,8 +72,7 @@ public sealed class FaceIdentityRecognitionAim : IDisposable
                 LabelConfidenceLevel = 1.0,
                 Taxonomy = new InstanceTaxonomy
                 {
-                    TaxonomyLevelIDs = new List<string> { "visual", "face" },
-                    TaxonomyDataURI = TaxonomyUri
+                    TaxonomyLevelIDs = new List<string> { "visual", "face" }
                 },
                 TaxonomyConfidenceLevel = 1.0
             };

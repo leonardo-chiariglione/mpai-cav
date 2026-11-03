@@ -1,0 +1,53 @@
+# =============================================================================
+#  CUI-CPP.orch - Company Performance Prediction (MPAI-CUI, CPP V2.1)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module - Company Performance Prediction, 1CUI-CPP-V2.1-I01 - which executes
+#  continuously: its AIMs (Financial and Governance Assessment, Primary Default Prediction, Organisation
+#  Model Assessment, Primary Discontinuity Prediction, Risk Matrix Generation, Prediction Result
+#  Perturbation) feed one another, and what one gives another is the Topology's business, never the
+#  User Agent's. The User Agent binds a device to every Port of the Module's boundary, each to one Port,
+#  by Data Type and Port Number:
+#
+#    what the analyst gives the Module -
+#      Horizon (number)                  the Prediction Horizon, in months
+#      Financial (CUI-FND)               the Financial Descriptors of the company
+#      Governance (CUI-GVS)              its Governance Descriptors
+#      Climate (CUI-LRD)                 the Climate Risk Descriptors of where it operates   (optional)
+#      Cyber (CUI-CRD)                   its Cyber Risk Descriptors                         (optional)
+#      SecondaryRisks (CUI-SRS)          the Secondary Risk Statements                      (optional)
+#
+#    what the Module gives -
+#      Organisation (CUI-ORD)            what the organisation does to the probability of default
+#      PrimaryDefault (CUI-PDD)          the probability of default within the Horizon, and the importance
+#                                        of each Financial Descriptor to it
+#      PrimaryDiscontinuity (CUI-PSD)    the probability that operations are interrupted, by risk
+#      SecondaryProbability (number)     the Secondary Discontinuity Probability                (optional)
+#
+#  The User Agent names no AIM and knows nothing of the Module but its boundary; the model the Prediction
+#  AIMs use is the Module's business too (Access data the Controller obtains).
+# =============================================================================
+
+workflow CUI-CPP over 1CUI-CPP-V2.1-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  Horizon         (number)        from device "Horizon"
+    stream  Financial       (CUI-FND-V2.1)  from device "Financial"
+    stream  Governance      (CUI-GVS-V2.1)  from device "Governance"
+    stream  Climate         (CUI-LRD-V2.1)  from device "Climate"
+    stream  Cyber           (CUI-CRD-V2.1)  from device "Cyber"
+    stream  SecondaryRisks  (CUI-SRS-V2.1)  from device "SecondaryRisks"
+
+    deliver Organisation          (CUI-ORD-V2.1)  to device "Report"
+    deliver PrimaryDefault        (CUI-PDD-V2.1)  to device "Report"
+    deliver PrimaryDiscontinuity  (CUI-PSD-V2.1)  to device "Report"
+    deliver SecondaryProbability  (number)        to device "Report"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

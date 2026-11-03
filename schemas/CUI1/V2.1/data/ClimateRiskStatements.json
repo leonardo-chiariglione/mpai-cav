@@ -1,0 +1,68 @@
+{ "$schema":                                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                    "https://schemas.mpai.community/CUI1/V2.1/data/ClimateRiskStatements.json",
+  "title":                                  "Climate Risk Descriptors V2.1",
+  "type":                                   "object",
+  "properties":                             {
+
+    "Header":                               { "type": "string", "const": "CUI-LRS-V2.1" },
+    "MInstanceID":                          { "type": "string", "description": "Identifier of Virtual Space." },
+    "UEnvironmentID":                       { "type": "string" },
+    "ClimateRiskDescriptorsID":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "ClimateRiskDescriptorsTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                              "description": "Time of Descriptor creation." },
+
+    "ClimateRiskDescriptorsData":           { "type": "object", "description": "Data collecting information on Descriptors.", "properties": {
+
+      "GNSSPosition":                       { "type": "object", "description": "Data of GNSS Position.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                              "description": "Time of GNSS position acquisition." },
+        "Source":                           { "type": "string", "description": "ID of prediction requester." },
+        "Type":                             { "type": "string", "description": "GNSS Point." },
+        "ValueOfPosition":                  { "type": "string","description": "According to  selected GNSS standard." } } },
+
+      "AverageTemperature":                 { "type": "object", "description": "Average Temperature.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Year of ref." },
+        "Source":                           { "type": "string", "description": "ID of prediction requester or  data provider." },
+        "Type":                             { "type": "string", "description": "Real number." },
+        "AverageTemperature4Qs":            { "type": "number", "description": "Average temperature during last 4 quarters." } } },
+
+      "AverageMinimumTemperature":          { "type": "object", "description": "Average Minimum Temperature.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "AverageMinimumTemperature4Qs":     { "type": "number", "description": "Average minimum temperature during last 4 quarters." } } },
+
+      "AverageMaximumTemperature":          { "type": "object", "description": "Average Maximum Temperature.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "AverageMaximumTemperature4Qs":     { "type": "number", "description": "Avg max temperature during last 4 quarters." } } },
+
+      "TotalMonthlyPrecipitation":          { "type": "object", "description": "Total Monthly Precipitation.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Month of reference." },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "TotalMonthlyPrecipitationMm":      { "type": "number", "description": "Value of total monthly precipit. in mm." } } },
+
+      "AverageNumberOfMonthlyRainyDays4Qs": { "type": "object",
+                                              "description": "Average Number of Monthly Rainy Days in the last 4 Quarters.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "AverageNumberOfMonthlyRainyDays":  { "type": "number",
+                                              "description": "Average number of monthly rainy days (last 4 quarters)." } } },
+
+      "AverageMinimumHumidity4Qs":          { "type": "object", "description": "Avg Min Humidity in last 4 Quarters.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "AverageMinimumHumidity":           { "type": "number", "description": "Avg min humidity during the last 4 quarters." } } },
+
+      "AverageMaximumHumidity4Qs":          { "type": "object", "description": "Avg max humidity in last 4 quarters.", "properties": {
+        "Time":                             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+        "Source":                           { "type": "string" },
+        "Type":                             { "type": "string" },
+        "AverageMaximumHumidity":           { "type": "number", "description": "Avg maxm humidity during  last 4 quarters." } } } } },
+
+    "Trace":                                { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":                        { "type": "string", "maxLength": 2048 } } }

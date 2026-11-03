@@ -26,7 +26,7 @@ public class AsmVoiceThroughControllerTests
     {
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         return new ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"),
-            s => new CompositeProvider(new AsmProvider(Repository.Amds), new MadProvider(store), new MatProvider(s)));
+            s => new CompositeProvider(new AsmProvider(Repository.Amds), new LeafAimsProvider(s)));
     }
 
     private static bool Ollama()
@@ -47,9 +47,9 @@ public class AsmVoiceThroughControllerTests
         BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
     };
 
-    private static string Command(UserCommandData data) => MpaiJson.ToJson(new UserCommand
+    private static string Command(UserCommandRQ data) => MpaiJson.ToJson(new UserCommand
     {
-        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = Guid.NewGuid().ToString(), UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     });
 
     private static double? XOf(JsonNode? scene, string name) =>
@@ -58,8 +58,9 @@ public class AsmVoiceThroughControllerTests
             .Select(e => e?["AudioObjectSpaceTime"]?["SpatialAttitude1"]?["Position"]?["CartPosition"]?[0] is { } x ? (double?)x.GetValue<double>() : null)
             .FirstOrDefault();
 
+    // SUSPENDED (the author, 2026-10-17): the ASM Module no longer has the vocal interface (ASR, EDP, TTS); it comes back as an extension of its own.
     // The Controller starts the Module with the voice AIMs in it: the Module is the L2, all of it.
-    [SkippableFact]
+    [SkippableFact(Skip = "The vocal interface is not part of the ASM Module now; it returns as an extension.")]
     public void TheControllerStartsTheModuleWithItsVoice()
     {
         var work = Path.Combine(Path.GetTempPath(), "asm-voice-start-" + Guid.NewGuid().ToString("N"));
@@ -78,7 +79,7 @@ public class AsmVoiceThroughControllerTests
         finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
     }
 
-    [SkippableFact]
+    [SkippableFact(Skip = "The vocal interface is not part of the ASM Module now; it returns as an extension.")]
     [Trait("Duration", "Long")]
     public void WhatThePersonSaysMovesTheObjectThroughTheController()
     {
@@ -100,7 +101,7 @@ public class AsmVoiceThroughControllerTests
                 Assert.Equal(AifError.OK, opened.Error);
                 ids.Add((string)JsonNode.Parse(opened.Json!)!["BasicAudioObjectID"]!);
             }
-            api.InputWrite(Asm, "CAE-UCM-V1.0", 2, Command(new UserCommandData
+            api.InputWrite(Asm, "CAE-UCM-V1.0", 1, Command(new UserCommandRQ
             {
                 AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
                                                                   new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
@@ -119,24 +120,16 @@ public class AsmVoiceThroughControllerTests
             // The User Command that comes out is given back where the User Agent addresses it.
             var understood = api.OutputRead(Asm, "CAE-UCM-V1.0", 6, 180_000);
             Assert.True(understood.Error == AifError.OK, "no User Command: " + understood.Error);
-            Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandData"]!["MovedObjects"]);
-            Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 2, understood.Json!));
+            Assert.NotNull(JsonNode.Parse(understood.Json!)!["UserCommandRQ"]!["MovedObjects"]);
+            Assert.Equal(AifError.OK, api.InputWrite(Asm, "CAE-UCM-V1.0", 1, understood.Json!));
 
             var report = api.OutputRead(Asm, "CAE-UCM-V1.0", 2, 60_000);
-            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandReport!.Outcome);
+            Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
             var edited = api.OutputRead(Asm, "OSD-BAS-V1.5", 1, 60_000);
             Assert.True(XOf(JsonNode.Parse(edited.Json!), "violin")!.Value < violinAt, "the violin moved to the left");
         }
         finally { api.StopFlow(Asm); try { Directory.Delete(work, true); } catch { } }
     }
 
-    private static Dictionary<string, string> VoiceSettings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    private static Dictionary<string, string> VoiceSettings(string aim) => TestModels.Settings(aim);
 }

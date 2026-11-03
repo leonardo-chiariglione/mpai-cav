@@ -20,7 +20,10 @@
     "Formats":               { "type": "object", "additionalProperties": false, "properties": {
       "Extension":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/NNModelExtensions.json" },
       "Framework":          { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/NNModelFrameworks.json" },
-      "Exchange":           { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/NNModelExchange.json" } } },
+      "Exchange":           { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/NNModelExchange.json" },
+      "TransportFormat":    { "type": "object", "additionalProperties": false, "properties": {
+        "FileFormats":      { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/MLModelFileFormats.json" },
+        "StreamFormats":    { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/MLModelStreamFormats.json" } } } } },
 
     "Attributes":           { "$ref": "#/$defs/Attributes" },
 

@@ -3,7 +3,7 @@
   "$id":              "https://schemas.mpai.community/AIH1/V1.1/AIMs/AnomalyAndRiskAlerting.json",
   "title":            "Anomaly and Risk Alerting V1.1",
 
-  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "AIH-ARA-V1.1-I01", "AIMName": "AIH-ARA-V1.1"},
+  "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":           "AIH-ARA-V1.1",
 
   "APIProfile":       "Basic",
@@ -14,6 +14,8 @@
 
   "ExternalPorts":  [{"Name": "AIHData", "Direction": "Input",  "DataType": "AIH-AHD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "ARAData", "Direction": "Output", "DataType": "AIH-ARD-V1.1", "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":[{"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}],
 

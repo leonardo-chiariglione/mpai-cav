@@ -1,0 +1,16 @@
+# StoreApp
+
+The Implementer's front door to the MPAI Store: a window where an L3 is submitted to
+the Store Service and the Store's verdict is read - what it found, and whether it
+published or refused the L3. StoreApp holds no Store logic of its own.
+
+- **Store address:** the environment variable `MPAI_STORE`, default `https://localhost:5020/`.
+- **Build:** run `StoreApp.bat`, which builds `StoreApp.exe` in this folder; or
+  `dotnet run --project MAS\Store\App\StoreApp.csproj`.
+- **Implementer ID:** the first submission asks for it and asks the Service whether it has been assigned (it is kept for the next time). *Register as an Implementer...* opens the registration page of the Service, which gives the ID. The L3 must carry that ID in its Identifier.
+- **Use:** *Submit an L3...*, pick the file, read the log. The list on the left shows
+  what the Store holds, with each L3's latest version and the number of findings.
+
+See `MAS\Store\Service\README.md` for what the Store checks.
+
+- **What the App writes on your computer** (the Store's means of authenticating a submitter needs it; WKF-2 of the MPAI Store page, 7.3, requires a Store to say so): in `%LOCALAPPDATA%\MPAI\StoreApp` the file `implementer-id.txt` (your Implementer ID, so that it is not asked again) and `implementer-<ID>.key` (your private key, which never leaves the computer and is not password-protected). Nothing else.

@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "MMC-ASR-V2.5",
 
   "APIProfile":       "Basic",
@@ -20,6 +20,12 @@
 
   "Topology":        [ ],
 
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "asr-model", "Uri": "/* URI of the speech recognition model */", "Sha256": "/* SHA-256 */", "Setting": "ModelPath", "Description": "The speech recognition model that the program of the Implementation reads."},
+                      {"Name": "asr-program", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the program inside the archive */", "Setting": "ExecutablePath", "Description": "The program that reads the speech recognition model."},
+                      {"Name": "asr-server", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the server inside the archive */", "Setting": "ServerPath", "Description": "The server that keeps the model loaded between turns."}],
+
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",
                         "Architecture":     "/* x86-64 | ARM64 */",

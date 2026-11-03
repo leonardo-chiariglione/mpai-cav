@@ -17,13 +17,9 @@ public class StandInTests
 {
     private static readonly (string Module, (string DataType, int Number, string Json)[] Inputs)[] Cases =
     {
-        ("1MMC-MAD-V2.5-I01", [("OSD-BSO-V1.5", 1, "speech"), ("OSD-B3O-V1.5", 1, "avatar")]),
-        ("1MMC-MAD-V2.5-I01", [("OSD-BTO-V1.5", 1, "typed"), ("OSD-B3O-V1.5", 1, "avatar")]),
         ("1MMC-AMQ-V2.5-I01", [("OSD-BSO-V1.5", 2, "reply")]),
         ("1MMC-AMQ-V2.5-I01", [("OSD-BVO-V1.5", 1, "picture"), ("OSD-BSO-V1.5", 1, "question")]),
         ("1MMC-AMQ-V2.5-I01", [("OSD-BVO-V1.5", 1, "picture"), ("OSD-BTO-V1.5", 1, "welcome")]),
-        ("1MMC-MAT-V2.5-I01", [("OSD-BSO-V1.5", 1, "speech"), ("OSD-SEL-V1.5", 1, "en-it"), ("OSD-B3O-V1.5", 1, "avatar")]),
-        ("1MMC-MPD-V2.5-I01", [("OSD-BSO-V1.5", 1, "speech"), ("OSD-B3O-V1.5", 1, "avatar")]),
         ("1PAF-RSR-V1.6-I01", [("OSD-BTO-V1.5", 1, "words"), ("OSD-BTO-V1.5", 2, "words"), ("OSD-B3O-V1.5", 1, "avatar")]),
         ("1MAS-APP-V1.0-I01", [("OSD-BTO-V1.5", 1, "hello"), ("OSD-B3O-V1.5", 1, "avatar")])
     };

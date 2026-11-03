@@ -24,9 +24,9 @@ public sealed class AmsProvider : IAimProvider
         Fed => new FullEnvironmentDescription(aimName, settings),
         Rsp => new RouteSelectionPlanning(aimName),
         Psp => new PathSelectionPlanning(aimName, settings),
-        Msp => new MotionSelectionPlanning(aimName, settings),
+        Msp => new MotionSelectionPlanning(aimName, settings, storage, privateStorage),
         Toa => new TrafficObstacleAvoidance(aimName, settings),
-        Amm => new AmsMemory(aimName, moduleStorage),
+        Amm => new AmsMemory(aimName, storage),
         _ => throw new ArgumentException($"{aimName} is not an AIM of AMS Stage 1.")
     };
 }

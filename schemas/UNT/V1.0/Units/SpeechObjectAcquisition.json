@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-SOA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Media",
+  "Description": "Speech Object Acquisition: acquires Speech Objects from the real world and provides them, and the Scene Descriptors of what it acquires where the Data Type exists. A microphone gives a Basic Speech Object; a source on a disk or a network may give a Basic or a full Speech Object, and Basic or full Scene Descriptors. The end of the Speech Object is the end of the speech.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "SensedSpeech",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-BSS-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredSpeech",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5",
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredSpeech",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5",
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

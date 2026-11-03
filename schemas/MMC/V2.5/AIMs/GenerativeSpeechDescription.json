@@ -2,7 +2,7 @@
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
   "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/GenerativeSpeechDescription.json",
   "title":                "Generative Speech Description V2.5",
-  "Identifier":           {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-GSD-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "MMC-GSD-V2.5",
   "APIProfile":           "Basic",
   "Description":          "Generative Speech Description: produces the Machine Speech Descriptors from the Text and, optionally, a Speech Personal Status for expression; the Descriptors drive the synthesis of the Machine Speech; when the Speech Personal Status is absent the speech is neutral.",
@@ -12,6 +12,8 @@
                           {"Name": "MachineSpeechDescriptors", "Direction": "Output", "DataType": "MMC-SDO-V2.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
   "SubAIMs":              [],
   "Topology":             [],
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
   "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
   "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
                           {"Name": "CPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
@@ -21,4 +23,4 @@
                           {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},
                           {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */", "Maximum": "/* GB/s */", "Request": "/* GB/s */"}],
   "DataXMData":           {},
-  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}] }
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/generative-speech-description/"}] }

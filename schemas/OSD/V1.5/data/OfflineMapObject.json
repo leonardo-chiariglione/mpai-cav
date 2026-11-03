@@ -6,7 +6,7 @@
   "required":                         [ "Header", "OfflineMapObjectID", "OfflineMapObjectSpaceTime" ],
   "properties":                       {
 
-    "Header":                         { "type": "string", "const": "OSD-OMO-V1.5", "description": "Offline Map Object Header â€“ Standard OSD-OMO-Vx.y" },
+    "Header":                         { "type": "string", "const": "OSD-OMO-V1.5", "description": "Offline Map Object Header – Standard OSD-OMO-Vx.y" },
     "MInstanceID":                    { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Offline Map Object is or is intended to be located." },
     "UEnvironmentID":                 { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Offline Map Object is or is intended to be located." },
     "OfflineMapObjectID":             { "type": "string", "description": "Unique identifier of this Offline Map Object." },

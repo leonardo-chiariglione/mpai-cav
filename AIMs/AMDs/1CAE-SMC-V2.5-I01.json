@@ -1,0 +1,17 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "CAE-SMC-V2.5-I01", "AIMName": "1CAE-SMC-V2.5-I01"},
+  "Header":           "CAE-SMC-V2.5",
+  "APIProfile":       "Basic",
+  "Description":      "Speech Model Creation: receives the Speech Segments for Modelling (a Basic Speech Object) and produces the Neural Network Speech Model (an ML Model Object).",
+  "ExternalPorts":    [{"Name": "SpeechSegmentsForModelling", "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "NeuralNetworkSpeechModel",   "Direction": "Output", "DataType": "AIP-MLO-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":          [],
+  "Topology":         [],
+  "AccessSources":   [{"Name": "openvoice-source", "Uri": "https://github.com/myshell-ai/OpenVoice/archive/74a1d147b17a8c3092dd5430504bd83ef6c7eb23.zip", "Sha256": "D08CBC84F4EC7ABC76F9DDDB5BBB221E906E49CFE5FEBD37133152BDEACB8BE4", "Unpack": true, "Inside": "OpenVoice-74a1d147b17a8c3092dd5430504bd83ef6c7eb23", "Setting": "OpenVoiceSource", "IsOptional": true, "Terms": {"Licence": "MIT", "Uri": "https://github.com/myshell-ai/OpenVoice/blob/main/LICENSE", "PersonalData": false}, "Description": "The code of OpenVoice (myshell-ai/OpenVoice, commit 74a1d14), whose modules the voice engine of the Speech Model loads."},
+                      {"Name": "openvoice-converter", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/checkpoint.pth", "Sha256": "9652C27E92B6B2A91632590AC9962EF7AE2B712E5C5B7F4C34EC55EE2B37AB9E", "Setting": "OpenVoiceCheckpoint", "AsFile": "checkpoint.pth", "IsOptional": true, "Terms": {"Licence": "MIT", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2", "PersonalData": false}, "Description": "The tone colour converter of OpenVoice V2, which makes the embedding of a voice and speaks in it."},
+                      {"Name": "openvoice-config", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/config.json", "Sha256": "9DFFF60350B8C63F2C664EFD92A61B2516EFB22671466960F0E5DFEBD881FA47", "Setting": "OpenVoiceConfig", "AsFile": "config.json", "IsOptional": true, "ValidWith": ["9652C27E92B6B2A91632590AC9962EF7AE2B712E5C5B7F4C34EC55EE2B37AB9E"], "Description": "The configuration of that converter.", "Terms": {"Licence": "MIT", "Uri": "https://huggingface.co/myshell-ai/OpenVoiceV2", "PersonalData": false}}],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE1/V2.5/SMC", "MASPort": 443, "BinaryName": "Mpai.Cae.Usc.Smc", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+  "ResourcePolicies": [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "2 GB", "Maximum": "8 GB"},
+                       {"Name": "CPU:Class", "Minimum": "Low", "Request": "Medium", "Maximum": "High"}],
+  "DataXMData":       {},
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speech-model-creation/"}] }

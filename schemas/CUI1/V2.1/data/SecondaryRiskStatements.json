@@ -1,0 +1,30 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://json-schema.mpai.community/CUI1/V2.1/data/SecondaryRiskStatements.json",
+  "title":                        "SecondaryRiskStatements V2.1",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     ["Header", "MInstanceID", "SecondaryRiskStatementsData"],
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "CUI-SRS-V2.1" },
+
+    "MInstanceID":                { "type": "string", "description": "Identifier of Virtual Space." },
+
+    "SecondaryRiskStatementsData":{ "type": "object", "description": "Collection of Level-1 Risks.", "additionalProperties": false,
+
+      "patternProperties":        { "^Level-1Risk[0-9]+$":
+                                  { "type": "object", "description": "Container for Level-2 Risks under a specific Level-1 category.",
+                                    "additionalProperties": false,
+
+        "patternProperties":      { "^Level-2RiskID#[0-9]+$": { "type": "object", "required": ["Impact","Probability","Severity",
+                                    "Retention"], "additionalProperties": false, "properties": {
+            "Impact":             { "type": "string", "enum": ["none","Low","Medium","High"],
+                                    "description": "The extent of damageif Risk occurred." },
+            "Probability":        { "type": "string", "enum": ["none","Low","Medium","High"],
+                                    "description": "The likelihood of a risk event occurring." },
+            "Severity":           { "type": "string", "enum": ["none","Low","Medium","High"],
+                                    "description": "The severity of the consequences." },
+            "Retention":          { "type": "number", "minimum": 0, "maximum": 100,
+                                    "description": "The % of effect of the Risk retained in the Company." } } } } } } },
+    "Trace":                      { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":              { "type": "string" } } }

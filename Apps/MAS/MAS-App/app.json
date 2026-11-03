@@ -1,0 +1,9 @@
+﻿{
+    "Name": "MPAI as a Service",
+    "Description": "Questions about pictures and access control with a Portable Avatar.",
+    "Apps": [
+        "AMQ",
+        "ACR",
+        "MAC"
+    ]
+}

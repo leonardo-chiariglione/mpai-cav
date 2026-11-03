@@ -1,0 +1,27 @@
+# =============================================================================
+#  EAE-Conference.orch - Enhanced Audioconference Experience (CAE-USC V2.5), for a conference
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  The Module of EAE.orch run exchange after exchange for as long as the conference lasts: the Module
+#  is started once, and each exchange takes the next segment of the room's audio. The User Agent
+#  offers each datum to its Port, by Data Type and Port Number, from the device the App gave it (a
+#  device gives the next datum it has, and the workflow waits for it), asks for the Audio Scene
+#  Descriptors, presents them, and says the exchange is over.
+# =============================================================================
+
+workflow EAE over 1CAE-EAE-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    loop until Stop:
+        offer   Capture   (OSD-BAO-V1.5) from device "Capture"
+        offer   Array     (CAE-MAG-V2.5) from device "Array"
+        offer   Reference (CAE-ASR-V1.0) from device "Reference"
+        ask     Scene     (OSD-BAS-V1.5)
+        present Scene
+        prompt  "exchange over"
+
+on Stop:
+    ask Controller to stop

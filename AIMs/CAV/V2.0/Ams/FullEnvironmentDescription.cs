@@ -47,7 +47,7 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
                             roadLaneWidth = EssJson.Setting(settings ?? new Dictionary<string, string>(), "RoadLaneWidth", RoadMap.LaneWidth);
     private readonly Dictionary<string, (string Turn, long Seen)> signalling = new(StringComparer.Ordinal);    // each vehicle that shows an indicator, and when it last did
     private RoadMap? map;
-    private long count, sent;
+    private long count, sent, scenes;
     private long? lastSent;
     private readonly Dictionary<string, JsonNode> reported = new(StringComparer.Ordinal);    // the latest of each Remote CAV
     private readonly Dictionary<string, JsonNode> intended = new(StringComparer.Ordinal);    // the Trajectory each Remote CAV last said it will follow
@@ -66,8 +66,41 @@ public sealed class FullEnvironmentDescription(string instanceId, IReadOnlyDicti
             if (map is null) { context.Report("Basic Environment Descriptors before the Offline Map: not placed."); continue; }
             var fed = Describe(json);
             await ports.WriteAsync(AmsTypes.Fed, 1, fed.ToJsonString());
+            await ports.WriteAsync(AmsTypes.Bms, 1, SceneDescriptors(fed).ToJsonString());
             if (ToSend(fed) is { } message) await ports.WriteAsync(Remote, 1, message.ToJsonString());
         }
+    }
+
+    // THE SCENE FOR THE PASSENGER (the author, 2026/11/01: slides 8 and 9 of the CAV Reference Model). The environment the Full Environment
+    // Descriptors describe, as the Basic Multimodal Scene Descriptors Human-CAV Interaction renders from the passenger's Point of View: the
+    // CAV itself and each object around it, each placed by the Space-Time of its Spatial Attitude on the frame of the CAV (the Basic
+    // Environment Objects' own), named by its Basic Environment Object ID. The Objects are those of the FED, not copies of them.
+    public JsonObject SceneDescriptors(JsonObject fed)
+    {
+        var ms = AmsTypes.Ms(fed["FullEnvironmentDescriptorsTime"]);
+        var id = $"BMS{++scenes:D6}";
+        var members = new JsonArray(new JsonObject
+        {
+            ["BXOSpaceTime"] = EssJson.SpaceTime($"{id}-ego-ST", ms, EssJson.Attitude($"{id}-ego", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0))),
+            ["BXOOrBXOID"] = cav ?? "ego"
+        });
+        foreach (var entry in fed["FullEnvironmentObjects"]?.AsArray() ?? [])
+        {
+            var o = entry?["BasicEnvironmentObject"];
+            if ((string?)o?["BasicEnvironmentObjectID"] is not { } objectId) continue;
+            members.Add(new JsonObject
+            {
+                ["BXOSpaceTime"] = EssJson.SpaceTime($"{id}-{objectId}-ST", ms, o!["SpatialAttitude"] as JsonObject is { } a ? (JsonObject)a.DeepClone() : null),
+                ["BXOOrBXOID"] = objectId
+            });
+        }
+        return new JsonObject
+        {
+            ["Header"] = AmsTypes.Bms, ["MInstanceID"] = InstanceId, ["BasicMultimodalSceneDescriptorsID"] = id,
+            ["BMSDescriptorsTime"] = EssJson.SimpleTime($"{id}-T", ms),
+            ["BMSDescriptorsSpaceTime"] = EssJson.SpaceTime($"{id}-ST", ms, EssJson.Attitude($"{id}-frame", ms, (0, 0, 0), (1, 1, 1), (0, 0, 0))),
+            ["MultimodalObjectCount"] = members.Count, ["BasicObjectsData"] = members
+        };
     }
 
     // The Offline Map, as a Basic Offline Map Object.

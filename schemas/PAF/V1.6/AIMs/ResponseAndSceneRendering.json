@@ -3,7 +3,7 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/ResponseAndSceneRendering.json",
   "title":                "Response and Scene Rendering V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-RSR-V1.6"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "PAF-RSR-V1.6",
 
   "APIProfile":           "Basic",
@@ -16,7 +16,7 @@
 
   "ExternalPorts":        [{"Name": "PointOfView", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarSpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "AVSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MultimodalSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "InputSpeech", "Direction": "Input", "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "Output": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "SpeechModel", "Direction": "Input", "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TextTTS", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -27,9 +27,9 @@
                           {"Name": "OutputPointOfView", "Direction": "Output", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PDX-V2.5", "Relation": "Internal"}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": "Internal"}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-SAF-V1.6", "Relation": "Internal"}}],
+  "SubAIMs":              [{"Header": "MMC-PDX-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                          {"Header": "MMC-TTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                          {"Header": "PAF-SAF-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-OPV-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-OPV-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-OSA-V1.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-OSA-V1.5"}},
@@ -46,6 +46,8 @@
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-B3O-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "string"}},
                           {"Output": {"AIMName": "PAF-SAF-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

@@ -1,0 +1,223 @@
+@* THALIA'S DESKTOP: where a person chooses among the Apps the Service offers and reaches the MPAI Store.
+   The picture behind the icons is any picture (the Host serves it from /thalia/wallpaper); the icons are the
+   Apps of the Service as they are; the two Store icons open windows on what the Store really has. *@
+@using Mpai.RcaWeb.Mas
+@using System.IO
+@using System.Text
+@using System.Threading
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+@implements IDisposable
+
+<div class="desk">
+  <div class="icons">
+    @foreach (var app in Apps)
+    {
+      <div class="icon @(selected == app.Id ? "sel" : "")" tabindex="0" title="@app.Description"
+           @onclick="() => selected = app.Id" @ondblclick="() => Open(app.Id)" @onkeydown="e => AppKey(e, app.Id)">
+        <div class="tile">
+          @if (app.IconPath is not null) { <img src="@app.IconPath" alt="" /> }
+          else { <span>@Initial(app.Name)</span> }
+        </div>
+        <div class="label">@app.Name</div>
+      </div>
+    }
+    <div class="icon @(selected == "store" ? "sel" : "")" tabindex="0" @onclick='() => selected = "store"' @ondblclick="OpenStore" @onkeydown="StoreKey">
+      <div class="tile"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" /><path d="M15 15l5 5" /></svg></div>
+      <div class="label">Search in Store</div>
+    </div>
+    <div class="icon @(selected == "submit" ? "sel" : "")" tabindex="0" @onclick='() => selected = "submit"' @ondblclick="OpenSubmit" @onkeydown="SubmitKey">
+      <div class="tile"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg></div>
+      <div class="label">Submit to Store</div>
+    </div>
+  </div>
+
+  @if (storeOpen)
+  {
+    <div class="win store">
+      <header><span>Search in Store</span><button @onclick="() => storeOpen = false" aria-label="Close">x</button></header>
+      <div class="body">
+        <div class="find">
+          <input placeholder="Search by words, for example: speech, picture, avatar" @bind="query" @bind:event="oninput" />
+        </div>
+        <div class="chips">
+          @foreach (var f in new[] { "All", "Apps", "AI Modules" })
+          {
+            <button class="chip @(filter == f ? "on" : "")" @onclick="() => filter = f">@f</button>
+          }
+        </div>
+        @if (storeError is not null)
+        {
+          <div class="note bad">@storeError</div>
+        }
+        else if (entries is null)
+        {
+          <div class="note">Asking the Store...</div>
+        }
+        else
+        {
+          var shown = Filtered().ToList();
+          <div class="count">@shown.Count of @entries.Count in the Store</div>
+          <div class="results">
+            @foreach (var e in shown)
+            {
+              <div class="entry">
+                <div class="top">
+                  <b>@e.Name</b>
+                  <span class="kind">@(e.IsApp ? "App" : "AI Module")</span>
+                  <span class="ver">version @e.Version</span>
+                </div>
+                <div class="desc">@e.Description</div>
+                <div class="meta">
+                  <span>Made by Implementer @e.Implementer</span>
+                  <span class="ok">Checked by the Store@(e.Warnings > 0 ? $", {e.Warnings} note(s)" : "")@(e.Errors > 0 ? $", {e.Errors} problem(s)" : "")</span>
+                </div>
+                @if (e.Parts.Count > 0)
+                {
+                  <div class="parts">Made of: @string.Join(" + ", e.Parts.Select(PartName))</div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (submitOpen)
+  {
+    <div class="win submit">
+      <header><span>Submit to Store</span><button @onclick="() => submitOpen = false" aria-label="Close">x</button></header>
+      <div class="body">
+        <div class="note">Give the Store the description (the L3) of your AI Module or App. The Store checks it against its standard, fetches the package it names and records what it must be.</div>
+        <label>The L3 file</label>
+        <InputFile OnChange="L3Chosen" accept=".json" />
+        <div class="file">@(l3Name ?? "no file chosen")</div>
+        <label>Administrator key of the Store (for MPAI's own submissions)</label>
+        <input type="password" @bind="adminKey" @bind:event="oninput" autocomplete="off" />
+        <div class="actions"><button class="primary" @onclick="SubmitAsync">Submit</button></div>
+        <div class="note @(submitOk ? "ok" : "bad")">@submitResult</div>
+      </div>
+    </div>
+  }
+
+  <div class="taskbar">
+    <button class="start">Thalia</button>
+    <span class="grow"></span>
+    <span class="@(serviceUp ? "up" : "down")">@(serviceUp ? "AIF running" : "AIF not answering")</span>
+    <span class="@(storeUp ? "up" : "down")">@(storeUp ? "Store connected" : "Store not reachable")</span>
+    <span class="clock">@DateTime.Now.ToString("HH:mm")</span>
+  </div>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<WebAppDirectory.App> Apps { get; set; } = Array.Empty<WebAppDirectory.App>();
+    [Parameter] public EventCallback<string> OnOpen { get; set; }
+
+    private string? selected;
+    private bool storeOpen, submitOpen, serviceUp, storeUp;
+    private string query = "", filter = "All", adminKey = "";
+    private IReadOnlyList<WebStore.Entry>? entries;
+    private string? storeError, l3Name, l3Text, submitResult;
+    private bool submitOk;
+    private Timer? timer;
+
+    private string PartName(string id) => entries?.FirstOrDefault(x => x.Id == id)?.Name ?? id;
+
+    private static string Initial(string name) => name.Length > 0 ? name[..1] : "?";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckStatusAsync();
+        timer = new Timer(async _ => { await CheckStatusAsync(); await InvokeAsync(StateHasChanged); }, null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15));
+    }
+
+    public void Dispose() => timer?.Dispose();
+
+    private async Task CheckStatusAsync()
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync("thalia/status"));
+            serviceUp = doc.RootElement.GetProperty("service").GetBoolean();
+            storeUp = doc.RootElement.GetProperty("store").GetBoolean();
+        }
+        catch { serviceUp = storeUp = false; }
+    }
+
+    private Task Open(string id) => OnOpen.InvokeAsync(id);
+    private async Task AppKey(KeyboardEventArgs e, string id) { if (e.Key == "Enter") await Open(id); }
+    private async Task StoreKey(KeyboardEventArgs e) { if (e.Key == "Enter") await OpenStore(); }
+    private void SubmitKey(KeyboardEventArgs e) { if (e.Key == "Enter") OpenSubmit(); }
+
+    private async Task OpenStore()
+    {
+        storeOpen = true; submitOpen = false; selected = "store";
+        storeError = null; entries = null;
+        StateHasChanged();
+        try { entries = await new WebStore(Http).ListAsync(); }
+        catch (Exception ex) { storeError = "The Store does not answer (" + ex.Message + "). Is it running, and does the Store setting of this host name it?"; }
+    }
+
+    private IEnumerable<WebStore.Entry> Filtered()
+    {
+        var words = query.Trim().ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return (entries ?? Array.Empty<WebStore.Entry>()).Where(e =>
+            (filter == "All" || (filter == "Apps" && e.IsApp) || (filter == "AI Modules" && !e.IsApp)) &&
+            words.All(w => (e.Name + " " + e.Description + " " + e.Id + " " + e.Implementer).ToLowerInvariant().Contains(w)));
+    }
+
+    private void OpenSubmit() { submitOpen = true; storeOpen = false; selected = "submit"; submitResult = null; }
+
+    private async Task L3Chosen(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            l3Name = e.File.Name;
+            using var reader = new StreamReader(e.File.OpenReadStream(2_000_000), Encoding.UTF8);
+            l3Text = await reader.ReadToEndAsync();
+            submitResult = null;
+        }
+        catch (Exception ex) { l3Text = null; submitOk = false; submitResult = "That file could not be read: " + ex.Message; }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (l3Text is null) { submitOk = false; submitResult = "Choose the L3 file first."; return; }
+        if (adminKey.Length == 0) { submitOk = false; submitResult = "Enter the administrator key, or submit signed with your own key using the Store app."; return; }
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "thalia/store/L3") { Content = new StringContent(l3Text, Encoding.UTF8, "application/json") };
+            request.Headers.Add("MPAI-Admin", adminKey);
+            using var response = await Http.SendAsync(request);
+            var body = await response.Content.ReadAsStringAsync();
+            submitOk = response.IsSuccessStatusCode;
+            submitResult = Summarise(body, response.StatusCode.ToString());
+            if (submitOk) { entries = null; }
+        }
+        catch (Exception ex) { submitOk = false; submitResult = "The Store did not answer: " + ex.Message; }
+    }
+
+    private static string Summarise(string body, string status)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var r = doc.RootElement;
+            var sb = new StringBuilder();
+            if (r.TryGetProperty("published", out var p) && p.GetBoolean())
+                sb.Append($"Accepted: {r.GetProperty("id").GetString()}, version {r.GetProperty("version").GetInt32()}.");
+            else if (r.TryGetProperty("refused", out var why))
+                sb.Append("Refused: " + why.GetString());
+            else sb.Append(status);
+            if (r.TryGetProperty("nonconformities", out var nc) && nc.ValueKind == JsonValueKind.Array)
+                foreach (var n in nc.EnumerateArray().Take(6)) sb.Append(" - " + n.ToString());
+            if (r.TryGetProperty("findings", out var fs) && fs.ValueKind == JsonValueKind.Array)
+                foreach (var f in fs.EnumerateArray().Take(6))
+                    sb.Append($" - {(f.TryGetProperty("severity", out var sv) ? sv.GetString() : "")}: {(f.TryGetProperty("text", out var tx) ? tx.GetString() : "")}");
+            return sb.ToString();
+        }
+        catch { return status + ": " + (body.Length > 300 ? body[..300] : body); }
+    }
+}

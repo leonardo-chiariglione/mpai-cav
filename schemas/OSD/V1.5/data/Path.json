@@ -6,7 +6,7 @@
   "required":         [ "Header", "PathID", "Path" ],
   "properties":       {
 
-    "Header":         { "type": "string", "const": "OSD-PAT-V1.5", "description": "Path Header â€“ Standard OSD-PAT-Vx.y" },
+    "Header":         { "type": "string", "const": "OSD-PAT-V1.5", "description": "Path Header – Standard OSD-PAT-Vx.y" },
     "MInstanceID":    { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Path is defined." },
     "UEnvironmentID": { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Path is defined." },
     "PathID":         { "type": "string", "description": "Unique identifier of this Path instance." },
@@ -20,6 +20,7 @@
                         "type": "object", "additionalProperties": false, "required": [ "PointOfView" ], "properties": {
       "PointOfView":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "A Point of View in the Path." } } } },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the Points of View of the Path, stated once for all of them. A Qualifier of an inner Data Type overrides this one." },
     "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                         "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Path in a trusted data exchange context." },
     "DescrMetadata":  { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Path (plain text, max 2048 characters)." } } }

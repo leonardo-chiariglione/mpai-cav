@@ -8,7 +8,7 @@ namespace Mpai.Aif.PortData;
 // Attitude of the person or the machine, split by modality (Text, Speech, Face,
 // Body).
 //
-// It crosses MPAI-MAS because EDP's Personal Status Ports do: MPD sends the
+// It crosses MPAI-MAS because EDP's Personal Status Ports do: an affective conversation sends the
 // person's Personal Status in, and reads the machine's Personal Status back, each
 // turn, over whichever machine runs EDP - local or remote (MPAI-MAS: a Sub-AIM's
 // Relation other than Internal).

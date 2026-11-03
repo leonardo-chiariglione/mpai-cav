@@ -16,9 +16,11 @@
     "RegisterData":             { "type": "array", "items": { "oneOf": [
 
                                 { "type": "object", "required": [ "Request" ], "additionalProperties": false, "properties": {
-      "Request":                { "type": "object", "required": [ "UserProfile", "RequestedServices" ],
+      "Request":                { "type": "object", "required": [ "RequestedServices" ],
+                                  "oneOf": [ { "required": [ "UserProfile" ] }, { "required": [ "ThirdPartyUserProfile" ] } ],
                                   "additionalProperties": false, "properties": {
         "UserProfile":          { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/UserProfile.json" },
+        "ThirdPartyUserProfile":{ "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ThirdPartyUserProfile.json" },
         "RequestedServices":    { "type": "array", "minItems": 1, "items": { "type": "object",
                                   "required": [ "Service" ], "additionalProperties": false, "properties": {
           "Service":            { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ProcessTypes.json" } } } } } } } },

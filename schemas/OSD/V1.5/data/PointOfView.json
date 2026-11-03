@@ -7,7 +7,7 @@
   "properties":           {
 
     "Header":             { "type": "string", "const": "OSD-OPV-V1.5",
-                            "description": "Point of View Header â€“ Standard OSD-OPV-Vx.y" },
+                            "description": "Point of View Header – Standard OSD-OPV-Vx.y" },
     "MInstanceID":        { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Point of View is defined." },
     "UEnvironmentID":     { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Point of View is defined." },
     "PointOfViewID":      { "type": "string", "description": "Unique identifier of this Point of View instance." },
@@ -15,16 +15,16 @@
 
     "General":            { "type": "object", "additionalProperties": false, "required": [ "CoordType", "ObjectType", "MediaType" ],
                             "description": "General classification data of the Object.", "properties": {
-      "CoordType":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Geodesic, Toroidal." },
+      "CoordType":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json", "description": "Coordinate type: one of Cartesian, Spherical, Cylindrical, Geodetic, Toroidal." },
       "ObjectType":       { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json", "description": "Media type: one of Speech, Audio, Visual, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
 
     "CartPosition":       { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Cartesian position (X, Y, Z) in metres." },
     "CartAccuracy":       { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Cartesian position component (X, Y, Z) in metres." },
-    "SpherPosition":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, Ï†, Î¸) in metres and degrees." },
-    "SpherAccuracy":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, Ï†, Î¸)." },
-    "Orientation":        { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation in degrees." },
-    "OrientAccuracy":     { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)." },
+    "SpherPosition":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Spherical position (r, φ, θ) in metres and degrees." },
+    "SpherAccuracy":      { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each spherical position component (r, φ, θ)." },
+    "Orientation":        { "type": "array", "minItems": 3, "maxItems": 4, "items": { "type": "number" }, "description": "The orientation: three Euler angles (α, β, γ) in degrees, or a quaternion of four numbers. The Spatial Qualifier says which." },
+    "OrientAccuracy":     { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "Accuracy of each Euler angle (α, β, γ) in Orientation (degrees)." },
 
     "Aperture":           { "type": "array", "description": "Field of View expressed as Azimuth and Elevation.",
                             "items": { "type": "object", "additionalProperties": false, "required": [ "Azimuth", "Elevation" ], "properties": {
@@ -33,6 +33,7 @@
 
     "FocalDistance":      { "type": "number", "description": "Focal distance of the Point of View (metres)." },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the frame, the axes and their handedness, the units and the conventions of this Point of View." },
     "DataXMData":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                             "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Point of View in a trusted data exchange context." },
     "DescrMetadata":      { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Point of View (plain text, max 2048 characters)." } } }

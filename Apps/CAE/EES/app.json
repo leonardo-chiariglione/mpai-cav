@@ -1,0 +1,14 @@
+{
+    "Name": "Emotion Enhanced Speech",
+    "Description": "Give emotionless speech an emotion: from the prosody of a model utterance, or from an emotion you name.",
+    "Icon": "icon.svg",
+    "Version": "1.0",
+    "Standard": "MPAI-CAE V2.5",
+    "UseCase": "USC",
+    "Module": "1CAE-EES-V2.5-I01",
+    "Keywords": ["speech", "emotion", "prosody"],
+    "Categories": ["Audio"],
+    "Languages": ["en"],
+    "Asks": ["the emotionless speech", "a model utterance, or an emotion and its degree and a language"],
+    "Keeps": "Nothing: the speech with emotion is written where the user says."
+}

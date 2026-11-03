@@ -222,7 +222,7 @@ public class HighwayOvertakingTests
     [Trait("Duration", "Long")]
     public void TheCavOvertakesTheTruckOnItsOwnSenses()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var world = HighwayScenarios.Overtaking();
         Check(world, Drive(world, 120, perfect: false).Trace, "overtake");
     }

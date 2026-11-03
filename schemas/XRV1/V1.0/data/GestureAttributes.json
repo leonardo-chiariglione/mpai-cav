@@ -1,0 +1,6 @@
+{ "$schema":  "https://json-schema.org/draft/2020-12/schema",
+  "$id":      "https://schemas.mpai.community/XRV1/V1.0/data/GestureAttributes.json",
+  "title":    "Gesture Attributes V1.0",
+  "$comment":  "Data Type XRV-GSA-V1.0: a plain list of values, with no Header.",
+  "type":     "string", "enum":  [ "Raising arms", "Waving", "Jumping",  "Pointing to a direction", "Dancing" ] }
+ 

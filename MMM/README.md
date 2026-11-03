@@ -46,7 +46,7 @@ the M-Instance (no Marketplace, no other Use Case), and the viewer draws only Lo
 and Personae.
 
 The schemas are those of `schemas/MMM4/V2.2` (`data` and `actions`) and those they refer
-to; they are the published ones, from D:\AI. The API is made non-recursive when it is
+to; they are the published ones, from the AI tree. The API is made non-recursive when it is
 built, not in the schemas:
 
 1. a Data Type reached inside a Data Exchange Metadata is taken without its own

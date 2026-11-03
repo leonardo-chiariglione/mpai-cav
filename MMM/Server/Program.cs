@@ -23,9 +23,49 @@ while (repo is not null && !Directory.Exists(Path.Combine(repo, "MMM", "Viewer")
 if (repo is null) { Console.Error.WriteLine("The repository (MMM/Viewer, schemas) is not above this program."); return 1; }
 
 var m = new MInstance(Path.Combine(repo, "schemas"));
-Uc2.Setup(m);
-m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
-Meeting.Setup(m);                                      // the meeting room, its seats, the AVS Service and the Secretary
+// --world: the world of the MMM - the Metaverse Square, buildings with doors, the MPAI building with its meeting room - instead of Use Case 2 (MMM/World/world.json).
+// --code 123456 (or MMM_CODE): nobody gets anything from the server without the meeting code. --invite A,B,C: the Users that are invited from the start, the first the convener.
+var worldMode = args.Contains("--world");
+string? Arg(string name) { var i = Array.IndexOf(args, name); return i >= 0 && i + 1 < args.Length ? args[i + 1] : null; }
+var code = Arg("--code") ?? Environment.GetEnvironmentVariable("MMM_CODE");
+var invite = (Arg("--invite") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+// --identity: no meeting code; whoever asks is named (MMM/Server/Identity.cs). --chair Name (default: the first of --invite) is whoever browses on this machine. --invites Anna=token,Bruno=token: the
+// personal links of the guests the chair invited (?invite=token). --guests login=Name: the same for people who come through `tailscale serve`. --visitors: anybody else may come in as a visitor,
+// to the atrium, which is public, and no further; without it nobody else is answered.
+var chairName = Arg("--chair") ?? invite.FirstOrDefault() ?? "Chair";
+Dictionary<string, string> Pairs(string? list) => (list ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(p => p.Split('=', 2)).Where(p => p.Length == 2)
+    .ToDictionary(p => p[0].Trim(), p => p[1].Trim(), StringComparer.OrdinalIgnoreCase);
+var guests = Pairs(Arg("--guests"));                                                                           // login -> name
+var tokens = Pairs(Arg("--invites")).ToDictionary(p => p.Value, p => p.Key, StringComparer.Ordinal);            // token -> name
+var officerNames = (Arg("--officers") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal);   // --officers A,B: who else may take the MPAI Officer Account Level (the chair always may)
+var hostName = Arg("--host") ?? chairName;                          // whoever browses on this machine (the President); --chair is who convenes the meeting
+Identity? identity = args.Contains("--identity") || args.Contains("--tailscale") ? new Identity(chairName, guests, tokens, args.Contains("--visitors"), hostName) : null;
+// THE ONE WHO INVITES IS INVITED: the chair (who convenes) and the host (who runs the meeting on this machine) are always the first of the invited, whether or not they are on the list.
+if (identity is not null || Arg("--chair") is not null || Arg("--host") is not null)
+    invite = [.. new[] { chairName, hostName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
+if (worldMode)
+{
+    World.Setup(m, repo);
+    // The Personae a registering human chooses from (MMM/Viewer/personae/catalogue): the Rocketbox avatars.
+    var catalogue = Path.Combine(repo, "MMM", "Viewer", "personae", "catalogue", "catalogue.json");
+    if (File.Exists(catalogue))
+    {
+        var entries = JsonNode.Parse(File.ReadAllText(catalogue))!.AsArray();
+        m.Catalogue = entries.Select(e => (string)e!["Name"]!).ToHashSet(StringComparer.Ordinal);
+        m.CatalogueEntries = new JsonArray(entries.Select(e => (JsonNode)new JsonObject { ["Name"] = (string)e!["Name"]!, ["Group"] = (string)e["Group"]!, ["Gender"] = (string)e["Gender"]! }).ToArray());
+    }
+    // Rocketbox avatars (MIT) of the ABV demo, in turn to the Users that register: five humans, and the Secretary has Persona2.
+    m.DefaultModels = ["Persona1.glb", "Male03.glb", "Thalia.glb", "Male05.glb", "Male08.glb", "Persona2.glb"];
+    // --models Anna=Thalia.glb,Bruno=Male03.glb: the avatar of each User's Persona (the files of Apps/ABV/AVS/Server/avatars); the others take the list above in turn.
+    foreach (var pair in (Arg("--models") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(p => p.Split('=', 2)).Where(p => p.Length == 2))
+        m.SetModel($"{pair[0]}-Persona", pair[1]);
+}
+else
+{
+    Uc2.Setup(m);
+    m.DefaultModels = ["Persona1.glb", "Persona2.glb"];   // the Personae of the Users that join from a client are drawn with these in turn
+    Meeting.Setup(m);                                      // the meeting room, its seats, the AVS Service and the Secretary
+}
 
 // What a step means, said under its caption - for the steps whose point is not seen on the stage.
 var notes = new Dictionary<int, string>
@@ -82,22 +122,39 @@ void Next()
     try { next.Release(); } catch (SemaphoreFullException) { }
 }
 
-var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null);
+var internalKey = Guid.NewGuid().ToString("N");        // how the services of the M-Instance (the AVS Service, the Secretary, the ASR Service) get past the meeting code: they are not guests
+var avatarFolder = Path.Combine(repo, "Apps", "ABV", "AVS", "Server", "avatars");
+var app = MmmServer.Build(m, url, Path.Combine(repo, "MMM", "Viewer"), manual ? Next : null, manual ? Back : null, manual ? Shown : null, code, Directory.Exists(avatarFolder) ? avatarFolder : null, internalKey, identity, officerNames);
 await app.StartAsync();
 Console.WriteLine($"M-Instance {m.ID} on {url}; its viewer at {url.TrimEnd('/')}/viewer/");
 // The meeting's Processes: the AVS Service and the Secretary, acting through the MMM-API like any Process.
-// The ASR Service recognises with Whisper (the repository's Models\Whisper), if it is there.
+// The ASR Service recognises with Whisper (from Access: the L3 of ASR declares the program and the model), if they can be had.
 var whisper = new WhisperAsr(repo);
 if (whisper.Available) { whisper.Start(); Console.WriteLine("Whisper starting for the ASR Service (the model loads in a few seconds)."); }
-else Console.WriteLine("Models\\Whisper is not there: the ASR Service finds no words.");
+else Console.WriteLine("Whisper (the program and the model the L3 of ASR declares) is not in Access: the ASR Service finds no words.");
 // --meeting-demo [seconds]: the bots of the meeting use case play it against this server, a step at a time (default 5 s apart), for the viewer - open /viewer/?look=12,0 -
 // to show. The bots have no voices, so the ASR Service recognises the words of a script instead of Whisper.
 var meetingDemo = Array.IndexOf(args, "--meeting-demo");
 var meetingPause = meetingDemo >= 0 && meetingDemo + 1 < args.Length && double.TryParse(args[meetingDemo + 1], out var mp) ? mp : 5.0;
-var meeting = new MeetingServices(new HttpClient { BaseAddress = new Uri(url) }, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
+var inside = new HttpClient { BaseAddress = new Uri(url) }; inside.DefaultRequestHeaders.Add("X-Mmm-Internal", internalKey);
+var meeting = new MeetingServices(inside, m, meetingDemo >= 0 ? MeetingUseCase.ScriptedRecognizer() : whisper.Available ? whisper.RecognizeAsync : null);
+// The summary, for who asks (--no-summary: none): the language model and the voices are asked only when somebody does.
+using var summary = new SummaryServices(repo);
+if (!args.Contains("--no-summary")) { meeting.Summarise = summary.SummariseAsync; meeting.Translate = summary.TranslateAsync; meeting.Synthesise = summary.SynthesiseAsync; }
+// What the Secretary understands when a participant speaks to it: the JSON Interface of the Voice Command Interface, with the Application Context of the Secretary (the language model is loaded at the first request).
+using var secretaryUnderstands = new SecretaryInterpreter(repo, "llama3.1");
+if (!args.Contains("--no-summary")) meeting.Interpret = secretaryUnderstands.InterpretAsync;
 await meeting.StartAsync();
+meeting.Preinvite(invite);
+if (invite.Length > 0) Console.WriteLine($"Invited from the start: {string.Join(", ", invite)} (the first convenes the meeting).");
+// --until 19:00 (today, or tomorrow if it has passed) or --hours 2: when the meeting ends; its rights end with it. Without either, the convener ends it.
+if (Arg("--until") is { } until && TimeSpan.TryParse(until, out var clock)) { var at = DateTime.Today + clock; if (at < DateTime.Now) at = at.AddDays(1); meeting.EndsAt = new DateTimeOffset(at); }
+else if (Arg("--hours") is { } hours && double.TryParse(hours, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var h)) meeting.EndsAt = DateTimeOffset.UtcNow.AddHours(h);
+if (meeting.EndsAt is { } ends) Console.WriteLine($"The meeting ends at {ends.ToLocalTime():HH:mm}: its rights end with it.");                                      // the first of --invite is the convener, the others are invited
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsync(); } catch (Exception e) { Console.Error.WriteLine("meeting: " + e.Message); } await Task.Delay(200); } });
 var minutesShown = 0;
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpSummaryAsync(); } catch (Exception e) { Console.Error.WriteLine("summary: " + e.Message); } await Task.Delay(300); } });
+_ = Task.Run(async () => { while (true) { try { await meeting.PumpDialogueAsync(); } catch (Exception e) { Console.Error.WriteLine("dialogue: " + e.Message); } await Task.Delay(300); } });
 _ = Task.Run(async () => { while (true) { try { await meeting.PumpAsrAsync(); } catch (Exception e) { Console.Error.WriteLine("asr: " + e.Message); } await Task.Delay(200); } });
 _ = Task.Run(async () => { while (true) { var minutes = meeting.TheMinutes; while (minutesShown < minutes.Count) Console.WriteLine("minutes: " + minutes[minutesShown++]); await Task.Delay(200); } });
 if (meetingDemo >= 0)

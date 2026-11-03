@@ -1,0 +1,14 @@
+{
+    "Name": "Speech Restoration System",
+    "Description": "Replace the damaged parts of a recording of speech with speech made in the voice of the speaker.",
+    "Icon": "icon.svg",
+    "Version": "1.0",
+    "Standard": "MPAI-CAE V2.5",
+    "UseCase": "USC",
+    "Module": "1CAE-SRS-V2.5-I01",
+    "Keywords": ["speech", "restoration", "voice", "damaged"],
+    "Categories": ["Audio"],
+    "Languages": ["en"],
+    "Asks": ["speech of the speaker", "the damaged speech", "where it is damaged and what was said there"],
+    "Keeps": "Nothing: the restored speech is written where the user says."
+}

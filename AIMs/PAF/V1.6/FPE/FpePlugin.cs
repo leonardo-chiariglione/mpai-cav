@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System.Collections.Generic;
 using AIF.Controller;
 
@@ -11,6 +14,6 @@ public sealed class FpePlugin : IAimPlugin
     private HSEmotionEstimator? _dep;
     public string AimName => "PAF-FPE-V1.6";
     public IAimProcessor Create(AimPortReader ports, IReadOnlyDictionary<string, string> settings)
-        => new FpeAimProcessor(AimName, _dep ??= new HSEmotionEstimator(Get(settings,"HseModel",Mpai.Core.MpaiPaths.Model(@"hsemotion_enet_b0_8_va_mtl.onnx"))), ports);
+        => new FpeAimProcessor(AimName, _dep ??= new HSEmotionEstimator(Mpai.Core.MpaiPaths.Given(settings, "HseModel")), ports);
     private static string Get(IReadOnlyDictionary<string,string> s, string k, string d) => s.TryGetValue(k, out var v) && !string.IsNullOrWhiteSpace(v) ? v : d;
 }

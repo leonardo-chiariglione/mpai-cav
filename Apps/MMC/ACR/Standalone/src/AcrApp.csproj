@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>AcrApp</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <DefineConstants>$(DefineConstants);WINDOWS_DEVICES</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Framework -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <!-- The Human-CAV Interaction avatar surface (WebView renderer + present) -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
+    <!-- The workflow interpreter and the parser of the Workflow Description -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <!-- The HCI API -->
+    <ProjectReference Include="..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
+    <!-- Description AIMs (kept) -->
+    <!-- Reconciliation: the reused fusion (HCI-IDR) + the new OSD-IDR (verdict + Personal Status) -->
+    <!-- Recognition AIMs (CAV-MAC leaves) -->
+    <!-- Response and Scene Rendering leaves (PAF-RSR = PSD + TTS + GFD) -->
+    <!-- Webcam capture (VOA.Windows) -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\CVE\V1.0\VOA.Windows\Mpai.Cve.Voa.Windows.csproj" />
+    <!-- Spoken prompts: MMC-TTS + the Speech Object Delivery Unit (UNT-SOD) -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
+    <!-- Live mic capture -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
+    <ProjectReference Include="..\..\..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
+    <!-- Speech-delivery device (winmm) -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
+  </ItemGroup>
+</Project>

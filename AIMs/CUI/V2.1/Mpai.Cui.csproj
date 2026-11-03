@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The AIMs of CUI-CPP V2.1 (Company Performance Prediction): Financial and Governance
+       Assessment, Primary Default Prediction, Organisation Model Assessment, Primary
+       Discontinuity Prediction, Risk Matrix Generation, Prediction Result Perturbation, and the
+       provider that builds them. The composites - Company Assessment and Prediction and
+       Company Performance Prediction - are graphs the Controller builds from their Metadata.
+       Each AIM runs on its own Ports. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\AIF\Controller\AIF.Controller.csproj" />
+  </ItemGroup>
+
+</Project>

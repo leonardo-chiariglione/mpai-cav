@@ -1,0 +1,25 @@
+{
+    "Name": "About MPAI",
+    "Description": "In alcuni minuti potete avere un'idea chiara (ma senza dettagli) della proposta MPAI.",
+    "Icon": "icon.svg",
+    "Pane": "wide",
+    "Version": "1.0",
+    "Standard": "MPAI-AIF V3.0",
+    "UseCase": "ABM",
+    "Module": "1MAS-APP-V1.0-I01",
+    "Keywords": [
+        "mpai",
+        "about",
+        "video",
+        "introduction",
+        "proposal"
+    ],
+    "Categories": [
+        "Information"
+    ],
+    "Languages": [
+        "it"
+    ],
+    "Asks": [],
+    "Keeps": "Nothing."
+}

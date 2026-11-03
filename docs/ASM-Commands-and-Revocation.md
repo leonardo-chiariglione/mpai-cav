@@ -15,12 +15,12 @@
 
 ## 3. Revocation: one new field of the User Command
 
-- `UserCommandData.RevokedUserCommandID`: **the ID of an earlier User Command to revoke.** It goes to the AIM that executed that command, which **undoes it if it can**.
+- `UserCommandRQ.RevokedUserCommandID`: **the ID of an earlier User Command to revoke.** It goes to the AIM that executed that command, which **undoes it if it can**.
 - The report of the revoking command says, under the action `RevokedUserCommandID` and the ID of the command revoked: **Done** (undone), **Failed**, or **NotSupported**
   (this AIM cannot undo it). An AIM that has versions makes it easy; the standard does not require them.
 - Undo, as a person says it, is a revocation of the last command: the UA (or EDP, from voice) gives the ID of the last command.
 - **Keeping** (saving) a version is not a command: it is the Controller's retention of what the Module holds (`SharedStorageKeep`).
-- Done: the schema `schemas/CAE3/V1.0/data/UserCommand.json` (the field, and the action in the report), the C# `UserCommandData`, and `RevocationTests` (five tests).
+- Done: the schema `schemas/CAE3/V1.0/data/UserCommand.json` (the field, and the action in the report), the C# `UserCommandRQ`, and `RevocationTests` (five tests).
 
 ## 4. Left to the AIM
 

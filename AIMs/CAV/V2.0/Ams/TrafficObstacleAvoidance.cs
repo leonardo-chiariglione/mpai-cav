@@ -1,3 +1,4 @@
+using AIF.SharedStorage;
 using System.Text.Json.Nodes;
 
 using AIF.Controller;
@@ -51,7 +52,15 @@ public sealed class TrafficObstacleAvoidance(string instanceId, IReadOnlyDiction
             {
                 case AmsTypes.Alert: Alerted(json); continue;
                 case AmsTypes.Fed: Observe(json); continue;
-                case AmsTypes.Message: Answered(json); continue;
+                case AmsTypes.Message:
+                    Answered(json);
+                    // The Road State the MAS reports, whenever it does: to the AMS (Port 1, as the Topology carries it) and on the Bus (Port 2), which every AIM that reads it reads.
+                    if (json["MASMessage"]?["RoadState"] is JsonObject roadState)
+                    {
+                        await ports.WriteAsync(AmsTypes.RoadState, 1, roadState.ToJsonString());
+                        await ports.WriteAsync(AmsTypes.RoadState, 2, roadState.ToJsonString());
+                    }
+                    continue;
             }
             await ports.WriteAsync(AmsTypes.Message, 1, Refine(json).ToJsonString());
         }

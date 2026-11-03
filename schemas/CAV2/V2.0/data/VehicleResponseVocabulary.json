@@ -1,0 +1,65 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/CAV2/V2.0/data/VehicleResponseVocabulary.json",
+  "title":                          "Vehicle Response Vocabulary V2.0",
+  "type":                           "object",
+  "additionalProperties":           false,
+  "required":                       [ "Header", "VRVID", "VRVTime", "CAVID", "Surface" ],
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "CAV-VRV-V2.0", "description": "Vehicle Response Vocabulary Header – Standard CAV-VRV-Vx.y" },
+    "VRVID":                        { "type": "string", "description": "Unique identifier of this Vehicle Response Vocabulary instance." },
+    "VRVTime":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+                                      "description": "Time this Vehicle Response Vocabulary was produced (the end of the measurements)." },
+    "CAVID":                        { "type": "string", "description": "Identifier of the CAV whose responses are described." },
+    "Surface":                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/SurfaceResponse" },
+                                      "description": "What the CAV did on each type of road surface it was measured on." },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Vehicle Response Vocabulary (plain text, max 2048 characters)." } },
+
+  "$defs":                          {
+
+    "SurfaceResponse":              { "type": "object", "additionalProperties": false, "required": [ "SurfaceType", "Friction", "Speed" ], "properties": {
+      "SurfaceType":                { "type": "string", "description": "Type of road surface (e.g., dry asphalt, wet asphalt, snow, ice)." },
+      "Friction":                   { "type": "number", "minimum": 0, "maximum": 1, "description": "Friction coefficient of the surface during the measurements [0..1]." },
+      "Speed":                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/SpeedResponse" },
+                                      "description": "What the CAV did at each of the speeds it was measured at, in ascending order of speed." } } },
+
+    "SpeedResponse":                { "type": "object", "additionalProperties": false, "required": [ "Velocity", "Brake", "Motor", "Steering" ], "properties": {
+      "Velocity":                   { "type": "number", "minimum": 0, "description": "Speed of the CAV when the commands were applied (m/s)." },
+      "Brake":                      { "$ref": "#/$defs/BrakeResponse", "description": "What the CAV did when the brakes were commanded." },
+      "Motor":                      { "$ref": "#/$defs/MotorResponse", "description": "What the CAV did when the motor was commanded." },
+      "Steering":                   { "$ref": "#/$defs/SteeringResponse", "description": "What the CAV did when the road wheels were commanded." } } },
+
+    "BrakeResponse":                { "type": "object", "additionalProperties": false, "required": [ "Level" ], "properties": {
+      "Level":                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/BrakeLevel" }, "description": "The commands applied, in ascending order of deceleration." },
+      "MaxDeceleration":            { "type": "number", "minimum": 0, "description": "The largest deceleration the CAV reached, with the wheels not slipping (m/s2)." } } },
+
+    "BrakeLevel":                   { "type": "object", "additionalProperties": false, "required": [ "Command", "DeadTime", "RiseTime", "Settled" ], "properties": {
+      "Command":                    { "type": "number", "minimum": 0, "description": "Deceleration commanded (m/s2)." },
+      "DeadTime":                   { "type": "number", "minimum": 0, "description": "Time from the command to the first change of the acceleration (s)." },
+      "RiseTime":                   { "type": "number", "minimum": 0, "description": "Time from the first change of the acceleration to 90% of its final value (s)." },
+      "Settled":                    { "type": "number", "minimum": 0, "description": "Deceleration the CAV settled at (m/s2)." },
+      "Slipping":                   { "type": "boolean", "description": "True if the wheels slipped, i.e. the tyres could not give what was commanded." } } },
+
+    "MotorResponse":                { "type": "object", "additionalProperties": false, "required": [ "Level", "Coasting" ], "properties": {
+      "Level":                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/MotorLevel" }, "description": "The commands applied, in ascending order of acceleration." },
+      "Coasting":                   { "type": "number", "description": "Acceleration of the CAV with neither motor nor brakes acting, at this speed (m/s2; negative: it slows down)." },
+      "MaxAcceleration":            { "type": "number", "minimum": 0, "description": "The largest acceleration the CAV reached, with the wheels not slipping (m/s2)." } } },
+
+    "MotorLevel":                   { "type": "object", "additionalProperties": false, "required": [ "Command", "DeadTime", "RiseTime", "Settled" ], "properties": {
+      "Command":                    { "type": "number", "description": "Acceleration commanded (m/s2)." },
+      "DeadTime":                   { "type": "number", "minimum": 0, "description": "Time from the command to the first change of the acceleration (s)." },
+      "RiseTime":                   { "type": "number", "minimum": 0, "description": "Time from the first change of the acceleration to 90% of its final value (s)." },
+      "Settled":                    { "type": "number", "description": "Acceleration the CAV settled at (m/s2)." },
+      "Slipping":                   { "type": "boolean", "description": "True if the wheels slipped, i.e. the tyres could not give what was commanded." } } },
+
+    "SteeringResponse":             { "type": "object", "additionalProperties": false, "required": [ "Level" ], "properties": {
+      "Level":                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/SteeringLevel" }, "description": "The commands applied, in ascending order of angle." },
+      "MaxLateralAcceleration":     { "type": "number", "minimum": 0, "description": "The largest lateral acceleration the CAV reached while following the road wheels (m/s2)." } } },
+
+    "SteeringLevel":                { "type": "object", "additionalProperties": false, "required": [ "Command", "DeadTime", "RiseTime", "Settled" ], "properties": {
+      "Command":                    { "type": "number", "minimum": 0, "description": "Angle of the road wheels commanded (degrees)." },
+      "DeadTime":                   { "type": "number", "minimum": 0, "description": "Time from the command to the first change of the yaw rate (s)." },
+      "RiseTime":                   { "type": "number", "minimum": 0, "description": "Time from the first change of the yaw rate to 90% of its final value (s)." },
+      "Settled":                    { "type": "number", "minimum": 0, "description": "Yaw rate the CAV settled at (degrees/s)." },
+      "LateralAcceleration":        { "type": "number", "minimum": 0, "description": "Lateral acceleration at that yaw rate (m/s2)." },
+      "Following":                  { "type": "boolean", "description": "False if the CAV turned less than its road wheels asked, i.e. it was sliding." } } } } }

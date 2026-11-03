@@ -1,0 +1,13 @@
+{
+  "I want to listen from x 0, y 4, z 0": "the expected command; answered when the application answered",
+  "add the flute at 2, 1, 0": "the expected command; answered when the application answered",
+  "make it louder": "no command; answered at once",
+  "move the violin 1 metre to the left": "the expected command; answered when the application answered",
+  "move the violin a bit to the left": "no command; answered at once",
+  "play the scene": "the expected command; answered when the application answered",
+  "put the cello at minus 18 LUFS": "the expected command; answered when the application answered",
+  "rotate the drums to 180 degrees": "the expected command; answered when the application answered",
+  "rotate the guitar to 90 degrees": "no command; answered at once",
+  "take out the drums": "the expected command; answered when the application answered",
+  "what is the weather like": "no command; answered at once"
+}

@@ -59,8 +59,13 @@ public sealed class IceConditionAnalysis(string instanceId, IReadOnlyDictionary<
                     await ports.WriteAsync(MasTypes.Weather, 1, m.Json);
                     continue;
                 case MasTypes.Attitude:
-                    await ports.WriteAsync(MasTypes.RoadState, 1, State(json).ToJsonString());
+                {
+                    var state = State(json);
+                    await ports.WriteAsync(MasTypes.RoadState, 1, state.ToJsonString());
+                    // The Road State is the AMS's too, at any time: sent as an AMS-MAS Message when it is first known and whenever it changes.
+                    if (Changed(state)) await ports.WriteAsync(MasTypes.Message, 1, Announce(state).ToJsonString());
                     continue;
+                }
                 case MasTypes.Message:
                     continue;                                 // what was asked: the tyres say what was given
                 default:
@@ -68,6 +73,34 @@ public sealed class IceConditionAnalysis(string instanceId, IReadOnlyDictionary<
                     continue;
             }
         }
+    }
+
+    // THE ROAD STATE SENT TO THE AMS: when it is first known, and whenever the friction has moved by AnnounceStep or the ice has appeared or gone.
+    private double? announcedFriction;
+    private bool? announcedIce;
+    private long sent;
+    private readonly double announceStep = EssJson.Setting(settings, "AnnounceStep", 0.05);
+
+    private bool Changed(JsonObject state)
+    {
+        var surface = state["SurfaceCondition"];
+        var mu = (double?)surface?["FrictionCoefficientEstimate"];
+        var ice = (bool?)surface?["IcePresence"];
+        if (announcedFriction is { } before && Math.Abs((mu ?? before) - before) < announceStep && announcedIce == ice) return false;
+        (announcedFriction, announcedIce) = (mu, ice);
+        return true;
+    }
+
+    private JsonObject Announce(JsonObject state)
+    {
+        var ms = MasTypes.Ms(state["RoadStateTime"]);
+        var id = $"MAI{++sent:D6}";
+        return new JsonObject
+        {
+            ["Header"] = MasTypes.Message, ["AMSMASMessageID"] = id, ["AMSMASMessageTime"] = EssJson.SimpleTime(id + "-T", ms),
+            ["MASMessage"] = new JsonObject { ["CurrentTime"] = EssJson.SimpleTime(id + "-C", ms), ["RoadState"] = state.DeepClone() },
+            ["DescrMetadata"] = "The Road State, sent by the Ice Condition Analysis."
+        };
     }
 
     // What a Response says of the tyres.

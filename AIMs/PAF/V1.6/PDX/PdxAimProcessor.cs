@@ -82,7 +82,7 @@ public sealed class PdxAimProcessor : IAimProcessor
         Give(_speechModelPort, models.OfType<JsonObject>().FirstOrDefault());
         if (PersonalStatusOf(pav) is { } status) Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(status)));
         Give(_sceneSpaceTimePort, pav["AVSceneSpaceTime"]);
-        Give(_scenePort, pav["AVSceneDescriptors"]);
+        Give(_scenePort, pav["MultimodalSceneDescriptors"]);
 
         // Speech or text, not both: a Portable Avatar may carry both (the transmitter puts in what it recognised); the text is then what was said, and the speech is not
         // given, so that the words are not recognised a second time and counted twice.

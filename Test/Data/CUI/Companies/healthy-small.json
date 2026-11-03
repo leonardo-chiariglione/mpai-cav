@@ -1,0 +1,203 @@
+{
+  "PredictionHorizon": 12,
+  "FinancialDescriptors": {
+    "Header": "CUI-FND-V2.1",
+    "MInstanceID": "M1",
+    "FinancialDescriptorsID": "F-healthy",
+    "oType": 1,
+    "FinancialDescriptors": {
+      "AQ": [
+        {
+          "id": 1,
+          "module_id": "CUI",
+          "poweruser_id": 1,
+          "survey_company_id": 1,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "input": [
+            {
+              "code": "CEA1",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "10000000",
+              "saves": []
+            },
+            {
+              "code": "CEBDIFFVAL",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "1.200.000",
+              "saves": []
+            },
+            {
+              "code": "CEB5abc",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "400000",
+              "saves": []
+            },
+            {
+              "code": "CEC3",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "-150000",
+              "saves": []
+            },
+            {
+              "code": "CEUTILE",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "800000",
+              "saves": []
+            },
+            {
+              "code": "SPACTOT",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "4500000",
+              "saves": []
+            },
+            {
+              "code": "SPACITOT",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "1200000",
+              "saves": []
+            },
+            {
+              "code": "SPPDTOTENTRO",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "2500000",
+              "saves": []
+            },
+            {
+              "code": "SPPDTOTOLTRE",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "1500000",
+              "saves": []
+            },
+            {
+              "code": "SPPDTOT",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "4000000",
+              "saves": []
+            },
+            {
+              "code": "SPPATOT",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "5000000",
+              "saves": []
+            },
+            {
+              "code": "SPPTOT",
+              "type": "text",
+              "editable": true,
+              "required": null,
+              "value": "9500000",
+              "saves": []
+            }
+          ],
+          "simulation": false,
+          "consolidated": true,
+          "created_at": "2026-01-10T10:00:00Z",
+          "updated_at": "2026-01-10T10:00:00Z"
+        }
+      ]
+    }
+  },
+  "GovernanceDescriptors": {
+    "Header": "CUI-GVS-V2.1",
+    "MInstanceID": "M1",
+    "GovernanceDescriptorsID": "G-healthy",
+    "GovernanceDescriptors": {
+      "EFQ": {
+        "id": 1,
+        "module_id": "CUI",
+        "poweruser_id": 1,
+        "survey_company_id": 1,
+        "period_start": "2025-01-01",
+        "period_end": "2025-12-31",
+        "input": [
+          {
+            "type": "text",
+            "code": "SINDACO",
+            "editable": true,
+            "value": "1",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "SOCREV",
+            "editable": true,
+            "value": "Auditors Srl",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "REVOBBLIGATORIA",
+            "editable": true,
+            "value": "1",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "CAPMINIMILEGGE",
+            "editable": true,
+            "value": "0",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "QUOTE",
+            "editable": true,
+            "value": "40",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "QUOTE",
+            "editable": true,
+            "value": "35",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "QUOTE",
+            "editable": true,
+            "value": "25",
+            "saves": []
+          },
+          {
+            "type": "text",
+            "code": "ANAGRDATAINIZIO",
+            "editable": true,
+            "value": "01/03/1998",
+            "saves": []
+          }
+        ],
+        "output": null,
+        "simulation": false,
+        "consolidated": true,
+        "last_processing_datetime": null,
+        "created_at": "2026-01-10T10:00:00Z",
+        "updated_at": "2026-01-10T10:00:00Z"
+      }
+    },
+    "oType": 1
+  }
+}

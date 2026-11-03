@@ -7,7 +7,7 @@
   "properties":                               {
 
     "Header":                                 { "type": "string", "const": "OSD-LIO-V1.5",
-                                                "description": "LiDAR Object Header â€“ Standard OSD-LIO-Vx.y" },
+                                                "description": "LiDAR Object Header – Standard OSD-LIO-Vx.y" },
     "MInstanceID":                            { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this LiDAR Object is or is intended to be located." },
     "UEnvironmentID":                         { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this LiDAR Object is or is intended to be located." },
     "LiDARObjectID":                          { "type": "string", "description": "Unique identifier of this LiDAR Object." },

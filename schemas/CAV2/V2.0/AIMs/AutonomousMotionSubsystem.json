@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/AutonomousMotionSubsystem.json",
   "title": "Autonomous Motion Subsystem V2.0",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-AMS-V2.0" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-AMS-V2.0",
 
@@ -12,7 +12,6 @@
 
   "InternalTypes":  [
     { "Name": "FullEnvironmentDescriptors", "DataType": "CAV-FED-V2.0" },
-    { "Name": "AMSData"                   , "DataType": "CAV-AMD-V2.0" },
     { "Name": "Route"                     , "DataType": "CAV-RTE-V2.0" },
     { "Name": "RouteRequest"              , "DataType": "CAV-INT-V2.0" },
     { "Name": "RouteResponse"             , "DataType": "CAV-INT-V2.0" },
@@ -32,14 +31,15 @@
     { "Name": "AMSHCIMessageRH"              , "Direction": "Output",  "DataType": "CAV-AHM-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "EgoRemoteAMSMessageFR"        , "Direction": "Output",  "DataType": "CAV-ERA-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": true },
     { "Name": "AMSMASMessageTM"              , "Direction": "Output",  "DataType": "CAV-AMM-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSDataMX"                    , "Direction": "Output",  "DataType": "CAV-AMD-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "AMSDataMX"                    , "Direction": "Output",  "DataType": "CAV-AMD-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "BasicMMSceneDescriptorsAH"   , "Direction": "Output",  "DataType": "OSD-BMS-V1.5", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-FED-V2.0" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-RSP-V2.0" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TPD-V2.0" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-AMM-V2.0" } }
+    { "Header": "CAV-FED-V2.0", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "CAV-RSP-V2.0", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "CAV-TPD-V2.0", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "CAV-AMM-V2.0", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } }
   ],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BOO-V1.5"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "OSD-BOO-V1.5"}},
@@ -60,14 +60,12 @@
                           {"Output": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-FED-V2.0"}},
                           {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-INT-V2.0"}, "Input": {"AIMName": "CAV-RSP-V2.0", "DataType": "CAV-INT-V2.0"}},
                           {"Output": {"AIMName": "CAV-RSP-V2.0", "DataType": "CAV-INT-V2.0"}, "Input": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-INT-V2.0"}},
-                          {"Output": {"AIMName": "CAV-RSP-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0", "PortNumber": 1}},
-                          {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0", "PortNumber": 2}},
                           {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-CST-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-CST-V2.0"}},
                           {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-RDS-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-RDS-V2.0"}},
-                          {"Output": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-RSP-V2.0", "DataType": "CAV-AMD-V2.0"}},
-                          {"Output": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-AMD-V2.0"}},
-                          {"Output": {"AIMName": "CAV-AMM-V2.0", "DataType": "CAV-AMD-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-AMD-V2.0"}},
-                          {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-FED-V2.0"}}],
+                          {"Output": {"AIMName": "CAV-TPD-V2.0", "DataType": "CAV-FED-V2.0"}, "Input": {"AIMName": "CAV-FED-V2.0", "DataType": "CAV-FED-V2.0"}},
+                          {"Output": {"AIMName": "CAV-FED-V2.0", "DataType": "OSD-BMS-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BMS-V1.5"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [
    {

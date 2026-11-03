@@ -15,6 +15,14 @@
                                       "BindPolicy",
                                       "IssueCredential",
                                       "RevokeCredential",
-                                      "UpdateLifecycleState" ],
+                                      "UpdateLifecycleState",
+                                      "VerifyCredential",
+                                      "VerifyMessage",
+                                      "ServePayload",
+                                      "VerifyPayload",
+                                      "AcceptLink",
+                                      "CloseLink",
+                                      "AdmitController",
+                                      "RefuseController" ],
                             "description": "Type of trust-related operation." } } }
 

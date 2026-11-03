@@ -1,0 +1,24 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+   "$id":                   "https://schemas.mpai.community/TFA/V1.5/data/ControlQualifier.json",
+   "title":                 "Control Qualifier V1.5",
+   "type":                  "object",
+  "additionalProperties":   false,
+  "required":               [ "Header", "ControlQualifierID", "SubTypes", "Formats" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "TFA-CXQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "ControlQualifierID":   { "type": "string" },
+    "ControlQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":              { "type": "object", "additionalProperties": false },
+
+    "Formats":               {  "type": "string", "enum": [ "ANSI E1.20-2010", "ANSI E1.37-1-2012", "MIDI", "OSC" ] } ,
+
+    "Attributes":           { "type": "object", "additionalProperties": true },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }
+
+

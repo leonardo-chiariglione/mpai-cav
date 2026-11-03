@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The devices of the User Agent of the CAV (CAV.orch): the vehicle - a device that acts on the world and answers -, the cabin, the map. Here the vehicle and the cabin are a simulation, run
+       behind the devices; the workflow does not know it. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Cav.Ua</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\Test\CAV\Mpai.Cav.Recordings.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+  </ItemGroup>
+
+</Project>

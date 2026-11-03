@@ -6,9 +6,9 @@ using Mpai.Core;
 
 namespace Mpai.Aif.Tests;
 
-// NPR STEP 1 (M3246 3.1, 3.8): OPTICAL CHARACTER RECOGNITION IN D:\DI. MMC-OCR-V2.5
+// NPR STEP 1 (M3246 3.1, 3.8): OPTICAL CHARACTER RECOGNITION. MMC-OCR-V2.5
 // reads the author's page - an image of a headline and columns, kept outside the
-// repository as the photographs are (D:\Images\NPR, or MPAI_TEST_IMAGES) with the true
+// repository as the photographs are (Data\Images\NPR, or MPAI_TEST_IMAGES) with the true
 // text of each part - and gives its lines as a Text Object. Judged: the Text Object
 // valid against OSD-TXO-V1.5; every line a box within the page and a confidence; the
 // words of the truth read (at least 95% of them, in any order: the lines are in the
@@ -21,7 +21,7 @@ public class OcrTests
 {
     private static readonly string Page = Path.Combine(AccessTests.Images, "NPR", "npr-page.png");
     private static readonly string Truth = Path.Combine(AccessTests.Images, "NPR", "npr-page-truth.txt");
-    private static string Model(string file) => Path.Combine(Repository.Root, "Models", "OCR", file);
+    private static string Model(string file) => TestModels.Can(file) ? TestModels.Of(file) : "";
 
     private static readonly Dictionary<string, string> Settings = new()
     {
@@ -86,7 +86,27 @@ public class OcrTests
             var line = e.BTObjectIDOrBTObject![0];
             return (Text: line.GetText(), X0: tl[0], Y0: tl[1], X1: br[0], Y1: br[1], Confidence: line.DataXMData?.Confidence);
         }).ToList();
-        var boxed = lines.All(l => l.X0 >= 0 && l.Y0 >= 0 && l.X1 <= page[0] && l.Y1 <= page[1] && l.X1 > l.X0 && l.Y1 > l.Y0
+        // THE PAGE IS READ IN BANDS (the AIM reads one band, about a Point, at the top of the page with none): the whole of it
+        // is read here by two more bands, so that the words of the truth can be judged; a line seen in two bands counts once.
+        var pointPort = ports.Input("OSD-PNT-V1.5");
+        foreach (var y in new[] { 2100.0, 3500.0 })
+        {
+            var message = With(BasicVisualObject.FromFile("npr-page.png", bytes));
+            message.Ports[pointPort] = $"{{\"Header\":\"OSD-PNT-V1.5\",\"Coordinates\":{{\"X\":1200,\"Y\":{y}}}}}";
+            var more = MpaiJson.FromJson<TextObject>((await ocr.ProcessAsync(message)).Payload)!;
+            foreach (var e in more.BasicTextObjects)
+            {
+                var tl = e.BasicTextObjectSpaceTime!.SpatialAttitude1!.Position.CartPosition!;
+                var br = e.BasicTextObjectSpaceTime!.SpatialAttitude2!.Position.CartPosition!;
+                var line = e.BTObjectIDOrBTObject![0];
+                bool seen = lines.Any(l =>
+                {
+                    double w = Math.Min(l.X1, br[0]) - Math.Max(l.X0, tl[0]), h = Math.Min(l.Y1, br[1]) - Math.Max(l.Y0, tl[1]);
+                    return w > 0 && h > 0 && w * h > 0.5 * Math.Min((l.X1 - l.X0) * (l.Y1 - l.Y0), (br[0] - tl[0]) * (br[1] - tl[1]));
+                });
+                if (!seen) lines.Add((line.GetText(), tl[0], tl[1], br[0], br[1], line.DataXMData?.Confidence));
+            }
+        }        var boxed = lines.All(l => l.X0 >= 0 && l.Y0 >= 0 && l.X1 <= page[0] && l.Y1 <= page[1] && l.X1 > l.X0 && l.Y1 > l.Y0
                                    && l.Confidence is >= 0 and <= 1);
 
         var truthText = File.ReadAllLines(Truth);

@@ -1,0 +1,33 @@
+# =============================================================================
+#  EAE.orch - Enhanced Audioconference Experience (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes by exchange: the capture of the microphone array
+#  of a meeting room, the geometry of the array and the Audio Scene Reference are given, then
+#  the Audio Scene Descriptors are asked for. The User Agent offers each datum to its Port, by Data Type and Port Number, from
+#  the device the App gave it (the devices are the App's):
+#
+#    "Capture"    the audio of the array, a channel for each microphone
+#    "Array"      the Microphone Array Geometry: where each microphone is
+#    "Reference"  the Audio Scene Reference
+#
+#  and presents what the Module gives:
+#
+#    Scene        the Audio Scene Descriptors: the speakers found, where each is and when it
+#                 is active, and the enhanced audio of each
+# =============================================================================
+
+workflow EAE over 1CAE-EAE-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    offer   Capture   (OSD-BAO-V1.5) from device "Capture"
+    offer   Array     (CAE-MAG-V2.5) from device "Array"
+    offer   Reference (CAE-ASR-V1.0) from device "Reference"
+    ask     Scene     (OSD-BAS-V1.5)
+    present Scene
+
+on Stop:
+    ask Controller to stop

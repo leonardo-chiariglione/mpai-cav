@@ -45,16 +45,40 @@ public static class PortDataSchema
         ["OSD-BVO-V1.5"] = "OSD/V1.5/data/BasicVisualObject.json",
         ["OSD-STM-V1.5"] = "OSD/V1.5/data/SimpleTime.json",
         ["OSD-SEL-V1.5"] = "OSD/V1.5/data/Selector.json",
+        ["OSD-PNT-V1.5"] = "OSD/V1.5/data/Point.json",
         ["MMC-SUM-V2.5"] = "MMC/V2.5/data/Summary.json",
         ["PAF-FDO-V1.6"] = "PAF/V1.6/data/FaceDescriptorsObject.json",
 
         // The Data Types of the Environment Sensing Subsystem (M3219 3.6).
         ["OSD-OSA-V1.5"] = "OSD/V1.5/data/SpatialAttitude.json",
-        ["CAV-GNO-V2.0"] = "CAV2/V2.0/data/GNSSObject.json",
+        ["CAV-NSO-V2.0"] = "CAV2/V2.0/data/GNSSObject.json",
         ["CAV-WDT-V2.0"] = "CAV2/V2.0/data/WeatherData.json",
         ["CAV-FED-V2.0"] = "CAV2/V2.0/data/FullEnvironmentDescriptors.json",
         ["CAV-BED-V2.0"] = "CAV2/V2.0/data/BasicEnvironmentDescriptors.json",
-        ["CAV-ALT-V2.0"] = "CAV2/V2.0/data/Alert.json"
+        ["CAV-ALT-V2.0"] = "CAV2/V2.0/data/Alert.json",
+
+        // The Data Types of Audio Scene Management.
+        ["OSD-BAO-V1.5"] = "OSD/V1.5/data/BasicAudioObject.json",
+        ["OSD-BAS-V1.5"] = "OSD/V1.5/data/BasicAudioSceneDescriptors.json",
+        ["OSD-BSS-V1.5"] = "OSD/V1.5/data/BasicSpeechSceneDescriptors.json",
+        ["OSD-AUO-V1.5"] = "OSD/V1.5/data/AudioObject.json",
+        ["OSD-ASD-V1.5"] = "OSD/V1.5/data/AudioSceneDescriptors.json",
+        ["OSD-SPO-V1.5"] = "OSD/V1.5/data/SpeechObject.json",
+        ["OSD-SSD-V1.5"] = "OSD/V1.5/data/SpeechSceneDescriptors.json",
+        ["OSD-MSD-V1.5"] = "OSD/V1.5/data/MultimodalSceneDescriptors.json",
+        ["OSD-OPV-V1.5"] = "OSD/V1.5/data/PointOfView.json",
+        ["CAE-UCM-V1.0"] = "CAE3/V1.0/data/UserCommand.json",
+
+        // The Data Types of Company Performance Prediction (the Governance Descriptors carry the Header of the Governance Statements).
+        ["CUI-FND-V2.1"] = "CUI1/V2.1/data/FinancialDescriptors.json",
+        ["CUI-GVS-V2.1"] = "CUI1/V2.1/data/GovernanceDescriptors.json",
+        ["CUI-LRD-V2.1"] = "CUI1/V2.1/data/ClimateRiskDescriptors.json",
+        ["CUI-CRD-V2.1"] = "CUI1/V2.1/data/CyberRiskDescriptors.json",
+        ["CUI-SRS-V2.1"] = "CUI1/V2.1/data/SecondaryRiskStatements.json",
+        ["CUI-ORD-V2.1"] = "CUI1/V2.1/data/OrganisationDescriptors.json",
+        ["CUI-PDD-V2.1"] = "CUI1/V2.1/data/PrimaryDefaultDescriptors.json",
+        ["CUI-PSD-V2.1"] = "CUI1/V2.1/data/PrimaryDiscontinuityDescriptors.json",
+        ["CUI-SRM-V2.1"] = "CUI1/V2.1/data/SecondaryRiskMatrix.json"
     };
 
     // ONE EVALUATION AT A TIME, under the lock of the published schemas: the

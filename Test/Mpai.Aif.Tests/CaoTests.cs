@@ -129,7 +129,7 @@ public class CaoTests
     [Trait("Duration", "Long")]
     public void Step4OneModule()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, object>();
         var map = RoadMap.Grid(3).Named(CavDialogueTests.Places);
@@ -230,7 +230,7 @@ public class CaoTests
     [Trait("Duration", "Long")]
     public void Step5TheOtherCases()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var result = new Dictionary<string, string>();
         var report = new Dictionary<string, object>();
         double Hospital(Simulation sim) => sim.Map.Length(sim.Path.Segments[0]) + sim.Map.Length(sim.Path.Segments[1]);
@@ -287,7 +287,7 @@ public class CaoTests
     [Trait("Duration", "Long")]
     public async Task Step5TwoCaos()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         const double StoppedAt = RemoteStage1Tests.StoppedAt, AStart = RemoteStage1Tests.AStart;
         var result = new Dictionary<string, string>();
         var map = RoadMap.Grid(3).Named(CavDialogueTests.Places);

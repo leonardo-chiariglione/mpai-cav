@@ -251,7 +251,7 @@
     },
 
     "CR-07":                        {
-      "Purpose":                      "Credential chain validation (IA Ã¢â€ â€™ TrustAnchor)",
+      "Purpose":                      "Credential chain validation (IA → TrustAnchor)",
       "Preconditions":                {
         "InstanceCredential":           "issuedByIntermediateAuthority",
         "IssuerChain":                  [ "IntermediateAuthority", "TrustAnchor" ]

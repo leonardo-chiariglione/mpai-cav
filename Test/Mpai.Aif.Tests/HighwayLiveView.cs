@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Mpai.Aif.Tests;
 
 // THE LIVE VIEW OF A HIGHWAY RUN (M3253): a small web server on this machine's loopback that gives
-// CAV/Viewer/highway.html, the state of the run as the last step made it, and the picture of the front
+// Apps/CAV/CAVViewer/highway.html, the state of the run as the last step made it, and the picture of the front
 // camera that step gave the ESS. The run publishes after each step; the page reads and draws.
 public sealed class HighwayLiveView : IDisposable
 {
@@ -22,7 +22,7 @@ public sealed class HighwayLiveView : IDisposable
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls(url);
         app = builder.Build();
-        var page = Path.Combine(Repository.Root, "CAV", "Viewer", "highway.html");
+        var page = Path.Combine(Repository.Root, "Apps", "CAV", "CAVViewer", "highway.html");
         app.MapGet("/", (HttpContext ctx) => { ctx.Response.Headers.CacheControl = "no-store"; return Results.File(page, "text/html; charset=utf-8"); });
         app.MapGet("/state", (HttpContext ctx) => { ctx.Response.Headers.CacheControl = "no-store"; return Results.Content(state, "application/json"); });
         app.MapGet("/frame.png", (HttpContext ctx) =>

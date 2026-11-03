@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-TOD-V1.0",
+  "Group": "Delivery",
+  "Category": "Media",
+  "Description": "Text Object Delivery: delivers Text Objects, and the Scene Descriptors where the Data Type exists, to the real world through a display, and may write or send them to a disk or a network, objects and scenes, Basic or full.",
+  "ExternalPorts": [
+    {
+      "Name": "Text",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    },
+    {
+      "Name": "DeliveredText",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredText",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

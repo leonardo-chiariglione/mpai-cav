@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- a User Agent: a window, the avatar, the microphone. The Controller is a program of its own (Apps/MMC/Controller) and is spoken to through the Controller API. -->
+  <PropertyGroup>
+    <AssemblyName>NprApp</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <DefineConstants>$(DefineConstants);WINDOWS_DEVICES</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own (MmcController) -->
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
+    <!-- The workflow interpreter and the parser of the Workflow Description -->
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <!-- Audio devices: live microphone capture and the delivery of speech -->
+    <ProjectReference Include="..\..\..\..\..\..\AIMs\CAE3\V1.0\AOA\Mpai.Cae.Aoa.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIMs\CAE3\V1.0\AOA.Windows\Mpai.Cae.Aoa.Windows.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIMs\MMC\V2.5\SOD\Mpai.Mmc.Sod.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\AIMs\MMC\V2.5\SOD.Windows\Mpai.Mmc.Sod.Windows.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,60 @@
+{
+  "Format": "MPAI-CUI-LOGISTIC-1",
+  "Name": "polish-5year-logistic",
+  "Intercept": -3.0643286685615965,
+  "Features": [
+    {
+      "Name": "QuickRatio",
+      "Mean": 1.968346,
+      "Scale": 2.970497,
+      "Weight": -0.40397
+    },
+    {
+      "Name": "ROA",
+      "Mean": 0.064001,
+      "Scale": 0.163905,
+      "Weight": -0.555438
+    },
+    {
+      "Name": "ROE",
+      "Mean": 0.113473,
+      "Scale": 0.570136,
+      "Weight": -0.064736
+    },
+    {
+      "Name": "ROS",
+      "Mean": 0.041223,
+      "Scale": 0.124723,
+      "Weight": -0.459352
+    },
+    {
+      "Name": "DebtOnSales",
+      "Mean": 0.427639,
+      "Scale": 0.46565,
+      "Weight": 0.216909
+    }
+  ],
+  "Training": {
+    "Dataset": "Polish Companies Bankruptcy (UCI Machine Learning Repository), 5year.arff: ratios of companies a year before the outcome",
+    "Source": "https://archive.ics.uci.edu/dataset/365/polish\u002Bcompanies\u002Bbankruptcy\u002Bdata",
+    "Licence": "CC-BY-4.0",
+    "Attribution": "Tomczak, S. (2016). Polish Companies Bankruptcy [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5F600",
+    "SourceFileSha256": "CB3F6F250AC46BD8D18E9A222F489FE8EE3E396FCEC18959F5A0EF8E8169B2FC",
+    "Rows": 5910,
+    "Bankrupt": 410,
+    "Method": "L2-regularised logistic regression (lambda 1) of ten ratios, each winsorised at the 1st and 99th percentile, standardised and clamped to three scales; a missing ratio counts as the mean; a ratio whose weight would go the wrong way (more profit, more risk) is left out and the others refitted",
+    "Ratios": "CurrentRatio=X4, QuickRatio=X46, EBITDAMargin=X49, ROA=X7, ROE=X1/X10, ROS=X42, DebtOnSales=X2/X9, LongTermLiabilityRatio=X2-X51, InterestCoverageRatio=X27, InterestOnSales=X42/X27",
+    "Calibration": "to the sample (bankruptcies are over-represented): not to any population of companies",
+    "HeldOut": {
+      "HeldOutRows": 1773,
+      "HeldOutBankrupt": 127,
+      "TrainedAuc": 0.7635,
+      "ReferenceAuc": 0.7389,
+      "TrainedBrier": 0.0577,
+      "ReferenceBrier": 0.0734,
+      "TrainedLogLoss": 0.2196,
+      "ReferenceLogLoss": 0.2977
+    },
+    "Caution": "A demonstration of a trained model delivered as Access data. Trained on companies of Poland; not for real companies."
+  }
+}

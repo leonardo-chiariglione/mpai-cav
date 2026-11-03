@@ -1,0 +1,3336 @@
+{
+ "axes": "x east, y north, z up, metres",
+ "ground": {
+  "size": 200
+ },
+ "square": {
+  "id": "MVS",
+  "name": "Metaverse Square",
+  "x": 0,
+  "y": 0,
+  "size": 30
+ },
+ "spawn": {
+  "x": 3.0,
+  "y": 0.0,
+  "radius": 4.0,
+  "yaw": 270
+ },
+ "bounds": [
+  -60,
+  -60,
+  60,
+  60
+ ],
+ "buildings": [
+  {
+   "id": "MPAI",
+   "name": "MPAI",
+   "model": "world/mpai.glb",
+   "x": 28.0,
+   "y": 0.0,
+   "yaw": 0,
+   "height": 5.0,
+   "footprint": [
+    -12,
+    -51.0,
+    26.0,
+    23.0
+   ],
+   "sign": {
+    "image": "world/mpai-sign.png",
+    "x": 15.74,
+    "y": 0.0,
+    "z": 5.2,
+    "width": 9.0,
+    "height": 1.425,
+    "facing": "west"
+   },
+   "signs": [
+    {
+     "image": "world/mmm-sign.png",
+     "x": 20.5,
+     "y": -9.15,
+     "z": 1.0,
+     "width": 2.4,
+     "height": 1.644,
+     "facing": "south"
+    }
+   ],
+   "solids": [
+    [
+     16.0,
+     -9.1,
+     16.91428571428571,
+     -8.9
+    ],
+    [
+     16.91428571428571,
+     -9.1,
+     18.514285714285712,
+     -8.9
+    ],
+    [
+     18.514285714285712,
+     -9.1,
+     27.1,
+     -8.9
+    ],
+    [
+     28.9,
+     -9.1,
+     37.48571428571428,
+     -8.9
+    ],
+    [
+     37.48571428571428,
+     -9.1,
+     39.08571428571429,
+     -8.9
+    ],
+    [
+     39.08571428571429,
+     -9.1,
+     40.0,
+     -8.9
+    ],
+    [
+     16.0,
+     8.9,
+     16.91428571428571,
+     9.1
+    ],
+    [
+     16.91428571428571,
+     8.9,
+     18.514285714285712,
+     9.1
+    ],
+    [
+     18.514285714285712,
+     8.9,
+     27.1,
+     9.1
+    ],
+    [
+     28.9,
+     8.9,
+     37.48571428571428,
+     9.1
+    ],
+    [
+     37.48571428571428,
+     8.9,
+     39.08571428571429,
+     9.1
+    ],
+    [
+     39.08571428571429,
+     8.9,
+     40.0,
+     9.1
+    ],
+    [
+     15.9,
+     -9.0,
+     16.1,
+     -8.0
+    ],
+    [
+     15.9,
+     -8.0,
+     16.1,
+     -6.4
+    ],
+    [
+     15.9,
+     -6.4,
+     16.1,
+     -4.3999999999999995
+    ],
+    [
+     15.9,
+     -4.3999999999999995,
+     16.1,
+     -2.8
+    ],
+    [
+     15.9,
+     -2.8,
+     16.1,
+     -0.9
+    ],
+    [
+     15.9,
+     0.9,
+     16.1,
+     2.8
+    ],
+    [
+     15.9,
+     2.8,
+     16.1,
+     4.3999999999999995
+    ],
+    [
+     15.9,
+     4.3999999999999995,
+     16.1,
+     6.3999999999999995
+    ],
+    [
+     15.9,
+     6.3999999999999995,
+     16.1,
+     7.999999999999999
+    ],
+    [
+     15.9,
+     7.999999999999999,
+     16.1,
+     9.0
+    ],
+    [
+     39.9,
+     -9.0,
+     40.1,
+     -0.9
+    ],
+    [
+     39.9,
+     0.9,
+     40.1,
+     9.0
+    ],
+    [
+     26.5,
+     8.9,
+     27.1,
+     9.1
+    ],
+    [
+     28.9,
+     8.9,
+     29.5,
+     9.1
+    ],
+    [
+     26.5,
+     22.9,
+     29.5,
+     23.1
+    ],
+    [
+     26.4,
+     9.0,
+     26.6,
+     11.6
+    ],
+    [
+     26.4,
+     13.4,
+     26.6,
+     18.6
+    ],
+    [
+     26.4,
+     20.4,
+     26.6,
+     23.0
+    ],
+    [
+     29.4,
+     9.0,
+     29.6,
+     11.6
+    ],
+    [
+     29.4,
+     13.4,
+     29.6,
+     18.6
+    ],
+    [
+     29.4,
+     20.4,
+     29.6,
+     23.0
+    ],
+    [
+     18.5,
+     8.9,
+     26.5,
+     9.1
+    ],
+    [
+     18.5,
+     15.9,
+     26.5,
+     16.1
+    ],
+    [
+     18.4,
+     9.0,
+     18.6,
+     11.8
+    ],
+    [
+     18.4,
+     11.8,
+     18.6,
+     13.2
+    ],
+    [
+     18.4,
+     13.2,
+     18.6,
+     16.0
+    ],
+    [
+     26.4,
+     9.0,
+     26.6,
+     11.6
+    ],
+    [
+     26.4,
+     13.4,
+     26.6,
+     16.0
+    ],
+    [
+     29.5,
+     8.9,
+     37.5,
+     9.1
+    ],
+    [
+     29.5,
+     15.9,
+     37.5,
+     16.1
+    ],
+    [
+     29.4,
+     9.0,
+     29.6,
+     11.6
+    ],
+    [
+     29.4,
+     13.4,
+     29.6,
+     16.0
+    ],
+    [
+     37.4,
+     9.0,
+     37.6,
+     11.8
+    ],
+    [
+     37.4,
+     11.8,
+     37.6,
+     13.2
+    ],
+    [
+     37.4,
+     13.2,
+     37.6,
+     16.0
+    ],
+    [
+     18.5,
+     15.9,
+     26.5,
+     16.1
+    ],
+    [
+     18.5,
+     22.9,
+     19.8,
+     23.1
+    ],
+    [
+     19.8,
+     22.9,
+     21.2,
+     23.1
+    ],
+    [
+     21.2,
+     22.9,
+     23.8,
+     23.1
+    ],
+    [
+     23.8,
+     22.9,
+     25.2,
+     23.1
+    ],
+    [
+     25.2,
+     22.9,
+     26.5,
+     23.1
+    ],
+    [
+     18.4,
+     16.0,
+     18.6,
+     18.8
+    ],
+    [
+     18.4,
+     18.8,
+     18.6,
+     20.2
+    ],
+    [
+     18.4,
+     20.2,
+     18.6,
+     23.0
+    ],
+    [
+     26.4,
+     16.0,
+     26.6,
+     18.6
+    ],
+    [
+     26.4,
+     20.4,
+     26.6,
+     23.0
+    ],
+    [
+     29.5,
+     15.9,
+     37.5,
+     16.1
+    ],
+    [
+     29.5,
+     22.9,
+     30.8,
+     23.1
+    ],
+    [
+     30.8,
+     22.9,
+     32.2,
+     23.1
+    ],
+    [
+     32.2,
+     22.9,
+     34.8,
+     23.1
+    ],
+    [
+     34.8,
+     22.9,
+     36.2,
+     23.1
+    ],
+    [
+     36.2,
+     22.9,
+     37.5,
+     23.1
+    ],
+    [
+     29.4,
+     16.0,
+     29.6,
+     18.6
+    ],
+    [
+     29.4,
+     20.4,
+     29.6,
+     23.0
+    ],
+    [
+     37.4,
+     16.0,
+     37.6,
+     18.8
+    ],
+    [
+     37.4,
+     18.8,
+     37.6,
+     20.2
+    ],
+    [
+     37.4,
+     20.2,
+     37.6,
+     23.0
+    ],
+    [
+     40.0,
+     -1.6,
+     42.6,
+     -1.4
+    ],
+    [
+     44.4,
+     -1.6,
+     49.6,
+     -1.4
+    ],
+    [
+     51.4,
+     -1.6,
+     54.0,
+     -1.4
+    ],
+    [
+     40.0,
+     1.4,
+     42.6,
+     1.6
+    ],
+    [
+     44.4,
+     1.4,
+     49.6,
+     1.6
+    ],
+    [
+     51.4,
+     1.4,
+     54.0,
+     1.6
+    ],
+    [
+     39.9,
+     -1.5,
+     40.1,
+     -0.9
+    ],
+    [
+     39.9,
+     0.9,
+     40.1,
+     1.5
+    ],
+    [
+     53.9,
+     -1.5,
+     54.1,
+     1.5
+    ],
+    [
+     40.0,
+     1.4,
+     42.6,
+     1.6
+    ],
+    [
+     44.4,
+     1.4,
+     47.0,
+     1.6
+    ],
+    [
+     40.0,
+     9.4,
+     42.8,
+     9.6
+    ],
+    [
+     42.8,
+     9.4,
+     44.2,
+     9.6
+    ],
+    [
+     44.2,
+     9.4,
+     47.0,
+     9.6
+    ],
+    [
+     39.9,
+     1.5,
+     40.1,
+     9.5
+    ],
+    [
+     46.9,
+     1.5,
+     47.1,
+     9.5
+    ],
+    [
+     40.0,
+     -9.6,
+     42.8,
+     -9.4
+    ],
+    [
+     42.8,
+     -9.6,
+     44.2,
+     -9.4
+    ],
+    [
+     44.2,
+     -9.6,
+     47.0,
+     -9.4
+    ],
+    [
+     40.0,
+     -1.6,
+     42.6,
+     -1.4
+    ],
+    [
+     44.4,
+     -1.6,
+     47.0,
+     -1.4
+    ],
+    [
+     39.9,
+     -9.5,
+     40.1,
+     -1.5
+    ],
+    [
+     46.9,
+     -9.5,
+     47.1,
+     -1.5
+    ],
+    [
+     47.0,
+     1.4,
+     49.6,
+     1.6
+    ],
+    [
+     51.4,
+     1.4,
+     54.0,
+     1.6
+    ],
+    [
+     47.0,
+     9.4,
+     49.8,
+     9.6
+    ],
+    [
+     49.8,
+     9.4,
+     51.2,
+     9.6
+    ],
+    [
+     51.2,
+     9.4,
+     54.0,
+     9.6
+    ],
+    [
+     46.9,
+     1.5,
+     47.1,
+     9.5
+    ],
+    [
+     53.9,
+     1.5,
+     54.1,
+     2.8
+    ],
+    [
+     53.9,
+     2.8,
+     54.1,
+     4.2
+    ],
+    [
+     53.9,
+     4.2,
+     54.1,
+     6.8
+    ],
+    [
+     53.9,
+     6.8,
+     54.1,
+     8.2
+    ],
+    [
+     53.9,
+     8.2,
+     54.1,
+     9.5
+    ],
+    [
+     47.0,
+     -9.6,
+     49.8,
+     -9.4
+    ],
+    [
+     49.8,
+     -9.6,
+     51.2,
+     -9.4
+    ],
+    [
+     51.2,
+     -9.6,
+     54.0,
+     -9.4
+    ],
+    [
+     47.0,
+     -1.6,
+     49.6,
+     -1.4
+    ],
+    [
+     51.4,
+     -1.6,
+     54.0,
+     -1.4
+    ],
+    [
+     46.9,
+     -9.5,
+     47.1,
+     -1.5
+    ],
+    [
+     53.9,
+     -9.5,
+     54.1,
+     -8.2
+    ],
+    [
+     53.9,
+     -8.2,
+     54.1,
+     -6.8
+    ],
+    [
+     53.9,
+     -6.8,
+     54.1,
+     -4.2
+    ],
+    [
+     53.9,
+     -4.2,
+     54.1,
+     -2.8
+    ],
+    [
+     53.9,
+     -2.8,
+     54.1,
+     -1.5
+    ],
+    [
+     26.5,
+     -51.1,
+     29.5,
+     -50.9
+    ],
+    [
+     26.5,
+     -9.1,
+     27.1,
+     -8.9
+    ],
+    [
+     28.9,
+     -9.1,
+     29.5,
+     -8.9
+    ],
+    [
+     26.4,
+     -51.0,
+     26.6,
+     -48.4
+    ],
+    [
+     26.4,
+     -46.6,
+     26.6,
+     -41.4
+    ],
+    [
+     26.4,
+     -39.6,
+     26.6,
+     -34.4
+    ],
+    [
+     26.4,
+     -32.6,
+     26.6,
+     -27.4
+    ],
+    [
+     26.4,
+     -25.6,
+     26.6,
+     -20.4
+    ],
+    [
+     26.4,
+     -18.6,
+     26.6,
+     -13.4
+    ],
+    [
+     26.4,
+     -11.6,
+     26.6,
+     -9.0
+    ],
+    [
+     29.4,
+     -51.0,
+     29.6,
+     -49.95
+    ],
+    [
+     29.4,
+     -49.95,
+     29.6,
+     -48.55
+    ],
+    [
+     29.4,
+     -48.55,
+     29.6,
+     -46.45
+    ],
+    [
+     29.4,
+     -46.45,
+     29.6,
+     -45.05
+    ],
+    [
+     29.4,
+     -45.05,
+     29.6,
+     -41.4
+    ],
+    [
+     29.4,
+     -39.6,
+     29.6,
+     -34.4
+    ],
+    [
+     29.4,
+     -32.6,
+     29.6,
+     -27.4
+    ],
+    [
+     29.4,
+     -25.6,
+     29.6,
+     -20.4
+    ],
+    [
+     29.4,
+     -18.6,
+     29.6,
+     -13.4
+    ],
+    [
+     29.4,
+     -11.6,
+     29.6,
+     -9.0
+    ],
+    [
+     18.5,
+     -16.1,
+     26.5,
+     -15.9
+    ],
+    [
+     18.5,
+     -9.1,
+     26.5,
+     -8.9
+    ],
+    [
+     18.4,
+     -16.0,
+     18.6,
+     -13.2
+    ],
+    [
+     18.4,
+     -13.2,
+     18.6,
+     -11.8
+    ],
+    [
+     18.4,
+     -11.8,
+     18.6,
+     -9.0
+    ],
+    [
+     26.4,
+     -16.0,
+     26.6,
+     -13.4
+    ],
+    [
+     26.4,
+     -11.6,
+     26.6,
+     -9.0
+    ],
+    [
+     29.5,
+     -16.1,
+     37.5,
+     -15.9
+    ],
+    [
+     29.5,
+     -9.1,
+     37.5,
+     -8.9
+    ],
+    [
+     29.4,
+     -16.0,
+     29.6,
+     -13.4
+    ],
+    [
+     29.4,
+     -11.6,
+     29.6,
+     -9.0
+    ],
+    [
+     37.4,
+     -16.0,
+     37.6,
+     -13.2
+    ],
+    [
+     37.4,
+     -13.2,
+     37.6,
+     -11.8
+    ],
+    [
+     37.4,
+     -11.8,
+     37.6,
+     -9.0
+    ],
+    [
+     18.5,
+     -23.1,
+     26.5,
+     -22.9
+    ],
+    [
+     18.5,
+     -16.1,
+     26.5,
+     -15.9
+    ],
+    [
+     18.4,
+     -23.0,
+     18.6,
+     -20.2
+    ],
+    [
+     18.4,
+     -20.2,
+     18.6,
+     -18.8
+    ],
+    [
+     18.4,
+     -18.8,
+     18.6,
+     -16.0
+    ],
+    [
+     26.4,
+     -23.0,
+     26.6,
+     -20.4
+    ],
+    [
+     26.4,
+     -18.6,
+     26.6,
+     -16.0
+    ],
+    [
+     29.5,
+     -23.1,
+     37.5,
+     -22.9
+    ],
+    [
+     29.5,
+     -16.1,
+     37.5,
+     -15.9
+    ],
+    [
+     29.4,
+     -23.0,
+     29.6,
+     -20.4
+    ],
+    [
+     29.4,
+     -18.6,
+     29.6,
+     -16.0
+    ],
+    [
+     37.4,
+     -23.0,
+     37.6,
+     -20.2
+    ],
+    [
+     37.4,
+     -20.2,
+     37.6,
+     -18.8
+    ],
+    [
+     37.4,
+     -18.8,
+     37.6,
+     -16.0
+    ],
+    [
+     18.5,
+     -30.1,
+     26.5,
+     -29.9
+    ],
+    [
+     18.5,
+     -23.1,
+     26.5,
+     -22.9
+    ],
+    [
+     18.4,
+     -30.0,
+     18.6,
+     -27.2
+    ],
+    [
+     18.4,
+     -27.2,
+     18.6,
+     -25.8
+    ],
+    [
+     18.4,
+     -25.8,
+     18.6,
+     -23.0
+    ],
+    [
+     26.4,
+     -30.0,
+     26.6,
+     -27.4
+    ],
+    [
+     26.4,
+     -25.6,
+     26.6,
+     -23.0
+    ],
+    [
+     29.5,
+     -30.1,
+     37.5,
+     -29.9
+    ],
+    [
+     29.5,
+     -23.1,
+     37.5,
+     -22.9
+    ],
+    [
+     29.4,
+     -30.0,
+     29.6,
+     -27.4
+    ],
+    [
+     29.4,
+     -25.6,
+     29.6,
+     -23.0
+    ],
+    [
+     37.4,
+     -30.0,
+     37.6,
+     -27.2
+    ],
+    [
+     37.4,
+     -27.2,
+     37.6,
+     -25.8
+    ],
+    [
+     37.4,
+     -25.8,
+     37.6,
+     -23.0
+    ],
+    [
+     18.5,
+     -37.1,
+     26.5,
+     -36.9
+    ],
+    [
+     18.5,
+     -30.1,
+     26.5,
+     -29.9
+    ],
+    [
+     18.4,
+     -37.0,
+     18.6,
+     -34.2
+    ],
+    [
+     18.4,
+     -34.2,
+     18.6,
+     -32.8
+    ],
+    [
+     18.4,
+     -32.8,
+     18.6,
+     -30.0
+    ],
+    [
+     26.4,
+     -37.0,
+     26.6,
+     -34.4
+    ],
+    [
+     26.4,
+     -32.6,
+     26.6,
+     -30.0
+    ],
+    [
+     29.5,
+     -37.1,
+     37.5,
+     -36.9
+    ],
+    [
+     29.5,
+     -30.1,
+     37.5,
+     -29.9
+    ],
+    [
+     29.4,
+     -37.0,
+     29.6,
+     -34.4
+    ],
+    [
+     29.4,
+     -32.6,
+     29.6,
+     -30.0
+    ],
+    [
+     37.4,
+     -37.0,
+     37.6,
+     -34.2
+    ],
+    [
+     37.4,
+     -34.2,
+     37.6,
+     -32.8
+    ],
+    [
+     37.4,
+     -32.8,
+     37.6,
+     -30.0
+    ],
+    [
+     18.5,
+     -44.1,
+     26.5,
+     -43.9
+    ],
+    [
+     18.5,
+     -37.1,
+     26.5,
+     -36.9
+    ],
+    [
+     18.4,
+     -44.0,
+     18.6,
+     -41.2
+    ],
+    [
+     18.4,
+     -41.2,
+     18.6,
+     -39.8
+    ],
+    [
+     18.4,
+     -39.8,
+     18.6,
+     -37.0
+    ],
+    [
+     26.4,
+     -44.0,
+     26.6,
+     -41.4
+    ],
+    [
+     26.4,
+     -39.6,
+     26.6,
+     -37.0
+    ],
+    [
+     29.5,
+     -44.1,
+     30.8,
+     -43.9
+    ],
+    [
+     30.8,
+     -44.1,
+     32.2,
+     -43.9
+    ],
+    [
+     32.2,
+     -44.1,
+     34.8,
+     -43.9
+    ],
+    [
+     34.8,
+     -44.1,
+     36.2,
+     -43.9
+    ],
+    [
+     36.2,
+     -44.1,
+     37.5,
+     -43.9
+    ],
+    [
+     29.5,
+     -37.1,
+     37.5,
+     -36.9
+    ],
+    [
+     29.4,
+     -44.0,
+     29.6,
+     -41.4
+    ],
+    [
+     29.4,
+     -39.6,
+     29.6,
+     -37.0
+    ],
+    [
+     37.4,
+     -44.0,
+     37.6,
+     -41.2
+    ],
+    [
+     37.4,
+     -41.2,
+     37.6,
+     -39.8
+    ],
+    [
+     37.4,
+     -39.8,
+     37.6,
+     -37.0
+    ],
+    [
+     18.5,
+     -51.1,
+     19.8,
+     -50.9
+    ],
+    [
+     19.8,
+     -51.1,
+     21.2,
+     -50.9
+    ],
+    [
+     21.2,
+     -51.1,
+     23.8,
+     -50.9
+    ],
+    [
+     23.8,
+     -51.1,
+     25.2,
+     -50.9
+    ],
+    [
+     25.2,
+     -51.1,
+     26.5,
+     -50.9
+    ],
+    [
+     18.5,
+     -44.1,
+     26.5,
+     -43.9
+    ],
+    [
+     18.4,
+     -51.0,
+     18.6,
+     -48.2
+    ],
+    [
+     18.4,
+     -48.2,
+     18.6,
+     -46.8
+    ],
+    [
+     18.4,
+     -46.8,
+     18.6,
+     -44.0
+    ],
+    [
+     26.4,
+     -51.0,
+     26.6,
+     -48.4
+    ],
+    [
+     26.4,
+     -46.6,
+     26.6,
+     -44.0
+    ]
+   ],
+   "reception": {
+    "cx": 5.0,
+    "persona": "Reception-Persona",
+    "x": 6.2,
+    "y": 0.0,
+    "yaw": 90,
+    "model": "catalogue/Business_Female_01.glb"
+   },
+   "doors": [],
+   "rooms": [
+    {
+     "id": "Atrium",
+     "name": "Atrium",
+     "x": 0.0,
+     "y": 0.0,
+     "footprint": [
+      -12.0,
+      -9.0,
+      12.0,
+      9.0
+     ],
+     "height": 5.0,
+     "kind": "atrium",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MPAI-main",
+      "name": "MPAI, main door",
+      "from": "MVS",
+      "to": "Atrium",
+      "x": 16.0,
+      "y": 0.0,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     },
+     "public": true
+    },
+    {
+     "id": "MembersWing",
+     "name": "Members' wing",
+     "x": 0.0,
+     "y": 16.0,
+     "footprint": [
+      -1.5,
+      -7.0,
+      1.5,
+      7.0
+     ],
+     "height": 3.2,
+     "kind": "corridor",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MembersWing-door",
+      "name": "Members' wing door",
+      "from": "Atrium",
+      "to": "MembersWing",
+      "x": 28.0,
+      "y": 9.0,
+      "axis": "y",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "MemberRoom1",
+     "name": "Members' room 1",
+     "x": -5.5,
+     "y": 12.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "member",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MemberRoom1-door",
+      "name": "Members' room 1 door",
+      "from": "MembersWing",
+      "to": "MemberRoom1",
+      "x": 26.5,
+      "y": 12.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "MemberRoom2",
+     "name": "Members' room 2",
+     "x": 5.5,
+     "y": 12.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "member",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MemberRoom2-door",
+      "name": "Members' room 2 door",
+      "from": "MembersWing",
+      "to": "MemberRoom2",
+      "x": 29.5,
+      "y": 12.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "MemberRoom3",
+     "name": "Members' room 3",
+     "x": -5.5,
+     "y": 19.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "member",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MemberRoom3-door",
+      "name": "Members' room 3 door",
+      "from": "MembersWing",
+      "to": "MemberRoom3",
+      "x": 26.5,
+      "y": 19.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "MemberRoom4",
+     "name": "Members' room 4",
+     "x": 5.5,
+     "y": 19.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "member",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MemberRoom4-door",
+      "name": "Members' room 4 door",
+      "from": "MembersWing",
+      "to": "MemberRoom4",
+      "x": 29.5,
+      "y": 19.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "OfficesWing",
+     "name": "Offices of MPAI",
+     "x": 19.0,
+     "y": 0.0,
+     "footprint": [
+      -7.0,
+      -1.5,
+      7.0,
+      1.5
+     ],
+     "height": 3.2,
+     "kind": "corridor",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "OfficesWing-door",
+      "name": "Offices of MPAI door",
+      "from": "Atrium",
+      "to": "OfficesWing",
+      "x": 40.0,
+      "y": 0.0,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "Office-President",
+     "name": "President's office",
+     "x": 15.5,
+     "y": 5.5,
+     "footprint": [
+      -3.5,
+      -4.0,
+      3.5,
+      4.0
+     ],
+     "height": 3.2,
+     "kind": "office",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "Office-President-door",
+      "name": "President's office door",
+      "from": "OfficesWing",
+      "to": "Office-President",
+      "x": 43.5,
+      "y": 1.5,
+      "axis": "y",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "Office-VicePresident",
+     "name": "Vice-president's office",
+     "x": 15.5,
+     "y": -5.5,
+     "footprint": [
+      -3.5,
+      -4.0,
+      3.5,
+      4.0
+     ],
+     "height": 3.2,
+     "kind": "office",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "Office-VicePresident-door",
+      "name": "Vice-president's office door",
+      "from": "OfficesWing",
+      "to": "Office-VicePresident",
+      "x": 43.5,
+      "y": -1.5,
+      "axis": "y",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "Office-Board",
+     "name": "Board members' office",
+     "x": 22.5,
+     "y": 5.5,
+     "footprint": [
+      -3.5,
+      -4.0,
+      3.5,
+      4.0
+     ],
+     "height": 3.2,
+     "kind": "office",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "Office-Board-door",
+      "name": "Board members' office door",
+      "from": "OfficesWing",
+      "to": "Office-Board",
+      "x": 50.5,
+      "y": 1.5,
+      "axis": "y",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "Office-Secretariat",
+     "name": "Secretariat",
+     "x": 22.5,
+     "y": -5.5,
+     "footprint": [
+      -3.5,
+      -4.0,
+      3.5,
+      4.0
+     ],
+     "height": 3.2,
+     "kind": "office",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "Office-Secretariat-door",
+      "name": "Secretariat door",
+      "from": "OfficesWing",
+      "to": "Office-Secretariat",
+      "x": 50.5,
+      "y": -1.5,
+      "axis": "y",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "MeetingsWing",
+     "name": "Meeting rooms",
+     "x": 0.0,
+     "y": -30.0,
+     "footprint": [
+      -1.5,
+      -21.0,
+      1.5,
+      21.0
+     ],
+     "height": 3.2,
+     "kind": "corridor",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MeetingsWing-door",
+      "name": "Meeting rooms door",
+      "from": "Atrium",
+      "to": "MeetingsWing",
+      "x": 28.0,
+      "y": -9.0,
+      "axis": "y",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "MeetingRoom",
+     "name": "MMM meeting room",
+     "x": -5.5,
+     "y": -12.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MeetingRoom-door",
+      "name": "MMM meeting room door",
+      "from": "MeetingsWing",
+      "to": "MeetingRoom",
+      "x": 26.5,
+      "y": -12.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     },
+     "seats": [
+      {
+       "id": "MeetingRoom-S1",
+       "x": 1.5,
+       "y": 0.0,
+       "yaw": 90.0
+      },
+      {
+       "id": "MeetingRoom-S2",
+       "x": 0.0,
+       "y": -1.5,
+       "yaw": 0.0
+      },
+      {
+       "id": "MeetingRoom-S3",
+       "x": 0.0,
+       "y": 1.5,
+       "yaw": 180.0
+      },
+      {
+       "id": "MeetingRoom-S4",
+       "x": -1.5,
+       "y": 0.0,
+       "yaw": 270.0
+      },
+      {
+       "id": "MeetingRoom-S5",
+       "x": 1.061,
+       "y": -1.061,
+       "yaw": 45.0
+      },
+      {
+       "id": "MeetingRoom-S6",
+       "x": -1.061,
+       "y": 1.061,
+       "yaw": 225.0
+      },
+      {
+       "id": "MeetingRoom-S7",
+       "x": -1.061,
+       "y": -1.061,
+       "yaw": 315.0
+      },
+      {
+       "id": "MeetingRoom-S8",
+       "x": 1.061,
+       "y": 1.061,
+       "yaw": 135.0
+      }
+     ]
+    },
+    {
+     "id": "AIF-Room",
+     "name": "AIF meeting room",
+     "x": 5.5,
+     "y": -12.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "AIF-Room-door",
+      "name": "AIF meeting room door",
+      "from": "MeetingsWing",
+      "to": "AIF-Room",
+      "x": 29.5,
+      "y": -12.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "AIH-Room",
+     "name": "AIH meeting room",
+     "x": -5.5,
+     "y": -19.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "AIH-Room-door",
+      "name": "AIH meeting room door",
+      "from": "MeetingsWing",
+      "to": "AIH-Room",
+      "x": 26.5,
+      "y": -19.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "AIP-Room",
+     "name": "AIP meeting room",
+     "x": 5.5,
+     "y": -19.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "AIP-Room-door",
+      "name": "AIP meeting room door",
+      "from": "MeetingsWing",
+      "to": "AIP-Room",
+      "x": 29.5,
+      "y": -19.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "CAE-Room",
+     "name": "CAE meeting room",
+     "x": -5.5,
+     "y": -26.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "CAE-Room-door",
+      "name": "CAE meeting room door",
+      "from": "MeetingsWing",
+      "to": "CAE-Room",
+      "x": 26.5,
+      "y": -26.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "EVC-Room",
+     "name": "EVC meeting room",
+     "x": 5.5,
+     "y": -26.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "EVC-Room-door",
+      "name": "EVC meeting room door",
+      "from": "MeetingsWing",
+      "to": "EVC-Room",
+      "x": 29.5,
+      "y": -26.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "ISAC-Room",
+     "name": "ISAC meeting room",
+     "x": -5.5,
+     "y": -33.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "ISAC-Room-door",
+      "name": "ISAC meeting room door",
+      "from": "MeetingsWing",
+      "to": "ISAC-Room",
+      "x": 26.5,
+      "y": -33.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "MMC-Room",
+     "name": "MMC meeting room",
+     "x": 5.5,
+     "y": -33.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "MMC-Room-door",
+      "name": "MMC meeting room door",
+      "from": "MeetingsWing",
+      "to": "MMC-Room",
+      "x": 29.5,
+      "y": -33.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "NNW-Room",
+     "name": "NNW meeting room",
+     "x": -5.5,
+     "y": -40.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "NNW-Room-door",
+      "name": "NNW meeting room door",
+      "from": "MeetingsWing",
+      "to": "NNW-Room",
+      "x": 26.5,
+      "y": -40.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    },
+    {
+     "id": "PAF-Room",
+     "name": "PAF meeting room",
+     "x": 5.5,
+     "y": -40.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "PAF-Room-door",
+      "name": "PAF meeting room door",
+      "from": "MeetingsWing",
+      "to": "PAF-Room",
+      "x": 29.5,
+      "y": -40.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": -1
+     }
+    },
+    {
+     "id": "XRV-Room",
+     "name": "XRV meeting room",
+     "x": -5.5,
+     "y": -47.5,
+     "footprint": [
+      -4.0,
+      -3.5,
+      4.0,
+      3.5
+     ],
+     "height": 3.2,
+     "kind": "meeting",
+     "acoustics": {
+      "Header": "CAE-ACP-V1.0",
+      "AcousticProfileID": "Acoustics-MeetingRoom",
+      "Reflectivity": [
+       {
+        "EarlyReflectionTime": 0.012,
+        "LateReflectionTime": 0.08
+       }
+      ],
+      "Reverberation": [
+       {
+        "RT60": {
+         "Header": "OSD-PLT-V1.5",
+         "PlotID": "RT60-MeetingRoom",
+         "Plot": {
+          "2D": [
+           [
+            125,
+            0.7
+           ],
+           [
+            250,
+            0.62
+           ],
+           [
+            500,
+            0.55
+           ],
+           [
+            1000,
+            0.5
+           ],
+           [
+            2000,
+            0.45
+           ],
+           [
+            4000,
+            0.36
+           ]
+          ]
+         }
+        },
+        "EDT": 0.35
+       }
+      ],
+      "Diffusion": 0.5,
+      "Absorption": 0.32
+     },
+     "door": {
+      "id": "XRV-Room-door",
+      "name": "XRV meeting room door",
+      "from": "MeetingsWing",
+      "to": "XRV-Room",
+      "x": 26.5,
+      "y": -47.5,
+      "axis": "x",
+      "width": 1.8,
+      "outside": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "Library",
+   "name": "Library",
+   "model": "world/library.glb",
+   "x": 0.0,
+   "y": 30.0,
+   "yaw": 0,
+   "height": 3.4,
+   "footprint": [
+    -6,
+    -4.5,
+    6,
+    4.5
+   ],
+   "solids": [
+    [
+     -6.0,
+     25.4,
+     -0.8,
+     25.6
+    ],
+    [
+     0.8,
+     25.4,
+     6.0,
+     25.6
+    ],
+    [
+     -6.0,
+     34.4,
+     -3.7,
+     34.6
+    ],
+    [
+     -3.7,
+     34.4,
+     -2.3,
+     34.6
+    ],
+    [
+     -2.3,
+     34.4,
+     6.0,
+     34.6
+    ],
+    [
+     -6.1,
+     25.5,
+     -5.9,
+     27.05
+    ],
+    [
+     -6.1,
+     27.05,
+     -5.9,
+     28.45
+    ],
+    [
+     -6.1,
+     28.45,
+     -5.9,
+     34.5
+    ],
+    [
+     5.9,
+     25.5,
+     6.1,
+     27.05
+    ],
+    [
+     5.9,
+     27.05,
+     6.1,
+     28.45
+    ],
+    [
+     5.9,
+     28.45,
+     6.1,
+     34.5
+    ]
+   ],
+   "doors": [
+    {
+     "id": "Library-door",
+     "name": "Library door",
+     "from": "MVS",
+     "to": "Library",
+     "x": 0.0,
+     "y": 25.5,
+     "axis": "y",
+     "width": 1.6,
+     "outside": -1
+    }
+   ],
+   "rooms": []
+  },
+  {
+   "id": "Cafe",
+   "name": "Cafe",
+   "model": "world/cafe.glb",
+   "x": -30.0,
+   "y": 0.0,
+   "yaw": 0,
+   "height": 3.2,
+   "footprint": [
+    -4.5,
+    -4,
+    4.5,
+    4
+   ],
+   "solids": [
+    [
+     -34.5,
+     -4.1,
+     -32.95,
+     -3.9
+    ],
+    [
+     -32.95,
+     -4.1,
+     -31.55,
+     -3.9
+    ],
+    [
+     -31.55,
+     -4.1,
+     -25.5,
+     -3.9
+    ],
+    [
+     -34.5,
+     3.9,
+     -32.95,
+     4.1
+    ],
+    [
+     -32.95,
+     3.9,
+     -31.55,
+     4.1
+    ],
+    [
+     -31.55,
+     3.9,
+     -25.5,
+     4.1
+    ],
+    [
+     -34.6,
+     -4.0,
+     -34.4,
+     -2.7
+    ],
+    [
+     -34.6,
+     -2.7,
+     -34.4,
+     -1.3
+    ],
+    [
+     -34.6,
+     -1.3,
+     -34.4,
+     4.0
+    ],
+    [
+     -25.6,
+     -4.0,
+     -25.4,
+     -0.8
+    ],
+    [
+     -25.6,
+     0.8,
+     -25.4,
+     4.0
+    ]
+   ],
+   "doors": [
+    {
+     "id": "Cafe-door",
+     "name": "Cafe door",
+     "from": "MVS",
+     "to": "Cafe",
+     "x": -25.5,
+     "y": 0.0,
+     "axis": "x",
+     "width": 1.6,
+     "outside": 1
+    }
+   ],
+   "rooms": []
+  }
+ ]
+}

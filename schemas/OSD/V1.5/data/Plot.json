@@ -16,5 +16,6 @@
       "3D":                 { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } } },
       "4D":                 { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } } } } } },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the coordinates of the Plot: frame, axes and their handedness, units. A Qualifier of an inner Data Type overrides this one." },
     "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

@@ -33,7 +33,7 @@
       "ColourData":                 { "type": "string" },
       "ColourSpace":                { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json" } } },
 
-    "Intensity":                    { "type": "number", "description": "The light sourceâ€™s intensity measured in Watt." },
+    "Intensity":                    { "type": "number", "description": "The light source’s intensity measured in Watt." },
 
     "LightSourceRights":            { "$ref": "#/$defs/Rights" },
 

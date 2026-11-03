@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-SOD-V1.0",
+  "Group": "Delivery",
+  "Category": "Media",
+  "Description": "Speech Object Delivery: delivers Speech Objects, and the Scene Descriptors where the Data Type exists, to the real world through a loudspeaker or headphones, and may write or send them to a disk or a network, objects and scenes, Basic or full.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Speech",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "Scene",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "DeliveredSpeech",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5",
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredSpeech",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5",
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

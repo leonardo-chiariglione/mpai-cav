@@ -1,59 +1,305 @@
-{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json",
-  "title":                    "Acoustic Profile V1.0",
-  "description":              "The acoustics of an Object or of a Scene. An Object's: its frequency range, spectrogram, loudness and directional patterns (#/$defs/Object). A Scene's: its reflectivity, reverberation, diffusion, absorption and Doppler effect (#/$defs/Scene). A Data Type refers to the one it has.",
-  "anyOf":                    [ { "$ref": "#/$defs/Object" }, { "$ref": "#/$defs/Scene" } ],
-
-  "$defs":                    {
-
-    "Object":                 { "type": "object", "required": ["Header", "AcousticProfileID", "FrequencyRange", "Loudness"], "additionalProperties": false,
-                                "description": "The acoustics of an Object: what it sounds like, and how it radiates.", "properties": {
-
-      "Header":               { "type": "string", "const": "CAE-ACP-V1.0" },
-      "MInstanceID":          { "type": "string" },
-      "UEnvironmentID":       { "type": "string" },
-      "AcousticProfileID":    { "type": "string", "description": "Unique identifier for this AcousticProfile" },
-      "AcousticProfileTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-
-      "FrequencyRange":       { "type": "object", "required": ["MinFrequencyHz", "MaxFrequencyHz"], "additionalProperties": false, "description": "Nominal frequency bounds of the audio object in Hz", "properties": {
-        "MinFrequencyHz":     { "type": "number", "minimum": 0 },
-        "MaxFrequencyHz":     { "type": "number", "minimum": 0 } } },
-
-      "Spectrogram":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" },
-
-      "Loudness":             { "type": "number", "description": "Perceptual loudness (e.g., LUFS in dB)" },
-
-      "DirectionalPatterns":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json", "description": "How the Object radiates by direction, relative to the orientation of its Space-Time: gain in dB by azimuth and elevation (a 2D Plot), or by azimuth, elevation and frequency band (a 3D Plot). As DirectionalPatterns of the Audio Source. Absent, the Object radiates alike in every direction." },
-
-      "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-      "DescrMetadata":        { "type": "string", "maxLength": 2048 } } },
-
-    "Scene":                  { "type": "object", "required": ["Header", "AcousticProfileID"], "additionalProperties": false,
-                                "description": "The acoustics of a Scene: what happens to the sound of its Objects on the way to the listener.", "properties": {
-
-      "Header":               { "type": "string", "const": "CAE-ACP-V1.0" },
-      "MInstanceID":          { "type": "string" },
-      "UEnvironmentID":       { "type": "string" },
-      "AcousticProfileID":    { "type": "string", "description": "Unique identifier for this AcousticProfile" },
-      "AcousticProfileTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-
-      "Reflectivity":         { "type": "array", "items": { "type": "object", "required": ["EarlyReflectionTime", "LateReflectionTime"], "additionalProperties": false, "properties": {
-        "EarlyReflectionTime":{ "type": "number", "minimum": 0 },
-        "LateReflectionTime": { "type": "number", "minimum": 0 } } } },
-
-      "Reverberation":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
-        "RT60":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" },
-        "RT30":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" },
-        "RT20":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json" },
-        "EDT":                { "type": "number", "minimum": 0 } } } },
-
-      "Diffusion":            { "type": "number", "minimum": 0 },
-
-      "Absorption":           { "type": "number", "minimum": 0 },
-
-      "Doppler":              { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {
-        "DirectSoundFactor":  { "type": "number", "minimum": 0, "maximum": 1 },
-        "IndirectSound":      { "type": "number", "minimum": 0 } } } },
-
-      "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-      "DescrMetadata":        { "type": "string", "maxLength": 2048 } } } } }
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json",
+  "title": "Acoustic Profile V1.0",
+  "description": "The acoustics of an Object or of a Scene. An Object's: its frequency range, spectrogram, loudness and directional patterns (#/$defs/Object). A Scene's: its reflectivity, reverberation, diffusion, absorption and Doppler effect (#/$defs/Scene). A Data Type refers to the one it has.",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/Object"
+    },
+    {
+      "$ref": "#/$defs/Scene"
+    }
+  ],
+  "$defs": {
+    "Object": {
+      "type": "object",
+      "required": [
+        "Header",
+        "AcousticProfileID"
+      ],
+      "additionalProperties": false,
+      "description": "The acoustics of an Object: what it sounds like, and how it radiates. Only the identifier is required, so that a command can state the one property it changes.",
+      "properties": {
+        "Header": {
+          "type": "string",
+          "const": "CAE-ACP-V1.0"
+        },
+        "MInstanceID": {
+          "type": "string"
+        },
+        "UEnvironmentID": {
+          "type": "string"
+        },
+        "AcousticProfileID": {
+          "type": "string",
+          "description": "Unique identifier for this AcousticProfile"
+        },
+        "AcousticProfileTime": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+        },
+        "FrequencyRange": {
+          "type": "object",
+          "required": [
+            "MinFrequencyHz",
+            "MaxFrequencyHz"
+          ],
+          "additionalProperties": false,
+          "description": "Nominal frequency bounds of the audio object in Hz",
+          "properties": {
+            "MinFrequencyHz": {
+              "type": "number",
+              "minimum": 0
+            },
+            "MaxFrequencyHz": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "Spectrogram": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json",
+          "description": "A 3D Plot of triples: time in seconds, frequency in Hz, level in dB."
+        },
+        "Loudness": {
+          "type": "number",
+          "description": "Perceptual loudness, in LUFS."
+        },
+        "DirectionalPatterns": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json",
+          "description": "How the Object radiates by direction, relative to the orientation of its Space-Time: gain in dB by azimuth and elevation (a 2D Plot), or by azimuth, elevation and frequency band (a 3D Plot). As DirectionalPatterns of the Audio Source. Absent, the Object radiates alike in every direction."
+        },
+        "DataXMData": {
+          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+        },
+        "DescrMetadata": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      }
+    },
+    "Scene": {
+      "type": "object",
+      "required": [
+        "Header",
+        "AcousticProfileID"
+      ],
+      "additionalProperties": false,
+      "description": "The acoustics of a Scene: what happens to the sound of its Objects on the way to the listener. The level of the late reverberation is not carried: it follows from the volume V of the Closed Space (its Shape) of the Scene and the reverberation time T60, the direct and the reverberant levels being equal at the critical distance 0.057 sqrt(V/T60) metres (omnidirectional source). T60 is the RT60 of this profile where it has one, and otherwise Sabine's 0.161 V / A, with A the sum of the area of each surface multiplied by its Absorption.",
+      "properties": {
+        "Header": {
+          "type": "string",
+          "const": "CAE-ACP-V1.0"
+        },
+        "MInstanceID": {
+          "type": "string"
+        },
+        "UEnvironmentID": {
+          "type": "string"
+        },
+        "AcousticProfileID": {
+          "type": "string",
+          "description": "Unique identifier for this AcousticProfile"
+        },
+        "AcousticProfileTime": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+        },
+        "Reflectivity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "EarlyReflectionTime",
+              "LateReflectionTime"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "EarlyReflectionTime": {
+                "type": "number",
+                "minimum": 0,
+                "description": "In seconds: the time from the direct sound to the first reflection."
+              },
+              "LateReflectionTime": {
+                "type": "number",
+                "minimum": 0,
+                "description": "In seconds: the time from the first reflection to the onset of the late reverberation. The early part of the response ends EarlyReflectionTime + LateReflectionTime after the direct sound."
+              }
+            }
+          }
+        },
+        "Reverberation": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "RT60": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json",
+                "description": "The reverberation time, 60 dB decay: a 2D Plot of pairs, x the frequency in Hz and y the time in seconds. A Plot of one pair applies at all frequencies."
+              },
+              "RT30": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json",
+                "description": "The reverberation time evaluated on a 30 dB decay: a 2D Plot of pairs, x the frequency in Hz and y the time in seconds. A Plot of one pair applies at all frequencies."
+              },
+              "RT20": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Plot.json",
+                "description": "The reverberation time evaluated on a 20 dB decay: a 2D Plot of pairs, x the frequency in Hz and y the time in seconds. A Plot of one pair applies at all frequencies."
+              },
+              "EDT": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The early decay time, in seconds."
+              }
+            }
+          }
+        },
+        "Diffusion": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How diffuse the reflections are: 0 is specular reflection, 1 is fully diffuse reflection."
+        },
+        "Absorption": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The mean absorption coefficient of the space: the fraction of the sound energy absorbed, the mean over frequency and over the surfaces, weighted by area. A surface with a Material of its own (the Walls of this profile) takes the Absorption of that Material; a surface without one takes this Absorption, as if it were the DefaultMaterial of this profile. Where every surface has a Material, this is the area-weighted mean of theirs."
+        },
+        "Doppler": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "DirectSoundFactor": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "The share of the physical Doppler shift applied to the direct sound: 0 none, 1 the physical shift."
+              },
+              "IndirectSound": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The share of the physical Doppler shift applied to the reflected sound: 1 is the physical shift."
+              }
+            }
+          }
+        },
+        "DataXMData": {
+          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+        },
+        "DescrMetadata": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "Walls": {
+          "type": "array",
+          "description": "The Materials of the walls of the Closed Space of the Scene, each wall named in one of three ways: a face - or a Region of a face - of a Right Parallelepiped of the Shape of the Closed Space; a flat Polygon given by its vertices, in the frame of the Closed Space (any flat wall: a sloped ceiling, an angled wall, a panel); or a SurfaceID, the identifier of a surface of the Shape when the Shape is not made of Right Parallelepipeds (a curved wall, a modelled one). A wall not given its own Material has the DefaultMaterial. Part of a wall - a glass panel in a plaster wall, a door - is a Region of its face, or a Polygon, with a Material of its own; a door left open is a Region of air (Absorption 0, Transmission 1). Where walls overlap, the later one applies. A profile that states Walls is merged into the Walls the Scene has: a wall given replaces the wall with the same name - the same Right Parallelepiped, Face and Region, or the same Polygon, or the same SurfaceID - and the other walls keep their Material.",
+          "items": {
+            "$ref": "#/$defs/Wall"
+          }
+        },
+        "DefaultMaterial": {
+          "$ref": "#/$defs/MaterialIDOrMaterial",
+          "description": "The Material of every wall of the Closed Space not given its own in Walls. When given, it replaces the one the Scene has."
+        }
+      }
+    },
+    "MaterialIDOrMaterial": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Material.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "Wall": {
+      "description": "A wall and its Material: the wall named by a face of a Right Parallelepiped (with a Region of it, if only part), by a Polygon, or by a SurfaceID.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "RightParallelepipedID",
+            "Face",
+            "MaterialIDOrMaterial"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "RightParallelepipedID": {
+              "type": "string",
+              "description": "The Right Parallelepiped of the Shape whose face this wall is."
+            },
+            "Face": {
+              "type": "string",
+              "enum": [
+                "Floor",
+                "Ceiling",
+                "Front",
+                "Back",
+                "Left",
+                "Right"
+              ]
+            },
+            "Region": {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RightParallelepiped.json",
+              "description": "A part of the face, a 2D Right Parallelepiped on it; absent, the whole face."
+            },
+            "MaterialIDOrMaterial": {
+              "$ref": "#/$defs/MaterialIDOrMaterial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "Polygon",
+            "MaterialIDOrMaterial"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "Polygon": {
+              "type": "array",
+              "minItems": 3,
+              "description": "The vertices of a flat wall, in order round its edge, as (x, y, z) in metres in the frame of the Closed Space.",
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "MaterialIDOrMaterial": {
+              "$ref": "#/$defs/MaterialIDOrMaterial"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "SurfaceID",
+            "MaterialIDOrMaterial"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "SurfaceID": {
+              "type": "string",
+              "description": "The identifier of a surface of the Shape, when the Shape is not made of Right Parallelepipeds."
+            },
+            "MaterialIDOrMaterial": {
+              "$ref": "#/$defs/MaterialIDOrMaterial"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

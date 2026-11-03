@@ -1,8 +1,8 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "MMC-AMQ-V2.5-I01", "AIMName": "MMC-AMQ-V2.5"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "MMC-AMQ-V2.5",
 
   "APIProfile":       "Basic",
-  "Description":      "Answer to Multimodal Question (slide 3 of the MMC Reference Models): receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as a Portable Avatar, which utters it, and the Visual Object. Automatic Speech Recognition recognises the spoken question; Text and Image Query answers the question about the image; Portable Avatar Multiplexing puts the answer in the Portable Avatar.",
+  "Description":      "Answer to Multimodal Question: receives a Visual Object and a question - as a Speech Object or a Text Object - and returns the answer as a Portable Avatar, which utters it, and the Visual Object. Automatic Speech Recognition recognises the spoken question; Text and Image Query answers the question about the image; Text-To-Speech makes the Speech Object of the answer; Portable Avatar Multiplexing puts the answer, text and speech, in the Portable Avatar, which the User Agent renders.",
 
   "InternalTypes":        [],
 
@@ -13,18 +13,23 @@
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ASR-V2.5", "Relation": "Internal"}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TIQ-V2.5", "Relation": "Internal"}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": "Internal"}}],
+  "SubAIMs":              [{"Header": "MMC-ASR-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                          {"Header": "MMC-TIQ-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                          {"Header": "MMC-TTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                          {"Header": "PAF-PMX-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BSO-V1.5"}},
                           {"Output": {"AIMName": "MMC-ASR-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BVO-V1.5"}},
+                          {"Output": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
                           {"Output": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                          {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BSO-V1.5"}},
                           {"Output": {"AIMName": "MMC-TIQ-V2.5", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}},
                           {"Output": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
                           {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

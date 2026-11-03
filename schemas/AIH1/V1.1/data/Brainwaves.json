@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json",
+  "title": "Brainwaves V1.1",
+  "description": "The frequency, in Hz, of each EEG band of a person or of a group of persons.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["Header", "BrainwavesID", "BrainwavesData"],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "AIH-BRW-V1.1",
+      "description": "Brainwaves Header - Standard AIH-BRW-Vx.y."
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance (Virtual Space) associated with this Brainwaves instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment (Real Space) associated with this Brainwaves instance."
+    },
+    "BrainwavesID": {
+      "type": "string",
+      "description": "Identifier of this Brainwaves instance."
+    },
+    "BrainwavesTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+      "description": "Time of the measurement or estimate the frequencies refer to."
+    },
+    "EEGObjectID": {
+      "type": "string",
+      "description": "Identifier of the EEG Object from which the frequencies were derived, if any."
+    },
+    "BrainwavesData": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "The frequency, in Hz, of each EEG band.",
+      "properties": {
+        "Delta": { "type": "number", "minimum": 0.5, "maximum": 4,   "description": "Frequency of the delta band, in Hz (0.5 to 4 Hz)." },
+        "Theta": { "type": "number", "minimum": 4,   "maximum": 8,   "description": "Frequency of the theta band, in Hz (4 to 8 Hz)." },
+        "Alpha": { "type": "number", "minimum": 8,   "maximum": 13,  "description": "Frequency of the alpha band, in Hz (8 to 13 Hz)." },
+        "Beta":  { "type": "number", "minimum": 13,  "maximum": 30,  "description": "Frequency of the beta band, in Hz (13 to 30 Hz)." },
+        "Gamma": { "type": "number", "minimum": 30,  "maximum": 100, "description": "Frequency of the gamma band, in Hz (30 to 100 Hz)." }
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

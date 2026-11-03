@@ -1,0 +1,25 @@
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/XRV1/V1.0/examples/BiometricDeviceAnnotation.json",
+  "title":                        "Annotation V1.5", "type": "object", "required": [ "Header", "AnnotationID", "AnnotationTime" ],
+                                  "additionalProperties": false, "properties": {
+
+    "Header":                     { "type": "string", "const": "XRV-BDA-V1.0" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "AnnotationID":               { "type": "string" },
+    "AnnotationTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "MCAnnotation":               { "type": "object", "properties": {
+      "DeviceType":               { "type": "string" },
+      "Manufacturer":             { "type": "string" },
+      "ModelNumber":              { "type": "string" },
+      "BioChannel":               { "type": "integer" },
+      "BioDataTable":             { "type": "array", "items": {
+        "ECG":                    { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ECGQualifier.json" },
+        "EEG":                    { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/EEGQualifier.json" },
+        "GalvanicSkinResponse":   { "type": "number", "minimum": 0, "description": "Skin conductance (microsiemens)." },
+        "MyoelectricIntensity":   { "type": "number", "minimum": 0, "description": "EMG amplitude (mV)." },
+        "SkinTemperature":        { "type": "number", "minimum": 20, "maximum": 45, "description": "Skin temp. (degrees C)." } } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

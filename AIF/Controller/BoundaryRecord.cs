@@ -20,14 +20,17 @@ namespace AIF.Controller;
 // counted. The form of the record is this Implementation's.
 public sealed class BoundaryRecord
 {
-    public const string Category = "Boundary";
+    public const string Category = AIF.SharedStorage.RuledStore.Boundary;
     private const int InlineAbove = 64 * 1024;   // an inline datum above this becomes a payload of its own
 
     private readonly IRuledStorage storage;
     private readonly PayloadStore payloads;
     private readonly IClock clock;
     private readonly JsonObject header;
-    private readonly Channel<(string Key, byte[] Data, PortKey Port)> queue;
+    // A Message is recorded or not as a whole: one failure of any of its items counts it once.
+    private sealed class Whole { public int Failed; }
+
+    private readonly Channel<(string Key, byte[] Data, PortKey Port, Whole Message)> queue;
     private readonly Task writing;
     private readonly TimeSpan writeDelay;
     private readonly ConcurrentDictionary<PortKey, Counts> counts = new();
@@ -63,7 +66,7 @@ public sealed class BoundaryRecord
         started = clock.Now;
         startedTicks = clock.Monotonic;
         Id = $"R{started:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid().ToString("N")[..4]}";
-        queue = Channel.CreateBounded<(string, byte[], PortKey)>(new BoundedChannelOptions(Math.Max(1, depth))
+        queue = Channel.CreateBounded<(string, byte[], PortKey, Whole)>(new BoundedChannelOptions(Math.Max(1, depth))
         {
             SingleReader = true, FullMode = BoundedChannelFullMode.Wait
         });
@@ -73,10 +76,17 @@ public sealed class BoundaryRecord
     // A Message as it crosses: In, written to a boundary Input Port; Out, received
     // by a boundary Output Port - the boundary's Port, not the Port of the AIM that
     // wrote it.
+    // It never delays the Module and never fails it: what goes wrong here is counted as not recorded (STO-7).
     public void Take(string direction, PortMessage message, PortEnd? boundary = null)
     {
         var port = new PortKey(direction, boundary?.DataType ?? message.DataType, boundary?.PortNumber ?? message.PortNumber);
         var mine = counts.GetOrAdd(port, _ => new Counts());
+        try { Enqueue(direction, message, port, mine); }
+        catch { Interlocked.Increment(ref mine.NotRecorded); }
+    }
+
+    private void Enqueue(string direction, PortMessage message, PortKey port, Counts mine)
+    {
         var seq = Interlocked.Increment(ref sequence);
 
         // The payloads, now: a reference may be released as soon as it is read.
@@ -95,9 +105,10 @@ public sealed class BoundaryRecord
 
         // All or nothing: a record the queue cannot take now, with its payloads,
         // is not recorded.
+        var whole = new Whole();
         var items = extracted.Select(p => (p.Key, p.Data)).Append(($"{Id}/{seq:D9}", Encoding.UTF8.GetBytes(record.ToJsonString()))).ToList();
         foreach (var (key, data) in items)
-            if (!queue.Writer.TryWrite((key, data, port)))
+            if (!queue.Writer.TryWrite((key, data, port, whole)))
             {
                 Interlocked.Increment(ref mine.NotRecorded);
                 return;
@@ -146,7 +157,7 @@ public sealed class BoundaryRecord
 
     private async Task WriteAsync()
     {
-        await foreach (var (key, data, port) in queue.Reader.ReadAllAsync())
+        await foreach (var (key, data, port, whole) in queue.Reader.ReadAllAsync())
         {
             if (writeDelay > TimeSpan.Zero) await Task.Delay(writeDelay);
             try
@@ -155,10 +166,13 @@ public sealed class BoundaryRecord
             }
             catch
             {
-                // Where the storage cannot take it, the record is not written.
-                var mine = counts.GetOrAdd(port, _ => new Counts());
-                Interlocked.Increment(ref mine.NotRecorded);
-                Interlocked.Decrement(ref mine.Recorded);
+                // Where the storage cannot take it, the record is not written: the Message, once, however many items it has.
+                if (Interlocked.CompareExchange(ref whole.Failed, 1, 0) == 0)
+                {
+                    var mine = counts.GetOrAdd(port, _ => new Counts());
+                    Interlocked.Increment(ref mine.NotRecorded);
+                    Interlocked.Decrement(ref mine.Recorded);
+                }
             }
         }
     }

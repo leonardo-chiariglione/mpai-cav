@@ -1,0 +1,49 @@
+{
+ "Id": "de-degraded",
+ "Language": "de",
+ "Dpi": 150,
+ "Width": 1240,
+ "Height": 1754,
+ "Kind": "synthetic, degraded: 150 dpi, rotated 1.1 degrees, blurred, noisy, grey paper, JPEG quality 40",
+ "Columns": [
+  {
+   "Box": [
+    70,
+    226,
+    410,
+    1295
+   ],
+   "Point": [
+    228.4,
+    278.4
+   ],
+   "Text": "Unwetter im Rhein-Main-Gebiet löst Verkehrschaos aus\nFrankfurt am Main (Deutschland), 21.08.2019 – Ein schweres Unwetter hat am Sonntagabend, 18. August, im Rhein-Main-Gebiet ein Verkehrschaos ausgelöst. Dächer wurden abgedeckt, Bäume umgerissen. Es kam zu Unterbrechungen des Bahnfernverkehrs zwischen Frankfurt und Würzburg sowie Frankfurt und Mannheim. Am Flughafen Frankfurt kam es zu Verzögerungen und Flugausfällen. Mehrere Bundesstraßen, darunter die Bundesstraße 486 zwischen Mörfelden und Langen, und Teile der Bundesautobahnen A5 und A45 waren durch umgestürzte Bäume blockiert.\nEin Sprecher des Polizeipräsidiums Südosthessen teilte der Presse mit, es seien im Kreis Offenbach alleine während des Unwetters über 300 Notrufe eingegangen, im Kreisgebiet seien 21 Personen verletzt worden. Angaben über das Ausmaß der Unwetterschäden konnte die Polizei am 19. August noch nicht machen. Die Schäden durch Starkregen und Sturm seien immens. Die Offenbacher Berufsfeuerwehr gab an, sie sei zu über 1000 Einsätzen ausgerückt.\nManche Augenzeugen gaben an, zwischen Langen und Seligenstadt einen Tornado gesehen zu haben, doch der Deutsche Wetterdienst in Offenbach ist der Meinung, dass die Schäden durch eine Superzelle mit Downburst entstanden. „Alle Videos, die ich gesehen habe, sprechen für eine Superzelle“, sagte ein Sprecher des Deutschen Wetterdienstes in der Frankfurter Allgemeinen Zeitung.\nIm benachbarten Landkreis Aschaffenburg rückte die Feuerwehr zu 96 Einsätzen aus."
+  },
+  {
+   "Box": [
+    450,
+    226,
+    790,
+    1418
+   ],
+   "Point": [
+    608.4,
+    271.1
+   ],
+   "Text": "ISS: Reiter und Williams sechs Stunden im Außeneinsatz\nHouston (Vereinigte Staaten) / ISS, 04.08.2006 – Am gestrigen Donnerstag, den 3. August haben der US-Amerikaner Jeffrey Williams und sein deutscher Kollege Thomas Reiter einen knapp sechsstündigen „Weltraumspaziergang“ außerhalb der Internationalen Raumstation ISS absolviert. Kommandant Pawel Winogradow blieb zur Unterstützung an Bord zurück.\nNach Anfangsschwierigkeiten – die Außenluke der Luftschleuse hatte sich zunächst nicht öffnen lassen – begann der Außeneinsatz um 14:04 Uhr UTC mit dem Umschalten der Raumanzüge auf Batteriebetrieb. Nach fünf Stunden und 54 Minuten, um 19:58 Uhr UTC, endete der laut NASA „rundum gelungene“ Außeneinsatz.\nErstes Einsatzziel war es, ein Messgerät für elektrisches Potential zu installieren. Mit dessen Hilfe soll die Gefahr elektrischer Entladungen auf die ISS oder Astronauten untersucht werden, die von den Solarzellenpanels der Station ausgehen könnten. Im Anschluss daran befestigten sie zwei Probenbehälter mit Materialien, die auf ihre langfristige Weltraumtauglichkeit hin untersucht werden sollen. Die letzte größere Aufgabe bestand in der Installation einer Wärmebildkamera, um in Zukunft die Hitzekacheln des Spaceshuttles auf Schäden untersuchen zu können, wenn es an die ISS angedockt ist.\nZu den weiteren Arbeiten zählten Wartungen und Reparaturen an verschiedenen Teilen der Station. Die Astronauten waren dem Zeitplan so weit voraus, dass sie noch zusätzliche Arbeiten durchführen konnten und trotzdem 90 Minuten früher als geplant an Bord der ISS zurückkehrten."
+  },
+  {
+   "Box": [
+    810,
+    226,
+    1150,
+    1186
+   ],
+   "Point": [
+    968.3,
+    264.2
+   ],
+   "Text": "Petition fordert Wechsel auf 1080i-HD-Fernsehnorm bei ARD und ZDF\nDeutschland, 01.03.2010 – Die deutschen öffentlich-rechtlichen Fernsehsender ARD und ZDF starteten zu den Olympischen Winterspielen 2010 in Vancouver ihre HDTV-Regelausstrahlungen und bereits in der ersten Ausstrahlungswoche formierte sich im Hifi-Forum eine Online-Petition unter dem Namen „1080i bei ARD+ZDF jetzt!“, die einen Wechsel der HD-Fernsehnorm weg von der eingesetzten, geringer aufgelösten 720p50 (1280*720 bei 50 Vollbildern) zur höher aufgelösenden Variante 1080i50 (1920*1080 bei 50 Halbbildern oder 25 Vollbildern).\nEine der zentralen Forderungen lautet: „Wir wollen kein 720p. Wir wollen FullHD in 1080i oder p! Der überwiegende Teil der weltweiten HDTV-Produktionen erfolgt in 1080i, die meisten HD-Programme senden 1080i und die meisten Receiver sind auf 1080i-Ausgabe eingestellt - da ist eine TV-Ausstrahlung in 720p absolut kontraproduktiv für eine perfekte Bilddarstellung.“\nIn der Petition wird auf eine Entscheidung der „niederländischen Nachbarn“ verwiesen und damit wird auf die Entscheidung des Fernsehsenders NPO Bezug genommen, der nach heftigen Zuschauerreaktionen über die Bildqualität bei der Übertragung der Fußball-Europameisterschaft 2008 den Sendemodus von 720p auf 1080i änderte."
+  }
+ ]
+}

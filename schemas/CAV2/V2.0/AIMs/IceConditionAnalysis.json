@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/IceConditionAnalysis.json",
   "title": "Ice Condition Analysis V2.0",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-ICA-V2.0" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-ICA-V2.0",
 
@@ -18,12 +18,15 @@
     { "Name": "MotorResponse"   , "Direction": "Input"  , "DataType": "CAV-MRP-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "WheelResponse"   , "Direction": "Input"  , "DataType": "CAV-WHR-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "RoadState"       , "Direction": "Output" , "DataType": "CAV-RDS-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "AMSMASMessageOut", "Direction": "Output" , "DataType": "CAV-AMM-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "WeatherDataOut"  , "Direction": "Output" , "DataType": "CAV-WDT-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],
 
   "Topology":  [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [
     {"ImplementationURI": "/* URI storing Implementation */", "BinaryName": "/* BinaryName */", "Architecture": "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */", "OperatingSystem": "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */", "Version": "/* Version */", "Source": "/* AIMStorage | MPAIStore | AIMURL */", "Destination": "/* Destination URI */"}

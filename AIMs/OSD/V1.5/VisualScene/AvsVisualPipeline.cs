@@ -1,4 +1,7 @@
-﻿using System;
+﻿// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
+using System;
 using System.Collections.Generic;
 
 using Mpai.Core;
@@ -36,7 +39,7 @@ namespace Mpai.Osd.VisualScene;
 //  NOT treated as HCI-internal state. (FED from a REMOTE CAV crosses the same
 //  way, arriving in the Ego-Remote HCI Message (CAV-ERH-V2.0), also PTF-borne.)
 //
-//  Depends on: fused AudioVisualSceneDescriptors (OSD-BMS) and the FED type,
+//  Depends on: fused MultimodalSceneDescriptors (OSD-BMS) and the FED type,
 //  neither of which exists yet. Add when those are built.
 // ---------------------------------------------------------------------------
 public sealed class AvsVisualPipeline
@@ -108,7 +111,7 @@ public sealed class AvsVisualPipeline
             BasicVisualSceneDescriptorsEntries = entries
             // EXTENSION POINTs: crop each face to its own BasicVisualObject;
             // add body detection (also valid OSD-BVS objects); fuse with the
-            // audio scene -> BasicAudioVisualSceneDescriptors (OSD-BMS).
+            // audio scene -> BasicMultimodalSceneDescriptors (OSD-BMS).
         };
     }
 }

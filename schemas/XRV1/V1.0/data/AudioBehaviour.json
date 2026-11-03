@@ -1,0 +1,31 @@
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json",
+  "title":                  "Audio Behaviour V1.0",
+  "type":                   "object", 
+  "additionalProperties":   false, 
+  "required":               [ "Header", "AudioBehaviourID", "BehaviourData", "UEnvironmentID", "AudioBehaviourTime" ],
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "XRV-ABH-V1.0" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "AudioBehaviourID":     { "type": "string" },
+    "AudioBehaviourTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "BehaviourData":        { "type": "object", "additionalProperties": false, "properties": {
+
+      "BooingIntensity":    { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the booing, on a scale from 0 to 100." },
+      "ClappingIntensity":  { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the clapping, on a scale from 0 to 100." },
+      "LaughingIntensity":  { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the laughing, on a scale from 0 to 100." },
+      "ShoutingIntensity":  { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the shouting, on a scale from 0 to 100." },
+
+      "Singing":            { "type": "array", "minItems": 0, "items": { "type": "object", "additionalProperties": false, "required": [ "SingingIntensity", "Song" ], "properties": {
+        "SingingIntensity": { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the singing, on a scale from 0 to 100." },
+        "Song":             { "type": "string" } } } },
+
+      "Speaking":           { "type": "object", "additionalProperties": false, "required": [ "SpeakingIntensity", "UtteredText" ], "properties": {
+        "SpeakingIntensity":{ "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the speaking, on a scale from 0 to 100." },
+        "UtteredText":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextObject.json" } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

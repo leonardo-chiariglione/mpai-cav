@@ -1,0 +1,32 @@
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json",
+  "title":                      "Visual Behaviour V1.0",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "VisualBehaviourID", "Behaviour", "UEnvironmentID", "VisualBehaviourTime" ],
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "XRV-VBH-V1.0" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "VisualBehaviourID":        { "type": "string" },
+    "VisualBehaviourTime":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Behaviour":                { "type": "object", "additionalProperties": false, "unevaluatedProperties": false, "properties": {
+
+        "SpatialAttitude":      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
+        "ClappingIntensity":    { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the clapping, on a scale from 0 to 100." },
+
+        "Gestures":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Gesture" ], "properties": {
+          "Gesture":            { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/GestureAttributes.json" },
+          "Intensity":          { "type": "number", "minimum": 0, "maximum": 100, "description": "Intensity of the Gesture, on a scale from 0 to 100." },
+          "JumpHeight":         { "type": "number", "minimum": 0, "description": "Height of the jump, in meters, when the Gesture is Jumping." },
+          "PointOfView":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Direction pointed to, when the Gesture is Pointing to a direction." },
+          "DanceObject":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/DanceObject.json", "description": "The dance, when the Gesture is Dancing." } } } },
+
+        "Gazing":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json" },
+        "StadiumWave":          { "type": "boolean" },
+        "StandSit":             { "type": "boolean" } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

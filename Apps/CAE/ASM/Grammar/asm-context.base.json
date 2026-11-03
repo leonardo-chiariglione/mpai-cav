@@ -1,0 +1,1174 @@
+{
+  "Header": "MMC-APC-V2.5",
+  "Description": "The Application Context of Audio Scene Management (CAE-ASM) for the JSON Interface (MMC-JSI): what, beyond the schema of the User Command, describes the application. It is data of the Access of the implementation 1MMC-JSI-V2.5-I02 (Setting ApplicationContext), beside the schema of the User Command (Settings CommandSchema and ResponseSchema, one schema for both: the request is UserCommandRQ, the response UserCommandRS).",
+  "Application": "The application edits an audio scene: sounds (objects) placed around a listener, the user. A command moves, turns, adds, removes or plays objects, sets their loudness, moves the listener, or undoes an earlier command.",
+  "Conventions": "Positions are in metres: x right of the user, y ahead, z up; the user is at (0, 0, 0) facing +y. An orientation is (alpha, beta, gamma) in degrees and only gamma is used: 0 faces away from the user, 180 faces the user, 90 faces the user's left, 270 the user's right.\nThe field by the verb:\n- MovedObjects (the NEW position and orientation of an object): move, shift, push, bring, put, place, raise, lift, lower, drop, turn, rotate, nearer, closer, farther, forward, back.\n- ChangedObjects (a Level in LUFS, negative: \"minus 20\" is -20): louder, quieter, softer, the level of an object. LUFS alone is for the whole scene.\n- AddedObjects: add, bring in. RemovedObjects: remove, take out. DeliveredObject: play, let me hear (the scene has a name too). UserPoV: the listener (me, I, let me listen). RevokedUserCommandID: undo, go back (a command sent before, the last unless another is said).\nA change by d from the current position (see the state of the application) changes ONE coordinate: right x+d; left x-d; forward, ahead y+d; back, behind y-d; up, raise, lift z+d; down, lower, drop z-d; closer, nearer: the distance from (0, 0, 0) gets d smaller (an object ahead y-d, behind y+d); farther: d larger (ahead y+d, behind y-d). \"To x, y, z\" is as said. A turn keeps the position; \"by n degrees\" adds n to gamma.\nAnother word may stand for an object (fiddle: violin; singer, vocals: voice; keyboard: piano). Stop, save, open and close are not commands: answer a Problem.\nA room (ClosedSpace) is a box on the floor (z = 0), 2.5 m high unless said, given by four corners in metres: the corner with the smallest x, y, z; then the corner along x; the corner along y; the corner along z. \"3 metres by 3 metres centred at 0 0\" is x from -1.5 to 1.5 and y from -1.5 to 1.5: corners (-1.5, -1.5, 0), (1.5, -1.5, 0), (-1.5, 1.5, 0), (-1.5, -1.5, 2.5). \"6 by 4\" is 6 along x and 4 along y, centred at 0 0 unless a centre is said.\nDELETE is not REMOVE: \"remove the violin\" (take out, take away) takes it out of the scene and it is still kept (RemovedObjects); \"delete the violin\", \"erase it\", \"forget the violin\", \"delete it from the store\" deletes it from where the application keeps things, for good (DeletedObjects, by name: an object or a scene). An object that is in a scene is not deleted until the scene is.",
+  "Include": [
+    "UserCommandRQ.UserPoV",
+    "UserCommandRQ.LUFS",
+    "UserCommandRQ.RevokedUserCommandID",
+    "UserCommandRQ.DeliveredObject",
+    "UserCommandRQ.AddedObjects.Objects",
+    "UserCommandRQ.RemovedObjects.Objects.ObjectID",
+    "UserCommandRQ.MovedObjects.Objects.ObjectID",
+    "UserCommandRQ.MovedObjects.Objects.NewSpatialAttitude",
+    "UserCommandRQ.MovedObjects.Objects.NewSpatialAttitude.Position.CartPosition",
+    "UserCommandRQ.MovedObjects.Objects.NewSpatialAttitude.Orientation.Orientation",
+    "UserCommandRQ.ChangedObjects.Objects.Level",
+    "UserCommandRQ.ClosedSpace.Shape.SimpleLocationData.RightParallelepiped.CartPositions",
+    "UserCommandRQ.DeletedObjects.Objects.ObjectID",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Absorption",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Diffusion",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Reverberation",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Reflectivity",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Doppler",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.Walls",
+    "UserCommandRQ.ModifiedScene.AcousticProfile.DefaultMaterial",
+    "UserCommandRQ.ModifiedObjects.Objects.AcousticProfile.FrequencyRange",
+    "UserCommandRQ.ModifiedObjects.Objects.AcousticProfile.Loudness"
+  ],
+  "Require": [
+    "UserCommandRQ",
+    "UserCommandRQ.MovedObjects.Objects",
+    "UserCommandRQ.ChangedObjects.Objects",
+    "UserCommandRQ.RemovedObjects.Objects",
+    "UserCommandRQ.AddedObjects.Objects"
+  ],
+  "Drop": [
+    "UserCommandRQ.AddedObjects.ObjectID"
+  ],
+  "Generated": [
+    "UserCommandID",
+    "ObjectSpatialAttitudeID",
+    "PositionID",
+    "OrientationID",
+    "PointOfViewID",
+    "SimpleTimeID",
+    "ClosedSpaceID"
+  ],
+  "Fill": {
+    "UserCommandRQ.AddedObjects.ObjectID": "stage",
+    "UserCommandTime": {
+      "Header": "OSD-STM-V1.5",
+      "SimpleTimeID": "{id}",
+      "SimpleTimeData": [
+        {
+          "FlagsByte": 1,
+          "StartTime": "{now}",
+          "EndTime": "{now}",
+          "AccuracyPlusMinus": 0
+        }
+      ]
+    },
+    "UserCommandRQ.ClosedSpace.Shape.SimpleLocationData.RightParallelepiped.Dimensions": "3D",
+    "UserCommandRQ.ClosedSpace.DefaultMaterial": [
+      {
+        "Header": "OSD-MTR-V1.5",
+        "MaterialID": "plaster",
+        "Acoustic": {
+          "Absorption": [
+            {
+              "FrequencyHz": 400,
+              "Fraction": 0.1
+            },
+            {
+              "FrequencyHz": 2500,
+              "Fraction": 0.15
+            },
+            {
+              "FrequencyHz": 15000,
+              "Fraction": 0.2
+            }
+          ],
+          "Scattering": 0.3,
+          "Transmission": [
+            {
+              "FrequencyHz": 400,
+              "Fraction": 0
+            },
+            {
+              "FrequencyHz": 2500,
+              "Fraction": 0
+            },
+            {
+              "FrequencyHz": 15000,
+              "Fraction": 0
+            }
+          ],
+          "BandScheme": "Other",
+          "Incidence": "Random"
+        }
+      }
+    ]
+  },
+  "Names": [
+    {
+      "Path": "UserCommandRQ.DeliveredObject",
+      "Set": "Present"
+    },
+    {
+      "Path": "UserCommandRQ.MovedObjects.Objects.ObjectID",
+      "Set": "Members"
+    },
+    {
+      "Path": "UserCommandRQ.RemovedObjects.Objects.ObjectID",
+      "Set": "Members"
+    },
+    {
+      "Path": "UserCommandRQ.ChangedObjects.Objects.ObjectID",
+      "Set": "Members"
+    },
+    {
+      "Path": "UserCommandRQ.AddedObjects.Objects.ObjectID",
+      "Set": "Stored"
+    },
+    {
+      "Path": "UserCommandRQ.DeletedObjects.Objects.ObjectID",
+      "Set": "Kept"
+    }
+  ],
+  "Context": {
+    "Items": "UserCommandRS.ListedObjects",
+    "Name": "ObjectID",
+    "Kind": "Kind",
+    "SceneKinds": [
+      "Audio Scene",
+      "Speech Scene",
+      "Multimodal Scene"
+    ],
+    "Members": "Members",
+    "MemberName": "ObjectID",
+    "MemberNames": "MemberObjectIDs",
+    "Describe": [
+      {
+        "Label": "position",
+        "Path": "PoV.Position.CartPosition",
+        "Unit": "m",
+        "Words": ["where", "position", "place", "location", "coordinates"]
+      },
+      {
+        "Label": "orientation",
+        "Path": "PoV.Orientation.Orientation",
+        "Words": ["orientation", "direction", "heading", "facing", "faces"]
+      },
+      {
+        "Label": "starts at",
+        "Path": "Time.SimpleTimeData.StartTime",
+        "Unit": "s",
+        "Words": ["duration", "time", "timing", "when", "start", "starts", "begin", "begins", "length", "how long", "playing time"]
+      },
+      {
+        "Label": "ends at",
+        "Path": "Time.SimpleTimeData.EndTime",
+        "Unit": "s",
+        "Words": ["duration", "time", "timing", "when", "end", "ends", "finish", "finishes", "length", "how long", "playing time"]
+      },
+      {
+        "Label": "level",
+        "Path": "Level",
+        "Unit": "LUFS",
+        "Words": ["level", "loudness", "volume", "loud"]
+      }
+    ],
+    "Words": {
+      "State": "",
+      "Scene": "Scene \"{0}\" with {1} objects:",
+      "Stored": "Stored sounds that can be added:",
+      "Unknown": "The scene is not known: no object can be named."
+    }
+  },
+  "NeedsNumber": {
+    "Phrases": [
+      "a bit",
+      "a little",
+      "slightly",
+      "somewhat",
+      "a lot",
+      "much",
+      "louder",
+      "quieter",
+      "softer",
+      "closer",
+      "farther",
+      "further",
+      "nearer",
+      "higher",
+      "lower",
+      "turn up",
+      "turn down"
+    ],
+    "NumberWords": [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+      "eleven",
+      "twelve",
+      "twenty",
+      "thirty",
+      "forty",
+      "fifty",
+      "sixty",
+      "ninety",
+      "hundred",
+      "half",
+      "quarter",
+      "a metre",
+      "a meter",
+      "a degree"
+    ],
+    "Question": "By how much, as a number? For a position, in metres; for a loudness, in LUFS; for a turn, in degrees."
+  },
+  "Earlier": "UserCommandID",
+  "ResponseIntro": "The audio scene application answered",
+  "Words": {
+    "Outcome": "result",
+    "Actions": "actions",
+    "Action": "did",
+    "ObjectID": "on",
+    "Reason": "because",
+    "ResultID": "producing",
+    "ListedObjects": "listed",
+    "Kind": "kind",
+    "Members": "members",
+    "ObjectCount": "objects",
+    "ChildCount": "children",
+    "MemberObjectIDs": "made of",
+    "PoV": "at",
+    "CartPosition": "",
+    "Orientation": "orientation",
+    "Position": "position",
+    "Duration": "seconds",
+    "Version": "version",
+    "Done": "done",
+    "Failed": "failed",
+    "NotSupported": "not supported",
+    "Partly": "partly done",
+    "Ignored": "ignored",
+    "MovedObjects": "moved",
+    "AddedObjects": "added",
+    "RemovedObjects": "removed",
+    "ChangedObjects": "changed",
+    "ModifiedObjects": "modified",
+    "DeliveredObject": "played",
+    "AcquiredObject": "recorded",
+    "UserPoV": "moved the listener",
+    "LUFS": "set the loudness of the scene",
+    "RevokedUserCommandID": "undid an earlier command",
+    "TranslatedObjects": "translated",
+    "ClosedSpace": "changed the room",
+    "ModifiedScene": "changed the acoustics",
+    "UserCommandRS": ""
+  },
+  "Skip": [
+    "Header",
+    "MInstanceID",
+    "UEnvironmentID",
+    "UserCommandID",
+    "UserCommandTime",
+    "ReportTime",
+    "DataXMData",
+    "DescrMetadata",
+    "Confidence",
+    "ObjectSpatialAttitudeID",
+    "PositionID",
+    "OrientationID",
+    "PointOfViewID",
+    "SimpleTimeID"
+  ],
+  "Examples": [
+    {
+      "Request": "move the bass 2 metres to the right",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "MovedObjects bass, right is x: x=1+2=3, y=3, z=0.",
+      "Command": {
+        "UserCommandRQ": {
+          "MovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass",
+                "NewSpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      3,
+                      3,
+                      0
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "bring the bass 1 metre closer",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "MovedObjects bass, closer is y smaller: x=1, y=3-1=2, z=0.",
+      "Command": {
+        "UserCommandRQ": {
+          "MovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass",
+                "NewSpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      1,
+                      2,
+                      0
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "push the guitar 2 metres forward",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "MovedObjects guitar, forward is y bigger: x=-2, y=2+2=4, z=0.",
+      "Command": {
+        "UserCommandRQ": {
+          "MovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "guitar",
+                "NewSpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      -2,
+                      4,
+                      0
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "raise the bass by half a metre",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "MovedObjects bass, raise is z bigger: x=1, y=3, z=0+0.5=0.5.",
+      "Command": {
+        "UserCommandRQ": {
+          "MovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass",
+                "NewSpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      1,
+                      3,
+                      0.5
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "turn the guitar to 90 degrees",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "MovedObjects guitar, turn: x=-2, y=2, z=0, gamma=90.",
+      "Command": {
+        "UserCommandRQ": {
+          "MovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "guitar",
+                "NewSpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      -2,
+                      2,
+                      0
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      90
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "set the bass to minus 18 LUFS",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "ChangedObjects bass, Level=-18.",
+      "Command": {
+        "UserCommandRQ": {
+          "ChangedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass",
+                "Level": -18
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "set the whole scene to minus 23 LUFS",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "LUFS=-23.",
+      "Command": {
+        "UserCommandRQ": {
+          "LUFS": -23
+        }
+      }
+    },
+    {
+      "Request": "add the thunder at 0, 4, 1",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)\nStored sounds that can be added: thunder",
+      "Working": "AddedObjects thunder at 0, 4, 1.",
+      "Command": {
+        "UserCommandRQ": {
+          "AddedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "thunder",
+                "SpatialAttitude": {
+                  "Position": {
+                    "CartPosition": [
+                      0,
+                      4,
+                      1
+                    ]
+                  },
+                  "Orientation": {
+                    "Orientation": [
+                      0,
+                      0,
+                      180
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "I want to listen from 0, 5, 0",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "UserPoV at 0, 5, 0.",
+      "Command": {
+        "UserCommandRQ": {
+          "UserPoV": {
+            "CartPosition": [
+              0,
+              5,
+              0
+            ],
+            "Orientation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "take out the bass and play everything",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "RemovedObjects bass; DeliveredObject stage.",
+      "Command": {
+        "UserCommandRQ": {
+          "RemovedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass"
+              }
+            ]
+          },
+          "DeliveredObject": "stage"
+        }
+      }
+    },
+    {
+      "Request": "undo that",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Earlier": "- k-6: \"set the bass to minus 18 LUFS\"\n- k-7: \"turn the guitar to 90 degrees\"",
+      "Working": "RevokedUserCommandID k-7, the last.",
+      "Command": {
+        "UserCommandRQ": {
+          "RevokedUserCommandID": "k-7"
+        }
+      }
+    },
+    {
+      "Request": "add the saxophone at 1, 1, 0",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)\nStored sounds that can be added: thunder",
+      "Working": "Problem: no saxophone among the stored sounds.",
+      "Problem": "There is no saxophone to add; the stored sound is thunder."
+    },
+    {
+      "Request": "move it 1 metre to the left",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "Problem: \"it\" is not an object.",
+      "Problem": "Which object should I move, the bass or the guitar?"
+    },
+    {
+      "Request": "rotate the cello to 90 degrees",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "Problem: no cello in the scene.",
+      "Problem": "There is no cello in the scene; there are the bass and the guitar."
+    },
+    {
+      "Request": "save the scene",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "Problem: saving is not a command.",
+      "Problem": "Saving is not something I can do with the audio scene."
+    },
+    {
+      "Request": "create a square room of 3 metres by 3 metres centred at 0 0",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "ClosedSpace: x from -1.5 to 1.5, y from -1.5 to 1.5, height 2.5: corners (-1.5,-1.5,0) (1.5,-1.5,0) (-1.5,1.5,0) (-1.5,-1.5,2.5).",
+      "Command": {
+        "UserCommandRQ": {
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "CartPositions": [
+                          [
+                            -1.5,
+                            -1.5,
+                            0
+                          ],
+                          [
+                            1.5,
+                            -1.5,
+                            0
+                          ],
+                          [
+                            -1.5,
+                            1.5,
+                            0
+                          ],
+                          [
+                            -1.5,
+                            -1.5,
+                            2.5
+                          ]
+                        ],
+                        "Dimensions": "3D"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Request": "make the room 6 by 4 metres",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "ClosedSpace: 6 along x (-3 to 3), 4 along y (-2 to 2), height 2.5: corners (-3,-2,0) (3,-2,0) (-3,2,0) (-3,-2,2.5).",
+      "Command": {
+        "UserCommandRQ": {
+          "ClosedSpace": [
+            {
+              "Shape": [
+                {
+                  "SimpleLocationData": [
+                    {
+                      "RightParallelepiped": {
+                        "CartPositions": [
+                          [
+                            -3,
+                            -2,
+                            0
+                          ],
+                          [
+                            3,
+                            -2,
+                            0
+                          ],
+                          [
+                            -3,
+                            2,
+                            0
+                          ],
+                          [
+                            -3,
+                            -2,
+                            2.5
+                          ]
+                        ],
+                        "Dimensions": "3D"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Request": "delete the bass from the store",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "DeletedObjects bass.",
+      "Command": {
+        "UserCommandRQ": {
+          "DeletedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "bass"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Request": "erase the scene called stage",
+      "State": "Scene \"stage\" with 2 objects:\n- bass: position (1, 3, 0); orientation (0, 0, 180)\n- guitar: position (-2, 2, 0); orientation (0, 0, 180)",
+      "Working": "DeletedObjects stage.",
+      "Command": {
+        "UserCommandRQ": {
+          "DeletedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "stage"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "Descriptions": {
+    "UserCommandRQ.MovedObjects": "Moves, places or turns objects: the new position and orientation. Also bringing closer or farther, raising, lowering, pushing, shifting.",
+    "UserCommandRQ.MovedObjects.Objects.NewSpatialAttitude.Position.CartPosition": "[x, y, z] in metres: x right (+) or left (-), y forward (+) or back (-), z up (+) or down (-); closer to the user is y smaller.",
+    "UserCommandRQ.MovedObjects.Objects.NewSpatialAttitude.Orientation.Orientation": "[alpha, beta, gamma] in degrees; only gamma turns the object.",
+    "UserCommandRQ.ChangedObjects": "Sets the loudness of one object, in LUFS: only for louder, quieter, softer, level. Never for raise, lower, up, down, closer, nearer, farther: those move the object (MovedObjects).",
+    "UserCommandRQ.ChangedObjects.Objects.Level": "The loudness of the object, in LUFS (negative).",
+    "UserCommandRQ.LUFS": "The loudness of the whole scene, in LUFS (negative).",
+    "UserCommandRQ.AddedObjects": "Adds stored sounds to the scene, at a position.",
+    "UserCommandRQ.AddedObjects.Objects.SpatialAttitude.Position.CartPosition": "[x, y, z] in metres where the sound is put.",
+    "UserCommandRQ.RemovedObjects": "Takes objects out of the scene, which keeps them in the store: remove, take out, take away. Never for delete, erase or forget.",
+    "UserCommandRQ.DeliveredObject": "Plays an object, or the whole scene (its name).",
+    "UserCommandRQ.UserPoV": "Moves the listener (the user), not an object: where the user listens from.",
+    "UserCommandRQ.UserPoV.CartPosition": "[x, y, z] in metres of the listener.",
+    "UserCommandRQ.UserPoV.Orientation": "[alpha, beta, gamma] in degrees of the listener.",
+    "UserCommandRQ.RevokedUserCommandID": "Undoes an earlier command: its identifier.",
+    "UserCommandRQ.ClosedSpace": "The room the scene is in: a box with walls, replacing the one the scene had. Only for a room, a square room, the size of the room.",
+    "UserCommandRQ.ClosedSpace.Shape.SimpleLocationData.RightParallelepiped.CartPositions": "Four corners [x, y, z] in metres: the corner with the smallest x, y, z, then the corner along x, the corner along y, the corner along z (the height: 2.5 unless said).",
+    "UserCommandRQ.DeletedObjects": "Deletes objects or scenes from the store, for good, by name: only for delete, erase, wipe, forget, from the store. Never for remove or take out, which only take an object out of the scene."
+  },
+  "Working": true,
+  "Reminder": "MovedObjects for move, raise, lower, closer, nearer, farther, forward, back and turn (a position is never a loudness); ChangedObjects only for louder, quieter or LUFS; change one coordinate by the amount; use only the names above.",
+  "Triggers": [
+    {
+      "Path": "UserCommandRQ.ChangedObjects",
+      "Words": [
+        "loud",
+        "quiet",
+        "soft",
+        "lufs",
+        "level",
+        "volume",
+        "decibel",
+        "db "
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.LUFS",
+      "Words": [
+        "loud",
+        "quiet",
+        "soft",
+        "lufs",
+        "level",
+        "volume",
+        "decibel",
+        "db "
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.UserPoV",
+      "Words": [
+        "me ",
+        "i ",
+        "my ",
+        "listen",
+        "sit ",
+        "stand"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.RevokedUserCommandID",
+      "Words": [
+        "undo",
+        "go back",
+        "revert",
+        "take that back",
+        "cancel"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.DeliveredObject",
+      "Words": [
+        "play",
+        "hear",
+        "listen"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.AddedObjects",
+      "Words": [
+        "add",
+        "bring in",
+        "put in",
+        "insert",
+        "include",
+        "at the ",
+        "{Stored}"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.RemovedObjects",
+      "Words": [
+        "remove",
+        "take out",
+        "don't want",
+        "do not want",
+        "out of the scene",
+        "take away"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.MovedObjects",
+      "Words": [
+        "move",
+        "shift",
+        "push",
+        "bring",
+        "put",
+        "place",
+        "raise",
+        "lift",
+        "lower",
+        "drop",
+        "turn",
+        "rotate",
+        "close",
+        "near",
+        "far",
+        "forward",
+        "back",
+        "left",
+        "right",
+        "up",
+        "down",
+        "orient",
+        "face",
+        "should be",
+        "away",
+        "behind",
+        "ahead",
+        "further",
+        "higher",
+        "metre",
+        "meter",
+        "degree"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.ClosedSpace",
+      "Words": [
+        "by meters",
+        "by metres",
+        "ceiling",
+        "height",
+        "room",
+        "size of the room",
+        "square room",
+        "walls"
+      ]
+    },
+    {
+      "Path": "UserCommandRQ.DeletedObjects",
+      "Words": [
+        "delete",
+        "erase",
+        "wipe",
+        "forget",
+        "from the store",
+        "from storage",
+        "from the library",
+        "get rid of",
+        "for good",
+        "permanently"
+      ]
+    }
+  ],
+  "Hints": [
+    {
+      "Words": [
+        "right"
+      ],
+      "Text": "to the right is x bigger."
+    },
+    {
+      "Words": [
+        "left"
+      ],
+      "Text": "to the left is x smaller."
+    },
+    {
+      "Words": [
+        "forward",
+        "ahead",
+        "further in",
+        "in front"
+      ],
+      "Text": "forward is y bigger."
+    },
+    {
+      "Words": [
+        "back",
+        "behind"
+      ],
+      "Text": "back is y smaller."
+    },
+    {
+      "Words": [
+        "up",
+        "raise",
+        "lift",
+        "higher"
+      ],
+      "Text": "up is z bigger."
+    },
+    {
+      "Words": [
+        "down",
+        "lower",
+        "drop"
+      ],
+      "Text": "down is z smaller."
+    },
+    {
+      "Words": [
+        "closer",
+        "nearer",
+        "near "
+      ],
+      "Text": "closer: the distance from (0, 0, 0) gets smaller (an object with y > 0: y smaller; with y < 0: y bigger)."
+    },
+    {
+      "Words": [
+        "farther",
+        "further away",
+        "away"
+      ],
+      "Text": "farther: the distance from (0, 0, 0) gets bigger (an object with y > 0: y bigger; with y < 0: y smaller, more negative)."
+    },
+    {
+      "Words": [
+        "turn",
+        "rotate",
+        "orient",
+        "degrees"
+      ],
+      "Text": "a turn changes gamma only; the position stays as it is."
+    }
+  ],
+  "StateRequests": [
+    {
+      "UserCommandRQ": {
+        "ListedObjects": {
+          "Kind": "All"
+        }
+      }
+    },
+    {
+      "UserCommandRQ": {
+        "ListedObjects": {
+          "Kind": "Audio Scene",
+          "ObjectID": "{scene}"
+        }
+      }
+    }
+  ],
+  "Refusals": [
+    {
+      "Words": [
+        "load a sound",
+        "load the sound",
+        "load sound",
+        "open a sound",
+        "import a sound",
+        "bring a sound from"
+      ],
+      "Problem": "To load a sound, press the Load a sound button, and tell me what to call it."
+    },
+    {
+      "Words": [
+        "stop",
+        "pause",
+        "weather",
+        "how old",
+        "who are you",
+        "what time"
+      ],
+      "Problem": "That is not something I can do with the audio scene."
+    }
+  ],
+  "NeedsObject": {
+    "Paths": [
+      "UserCommandRQ.MovedObjects",
+      "UserCommandRQ.ChangedObjects",
+      "UserCommandRQ.RemovedObjects",
+      "UserCommandRQ.DeletedObjects"
+    ],
+    "Question": "Which object do you mean?",
+    "Names": "",
+    "Synonyms": {
+      "fiddle": "violin",
+      "singer": "voice",
+      "vocals": "voice",
+      "keyboard": "piano",
+      "drum": "drums",
+      "drum kit": "drums"
+    },
+    "Unless": [
+      "UserCommandRQ.UserPoV",
+      "UserCommandRQ.LUFS",
+      "UserCommandRQ.RevokedUserCommandID",
+      "UserCommandRQ.AddedObjects",
+      "UserCommandRQ.ClosedSpace"
+    ],
+    "Anything": [
+      "scene",
+      "everything",
+      "whole",
+      "all"
+    ]
+  },
+  "Said": {
+    "AddedObjects": "put {0} in the scene",
+    "MovedObjects": "updated {0}",
+    "RemovedObjects": "took {0} out of the scene",
+    "DeletedObjects": "deleted {0}",
+    "ChangedObjects": "changed {0}",
+    "ClosedSpace": "built the room",
+    "RevokedUserCommandID": "undid that",
+    "UserPoV": "moved the listener",
+    "AcquiredObject": "loaded {0}",
+    "DeliveredObject": "played {0}",
+    "LUFS": "set the loudness",
+    "ModifiedScene": "set the acoustics of the room",
+    "ModifiedObjects": "changed {0}",
+    "NewScene": "started the scene {0}",
+    "OpenedScene": "opened the scene {0}",
+    "NamedScene": "named the scene {0}"
+  },
+  "Asks": [
+    {
+      "Words": [
+        "new scene",
+        "fresh scene",
+        "empty scene",
+        "blank scene"
+      ],
+      "Say": "What do you want to call it? Say for example: new scene called concert."
+    },
+    {
+      "Pattern": "^(?=.*(?:^|[^a-z0-9])x(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten))(?=.*(?:^|[^a-z0-9])z(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten))",
+      "Unless": "(?:^|[^a-z0-9])y(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Say": "I have x and z. What is y? Say it again, for example: x 2, y 1."
+    },
+    {
+      "Pattern": "^(?=.*(?:^|[^a-z0-9])y(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten))(?=.*(?:^|[^a-z0-9])z(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten))",
+      "Unless": "(?:^|[^a-z0-9])x(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Say": "I have y and z. What is x? Say it again, for example: x 2, y 1."
+    },
+    {
+      "Pattern": "(?:^|[^a-z0-9])x(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Unless": "(?:^|[^a-z0-9])y(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)|(?:^|[^a-z0-9])z(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Say": "I have x. What is y? Say it again, for example: x 2, y 1."
+    },
+    {
+      "Pattern": "(?:^|[^a-z0-9])y(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Unless": "(?:^|[^a-z0-9])x(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)|(?:^|[^a-z0-9])z(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Say": "I have y. What is x? Say it again, for example: x 2, y 1."
+    },
+    {
+      "Pattern": "(?:^|[^a-z0-9])z(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Unless": "(?:^|[^a-z0-9])x(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)|(?:^|[^a-z0-9])y(?: ?=| equals?| equal to| at| is)? ?(?:minus |-)?(?:[0-9]|zero|one|two|three|four|five|six|seven|eight|nine|ten)",
+      "Say": "I have z. What are x and y? Say it again, for example: x 2, y 1."
+    },
+    {
+      "Words": [
+        "ceiling",
+        "how high is the room",
+        "height of the room"
+      ],
+      "Say": "How big is the room? For example: 4 by 4 metres, ceiling 3."
+    },
+    {
+      "Words": [
+        "room",
+        "the space",
+        "the area"
+      ],
+      "Say": "What size is the room? For example: 4 by 4 metres."
+    },
+    {
+      "Words": [
+        "place ",
+        "put ",
+        "add ",
+        "bring in "
+      ],
+      "Say": "Where do you want to put it? For example: x 2, y 1."
+    },
+    {
+      "Words": [
+        "louder",
+        "quieter",
+        "softer",
+        "level"
+      ],
+      "Say": "Which level? For example: minus 20 LUFS."
+    },
+    {
+      "Words": [
+        "where is",
+        "where are"
+      ],
+      "Say": "Ask me: what is in the scene."
+    },
+    {
+      "Pattern": "(?:^|[^a-z0-9])(?:start|starts|begin)[^0-9]*[0-9]",
+      "Unless": "(?:end|ends|until|stop|finish)[^0-9]*[0-9]|[0-9] (?:seconds? )?(?:to|until) [0-9]",
+      "Say": "When does it end? For example: start at 1, end at 4 seconds."
+    },
+    {
+      "Pattern": "(?:^|[^a-z0-9])(?:end|ends|finish|stop)[^0-9]*[0-9]",
+      "Unless": "(?:start|starts|begin|from)[^0-9]*[0-9]",
+      "Say": "When does it start? For example: start at 1, end at 4 seconds."
+    },
+    {
+      "Words": [
+        "move me",
+        "turn me"
+      ],
+      "Say": "Where should I put you? For example: x 1, y 2."
+    }
+  ],
+  "Try": "Try: place a room of 4 by 4 metres, or ask what is in the scene.",
+  "Reasons": [
+    {
+      "When": "no Basic Audio Scene is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "the open Scene has no such member",
+      "Say": "That sound is not in the scene. Put it in the scene first."
+    },
+    {
+      "When": "keeps no Audio Scene of that name",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "no Basic Speech Object is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "no Multimodal Scene is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "no Basic Speech Scene is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "no Basic Audio Object is open",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "are listed by Audio Scene Editing",
+      "Say": "There is no scene yet. Say for example: place a room of 4 by 4 metres, or put a sound in the scene first."
+    },
+    {
+      "When": "a Scene of that name is kept",
+      "Say": "A scene with that name already exists. Choose another name."
+    },
+    {
+      "When": "no saved Audio Scene of that name",
+      "Say": "I have no saved scene with that name. Say: list my scenes."
+    }
+  ],
+  "Memory": {
+    "lx": 0,
+    "ly": 0,
+    "lg": 0
+  }
+}

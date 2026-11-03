@@ -25,6 +25,7 @@ public sealed class KeyInfo
     public List<string>?    Readers        { get; init; }
     public StorageLifetime  Lifetime       { get; init; } = StorageLifetime.Scope;
     public double?          WithinMs       { get; init; }
+    public DateTimeOffset?  Until          { get; init; }      // an absolute expiry, where the rules state one (absent: none)
     public string?          Rule           { get; init; }
     public string?          ModuleInstance { get; init; }
     public string?          Session        { get; init; }

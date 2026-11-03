@@ -61,14 +61,12 @@ public sealed class SpeechObjectFamily : IMediaObjectFamily<BasicSpeechObject, S
         PointOfView? listener) => new()
     {
         SpeechObjectID = id,
-        SpeechObjectTime = previous?.SpeechObjectTime,
 
         // SpeechObjectSpaceTime is REQUIRED by the schema, so a composed Object
         // that has not been placed starts at the origin rather than at null.
         SpeechObjectSpaceTime = previous?.SpeechObjectSpaceTime ?? spaceTime,
 
         UserPoV = listener ?? previous?.UserPoV,
-        ParentSpeechObjectIDs = previous?.ParentSpeechObjectIDs,
 
         BasicSpeechObjectCount = basicEntries.Count,
         BasicSpeechObjects = basicEntries.Count > 0
@@ -96,10 +94,8 @@ public sealed class SpeechObjectFamily : IMediaObjectFamily<BasicSpeechObject, S
         IReadOnlyList<(SpaceTime? Placement, SpeechObject Child)> subChildren) => new()
     {
         SpeechObjectID = id,
-        SpeechObjectTime = stored?.SpeechObjectTime,
         SpeechObjectSpaceTime = stored?.SpeechObjectSpaceTime,
         UserPoV = stored?.UserPoV,
-        ParentSpeechObjectIDs = stored?.ParentSpeechObjectIDs,
 
         BasicSpeechObjectCount = basicChildren.Count,
         BasicSpeechObjects = basicChildren.Count > 0

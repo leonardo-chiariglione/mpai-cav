@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 
 using Mpai.Rca;
+using Mpai.Ua;
 
 namespace Mpai.Aif.Tests;
 
@@ -46,10 +47,10 @@ public class HostPublishedTests
         var result = new Dictionary<string, string>();
         var log = new StringBuilder();
 
-        var publish = Run("dotnet", $"publish \"{Path.Combine(root, "UserAgent", "Clients", "Browser", "Host", "RcaWeb.Host.csproj")}\" -c Release -o \"{client}\" -nologo -v q", root, log);
+        var publish = Run("dotnet", $"publish \"{Path.Combine(root, "AIF", "UserAgent", "Clients", "Browser", "Host", "RcaWeb.Host.csproj")}\" -c Release -o \"{client}\" -nologo -v q", root, log);
         Assert.True(publish == 0, "The host did not publish:\n" + log);
         foreach (var dir in new[] { "Assets", "Orchestration" })
-            Copy(Path.Combine(root, "UserAgent", dir), Path.Combine(package, "UserAgent", dir));
+            Copy(Path.Combine(root, "AIF", "UserAgent", dir), Path.Combine(package, "AIF", "UserAgent", dir));
         var framework = Path.Combine(client, "wwwroot", "_framework");
         result["the client's files"] = Directory.EnumerateFiles(framework).Any(f => f.EndsWith(".pdb")) ? "with symbols" : "no symbols";
 

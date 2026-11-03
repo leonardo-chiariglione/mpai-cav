@@ -15,4 +15,4 @@
     { "const": "BCP 47",
       "description": "IETF Best Current Practice 47 language tags combining ISO 639 language codes with script (ISO 15924) and region (ISO 3166), e.g., 'en-US', 'zh-Hant-TW'." },
     { "const": "Glottocode",
-      "description": "GlottologÃ¢â‚¬â„¢s stable identifiers for languages, dialects, and families (e.g., 'stan1293'); complementary to ISO 639-3." } ] }
+      "description": "Glottolog’s stable identifiers for languages, dialects, and families (e.g., 'stan1293'); complementary to ISO 639-3." } ] }

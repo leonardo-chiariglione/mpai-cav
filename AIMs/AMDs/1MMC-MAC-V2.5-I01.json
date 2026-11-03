@@ -80,7 +80,8 @@
                           {"Output": {"AIMName": "1OSD-IDR-V1.5-I01", "DataType": "boolean"}, "Input": {"AIMName": "", "DataType": "boolean", "PortNumber": 1}},
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "DataType": "OSD-B3O-V1.5"}},
                           {"Output": {"AIMName": "", "DataType": "string", "PortNumber": 1}, "Input": {"AIMName": "1PAF-RSR-V1.6-I01", "DataType": "string"}}],
-    "Implementations":  [
+
+  "Implementations":  [
                             {
                                 "ImplementationURI":  "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1MMC-MAC-V2.5-I01.json",
                                 "MASPort":  443,

@@ -1,0 +1,171 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "MMC-JSI-V2.5-I03",
+    "AIMName": "1MMC-JSI-V2.5-I03"
+  },
+  "Header": "MMC-JSI-V2.5",
+  "APIProfile": "Basic",
+  "Description": "JSON Interface for the Secretary of a meeting in the Metaverse (MMM). DRAFT. What a participant says to the Secretary becomes a User Command request (MMM-UCM, UserCommandRQ) - a summary in a language, written or spoken, the hand, the microphone, the screen, closing the meeting, going back to the meeting - and the User Command response (UserCommandRS) becomes the Response Hint, which the Secretary says in a few words. The application is the entries of its Access: the schema of the User Command (commands and responses) and the Application Context of the Secretary.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "Request",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ApplicationResponse",
+      "Direction": "Input",
+      "DataType": "MMM-UCM-V2.2",
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ApplicationContext",
+      "Direction": "Input",
+      "DataType": "MMC-APC-V2.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ApplicationCommand",
+      "Direction": "Output",
+      "DataType": "MMM-UCM-V2.2",
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ResponseHint",
+      "Direction": "Output",
+      "DataType": "OSD-BTO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AccessSources": [
+    {
+      "Name": "CommandSchema",
+      "Uri": "https://schemas.mpai.community/MMM4/V2.2/data/UserCommand.json",
+      "Sha256": "F23FD83AB8188627F2DEAB85E4DB91EAF911418F6A8427309EF746FF982018F4",
+      "Setting": "CommandSchema",
+      "Terms": {
+        "Licence": "BSD-3-Clause",
+        "Uri": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/LICENSE",
+        "PersonalData": false
+      },
+      "Description": "The schema of the User Command of the Secretary: a command is an Instance of it that carries a UserCommandRQ."
+    },
+    {
+      "Name": "ResponseSchema",
+      "Uri": "https://schemas.mpai.community/MMM4/V2.2/data/UserCommand.json",
+      "Sha256": "F23FD83AB8188627F2DEAB85E4DB91EAF911418F6A8427309EF746FF982018F4",
+      "Setting": "ResponseSchema",
+      "Terms": {
+        "Licence": "BSD-3-Clause",
+        "Uri": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/LICENSE",
+        "PersonalData": false
+      },
+      "Description": "The same schema: a response is an Instance of it that carries a UserCommandRS."
+    },
+    {
+      "Name": "ApplicationContext",
+      "Uri": "https://raw.githubusercontent.com/leonardo-chiariglione/mpai-cav/main/MMM/Access/SecretaryApplicationContext.json",
+      "Sha256": "5CAEDF253D98A16759A585C43F84528398B0E7CACE4247A51BA483DF91DAB6DA",
+      "Setting": "ApplicationContext",
+      "Terms": {
+        "Licence": "BSD-3-Clause",
+        "Uri": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/LICENSE",
+        "PersonalData": false
+      },
+      "Description": "What the schema of the User Command does not say about the Secretary: the languages and forms of a summary, the words for the hand, the microphone, the screen and the end of the meeting, the words of the responses, and examples."
+    },
+    {
+      "Name": "llm-weights",
+      "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+      "Sha256": "dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+      "Terms": {
+        "Licence": "Llama 3.2 Community License",
+        "Uri": "https://www.llama.com/llama3_2/license/",
+        "PersonalData": false
+      },
+      "Description": "The weights of the language model of the dialogue (Llama 3.2, 3 billion parameters, Q4_K_M), in the form Ollama publishes them. Ollama is given them from Access and creates the model."
+    },
+    {
+      "Name": "llm-template",
+      "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:966de95ca8a62200913e3f8bfbf84c8494536f1b94b49166851e76644e966396",
+      "Sha256": "966de95ca8a62200913e3f8bfbf84c8494536f1b94b49166851e76644e966396",
+      "ValidWith": [
+        "dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"
+      ],
+      "Description": "The chat template of the model.",
+      "Terms": {
+        "Licence": "Llama 3.2 Community License",
+        "Uri": "https://www.llama.com/llama3_2/license/",
+        "PersonalData": false
+      }
+    },
+    {
+      "Name": "llm-parameters",
+      "Uri": "https://registry.ollama.ai/v2/library/llama3.2/blobs/sha256:56bb8bd477a519ffa694fc449c2413c6f0e1d3b1c88fa7e3c9d88d3ae49d4dcb",
+      "Sha256": "56bb8bd477a519ffa694fc449c2413c6f0e1d3b1c88fa7e3c9d88d3ae49d4dcb",
+      "ValidWith": [
+        "dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"
+      ],
+      "Description": "The default parameters of the model (its stop tokens).",
+      "Terms": {
+        "Licence": "Llama 3.2 Community License",
+        "Uri": "https://www.llama.com/llama3_2/license/",
+        "PersonalData": false
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/JSI",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Mmc.Jsi",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "2.5",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "4 GB",
+      "Request": "6 GB",
+      "Maximum": "8 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Medium",
+      "Request": "High",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/json-interface/"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/SpeechOverlap.json",
+  "title":                    "Speech Overlap V1.5",
+  "type":                     "object",
+  "properties": {
+
+    "Header":                 { "type": "string", "const": "OSD-SOL-V1.5" },
+    "MInstanceID":            { "type": "string" },
+    "MEnvironmentID":         { "type": "string" },
+    "SpeechOverlapID":        { "type": "string" },
+
+    "SpeechQualifier":        { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json" },
+
+    "SpeechOverlapData":      { "type": "array", "items": { "type": "object", "properties": {
+      "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Speech overlaps as stated." },
+      "SpeechObjectID":       { "type": "string" },
+      "SpeechObjectTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" } } } },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

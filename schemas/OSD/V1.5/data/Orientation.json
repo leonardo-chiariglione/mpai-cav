@@ -6,7 +6,7 @@
   "required":                 [ "Header", "OrientationID", "Orientation" ],
   "properties":               {
 
-    "Header":                 { "type": "string", "const": "OSD-OOR-V1.5", "description": "Orientation Header â€“ Standard OSD-OOR-Vx.y" },
+    "Header":                 { "type": "string", "const": "OSD-OOR-V1.5", "description": "Orientation Header – Standard OSD-OOR-Vx.y" },
     "MInstanceID":            { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Orientation refers to." },
     "UEnvironmentID":         { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Orientation refers to." },
     "OrientationID":          { "type": "string", "description": "Unique identifier of this Object Orientation instance." },
@@ -18,19 +18,20 @@
       "ObjectType":           { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/ObjectTypes.json", "description": "Type of the Object: one of Digital Human, Generic." },
       "MediaType":            { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/MediaTypes.json", "description": "Media type of the Object: one of Speech, Audio, Visual, Audio-Visual, Haptic, Smell, RADAR, LiDAR, Ultrasound." } } },
 
-    "Orientation":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Euler angles (Î±, Î², Î³) representing the Object's orientation (degrees)." },
+    "Orientation":            { "type": "array", "minItems": 3, "maxItems": 4, "items": { "type": "number" },
+                                "description": "The Object's orientation: three Euler angles (α, β, γ) in degrees, or a quaternion of four numbers. The Spatial Qualifier of the data that carry it says which, and the order of the rotations or of the numbers." },
     "OrientAccuracy":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Estimated accuracy of each Euler angle (Î±, Î², Î³) in Orientation (degrees)." },
+                                "description": "Estimated accuracy of each Euler angle (α, β, γ) in Orientation (degrees)." },
     "OrientVelocity":         { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Angular velocity of the Object's orientation (Î±, Î², Î³) (degrees/s)." },
+                                "description": "Angular velocity of the Object's orientation (α, β, γ) (degrees/s)." },
     "OrientVelocityAccuracy": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Estimated accuracy of each angular velocity component (Î±, Î², Î³) (degrees/s)." },
+                                "description": "Estimated accuracy of each angular velocity component (α, β, γ) (degrees/s)." },
     "OrientAccel":            { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Angular acceleration of the Object's orientation (Î±, Î², Î³) (degrees/sÂ²)." },
+                                "description": "Angular acceleration of the Object's orientation (α, β, γ) (degrees/s²)." },
     "OrientAccelAccuracy":    { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" },
-                                "description": "Estimated accuracy of each angular acceleration component (Î±, Î², Î³) (degrees/sÂ²)." },
+                                "description": "Estimated accuracy of each angular acceleration component (α, β, γ) (degrees/s²)." },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the representation of this Orientation (Euler angles or quaternion), the order of the rotations or of the numbers, and the frame and axes." },
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
                                 "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Orientation instance in a trusted data exchange context." },
     "DescrMetadata":          { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Orientation instance (plain text, max 2048 characters)." } } }

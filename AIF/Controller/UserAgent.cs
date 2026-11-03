@@ -47,11 +47,14 @@ public sealed class UserAgent
                 ContinuousExecutor.ObjectInspector?.Invoke(spec.Writer.Aim, message.DataType, message.Json)
         };
         InProcessTransport  = new InProcessTransport(Clock);
+        BusTransport        = new BusTransport(Clock);
         RemoteTransport     = new RemoteTransport(LinkFor, Clock);
     }
 
     // The Modules with AIMs on hosts, by the name their hosts know them by.
     private readonly ConcurrentDictionary<string, RunningModule> hostModules = new();
+    // The Modules whose AIMs are being placed on hosts: an AIM there reads its Access while it is built, before the Module is running.
+    private readonly ConcurrentDictionary<string, (string Name, string? Central)> placingModules = new();
 
     // The Remote transport's reach: the link to the host an AIM of a Module
     // instance is placed on; null for an AIM here and for the boundary.
@@ -92,17 +95,17 @@ public sealed class UserAgent
     // this Controller read. Where it is kept is the deployment's; null: there is none.
     public AccessStore? Access { get; set; }
 
-    // MPAI_AIFU_Access_Create, _Put, _Delete (AIF V3.0, Basic API 3.9): the User's
-    // Sources, written through the User Agent. A Source the User creates has the User
-    // as its Writer; one a Provider created the User cannot write.
-    public AifError MPAI_AIFU_Access_Create(string source) =>
-        Access is null ? AifError.NotInitialized : ErrorOf(Access.Create(source, AccessStore.User));
+    // THE USER AGENT HAS NO FUNCTION ON ACCESS (AIF V3.0, Storage 6.4): Access is infrastructure that serves the AIMs. What an AIM reads it declares in
+    // its Metadata and the Controller obtains it; what the User Agent keeps for itself it keeps in Shared Storage (SharedStorage_Init, _Keep) or outside the
+    // AIF, and gives to the Controller as data on the Ports of a Module.
 
-    public AifError MPAI_AIFU_Access_Put(string source, string key, byte[] data) =>
-        Access is null ? AifError.NotInitialized : ErrorOf(Access.Put(source, AccessStore.User, key, data));
-
-    public AifError MPAI_AIFU_Access_Delete(string source, string key) =>
-        Access is null ? AifError.NotInitialized : ErrorOf(Access.Delete(source, AccessStore.User, key));
+    // The Access of an AIM placed on a host: the rules of each datum decide, as they do for an AIM here, for the AIM the request
+    // names, which is of the Module the link was opened for.
+    private IAccessReader? AccessOfAimOnHost(string module, string? central, string aim) =>
+        Access is AccessStore store
+            ? store.As(new AIF.SharedStorage.StorageHolder(module, aim),
+                       central is { } c ? new AIF.SharedStorage.StorageHolder(module, c) : null)
+            : Access;
 
     private static AifError ErrorOf(AccessOutcome outcome) => outcome switch
     {
@@ -112,16 +115,67 @@ public sealed class UserAgent
         _                           => AifError.Failed               // Exists, Refused
     };
 
-    // THE PROVIDERS' DOOR (AIF V3.0, Basic API 6): a listener on which Providers write
-    // their Sources, each on a link admitted by the Trust Protocol of this Controller.
-    public AccessProviderServer OpenAccessToProviders(AIF.Trust.TrustProtocol protocol, int port = 0) =>
-        new(Access ?? throw new InvalidOperationException("this Controller has no Access."), protocol, port);
+    // THE DATA OF PROVIDERS (AIF V3.0, Storage 6.3): only the Controller writes Access. It obtains what the Metadata of an AIM names
+    // from the URI the Metadata gives; the data of a Provider, over a link the Trust Protocol admitted. AccessTrust is that
+    // protocol (null: every Uri is obtained as it always was); OpenAccessHosts, the hosts whose data is published openly, obtained
+    // by its SHA-256 alone.
+    public AIF.Trust.TrustProtocol? AccessTrust { get; set; }
+    public ISet<string> OpenAccessHosts { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    private AccessFetcher? NewFetcher()
+    {
+        if (Access is null) return null;
+        var fetcher = new AccessFetcher(Access) { Trust = AccessTrust };
+        foreach (var host in OpenAccessHosts) fetcher.OpenHosts.Add(host);
+        return fetcher;
+    }
+
+    private IEnumerable<DescriptorNode> LeavesOf(string aimName)
+    {
+        var selected = _store.GetCatalog().FirstOrDefault(c => c.AIMName == aimName);
+        return selected is null || _controller is null ? [] : AimsOf(_controller.RegisterAim(new Identifier
+        { AIMName = selected.AIMName, ImplementerID = selected.ImplementerID, ImplementationID = selected.ImplementationID }).Root);
+    }
+
+    // UPDATING ACCESS: the Controller reads the Metadata of a Module again and obtains what it names that Access does not hold - a new
+    // SHA-256 for a Uri is a new Version of its Source. It is done each time a Module starts, and when this is called; nothing
+    // watches a Uri. What was done for each entry of each AIM of the Module.
+    public IReadOnlyList<AccessUpdate> RefreshAccess(string moduleName)
+    {
+        var fetcher = NewFetcher();
+        return fetcher is null ? [] : LeavesOf(moduleName).SelectMany(l => fetcher.Refresh(l.AccessSources, l.AIMName)).ToList();
+    }
+
+    // MPAI_AIFM_MODEL_UPDATE: the Controller reads the Metadata of the Module again - as the Store gave it - and obtains the model the AIM names, as ModelUpdate of the host says.
+    private Task<AifError> ModelUpdateAsync(string moduleName, AimHost host, string aim, string uri) => Task.Run(() =>
+    {
+        _store.Scan();
+        var leaf = LeavesOf(moduleName).FirstOrDefault(l => l.AIMName == aim);
+        return leaf is null ? AifError.NotFound : host.ModelUpdate(aim, uri, leaf.AccessSources, out _);
+    });
+
+    // The same, for a caller that is the Controller's own (a test, a tool): the AIM of a running Module.
+    public Task<AifError> ModelUpdate(int moduleId, string aim, string uri) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous?.Models is { } update ? update(aim, uri) : Task.FromResult(AifError.NotStarted);
+
+    public double? ModelDrift(int moduleId, string aim) => _running.TryGetValue(moduleId, out var module) ? module.Continuous?.Drift?.Invoke(aim) : null;
+
+    // REMOVING FROM ACCESS: the Controller removes the Sources that the Metadata of no Module in its catalogue declares, and
+    // keeps those that one does. An AIM, the User Agent and a Provider have no such call.
+    public (IReadOnlyList<string> Removed, IReadOnlyList<string> Kept) PruneAccess()
+    {
+        var fetcher = NewFetcher();
+        if (fetcher is null) return ([], []);
+        var declared = _store.GetCatalog().SelectMany(c => LeavesOf(c.AIMName)).SelectMany(l => l.AccessSources);
+        return fetcher.Prune(AccessFetcher.Declared(declared));
+    }
 
     // THE TRANSPORTS OF THIS CONTROLLER (M3205 3.6.2, M3215 3.1): Controller, which
     // relays and can observe, and InProcess. The Channels of a Module use the one
     // its Output Ports declare, DefaultTransport where they declare none.
     public ControllerTransport ControllerTransport { get; }
     public InProcessTransport  InProcessTransport  { get; }
+    public BusTransport        BusTransport        { get; }
     public RemoteTransport     RemoteTransport     { get; }
     public string DefaultTransport { get; set; } = "Controller";
 
@@ -130,6 +184,14 @@ public sealed class UserAgent
     // key the hosts were started with. The L3's Relation says an AIM runs
     // elsewhere; this says where.
     public Dictionary<string, string> AimHosts { get; } = new(StringComparer.Ordinal);
+
+    // A DEPLOYMENT THAT RUNS EVERY AIM OF A MODULE ON ITS AIM HOST - the Controller holds none - says so here, and names the host for the Module (AimHosts[module]). It need not know the AIMs
+    // of the Module, or rewrite the Relation in the Metadata: the Metadata is authoritative and stays as the Implementer wrote it.
+    public bool AllAimsApart { get; set; }
+
+    // WHAT THIS CONTROLLER HANDS A HOST WHEN IT PLACES AN AIM there: the AIM's Metadata, the fingerprints the MPAI Store approved and the AIM Licence it holds for it (null for an AIM
+    // that has none to hand over). A host with a repository of its own takes the AIM in from it.
+    public Func<string, JsonObject?>? PackageForHost { get; set; }
 
     // TRUST (Phase 13, M3223 3.1): where the deployment has configured its Trust
     // Anchor, every AIM Instance started is a PTF Process Instance - its key, its
@@ -157,7 +219,7 @@ public sealed class UserAgent
     private Attestation.Policy? HostAttestation => Manufacturer is { } manufacturer
         ? new Attestation.Policy(manufacturer, m => m.Register == Attestation.CodeRegister
             ? PartyCode.Approve(HostCode, m)
-            : ImplementationEvidence.Approve(_store.Fingerprints, m))
+            : ImplementationEvidence.Approve(_store.Verifier, m))
         : null;
 
     // Why the last Module refused was refused, where it was not trusted.
@@ -210,7 +272,9 @@ public sealed class UserAgent
                     case "Time":                                   // the time base a host stamps on
                         return new JsonObject { ["Ok"] = true, ["Now"] = Clock.Now.ToString("O") };
                     case "Access" when module is not null:          // an AIM there reading Access
-                        return RemoteAccess.Answer(Access, frame);
+                        return RemoteAccess.Answer(AccessOfAimOnHost(module.Name, module.Graph.Root.StorageControl, frame["Aim"]?.GetValue<string>() ?? ""), frame);
+                    case "Access" when placingModules.TryGetValue(frame["Module"]?.GetValue<string>() ?? "", out var placing):   // ... while it is being placed
+                        return RemoteAccess.Answer(AccessOfAimOnHost(placing.Name, placing.Central, frame["Aim"]?.GetValue<string>() ?? ""), frame);
                     case "StopAim" when module is not null:
                         return new JsonObject
                         {
@@ -255,7 +319,7 @@ public sealed class UserAgent
         {
             foreach (var child in node.Children)
             {
-                var away = elsewhere || (child.Relation.Length > 0 && child.Relation != "Internal");
+                var away = elsewhere || AllAimsApart || (child.Relation.Length > 0 && child.Relation != "Internal");
                 var at = AimHosts.GetValueOrDefault(child.AIMName) ?? host;
                 if (child.IsComposite) { Walk(child, away, at); continue; }
                 if (!away) continue;
@@ -263,7 +327,7 @@ public sealed class UserAgent
                     $"{module}: {child.AIMName} runs on another machine (its Relation, or a composite's containing it, is not Internal), and no AIM host is named for it.");
             }
         }
-        Walk(root, false, null);
+        Walk(root, false, AimHosts.GetValueOrDefault(root.AIMName));      // a host named for the Module itself holds all its AIMs that are not Internal
         return placed;
     }
 
@@ -283,6 +347,7 @@ public sealed class UserAgent
     {
         [ControllerTransport.Name] = ControllerTransport,
         [InProcessTransport.Name]  = InProcessTransport,
+        [BusTransport.Name]        = BusTransport,
         [RemoteTransport.Name]     = RemoteTransport
     };
 
@@ -450,6 +515,7 @@ public sealed class UserAgent
         _controller.SetSharedStorageRoot(_sharedStorageRoot);
         _controller.InstanceOf = module => _instances.GetValueOrDefault(module, "");
         _controller.SessionOf  = module => _sessions.TryGetValue(module, out var s) ? s : _session;
+        _controller.ClientOf   = module => _sessions.TryGetValue(module, out var s) ? s : "";
         _controller.Now        = () => Clock.Now;
         return AifError.OK;
     }
@@ -501,6 +567,19 @@ public sealed class UserAgent
             kept[aimName] = made;
             return made;
         }
+
+        public IAimProcessor Create(string aimName,
+            IReadOnlyDictionary<string, string> settings,
+            AIF.SharedStorage.ISharedStorage? storage,
+            AIF.SharedStorage.ISharedStorage? privateStorage,
+            AIF.SharedStorage.IRuledStorage? moduleStorage,
+            IAccessReader? access)
+        {
+            if (kept.TryGetValue(aimName, out var already)) return already;
+            var made = inner.Create(aimName, settings, storage, privateStorage, moduleStorage, access);
+            kept[aimName] = made;
+            return made;
+        }
     }
 
     // MPAI_AIFU_MODULE_Start(name, out MODULE_ID)
@@ -537,7 +616,8 @@ public sealed class UserAgent
         };
 
         var graph = _controller.RegisterAim(identifier);
-        var host  = new AimHost { Access = Access };
+        var fetcher = NewFetcher();
+        var host  = new AimHost { Access = Access, Fetcher = fetcher, ModuleName = name, CentralControl = graph.Root.StorageControl };
         RunningModule? started = null;
 
         // THE CONTROLLER KEEPS WHAT IT HAS BUILT. Stopping a Module releases the
@@ -555,6 +635,31 @@ public sealed class UserAgent
         // THE PRIVATE STORAGE OF THE MODULE (M3219 3.1), below its scope beside its
         // AIMs' own; its central control, where the Metadata names one, an AIM of
         // the Module.
+        // THE ACCESS A MODULE NEEDS (AIM Metadata, AccessSources): what each AIM declares is obtained, checked against the SHA-256
+        // its Metadata gives; an entry an AIM does not mark optional that cannot be obtained refuses the Module.
+        foreach (var leaf in AimsOf(graph.Root))
+        {
+            if (AccessEntry.Check(leaf.AccessSources) is { Length: > 0 } wrong)
+                throw new InvalidOperationException($"{name}: {leaf.AIMName} declares its Access wrongly: {wrong}");
+            var got = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in leaf.AccessSources.Where(e => !e.IsPlaceholder || !e.IsOptional))
+            {
+                var why = "the Controller has no Access";
+                if (fetcher is not null && fetcher.Ensure(entry, leaf.AIMName, out why) == AccessOutcome.OK) got.Add(entry.Sha256);
+                else if (!entry.IsOptional)
+                    throw new InvalidOperationException($"{name}: {leaf.AIMName} needs the Access '{entry.Name}' and there is no such Source: {why}");
+            }
+            // Data that is only valid with other data is not given without it.
+            foreach (var entry in leaf.AccessSources.ToList())
+                if (got.Contains(entry.Sha256) && entry.ValidWith?.FirstOrDefault(h => !got.Contains(h)) is { } missing)
+                {
+                    if (!entry.IsOptional)
+                        throw new InvalidOperationException($"{name}: {leaf.AIMName}: the Access '{entry.Name}' is valid only with data {missing}, which could not be obtained");
+                    leaf.AccessSources.Remove(entry);
+                    fetcher?.Withhold(entry, leaf.AIMName);   // and what was obtained for it is not read by it (STO-10)
+                }
+        }
+
         if (graph.Root.StorageControl is { } control && !Leaves(graph.Root).Contains(control))
             throw new InvalidOperationException(
                 $"{name}: its StorageControl names {control}, which is not an AIM of the Module.");
@@ -566,6 +671,7 @@ public sealed class UserAgent
         _instances[name] = hostModule;
         AIF.SharedStorage.RuledStore.Started(hostModule);
         var placement = Placement(graph.Root, name);
+        if (placement.Count > 0) placingModules[hostModule] = (name, graph.Root.StorageControl);
         var hosts = new List<AimHostClient>();
         var placedIdentities = new Dictionary<string, JsonObject?>(StringComparer.Ordinal);
         var placedEvidence = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
@@ -582,17 +688,25 @@ public sealed class UserAgent
             {
                 var instanceId = $"{hostModule}/{leaf.AIMName}";
                 var instance = verifier.IssueLocal(instanceId, leaf.AIMName, leaf.AIMName, issuer: leaf.Packaged.Count > 0);
-                var measured = ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), settings.For(leaf.AIMName));
+                // The models Access gave the AIM are those its settings name when it runs, and are measured as such.
+                var aimSettings = AccessEntry.Overlay(settings.For(leaf.AIMName), leaf.AccessSources, host.AccessFor(leaf.AIMName), leaf.AIMName);
+                var measured = ImplementationEvidence.Of(provider.ImplementationOf(leaf.AIMName), aimSettings);
                 ImplementationEvidence.Record(RootOfTrust, leaf.AIMName, measured);
                 instance.Evidence = verifier.SignEvidence(instanceId, measured);
-                Verify(verifier, instance, leaf, settings.For(leaf.AIMName), name);
+                Verify(verifier, instance, leaf, aimSettings, name);
             }
         IAimProcessor? OnItsHost(DescriptorNode leaf)
         {
             if (!placement.TryGetValue(leaf.AIMName, out var address)) return null;
             var client = HostAt(address);
-            var reply = client.PlaceAsync(hostModule, leaf.AIMName).GetAwaiter().GetResult();
+            var reply = client.PlaceAsync(hostModule, leaf.AIMName, PackageForHost?.Invoke(leaf.AIMName)).GetAwaiter().GetResult();
             placedIdentities[leaf.AIMName] = reply["CII"] as JsonObject;
+
+            // THE CONTROLLER VERIFIES, not the host: what the host measured of the files it obtained is put to the Store, which says whether it is what it approved.
+            if (reply["Measured"] is JsonObject measuredByHost)
+                foreach (var (file, fingerprint) in measuredByHost)
+                    if (_store.Verifier.Verify(leaf.AIMName, file, (string?)fingerprint ?? "") != VerifyResult.Same)
+                        throw new TrustRefusedException($"{name} not started: NOT_TRUSTED - {file} of {leaf.AIMName}, obtained on the AIM host at {address}, is not what the Store approved.");
 
             // What it runs there, measured by the host and signed by the key the AIM
             // holds there (M3223 3.2); verified with the rest once it is placed.
@@ -608,6 +722,7 @@ public sealed class UserAgent
             var made = _controller.Instantiate(graph, new Retaining(provider, _retained), settings, host,
                 () => started?.StorageLocation ?? _sharedStorageRoot, OnItsHost,
                 aim => new CurrentStorage(this, name, aim));
+            placingModules.TryRemove(hostModule, out _);
 
             // AN AIM ON A HOST (M3223 3.1-3.3): its key made there, its CII sent here;
             // issued its credential only if the CII shows the host holds that key; then
@@ -682,6 +797,9 @@ public sealed class UserAgent
                 Storage    = moduleStore
             };
             started.Hosts.AddRange(hosts);
+            // MACHINE LEARNING (Basic API 4.12): what an AIM of this Module asks of the Controller about its models.
+            channels.Models = (aim, uri) => ModelUpdateAsync(name, host, aim, uri);
+            channels.Drift = aim => host.Processor(aim) is IModelDrift drifting ? drifting.Drift : null;
             foreach (var (aim, address) in placement) started.Placed[aim] = HostAt(address);
             if (placement.Count > 0)
             {
@@ -725,6 +843,7 @@ public sealed class UserAgent
         catch
         {
             Trust?.TransitionModule(hostModule, "Terminated");
+            placingModules.TryRemove(hostModule, out _);
             hostModules.TryRemove(hostModule, out _);
             foreach (var client in hosts)
                 try { client.AskAsync("Release", hostModule).Wait(TimeSpan.FromSeconds(5)); } catch { }
@@ -769,6 +888,7 @@ public sealed class UserAgent
         hostModules.TryRemove(module.HostModule, out _);
         module.Host.Dispose();
         AIF.SharedStorage.RuledStore.Ended(module.HostModule);
+        AIF.SharedStorage.RuledStore.SweepAll();   // what was kept as long as the Module ran goes with it (Storage 3)
         Trust?.TransitionModule(module.HostModule, "Terminated");
         _running.TryRemove(moduleId, out _);
         return AifError.OK;
@@ -788,7 +908,7 @@ public sealed class UserAgent
     {
         private AIF.SharedStorage.IRuledStorage Now() =>
             (ua._stores.TryGetValue(module, out var store) ? store : throw new InvalidOperationException($"{module} is not running."))
-            .For(new AIF.SharedStorage.StorageHolder(module, aim), ua._instances.GetValueOrDefault(module, ""), ua._session);
+            .For(new AIF.SharedStorage.StorageHolder(module, aim), ua._instances.GetValueOrDefault(module, ""), ua._sessions.TryGetValue(module, out var served) ? served : ua._session);   // the session the exchange serves (Basic API 3.7.1)
 
         public string Holder => $"{module}/{aim}";
         public AIF.SharedStorage.StorageOutcome MPAI_AIFM_RuledStorage_Put(string key, byte[] data, string category, IReadOnlyCollection<string>? readers = null, AIF.SharedStorage.StorageTime? time = null) =>
@@ -844,10 +964,9 @@ public sealed class UserAgent
         var allowed = PolicyOf(leaf);
         var policy = trust.BindPolicy(instance.Id, allowed);
         var binary = _store.BinaryNameOf(IdentifierOf(leaf));
-        var approved = binary is null ? null : _store.Fingerprints.Approved(leaf.AIMName, binary);
         var decision = trust.Verify(instance, new AIF.Trust.VerificationPipeline.Expectation(
             instance.Id, LifecycleState: "Created", EvidenceRequired: true,
-            CheckEvidence: items => ImplementationEvidence.Check(leaf.AIMName, items, binary, approved, settings),
+            CheckEvidence: items => ImplementationEvidence.Check(leaf.AIMName, items, binary, _store.Verifier, settings),
             Policy: policy,
             CheckPolicy: bound =>
             {
@@ -921,6 +1040,12 @@ public sealed class UserAgent
     private static IEnumerable<string> Leaves(DescriptorNode node) =>
         node.Children.SelectMany(c => c.IsComposite ? Leaves(c) : [c.AIMName]);
 
+    // The External Ports of a running Continuous Module, as its AIMs call them (Basic API 5); and what the Controller of the Module asks of it to serve them.
+    public void SetExternal(int moduleId, AIF.Channels.IExternalPorts? external) { if (_running.TryGetValue(moduleId, out var module) && module.Continuous is { } run) run.External = external; }
+    public bool HasAim(int moduleId, string name) => _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run && run.HasAim(name);
+    public async Task<bool> ContinuousReadableAsync(int moduleId, string dataType, int portNumber, int timeoutMs) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run && await run.BoundaryReadableAsync(dataType, portNumber, timeoutMs);
+
     // The boundary Ports of a running Module, as its Metadata declares them.
     public IReadOnlyList<RuntimePort>? BoundaryPorts(int moduleId) =>
         _running.TryGetValue(moduleId, out var module) ? module.Graph.Root.Ports : null;
@@ -939,6 +1064,15 @@ public sealed class UserAgent
     }
 
     // Every AIM of the Module: status, why, and the reports of its last run.
+    // The state of the Module: Running, or Suspended between Pause and Resume.
+    public AifError MPAI_AIFU_MODULE_GetState(int moduleId, out ModuleState state)
+    {
+        state = ModuleState.Running;
+        if (!_running.TryGetValue(moduleId, out var module)) return AifError.NotFound;
+        state = module.Host.IsSuspended ? ModuleState.Suspended : ModuleState.Running;
+        return AifError.OK;
+    }
+
     public AifError MPAI_AIFU_MODULE_GetStatus(int moduleId, out IReadOnlyList<AimReport> aims)
     {
         aims = Array.Empty<AimReport>();
@@ -1001,6 +1135,21 @@ public sealed class UserAgent
         if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null, default);
         return await module.Continuous.ReadBoundaryStampedAsync(dataType, portNumber, timeoutMs);
     }
+
+    // For the payload channel of an External Port (Communication 7): the Message with the
+    // references of its payloads kept, the store that holds them, and the adoption of the
+    // payloads of a Message that stay on the Controller that wrote it.
+    public async Task<(AifError, string?, DateTimeOffset)> ContinuousReadApartAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
+    {
+        if (!_running.TryGetValue(moduleId, out var module) || module.Continuous is null) return (AifError.NotStarted, null, default);
+        return await module.Continuous.ReadBoundaryApartAsync(dataType, portNumber, timeoutMs);
+    }
+
+    public AIF.Channels.IPayloadSource? PayloadSourceOf(int moduleId) =>
+        _running.TryGetValue(moduleId, out var module) ? module.Continuous?.Payloads : null;
+
+    public string AdoptPayloads(int moduleId, string dataType, int portNumber, string json, IEnumerable<(string Reference, Func<byte[]?> Fetch)> payloads) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous is { } run ? run.AdoptBoundaryPayloads(dataType, portNumber, json, payloads) : json;
 
     public async Task<(AifError, string?)> ContinuousReadAsync(int moduleId, string dataType, int portNumber, int timeoutMs)
     {

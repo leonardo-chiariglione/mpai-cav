@@ -33,6 +33,8 @@ public sealed class MInstance
         public string Status { get; set; } = "Final";
         public JsonNode? SpatialAttitude { get; set; }
         public string? Animation { get; set; }       // the Animation Stream animating it
+        public JsonObject? Qualifier { get; set; }   // Data UM-Captured and not yet Identified: the Qualifier it was captured with
+        public long Started { get; set; }            // Data UM-Captured: when (Unix milliseconds); a streamed Speech Object has no duration until its stream is over, and then this is its start
         public double[]? Place { get; set; }         // a Location's place, x (east) and y (north) in metres: in the
                                                      // M-Environment, or in the Location it is at
         public double Size { get; set; }             // a Location's side, metres
@@ -126,6 +128,36 @@ public sealed class MInstance
     private readonly Dictionary<string, string> models = new(StringComparer.Ordinal);
     // The 3D Models (GLB files) given in turn to the Personae of the Users that register without one of their own.
     public IReadOnlyList<string> DefaultModels { get; set; } = [];
+    // The catalogue of Personae the M-Instance offers a registering human (Rocketbox avatars, MMM/Viewer/personae/catalogue): the human chooses one, it does not bring its own.
+    // A choice is the name of an entry (PersonaChoice in the Personal Profile); one that is not in the catalogue is refused (422).
+    public IReadOnlySet<string> Catalogue { get; set; } = new HashSet<string>(StringComparer.Ordinal);
+    // What the M-Instance shows a human that is about to register: the entries of the catalogue (Name, Group, Gender). It is the M-Instance's to offer; the human is not yet in it.
+    public JsonArray CatalogueEntries { get; set; } = [];
+
+    // A Persona of the catalogue is one human's: once chosen it is no longer offered, and a second choice of it is refused (409 Clash). It is the M-Instance's decision to offer
+    // each Persona once, so that two people do not meet as the same avatar.
+    public bool PersonaTaken(string name)
+    {
+        var model = CatalogueModel(name);
+        lock (gate) return items.Values.Any(i => i.DataType == "OSD-3DO-V1.5" && i.Model == model);
+    }
+
+    // The entries of the catalogue that nobody has chosen.
+    public JsonArray AvailableCatalogueEntries()
+    {
+        lock (gate) return new JsonArray(CatalogueEntries.Where(e => e?["Name"]?.GetValue<string>() is { } n && !items.Values.Any(i => i.DataType == "OSD-3DO-V1.5" && i.Model == CatalogueModel(n))).Select(e => e!.DeepClone()).ToArray());
+    }
+    // THE ACCOUNT LEVELS the Register Service offers (MMM-TEC Register, step 2): what a human is shown when it selects Registration. Both are free: there is no Service Pricing Model to pay.
+    // Visitor: the public places of the MPAI building. Participant: the meetings the chair invited it to (the AVS Service gives the Rights to those on the chair's list that hold a Participant Account).
+    public IReadOnlyList<(string Id, string Name, string Description)> AccountLevels { get; set; } =
+    [
+        ("Visitor", "Visitor", "The public places of the MPAI building: the atrium, where anybody may come in, look, talk and ask. Free."),
+        ("Participant", "Participant", "Meetings you have been invited to: the Rights to the meeting rooms, for the meeting, if you are on the chair's list. Free."),
+        ("Officer", "MPAI Officer", "All of MPAI: the Rights to every place of the building - the members' rooms, the offices of MPAI, all the meeting rooms. Offered only to the people the chair designates. Free.")
+    ];
+    public string? AccountLevelOf(string user) { lock (gate) return accountLevels.GetValueOrDefault(user); }
+    private readonly Dictionary<string, string> accountLevels = new(StringComparer.Ordinal);
+    public static string CatalogueModel(string name) => $"catalogue/{name}.glb";
     private int registered;
     public void SetModel(string itemId, string model)
     {
@@ -138,6 +170,26 @@ public sealed class MInstance
         {
             processes[id] = new Process { ID = id, Kind = "User", HumanID = humanId, Token = NewToken() };
             foreach (var i in owns ?? []) if (items.TryGetValue(i, out var it)) it.Owner = id;
+        }
+    }
+
+    // A User that comes back (its browser was closed, refreshed): it is the same person - the transport says so - so its Process is given a new token, and told where its Persona
+    // stands. The old token is no longer valid. null: no such User.
+    public (string Token, JsonObject Info)? Resume(string user)
+    {
+        lock (gate)
+        {
+            if (!processes.TryGetValue(user, out var p) || p.Kind != "User") return null;
+            p.Token = NewToken();
+            var persona = items.Values.FirstOrDefault(i => i.Owner == user && i.DataType == "OSD-3DO-V1.5");
+            var info = new JsonObject { ["User"] = user };
+            if (persona is not null)
+            {
+                info["Persona"] = persona.ID; info["Model"] = persona.Model; info["Location"] = persona.Location;
+                if (persona.SpatialAttitude?["Position"]?["CartPosition"] is JsonArray a && a.Count >= 2) { info["X"] = a[0]?.GetValue<double>(); info["Y"] = a[1]?.GetValue<double>(); }
+                info["Yaw"] = YawOf(persona);
+            }
+            return (p.Token!, info);
         }
     }
 
@@ -181,18 +233,19 @@ public sealed class MInstance
         lock (gate)
         {
             if (!items.TryGetValue(itemId, out var it)) return false;
-            return it.Owner == process || it.Public || HeardBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
-                   || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId || Targets(items[r].Body!).Contains(itemId));
+            return it.Owner == process || it.Public || HeardBy(process, it) || SeenBy(process, it) || (inboxes.GetValueOrDefault(process)?.Contains(itemId) ?? false)
+                   || (holdings.GetValueOrDefault(process) ?? []).Any(r => r == itemId)
+                   // ...a Right that allows something on it: not one that withdraws a Right (May Not), and not one whose period is over
+                   || Live(process).Any(b => Entries(b).Where(e => e.Verb != "May Not").SelectMany(e => e.PAs).Select(Template).OfType<PA>()
+                                             .SelectMany(t => new[] { t.Target, t.Nil }).Contains(itemId));
         }
     }
 
     // ---------------------------------------------------------------- Speech Objects that are streams
-    // The Speech Object a Process may feed: its own, still a stream. Its declared end (Unix milliseconds), or null.
-    public long? StreamToFeed(string process, string id)
+    // The Speech Object a Process may feed: its own, still a stream. A streamed Speech Object has no duration: its Time is not in it until the stream is over.
+    public bool StreamToFeed(string process, string id)
     {
-        lock (gate)
-            return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Owner == process && it.Streaming
-                   && it.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0]?["EndTime"] is JsonNode e ? e.GetValue<long>() : null;
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Owner == process && it.Streaming;
     }
 
     // The stream is over: what arrived is the Speech Object's data, and it is no longer a stream.
@@ -202,6 +255,13 @@ public sealed class MInstance
         {
             if (!items.TryGetValue(id, out var it) || it.Body?["BasicSpeechObjectData"]?[0] is not JsonObject data) return;
             data["Data"] = Convert.ToBase64String(pcm);
+            // The duration of the speech is known now, and it is the Speech Object's own Time: from when its Data was captured to the end of the stream.
+            if (it.Body["BasicSpeechObjectTime"] is null)
+                it.Body["BasicSpeechObjectTime"] = new JsonObject
+                {
+                    ["Header"] = "OSD-STM-V1.5", ["SimpleTimeID"] = id + "-T",
+                    ["SimpleTimeData"] = new JsonArray(new JsonObject { ["FlagsByte"] = 3, ["StartTime"] = it.Started, ["EndTime"] = Math.Max(it.Started, it.Started + pcm.Length / 32), ["AccuracyMode"] = "single", ["AccuracyPlusMinus"] = 1 })
+                };
             it.Streaming = false;
         }
     }
@@ -216,6 +276,64 @@ public sealed class MInstance
 
     public bool IsStream(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "OSD-BSO-V1.5" && it.Streaming; }
 
+    // ---------------------------------------------------------------- Animation Streams that arrive as they are captured
+    // The Animation Stream a Process may feed: its own, still a stream (its Animation Qualifier names a stream format).
+    public bool AnimationToFeed(string process, string id)
+    {
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == "PAF-AMO-V1.6" && it.Owner == process && it.Streaming;
+    }
+
+    // An Animation Stream is seen by whoever has an Item in the Room around the seat of the Persona it animates, unless a Right bars it from the places in it (May Not).
+    public bool AnimationSeenBy(string process, string id)
+    {
+        lock (gate)
+        {
+            if (!items.TryGetValue(id, out var stream) || !stream.Streaming) return false;
+            var persona = items.Values.FirstOrDefault(i => i.Animation == id);
+            if (persona is null) return false;
+            if (persona.Owner == process) return true;
+            if (persona.Location is null || !items.TryGetValue(persona.Location, out var seat) || seat.Location is null) return false;
+            var room = seat.Location;
+            bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
+            if (!items.Values.Any(i => i.Owner == process && InRoom(i.Location))) return false;
+            return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                             .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
+        }
+    }
+
+    // The stream is over: it no longer animates anything, and it is gone.
+    public void AnimationEnded(string id)
+    {
+        lock (gate)
+        {
+            foreach (var i in items.Values.Where(i => i.Animation == id)) i.Animation = null;
+            items.Remove(id);
+        }
+    }
+
+    // ---------------------------------------------------------------- the screen shared in a room
+    // A SHARED SCREEN is a Visual Object (OSD-BVO) that is a stream: its User - the one with the Right to place it in the room - declares it with the address its frames are delivered
+    // from, and feeds it as it captures (a WebSocket, /ws/v2.2/screen/{id}); whoever has an Item in the room sees it, as it goes on. It has no data kept: when the stream is over the Item is gone.
+    public const string ScreenHeader = "OSD-BVO-V1.5";
+    public long? ScreenToFeed(string process, string id)
+    {
+        lock (gate) return items.TryGetValue(id, out var it) && it.DataType == ScreenHeader && it.Owner == process && it.Streaming ? 1 : null;
+    }
+    public void ScreenEnded(string id) { lock (gate) items.Remove(id); }
+    public void StopScreens() { lock (gate) foreach (var id in items.Values.Where(i => i.DataType == ScreenHeader && i.Streaming).Select(i => i.ID).ToList()) items.Remove(id); }
+    public bool ScreenLive(string id) { lock (gate) return items.TryGetValue(id, out var it) && it.DataType == ScreenHeader && it.Streaming; }
+
+    // A shared screen is seen by whoever has an Item in the room it was placed at, unless a Right bars it from the places in it (May Not: it was taken out of the meeting).
+    private bool SeenBy(string process, Item screen)
+    {
+        if (screen.DataType != ScreenHeader || screen.Location is null) return false;
+        var room = screen.Location;
+        bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
+        if (!items.Values.Any(i => i.Owner == process && i.DataType != ScreenHeader && InRoom(i.Location))) return false;
+        return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
+                         .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
+    }
+
     // A Speech Object is heard by whoever has an Item in the Room around the seat it was placed at - its User's Persona seated in it - unless a Right bars it from the
     // places in it (May Not: it was taken out of the meeting).
     private bool HeardBy(string process, Item speech)
@@ -224,7 +342,7 @@ public sealed class MInstance
         var room = seat.Location;
         bool InRoom(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == room) return true; return false; }
         if (!items.Values.Any(i => i.Owner == process && InRoom(i.Location))) return false;
-        return !(holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+        return !Live(process).SelectMany(Entries).Where(e => e.Verb == "May Not")
                          .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && InRoom(t.Target));
     }
 
@@ -268,7 +386,7 @@ public sealed class MInstance
                                                   (i.Location is not null && items.TryGetValue(i.Location, out var at) && at.DataType == "MMM-LOC"))
                                       .OrderBy(i => i.ID, StringComparer.Ordinal).ToList();
             // Items at the same Location stand side by side.
-            var side = located.Where(i => i.DataType != "MMM-LOC" && i.DataType != "OSD-BSO-V1.5").GroupBy(i => i.Location!)
+            var side = located.Where(i => i.DataType != "MMM-LOC" && i.DataType != "OSD-BSO-V1.5" && i.DataType != ScreenHeader).GroupBy(i => i.Location!)
                               .SelectMany(g => g.Select((it, k) => (it.ID, Offset: (k - (g.Count() - 1) / 2.0) * 0.9)))
                               .ToDictionary(x => x.ID, x => x.Offset);
             return new JsonObject
@@ -286,7 +404,7 @@ public sealed class MInstance
                     var w = Where(i);
                     var o = new JsonObject
                     {
-                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : i.DataType == "OSD-BSO-V1.5" ? "Speech" : "Item",
+                        ["ID"] = i.ID, ["Kind"] = i.DataType == "MMM-LOC" ? "Location" : i.DataType == "OSD-3DO-V1.5" ? "Persona" : i.DataType == "OSD-BSO-V1.5" ? "Speech" : i.DataType == ScreenHeader ? "Screen" : "Item",
                         ["At"] = i.Location, ["X"] = w[0] + (Spot(i) is null ? side.GetValueOrDefault(i.ID) : 0), ["Y"] = w[1], ["Z"] = 0.0,    // east, north, up: metres
                         ["Yaw"] = YawOf(i), ["Depth"] = DepthOf(i),
                         ["Perceptible"] = i.Perceptible, ["Owner"] = i.Owner, ["Public"] = i.Public
@@ -294,9 +412,13 @@ public sealed class MInstance
                     if (i.DataType == "MMM-LOC") o["Size"] = i.Size;
                     if (i.Model is not null) o["Model"] = i.Model;
                     if (i.Animation is not null) o["Animation"] = i.Animation;
+                    if (i.DataType == ScreenHeader) o["Streaming"] = i.Streaming;
                     // A Speech Object says when it is heard: its own time (Unix milliseconds). Its data is read as an Item, once, by whoever may hear it.
-                    if (i.DataType == "OSD-BSO-V1.5" && i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0] is JsonNode st)
-                    { o["Start"] = st["StartTime"]?.DeepClone(); o["End"] = st["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming; }
+                    if (i.DataType == "OSD-BSO-V1.5")
+                    {
+                        var st = i.Body?["BasicSpeechObjectTime"]?["SimpleTimeData"]?[0];
+                        o["Start"] = st?["StartTime"]?.DeepClone() ?? JsonValue.Create(i.Started); o["End"] = st?["EndTime"]?.DeepClone(); o["Streaming"] = i.Streaming;    // a stream has no end yet
+                    }
                     return (JsonNode)o;
                 }).ToArray())
             };
@@ -365,8 +487,8 @@ public sealed class MInstance
             "Register" => Register(service, with),
             "Transact" => Transact(service, rq.SourceProcessID, with),
             "MM-Add" => MMAdd(service, rq.SourceProcessID, c, with),
-            "UM-Capture" => UMCapture(service, rq.SourceProcessID, c, refs),
-            "Identify" => Identify(service, rq.SourceProcessID, c, refs),
+            "UM-Capture" => UMCapture(service, rq.SourceProcessID, c, refs, with),
+            "Identify" => Identify(service, rq.SourceProcessID, c, refs, with),
             "MM-Animate" => MMAnimate(service, rq.SourceProcessID, c, refs, with),
             "MM-Send" => MMSend(service, rq.SourceProcessID, c, with),
             "MM-Move" => MMMove(service, rq.SourceProcessID, c, with),
@@ -388,21 +510,40 @@ public sealed class MInstance
         if (profile is null || human is null) return Fail(422, service, "FaultyPA", "Register takes a Personal Profile with its humanID");
         if (processes.ContainsKey(human)) return Fail(409, service, "Clash", $"{human} is registered already");
 
+        var level = profile["PersonalProfile"]?["AccountLevel"]?.GetValue<string>();
+        if (level is not null && !AccountLevels.Any(l => l.Id == level)) return Fail(422, service, "FaultyPA", $"{level} is not an Account Level of this M-Instance");
+        foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
+            foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
+            {
+                if (e?["PersonaChoice"]?.GetValue<string>() is not { } pick) continue;
+                if (!Catalogue.Contains(pick)) return Fail(422, service, "FaultyPA", $"{pick} is not in the catalogue of Personae: a Persona is chosen from it, not brought");
+                if (PersonaTaken(pick)) return Fail(409, service, "Clash", $"{pick} was chosen by another human");
+            }
+
         processes[human] = new Process { ID = human, Kind = "Human" };
         var account = $"Account-{human}";
         var users = new List<string>();
+        var createdItems = new List<string>();                  // the Personae of the Account: its Items
         var tokens = new Dictionary<string, string>();
         foreach (var p in profile["PersonalProfile"]?["Processes"]?.AsArray() ?? [])
         {
             var ids = Ids(p?["ProcessIDOrProcess"], "ProcessID");
             var personae = Ids(p?["PersonaIDOrPersona"], "PersonaID");
+            var chosen = new Dictionary<string, string>();       // PersonaID -> the entry of the catalogue the human chose for it
+            foreach (var e in p?["PersonaIDOrPersona"]?.AsArray() ?? [])
+                if (e?["PersonaChoice"]?.GetValue<string>() is { } choice && e["PersonaID"]?.GetValue<string>() is { } cid)
+                {
+                    chosen[cid] = CatalogueModel(choice);
+                }
             foreach (var u in ids)
             {
                 if (processes.ContainsKey(u)) return Fail(409, service, "Clash", $"Process {u} exists already");
                 var proc = new Process { ID = u, Kind = "User", HumanID = human, Token = NewToken() };
                 processes[u] = proc; tokens[u] = proc.Token!; users.Add(u);
+                if (level is not null) accountLevels[u] = level;
+                createdItems.AddRange(personae);
                 foreach (var pid in personae)
-                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
+                    items[pid] = new Item { ID = pid, DataType = "OSD-3DO-V1.5", Owner = u, Model = chosen.GetValueOrDefault(pid) ?? models.GetValueOrDefault(pid) ?? (DefaultModels.Count > 0 ? DefaultModels[registered++ % DefaultModels.Count] : null) };
             }
         }
         items[profile["PersonalProfileID"]?.GetValue<string>() ?? $"Profile-{human}"] =
@@ -412,8 +553,9 @@ public sealed class MInstance
             ID = account, DataType = "MMM-ACC-V2.2", Owner = human,
             Body = new JsonObject
             {
-                ["Header"] = "MMM-ACC-V2.2", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID, ["HumanID"] = human, ["AccountID"] = account,
-                ["Processes"] = new JsonArray(users.Select(u => (JsonNode)new JsonObject { ["ProcessID"] = u }).ToArray())
+                ["Header"] = "MMM-ACC-V2.2", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID, ["HumanID"] = human, ["AccountID"] = account, ["AccountLevel"] = level,
+                ["Processes"] = new JsonArray(users.Select(u => (JsonNode)new JsonObject { ["ProcessID"] = u }).ToArray()),
+                ["Items"] = new JsonArray(createdItems.Select(i => (JsonNode)new JsonObject { ["ItemID"] = i }).ToArray())
             }
         };
         return Ok(201, service, new Complements { With = [JsonValue.Create(account)] }) with { Tokens = tokens };
@@ -458,6 +600,16 @@ public sealed class MInstance
             items[c.Nil!] = new Item { ID = c.Nil!, DataType = "OSD-BSO-V1.5", Body = speech, Owner = source, Streaming = first?["DataURI"] is not null && first["Data"] is null };
             created = true;
         }
+        // A shared screen: a Visual Object declared with an address its frames come from and no data, a stream. One at a time in a place: a second is refused (409), unless it is the same User's.
+        if (!items.ContainsKey(c.Nil!) && with.FirstOrDefault(i => Header(i) == ScreenHeader && (string?)i["BasicVisualObjectID"] == c.Nil) is { } screen
+            && screen["BasicVisualObjectData"]?[0] is JsonObject frames && frames["DataURI"] is not null && frames["Data"] is null)
+        {
+            if (c.At is not null && items.Values.FirstOrDefault(i => i.DataType == ScreenHeader && i.Streaming && i.Location == c.At && i.Owner != source) is { } other)
+                return Fail(409, service, "Busy", $"{other.Owner} is sharing a screen here");
+            foreach (var old in items.Values.Where(i => i.DataType == ScreenHeader && i.Owner == source && i.Streaming).Select(i => i.ID).ToList()) items.Remove(old);   // its own, earlier
+            items[c.Nil!] = new Item { ID = c.Nil!, DataType = ScreenHeader, Body = screen, Owner = source, Streaming = true };
+            created = true;
+        }
         if (!items.TryGetValue(c.Nil!, out var it)) return Fail(404, service, "IncID", $"no Item {c.Nil}");
         if (!items.ContainsKey(c.At!)) return Fail(404, service, "IncID", $"no M-Location {c.At}");
         if (it.Owner != source && !Allowed(source, "MM-Add", c.Nil, c.At)) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
@@ -498,7 +650,7 @@ public sealed class MInstance
         // A Process captures an M-Location it may read or enter, or one that one of its Items is in (its Persona seated in the Room).
         bool IsIn(string? l) { for (var d = 0; l is not null && d < 8; d++, l = items.GetValueOrDefault(l)?.Location) if (l == c.At) return true; return false; }
         // ...unless a Right bars it from the places in it (May Not: the convener took it out of the meeting).
-        bool Barred() => (holdings.GetValueOrDefault(source) ?? []).Select(r => items[r].Body!).SelectMany(Entries).Where(e => e.Verb == "May Not")
+        bool Barred() => Live(source).SelectMany(Entries).Where(e => e.Verb == "May Not")
                              .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => t.Target is not null && IsIn(t.Target));
         if (!MayRead(source, c.At!) && !MayEnter(source, "MM-Capture", source, c.At!) && !(items.Values.Any(i => i.Owner == source && IsIn(i.Location)) && !Barred()))
             return Fail(403, service, "InsRights", $"{source} may not capture {c.At}");
@@ -514,7 +666,7 @@ public sealed class MInstance
             return false;
         }
         var heardSince = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 60_000;   // a Speech Object is heard while it lasts: what was said more than a minute ago is not returned
-        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false && ((string?)t["Kind"] != "Speech" || (t["End"]?.GetValue<long>() ?? 0) >= heardSince)).Select(t => (JsonNode)t.DeepClone()).ToArray();
+        var scene = things.Where(t => Inside(t) && (bool?)t["Perceptible"] != false && ((string?)t["Kind"] != "Speech" || (bool?)t["Streaming"] == true || (t["End"]?.GetValue<long>() ?? 0) >= heardSince)).Select(t => (JsonNode)t.DeepClone()).ToArray();
         var item = new JsonObject
         {
             ["ItemName"] = $"Scene-{c.At}", ["MInstanceID"] = ID, ["MEnvironmentID"] = EnvironmentID,
@@ -546,27 +698,47 @@ public sealed class MInstance
         return Ok(200, service, new Complements { With = GrantAll(with, source) });
     }
 
-    // EISrvc. UM-Capture captures Data at a U-Location: the Data becomes an Item of the
-    // requesting Process.
-    private Outcome UMCapture(string service, string source, Complements c, List<string> refs)
+    // EISrvc (the Import Service). UM-Capture: a Process of a human - its Device - asks that a scene at a U-Location be captured as Data, With the Qualifier the Data is to have.
+    // The Data is named by the requester (Nil) and belongs to it; it is not yet an Item of the M-Instance: Identify makes it one. A Qualifier whose transport is a stream says that
+    // the Data arrives as it is captured (a Speech Qualifier, TFA-SPQ, names the stream format of the speech and the time it lasts).
+    private Outcome UMCapture(string service, string source, Complements c, List<string> refs, List<JsonObject> with)
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (Need(service, c.At, "At") is { } f2) return f2;
         if (items.ContainsKey(c.Nil!)) return Fail(409, service, "Clash", $"{c.Nil} exists already");
-        items[c.Nil!] = new Item { ID = c.Nil!, DataType = "MMM-DAT", Owner = source, Location = c.At };
+        var qualifier = with.FirstOrDefault(i => Header(i)?.StartsWith("TFA-", StringComparison.Ordinal) == true);
+        items[c.Nil!] = new Item { ID = c.Nil!, DataType = "MMM-DAT", Owner = source, Location = c.At, Qualifier = qualifier, Started = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
         return Ok(201, service, new Complements { Nil = c.Nil, With = refs.Select(r => (JsonNode?)JsonValue.Create(r)).ToList() });
     }
 
-    // IDSrvc. Identify says what captured Data is: here, the Animation Stream of the
-    // human captured.
-    private Outcome Identify(string service, string source, Complements c, List<string> refs)
+    // IDSrvc. Identify makes an Item of Data and its Qualifier. Speech captured (a Speech Qualifier, TFA-SPQ) becomes a Speech Object (OSD-BSO): its time is the Qualifier's, its data
+    // is delivered as the stream the Qualifier names, and its Identifier is the one the Data was named with; the Item is its requester's, and is not anywhere until MM-Added.
+    // Any other Data is, here, the Animation Stream of the human captured.
+    private Outcome Identify(string service, string source, Complements c, List<string> refs, List<JsonObject> with)
     {
         if (Need(service, c.Nil, "Nil") is { } f1) return f1;
         if (!items.TryGetValue(c.Nil!, out var data)) return Fail(404, service, "IncID", $"no Data {c.Nil}");
         if (data.Owner != source) return Fail(403, service, "InsRights", $"{c.Nil} is not {source}'s");
-        var stream = $"{c.Nil}-Stream";
-        items[stream] = new Item { ID = stream, DataType = "PAF-AMO-V1.6", Owner = source };
-        return Ok(201, service, new Complements { Nil = stream });
+        var qualifier = with.FirstOrDefault(i => Header(i) == "TFA-SPQ-V1.5") ?? (data.Qualifier is { } q && Header(q) == "TFA-SPQ-V1.5" ? q : null);
+        if (data.DataType == "MMM-DAT" && qualifier is not null)
+        {
+            var stream = qualifier["Formats"]?["TransportFormats"]?["StreamFormat"] is not null;
+            if (!stream) return Fail(422, service, "IncDQ", "the Data of a speech arrives as a stream: its Speech Qualifier names the stream format");
+            var id = data.ID;
+            data.Body = new JsonObject
+            {
+                ["Header"] = "OSD-BSO-V1.5", ["MInstanceID"] = ID, ["BasicSpeechObjectID"] = id,
+                ["BasicSpeechObjectData"] = new JsonArray(new JsonObject { ["DataURI"] = $"/ws/v2.2/speech/{id}/listen" }),
+                ["BasicSpeechDataQualifier"] = qualifier.DeepClone()
+            };
+            data.DataType = "OSD-BSO-V1.5"; data.Streaming = true; data.Location = null; data.Qualifier = null;
+            return Ok(201, service, new Complements { Nil = id });
+        }
+        // Any other Data is the Animation Stream of the human captured; if its Animation Qualifier (TFA-AMQ) names a stream format, it arrives as it is captured.
+        var animation = with.FirstOrDefault(i => Header(i) == "TFA-AMQ-V1.5") ?? (data.Qualifier is { } aq && Header(aq) == "TFA-AMQ-V1.5" ? aq : null);
+        var streamId = $"{c.Nil}-Stream";
+        items[streamId] = new Item { ID = streamId, DataType = "PAF-AMO-V1.6", Owner = source, Qualifier = animation, Streaming = animation?["Formats"]?["TransportFormat"] is not null };
+        return Ok(201, service, new Complements { Nil = streamId });
     }
 
     // COSrvc. MM-Send conveys a Message to a Process: the Message reaches its inbox and
@@ -578,6 +750,13 @@ public sealed class MInstance
         if (!processes.ContainsKey(c.To!)) return Fail(404, service, "IncID", $"no Process {c.To}");
         // What is sent: a Message, or a Speech Object - a User's own capture of what it said, with the time it lasts (a Basic Speech Object, OSD-BSO).
         var message = with.FirstOrDefault(i => Header(i) is "MMM-MSG-V2.2" or "OSD-BSO-V1.5");
+        // A Speech Object the sender already has - its own capture, still a stream - is sent as it is: the recipient is given that Item (it may read it, and listen to it), not a copy.
+        if (message is not null && Header(message) == "OSD-BSO-V1.5" && message["BasicSpeechObjectID"]?.GetValue<string>() is { } own && items.TryGetValue(own, out var sent) && sent.Owner == source)
+        {
+            var inbox = inboxes.TryGetValue(c.To!, out var ib) ? ib : inboxes[c.To!] = [];
+            if (!inbox.Contains(own)) inbox.Add(own);
+            return Ok(200, service, new Complements { With = GrantAll(with, c.To!) });
+        }
         items[c.Nil!] = new Item { ID = c.Nil!, DataType = message is null ? "MMM-MSG-V2.2" : Header(message)!, Body = message, Owner = source };
         var box = inboxes.TryGetValue(c.To!, out var b) ? b : inboxes[c.To!] = [];
         if (!box.Contains(c.Nil!)) box.Add(c.Nil!);          // a Message sent again under the same identifier replaces the first
@@ -677,7 +856,7 @@ public sealed class MInstance
     // Does a Right of the Process allow it? A May Not prevails.
     private bool Allowed(string process, string action, string? nil, string? target)
     {
-        var held = (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).ToList();
+        var held = Live(process).ToList();
         bool Any(string verb) => held.SelectMany(Entries).Where(e => e.Verb == verb)
                                      .SelectMany(e => e.PAs).Select(Template).OfType<PA>().Any(t => Matches(t, action, nil, target));
         return !Any("May Not") && Any("May");
@@ -688,13 +867,28 @@ public sealed class MInstance
     private bool MayEnter(string process, string action, string item, string location)
     {
         if (Allowed(process, action, item, location)) return true;
-        var denied = (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).SelectMany(Entries)
+        var denied = Live(process).SelectMany(Entries)
                      .Where(e => e.Verb == "May Not").SelectMany(e => e.PAs).Select(Template).OfType<PA>()
                      .Any(t => Matches(t, action, item, location));
         if (denied) return false;
         for (var l = location; l is not null && items.TryGetValue(l, out var it); l = it.Location)
             if (it.Owner == process || it.Public) return true;
         return false;
+    }
+
+    // THE RIGHTS A PROCESS HOLDS NOW. A Rights Item may carry a RightsTime: a Simple Time whose Start and End differ is the period the Rights are valid for (the Rights of a meeting
+    // last as long as the meeting does); after its End they are not held. A Rights Item without one, or whose times are the same instant, does not expire.
+    private IEnumerable<JsonObject> Live(string process) =>
+        (holdings.GetValueOrDefault(process) ?? []).Select(r => items[r].Body!).Where(b => !Expired(b));
+
+    // The time the M-Instance goes by (a test moves it).
+    public Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
+
+    private bool Expired(JsonObject rights)
+    {
+        if (rights["RightsTime"]?["SimpleTimeData"]?[0] is not JsonObject t || t["StartTime"] is null || t["EndTime"] is null) return false;
+        var (start, end) = (t["StartTime"]!.GetValue<long>(), t["EndTime"]!.GetValue<long>());
+        return end > start && Clock().ToUnixTimeMilliseconds() > end;
     }
 
     // The Items a Rights Item concerns: the targets and Nils of its Process Actions.

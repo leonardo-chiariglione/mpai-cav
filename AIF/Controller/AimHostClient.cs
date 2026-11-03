@@ -34,9 +34,13 @@ public sealed class AimHostClient : IAsyncDisposable
 
     // The host's answer: with the CII of the AIM Instance it placed, whose key it
     // made and holds (M3223 3.1).
-    public async Task<JsonObject> PlaceAsync(string module, string aim)
+    // package: what the Controller holds of the AIM - its Metadata, the fingerprints the Store approved, the AIM Licence - for a host that keeps a repository to take in an AIM it
+    // has not seen: it obtains the Implementation and its models itself, from the places the Metadata gives, and checks them and the AIM Licence before it builds the AIM.
+    public async Task<JsonObject> PlaceAsync(string module, string aim, JsonObject? package = null)
     {
-        var reply = await Link.RequestAsync(new JsonObject { ["Kind"] = "Place", ["Module"] = module, ["Aim"] = aim });
+        var frame = new JsonObject { ["Kind"] = "Place", ["Module"] = module, ["Aim"] = aim };
+        if (package is not null) frame["Package"] = package;
+        var reply = await Link.RequestAsync(frame);
         if (reply["Ok"]?.GetValue<bool>() != true)
             throw new InvalidOperationException($"The AIM host at {Address} did not place {aim}: {reply["Error"]}.");
         return reply;

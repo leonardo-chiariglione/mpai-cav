@@ -25,7 +25,7 @@ public class TrustVerificationTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 9, 26, 9, 0, 0, TimeSpan.Zero);
     private static string TestBinary => typeof(RemoteAims).Assembly.Location;
-    private static string Phase13 => Path.Combine(Repository.Root, "Test", "Data", "Phase13");
+    private static string Phase13 => Path.Combine(Repository.Root, "AIMs", "TST", "Phase13");
 
     // THE PIPELINE, step by step: what passes, and where each failure stops it.
     [Fact]

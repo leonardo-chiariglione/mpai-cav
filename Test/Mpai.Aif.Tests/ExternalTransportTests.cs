@@ -32,7 +32,7 @@ public class ExternalTransportTests
             : this(id, moduleType, new KeyAdmission(key), discovery, inRange) { }
 
         public Cav(string id, string moduleType, ILinkAdmission admission, UdpDiscovery discovery, Func<string, bool> inRange,
-                   Func<string, string>? sign = null, Func<string, string, string?>? verify = null)
+                   Func<string, string, string>? sign = null, Func<string, string, string, string?>? verify = null)
         {
             Hub = new ExternalHub(new ExternalHub.Options
             {
@@ -87,9 +87,9 @@ public class ExternalTransportTests
         Cav Make(string id, AIF.Trust.TrustAuthority by, AIF.Trust.TrustAuthority.Admission admission, Func<string, string>? alter = null, string? signAs = null)
         {
             var trust = new AIF.Controller.CityTrust(by, admission);
-            Func<string, string> sign = json =>
+            Func<string, string, string> sign = (json, binding) =>
             {
-                var signed = trust.Sign(json);
+                var signed = trust.Sign(json, binding);
                 if (signAs is not null) signed = signed.Replace($"\"KeyID\":\"{id}\"", $"\"KeyID\":\"{signAs}\"");
                 return alter?.Invoke(signed) ?? signed;
             };

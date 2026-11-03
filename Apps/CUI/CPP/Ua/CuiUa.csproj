@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CuiUa - THE USER AGENT of Company Performance Prediction, a console program. It supplies only DEVICES - the data of a company, from a file, and a report on the screen - and runs the workflow of
+       the App (Apps/CUI/CPP/CUI-CPP.orch) with the interpreter of the User Agent, against a Controller (CuiController) that is a program of its own. It knows no AIM and reads no storage. -->
+
+  <PropertyGroup>
+    <AssemblyName>CuiUa</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Mpai.Cui.Ua</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Ua\Mpai.Ua.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Wdl\Mpai.Wdl.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
+  </ItemGroup>
+
+</Project>

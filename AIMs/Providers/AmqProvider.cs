@@ -20,7 +20,8 @@ namespace Mpai.Providers;
 //   MMC-ASR - speech to text (Whisper)             (question, when spoken)
 //   MMC-TIQ - text + image query (BLIP)            (the answer)
 //   MMC-TTS - text to speech (Piper)               (the spoken answer)
-//   MMC-PDX, PAF-GFD, PAF-GBD, PAF-PMX - RSR leaves, so the avatar can SPEAK with a face
+//   PAF-PMX - Portable Avatar Multiplexing: the answer, its text and its speech, in the Portable Avatar the User Agent renders
+//   MMC-PDX, PAF-GFD, PAF-GBD - RSR leaves, for the Standalone programs that speak their guidance
 // Acquisition and delivery (image, mic, speaker) are the User Agent, not sub-AIMs.
 public sealed class AmqProvider : IAimProvider
 {

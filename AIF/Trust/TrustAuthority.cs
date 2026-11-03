@@ -51,9 +51,20 @@ public sealed class TrustAuthority
 // what it receives: only a Message signed by the CAV its link admitted is given on.
 public static class ExternalSigning
 {
-    public enum Outcome { Valid, Unsigned, NotTheSender, UnknownKey, Tampered, Invalid }
+    public enum Outcome { Valid, Unsigned, NotTheSender, UnknownKey, Tampered, Invalid, NotBound }
 
-    public static string Sign(string json, TrustAnchorKey anchor, ECDsa key, string authority, DateTimeOffset now)
+    // The payloads a signed Message states travel apart: reference, length, hash.
+    public static IReadOnlyList<(string Reference, long Length, string Hash)> PayloadsOf(string json) =>
+        (JsonNode.Parse(json)?["DataXMData"]?["Security"]?["Integrity"]?["Payloads"] as JsonArray)?
+            .Select(p => ((string)p!["Reference"]!, (long)p["Length"]!, (string)p["Hash"]!)).ToList() ?? [];
+
+    // payloads: the payloads that travel apart on the payload channel (Communication 7):
+    // for each, the reference the receiving Controller asks for, its length and its
+    // hash - in the Integrity, so that the signature covers them.
+    // binding: what the Message is bound to - the Port it is for and the stamp of its writer (Communication 9: a Message carries its Controller's identifier and stamp, and is signed by it) -
+    // in the signed Message, so that neither can be changed on the way.
+    public static string Sign(string json, TrustAnchorKey anchor, ECDsa key, string authority, DateTimeOffset now,
+                              IReadOnlyList<(string Reference, long Length, string Hash)>? payloads = null, string? binding = null)
     {
         var obj = JsonNode.Parse(json)!.AsObject();
         obj.Remove("DataXMData");
@@ -67,10 +78,13 @@ public static class ExternalSigning
             {
                 ["Header"] = "PTF-SEC-V1.0",
                 ["Identity"] = new JsonObject { ["Issuer"] = $"urn:mpai:ptf:authority:{authority}", ["CredentialRef"] = $"urn:mpai:ptf:cav:{anchor.AnchorId}" },
-                ["Transmission"] = new JsonObject { ["Protocol"] = "Custom" },
+                ["Transmission"] = binding is null ? new JsonObject { ["Protocol"] = "Custom" } : new JsonObject { ["Protocol"] = "Custom", ["Binding"] = binding },
                 ["Integrity"] = new JsonObject { ["Hash"] = new JsonObject { ["Algorithm"] = "PTF-ALGO-HASH-SHA256", ["Value"] = hash }, ["KeyID"] = anchor.AnchorId }
             }
         };
+        if (payloads is { Count: > 0 })
+            obj["DataXMData"]!["Security"]!["Integrity"]!["Payloads"] = new JsonArray(payloads.Select(p => (JsonNode)new JsonObject
+            { ["Reference"] = p.Reference, ["Length"] = p.Length, ["Hash"] = p.Hash }).ToArray());
         var signature = key.SignData(PtfCanonical.Bytes(obj), HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
         obj["DataXMData"]!["Security"]!["Integrity"]!["Signature"] = Convert.ToHexString(signature);
         return obj.ToJsonString();
@@ -78,7 +92,7 @@ public static class ExternalSigning
 
     // Signed by the CAV expected - the one the link admitted - whose anchor this end
     // trusts, over the Object as it came.
-    public static Outcome Verify(string json, string expectedSigner, Func<string, JsonObject?> anchorOf)
+    public static Outcome Verify(string json, string expectedSigner, Func<string, JsonObject?> anchorOf, string? binding = null)
     {
         var obj = JsonNode.Parse(json)!.AsObject();
         var integrity = obj["DataXMData"]?["Security"]?["Integrity"] as JsonObject;
@@ -95,8 +109,9 @@ public static class ExternalSigning
             unsigned["DataXMData"]!["Security"]!["Integrity"]!.AsObject().Remove("Signature");
             byte[] value;
             try { value = Convert.FromHexString(hex); } catch (FormatException) { return Outcome.Invalid; }
-            return key.VerifyData(PtfCanonical.Bytes(unsigned), value, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)
-                ? Outcome.Valid : Outcome.Invalid;
+            if (!key.VerifyData(PtfCanonical.Bytes(unsigned), value, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)) return Outcome.Invalid;
+            // signed, and bound to the Port and the stamp it arrived with (the binding is in what was signed)
+            return binding is not null && (string?)obj["DataXMData"]?["Security"]?["Transmission"]?["Binding"] != binding ? Outcome.NotBound : Outcome.Valid;
         }
     }
 }

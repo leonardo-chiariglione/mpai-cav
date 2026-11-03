@@ -5,7 +5,7 @@
 
   "Header":       "MMC-SPE-V2.5",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-SPE-V2.5" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "APIProfile":   "Basic",
   "Description":  "This composite AIM extracts the Personal Status conveyed by Speech.",
@@ -17,14 +17,18 @@
   ],
 
   "SubAIMs":  [
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-ESD-V2.5" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PSI-V2.5" } }
+    { "Header": "MMC-ESD-V2.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "MMC-PSI-V2.5", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } }
   ],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-ESD-V2.5", "DataType": "OSD-BSO-V1.5"}},
                           {"Output": {"AIMName": "MMC-ESD-V2.5", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SDO-V2.5"}},
                           {"Output": {"AIMName": "", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SDO-V2.5"}},
                           {"Output": {"AIMName": "MMC-PSI-V2.5", "DataType": "MMC-SPS-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-SPS-V2.5"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "spe-model", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "W2v2Model", "AsFile": "model.onnx", "Description": "The speech emotion model."}],
 
   "Implementations":  [
    {

@@ -12,7 +12,7 @@
 
   "ExternalPorts":        [{"Name": "PointOfView", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarSpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "AVSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MultimodalSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "InputSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "Output": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TextTTS", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Input": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "TextSAF", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "Input": 1, "Output": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},

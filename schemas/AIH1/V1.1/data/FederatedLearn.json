@@ -20,12 +20,14 @@
       "Request":              { "type": "object", "required": [ "HFEID", "PreLearnNNModelID" ],
                                 "additionalProperties": false, "properties": {
         "HFEID":              { "type": "string", "description": "Id of the human-feature extraction or relevant component." },
-        "PreLearnNNModelID":  { "type": "string", "description": "Identifier of the pre-learning neural network model." } } } } },
+        "PreLearnNNModelID":  { "type": "string", "description": "Identifier of the pre-learning neural network model." },
+        "PreLearnAIMID":      { "type": "string", "description": "Identifier, in the MPAI Store, of the AIM that wraps the pre-learning neural network model: what the Back End uploaded and the Front End downloaded." } } } } },
                               { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties":  {
       "Response":             { "type": "object", "required": [ "AIHDataID", "PostLearnNNModel" ], "additionalProperties": false,
                                 "properties": {
         "PostLearnNNModel":   { "$ref": "https://schemas.mpai.community/AIP/V1.0/data/MLModelObject.json",
                                 "description": "Post FedLearn model." },
+        "PostLearnAIMID":     { "type": "string", "description": "Identifier, in the MPAI Store, of the AIM that wraps the post-learning neural network model, when the Back End has uploaded it." },
         "AIHDataID":          { "type": "string", "description": "ID of the AIH Data used for training." } } } } } ] } },
 
     "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },

@@ -85,6 +85,10 @@
         "ChannelId": {
           "type": "string",
           "format": "uuid"
+        },
+        "Binding": {
+          "type": "string",
+          "description": "What the Data Exchange is bound to, in the signed object: for a Message between Controllers, <Data Type>#<Port Number>@<stamp of its writer>, the Port it is for and the time it was written. Being signed, neither can be changed in transit."
         }
       }
     },
@@ -120,6 +124,34 @@
         "KeyID": {
           "type": "string",
           "description": "Identifier of the key that verifies the Signature; the key's identity states its algorithm."
+        },
+        "Payloads": {
+          "type": "array",
+          "description": "The payloads of the Data Exchange that travel apart from it (on the payload channel of a link, in the AIF), each with its length and hash, so that the Signature covers them and a payload that does not match is refused.",
+          "items": {
+            "type": "object",
+            "required": [
+              "Reference",
+              "Length",
+              "Hash"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "Reference": {
+                "type": "string",
+                "description": "The reference the receiver asks for the payload with."
+              },
+              "Length": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "Hash": {
+                "type": "string",
+                "pattern": "^[A-Fa-f0-9]{64}$",
+                "description": "SHA-256 of the payload."
+              }
+            }
+          }
         }
       },
       "dependentRequired": {

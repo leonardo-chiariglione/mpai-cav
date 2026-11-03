@@ -3,7 +3,7 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/EntityBodyDescription.json",
   "title":                "Entity Body Description V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-EBD-V1.6"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "PAF-EBD-V1.6",
 
   "APIProfile":           "Basic",
@@ -16,6 +16,8 @@
 
   "SubAIMs":              [ ],
   "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
                             "BinaryName":       "/* BinaryName */",

@@ -19,7 +19,7 @@ A two-way road, a lane each way, a junction with a side road to the right. The C
 - `AIMs/CAV/V2.0/Ams/PathSelectionPlanning.cs`: `JunctionAhead`, given to the planner.
 - `AIMs/CAV/V2.0/Ams/TrafficObstacleAvoidance.cs`: `Yield` no longer yields to the PredictedPath of a vehicle on the CAV's own road going the same way (ahead, beside or behind): it is followed (the Motion Selection Planning) or left behind, not a crossing. Without this the CAV braked at 6 m/s2 for the car it was about to pass.
 - `AIMs/CAV/V2.0/Ess/BasicVisualSceneDescription.cs`: `LastFar`, what the telephoto window showed (for the harness).
-- Test harness: `HighwayBaselineTests` (live mode `junction-overtake`), `HighwayRecording` and `HighwayLiveView` (the telephoto picture), `CAV/Viewer/highway.html` (the view follows the CAV a long way ahead and closes on the pass; the telephoto picture; the planner's words; the stretch of the other lane known clear, in green; the predicted turn, dashed; captions), `CAV/Cav.ps1` (use case 8), `CAV/Demos/index.html`.
+- Test harness: `HighwayBaselineTests` (live mode `junction-overtake`), `HighwayRecording` and `HighwayLiveView` (the telephoto picture), `Apps/CAV/CAVViewer/highway.html` (the view follows the CAV a long way ahead and closes on the pass; the telephoto picture; the planner's words; the stretch of the other lane known clear, in green; the predicted turn, dashed; captions), `CAV/Cav.ps1` (use case 8), `CAV/Demos/index.html`.
 
 ## Verified
 

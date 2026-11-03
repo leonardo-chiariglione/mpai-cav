@@ -7,7 +7,7 @@ using Mpai.Aif.Api;
 namespace Mpai.Aif.Tests;
 
 // The Controller API of Phase 3 (M3213 3.8), on test Modules made for the purpose
-// from test AIMs whose behaviour is exact. Their L3s are in Test/Data/Phase3, not
+// from test AIMs whose behaviour is exact. Their L3s are in AIMs/TST/Phase3, not
 // in AIMs/AMDs: they are not AIMs anybody would use.
 //
 // Step 1 records what the Controller does today, failures included; each later
@@ -19,7 +19,7 @@ public class ControllerTests
 {
     public const string Text = "TST-TXT-V1.0";
 
-    public static string Amds => Path.Combine(Repository.Root, "Test", "Data", "Phase3");
+    public static string Amds => Path.Combine(Repository.Root, "AIMs", "TST", "Phase3");
 
     private static ControllerApi Api() =>
         new(Amds, Path.Combine(Amds, "no-settings.json"), new TestAims());
@@ -149,9 +149,9 @@ public class ControllerTests
         {
             using var api = Api();
             var said = new List<string>();
-            var devices = new Mpai.Rca.DeviceRegistry()
+            var devices = new Mpai.Ua.DeviceRegistry()
                 .RegisterAcquire(Text, (vad, wanted) => Task.FromResult<string?>("x"));
-            var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, said.Add);
+            var interpreter = new Mpai.Ua.WorkflowInterpreter(api.Async(), devices, said.Add);
 
             var workflow = new Mpai.Wdl.WorkflowReader().Read($$"""
                 workflow TST over 1TST-DGR-V1.0-I01
@@ -231,10 +231,13 @@ public class ControllerTests
         {
             const string module = "1TST-NST-V1.0-I01";
             api.StartFlow(module);
+            result["Controller API: the Module's state before Pause"] = api.Status(module).State.ToString();
             result["Controller API: Pause"] = api.Pause(module).ToString();
+            result["Controller API: the Module's state after Pause"] = api.Status(module).State.ToString();
             api.InputWrite(module, Text, 1, "p");
             result["Controller API: a read with timeout 600 while paused"] = Shown(api.OutputRead(module, Text, 1, 600));
             result["Controller API: Resume"] = api.Resume(module).ToString();
+            result["Controller API: the Module's state after Resume"] = api.Status(module).State.ToString();
             result["Controller API: a read after Resume"] = Shown(api.OutputRead(module, Text, 1, 3000));
             api.StopFlow(module);
             result["Controller API: Pause, Module not started"] = api.Pause(module).ToString();

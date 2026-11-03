@@ -125,9 +125,43 @@ public class MetadataTests
         finally { Directory.Delete(copy, recursive: true); }
     }
 
+    // The instance-of rule includes the Port Number: an L3 whose Port has another Port
+    // Number than the L2's Port of that Direction and Data Type does not conform.
+    [Fact]
+    public void PortNumbersMatch()
+    {
+        var conformance = new L2Conformance(Repository.Schemas, _ => null);
+        var l3 = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-PSE-V2.5-I01.json")))!;
+        var ports = l3["ExternalPorts"]!.AsArray();
+        ports[0]!["PortNumber"] = 7;
+        using var doc = JsonDocument.Parse(l3.ToJsonString());
+        Assert.Contains(conformance.Check(doc.RootElement), f => f.Contains("Port Number 7"));
+    }
+
+    // The instance-of rule includes the Access: an L3 declares every Access its L2 declares, by Name, and may declare others.
+    [Fact]
+    public void AccessOfTheL2IsDeclaredByTheL3()
+    {
+        var conformance = new L2Conformance(Repository.Schemas, _ => null);
+        static List<string> Check(L2Conformance c, JsonNode l3)
+        {
+            using var doc = JsonDocument.Parse(l3.ToJsonString());
+            return c.Check(doc.RootElement).Where(f => f.StartsWith("Access '")).ToList();
+        }
+        JsonNode L3() => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1PAF-FIR-V1.6-I01.json")))!;
+
+        Assert.Empty(Check(conformance, L3()));
+
+        var missing = L3(); var list = missing["AccessSources"]!.AsArray(); list.Remove(list.First(e => (string?)e!["Name"] == "reference-faces"));
+        Assert.Contains(Check(conformance, missing), f => f.Contains("'reference-faces'") && f.Contains("not declared"));
+
+        var more = L3(); more["AccessSources"]!.AsArray().Add(new JsonObject { ["Name"] = "voices", ["Uri"] = "https://example.org/voices/", ["Sha256"] = new string('0', 64) });
+        Assert.Empty(Check(conformance, more));
+    }
+
     // Every L3's ResourcePolicies read as the Controller reads them when it builds a
     // Module's AIMs: a number (CPU:Number, GPU:Number) as well as a string, and every
-    // Memory value understood. MAD and MPD failed to start in the Service when these
+    // Memory value understood. AMQ and others failed to start in the Service when these
     // became numbers, and loading an L3 alone does not read them.
     [Fact]
     public void ResourcePolicies()
@@ -156,7 +190,7 @@ public class MetadataTests
                                       .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
         {
             var node = TryParse(file);
-            if (node?["Identifier"]?["AIMName"]?.GetValue<string>() is { } aim) l2[aim] = node;
+            if (node?["Header"]?.GetValue<string>() is { } aim) l2[aim] = node;   // an L2 is known by its Header, the AIM Type
         }
 
         var result = new Dictionary<string, string>();
@@ -212,32 +246,32 @@ public class MetadataTests
     // Names never address (M3211 3.4). The Topology of an L3 has no name: each end is an
     // AIM, a Data Type and a Port Number. A name put on an end is not read; an end whose
     // Data Type the Sub-AIM has no Port of stops the L3 from loading; and when every
-    // Sub-AIM of MAD names its Ports differently, MAD loads into the same connections,
+    // Sub-AIM of AMQ names its Ports differently, AMQ loads into the same connections,
     // since the Controller reads no Sub-AIM's Port names.
     [Fact]
     public void Addressing()
     {
         JsonNode Read(string aim) => JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, aim + ".json")))!;
-        var mad = Read("1MMC-MAD-V2.5-I01");
-        var baseline = MadConnections(mad);
+        var amq = Read("1MMC-AMQ-V2.5-I01");
+        var baseline = CompositeConnections(amq);
 
-        var undeclared = mad.DeepClone();
+        var undeclared = amq.DeepClone();
         var end = undeclared["Topology"]!.AsArray().Select(l => l!["Input"]!).First(e => e["AIMName"]!.GetValue<string>() != "");
         end["PortName"] = "NoSuchLabel";
-        Assert.Equal(baseline, MadConnections(undeclared));          // the end states its Data Type: the name is not read
+        Assert.Equal(baseline, CompositeConnections(undeclared));          // the end states its Data Type: the name is not read
 
-        var notAPort = mad.DeepClone();
+        var notAPort = amq.DeepClone();
         var wrongEnd = notAPort["Topology"]!.AsArray().Select(l => l!["Input"]!).First(e => e["AIMName"]!.GetValue<string>() != "");
         wrongEnd["DataType"] = "OSD-NO-V1.5";
-        Assert.ThrowsAny<Exception>(() => MadConnections(notAPort));
+        Assert.ThrowsAny<Exception>(() => CompositeConnections(notAPort));
 
         var renamed = new Dictionary<string, JsonNode>();
-        foreach (var sub in mad["SubAIMs"]!.AsArray())
+        foreach (var sub in amq["SubAIMs"]!.AsArray())
         {
             var name = sub!["Identifier"]!["AIMName"]!.GetValue<string>();
             var l3 = Read(name);
             // A composite's own Port names are labels of its own Topology: renamed
-            // there too, consistently. What MAD sees is only that they changed.
+            // there too, consistently. What AMQ sees is only that they changed.
             var names = new Dictionary<string, string>();
             foreach (var port in l3["ExternalPorts"]!.AsArray())
             {
@@ -251,11 +285,11 @@ public class MetadataTests
                         line[side]!["PortName"] = fresh;
             renamed[name] = l3;
         }
-        Assert.Equal(baseline, MadConnections(renamed));
+        Assert.Equal(baseline, CompositeConnections(renamed));
 
-        // MAD's own names - its ExternalPorts, InternalTypes and every Topology
+        // AMQ's own names - its ExternalPorts, InternalTypes and every Topology
         // label - renamed consistently: the same connections.
-        var own = mad.DeepClone();
+        var own = amq.DeepClone();
         var labels = new Dictionary<string, string>();
         string Fresh(string old) => labels.TryGetValue(old, out var f) ? f : labels[old] = $"Label{labels.Count + 1}";
         foreach (var p in own["ExternalPorts"]!.AsArray().Concat(own["InternalTypes"]?.AsArray() ?? []))
@@ -263,7 +297,7 @@ public class MetadataTests
         foreach (var line in own["Topology"]!.AsArray())
             foreach (var side in new[] { "Output", "Input" })
                 if (line![side]!["PortName"]?.GetValue<string>() is { } label) line[side]!["PortName"] = Fresh(label);
-        Assert.Equal(baseline, MadConnections(own));
+        Assert.Equal(baseline, CompositeConnections(own));
     }
 
     // NO NAME REACHES PROCESSING. Every L3, as the Store gives it to the Controller,
@@ -306,10 +340,15 @@ public class MetadataTests
                                           .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs"))
             {
                 var l2 = TryParse(file);
-                if (l2?["Identifier"]?["AIMName"]?.GetValue<string>() is not { } aim) continue;
+                if (l2?["Header"]?.GetValue<string>() is not { } aim) continue;
                 // What an L2 leaves to the Implementer ("IsRemote": "") is not topology.
                 foreach (var port in l2["ExternalPorts"]?.AsArray() ?? [])
                     if (port?["IsRemote"] is JsonValue v && v.GetValueKind() == JsonValueKind.String) port["IsRemote"] = false;
+                // The L2 stands for an L3 here, to see its topology load: named, as an L3 is, by ImplementerID + ImplementationID (the Implementer's, here empty and the AIM Type).
+                l2["Identifier"] = new JsonObject { ["ImplementerID"] = "", ["ImplementationID"] = aim, ["AIMName"] = aim };
+                foreach (var sub in l2["SubAIMs"]?.AsArray() ?? [])
+                    if (sub?["Header"]?.GetValue<string>() is { } type)
+                        sub["Identifier"] = new JsonObject { ["ImplementerID"] = "", ["ImplementationID"] = type, ["AIMName"] = type, ["Relation"] = sub["Identifier"]?["Relation"]?.DeepClone() ?? "" };
                 File.WriteAllText(Path.Combine(copy, aim + ".json"), l2.ToJsonString());
                 if (l2["Topology"] is JsonArray { Count: > 0 }) composites.Add(aim);
             }
@@ -339,7 +378,7 @@ public class MetadataTests
     public void NewFields()
     {
         var schema = AimMetadataSchema.Load(Repository.Schemas);
-        var composite = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-MAD-V2.5-I01.json")))!;
+        var composite = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-AMQ-V2.5-I01.json")))!;
         var basic     = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Amds, "1MMC-ASR-V2.5-I01.json")))!;
 
         JsonNode Input(JsonNode aim)  => aim["ExternalPorts"]!.AsArray().First(p => p!["Direction"]!.GetValue<string>() == "Input")!;
@@ -398,26 +437,26 @@ public class MetadataTests
         Assert.True(wrong.Count == 0, "The schema judged these wrongly:\n" + string.Join("\n", wrong));
 
         // None of the new fields changes the connections the Controller builds:
-        // MAD with all of them loads into the same connections as MAD without them.
+        // AMQ with all of them loads into the same connections as AMQ without them.
         var all = composite.DeepClone();
         all["Execution"] = "Exchange"; all["OnDegraded"] = "StopModule"; all["RestartLimit"] = 0;
         foreach (var port in all["ExternalPorts"]!.AsArray())
             if (port!["Direction"]!.GetValue<string>() == "Input") { port["Depth"] = 16; port["Overflow"] = "Block"; port["AcceptedTransports"] = new JsonArray("Controller"); }
             else port["Transport"] = "Controller";
-        Assert.Equal(MadConnections(composite), MadConnections(all));
+        Assert.Equal(CompositeConnections(composite), CompositeConnections(all));
     }
 
     private static HashSet<string> Validate(AimMetadataSchema schema, JsonNode aim) =>
         schema.Violations(aim.ToJsonString()).ToHashSet();
 
-    // The connections the Controller builds for 1MMC-MAD-V2.5-I01 from this text of
+    // The connections the Controller builds for 1MMC-AMQ-V2.5-I01 from this text of
     // its L3, the other L3s being those of the repository.
-    private static List<string> MadConnections(JsonNode mad) =>
-        MadConnections(new Dictionary<string, JsonNode> { ["1MMC-MAD-V2.5-I01"] = mad });
+    private static List<string> CompositeConnections(JsonNode amq) =>
+        CompositeConnections(new Dictionary<string, JsonNode> { ["1MMC-AMQ-V2.5-I01"] = amq });
 
-    // The connections the Controller builds for 1MMC-MAD-V2.5-I01 when the L3s named
+    // The connections the Controller builds for 1MMC-AMQ-V2.5-I01 when the L3s named
     // are replaced by the texts given, the others being those of the repository.
-    private static List<string> MadConnections(IReadOnlyDictionary<string, JsonNode> replaced)
+    private static List<string> CompositeConnections(IReadOnlyDictionary<string, JsonNode> replaced)
     {
         var folder = Path.Combine(Path.GetTempPath(), "mpai-l3s-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -427,7 +466,7 @@ public class MetadataTests
             foreach (var (name, text) in replaced) File.WriteAllText(Path.Combine(folder, name + ".json"), text.ToJsonString());
             var store = new AmdStore(folder);
             store.Scan();
-            var graph = new Controller(store).RegisterAim(store.FindByAimName("1MMC-MAD-V2.5-I01")!);
+            var graph = new Controller(store).RegisterAim(store.FindByAimName("1MMC-AMQ-V2.5-I01")!);
             return graph.Connections.Select(c => $"{c.Output} -> {c.Input}").OrderBy(s => s, StringComparer.Ordinal).ToList();
         }
         finally { Directory.Delete(folder, recursive: true); }

@@ -1,0 +1,55 @@
+# =============================================================================
+#  HFE.orch - Health Front End (AIH-HSP V1.1)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module (the Health Front End of one End User), which runs
+#  until Stop. The User Agent of the Front End binds a device to every Port of the
+#  Module's boundary, each to one Port, by Data Type and Port Number:
+#
+#    what the End User gives the Front End -
+#      RegisterIn      the request to register with the Back End. The workflow joins the Back End's service first (the
+#                      Controller is admitted by the Trust Authority the End User decided to trust); the request then goes
+#                      to the Back End, and its answer comes back, between the Controllers
+#      RequestIn       a request to be sent to the Back End (an upload, a processing)
+#      HealthIn        the Health Data the End User acquired
+#      LicenceIn       the Model Licence the End User provides for it
+#
+#    what the Back End gives the Front End -
+#      (the request for the NN Model the Front End trained, and its answer, are External Ports:
+#       the Controller of the Front End and that of the Back End exchange them, signed - no device)
+#
+#    what the Front End gives -
+#      (a request to the Back End, and its answer, are External Ports like the registration: between the Controllers)
+#      RegisterAnswerOut  to the End User: the answer of the Back End to the registration (the Tokens)
+#      ResponseOut     to the End User: the answer to a request (the AIH Data of the Vault, when asked for it)
+#      AraOut          to the End User: the ARA Data - the alert is the ARA Data, which carries the risk
+#
+#  Where the AIH Data is kept (the Secure Data Vault) is the End User's: the User
+#  Agent asks the Controller to keep the storage there. It names no AIM; AIH Data
+#  Processing keeps the AIH Data there through the storage API (there is no Storage AIM).
+#  The Front End talks to the Back End only: never to another Front End.
+# =============================================================================
+
+workflow HFE over 1AIH-HFE-V1.1-I01
+
+on Start:
+
+    type    Vault (OSD-BTO-V1.5)
+    ask Controller to start
+    ask Controller to keep storage in "{Vault}"
+    ask Controller to join "AIH-HBE" role FrontEnd
+
+    stream  RegisterIn        (AIH-REG-V1.1:1) from device "RegisterIn"
+    stream  RequestIn         (AIH-AHP-V1.1:1) from device "RequestIn"
+    stream  HealthIn          (AIH-HLD-V1.1)   from device "HealthIn"
+    stream  LicenceIn         (AIH-MDL-V1.1)   from device "LicenceIn"
+
+    deliver RegisterAnswerOut (AIH-REG-V1.1:2) to device "RegisterAnswerOut"
+    deliver ResponseOut       (AIH-AHP-V1.1:2) to device "ResponseOut"
+    deliver AraOut            (AIH-ARD-V1.1)   to device "AraOut"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

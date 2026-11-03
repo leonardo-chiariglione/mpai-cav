@@ -45,6 +45,7 @@ public sealed class TrustProtocol
     // anchors of the other ends so trusted, by their identifiers.
     private readonly JsonObject? credential;
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, JsonObject> credited = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, JsonObject> credentials = new();
 
     // record: each check of the other end, as a Trust Operation - its type, the type
     // and identifier of what was checked, and why it failed where it did - for the
@@ -194,7 +195,25 @@ public sealed class TrustProtocol
         record?.Invoke("VerifyCredential", "InstanceCredential", (string?)credential["InstanceCredentialID"] ?? "", outcome == PtfCredential.Outcome.Valid ? null : outcome.ToString());
         if (outcome != PtfCredential.Outcome.Valid) { why = $", and its credential is {outcome}"; return null; }
         credited[keyId] = presented;
+        credentials[keyId] = credential;
         return presented;
+    }
+
+    // WHETHER AN ANCHOR ADMITTED EARLIER IS STILL TRUSTED, NOW: its validity and, where it was admitted by a credential, the credential's - trust is not kept from the opening of a link (Zero Trust 2.7: no
+    // caching of trust; Communication 9: a link lasts until the credential expires). Null where it is; otherwise why not.
+    public string? StillTrusted(string keyId)
+    {
+        var anchor = trusted.FirstOrDefault(a => (string?)a["AnchorID"] == keyId) ?? credited.GetValueOrDefault(keyId);
+        if (anchor is null) return $"{keyId} is not an anchor this end trusts";
+        var t = now();
+        if (TrustAnchorKey.ValidityOf(anchor) is not var (notBefore, notAfter) || t < notBefore || t > notAfter) return $"expired: the anchor {keyId} is not valid now";
+        if (credentials.TryGetValue(keyId, out var credential))
+        {
+            var outcome = PtfCredential.CheckCredential(credential, anchor,
+                id => trusted.FirstOrDefault(a => (string?)a["AnchorID"] == id) is { } issuer ? TrustAnchorKey.KeyOf(issuer) : null, t);
+            if (outcome != PtfCredential.Outcome.Valid) return $"expired: the credential of {keyId} is {outcome}";
+        }
+        return null;
     }
 
     private JsonObject Time() => new()

@@ -1,0 +1,45 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/JSONInterface.json",
+  "title":                "JSON Interface V2.5",
+  "Header":               "MMC-JSI-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "JSON Interface: between what a person says, as text, and an application that is driven by JSON instances. It is the same for every application: the application is given to it as the schema of its commands, the schema of its responses and the rest of what describes the application (CommandSchema, ResponseSchema and ApplicationContext, the AccessSources of its L3): the Application Context (MMC-APC), the standing description of the application, which the AIM may also receive on its Application Context Port: when it does, that replaces what it read from Access. Request to command: a request in words, with what the AIM remembers of the state of the application and of the commands it sent, becomes a command that conforms to the command schema, checked against it before it leaves; a request that is not for the application, or that does not become a valid command, gives no command. Response to Response Hint: a response of the application, which conforms to the response schema and names the command it answers, becomes, from the descriptions in the schema, the Response Hint: a Text Object that tells what the application did and with which values, or what it did not do and why, or why no command was formed. A Response Hint is given for every request. The AIM does not decide what is said to the person: the Response Hint goes to the dialogue AIM.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "Request", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationResponse", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationContext", "Direction": "Input", "DataType": "MMC-APC-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ApplicationCommand", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ResponseHint", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "AccessSources":        [{"Name": "CommandSchema", "Uri": "/* URI of the schema of the commands of the application */", "Sha256": "/* SHA-256 */", "Setting": "CommandSchema", "Description": "The schema that a command conforms to; its descriptions are what tells the AIM what each field means."},
+                           {"Name": "ResponseSchema", "Uri": "/* URI of the schema of the responses of the application */", "Sha256": "/* SHA-256 */", "Setting": "ResponseSchema", "Description": "The schema that a response conforms to."},
+                           {"Name": "ApplicationContext", "Uri": "/* URI of the Application Context of the application */", "Sha256": "/* SHA-256 */", "Setting": "ApplicationContext", "Description": "What the two schemas do not say about the application, as data: the frame and the units the numbers of a command are in, which parts of the command schema a person's words can use, the names the application has, how its state is told, the words of its responses, and examples of requests with the commands they come to. The AIM knows no application: this entry, with the two schemas, is the application."},
+                           {"Name": "llm-weights", "Uri": "/* URI of the weights of the language model */", "Sha256": "/* SHA-256 */", "IsOptional": true, "Description": "The weights of the language model that understands the request."},
+                           {"Name": "llm-template", "Uri": "/* URI of the chat template */", "Sha256": "/* SHA-256 */", "IsOptional": true, "Description": "The chat template of the model."},
+                           {"Name": "llm-parameters", "Uri": "/* URI of the default parameters */", "Sha256": "/* SHA-256 */", "IsOptional": true, "Description": "The default parameters of the model."}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/json-interface/"}]}

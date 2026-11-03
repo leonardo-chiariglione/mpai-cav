@@ -1,0 +1,9 @@
+{
+  "an AIM reads": "Get greeting: OK ciao; Get farewell: NotFound; List: greeting; Version: 3; Version of a Source not there: -1",
+  "an AIM that declares nothing reads": "Get greeting: NotAuthorised ; Get farewell: NotFound; List: ; Version: 3; Version of a Source not there: -1",
+  "it deletes one": "OK; Version 3",
+  "it deletes one not there": "NotFound",
+  "it puts another": "OK; Version 2",
+  "the Controller creates a Source": "OK",
+  "the Controller puts an item": "OK; Version 1"
+}

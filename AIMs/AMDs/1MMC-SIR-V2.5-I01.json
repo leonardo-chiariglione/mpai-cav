@@ -6,13 +6,16 @@
 
   "InternalTypes":    [],
 
-  "ExternalPorts":    [{"Name": "BasicSpeechObject",          "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":    [{"Name": "BasicSpeechObject",          "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AudioSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BAS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "SpeakerID",             "Direction": "Output", "DataType": "OSD-IID-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":          [],
 
   "Topology":         [],
+
+  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx/resolve/main/ecapa-tdnn.onnx", "Sha256": "38FDFC7D2BC9E2925349BAAB9639FCAF4B4C755BE83EE7D616B6E3FBC9D5EAB3", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx", "PersonalData": false}, "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings)."},
+                      {"Name": "reference-voices", "Uri": "https://raw.githubusercontent.com/leonardo-chiariglione/mpai-cav/main/AIMs/MMC/V2.5/SIR/Data/reference-voices.features", "Sha256": "64FF8B125FB035E2DA92B19B06ACBC55B63C69CDD9FDAA85C16AA15EE5DD642B", "ValidWith": ["38FDFC7D2BC9E2925349BAAB9639FCAF4B4C755BE83EE7D616B6E3FBC9D5EAB3"], "IsOptional": true, "Terms": {"Licence": "CC-BY-4.0", "Uri": "https://www.openslr.org/12/", "PersonalData": true}, "Description": "The voice features of 40 known speakers (LibriSpeech), one 192-value ECAPA vector per speaker, against which a voice is also matched; the people enrolled by ACR are in Shared Storage."}],
 
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/SIR",
                         "MASPort":           443,

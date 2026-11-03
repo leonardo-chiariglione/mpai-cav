@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required":             [ "Header", "Identifier", "APIProfile", "Description", "ExternalPorts", "Implementations" ],
 
-  "$comment":             "An AIM is Basic or Composite. SubAIMs and Topology are required together and only for a Composite AIM (see dependentRequired). A Port is addressed by its Data Type and, where an AIM has more than one Port of the same Direction and Data Type, by a PortNumber; names are labels for people and are never used for addressing. Constrained fields admit a /* ... */ placeholder so that one file serves as both Implementer template and validated instance; AIMMetadata-strict.json disables placeholders through the 'placeholder' dynamic anchor.",
+  "$comment":             "An AIM is Basic or Composite. SubAIMs and Topology are required together and only for a Composite AIM (see dependentRequired). A Port is addressed by its Data Type and, where an AIM has more than one Port of the same Direction and Data Type, by a PortNumber; names are labels for people and are never used for addressing. Constrained fields admit a /* ... */ placeholder so that one file serves as both Implementer template and validated instance.",
 
   "properties":           {
 
@@ -15,7 +15,7 @@
     "title":              { "type": "string" },
 
     "Header":             { "$ref": "#/$defs/MPAIIdentifier",
-                            "description": "The AIM Type this Metadata describes, in STANDARD-TYPE-Vn.m form, e.g. MMC-MAD-V2.5. In an L2 it is the L2's own AIM Type; in an L3 it is the AIM Type of the L2 the L3 implements, and names the L2 the L3 is checked against." },
+                            "description": "The AIM Type this Metadata describes, in STANDARD-TYPE-Vn.m form, e.g. MMC-AMQ-V2.5. In an L2 it is the L2's own AIM Type; in an L3 it is the AIM Type of the L2 the L3 implements, and names the L2 the L3 is checked against." },
 
     "Identifier":         { "$ref": "#/$defs/Identifier" },
 
@@ -29,8 +29,9 @@
     "OnDegraded":         { "description": "What this Composite AIM does when one of its AIMs fails: StopModule - the run ends and the Module is stopped; StopAIM - that AIM is stopped and the others go on without it; Continue - the others run on what they have, and that AIM runs again at the next exchange. Omitted means StopModule.",
                             "anyOf": [ { "enum": [ "StopModule", "StopAIM", "Continue" ] }, { "$dynamicRef": "#placeholder" } ] },
 
-    "StorageControl": {"description": "The AIM Instance of a Sub-AIM of this Composite AIM that holds the central control of its Private Storage: it sets, for each category, who may write, who may read and the longest time, and reads every datum; a writer may restrict these for its datum, never extend them. Omitted means no central control: each writer sets the rules of the data it writes.", "anyOf": [{"$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMInstanceIdentifier"}, {"$dynamicRef": "#placeholder"}]},
-    "Record": {"description": "Always: the Controller records what crosses the boundary of this Composite AIM from its Start to its Stop, into its Private Storage, whatever the User Agent does. Omitted means the User Agent decides.", "anyOf": [{"enum": ["Always"]}, {"$dynamicRef": "#placeholder"}]},
+    "StorageControl":     {"description": "The AIM Instance of a Sub-AIM of this Composite AIM that holds the central control of its Private Storage: it sets, for each category, who may write, who may read and the longest time, and reads every datum; a writer may restrict these for its datum, never extend them. Omitted means no central control: each writer sets the rules of the data it writes.", 
+                            "anyOf": [{"$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMInstanceIdentifier"}, {"$dynamicRef": "#placeholder"}]},
+    "Record":             {"description": "Always: the Controller records what crosses the boundary of this Composite AIM from its Start to its Stop, into its Private Storage, whatever the User Agent does. Omitted means the User Agent decides.", "anyOf": [{"enum": ["Always"]}, {"$dynamicRef": "#placeholder"}]},
     "RestartLimit":       { "description": "How many times the Controller restarts this AIM when it throws before leaving it DEAD. Omitted means 0.",
                             "anyOf": [ { "type": "integer", "minimum": 0 }, { "$dynamicRef": "#placeholder" } ] },
 
@@ -39,6 +40,11 @@
 
     "Deadline":           { "description": "The time, in milliseconds, within which a run of this AIM completes. A missed Deadline is counted and reported; one missed on three consecutive runs makes the AIM DEGRADED. Omitted where the AIM has no Deadline.",
                             "anyOf": [ { "type": "number", "exclusiveMinimum": 0 }, { "$dynamicRef": "#placeholder" } ] },
+
+    "AIMLicence":         { "anyOf": [ { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMLicence.json",
+                                         "not": { "anyOf": [ { "required": [ "Licensee" ] }, { "required": [ "ParentLicence" ] }, { "required": [ "Signature" ] } ] } },
+                                       { "$dynamicRef": "#placeholder" } ],
+                            "description": "The licence the Implementer offers for this AIM, as an AIM Licence (AIF-LIC): Licensor, Grant, Term (Duration), Updates, the price (Payment.Value) and TermsURI, where its terms are published in the MPAI Store. An offer has no Licensee and no Signature: this Metadata is published once, for everybody, and never overwritten. The AIM Licence a Controller obtains with the AIM is this offer completed for it, signed by the MPAI Store, and kept in its AIM repository. Omitted means the AIM needs no AIM Licence. In an L2 it is a /* ... */ placeholder: the Implementer fills it, or removes it. A Composite AIM's AIM Licence covers its Sub-AIMs only if Grant.SubAIMs names them." },
 
     "InternalTypes":      { "type": "array", "description": "The Data Types used inside a Composite AIM by its SubAIMs, as distinct from those crossing the ExternalPorts.",
                             "items": { "type": "object", "additionalProperties": false,
@@ -52,6 +58,7 @@
     "SubAIMs":            { "type": "array", "description": "Present only for a Composite AIM.",
                             "items": { "type": "object", "additionalProperties": false,
                             "required": [ "Identifier" ], "properties": {
+      "Header":           { "$ref": "#/$defs/MPAIIdentifier", "description": "The AIM Type of the SubAIM (e.g. MMC-AMQ-V2.5). In an L2, which is the standard and is not executed, it is what the Topology refers to; in an L3 it equals the Header of the L3 of the SubAIM." },
       "Identifier":       { "$ref": "#/$defs/Identifier" },
       "AIMNumber":        { "type": "integer", "minimum": 1, "description": "1-based ordinal distinguishing SubAIMs that share an AIMName; omitted when the AIMName occurs once (implicitly 1). Referenced by PortID.AIMNumber." } } } },
 
@@ -92,6 +99,48 @@
       "Type":             { "anyOf": [ { "enum": [ "Specification", "Manual", "Tutorial", "Video" ] }, { "$dynamicRef": "#placeholder" } ] },
       "URI":              { "anyOf": [ { "type": "string", "format": "uri" }, { "$dynamicRef": "#placeholder" } ] } } } },
 
+    "AccessSources":      { "type": "array",
+                            "description": "The Access this AIM reads (AIF Access, Storage 6): data identified by the URI it is obtained from, as it was published - a file, or a set of files under a URI that ends in a slash - and pinned by its SHA-256, which is the identity of the data. MPAI does not classify the data: what is inside is the AIM's own business. The Controller obtains each entry (from Uri, or from a Mirror) and checks it against its SHA-256, refuses a Module in which an entry not marked IsOptional cannot be obtained, and gives the AIM what its entries name, and the Keys KeyPrefixes allows, only; a read of anything else is refused with NOT_AUTHORISED. Omitted: the AIM reads no Access.",
+                            "items": { "type": "object", "additionalProperties": false, "required": [ "Name", "Uri", "Sha256" ],
+                            "if":   { "properties": { "Uri": { "not": { "pattern": "^ *[/][*]" } } } },
+                            "then": { "required": [ "Terms" ] },
+                            "properties": {
+      "Name":             { "type": "string", "minLength": 1, "description": "The name by which the AIM asks for the data (MPAI_AIFM_Access_Sources); unique among the entries of the AIM that are for the same environment." },
+      "Uri":              { "description": "Where the data is obtained from: an http, https or file URI. A file: the URI of the file, whose Key is its name. A set of files: a URI that ends in a slash, under which a manifest (manifest.json) lists the Keys of the set with the SHA-256 of each file.",
+                            "anyOf": [ { "type": "string", "format": "uri" }, { "$dynamicRef": "#placeholder" } ] },
+      "Sha256":           { "description": "The SHA-256 of the file, or of the manifest of the set. What is obtained and does not match is refused.",
+                            "anyOf": [ { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" }, { "$dynamicRef": "#placeholder" } ] },
+      "Mirrors":          { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "format": "uri" },
+                            "description": "Other places holding the same bytes, tried in order after Uri when it cannot be obtained. The SHA-256 is the identity of the data: what is obtained from any location and does not match is refused. Of the same kind as Uri (a set's end in a slash)." },
+      "ValidWith":        { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+                            "description": "The SHA-256 of other entries of this AIM that this data is only meaningful with - a database of features and the model that computed them. The Module is refused where one of them is not declared or, if this entry is not optional, cannot be obtained; an optional entry whose partner is missing is not given to the AIM." },
+      "Setting":          { "type": "string", "minLength": 1,
+                            "description": "For an Implementation that runs a program which reads files - a speech engine, a runtime - the name of the setting of the Implementation that is given the file where Access keeps this data, so that the program reads it where it is; the data is read through the Access of the AIM, under the rules of the datum." },
+      "AsFile":           { "type": "string", "minLength": 1,
+                            "description": "The name the file has where it is given to a program: the files of the entries of an AIM Instance that name one are together in one folder, so that a model whose parts refer to one another by file name - an ONNX model and its external data - finds them. Unique among the entries of the AIM." },
+      "Member":           { "type": "string", "minLength": 1,
+                            "description": "Where Uri locates an archive (a zip) and not the data itself: the file of the archive that is the data. Sha256 is then that of the file, which is what the AIM reads; the archive is only where it is found, so that several entries may name the same archive. Not for a set of files." },
+      "Unpack":           { "description": "True where Uri locates an archive (a zip) of a program - an executable with the libraries and data it needs beside it - and not a file the AIM reads: Sha256 is that of the archive, which the Controller unpacks, once, into a folder, and gives the Implementation the file Inside names.",
+                            "anyOf": [ { "type": "boolean" }, { "$dynamicRef": "#placeholder" } ] },
+      "Inside":           { "type": "string", "minLength": 1,
+                            "description": "With Unpack: the path, inside the unpacked archive, of the file the Setting is given, e.g. piper/piper.exe." },
+      "KeyPrefixes":      { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" },
+                            "description": "The Keys, or Key prefixes, of the set that the AIM reads. Omitted: all." },
+      "OperatingSystem":  { "description": "The operating system this entry is for, as in Implementations. Omitted: for every operating system. An entry for another one than the one the AIM executes in is neither obtained nor given to the AIM; a program of Access has one entry for each environment, with the same Name and Setting.",
+                            "anyOf": [ { "enum": [ "Windows", "Linux", "MacOS", "Debian", "Ubuntu", "RedHat", "Android", "Zephyr", "RTOS", "Oniro", "iOS" ] }, { "$dynamicRef": "#placeholder" } ] },
+      "Architecture":     { "description": "The architecture of the processor this entry is for, as in Implementations. Omitted: for every architecture.",
+                            "anyOf": [ { "enum": [ "x86", "x86-64", "ARM", "ARM64", "MIPS", "RISC-V" ] }, { "$dynamicRef": "#placeholder" } ] },
+      "IsOptional":       { "description": "True where the Module can load and the AIM can run without the data; omitted means required (implicitly false).",
+                            "anyOf": [ { "type": "boolean" }, { "$dynamicRef": "#placeholder" } ] },
+      "Terms":            { "type": "object", "additionalProperties": false,
+                            "required": [ "Licence", "Uri" ],
+                            "description": "The terms of use of the data: required where the entry states the data it names (a Uri that is not a placeholder), so that whoever deploys the Module can see them and the code that uses the data can point to them. Informational: the Controller does not enforce them.",
+                            "properties": {
+        "Licence":        { "type": "string", "description": "Name of the licence or terms under which the data is published (an SPDX identifier where there is one)." },
+        "Uri":            { "type": "string", "format": "uri", "description": "Where those terms are stated." },
+        "PersonalData":   { "type": "boolean", "description": "True where the data describes persons." } } },
+      "Description":      { "type": "string", "description": "What the data is and what the AIM uses it for: a label for people." } } } },
+
     "DataXMData":         { "description": "Declares that the AIM exchanges Data accompanied by Data Exchange Metadata. The empty object is the normal form in AIM Metadata: DataExchangeMetadata requires DataID and Source, which are run-time facts and cannot be known when an AIM is described. A full DEM instance is accepted for the case where one is genuinely available.",
                             "anyOf": [ { "type": "object", "maxProperties": 0 },
                                        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" } ],
@@ -107,33 +156,30 @@
   "$defs":                {
     "Relation":           { "description": "Deployment relationship of a SubAIM to the machine provisioned for the AIM Instance described by THIS AIM Metadata schema instance. Each admissible value is defined individually below.",
                             "oneOf": [
-      { "const": "Internal", "title": "Internal",
-        "description": "The AIM is installed and operated within the machine that would naturally be provisioned for the AIM Instance described by this AIM Metadata schema instance." },
-      { "const": "External", "title": "External",
-        "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for the sole usage of the AIM Instance described by this AIM Metadata schema instance." },
-      { "const": "Private", "title": "Private",
-        "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances deployed for the same provisioning account. In this case, the value of the Host Property must identify the private service instance." },
-      { "const": "Public", "title": "Public",
-        "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances irrespective of their provisioning account. In this case, the value of the Host Property must identify the public service instance." },
-      { "const": "Packaged", "title": "Packaged",
-        "description": "The AIM is contained in the implementation of the AIM described by this AIM Metadata schema instance - one binary - and runs within it. The Controller does not instantiate it and does not connect it: the package does. Where a SubAIM is Packaged, all SubAIMs are, and the Topology, if any, describes the package and is not executed by the Controller. Under Zero Trust, the package presents each AIM it contains - its identity and a credential it issues it - for verification." }
+                          { "const": "Internal", "title": "Internal",
+                            "description": "The AIM is installed and operated within the machine that would naturally be provisioned for the AIM Instance described by this AIM Metadata schema instance." },
+                          { "const": "External", "title": "External",
+                            "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for the sole usage of the AIM Instance described by this AIM Metadata schema instance." },
+                          { "const": "Private", "title": "Private",
+                            "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances deployed for the same provisioning account. In this case, the value of the Host Property must identify the private service instance." },
+                          { "const": "Public", "title": "Public",
+                            "description": "The AIM is installed and operated within its own machine provisioned for the AIM Instance described by its own AIM Metadata schema instance, for usage by AIM Instances irrespective of their provisioning account. In this case, the value of the Host Property must identify the public service instance." },
+                          { "const": "Packaged", "title": "Packaged",
+                            "description": "The AIM is contained in the implementation of the AIM described by this AIM Metadata schema instance - one binary - and runs within it. The Controller does not instantiate it and does not connect it: the package does. Where a SubAIM is Packaged, all SubAIMs are, and the Topology, if any, describes the package and is not executed by the Controller. Under Zero Trust, the package presents each AIM it contains - its identity and a credential it issues it - for verification." }
                             ] },
 
 
     "Placeholder":        { "$dynamicAnchor": "placeholder",
-                            "$comment": "An unfilled template value of the form /* ... */. Every constrained field admits this as an alternative branch. AIMMetadata-strict.json redefines this anchor as false, so the same AIM file validates strictly once an Implementer has filled it in.",
+                            "$comment": "An unfilled template value of the form /* ... */. Every constrained field admits this as an alternative branch.",
                             "type": "string", "pattern": "^/\\*.*\\*/$" },
 
     "MPAIIdentifier":     { "type": "string", "pattern": "^[A-Z0-9]{3}-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$",
                             "description": "The MPAI three-three-version identifier, e.g. OSD-SPO-V1.5." },
 
-    "Identifier":         { "type": "object", "$anchor": "identifier", "additionalProperties": false,
-                            "required": [ "ImplementerID", "ImplementationID", "AIMName" ], "properties": {
+    "Identifier":         { "type": "object", "$anchor": "identifier", "additionalProperties": false, "required": [ "ImplementerID", "ImplementationID", "AIMName" ], "properties": {
       "ImplementerID":    { "type": "string", "description": "String assigned by IIDRA" },
       "ImplementationID": { "type": "string", "description": "String assigned by Implementer" },
-      "AIMName":          { "description": "An AIM Instance (AIF-AMI): in an L2 its AIM Type (MMC-MAD-V2.5), in an L3 its AIM Instance identifier (1MMC-MAD-V2.5-I01).",
-                            "anyOf": [ { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMType" },
-                                       { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/AIMInstance.json#/$defs/AIMInstanceIdentifier" } ] },
+      "AIMName":          { "type": "string", "description": "The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them." },
       "Relation":         { "description": "How the SubAIM is deployed relative to the machine provisioned for the AIM Instance described by THIS AIM Metadata schema instance. Empty in an L2 instance means the default Internal, to be fixed at L3. See $defs/Relation for the individual definitions.",
                             "anyOf": [ { "$ref": "#/$defs/Relation" }, { "const": "" }, { "$dynamicRef": "#placeholder" } ] },
       "Host":             { "type": "string", "description": "Service instance address; REQUIRED when Relation is Private or Public, otherwise omitted." } } },
@@ -145,12 +191,12 @@
     "PortType":           { "description": "What a Port carries: an MPAI Data Type, or a type of the type system of AIF V3.0 (Metadata, 1.1).",
                             "anyOf": [ { "$ref": "#/$defs/MPAIIdentifier" }, { "$ref": "#/$defs/AIFType" } ] },
 
-    "AIFType":            { "type": "string", "description": "A type of the type system of AIF V3.0 (Metadata, 1.1): a base type - int8, int16, int32, int64, uint8 or byte, uint16, uint32, uint64, float32, float64, boolean (one byte, 0 or 1), string (UTF-8 text) - or a struct or variant in braces, each optionally an array ([]).",
-                            "pattern": "^((int8|int16|int32|int64|uint8|byte|uint16|uint32|uint64|float32|float64|boolean|string)|\\{.+\\})(\\[\\])*$" },
+    "AIFType":            { "type": "string", "description": "A type of the type system of AIF V3.0 (Metadata, 1.1): a base type - int8, int16, int32, int64, uint8 or byte, uint16, uint32, uint64, float32, float64, number (an alias of float64: a JSON number), boolean (one byte, 0 or 1), string (UTF-8 text) - or a struct or variant in braces, each optionally an array ([]).",
+                            "pattern": "^((int8|int16|int32|int64|uint8|byte|uint16|uint32|uint64|float32|float64|number|boolean|string)|\\{.+\\})(\\[\\])*$" },
 
     "GroupNumber":        { "anyOf": [ { "type": "integer", "minimum": 1 }, { "$dynamicRef": "#placeholder" } ] },
 
-    "Transport":          { "description": "A transport of M3205 3.6.2: Controller (Messages relayed by the Controller), InProcess, PointToPoint, Remote, Bus, External.",
+    "Transport":          { "description": "A transport of Controller (Messages relayed by the Controller), InProcess, PointToPoint, Remote, Bus, External.",
                             "anyOf": [ { "enum": [ "Controller", "InProcess", "PointToPoint", "Remote", "Bus", "External" ] }, { "$dynamicRef": "#placeholder" } ] },
 
     "PortOptions":        { "type": "object", "additionalProperties": false,

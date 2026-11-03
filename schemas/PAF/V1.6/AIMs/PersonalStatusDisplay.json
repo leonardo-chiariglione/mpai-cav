@@ -3,7 +3,7 @@
   "$id":                  "https://schemas.mpai.community/PAF/V1.6/AIMs/PersonalStatusDisplay.json",
   "title":                "Personal Status Display V1.6",
 
-  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PSD-V1.6"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":               "PAF-PSD-V1.6",
 
   "APIProfile":           "Basic",
@@ -18,11 +18,11 @@
                           {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":              [{"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-PDX-V2.5", "Relation": ""}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TTS-V2.5", "Relation": ""}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-GFD-V1.6", "Relation": ""}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-GBD-V1.6", "Relation": ""}},
-                          {"Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-PMX-V1.6", "Relation": ""}}],
+  "SubAIMs":              [{"Header": "MMC-PDX-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                          {"Header": "MMC-TTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                          {"Header": "PAF-GFD-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                          {"Header": "PAF-GBD-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                          {"Header": "PAF-PMX-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}}],
 
   "Topology":             [{"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}},
                           {"Output": {"AIMName": "", "DataType": "AIP-MLO-V1.0"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "AIP-MLO-V1.0"}},
@@ -40,6 +40,8 @@
                           {"Output": {"AIMName": "PAF-GBD-V1.6", "DataType": "PAF-BDO-V1.6"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-BDO-V1.6"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-B3O-V1.5"}},
                           {"Output": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":      [{"ImplementationURI": "/* absolute URI locating the Implementation */", "BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "MASPort": 443, "Firewall": [{"Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0"}], "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
   "ResourcePolicies":     [{"Name": "Memory", "Minimum": "/* GB */", "Maximum": "/* GB */", "Request": "/* GB */"},

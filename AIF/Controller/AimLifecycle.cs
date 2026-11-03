@@ -14,6 +14,15 @@ public enum AimStatus
 // in the Module's last run.
 public sealed record AimReport(string Aim, AimStatus Status, string Reason, IReadOnlyList<string> Reports);
 
+// The state of a running Module in the Basic API: Running, or Suspended after
+// MPAI_AIFU_MODULE_Pause and until MPAI_AIFU_MODULE_Resume. (A Module that has been
+// stopped is no longer there to be asked: its Status is NotStarted.)
+public enum ModuleState
+{
+    Running,
+    Suspended
+}
+
 // The four states of an AIM's lifecycle, as its host drives it.
 public enum AimState
 {
@@ -194,10 +203,28 @@ public readonly struct AimContext
         return _access?.Get(source, key, out data) ?? AccessOutcome.NotFound;
     }
 
+    // The same as a stream: a model or a database of a size that is not to be held in memory is read from where it is kept.
+    public AccessOutcome MPAI_AIFM_Access_Open(string source, string key, out Stream stream)
+    {
+        stream = Stream.Null;
+        return _access?.Open(source, key, out stream) ?? AccessOutcome.NotFound;
+    }
+
+    // The item as a file, for a program that reads files; to be read and not written.
+    public AccessOutcome MPAI_AIFM_Access_Path(string source, string key, out string path)
+    {
+        path = "";
+        return _access?.LocalPath(source, key, out path) ?? AccessOutcome.NotFound;
+    }
+
     public IReadOnlyList<string> MPAI_AIFM_Access_List(string source, string prefix = "") =>
         _access?.List(source, prefix) ?? [];
 
     public long MPAI_AIFM_Access_Version(string source) => _access?.Version(source) ?? -1;
+
+    // The Sources (URIs) that this AIM declared under a Name in its Metadata (AccessSources): the AIM asks for the data by the
+    // name it gave it, and is told where it is. An empty name gives all of them.
+    public IReadOnlyList<string> MPAI_AIFM_Access_Sources(string name) => _access?.SourcesOf(name) ?? [];
 
     // Convenience: await this to honour both Pause and Stop.
     // Call repeatedly at natural yield points inside ProcessAsync.

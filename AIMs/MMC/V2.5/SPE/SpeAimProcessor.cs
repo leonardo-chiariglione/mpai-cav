@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +46,7 @@ public sealed class SpeAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Basic Speech Object on input port"));
 
-        var speech = MpaiJson.FromJson<BasicSpeechObject>(bsoJson);
+        var speech = SpeechInputs.Basic(bsoJson);
         if (speech is null || speech.Data.Length == 0)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "empty Basic Speech Object"));

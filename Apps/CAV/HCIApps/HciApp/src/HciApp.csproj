@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HciApp</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <DefineConstants>$(DefineConstants);WINDOWS_DEVICES</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Framework + Controller API + UA kit -->
+    <ProjectReference Include="..\..\..\..\..\AIMs\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\UaKit\Mpai.UaKit.csproj" />
+    <ProjectReference Include="..\..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <!-- the Controller API of a Controller that is a program of its own (HciController) -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\Remote\Mpai.Mas.Client.csproj" />
+    <!-- Scene front-end -->
+    <!-- Recognisers -->
+    <!-- Dialogue + rendering -->
+    <!-- the devices: the Units of the User Agent's Physical Layer -->
+    <ProjectReference Include="..\..\..\..\..\AIF\UserAgent\PhysicalLayer\Mpai.PhysicalLayer.csproj" />
+    <!-- HciProvider (18 leaves) compiled into the app -->
+  </ItemGroup>
+</Project>

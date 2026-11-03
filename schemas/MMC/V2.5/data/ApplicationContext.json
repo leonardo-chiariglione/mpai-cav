@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMC/V2.5/data/ApplicationContext.json",
+  "title": "Application Context V2.5",
+  "description": "The Application Context (MMC-APC) of an application served by JSON Interface (MMC-JSI): the standing description of the application. JSON Interface obtains it from the Access of its implementation (Settings CommandSchema, ResponseSchema and ApplicationContext), or receives it on its Application Context Port; this Data Type is the whole of it. CommandSchema and ResponseSchema are the addresses of the schemas of the commands and of the responses of the application; the other members are the structure that says what those two schemas do not. A path is a dotted path from the name of a command or response, through its properties, to the property or object it designates (for example UserCommandRQ.MovedObjects.Objects.ObjectID). Only Header is required: every other member is a help that an implementation of JSON Interface may use.",
+  "type": "object",
+  "required": ["Header"],
+  "additionalProperties": false,
+  "$defs": {
+    "Path": { "type": "string", "minLength": 1, "description": "A dotted path in the command or response schema." },
+    "Paths": { "type": "array", "items": { "$ref": "#/$defs/Path" }, "description": "A list of paths." },
+    "WordList": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "description": "Words or phrases, in lower case, that are looked for in a request." },
+    "Command": { "type": "object", "description": "A command, an instance of the CommandSchema." } },
+  "properties": {
+    "Header": { "const": "MMC-APC-V2.5", "description": "Identifies the structure." },
+    "CommandSchema": { "type": "string", "format": "uri", "description": "The address of the schema that a command of the application conforms to." },
+    "ResponseSchema": { "type": "string", "format": "uri", "description": "The address of the schema that a response of the application conforms to." },
+    "Description": { "type": "string", "description": "Says which application the Application Context is for and where it is kept in the Access of the implementation." },
+    "Application": { "type": "string", "description": "What the application is and does, in words, given to the language model." },
+    "Conventions": { "type": "string", "description": "What the schemas do not say and the commands rely on: units, axes, orientations, which field a verb is for, how a change by an amount is made, other words for an object." },
+    "Include": { "$ref": "#/$defs/Paths", "description": "The paths of the command schema that the request is allowed to fill. Everything else is left out of the schema given to the model, to make it small." },
+    "Require": { "$ref": "#/$defs/Paths", "description": "Paths that are required in the schema given to the model, though the command schema does not require them." },
+    "Drop": { "$ref": "#/$defs/Paths", "description": "Paths removed from the schema given to the model." },
+    "Skip": { "type": "array", "items": { "type": "string" }, "description": "Names of properties that are not shown in the descriptions of the response, because they carry no meaning for the person." },
+    "Generated": { "type": "array", "items": { "type": "string" }, "description": "Names of properties that the AIM gives a value to after the model has answered (identifiers, times): the model is not asked for them." },
+    "Fill": { "type": "object", "description": "Values the AIM sets in a command: a path, or a property name, and the value; {id} is a new identifier and {now} the time.", "additionalProperties": true },
+    "Names": {
+      "type": "array",
+      "description": "Paths whose value is the name of an object, and the set of names that the value is taken from.",
+      "items": {
+        "type": "object",
+        "required": ["Path", "Set"],
+        "additionalProperties": false,
+        "properties": {
+          "Path": { "$ref": "#/$defs/Path" },
+          "Set": { "enum": ["Members", "Present", "Stored", "Kept"], "description": "Members: the objects of the open scene; Present: the open scene and its objects; Stored: the objects kept and not yet used; Kept: everything the application keeps, scenes and objects." } } } },
+    "NeedsObject": {
+      "type": "object",
+      "description": "Requests that act on an object and name none are not turned into a command: the person is asked.",
+      "additionalProperties": false,
+      "properties": {
+        "Paths": { "$ref": "#/$defs/Paths", "description": "The commands that need an object." },
+        "Question": { "type": "string", "description": "What is asked." },
+        "Names": { "type": "string", "description": "The sentence that lists the names, with {0} for the list." },
+        "Synonyms": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Another word and the name it stands for." },
+        "Unless": { "$ref": "#/$defs/Paths", "description": "Commands that do not need an object." },
+        "Anything": { "$ref": "#/$defs/WordList", "description": "Words that stand for the whole scene." } } },
+    "NeedsNumber": {
+      "type": "object",
+      "description": "Requests that say an amount without a number are not turned into a command: the person is asked.",
+      "additionalProperties": false,
+      "properties": {
+        "Phrases": { "$ref": "#/$defs/WordList", "description": "Phrases that call for an amount." },
+        "NumberWords": { "$ref": "#/$defs/WordList", "description": "Words that give the amount." },
+        "Question": { "type": "string", "description": "What is asked." } } },
+    "Refusals": {
+      "type": "array",
+      "description": "Requests that are not for the application.",
+      "items": {
+        "type": "object",
+        "required": ["Words", "Problem"],
+        "additionalProperties": false,
+        "properties": {
+          "Words": { "$ref": "#/$defs/WordList" },
+          "Problem": { "type": "string", "description": "What the AIM says when the request has one of the words." } } } },
+    "Triggers": {
+      "type": "array",
+      "description": "Paths of the command schema kept, for a request, only when it has one of the words.",
+      "items": {
+        "type": "object",
+        "required": ["Path", "Words"],
+        "additionalProperties": false,
+        "properties": { "Path": { "$ref": "#/$defs/Path" }, "Words": { "$ref": "#/$defs/WordList" } } } },
+    "Hints": {
+      "type": "array",
+      "description": "A sentence added to the request when it has one of the words.",
+      "items": {
+        "type": "object",
+        "required": ["Words", "Text"],
+        "additionalProperties": false,
+        "properties": { "Words": { "$ref": "#/$defs/WordList" }, "Text": { "type": "string" } } } },
+    "Shortcuts": {
+      "type": "array",
+      "description": "Requests that are answered with a fixed command, without the model.",
+      "items": {
+        "type": "object",
+        "required": ["Phrases", "Command"],
+        "additionalProperties": false,
+        "properties": { "Phrases": { "$ref": "#/$defs/WordList" }, "Command": { "$ref": "#/$defs/Command" } } } },
+    "StateRequests": { "type": "array", "items": { "$ref": "#/$defs/Command" }, "description": "The commands that ask the application for its state, sent when the AIM does not know it." },
+    "Context": {
+      "type": "object",
+      "description": "How the state of the application is read from a response and told to the model.",
+      "additionalProperties": false,
+      "properties": {
+        "Items": { "$ref": "#/$defs/Path", "description": "The path of the list of things in the response." },
+        "Name": { "type": "string", "description": "The property that names an item." },
+        "Kind": { "type": "string", "description": "The property that says what an item is." },
+        "SceneKinds": { "type": "array", "items": { "type": "string" }, "description": "The kinds that are scenes." },
+        "Members": { "type": "string", "description": "The property that counts the members of a scene." },
+        "MemberName": { "type": "string", "description": "The property that names a member." },
+        "MemberNames": { "type": "string", "description": "The property that lists the names of the members of a scene." },
+        "Describe": {
+          "type": "array",
+          "description": "Values of an item that are told to the model.",
+          "items": { "type": "object", "required": ["Label", "Path"], "additionalProperties": false, "properties": {
+            "Label": { "type": "string" }, "Path": { "type": "string" },
+            "Words": { "$ref": "#/$defs/WordList", "description": "The words that ask for this value in a question about an item (\"what is the duration of clip777?\"): the question is answered with the value, told by its Label." },
+            "Unit": { "type": "string", "description": "The unit the value is told in (\"s\", \"m\", \"LUFS\")." } } } },
+        "Words": {
+          "type": "object",
+          "description": "The sentences that tell the state: State, Scene ({0} the name, {1} the number of members), Stored, Unknown.",
+          "additionalProperties": { "type": "string" } } } },
+    "Earlier": { "type": "string", "description": "The property of a command that names an earlier command (to undo it)." },
+    "ResponseIntro": { "type": "string", "description": "The first words of the Response Hint." },
+    "Words": { "type": "object", "additionalProperties": { "type": "string" }, "description": "The words with which the Response Hint tells a property or a value of a response." },
+    "Examples": {
+      "type": "array",
+      "description": "Requests with the command they stand for, given to the model.",
+      "items": {
+        "type": "object",
+        "required": ["Request"],
+        "oneOf": [ { "required": ["Command"] }, { "required": ["Problem"] } ],
+        "additionalProperties": false,
+        "properties": {
+          "Request": { "type": "string" },
+          "State": { "type": "string", "description": "The state of the application that the example assumes." },
+          "Earlier": { "type": "string", "description": "The commands sent before that the example assumes, one per line." },
+          "Working": { "type": "string", "description": "The reasoning that leads to the command, or to the problem." },
+          "Command": { "$ref": "#/$defs/Command" },
+          "Problem": { "type": "string", "description": "What is said instead of a command, when the request does not become one." } } } },
+    "Descriptions": { "type": "object", "additionalProperties": { "type": "string" }, "description": "A description for a path, added to the description of the command schema." },
+    "Said": { "type": "object", "additionalProperties": { "type": "string" }, "description": "How a response that did all that was asked is said in a few words, without the dialogue AIM asking its language model: the action of the response and the words for it, {0} standing for the name of the object." },
+    "Rules": { "type": "array", "description": "The grammar of the application: requests of a known shape that become a command at once, without the language model. Each rule is a Pattern (a regular expression of the whole request; <NUM:n> is a number), the sets of Names its words have to be, numbers worked out (Let) from the numbers said and from where the objects are, and the Command (a string {expression} is replaced by its number).", "items": { "type": "object", "required": ["Pattern", "Command"], "additionalProperties": false, "properties": { "Pattern": { "type": "string" }, "Names": { "type": "object", "additionalProperties": { "enum": ["Members", "Present", "Stored", "Kept", "Latest", "Newest"] } }, "Implicit": { "type": "object", "description": "A name the words of the request do not say: the variable and the set it is taken from (Latest: the sound kept and not yet in a scene, last kept; Newest: the sound last spoken of or loaded, in a scene or not).", "additionalProperties": { "enum": ["Members", "Present", "Stored", "Kept", "Latest", "Newest"] } }, "Let": { "type": "object", "additionalProperties": { "type": "string" } }, "Sets": { "type": "object", "description": "What the application is in after this command, if the application says it was done: a variable of the guide ({scene} in a Command) and the group of the Pattern that gives its new value.", "additionalProperties": { "type": "string" } }, "Raw": { "type": "array", "description": "The groups of the Pattern whose words are kept as the person wrote them (a name they give), not in lower case.", "items": { "type": "string" } }, "Keep": { "type": "array", "items": { "type": "string" }, "description": "The numbers of the request that a later request may use (the size of the room, when the ceiling is asked for alone)." }, "Command": { "type": "object" } } } },
+    "Try": { "type": "string", "description": "What is said, as it is, to a request that says nothing the application knows." },
+    "Asks": { "type": "array", "description": "Words that name a thing the application has but give what is needed for it nowhere, or a pattern a request that says only part of what is needed matches (and, optionally, one it must not match), and what to say, as it is, to ask for it.", "items": { "type": "object", "required": ["Say"], "anyOf": [{ "required": ["Words"] }, { "required": ["Pattern"] }], "additionalProperties": false, "properties": { "Words": { "type": "array", "items": { "type": "string" } }, "Pattern": { "type": "string", "description": "A regular expression the request, in lower case, matches." }, "Unless": { "type": "string", "description": "A regular expression the request must not match for the question to be asked." }, "Say": { "type": "string" } } } },
+    "Reasons": { "type": "array", "description": "A reason a response gives for a failure, in the words it has, and what is said instead, as it is.", "items": { "type": "object", "required": ["When", "Say"], "additionalProperties": false, "properties": { "When": { "type": "string" }, "Say": { "type": "string" } } } },
+    "Memory": { "type": "object", "description": "The numbers the Keep of the Rules holds, with the value each has before any rule has kept it.", "additionalProperties": { "type": "number" } },
+    "Working": { "type": "boolean", "description": "Whether the model writes its reasoning before the command." },
+    "Reminder": { "type": "string", "description": "A sentence repeated to the model after the request." } } }

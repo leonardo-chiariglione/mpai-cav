@@ -1,0 +1,38 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/MMC/V2.5/AIMs/SpeechSceneEditing.json",
+  "title":                "Speech Scene Editing V2.5",
+  "Header":               "MMC-SSE-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Speech Scene Editing. One Speech Scene is open at a time: a Speech Scene arriving is opened, and the first Object added to no open Scene creates one. The User Command places Speech Objects - named as the User names them - (AddedObjects), moves them, changes where they are, takes them out and sets where the Scene is heard from (UserPoV). Every edit is a new version in Shared Storage; a member is held by its identifier and read from Shared Storage when the Scene is output. Outputs: the open Speech Scene, and the User Command, with its response (UserCommandRS) saying how each action was executed.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-SPO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechScene", "Direction": "Input", "DataType": "OSD-SSD-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechSceneDescriptors", "Direction": "Output", "DataType": "OSD-SSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandRS", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/speech-scene-editing/"}]}

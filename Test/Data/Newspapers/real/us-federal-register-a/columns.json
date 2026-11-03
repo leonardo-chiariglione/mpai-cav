@@ -1,0 +1,49 @@
+{
+ "Id": "us-federal-register-a",
+ "Language": "en",
+ "Dpi": 300,
+ "Width": 2550,
+ "Height": 3300,
+ "Kind": "real: a page of a government publication, rendered from its PDF",
+ "Columns": [
+  {
+   "Box": [
+    187,
+    251,
+    897,
+    3089
+   ],
+   "Point": [
+    542,
+    662
+   ],
+   "Text": "Rulemaking (PEG FNPRM), published at 89 FR 63135, August 2, 2024, proposing that the filing requirements under the closed captioning and certification rules would not apply to video programmers that provide video programming exclusively to a PEG channel for which the channel administrator certifies that the channel is exempt from the closed captioning requirements. In addition, the Commission proposed that captioning registration and certifications shall not apply to programming carried on nonbroadcast networks for distribution by a cable operator or other MVPD, if the network itself certifies that it is exempt or that all programming comprising the network’s linear line-up is either exempt from or compliant with the closed caption rules.\n7. Registration and Certification—PEG Channels. The Commission amends its rules to provide that video programmers providing programming exclusively to PEG channels are not required to register with the Commission and file certifications of compliance if the PEG channel administrators certify that the entire channels are exempt. Requiring each of thousands of individual video programmers to certify to the same exemptions claimed by their channel administrators imposes duplicative and needlessly burdensome paperwork. Where the PEG channel administrator files the required contact information and a certification attesting to the channel’s exemption from the captioning rules, consumers will have access to the information intended by the certification requirement, and the Commission will have sufficient documentation to ensure accountability for compliance with its rules.\n8. The record indicates that it is reasonable to expect that the administrators of most exempt PEG channels can certify that the channel is exempt. In instances where a channel administrator does not register and certify, individual video programmers are obligated to comply with the registration and certification requirements.\n9. The Commission further amends the captioning rule to provide that, if a PEG channel is not entirely exempt, video programmers on that channel are not required to register and certify compliance if the channel administrator certifies that all programming carried on the channel is either compliant or exempt. Although it seems that there are few, if any, non-exempt PEG channels, the Commission concludes that the same rationale for allowing administrators to certify for exempt PEG channels is applicable to non-exempt channels—i.e., to the extent that the"
+  },
+  {
+   "Box": [
+    925,
+    251,
+    1635,
+    3089
+   ],
+   "Point": [
+    1267,
+    455
+   ],
+   "Text": "administrator can certify on behalf of the entire channel, such certification will avoid imposing needless, duplicative paperwork on video programmers. In instances where a channel administrator does not register and certify, individual video programmers retain their obligations to comply with the registration and certification requirements.\n10. These rule changes do not alter any video programmer’s substantive captioning obligations. Programming that is exempt from captioning will continue to be exempt, and providers of non-exempt programming will continue to be required to provide captioning. The amended rules also do not change the requirement that certifications of compliance or exemption be filed for all programming carried on PEG channels. They merely minimize unnecessary and duplicative paperwork. By ensuring that neither PEG programmers nor agency staff are burdened with unnecessary paperwork, the Commission makes implementation of the rules more efficient, and thereby advance the Commission’s overarching goal of ensuring that all non-exempt programming is captioned in compliance with the Commission’s standards. Therefore, the Commission finds today’s action to be fully consistent with the Commission’s longstanding commitment to ensure the accessibility of video programming through the provision of closed captioning.\n11. Nonbroadcast Network Programming. Under the Commission’s captioning rules, nonbroadcast networks are ‘‘video programmers’’ and must register with the Commission and annually certify either that the network itself is exempt or that each of the programs comprising its channel line-up is compliant with (or exempt from) the captioning rules. In light of these existing registration and certification requirements for nonbroadcast networks, the Commission concludes that it would be unnecessarily duplicative for potentially thousands of program owners that supply programming exclusively to nonbroadcast networks to also register and file annual certifications with the Commission for the same programming addressed in the networks’ filings.\n12. To alleviate this burden, the Commission amends its rules to provide that closed captioning registration and certification requirements will not apply to video programmers that provide or license video programming exclusively to a nonbroadcast network for distribution by a cable operator or other MVPD, if the network has registered and"
+  },
+  {
+   "Box": [
+    1663,
+    251,
+    2362,
+    3088
+   ],
+   "Point": [
+    2012,
+    723
+   ],
+   "Text": "filed a certification with the Commission confirming that either the network itself is exempt or all programming comprising its linear line- up is compliant with or exempt from captioning obligations. However, if a nonbroadcast network does not file a certification, each video programmer that provides programming on such network will remain subject to the registration and certification requirements. Nonbroadcast networks ‘‘often employ contractual provisions or other mechanisms to hold their suppliers (i.e., program owners) accountable for working with the network to ensure captioning compliance.’’ The Commission clarifies that the rules adopted in the Order are not intended to disturb or interfere with any agreements between programming owners and nonbroadcast networks to ensure captioning compliance.\n13. The Commission directs the Consumer and Governmental Affairs Bureau (CGB or Bureau), pursuant to its delegated authority to oversee the development of a certification and registration form and database, to consider ways to minimize the burden for providers, including providers that control multiple program networks, to submit their registration and certification information in accordance with its obligations under the PRA and the SBA.\nA commenter asks the Commission to declare that any procedural matters affecting MVPDs should equally apply to virtual MVPDs (vMVPDs). This is beyond the scope of this proceeding, which concerns the Commission’s registration and certification requirements related to closed captioning of televised video programming. In the Twenty-First Century Communications and Video Accessibility Act, Congress established separate guidelines for traditional television distribution and IP-delivered video programming. The Commission therefore declines to consider this request here.\n14. Costs and Benefits. Thousands of video programmers provide programming to PEG channels and nonbroadcast networks. Under current rules, once the Commission sets up its database to accept their filings, these programmers must provide contact information and certify that their programming is compliant with the closed captioning rules or exempt from them each year. The Order amends the closed captioning rules so that such programmers need not file this information if the PEG channel administrator or nonbroadcast network itself registers its contact information"
+  }
+ ]
+}

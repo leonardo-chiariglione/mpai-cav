@@ -18,6 +18,7 @@
       "HeartRate":            { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ECGObject.json" },
       "HeartRateVariability": { "type": "number" },
       "BrainState":           { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/EEGObject.json" },
+      "Brainwaves":           { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" },
       "GalvanicSkinResponse": { "type": "number", "minimum": 0, "description": "Skin conductance (microsiemens)." },
       "MyoelectricIntensity": { "type": "number", "minimum": 0, "description": "EMG amplitude (mV)." },
       "SkinTemperature":      { "type": "number", "minimum": 20, "maximum": 45, "description": "Skin temp. (degrees C)." } } },

@@ -1,0 +1,25 @@
+{ "$id":                          "https://schemas.mpai.community/TFA/V1.5/data/MetaverseQualifier.json",
+  "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "title":                        "Metaverse Qualifier V1.5",
+  "description":                  "Structure, content formats, subtype, and attributes of metaverse data.",
+  "type":                         "object",
+  "required":                     [ "Header", "MetaverseQualifierID", "SubTypes", "Formats" ],
+  "additionalProperties":         false,
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "TFA-MAQ-V1.5" },
+    "MInstanceID":                { "type": "string" },
+    "UEnvironmentID":             { "type": "string" },
+    "MetaverseQualifierID":       { "type": "string" },
+    "MetaverseQualifierTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":                    { "type": "object", "additionalProperties": false },
+
+    "Formats":                     { "type": "object", "additionalProperties": false, "properties": {
+
+      "OtherMetaverseAPIFormat":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/formats/MetaverseAPIFormats.json" } } },
+
+    "Attributes":                 { "type": "object", "additionalProperties": true },
+
+    "DataXMData":     { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":  { "type": "string", "maxLength": 2048 } } }

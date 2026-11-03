@@ -1,14 +1,16 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 
 using Mpai.Core;
+using Mpai.Core.OSD;
 using Mpai.Mmc.Edp;
 
 namespace Mpai.Aif.Tests;
 
-// A VOICE COMMAND, END TO END (the author, 2026/10/11: put a Whisper that feeds EDP). The person's voice is a Speech Object; Speech Recognition (Whisper, MMC-ASR) makes it
-// text; Entity Dialogue Processing (MMC-EDP), given the Scene being edited, makes the User Command; the ASM AIM that executes it - Audio Scene Editing - does what it says.
-// The AIMs do not talk to one another: the User Agent, here the test, gives each what the one before gave out, as it does through the Controller. The voice is made by
-// Text-To-Speech, so that the test needs no microphone.
+// A VOICE COMMAND, END TO END (the author, 2026/10/11: put a Whisper that feeds EDP; ported to MMC-VCI 2026/10/26). The person's voice is a Speech Object; Speech Recognition
+// (Whisper, MMC-ASR) makes it text; the Voice Command Interface (MMC-VCI) - its JSON Interface, given the scene the application tells it (a User Command response that lists the
+// scene) - makes the command, a User Command request (CAE-UCM); the Editing AIMs of the application execute it, and their responses, merged into one, go back to the Voice Command Interface, which says it. The AIMs do not talk to one another: the User Agent, here the test, gives each what the one
+// before gave out, as it does through the Controller. The voice is made by Text-To-Speech, so that the test needs no microphone; the Voice Command Interface is the Module of the
+// repository run with the recogniser given the words Whisper heard (the sound has been through Whisper here, outside the Module) and a synthesiser that records.
 [Trait("Group", "Models")]
 [Trait("Blocks", "Yes")]
 public class AsmVoiceChainTests
@@ -17,103 +19,78 @@ public class AsmVoiceChainTests
 
     private static bool Ollama()
     {
-        try { using var h = new HttpClient { Timeout = TimeSpan.FromSeconds(3) }; return h.GetAsync("http://127.0.0.1:11434/api/tags").Result.IsSuccessStatusCode; }
+        try { using var h = new HttpClient { Timeout = TimeSpan.FromSeconds(3) }; return h.GetStringAsync("http://127.0.0.1:11434/api/tags").Result.Contains("\"" + Model + "\""); }
         catch { return false; }
     }
 
-    private static Dictionary<string, string> Settings(string aim)
-    {
-        var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!;
-        return all[aim]!.AsObject().ToDictionary(p => p.Key, p =>
-        {
-            var v = (string)p.Value!;
-            return File.Exists(Path.Combine(Repository.Root, v)) ? Path.Combine(Repository.Root, v) : v;
-        });
-    }
+    private static Dictionary<string, string> Settings(string aim) => TestModels.Settings(aim);
 
-    private static SpatialAttitude At(double x, double y) => new()
-    {
-        ObjectSpatialAttitudeID = Guid.NewGuid().ToString(),
-        Position = new Position { PositionID = Guid.NewGuid().ToString(), CartPosition = [x, y, 0] },
-        Orientation = new Orientation { OrientationID = Guid.NewGuid().ToString(), EulerAngles = [0, 0, 180] }
-    };
-
-    private static BasicAudioObject Sound(string name) => new()
-    {
-        BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
-    };
-
-    // Where the member of the Scene named so is, along x: the Scene holds its Objects, which carry their names in their description.
-    private static double? XOf(JsonNode? scene, string name) =>
-        scene?["BasicAudioSceneDescriptorsData"]?.AsArray()
-            .Where(e => (string?)e?["AObjectIDOrAObject"]?[0]?["DescrMetadata"] == name)
-            .Select(e => e?["AudioObjectSpaceTime"]?["SpatialAttitude1"]?["Position"]?["CartPosition"]?[0] is { } x ? (double?)x.GetValue<double>() : null)
-            .FirstOrDefault();
+    // Where the member of the Scene named so is, along x, in the response that lists the scene.
+    private static double? XOf(JsonNode? listing, string name) =>
+        listing?["UserCommandRS"]?["ListedObjects"]?.AsArray().SelectMany(o => o?["Members"]?.AsArray() ?? [])
+            .Where(m => (string?)m?["ObjectID"] == name)
+            .Select(m => m?["PoV"]?["Position"]?["CartPosition"]?[0] is { } x ? (double?)x.GetValue<double>() : null).FirstOrDefault();
 
     [SkippableFact]
     [Trait("Duration", "Long")]
-    public async Task WhatThePersonSaysMovesTheObjectInTheScene()
+    public async Task WhatThePersonSaysMovesTheObjectInTheScene() => await Run();
+
+    private static async Task Run()
     {
         Skip.IfNot(Ollama(), "Ollama is not running.");
+        Skip.IfNot(TestModels.Can("ggml-small.bin"), "The Whisper model cannot be had here.");
         var tts = Settings("1MMC-TTS-V2.5-I01"); var asr = Settings("1MMC-ASR-V2.5-I01");
         Skip.IfNot(File.Exists(tts["PiperExecutable"]) && File.Exists(asr["ModelPath"]) && File.Exists(asr["ExecutablePath"]), "Piper or the Whisper model is absent: the model files are obtained separately.");
 
-        var root = Path.Combine(Path.GetTempPath(), "asm-voice-" + Guid.NewGuid().ToString("N"));
-        try
+        using var rig = new AsmRig();
+        // The scene being edited: a violin at x = 1 and drums at x = 3, two metres ahead, built as the User Agent would: the sounds arrive in User Commands, and are placed by one.
+        foreach (var name in new[] { "violin", "drums" })
+            await rig.Ask(AsmRig.Command(new UserCommandRQ { AcquiredObject = new ManagedObject { BasicAudioObject = AsmRig.Sound(name) } }));
+        var build = AsmRig.Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { ObjectID = "stage", Objects = [AsmRig.Put("violin", 1), AsmRig.Put("drums", 3)] } });
+        var built = (await rig.Ask(build)).Merged(build.UserCommandID);
+        Assert.Equal("Done", built.UserCommandRS!.Outcome);
+
+        async Task<string> Listing()
         {
-            var storage = new AIF.SharedStorage.FileSharedStorage(root, "CAE-ASM", "ASM-Voice");
-            var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
-
-            // The AIMs: Object and Scene Editing of ASM, Speech Recognition, Dialogue Processing.
-            var aoePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-AOE-V1.0-I01");
-            var asePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-            var edpPorts = AIF.Controller.AimPortReader.Load(store, "1MMC-EDP-V2.5-I01");
-            var aoe = new Mpai.Cae.Aoe.AoeAimProcessor("1CAE-AOE-V1.0-I01", new Mpai.Cae.Aoe.AoeAim(storage), aoePorts);
-            var ase = new Mpai.Cae.Ase.AseAimProcessor("1CAE-ASE-V1.0-I01", new Mpai.Cae.Ase.AseAim(storage), asePorts);
-            using var llm = new OllamaClient(Model, context: 4096);
-            var edp = new EdpAimProcessor("1MMC-EDP-V2.5-I01", llm, edpPorts);
-            var synthesizer = Mpai.Aims.Tts.TtsFactory.Create(tts);
-            var recogniser = Mpai.Aims.Asr.AsrFactory.Create(asr);
-
-            async Task<AIF.Controller.Message> Give(AIF.Controller.IAimProcessor aim, params (string Port, string Json)[] inputs) =>
-                await aim.ProcessAsync(new AIF.Controller.Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) });
-
-            // The scene being edited: a violin at x = 1 and drums at x = 3, two metres ahead, built as the User Agent would.
-            string objectIn = aoePorts.Input("OSD-BAO-V1.5"), objectOut = aoePorts.Output("OSD-BAO-V1.5"),
-                   command = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-BAS-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
-            var ids = new List<string>();
-            foreach (var name in new[] { "violin", "drums" })
-                ids.Add((string)JsonNode.Parse((await Give(aoe, (objectIn, MpaiJson.ToJson(Sound(name))))).Ports[objectOut])!["BasicAudioObjectID"]!);
-            var build = new UserCommand
-            {
-                UserCommandID = "build", UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
-                UserCommandData = new UserCommandData
-                {
-                    AddedObjects = new ObjectPlacements { Objects = [ new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[0] }, SpatialAttitude = At(1, 2) },
-                                                                      new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = ids[1] }, SpatialAttitude = At(3, 2) } ] }
-                }
-            };
-            var scene = (await Give(ase, (command, MpaiJson.ToJson(build)))).Ports[sceneOut];
-            Assert.True(XOf(JsonNode.Parse(scene), "violin") is not null, "the scene: " + scene[..Math.Min(1500, scene.Length)]);
-            var violinAt = XOf(JsonNode.Parse(scene), "violin")!.Value;
-
-            // 1. The voice: what the person says, as a sound.
-            const string said = "move the violin to the left";
-            var voice = await synthesizer.ProcessAsync(BasicTextObject.FromText(said));
-            // 2. Whisper hears it.
-            var heard = (await recogniser.ProcessAsync(voice)).GetText();
-            Assert.True(Alike(said, heard) >= 0.7, $"Whisper heard \"{heard}\"");
-            // 3. EDP, given the Scene and the words, makes the User Command.
-            var understood = await Give(edp, (edpPorts.Input("OSD-BTO-V1.5"), MpaiJson.ToJson(BasicTextObject.FromText(heard))), (edpPorts.Input("OSD-BAS-V1.5"), scene));
-            Assert.True(understood.Ports.TryGetValue(edpPorts.Output("CAE-UCM-V1.0"), out var ucm), "EDP gave no User Command for \"" + heard + "\"");
-            Assert.NotNull(JsonNode.Parse(ucm!)!["UserCommandData"]!["MovedObjects"]);
-            // 4. Audio Scene Editing executes it, and says so.
-            var edited = await Give(ase, (command, ucm!));
-            var report = MpaiJson.FromJson<UserCommand>(edited.Ports[sceneReport]).UserCommandReport!;
-            Assert.Equal("Done", report.Outcome);
-            Assert.True(XOf(JsonNode.Parse(edited.Ports[sceneOut]), "violin")!.Value < violinAt, "the violin moved to the left");
+            var ask = AsmRig.Command(new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Audio Scene", ObjectID = "stage" } });
+            return AsmRig.Json((await rig.Ask(ask)).Merged(ask.UserCommandID));
         }
-        finally { try { Directory.Delete(root, true); } catch { } }
+        var scene = await Listing();
+        var violinAt = XOf(JsonNode.Parse(scene), "violin")!.Value;
+        Assert.Equal(1, violinAt);
+
+        // 1. The voice: what the person says, as a sound. 2. Whisper hears it.
+        const string said = "move the violin 1 metre to the left";
+        var synthesizer = Mpai.Aims.Tts.TtsFactory.Create(tts);
+        var recogniser = Mpai.Aims.Asr.AsrFactory.Create(asr);
+        var voice = await synthesizer.ProcessAsync(BasicTextObject.FromText(said));
+        var heard = (await recogniser.ProcessAsync(voice)).GetText();
+        Assert.True(Alike(said, heard) >= 0.7, $"Whisper heard \"{heard}\"");
+
+        // 3. The Voice Command Interface, given the scene, makes the command from the words.
+        using var llm = new OllamaClient(Model, context: 4096);
+        using var vci = new VciRig((s, t, schema) => llm.ChatSchemaAsync(s, t, schema), null);
+        Assert.Equal(AIF.Controller.AifError.OK, vci.Api.StartFlow(VciRig.Vci));
+        Assert.Equal(AIF.Controller.AifError.OK, vci.Write(VciRig.Ucm, 1, scene));
+        vci.Say(heard);
+        var command = vci.Read(VciRig.Ucm, 1, 40000);
+        Assert.True(command.Ok, "the Voice Command Interface gave no command for \"" + heard + "\"");
+        Assert.NotNull(JsonNode.Parse(command.Json!)!["UserCommandRQ"]!["MovedObjects"]);
+
+        // 4. The editing AIMs execute it, and say so; their responses are one, which goes back, and is said.
+        var given = JsonNode.Parse(command.Json!)!;
+        var id = (string)given["UserCommandID"]!;
+        var response = AsmRig.Json((await rig.Ask(command.Json!)).Merged(id));
+        var rs = JsonNode.Parse(response)!;
+        if ((string?)rs["UserCommandRS"]!["Outcome"] != "Done") Assert.Fail(command.Json + " >>> " + response);
+        var after = XOf(JsonNode.Parse(await Listing()), "violin")!.Value;
+        Assert.True(after < violinAt, $"the violin moved to the left: it was at {violinAt}, it is at {after}");
+        Assert.Equal(0, after, 1);                                                            // 1 metre to the left of x = 1
+
+        Assert.Equal(AIF.Controller.AifError.OK, vci.Write(VciRig.Ucm, 1, response));
+        var reply = vci.Read(VciRig.Bto, 2, 40000);
+        Assert.True(reply.Ok, "the application's answer was not said");
+        Assert.True(vci.Read(VciRig.Bso, 1, 15000).Ok);
     }
 
     // Letters only, from 0 to 1.

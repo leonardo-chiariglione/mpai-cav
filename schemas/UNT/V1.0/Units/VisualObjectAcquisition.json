@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "Header": "UNT-VOA-V1.0",
+  "Group": "Acquisition",
+  "Category": "Media",
+  "Description": "Visual Object Acquisition: acquires Visual Objects from the real world and provides them, and the Scene Descriptors of what it acquires where the Data Type exists. A camera gives a Basic Visual Object; a source on a disk or a network may give a Basic or a full Visual Object, and Basic or full Scene Descriptors.",
+  "ExternalPorts": [
+    {
+      "Name": "UserCommand",
+      "Direction": "Input",
+      "DataType": [
+        "CAE-UCM-V1.0"
+      ],
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "SensedVisual",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-BVS-V1.5"
+      ],
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Hardware"
+    },
+    {
+      "Name": "StoredVisual",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5",
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "Software"
+    },
+    {
+      "Name": "AcquiredVisual",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5",
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-unt/"
+    }
+  ]
+}

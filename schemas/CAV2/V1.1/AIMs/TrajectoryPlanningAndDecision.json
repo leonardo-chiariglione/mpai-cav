@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V1.1/AIMs/TrajectoryPlanningAndDecision.json",
   "title": "Trajectory Planning and Decision V1.1",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TPD-V1.1" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-TPD-V1.1",
 
@@ -34,9 +34,9 @@
   ],
 
   "SubAIMs":  [
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-PSP-V1.1" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-MSP-V1.1" } },
-    { "Identifier": { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TOA-V1.1" } }
+    { "Header": "CAV-PSP-V1.1", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "CAV-MSP-V1.1", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } },
+    { "Header": "CAV-TOA-V1.1", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" } }
   ],
 
   "Topology":  [
@@ -61,6 +61,8 @@
     { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "TrajectoryRequestTM", "DataType": "CAV-INT-V1.1"            }, "Input": { "AIMName": "CAV-MSP-V1.1", "PortName": "TrajectoryRequestTM", "DataType": "CAV-INT-V1.1", "PortNumber": 2 } },
     { "Output": { "AIMName": "CAV-TOA-V1.1", "PortName": "FullEnvironmentDescriptorsTOut", "DataType": "CAV-FED-V1.1" }, "Input": { "AIMName": ""            , "PortName": "FullEnvironmentDescriptorsOut" } }
   ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [
    {

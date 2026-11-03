@@ -1,9 +1,7 @@
 {
   "Machine": "development machine of the author (Windows 10 Pro, 12 cores, 32 GB)",
-  "Measured": "2026/10/01 (whisper and piper kept loaded between turns)",
+  "Measured": "2026/10/25 (whisper and piper kept loaded between turns; AMQ with Text-To-Speech inside the Module, as its reference model says)",
   "Seconds": {
-    "typed MAD turn": 0.6,
-    "spoken MAD turn": 1.5,
-    "AMQ question": 0.7
+    "AMQ question": 1.1
   }
 }

@@ -4,6 +4,7 @@ using Mpai.Aims.Asr;
 using Mpai.Aims.Tts;
 using Mpai.Aims.Ttt;
 using Mpai.Mmc.Edp;
+using Mpai.Mmc.Jsi;
 using Mpai.Mmc.Nlu;
 using Mpai.Mmc.Pmx;
 using Mpai.Mmc.Spe;
@@ -40,11 +41,16 @@ public static class AimBinaries
         ["1OSD-IDR-V1.5-I01"] = typeof(Mpai.Osd.Idr.IdrAimProcessor),
         ["1PAF-EFD-V1.6-I01"] = typeof(Mpai.Paf.Efd.EfdAimProcessor),
         ["1MMC-EDP-V2.5-I02"] = typeof(EdpAimProcessor),
+        ["1MMC-EDP-V2.5-I03"] = typeof(EdpAimProcessor),
+        ["1MMC-JSI-V2.5-I01"] = typeof(JsiAimProcessor),
+        ["1MMC-JSI-V2.5-I02"] = typeof(JsiAimProcessor),
         ["1MMC-SCM-V2.5-I01"] = typeof(Mpai.Mmc.Scm.ScmAimProcessor),
         ["1PAF-PDX-V1.6-I01"] = typeof(Mpai.Paf.Pdx.PdxAimProcessor),
         ["1PAF-PMX-V1.6-I01"] = typeof(Mpai.Paf.Pmx.PmxAimProcessor),
         ["1PAF-PMX-V1.6-I02"] = typeof(Mpai.Paf.Pmx.ContinuousPmx),
         ["1MMC-ESD-V2.5-I01"] = typeof(Mpai.Mmc.Esd.EsdAimProcessor),
+        ["1MMC-OCR-V2.5-I01"] = typeof(Mpai.Aims.Ocr.OcrAimProcessor),
+        ["1MMC-CTS-V2.5-I01"] = typeof(Mpai.Mmc.Cts.CtsAimProcessor),
     };
 
     public static string? Of(string aimName) => Processors.TryGetValue(aimName, out var type) ? type.Assembly.Location : null;

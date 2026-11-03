@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V1.1/AIMs/RouteSelectionPlanning.json",
   "title": "Route Selection Planning V1.1",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-RSP-V1.1" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-RSP-V1.1",
 
@@ -25,6 +25,8 @@
 
   "SubAIMs":  [ ],
   "Topology":  [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [
    {

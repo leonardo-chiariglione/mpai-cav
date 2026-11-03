@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\..\..\..\AIF\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\PDX\Mpai.Paf.Pdx.csproj" />
   </ItemGroup>
 

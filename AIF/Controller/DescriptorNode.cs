@@ -59,6 +59,11 @@ public sealed class DescriptorNode
     public bool IsContinuous =>
         Execution == "Continuous";
 
+    // THE ACCESS THIS AIM READS (AIM Metadata, AccessSources): kinds of data, by the Data Type of their items, with the
+    // Writer they must have and, where stated, the Keys. Empty: the AIM reads no Access.
+    public List<AccessEntry> AccessSources { get; } =
+        new();
+
     // How many times this AIM is started again when it throws (M3215 3.3), and its
     // Period and Deadline in milliseconds (3.5); null where not declared.
     public int     RestartLimit { get; set; }

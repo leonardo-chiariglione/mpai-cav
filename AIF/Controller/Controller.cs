@@ -32,7 +32,7 @@ public sealed class Controller
     private ISharedStorage? StorageFor(string moduleName, string aimName, Func<string?>? location) =>
         location is not null && InstanceOf is { } instance && SessionOf is { } session
             ? new SharedStorageHandle(() => location() ?? storageRoot, new StorageHolder(moduleName, aimName),
-                                      () => instance(moduleName), () => session(moduleName), "local", Now ?? (() => DateTimeOffset.UtcNow))
+                                      () => instance(moduleName), () => session(moduleName), () => ClientOf?.Invoke(moduleName) ?? "", Now ?? (() => DateTimeOffset.UtcNow))
             : location is not null
             ? new ModuleSharedStorage(() => location() ?? storageRoot, $"{moduleName}/{aimName}", "local")
             : storageRoot is null
@@ -46,14 +46,17 @@ public sealed class Controller
     // a Service's Controller serving many clients - the client's (M3245 3.3).
     public Func<string, string>? SessionOf { get; set; }
     public Func<DateTimeOffset>? Now { get; set; }
+    // The client of the User Agent a Module's exchange serves, or empty where it serves the User Agent's own session (Basic API 3.7, 4.11.2.6): what a write records as RequestedBy.
+    public Func<string, string>? ClientOf { get; set; }
 
-    // PRIVATE STORAGE (M3215 3.7): reachable only by its AIM Instance, held below
-    // its Module's scope at private/<AIM Instance>, stamped as Shared Storage is.
+    // PRIVATE STORAGE (M3215 3.7): reachable only by its AIM Instance of its Module (an AIM name alone
+    // identifies nothing: the same AIM may be a Sub-AIM of many Modules), held below its Module's
+    // scope at private/<Module>/<AIM Instance>, stamped as Shared Storage is.
     // The AIM is given no handle to any other AIM's.
     private ISharedStorage? PrivateStorageFor(string moduleName, string aimName, Func<string?>? location)
     {
         string? Scope() => (location?.Invoke() ?? storageRoot) is { } root
-            ? Path.Combine(root, "private", Uri.EscapeDataString(aimName))
+            ? Path.Combine(root, "private", Uri.EscapeDataString(moduleName), Uri.EscapeDataString(aimName))
             : null;
         return Scope() is null ? null : new ModuleSharedStorage(Scope, $"{moduleName}/{aimName}", "local");
     }
@@ -198,6 +201,7 @@ public sealed class Controller
         node.Execution      = TextOf(root, "Execution") ?? node.Execution;
         node.StorageControl = TextOf(root, "StorageControl");
         node.Record         = TextOf(root, "Record");
+        node.AccessSources.AddRange(AccessEntry.ReadForThisMachine(root));
         node.RestartLimit = IntOf(root, "RestartLimit") ?? 0;
         node.Period       = NumberOf(root, "Period");
         node.Deadline     = NumberOf(root, "Deadline");
@@ -449,9 +453,10 @@ public sealed class Controller
         {
             var aimName = graph.Root.AIMName;
             CheckResources(graph.Root);
+            host.BindAccess(aimName, graph.Root.AccessSources);
             host.RegisterRuntime(
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
+                provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), graph.Root.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName), host.AccessFor(aimName)));
             instantiated.Add(aimName);
             return instantiated;
         }
@@ -494,9 +499,10 @@ public sealed class Controller
             }
 
             CheckResources(child);
+            host.BindAccess(aimName, child.AccessSources);
             host.RegisterRuntime(
-                provider.Create(aimName, settings.For(aimName), StorageFor(moduleName, aimName, storageLocation),
-                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName)));
+                provider.Create(aimName, AccessEntry.Overlay(settings.For(aimName), child.AccessSources, host.AccessFor(aimName), aimName), StorageFor(moduleName, aimName, storageLocation),
+                                PrivateStorageFor(moduleName, aimName, storageLocation), moduleStorage?.Invoke(aimName), host.AccessFor(aimName)));
             instantiated.Add(aimName);
         }
     }

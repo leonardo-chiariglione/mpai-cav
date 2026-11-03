@@ -163,6 +163,11 @@ public sealed class SpatialAttitude
 
     public DataExchangeMetadata? DataXMData { get; init; }
     public string? DescrMetadata { get; init; }
+
+    // WHICH PARTS A COMMAND STATES (CAE-UCM, M3282 UCM-1): a command may give only the parts of a Spatial Attitude that change - Position, Orientation, SpatialAttitudeTime -
+    // and what it does not state keeps its value. A Spatial Attitude built by code states both, as it always did; one read from a command that leaves a part out says so here.
+    [System.Text.Json.Serialization.JsonIgnore] public bool PositionStated { get; init; } = true;
+    [System.Text.Json.Serialization.JsonIgnore] public bool OrientationStated { get; init; } = true;
 }
 
 // OSD/V1.5/data/Position.json
@@ -380,7 +385,7 @@ public sealed class BasicSpeechObject
 //  borrowed SpeechQualifier.
 //
 //  .Data and .Qualifier below are a COMPATIBILITY SURFACE, not the real
-//  storage: every existing AOA/AOD backend (Alsa/Wasapi/File acquisition,
+//  storage: every existing UNT-AOA/UNT-AOD backend (Alsa/Wasapi/File acquisition,
 //  Aplay/File/Winmm delivery) and FromData() reads/writes through them, so
 //  none of that code needs to change for this fix. They project to/from the
 //  schema-correct fields underneath.
@@ -415,6 +420,9 @@ public sealed class BasicAudioObject
     // one counts only when the Object is heard alone. UserPoV, not
     // ListenerPointOfView: the user is neutral, for audio and visual alike.
     public PointOfView? UserPoV { get; init; }
+
+    // The device the sound was captured with, or is to be played by (the schema's DeviceID).
+    public string? DeviceID { get; init; }
 
     public BasicAudioObjectProperties? BasicAudioObjectProperties { get; init; }
     public AudioQualifier? AudioQualifier { get; init; }
@@ -481,6 +489,7 @@ public sealed class BasicAudioObject
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
         UserPoV = UserPoV,
+        DeviceID = DeviceID,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,
@@ -502,6 +511,7 @@ public sealed class BasicAudioObject
         ChildObjects = ChildObjects,
         BasicAudioObjectData = BasicAudioObjectData,
         UserPoV = listener,
+        DeviceID = DeviceID,
         BasicAudioObjectProperties = BasicAudioObjectProperties,
         AudioQualifier = AudioQualifier,
         DataXMData = DataXMData,
@@ -568,9 +578,15 @@ public sealed class AcousticProfile
     public double? Diffusion { get; init; }
     public double? Absorption { get; init; }
     public List<Doppler>? Doppler { get; init; }
+    // The walls of the Closed Space of the Scene and their Materials (CAE-ACP): each wall a face of a Right Parallelepiped (with a Region), a Polygon or a SurfaceID, with MaterialIDOrMaterial.
+    public System.Text.Json.Nodes.JsonArray? Walls { get; init; }
+    public System.Text.Json.Nodes.JsonArray? DefaultMaterial { get; init; }
 
     public DataExchangeMetadata? DataXMData { get; init; }
     public string? DescrMetadata { get; init; }
+
+    // A command may give the identifier of a kept profile instead of the profile (CAE-UCM, M3282 UCM-4): then this holds only its AcousticProfileID, and is a reference.
+    [System.Text.Json.Serialization.JsonIgnore] public bool Reference { get; init; }
 }
 
 public sealed class FrequencyRange { public double MinFrequencyHz { get; init; } public double MaxFrequencyHz { get; init; } }
@@ -685,55 +701,4 @@ public sealed class SubTextObjectEntry
     public TextObject? SubTObjectIDOrSubTObject { get; init; }
 }
 
-// Added to AIMs/Core/Objects.cs
-//
-// SpeechObject: the composed Speech Object, per OSD/V1.5/data/SpeechObject.json.
-//
-// Only the BASIC half of speech was ever built, which is why speech kept
-// borrowing audio's types: there was nothing else for it to be. Every medium has
-// a Basic and a full Object - TextObject has existed all along, AudioObject was
-// built for CAE-ASM, and this completes the third.
-public sealed class SpeechObject
-{
-    public string Header { get; init; } = "OSD-SPO-V1.5";
-    public string? MInstanceID { get; init; }
-    public string? UEnvironmentID { get; init; }
-    public string SpeechObjectID { get; init; } = "";
-    public SimpleTime? SpeechObjectTime { get; init; }
-    public SpaceTime? SpeechObjectSpaceTime { get; init; }
-
-    // Where the Object is being listened FROM, as AudioObject has.
-    public PointOfView? UserPoV { get; init; }
-
-    public List<string>? ParentSpeechObjectIDs { get; init; }
-
-    public int? BasicSpeechObjectCount { get; init; }
-    public List<BasicSpeechObjectEntry>? BasicSpeechObjects { get; init; }
-
-    public int? SubSpeechObjectCount { get; init; }
-    public List<SubSpeechObjectEntry>? SubSpeechObjects { get; init; }
-
-    public string? DescrMetadata { get; init; }
-
-    // Wrap a single Basic Speech Object as an Object of one.
-    public static SpeechObject FromBasic(BasicSpeechObject basic) => new()
-    {
-        SpeechObjectID = Guid.NewGuid().ToString(),
-        BasicSpeechObjectCount = 1,
-        BasicSpeechObjects = new() { new BasicSpeechObjectEntry { BSObjectIDOrBSObject = basic } }
-    };
-}
-
-public sealed class BasicSpeechObjectEntry
-{
-    // Where this Basic Speech Object sits WITHIN the containing Object. Absent
-    // means the containing Object's own Space/Time.
-    public SpaceTime? BasicSpeechObjectSpaceTime { get; init; }
-    public BasicSpeechObject? BSObjectIDOrBSObject { get; init; }
-}
-
-public sealed class SubSpeechObjectEntry
-{
-    public SpaceTime? SubSpeechObjectSpaceTime { get; init; }
-    public SpeechObject? SubSObjectIDOrSubSObject { get; init; }
-}
+// The Speech Object (OSD-SPO) and its entries are in AIMs/Core/OSD/SpeechSchema.cs, with the Speech Scene Descriptors.

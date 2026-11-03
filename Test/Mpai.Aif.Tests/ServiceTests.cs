@@ -29,10 +29,10 @@ public sealed class ServiceFixture : IDisposable
     public ServiceFixture()
     {
         var root = Repository.Root;
-        var exe = Path.Combine(root, "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
+        var exe = Path.Combine(root, "Apps", "MAS", "Service", "src", "bin", "Debug", "net10.0", "MasService.exe");
 
         SkipReason =
-            !Directory.Exists(Path.Combine(root, "Models")) ? "Models is absent: the model files are obtained separately." :
+            !TestModels.Can("ggml-small.bin") ? "Models is absent: the model files are obtained separately." :
             !File.Exists(exe) ? "The Service is not built: " + exe :
             !OllamaHas("llama3.2:3b") ? "Ollama is not running with llama3.2:3b." :
             PortInUse(5108) ? "Port 5108 is in use." :
@@ -44,7 +44,7 @@ public sealed class ServiceFixture : IDisposable
         {
             ["ListenUrl"]    = Url,
             ["AppDirectory"] = Path.Combine(root, "Apps"),
-            ["Apps"]         = new JsonArray("MAD", "AMQ", "MAT", "MPD"),
+            ["Apps"]         = new JsonArray("AMQ"),
             ["AmdDirectory"] = Repository.Amds,
             ["SettingsPath"] = Path.Combine(root, "AIMs", "aim-settings.json"),
             // The tests time their own first turn apart (Median): no warm-up, so that
@@ -99,7 +99,7 @@ public sealed class ServiceFixture : IDisposable
         System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties()
               .GetActiveTcpListeners().Any(e => e.Port == port);
 
-    private static string Tail(string text, int lines) =>
+    public static string Tail(string text, int lines) =>
         string.Join("\n", text.Split('\n').TakeLast(lines));
 }
 
@@ -112,7 +112,7 @@ public sealed class ServiceCollection : ICollectionFixture<ServiceFixture> { }
 [Trait("Blocks", "No")]
 public class ServiceTests
 {
-    private const string MAD = "1MMC-MAD-V2.5-I01", AMQ = "1MMC-AMQ-V2.5-I01";
+    private const string AMQ = "1MMC-AMQ-V2.5-I01";
 
     private readonly ServiceFixture service;
     private readonly ITestOutputHelper output;
@@ -156,8 +156,8 @@ public class ServiceTests
         Assert.True(wrong.Count == 0, string.Join("\n", wrong));
     }
 
-    // One client stops MAD while the other's turn is running; the other's turn,
-    // and its next, must still answer with speech.
+    // One client stops AMQ while the other's question is being answered; the other's answer,
+    // and its next, must still come.
     [SkippableFact]
     public void TwoClientsStop()
     {
@@ -165,18 +165,18 @@ public class ServiceTests
 
         using var a = new RemoteControllerApi(ServiceFixture.Url);
         using var b = new RemoteControllerApi(ServiceFixture.Url);
-        Assert.Equal(AifError.OK, a.StartFlow(MAD));
-        Assert.Equal(AifError.OK, b.StartFlow(MAD));
+        Assert.Equal(AifError.OK, a.StartFlow(AMQ));
+        Assert.Equal(AifError.OK, b.StartFlow(AMQ));
 
-        var turn = Task.Run(() => b.Advance(MAD, new[] { Text(2, "Tell me a short story about a cat called Tom."), Avatar }));
-        Thread.Sleep(1500);
+        var turn = Task.Run(() => Answer(Ask(b, "blue.jpg")));
+        Thread.Sleep(500);
         var stillRunning = !turn.IsCompleted;
-        a.StopFlow(MAD);
-        output.WriteLine($"A stopped MAD while B's turn was {(stillRunning ? "running" : "already done")}");
+        a.StopFlow(AMQ);
+        output.WriteLine($"A stopped AMQ while B's question was {(stillRunning ? "being answered" : "already answered")}");
 
-        Assert.True(Spoke(turn.Result), "B's turn that was running when A stopped did not answer with speech");
-        Assert.True(Spoke(b.Advance(MAD, new[] { Text(2, "What was the cat called?"), Avatar })), "B's next turn did not answer with speech");
-        b.StopFlow(MAD);
+        Assert.False(string.IsNullOrEmpty(turn.Result), "B's question that was being answered when A stopped got no answer");
+        Assert.False(string.IsNullOrEmpty(Answer(Ask(b, "red.jpg"))), "B's next question got no answer");
+        b.StopFlow(AMQ);
     }
 
     // Six runs each, after one not counted, against the baseline in timing.json:
@@ -188,9 +188,7 @@ public class ServiceTests
 
         var measured = new Dictionary<string, double>
         {
-            ["typed MAD turn"]  = Median(MAD, new[] { Text(2, "Name one fruit. Answer in five words."), Avatar }),
-            ["spoken MAD turn"] = Median(MAD, new[] { Speech("question.wav"), Avatar }),
-            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(2, "What color is the picture?"), Avatar })
+            ["AMQ question"]    = Median(AMQ, new[] { Picture("red.jpg"), Text(1, "What color is the picture?"), MachineId })
         };
 
         var file = Path.Combine(Repository.Root, "Test", "Expected", "timing.json");
@@ -222,12 +220,13 @@ public class ServiceTests
             var clock = Stopwatch.StartNew();
             var r = client.Advance(module, inputs);
             times.Add(clock.Elapsed.TotalSeconds);
-            Assert.True(r.Ok, $"{module}: {r.Error}");
+            Assert.True(r.Ok, $"{module}: {r.Error}\nthe Service's log, last 400 lines:\n{ServiceFixture.Tail(service.Log, 400)}");
 
             // A TURN IS TIMED ONLY IF IT ANSWERED. A turn in which an AIM failed -
             // the language model unreachable, say - returns quickly with nothing to
             // say, and would pass for a fast one.
-            Assert.True(AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no speech");
+            // AMQ gives its answer as words in the Portable Avatar; the other Modules, speech.
+            Assert.True(module == AMQ ? AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null : AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is not null, $"{module}: the turn produced no answer");
         }
         client.StopFlow(module);
         times.Sort();
@@ -235,12 +234,12 @@ public class ServiceTests
     }
 
     private static ControllerApi.Result Ask(RemoteControllerApi client, string picture) =>
-        client.Advance(AMQ, new[] { Picture(picture), Text(2, "What color is the picture?"), Avatar });
+        client.Advance(AMQ, new[] { Picture(picture), Text(1, "What color is the picture?"), MachineId });
 
     private static string Answer(ControllerApi.Result r)
     {
-        var json = r.ByType("OSD-BTO-V1.5");
-        try { return json is null ? "" : MpaiJson.FromJson<BasicTextObject>(json).GetText(); } catch { return json ?? ""; }
+        // AMQ answers as a Portable Avatar that carries the answer as a Text Object; the others say it aloud, and give their words as text too.
+        return AvatarUtterance.TextOfPortableAvatar(r.ByType("PAF-PAV-V1.6")) ?? "";
     }
 
     // The Portable Avatar carries the speech.
@@ -248,6 +247,9 @@ public class ServiceTests
         r.Ok && AvatarUtterance.FromPortableAvatar(r.ByType("PAF-PAV-V1.6")) is { MachineSpeechWav.Length: > 200 };
 
     // The Avatar the reply animates: every Module that renders with RSR takes one.
+    // The Machine ID the Module gives its Portable Avatar to.
+    private static ControllerApi.Datum MachineId => new("string", 1, "\"cav-machine\"");
+
     private static ControllerApi.Datum Avatar => new("OSD-B3O-V1.5", 1, AvatarUtterance.AvatarDatum("cav-avatar.glb"));
 
     private static string Data(string file) => Path.Combine(Repository.Root, "Test", "Data", file);

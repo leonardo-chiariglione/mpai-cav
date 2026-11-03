@@ -1,0 +1,14 @@
+{
+    "Name": "Enhanced Audioconference Experience",
+    "Description": "Find the speakers in the audio of a microphone array, separate them, take the noise away, and describe the audio scene.",
+    "Icon": "icon.svg",
+    "Version": "1.0",
+    "Standard": "MPAI-CAE V2.5",
+    "UseCase": "USC",
+    "Module": "1CAE-EAE-V2.5-I01",
+    "Keywords": ["audioconference", "microphone array", "speakers", "noise"],
+    "Categories": ["Audio"],
+    "Languages": ["en"],
+    "Asks": ["the audio of the microphone array", "where the microphones are"],
+    "Keeps": "Nothing: the speakers and the audio scene are written where the user says."
+}

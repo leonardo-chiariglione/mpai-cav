@@ -1,0 +1,48 @@
+{ "$id":                            "https://schemas.mpai.community/OSD/V1.5/data/BasicPointerObject.json",
+  "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "title":                          "Basic Pointer Object V1.5",
+  "type":                           "object",
+  "required":                       [ "Header", "BasicPointerObjectID", "BasicPointerData" ],
+  "additionalProperties":           false,
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "OSD-BPO-V1.5" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironment":                 { "type": "string" },
+    "BasicPointerObjectID":         { "type": "string" },
+    "BasicPointerObjectTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "PointerSpace":                 { "type": "object", "additionalProperties": false, "required": [ "Width", "Height" ], "properties": {
+      "Width":                      { "type": "number", "exclusiveMinimum": 0 },
+      "Height":                     { "type": "number", "exclusiveMinimum": 0 },
+      "Unit":                       { "type": "string", "default": "CSS pixel" } } },
+
+    "BasicPointerData":             { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": [ "PointerID", "PointerType", "EventType", "X", "Y" ], "properties": {
+      "PointerID":                  { "type": "integer" },
+      "PointerType":                { "type": "string" },
+      "IsPrimary":                  { "type": "boolean", "default": false },
+      "EventType":                  { "type": "string", "enum": [ "pointerover", "pointerenter", "pointerdown", "pointermove", "pointerrawupdate", "pointerup", "pointercancel", "pointerout", "pointerleave", "gotpointercapture", "lostpointercapture", "wheel" ] },
+      "EventTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+      "X":                          { "type": "number" },
+      "Y":                          { "type": "number" },
+      "Width":                      { "type": "number", "default": 1 },
+      "Height":                     { "type": "number", "default": 1 },
+      "Pressure":                   { "type": "number", "minimum": 0, "maximum": 1 },
+      "TangentialPressure":         { "type": "number", "minimum": -1, "maximum": 1, "default": 0 },
+      "TiltX":                      { "type": "integer", "minimum": -90, "maximum": 90, "default": 0 },
+      "TiltY":                      { "type": "integer", "minimum": -90, "maximum": 90, "default": 0 },
+      "Twist":                      { "type": "integer", "minimum": 0, "maximum": 359, "default": 0 },
+      "AltitudeAngle":              { "type": "number", "minimum": 0, "maximum": 1.5707963267948966 },
+      "AzimuthAngle":               { "type": "number", "minimum": 0, "maximum": 6.283185307179586, "default": 0 },
+      "Button":                     { "type": "integer", "minimum": -1, "maximum": 5, "default": -1 },
+      "Buttons":                    { "type": "integer", "minimum": 0, "maximum": 63, "default": 0 },
+      "DeltaX":                     { "type": "number", "default": 0 },
+      "DeltaY":                     { "type": "number", "default": 0 },
+      "DeltaZ":                     { "type": "number", "default": 0 },
+      "DeltaMode":                  { "type": "integer", "enum": [ 0, 1, 2 ], "default": 0 },
+      "Momentum":                   { "type": "boolean", "default": false } } } },
+
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the positions of the pointer: the frame, the origin and the axes of the space PointerSpace describes, and its unit." },
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\Communication\SharedStorage\AIF.SharedStorage.csproj" />
     <ProjectReference Include="..\Communication\Channels\AIF.Channels.csproj" />
     <ProjectReference Include="..\Trust\AIF.Trust.csproj" />

@@ -1,0 +1,36 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "TST-BUS-V1.0-I01", "AIMName": "1TST-BUS-V1.0-I01"},
+  "Header":           "TST-BUS-V1.0",
+
+  "APIProfile":       "Basic",
+  "Execution":        "Continuous",
+  "OnDegraded":       "Continue",
+  "Description":      "Test Module, the Bus: two writers and two readers of one Data Type, no Topology between them.",
+
+  "InternalTypes":    [{"Name": "Text", "DataType": "TST-TXT-V1.0"},
+                       {"Name": "Read", "DataType": "TST-TXT-V1.0"}],
+
+  "ExternalPorts":    [{"Name": "In1",  "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "In2",  "Direction": "Input",  "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Out1", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "Out2", "Direction": "Output", "DataType": "TST-TXT-V1.0", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":          [{ "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-BWA-V1.0-I01", "AIMName": "1TST-BWA-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-BWB-V1.0-I01", "AIMName": "1TST-BWB-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-BRA-V1.0-I01", "AIMName": "1TST-BRA-V1.0-I01", "Relation": "Internal" } },
+                       { "Identifier": { "ImplementerID": "1", "ImplementationID": "TST-BRB-V1.0-I01", "AIMName": "1TST-BRB-V1.0-I01", "Relation": "Internal" } }],
+
+  "Topology":         [{ "Output": { "AIMName": "",                  "PortName": "In1"  }, "Input": { "AIMName": "1TST-BWA-V1.0-I01", "PortName": "Text" } },
+                       { "Output": { "AIMName": "",                  "PortName": "In2"  }, "Input": { "AIMName": "1TST-BWB-V1.0-I01", "PortName": "Text" } },
+                       { "Output": { "AIMName": "1TST-BRA-V1.0-I01", "PortName": "Read" }, "Input": { "AIMName": "",                  "PortName": "Out1" } },
+                       { "Output": { "AIMName": "1TST-BRB-V1.0-I01", "PortName": "Read" }, "Input": { "AIMName": "",                  "PortName": "Out2" } }],
+
+  "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Mpai.Aif.Tests/ContinuousTests.cs",
+                        "MASPort":           443,
+                        "BinaryName":        "Mpai.Aif.Tests",
+                        "Architecture":      "x86-64",
+                        "OperatingSystem":   "Windows",
+                        "Version":           "1.0",
+                        "Source":            "AIMStorage"}],
+  "ResourcePolicies": [],
+  "DataXMData":       {},
+  "Documentation":    []}

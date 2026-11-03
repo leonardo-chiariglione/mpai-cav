@@ -18,7 +18,7 @@
                           {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarSpatialAttitude", "Direction": "Input", "DataType": "OSD-OSA-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "AVSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "MultimodalSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [{"Identifier": {"ImplementerID": "1", "ImplementationID": "PAF-GFD-V1.6-I01", "AIMName": "1PAF-GFD-V1.6-I01", "Relation": "Internal"}},

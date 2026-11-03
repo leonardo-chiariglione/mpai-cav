@@ -6,6 +6,7 @@ using AIF.Controller;
 using AIF.SharedStorage;
 using Mpai.Aif.Api;
 using Mpai.Rca;
+using Mpai.Ua;
 using Mpai.Wdl;
 
 namespace Mpai.Aif.Tests;

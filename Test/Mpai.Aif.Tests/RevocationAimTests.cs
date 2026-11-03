@@ -10,11 +10,11 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class RevocationAimTests
 {
-    private static Mpai.Core.UserCommand Command(Mpai.Core.UserCommandData data) => new()
+    private static Mpai.Core.UserCommand Command(Mpai.Core.UserCommandRQ data) => new()
     {
-        UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandData = data
+        UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = data
     };
-    private static Mpai.Core.UserCommand Revoke(Mpai.Core.UserCommand earlier) => Command(new Mpai.Core.UserCommandData { RevokedUserCommandID = earlier.UserCommandID });
+    private static Mpai.Core.UserCommand Revoke(Mpai.Core.UserCommand earlier) => Command(new Mpai.Core.UserCommandRQ { RevokedUserCommandID = earlier.UserCommandID });
     private static Mpai.Core.ManagedObject Ref(string id) => new() { ObjectID = id };
     private static SpatialAttitude At(double x) => new()
     {
@@ -27,13 +27,16 @@ public class RevocationAimTests
         BasicAudioObjectID = name, BasicAudioObjectData = [new InlineAudioData(Convert.ToBase64String(new byte[64]))], DescrMetadata = name
     };
 
-    private static async Task<(JsonNode? Out, Mpai.Core.UserCommandReport? Report)> Run(AIF.Controller.IAimProcessor aim, string? outPort, string reportPort, params (string Port, string Json)[] inputs)
+    private static async Task<(JsonNode? Out, Mpai.Core.UserCommandRS? Report)> Run(AIF.Controller.IAimProcessor aim, string? outPort, string reportPort, params (string Port, string Json)[] inputs)
     {
         var m = new AIF.Controller.Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) };
         var o = await aim.ProcessAsync(m);
-        var report = o.Ports.TryGetValue(reportPort, out var r) && r.Length > 0 ? Mpai.Core.MpaiJson.FromJson<Mpai.Core.UserCommand>(r).UserCommandReport : null;
+        var report = o.Ports.TryGetValue(reportPort, out var r) && r.Length > 0 ? Mpai.Core.MpaiJson.FromJson<Mpai.Core.UserCommand>(r).UserCommandRS : null;
         return (outPort is not null && o.Ports.TryGetValue(outPort, out var j) ? JsonNode.Parse(j) : null, report);
     }
+
+    // The Basic Audio Object the Audio Object holds alone.
+    private static JsonNode Bao(JsonNode? auo) => JsonNode.Parse(Forms.Bao(auo!.ToJsonString()))!;
 
     private static (string Root, AIF.SharedStorage.FileSharedStorage Storage, AIF.Store.AmdStore Store) Module()
     {
@@ -51,21 +54,26 @@ public class RevocationAimTests
         {
             var ports = AIF.Controller.AimPortReader.Load(store, "1CAE-AOE-V1.0-I01");
             var aoe = new Mpai.Cae.Aoe.AoeAimProcessor("1CAE-AOE-V1.0-I01", new Mpai.Cae.Aoe.AoeAim(storage), ports);
-            string objectIn = ports.Input("OSD-BAO-V1.5"), command = ports.Input("CAE-UCM-V1.0"), objectOut = ports.Output("OSD-BAO-V1.5"), report = ports.Output("CAE-UCM-V1.0");
+            string objectIn = ports.Input("OSD-AUO-V1.5"), command = ports.Input("CAE-UCM-V1.0"), objectOut = ports.Output("OSD-AUO-V1.5"), report = ports.Output("CAE-UCM-V1.0");
 
-            var (opened, _) = await Run(aoe, objectOut, report, (objectIn, Mpai.Core.MpaiJson.ToJson(Sound("music"))));
-            var original = (string)opened!["BasicAudioObjectID"]!;
+            // An Object is known by its name, which every version keeps: the versions are told apart by what they hold.
+            double? Level(JsonNode? auo) => (double?)Bao(auo)["BasicAudioObjectProperties"]?["Level"];
+            var (opened, _) = await Run(aoe, objectOut, report, (objectIn, Forms.Auo(Sound("music"))));
+            Assert.Equal("music", (string)Bao(opened)["BasicAudioObjectID"]!);
+            var original = Level(opened);
 
-            var louder = Command(new Mpai.Core.UserCommandData { LUFS = -12 });
+            var louder = Command(new Mpai.Core.UserCommandRQ { ModifiedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = new Mpai.Core.ManagedObject { ObjectID = "music" }, LUFS = -12 }] } });
             var (changed, said) = await Run(aoe, objectOut, report, (command, Mpai.Core.MpaiJson.ToJson(louder)));
-            Assert.NotEqual(original, (string)changed!["BasicAudioObjectID"]!);                     // a new version
+            Assert.Equal("music", (string)Bao(changed)["BasicAudioObjectID"]!);                          // the new version has the same name
+            Assert.Equal(-12, Level(changed));                                                          // a new version
             Assert.Equal("Done", said!.Outcome);
+            Assert.Equal("music", said.Actions[0].ObjectID);
 
             var (restored, undone) = await Run(aoe, objectOut, report, (command, Mpai.Core.MpaiJson.ToJson(Revoke(louder))));
             Assert.Equal("Done", undone!.Outcome);
             Assert.Equal("RevokedUserCommandID", undone.Actions[0].Action);
-            Assert.Equal(original, (string)restored!["BasicAudioObjectID"]!);                        // the version before is open again
-            Assert.Equal(original, undone.Actions[0].ResultID);
+            Assert.Equal(original, Level(restored));                                                    // the version before is open again
+            Assert.Equal("music", undone.Actions[0].ResultID);                                          // told by its name, never its key
 
             // Nothing is left to undo: the same revocation again is not done.
             var (_, again) = await Run(aoe, objectOut, report, (command, Mpai.Core.MpaiJson.ToJson(Revoke(louder))));
@@ -85,15 +93,16 @@ public class RevocationAimTests
             var aoe = new Mpai.Cae.Aoe.AoeAimProcessor("1CAE-AOE-V1.0-I01", new Mpai.Cae.Aoe.AoeAim(storage), aoePorts);
             var asePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
             var ase = new Mpai.Cae.Ase.AseAimProcessor("1CAE-ASE-V1.0-I01", new Mpai.Cae.Ase.AseAim(storage), asePorts);
-            string objectIn = aoePorts.Input("OSD-BAO-V1.5"), objectOut = aoePorts.Output("OSD-BAO-V1.5"), objectReport = aoePorts.Output("CAE-UCM-V1.0"),
-                   command = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-BAS-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
-            var (a, _) = await Run(aoe, objectOut, objectReport, (objectIn, Mpai.Core.MpaiJson.ToJson(Sound("anna"))));
-            var (b, _) = await Run(aoe, objectOut, objectReport, (objectIn, Mpai.Core.MpaiJson.ToJson(Sound("bruno"))));
-            string idA = (string)a!["BasicAudioObjectID"]!, idB = (string)b!["BasicAudioObjectID"]!;
-            int Members(JsonNode? scene) => scene?["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0;
+            string objectIn = aoePorts.Input("OSD-AUO-V1.5"), objectOut = aoePorts.Output("OSD-AUO-V1.5"), objectReport = aoePorts.Output("CAE-UCM-V1.0"),
+                   command = asePorts.Input("CAE-UCM-V1.0"), sceneOut = asePorts.Output("OSD-ASD-V1.5"), sceneReport = asePorts.Output("CAE-UCM-V1.0");
+            var (a, _) = await Run(aoe, objectOut, objectReport, (objectIn, Forms.Auo(Sound("anna"))));
+            var (b, _) = await Run(aoe, objectOut, objectReport, (objectIn, Forms.Auo(Sound("bruno"))));
+            string idA = (string)Bao(a)["BasicAudioObjectID"]!, idB = (string)Bao(b)["BasicAudioObjectID"]!;
+            Assert.Equal(("anna", "bruno"), (idA, idB));
+            int Members(JsonNode? scene) => scene is null ? 0 : JsonNode.Parse(Forms.Bas(scene.ToJsonString()))!["BasicAudioSceneDescriptorsData"]?.AsArray().Count ?? 0;
 
-            var addA = Command(new Mpai.Core.UserCommandData { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idA), SpatialAttitude = At(-1) }] } });
-            var addB = Command(new Mpai.Core.UserCommandData { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idB), SpatialAttitude = At(1) }] } });
+            var addA = Command(new Mpai.Core.UserCommandRQ { AddedObjects = new Mpai.Core.ObjectPlacements { ObjectID = "stage", Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idA), SpatialAttitude = At(-1) }] } });
+            var addB = Command(new Mpai.Core.UserCommandRQ { AddedObjects = new Mpai.Core.ObjectPlacements { Objects = [new Mpai.Core.ObjectPlacement { ObjectID = Ref(idB), SpatialAttitude = At(1) }] } });
             var (one, _) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(addA)));
             var (two, _) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(addB)));
             Assert.Equal((1, 2), (Members(one), Members(two)));
@@ -110,7 +119,7 @@ public class RevocationAimTests
             Assert.Equal("Done", first!.Outcome);
             Assert.Null(nothing);                                                                 // the Scene that the command created is gone: nothing is open
 
-            var (_, unknown) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(Command(new Mpai.Core.UserCommandData { RevokedUserCommandID = "never-sent" }))));
+            var (_, unknown) = await Run(ase, sceneOut, sceneReport, (command, Mpai.Core.MpaiJson.ToJson(Command(new Mpai.Core.UserCommandRQ { RevokedUserCommandID = "never-sent" }))));
             Assert.Equal("Failed", unknown!.Outcome);
         }
         finally { try { Directory.Delete(root, true); } catch { } }
@@ -123,20 +132,20 @@ public class RevocationAimTests
         var (root, storage, store) = Module();
         try
         {
-            var ports = AIF.Controller.AimPortReader.Load(store, "1CAE-SOE-V1.0-I01");
-            var soe = new Mpai.Cae.Soe.SoeAimProcessor("1CAE-SOE-V1.0-I01", storage, ports);
-            string objectIn = ports.Input("OSD-BSO-V1.5", 1), command = ports.Input("CAE-UCM-V1.0"), report = ports.Output("CAE-UCM-V1.0");
-            await Run(soe, null, report, (objectIn, Mpai.Core.MpaiJson.ToJson(new BasicSpeechObject { BasicSpeechObjectID = "BSO000001" })));
-            Assert.Null(Mpai.Cae.Soe.SpeechStore.Get(storage, "BSO000001")!.BasicSpeechObjectSpaceTime);
+            var ports = AIF.Controller.AimPortReader.Load(store, "1MMC-SOE-V2.5-I01");
+            var soe = new Mpai.Mmc.Soe.SoeAimProcessor("1MMC-SOE-V2.5-I01", storage, ports);
+            string objectIn = ports.Input("OSD-SPO-V1.5", 1), command = ports.Input("CAE-UCM-V1.0"), report = ports.Output("CAE-UCM-V1.0");
+            await Run(soe, null, report, (objectIn, Forms.Spo(new BasicSpeechObject { BasicSpeechObjectID = "hello" })));
+            Assert.Null(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
 
-            var place = Command(new Mpai.Core.UserCommandData { ChangedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = Ref("BSO000001"), SpatialAttitude = At(2) }] } });
+            var place = Command(new Mpai.Core.UserCommandRQ { ChangedObjects = new Mpai.Core.ObjectChanges { Objects = [new Mpai.Core.ObjectChange { ObjectID = Ref("hello"), SpatialAttitude = At(2) }] } });
             var (_, said) = await Run(soe, null, report, (command, Mpai.Core.MpaiJson.ToJson(place)));
             Assert.Equal("Done", said!.Outcome);
-            Assert.NotNull(Mpai.Cae.Soe.SpeechStore.Get(storage, "BSO000001")!.BasicSpeechObjectSpaceTime);
+            Assert.NotNull(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);
 
             var (_, undone) = await Run(soe, null, report, (command, Mpai.Core.MpaiJson.ToJson(Revoke(place))));
             Assert.Equal("Done", undone!.Outcome);
-            Assert.Null(Mpai.Cae.Soe.SpeechStore.Get(storage, "BSO000001")!.BasicSpeechObjectSpaceTime);   // where it was: nowhere in particular
+            Assert.Null(Mpai.Mmc.Soe.SpeechStore.Get(storage, "hello")!.BasicSpeechObjectSpaceTime);   // where it was: nowhere in particular
         }
         finally { try { Directory.Delete(root, true); } catch { } }
     }

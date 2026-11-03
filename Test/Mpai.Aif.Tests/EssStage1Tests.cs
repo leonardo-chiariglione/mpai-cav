@@ -37,7 +37,7 @@ public class EssStage1Tests
     [SkippableFact]
     public void Step1DetectorOnTheDrive()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -141,7 +141,7 @@ public class EssStage1Tests
     [SkippableFact]
     public async Task Step4VisualSceneDescription()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -238,7 +238,7 @@ public class EssStage1Tests
     [SkippableFact]
     public async Task Step5EnvironmentDescription()
     {
-        var model = Path.Combine(Repository.Root, "Models", "yolox_s.onnx");
+        var model = TestModels.Can("yolox_s.onnx") ? TestModels.Of("yolox_s.onnx") : "";
         Skip.IfNot(File.Exists(model), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
 
         var (messages, truth) = new SyntheticDrive(11, TimeSpan.FromSeconds(20)).Make();
@@ -322,7 +322,7 @@ public class EssStage1Tests
     [Trait("Duration", "Long")]
     public async Task Step6EndToEnd()
     {
-        Skip.IfNot(File.Exists(Path.Combine(Repository.Root, "Models", "yolox_s.onnx")), "Models/yolox_s.onnx is absent: the model files are obtained separately.");
+        Skip.IfNot(TestModels.Can("yolox_s.onnx"), "yolox_s.onnx cannot be had: the L3 declares it, and Access holds it or cannot obtain it.");
         var drive = new SyntheticDrive(11, TimeSpan.FromSeconds(20));
         var (messages, truth) = drive.Make();
         var result = new Dictionary<string, string>();
@@ -398,27 +398,27 @@ public class EssStage1Tests
     // The status is read at 19 s of the drive, while it plays: the camera Blocks, so a
     // frame of the drive may be given seconds after its time, and a camera stopped at
     // 10 s has certainly been silent longer than its MaxAge (2 s) by then.
-    private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Rca.WorkflowInterpreter.PlaybackReport Played)> RunEss(
+    private static async Task<(List<JsonObject> Records, Mpai.Aif.Api.ControllerApi.ModuleStatus Status, Mpai.Ua.WorkflowInterpreter.PlaybackReport Played)> RunEss(
         SyntheticDrive drive, IReadOnlyList<DriveMessage> messages)
     {
         const string ess = "1CAV-ESS-V2.0-I01";
         var location = Path.Combine(Path.GetTempPath(), "mpai-phase7-" + Guid.NewGuid().ToString("N"));
         var store = new AIF.SharedStorage.RuledStore(() => Path.Combine(location, "private", ess), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null);
-        var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, "SyntheticDrive"), "", ""), messages);
+        var driveId = drive.WriteRecord(store.For(new AIF.SharedStorage.StorageHolder(ess, AIF.SharedStorage.RuledStore.Controller), "", ""), messages);
 
         using var api = new Mpai.Aif.Api.ControllerApi(Repository.Amds, Path.Combine(Repository.Root, "AIMs", "aim-settings.json"), new EssProvider(Repository.Root));
         Assert.Equal(AifError.OK, api.StartFlow(ess));
         api.SharedStorageInit(ess, location);
         Assert.Equal(AifError.OK, api.RecordStart(ess, out var recordId));
 
-        var devices = new Mpai.Rca.DeviceRegistry().RegisterRecord("drive", new Mpai.Rca.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
-        var interpreter = new Mpai.Rca.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
+        var devices = new Mpai.Ua.DeviceRegistry().RegisterRecord("drive", new Mpai.Ua.StoredRecord(api.ModuleStorageAt(ess, location), driveId));
+        var interpreter = new Mpai.Ua.WorkflowInterpreter(Mpai.Aif.Api.ControllerApiAsync.Async(api), devices);
         var run = interpreter.RunAsync(new Mpai.Wdl.WorkflowReader().Read($$"""
             workflow DRIVE over {{ess}}
             on Start:
                 stream Camera (OSD-BVO-V1.5) from record "drive"
                 stream Attitude (OSD-OSA-V1.5) from record "drive"
-                stream Gnss (CAV-GNO-V2.0) from record "drive"
+                stream Gnss (CAV-NSO-V2.0) from record "drive"
                 wait {{(int)drive.Duration.TotalSeconds * 2 + 2}}s
             """), CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(19));

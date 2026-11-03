@@ -1,0 +1,49 @@
+{
+ "Id": "en-degraded",
+ "Language": "en",
+ "Dpi": 150,
+ "Width": 1240,
+ "Height": 1754,
+ "Kind": "synthetic, degraded: 150 dpi, rotated 1.1 degrees, blurred, noisy, grey paper, JPEG quality 40",
+ "Columns": [
+  {
+   "Box": [
+    70,
+    226,
+    410,
+    1557
+   ],
+   "Point": [
+    228.7,
+    293.4
+   ],
+   "Text": "Several people hospitalized after thousands of hotdogs spill following collision on interstate in Pennsylvania\nShortly after 9:00 a.m. EDT (1300 UTC) on Friday morning, thousands of hot dogs spilled onto Interstate 83 in York County, Pennsylvania following a crash involving a tractor trailer and two other vehicles. Several people were injured in the incident and were treated at York Hospital, although authorities later said that those were not life threatening.\nThe tractor trailer split open after a mechanical issue resulted in the truck brushing against a concrete divider, resulting in boxes of frozen hotdogs spilling out. According to the owner of a business located near the crash site: \"We heard a loud bang, and then we heard about three more loud bangs. We knew it was a tire first, blowout here on 83. But then after that, we knew there was some other type of accident because it went on for a minute or two.\"\nThe wieners were smashed along the road. A photo posted by Shrewsbury Volunteer Fire Company showed a damaged concrete divider in the incident. The spill stopped traffic in both directions, and commutes were delayed by \"at least a half an hour,\" according to The Independent. The lanes reopened later that afternoon.\nCleanup efforts extended into the late morning hours, and allegedly involved rakes. Brad Dauberman, who serves as Shrewsbury, Pennsylvania fire company chief described the cleanup process: \"Once those [dogs] leave the truck and hit the road, that’s all garbage, and it’s still pretty warm. [...] I can tell you personally, hot dogs are very slippery. I did not know that.\" Dauberman also stated that in order to complete the task, they were required to use a front-end loader in order to scoop up clods of meat to be jettisoned into a dump truck.\nIn total, over one thousand pounds of hotdogs were lost in the spill. The Pennsylvania State Police were investigating the incident."
+  },
+  {
+   "Box": [
+    450,
+    226,
+    790,
+    1535
+   ],
+   "Point": [
+    608.4,
+    271.1
+   ],
+   "Text": "India signs on to chemical patents to comply with WTO order\nA bill passed by India's Parliament put an end to the manufacture of many cheap generic drugs copied from products protected by foreign company patents. A Patents Amendment Bill (2005) has been condemned by foreign aid groups who expect a significant rise in drug costs as a result of the bill.\nDrug compounds in India were previously not protected by patents, meaning that research and developement costs borne by the originating manufacturers were avoided by generic drug producers. The new bill \"will move India toward the patent mainstream and support and encourage innovation and investment in research and development in India,\" said Ranjit Sahani, managing director of Novartis India.\nAs the world's fourth-largest manufacturer of drugs by volume, the pharmaceutical industry in India is valued at US$5 billion - but ranks as only 13th by value, reflecting the low costs to consumers of the products. \"Because India is one of the world's biggest producers of generic drugs, this law will have a severe knock-on effect on many developing countries which depend on imported generic drugs from India,\" said Samar Verma, regional policy adviser at Oxfam International.\nAround half of African, Asian and Latin American HIV patients needing anti-retroviral drugs rely on low-cost drugs from India, which are sold at one twentieth the price of similar drugs produced in the West.\nMore than 90 per cent of drugs listed as essentials in India are either unpatented or expired. Drugs patented before 1995 -- when the World Trade Organization  [WTO] set a 10 year deadline to enact protection -- will not be eligible under the bill.\nSome degree of protection was mandated by WTO in order for India to have greater access to international markets. Opposers of the bill say it goes too far."
+  },
+  {
+   "Box": [
+    810,
+    226,
+    1150,
+    1576
+   ],
+   "Point": [
+    968.3,
+    264.2
+   ],
+   "Text": "Swedish nuclear reactors shut down over safety concerns\nThree of Sweden's ten nuclear reactors have been shut down due to safety concerns following an incident last week at the Forsmark Nuclear Power Plant, in which the reactor cooling systems failed. The reactor has since been shut down there. After the incident, the Swedish Nuclear Power Inspectorate, SKI asked all the nuclear power plants to demonstrate that the same failure could not happen in them. On Wednesday, two more reactors at Oskarshamn were shut down after the operator said their safety could not be guaranteed.\nLast week's incident at the Forsmark plant was triggered by a short circuit that cut  power to the reactor cooling system. Two of the four backup generators also failed to start, but the remaining two worked and were sufficient to meet the plant's needs. Greenpeace reports that the fault in the backup power systems were traced to new equipment installed in 1993.\nThe spokesman of the Swedish Nuclear Power Inspectorate Anders Bredfell denied that there was any danger of a meltdown, adding that there was also a backup gas turbine to power the cooling system in an emergency.\nHowever, Lars-Olov Höglund, who was responsible for the nuclear plant Forsmark for many years, said the incident was the most dangerous one since Chernobyl and Three Mile island, and that a meltdown was avoided only by pure luck. His views have however been questioned as he is involved in  litigation with the Swedish nuclear industry and is known as an outspoken nuclear critic. Researchers at the Royal Institute of Technology as well as the personnel at the power plant were critical of Höglunds' view.\nSpeaking to BBC News, SKI spokesman Anders Bredfell said that the International Atomic Energy Agency (IAEA) was informed of the incident as required and that the incident classes as a '2' in the 0-7 scale used by the IAEA to assess the severity of the incident."
+  }
+ ]
+}

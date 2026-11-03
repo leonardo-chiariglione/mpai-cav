@@ -1,0 +1,82 @@
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/CUI1/V2.1/data/GovernanceDescriptors.json",
+  "title":                          "GovernanceDescriptors",
+  "type":                           "object",
+  "required":                       [ "oType" ],
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "CUI-GVS-V2.1" },
+    "MInstanceID":                  { "type": "string" },
+    "UEnvironmentID":               { "type": "string" },
+
+    "GovernanceDescriptorsID":      { "type": "string" },
+    "GovernanceDescriptorsTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+
+    "GovernanceDescriptors":        { "type": "object", "required": [ "EFQ" ], "properties": {
+
+      "EFQ":                        { "type": "object", "required": [ "id","module_id","poweruser_id","survey_company_id",
+                                      "period_start","period_end","input", "simulation","consolidated","created_at","updated_at" ],
+                                      "properties": {
+
+        "id":                       { "type": "integer" },
+        "module_id":                { "type": "string" },
+        "poweruser_id":             { "type": "integer" },
+        "survey_company_id":        { "type": "integer" },
+
+        "period_start":             { "type": "string", "format": "date-time" },
+        "period_end":               { "type": "string", "format": "date-time" },
+
+        "input":                    { "type": "array", "items": {    "type": "object", "required": [ "type","code","editable",
+                                      "value","saves" ], "properties": {
+
+          "code":                   { "type": "string" },
+          "type":                   { "type": "string", "enum": [ "text","fixed-row","replicable-row","binary-radio","select" ] },
+          "description":            { "type": [ "string","null" ] },
+          "required":               { "type": [ "boolean","null" ] },
+          "editable":               { "type": "boolean" },
+          "value":                  { "type": [ "string","array","null" ] },
+
+          "saves":                  { "type": "array", "items": {} },
+
+          "min":                    { "type": [ "integer","null" ] },
+          "max":                    { "type": [ "integer","null" ] },
+          "IVA":                    { "type": [ "string","null" ] },
+          "PERIODO":                { "type": [ "string","null" ] },
+
+          "DIMAZIENDALE":           { "type": [ "object","null" ], "properties": {
+
+            "DIMAZIENDALER":        { "type": "object", "properties": {
+              "DIMAZIENDALEDIP":    { "type": "string" },
+              "DIMAZIENDALEINDIP":  { "type": "string" },
+              "DIMAZIENDALECOLL":   { "type": "string" },
+              "DIMAZIENDALETOT":    { "type": "string" } } } } },
+
+          "columns":                { "type": [ "array","null" ], "items": {    "type": "object",
+                                      "required": [ "type","code","required" ], "properties": {
+            "type":                 { "type": "string" },
+            "code":                 { "type": "string" },
+            "required":             { "type": "boolean" },
+            "pattern":              { "type": [ "string","null" ] },
+            "min":                  { "type": [ "integer","null" ] },
+            "max":                  { "type": [ "integer","null" ] },
+            "options":              { "type": [ "array","null" ],
+                                      "items": { "type": "string" } } } } },
+
+          "fixedRows":              { "type": [ "array","null" ], "items": {    "type": "object",
+                                      "required": [ "code","values" ], "properties": {
+            "code":                 { "type": "string" },
+            "values":               { "type": "array",
+                                      "items": {    "type": "object", "required": [ "code","value" ], "properties": {
+              "code":               { "type": "string" },
+              "value":              { "type": "string" } } } } } } } } } },
+
+        "output":                   { "type": [ "object","null" ] },
+        "simulation":               { "type": "boolean" },
+        "consolidated":             { "type": "boolean" },
+        "last_processing_datetime": { "type": [ "string","null" ], "format": "date-time" },
+        "created_at":               { "type": "string", "format": "date-time" },
+        "updated_at":               { "type": "string", "format": "date-time" } } } } },
+
+    "oType":                        {  "type": "integer" },
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

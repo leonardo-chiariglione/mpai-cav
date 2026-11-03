@@ -1,7 +1,7 @@
 { "$schema":            "https://json-schema.org/draft/2020-12/schema",
   "$id":                "https://schemas.mpai.community/MMC/V2.5/data/Intent.json",
   "title":              "Intent V2.5",
-  "description":        "An EntityÃ¢â‚¬â„¢s goal-directed purpose, e.g., an attempt to do something, or an utterance representing a request or an assessment. It can be accompanied by modifiers like urgency and can be either inferred from observation of an Entity or assigned to a virtual Entity.",
+  "description":        "An Entity’s goal-directed purpose, e.g., an attempt to do something, or an utterance representing a request or an assessment. It can be accompanied by modifiers like urgency and can be either inferred from observation of an Entity or assigned to a virtual Entity.",
   "type":               "object",
   "required":           [ "Header", "IntentID", "Intent", "Parameters", "Trace" ], "properties": {
 

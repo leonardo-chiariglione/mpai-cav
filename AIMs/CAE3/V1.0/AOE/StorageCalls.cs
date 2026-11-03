@@ -3,7 +3,7 @@ using AIF.SharedStorage;
 namespace AIF.SharedStorage;
 
 // The Shared Storage calls by their short names, as AOE and ASE were written in
-// D:\AI against an earlier form of ISharedStorage; DI's carries the API names
+// the earlier tree against an earlier form of ISharedStorage; DI's carries the API names
 // MPAI_AIFM_SharedStorage_*.
 public static class StorageCalls
 {

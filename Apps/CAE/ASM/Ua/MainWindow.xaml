@@ -1,0 +1,79 @@
+<Window x:Class="Mpai.Cae.AsmUa.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:local="clr-namespace:Mpai.Cae.AsmUa"
+        Title="Audio scene by voice" Height="780" Width="1180">
+  <Grid Margin="12">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="329"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="0"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <TextBlock x:Name="InstructionText" Grid.Row="0" Grid.ColumnSpan="2" Text="Wait while the avatar loads" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+    <!-- the scene takes all the space left of the column of the lady and her words; it grows with the window -->
+    <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" BorderBrush="#CCC" BorderThickness="1" Margin="0,0,8,0">
+      <local:SceneView x:Name="Room"/>
+    </Border>
+
+    <Grid Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" x:Name="SideColumn">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <!-- the lady: each side 0.866 of what it was, so a quarter less in surface; her height follows the window -->
+      <wv2:WebView2 x:Name="Web" Grid.Row="0" Height="300" VerticalAlignment="Top"/>
+      <!-- HOW THE PERSON TALKS TO HER: both red at the start; one chosen turns blue and the other is disabled with its input -->
+      <UniformGrid Grid.Row="1" Rows="1" Margin="0,8,0,0">
+        <ToggleButton x:Name="VoiceModeButton" Content="Voice" Margin="0,0,4,0" Click="ModeButton_Click" Style="{StaticResource MicButton}"/>
+        <ToggleButton x:Name="TextModeButton" Content="Text" Margin="4,0,0,0" Click="ModeButton_Click" Style="{StaticResource MicButton}"/>
+      </UniformGrid>
+      <Border Grid.Row="2" BorderBrush="#CCC" BorderThickness="1" Margin="0,8,0,0" Padding="8">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel>
+            <TextBlock Text="What I heard:" FontWeight="Bold"/>
+            <TextBlock x:Name="HeardText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
+            <TextBlock Text="What she answered:" FontWeight="Bold"/>
+            <TextBlock x:Name="AnswerText" TextWrapping="Wrap" FontSize="15" Margin="0,2,0,6"/>
+            <TextBlock x:Name="StatusText" Foreground="#666" FontSize="13" TextWrapping="Wrap"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="3" Grid.ColumnSpan="2" Margin="0,8,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <Button x:Name="StopButton" Grid.Column="0" Content="Stop speaking (Esc)" Margin="0,0,8,0" Click="StopButton_Click" Style="{StaticResource StopButton}" Focusable="False"/>
+      <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone on" IsChecked="True" Margin="0,0,8,0" Click="MicButton_Click" Style="{StaticResource MicButton}" MinWidth="250"/>
+      <Button x:Name="LoadButton" Grid.Column="2" Content="Load a sound..." Padding="12,4" Margin="0,0,8,0" Click="LoadButton_Click" IsEnabled="False"/>
+      <Button x:Name="HearButton" Grid.Column="3" Content="Hear the scene" Padding="12,4" Margin="0,0,8,0" Click="HearButton_Click" IsEnabled="False"/>
+      <Button x:Name="RoomButton" Grid.Column="4" Content="Room acoustics" Padding="12,4" Margin="0,0,8,0" Click="RoomButton_Click" IsEnabled="False"/>
+      <TextBox x:Name="InputBox" Grid.Column="5" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" IsEnabled="False"/>
+      <Button x:Name="SendButton" Grid.Column="6" Content="Send" Padding="16,4" Margin="8,0,0,0" IsEnabled="False" Click="SendButton_Click"/>
+    </Grid>
+    <!-- how long what is stored is kept: until the person deletes it, unless they give a date -->
+    <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0" Visibility="Collapsed">
+      <TextBlock Text="What is stored is kept:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+      <RadioButton x:Name="KeepForever" Content="until it is deleted" IsChecked="True" VerticalAlignment="Center" Margin="0,0,14,0" Checked="Keep_Changed"/>
+      <RadioButton x:Name="KeepUntilDate" Content="until" VerticalAlignment="Center" Margin="0,0,6,0" Checked="Keep_Changed"/>
+      <DatePicker x:Name="KeepDate" SelectedDateChanged="Keep_Changed" Width="140"/>
+    </StackPanel>
+  </Grid>
+</Window>

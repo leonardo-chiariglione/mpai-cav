@@ -3,7 +3,7 @@
   "$id": "https://schemas.mpai.community/CAV2/V2.0/AIMs/TrafficObstacleAvoidance.json",
   "title": "Traffic Obstacle Avoidance V2.0",
 
-  "Identifier":   { "ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "CAV-TOA-V2.0" },
+  "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
 
   "Header":       "CAV-TOA-V2.0",
 
@@ -13,20 +13,22 @@
   "ExternalPorts":  [
     { "Name": "FullEnvironmentDescriptorsIn" , "Direction": "Input",   "DataType": "CAV-FED-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "Trajectory"                   , "Direction": "Input",   "DataType": "OSD-TRJ-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                      , "Direction": "Input",   "DataType": "CAV-AMD-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AlertIn"                      , "Direction": "Input",   "DataType": "CAV-ALT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSMASMessageIn"              , "Direction": "Input",   "DataType": "CAV-AMM-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "FullEnvironmentDescriptorsOut", "Direction": "Output",  "DataType": "CAV-FED-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AMSMASMessageOut"             , "Direction": "Output",  "DataType": "CAV-AMM-V2.0",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "AMSData"                      , "Direction": "Output",  "DataType": "CAV-AMD-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "RoadState"                    , "Direction": "Output",  "DataType": "CAV-RDS-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadState"                    , "Direction": "Output",  "DataType": "CAV-RDS-V2.0", "PortNumber": 1, "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "CAVState"                     , "Direction": "Output",  "DataType": "CAV-CST-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "AlertOut"                     , "Direction": "Output",  "DataType": "CAV-ALT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "Interaction"                  , "Direction": "Output",  "DataType": "CAV-INT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "Interaction"                  , "Direction": "Output",  "DataType": "CAV-INT-V2.0", "IsOptional": true,  "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateBusIn" , "Direction": "Input",  "DataType": "CAV-RDS-V2.0", "IsOptional": true, "AcceptedTransports": [ "Bus" ], "Technology": "Software", "Protocol": "", "IsRemote": false },
+    { "Name": "RoadStateBusOut", "Direction": "Output", "DataType": "CAV-RDS-V2.0", "PortNumber": 2, "IsOptional": true, "Transport": "Bus", "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],
   "Topology":  [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
   "Implementations":  [
    {

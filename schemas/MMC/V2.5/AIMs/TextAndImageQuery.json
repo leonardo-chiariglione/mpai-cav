@@ -5,7 +5,7 @@
 
   "Header":               "MMC-TIQ-V2.5",
 
-  "Identifier":           {"ImplementerID": "/* String from IIDRA */", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-TIQ-V2.5"},
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
 
@@ -20,6 +20,14 @@
   "SubAIMs":              [],
 
   "Topology":             [],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "tiq-vision", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "VisionModel", "AsFile": "blip_vision_model.onnx", "Description": "The vision model of the question-answering model on images (BLIP, in the form exported to ONNX)."},
+                      {"Name": "tiq-vision-data", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "VisionModelData", "AsFile": "blip_vision_model.onnx.data", "Description": "The weights of the vision model, which the model refers to by this file name."},
+                      {"Name": "tiq-encoder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "EncoderModel", "AsFile": "blip_text_encoder_wrapper.onnx", "Description": "The text encoder of the model."},
+                      {"Name": "tiq-decoder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "DecoderModel", "AsFile": "blip_decoder_context_dynamic.onnx", "Description": "The text decoder of the model."},
+                      {"Name": "tiq-vocab", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "VocabFile", "AsFile": "vocab.txt", "Description": "The vocabulary of the model."}],
 
   "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
                             "BinaryName":       "/* BinaryName */",

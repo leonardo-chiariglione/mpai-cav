@@ -9,6 +9,7 @@ namespace Mpai.Aif.Tests;
 // SPEECH AS SPEECH OBJECTS (MMM Phase 4). A participant sends what it said once, as a Speech Object that carries its own duration - not a request per chunk of
 // the microphone. The Secretary forwards it to the ASR Service, a Process of its own, which answers with the words; the words go into the minutes.
 [Trait("Group", "Fast")]
+[Collection("MmmMeeting")]                       // they share the static state of the Meeting: one at a time
 [Trait("Blocks", "Yes")]
 public class MmmSpeechTests
 {

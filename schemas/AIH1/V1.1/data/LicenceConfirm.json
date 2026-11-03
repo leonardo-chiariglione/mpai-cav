@@ -18,10 +18,11 @@
     "LicenceConfirmData": { "type": "array", "items": { "oneOf": [
 
                           { "type": "object", "required": [ "Request" ], "additionalProperties": false, "properties": {
-        "Request":        { "type": "object", "required": [ "AIHDataID", "ProcessType", "Time" ], "additionalProperties": false, "properties": {
+        "Request":        { "type": "object", "required": [ "AIHDataID", "ProcessType", "RequesterID", "Time" ], "additionalProperties": false, "properties": {
           "AIHDataID":    { "type": "string", "description": "Identifier of the AIH data to process." },
+          "RequesterID":  { "type": "string", "description": "Identifier of the party that requests the Process Type on the AIH Data and whose compliance with the licence is asked: the End User or a Third-Party User when the Health Back End asks on behalf of AIH Data Processing; the party that performed the operation being audited (the Health Back End) when it asks on behalf of Auditing. EndUserID is the End User the request is made for." },
           "ProcessType":  { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/ProcessTypes.json#" },
-          "Time":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Request Time." } } } } },
+          "Time":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Request Time." } } } } },
 
                           { "type": "object", "required": [ "Response" ], "additionalProperties": false, "properties": {
           "Response":     { "type": "object", "required": [ "Status" ], "additionalProperties": false, "properties": {

@@ -55,6 +55,11 @@ public sealed class AimHostServer
     // measured into it first.
     public AIF.Trust.IRootOfTrust? RootOfTrust { get; init; }
 
+    // THE HOST'S OWN REPOSITORY OF AIMs: where it has one, an AIM its Controller places here that it has not seen is taken in from what the Controller hands it - the Metadata, the
+    // fingerprints the MPAI Store approved, the AIM Licence. The host obtains the Implementation and its models itself, from the places the Metadata gives, and checks them and the
+    // AIM Licence as a host of the licensee (or of another party) before it builds the AIM. The folder of the repository is the one its L3s are in.
+    public AIF.Store.AimRepository? Repository { get; init; }
+
     public AimHostServer(AmdStore store, AimSettings settings, IAimProvider provider, string storageRoot)
     {
         this.store = store;
@@ -91,6 +96,12 @@ public sealed class AimHostServer
             case "Place":
             {
                 var aim = frame["Aim"]!.GetValue<string>();
+                IReadOnlyDictionary<string, string>? measuredFiles = null;
+                if (frame["Package"] is JsonObject package && Repository is not null)
+                {
+                    try { measuredFiles = Repository.Accept(package); store.Scan(); Console.WriteLine($"[AIM host] {aim} taken into the repository"); }
+                    catch (Exception e) when (e is InvalidOperationException or IOException or FileNotFoundException) { return Refused(e.Message); }
+                }
                 var identifier = store.FindByAimName(aim);
                 if (identifier is null) return Refused($"this host holds no L3 of {aim}");
                 if (!provider.CanCreate(aim)) return Refused($"this host has no implementation of {aim}");
@@ -121,11 +132,19 @@ public sealed class AimHostServer
                 });
                 if (!hosted.Aims.Add(aim))                                              // placed already
                     return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities.GetValueOrDefault(aim)?.DeepClone() };
+                // What the host measured of the files it obtained: the Controller asks the Store whether they are what it approved.
+                var measuredOut = new JsonObject();
+                foreach (var (file, fingerprint) in measuredFiles ?? new Dictionary<string, string>()) measuredOut[file] = fingerprint;
                 var scope = Path.Combine(storageRoot, Uri.EscapeDataString(module));
                 ImplementationEvidence.Record(RootOfTrust, aim, ImplementationEvidence.Of(provider.ImplementationOf(aim), settings.For(aim)));
-                var processor = provider.Create(aim, settings.For(aim),
+                // The Access this AIM declares, narrowed to it by what its L3 says (AccessSources).
+                hosted.Host.BindAccess(aim, AIF.Controller.AccessEntry.ReadForThisMachine(store.GetAMD(identifier).RootElement));
+                // what the AIM declares in Access is given to its Implementation as the Controller gives it to an AIM it runs itself
+                var givenSettings = AIF.Controller.AccessEntry.Overlay(settings.For(aim), AIF.Controller.AccessEntry.ReadForThisMachine(store.GetAMD(identifier).RootElement), hosted.Host.AccessFor(aim), aim);
+                var processor = provider.Create(aim, givenSettings,
                     new FileSharedStorage(scope, $"{module}/{aim}", "remote"),
-                    new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"));
+                    new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"),
+                    null, hosted.Host.AccessFor(aim));
                 hosted.Host.RegisterRuntime(processor);
                 var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
                 hosted.Keys[aim] = key;
@@ -139,7 +158,7 @@ public sealed class AimHostServer
                 var declared = new JsonObject();
                 foreach (var (k, v) in aimSettings.Where(s => s.Key.StartsWith("SHA256:", StringComparison.Ordinal))) declared[k] = v;
                 Console.WriteLine($"[AIM host] {aim} placed for {module}");
-                return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities[aim].DeepClone(), ["Evidence"] = evidence, ["Declared"] = declared };
+                return new JsonObject { ["Ok"] = true, ["CII"] = hosted.Identities[aim].DeepClone(), ["Evidence"] = evidence, ["Declared"] = declared, ["Measured"] = measuredOut };
             }
 
             // The credentials the Controller issued an AIM placed here: kept, to be

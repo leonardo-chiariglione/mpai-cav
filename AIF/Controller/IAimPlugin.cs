@@ -16,4 +16,12 @@ public interface IAimPlugin
     IAimProcessor Create(
         AimPortReader ports,
         IReadOnlyDictionary<string, string> settings);
+
+    // With the Access the AIM declared in its Metadata (AccessSources), narrowed to it. A plug-in that reads Access
+    // overrides this; the default is the plug-in without it.
+    IAimProcessor Create(
+        AimPortReader ports,
+        IReadOnlyDictionary<string, string> settings,
+        IAccessReader? access) =>
+        Create(ports, settings);
 }

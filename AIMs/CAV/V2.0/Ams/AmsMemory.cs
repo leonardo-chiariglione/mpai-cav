@@ -9,12 +9,13 @@ using Mpai.Cav.Ess;
 namespace Mpai.Cav.Ams;
 
 // AMS MEMORY, STAGE 1 (CAV-AMM; M3233 3.8). Every decision the AMS takes - Route,
-// Path, Trajectory, Alert, AMS-MAS Message - kept in the Private Storage of the
-// Module, category AMSData, with the Full Environment Descriptors it was taken on
+// Path, Trajectory, Alert, AMS-MAS Message - kept in the Shared Storage of the
+// Module (the author, 2026/11/01: the AMS Data is what is worth recording for the future, and
+// authorised parties may read it; every AMS AIM writes it and reads it), under ams-data/, with the Full Environment Descriptors it was taken on
 // (the latest before it); for each AMS-MAS Message, the AMS Data of that instant
 // given out: the Route in force, the Path, the Trajectory commanded, the latest
 // Alert since the last, and the Full Environment Descriptors.
-public sealed class AmsMemory(string instanceId, IRuledStorage? storage) : IAimProcessor, IAimRunner
+public sealed class AmsMemory(string instanceId, ISharedStorage? storage) : IAimProcessor, IAimRunner
 {
     private string? routeId;
     private JsonNode? path;
@@ -31,6 +32,7 @@ public sealed class AmsMemory(string instanceId, IRuledStorage? storage) : IAimP
         {
             if (await ports.ReadAsync(port.DataType, 1, 0) is not { } m) continue;
             var json = JsonNode.Parse(m.Json)!;
+            if (reason is not null) { context.Report("AMS Data not kept: " + reason); reason = null; }
             if (port.DataType != AmsTypes.Message) { Absorb(port.DataType, json); continue; }
             // An AMS-MAS Message: the AMS Data of its instant. What was given out before it - the Route, the Path, the
             // Alerts, the Full Environment Descriptors - is taken in first, whatever order the ports were served in.
@@ -67,12 +69,15 @@ public sealed class AmsMemory(string instanceId, IRuledStorage? storage) : IAimP
     }
 
     private long kept;
+    private bool failed;
+    private string? reason;
     // A decision and the Full Environment Descriptors it was taken on.
     private void Keep(string dataType, JsonNode json)
     {
         var record = new JsonObject { ["Decision"] = json.DeepClone(), ["FED"] = fed?.DeepClone() };
-        // Read back by the User Agent: what the AMS decided can always be read (M3233 3.8).
-        storage?.MPAI_AIFM_RuledStorage_Put($"decisions/{++kept:D8}-{dataType}", Encoding.UTF8.GetBytes(record.ToJsonString()), "AMSData",
-                                            readers: [AIF.SharedStorage.RuledStore.UserAgent]);
+        // What the AMS decided can always be read, by whoever the Shared Storage lets (M3233 3.8).
+        if (storage is null || failed) return;
+        try { storage.MPAI_AIFM_SharedStorage_Put($"{AmsData.Prefix}decisions/{++kept:D8}-{dataType}", Encoding.UTF8.GetBytes(record.ToJsonString())); }
+        catch (InvalidOperationException e) { failed = true; reason = e.Message; }
     }
 }

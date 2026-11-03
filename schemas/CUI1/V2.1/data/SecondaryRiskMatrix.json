@@ -1,0 +1,43 @@
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/CUI1/V2.1/data/SecondaryRiskMatrix.json",
+  "title":                    "SecondaryRiskMatrix",
+  "type":                     "object",
+  "required":                 ["Header", "MInstanceID", "SecondaryRiskMatrixData"],
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "CUI-SRM-V2.1" },
+    "MInstanceID":            { "type": "string" },
+    "UEnvironmentID":         { "type": "string" },
+    "SecondaryRiskMatrixID":  { "type": "string" },
+    "SecondaryRiskMatrixTime":{ "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+                                "description": "Time when the matrix was created." },
+
+    "SecondaryRiskMatrixData":{ "type": "object", "description": "Data collecting tuples of characteristics for each Risk without an AIM.",
+                                "patternProperties": { "^RiskID#[0-9]+$":
+                              { "type": "object", "description": "A tuple of data for a specific Risk.",
+                                "required": [ "Occurrence", "Impact", "Severity", "Retention" ],
+                                "properties": {
+        "Occurrence":         { "type": "object", "description": "The likelihood of the risk happening.",
+                                "required": [ "Type", "ValueOfOccurrence" ], "properties": {
+          "Type":             { "type": "string", "description": "Qualitative scale." },
+          "ValueOfOccurrence":{ "type": "string", "enum": ["Low","Medium","High"],
+                                "description": "Exceptional; At some time; Expected." } } },
+        "Impact":             { "type": "object",
+                                "description": "The extent of damage or disruption.",
+                                "required": [ "Type", "ValueOfImpact" ], "properties": {
+          "Type":             { "type": "string", "description": "Qualitative scale." },
+          "ValueOfImpact":    { "type": "string", "enum": ["Minor","Moderate","Major"],
+                                "description": "Minor changes; Some changes; Significant changes." } } },
+        "Severity":           { "type": "object", "description": "Estimated time needed to restore normal business activities.",
+                                "required": [ "Type", "ValueOfSeverity" ], "properties": {
+          "Type":             { "type": "string", "description": "Recovery time based scale." },
+          "ValueOfSeverity":  { "type": "string", "enum": ["Irrelevant","Not very relevant","Relevant","Very relevant","Serious"],
+                                "description": "Ranges from Irrelevant (1â€“8 hours) to Serious (>15 days)." } } },
+        "Retention":          { "type": "object", "description": "Percentage of the potential effect retained in the Company.",
+                                "required": [ "Type", "ValueOfRetention" ], "properties": {
+          "Type":             { "type": "string", "description": "Real number." },
+          "ValueOfRetention": { "type": "number", "minimum": 0, "maximum": 100,
+                                "description": "The percentage not transferred to a third party." } } } } } } },
+
+    "Trace":                  { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json" },
+    "DescrMetadata":          { "type": "string" } } }

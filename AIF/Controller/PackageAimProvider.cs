@@ -37,23 +37,39 @@ public sealed class PackageAimProvider : IAimProvider
     private readonly Action<string> say;
     private readonly Dictionary<string, IAimPlugin?> byAim = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Assembly> byPackage = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IImplementationVerifier? approvals;
+    private readonly Dictionary<string, string> binaryOf = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> refused = new(StringComparer.OrdinalIgnoreCase);
 
-    public PackageAimProvider(AmdStore store, string cacheFolder, Action<string>? say = null)
+    // approvals: the Store, when there is one to ask (MPAI_AIFS_VerifyImplementation). The Controller measures the binary of each package it has
+    // fetched and the Store says whether that is the fingerprint it approved; a package it does not approve is not loaded and the AIM is refused -
+    // not built by another provider in its place. Without it, nothing is verified.
+    public PackageAimProvider(AmdStore store, string cacheFolder, Action<string>? say = null, IImplementationVerifier? approvals = null)
     {
+        this.approvals = approvals;
         this.store = store;
         cache = cacheFolder;
         this.say = say ?? (_ => { });
         Directory.CreateDirectory(cache);
     }
 
-    public bool CanCreate(string aimName) => PluginFor(aimName) is not null;
+    public bool CanCreate(string aimName) => PluginFor(aimName) is not null || refused.ContainsKey(aimName);
 
-    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage)
+    // The binary this provider fetched for the AIM, for the Controller to measure.
+    public string? ImplementationOf(string aimName) => PluginFor(aimName) is not null && binaryOf.TryGetValue(aimName, out var path) ? path : null;
+
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage) =>
+        Create(aimName, settings, storage, null, null, null);
+
+    public IAimProcessor Create(string aimName, IReadOnlyDictionary<string, string> settings, ISharedStorage? storage,
+        ISharedStorage? privateStorage, IRuledStorage? moduleStorage, IAccessReader? access)
     {
-        if (PluginFor(aimName) is not { } plugin)
+        var found = PluginFor(aimName);
+        if (refused.TryGetValue(aimName, out var why)) throw new TrustRefusedException(why);
+        if (found is not { } plugin)
             throw new InvalidOperationException($"No package provides {aimName}.");
 
-        var processor = plugin.Create(AimPortReader.Load(store, aimName), settings);
+        var processor = plugin.Create(AimPortReader.Load(store, aimName), settings, access);
 
         // AN IMPLEMENTATION IS NAMED BY ITS INSTANCE. IAimPlugin.Create is not told
         // which Instance it is building, so a plug-in names its processor with the
@@ -111,6 +127,23 @@ public sealed class PackageAimProvider : IAimProvider
             var assemblyPath = Path.Combine(folder, binary + ".dll");
             if (!File.Exists(assemblyPath)) { say($"  package for {aimName}: {binary}.dll is not in {folder}."); continue; }
 
+            // THE STORE SAYS WHETHER THIS IS THE BINARY IT APPROVED, before anything of the package is loaded.
+            if (approvals is not null)
+            {
+                var fingerprint = ImplementationFingerprints.Of(assemblyPath);
+                var answer = approvals.Verify(aimName, binary, fingerprint);
+                if (answer != VerifyResult.Same)
+                {
+                    var why = answer == VerifyResult.Different
+                        ? $"{aimName} not started: {binary}.dll of the package at {uri} is not the binary the Store approved (SHA-256 {fingerprint[..16]}...)."
+                        : $"{aimName} not started: the Store approved no fingerprint of {binary}.dll, or could not be asked.";
+                    say("  " + why);
+                    refused[aimName] = why;
+                    return null;
+                }
+            }
+            binaryOf[aimName] = assemblyPath;
+
             if (!byPackage.TryGetValue(assemblyPath, out var assembly))
                 byPackage[assemblyPath] = assembly = new PackageContext(assemblyPath).LoadFromAssemblyPath(assemblyPath);
 
@@ -128,27 +161,7 @@ public sealed class PackageAimProvider : IAimProvider
         return null;
     }
 
-    private static bool ForThisMachine(string architecture, string operatingSystem)
-    {
-        static string Arch(string a) => a.ToLowerInvariant().Replace("-", "").Replace("_", "") switch
-        {
-            "x8664" or "x64" or "amd64" => "x64",
-            "arm64" or "aarch64"        => "arm64",
-            "x86" or "i386"             => "x86",
-            _                            => a.ToLowerInvariant()
-        };
-        var here = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        var ok = architecture.Length == 0 || Arch(architecture) == Arch(here);
-        if (operatingSystem.Length > 0)
-        {
-            var os = operatingSystem.ToLowerInvariant();
-            ok &= os.Contains("window") ? RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                : os.Contains("linux")  ? RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                : os.Contains("mac") || os.Contains("osx") ? RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                : true;
-        }
-        return ok;
-    }
+    private static bool ForThisMachine(string architecture, string operatingSystem) => ExecutionEnvironment.IsHere(architecture, operatingSystem);
 
     // THE PACKAGE, IN THE SCI'S CACHE. A file: URI is copied from where the
     // Implementer put it; an http(s) URI is downloaded, and a .zip unpacked.

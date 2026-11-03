@@ -1,0 +1,29 @@
+{
+ "Comment": "The public databases the reference faces and voices (Data/ReferenceFeatures) are computed from. Declared as Access data: the Controller obtains each from its URI, checks its SHA-256, and does not download it again when it already holds it. The tools BuildReferenceFeatures read them from Access.",
+ "AccessSources": [
+  {
+   "Name": "lfw",
+   "Uri": "https://ndownloader.figshare.com/files/5976018",
+   "Sha256": "055F7D9C632D7370E6FB4AFC7468D40F970C34A80D4C6F50FFEC63F5A8D536C0",
+   "Setting": "LfwArchive",
+   "Description": "Labeled Faces in the Wild, lfw.tgz: 13,233 pictures of 5,749 people (University of Massachusetts Amherst; the archive on figshare)",
+   "Terms": {
+    "Licence": "No licence stated; published for research use (Labeled Faces in the Wild)",
+    "Uri": "http://vis-www.cs.umass.edu/lfw/",
+    "PersonalData": true
+   }
+  },
+  {
+   "Name": "librispeech-dev-clean",
+   "Uri": "https://www.openslr.org/resources/12/dev-clean.tar.gz",
+   "Sha256": "76F87D090650617FCA0CAC8F88B9416E0EBF80350ACB97B343A85FA903728AB3",
+   "Setting": "LibriSpeechDevClean",
+   "Description": "LibriSpeech dev-clean (OpenSLR 12): 40 speakers reading audiobooks, FLAC; MD5 42e2234ba48799c1f50f24a7926300a1 as published by OpenSLR",
+   "Terms": {
+    "Licence": "CC BY 4.0",
+    "Uri": "https://www.openslr.org/12/",
+    "PersonalData": true
+   }
+  }
+ ]
+}

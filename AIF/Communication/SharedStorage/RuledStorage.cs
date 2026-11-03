@@ -29,34 +29,46 @@ public enum StorageOutcome
 
 // How long a datum is kept: until the Module instance that wrote it stops, until
 // the session of the User Agent ends, or as long as the scope is kept - and,
-// where given, no longer than a duration from its writing.
+// where given, no longer than a duration from its writing (Within) or beyond a date (Until:
+// "keep it until 31 December 2026"). Neither is ever forced: given none, a datum is kept until it is deleted.
 public enum StorageLifetime { Module, Session, Scope }
 
-public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scope, TimeSpan? Within = null)
+public sealed record StorageTime(StorageLifetime Lifetime = StorageLifetime.Scope, TimeSpan? Within = null, DateTimeOffset? Until = null)
 {
     public static StorageTime Scope { get; } = new();
 
     // Not longer than other: a lifetime no longer, and a duration within other's.
     public bool NotLongerThan(StorageTime other) =>
         Lifetime <= other.Lifetime &&
-        (other.Within is null || (Within is { } mine && mine <= other.Within.Value));
+        (other.Within is null || (Within is { } mine && mine <= other.Within.Value)) &&
+        (other.Until is null || (Until is { } until && until <= other.Until.Value));
 
-    // "Module", "Session", "Scope", "200ms", "5s", "Module 5s".
+    // "Module", "Session", "Scope", "200ms", "5s", "Module 5s", "until 2026-12-31" (up to the end of that day, UTC).
     public static StorageTime Parse(string text)
     {
         var lifetime = StorageLifetime.Scope;
         TimeSpan? within = null;
+        DateTimeOffset? until = null;
+        var expectDate = false;
         foreach (var part in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (Enum.TryParse<StorageLifetime>(part, true, out var l)) lifetime = l;
+            if (expectDate)
+            {
+                if (!DateTimeOffset.TryParse(part, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var date)) throw new FormatException($"'{part}' is not a date.");
+                until = date.TimeOfDay == TimeSpan.Zero ? date.AddDays(1) : date;
+                expectDate = false;
+            }
+            else if (part.Equals("until", StringComparison.OrdinalIgnoreCase)) expectDate = true;
+            else if (Enum.TryParse<StorageLifetime>(part, true, out var l)) lifetime = l;
             else if (part.EndsWith("ms") && double.TryParse(part[..^2], System.Globalization.CultureInfo.InvariantCulture, out var ms)) within = TimeSpan.FromMilliseconds(ms);
             else if (part.EndsWith('s') && double.TryParse(part[..^1], System.Globalization.CultureInfo.InvariantCulture, out var s)) within = TimeSpan.FromSeconds(s);
             else throw new FormatException($"'{part}' is not a lifetime or a duration.");
         }
-        return new StorageTime(lifetime, within);
+        if (expectDate) throw new FormatException("'until' wants a date.");
+        return new StorageTime(lifetime, within, until);
     }
 
-    public override string ToString() => Lifetime + (Within is { } w ? $" {w.TotalMilliseconds:0.#}ms" : "");
+    public override string ToString() => Lifetime + (Within is { } w ? $" {w.TotalMilliseconds:0.#}ms" : "") + (Until is { } u ? $" until {u.UtcDateTime:yyyy-MM-ddTHH:mm:ss}" : "");
 }
 
 // The general rules of a category, set by a central control: who may write it,
@@ -68,7 +80,11 @@ public sealed record StorageRule(IReadOnlyCollection<string> Writers, IReadOnlyC
 // the writer named them (none named: as the rules give), its time, and the rule
 // under which the write was allowed.
 public sealed record StorageTrace(string Writer, DateTimeOffset Stamp, string Category,
-                                  IReadOnlyList<string>? Readers, StorageTime Time, string Rule);
+                                  IReadOnlyList<string>? Readers, StorageTime Time, string Rule)
+{
+    // The client of the User Agent on whose behalf the write was made, or empty (Basic API 4.11.2.6).
+    public string RequestedBy { get; init; } = "";
+}
 
 // Who holds a handle: an AIM of a Module, the Controller for a Module, or the
 // User Agent. A name in the rules matches the holder's AIM, its Module, or - for
@@ -104,6 +120,8 @@ public sealed class RuledStore
     public const string UserAgent = "UserAgent";
     public const string Controller = "Controller";
     public const string Default = "Data";
+    // The category of the record of a Module's boundary: written by the Controller alone, read by the User Agent (Storage 5, STO-6).
+    public const string Boundary = "Boundary";
 
     // THE MODULE INSTANCES AND SESSIONS THAT ARE RUNNING, for data kept as long
     // as they run: a datum of one that is not running any more is gone.
@@ -123,13 +141,23 @@ public sealed class RuledStore
 
     // HOW LONG, WHERE THE WRITER DOES NOT SAY (M3245 3.3): the deployment's time for a
     // category at this location; a writer may keep a datum for less, not for more.
+    // (To decide: Basic API 3.5.2 says the Keep applies "where their writer does not say", which reads as a default, not a cap.)
     private readonly Dictionary<string, StorageTime> kept = new(StringComparer.Ordinal);
     public void Keep(string category, StorageTime time) { lock (one) kept[category] = time; }
 
-    // WHAT HAS LAPSED, DELETED: of every Shared Storage, now - a session ended.
+    // EVERY STORE, Shared and Private of a Module, for what has lapsed when a session ends or a Module stops.
+    private static readonly List<WeakReference<RuledStore>> everyStore = new();
+
+    // WHAT HAS LAPSED, DELETED: of every store, now - a session ended, a Module stopped (CTR-8; Basic API 3.7.2).
     public static void SweepAll()
     {
-        foreach (var store in shared.Values) store.Sweep();
+        List<RuledStore> live;
+        lock (everyStore)
+        {
+            everyStore.RemoveAll(w => !w.TryGetTarget(out _));
+            live = everyStore.Select(w => w.TryGetTarget(out var s) ? s : null!).Where(s => s is not null).ToList();
+        }
+        foreach (var store in live.Concat(shared.Values).Distinct()) store.Sweep();
     }
 
     public int Sweep()
@@ -151,6 +179,7 @@ public sealed class RuledStore
         this.now = now;
         this.everyoneReads = everyoneReads;
         CentralControl = centralControl;
+        lock (everyStore) everyStore.Add(new WeakReference<RuledStore>(this));
     }
 
     public StorageHolder? CentralControl { get; private set; }
@@ -205,8 +234,18 @@ public sealed class RuledStore
         return info;
     }
 
+    // A longest time the central control narrowed applies at once to what was written (Storage 3, Basic API 4.11.1.7).
+    private StorageTime? Longest(KeyInfo info)
+    {
+        if (CentralControl is null) return null;
+        lock (one) return rules.GetValueOrDefault(info.Category ?? Default)?.Time;
+    }
+
     private bool Expired(KeyInfo info) =>
+        (Longest(info) is { } longest &&
+            ((longest.Within is { } within && now() - new DateTimeOffset(info.StoredAt, TimeSpan.Zero) > within) || (longest.Until is { } until0 && now() > until0))) ||
         (info.WithinMs is { } ms && now() - new DateTimeOffset(info.StoredAt, TimeSpan.Zero) > TimeSpan.FromMilliseconds(ms)) ||
+        (info.Until is { } until && now() > until) ||
         (info.Lifetime == StorageLifetime.Module && !running.ContainsKey(info.ModuleInstance ?? "")) ||
         (info.Lifetime == StorageLifetime.Session && !running.ContainsKey(info.Session ?? ""));
 
@@ -222,6 +261,7 @@ public sealed class RuledStore
     private bool MayRead(StorageHolder holder, KeyInfo info)
     {
         if (holder.ToString() == info.StoredBy || IsCentral(holder)) return true;
+        if (info.Category == RuledStore.Boundary && holder.Module is null && holder.Name == UserAgent) return true;   // the record's reader is the User Agent (Storage 5)
         if (CentralControl is null)
             return info.Readers is { } named ? named.Any(holder.Is) : everyoneReads;
 
@@ -238,6 +278,8 @@ public sealed class RuledStore
         StorageTime? deployed;
         lock (one) deployed = kept.GetValueOrDefault(category);
         var effective = time is not null && (deployed is null || time.NotLongerThan(deployed)) ? time : deployed ?? time ?? StorageTime.Scope;
+        // THE RECORD OF THE BOUNDARY is written by the Controller alone (STO-6).
+        if (category == RuledStore.Boundary && holder.Name != Controller) return StorageOutcome.NotAuthorised;
         if (CentralControl is null || IsCentral(holder) || holder.Name == Controller)
             ruleText = IsCentral(holder) ? "the central control's own" : deployed is not null ? "the deployment's" : "the writer's";
         else
@@ -264,7 +306,7 @@ public sealed class RuledStore
             {
                 StoredBy = holder.ToString(), RequestedBy = requestedBy, StoredAt = now().UtcDateTime, Length = data.LongLength,
                 Category = category, Readers = readers?.ToList(), Lifetime = effective.Lifetime,
-                WithinMs = effective.Within?.TotalMilliseconds, Rule = ruleText,
+                WithinMs = effective.Within?.TotalMilliseconds, Until = effective.Until, Rule = ruleText,
                 ModuleInstance = by.ModuleInstance, Session = by.Session
             };
             File.WriteAllBytes(infoPath + ".tmp", JsonSerializer.SerializeToUtf8Bytes(info));
@@ -292,6 +334,7 @@ public sealed class RuledStore
         lock (one)
         {
             if (Load(key) is not { } info) return StorageOutcome.NotFound;
+            if (info.Category == RuledStore.Boundary && holder.Name != Controller) return StorageOutcome.NotAuthorised;   // nobody but the Controller writes into the record (STO-6)
             if (info.StoredBy != holder.ToString() && !IsCentral(holder) &&
                 !(everyoneReads && info.Readers is null && CentralControl is null))
                 return StorageOutcome.NotAuthorised;
@@ -322,7 +365,7 @@ public sealed class RuledStore
             if (Load(key) is not { } i) return StorageOutcome.NotFound;
             if (!MayRead(holder, i)) return StorageOutcome.NotAuthorised;
             trace = new StorageTrace(i.StoredBy, new DateTimeOffset(i.StoredAt, TimeSpan.Zero), i.Category ?? Default, i.Readers,
-                                     new StorageTime(i.Lifetime, i.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null), i.Rule ?? "the writer's");
+                                     new StorageTime(i.Lifetime, i.WithinMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null, i.Until), i.Rule ?? "the writer's") { RequestedBy = i.RequestedBy };
             return StorageOutcome.OK;
         }
     }
@@ -337,6 +380,7 @@ public sealed class RuledStore
     private sealed class Handle(RuledStore store, StorageHolder holder, string moduleInstance, string session) : IRuledStorage
     {
         public StorageHolder Holder { get; } = holder;
+        internal object Gate => store.one;
         public string ModuleInstance { get; } = moduleInstance;
         public string Session { get; } = session;
         string IRuledStorage.Holder => Holder.ToString();
@@ -373,8 +417,12 @@ public sealed class RuledStore
 
         public void MPAI_AIFM_SharedStorage_Put(string key, byte[] data, long offset)
         {
-            var existing = handle.MPAI_AIFM_RuledStorage_Get(key, out var old) == StorageOutcome.OK ? old : [];
-            MPAI_AIFM_SharedStorage_Put(key, offset == 0 ? data : SharedStorageRanges.Write(existing, data, offset));
+            // Atomic with respect to the key: the read and the write of a range under the store's lock (Basic API 4.11.2.1).
+            lock (handle.Gate)
+            {
+                var existing = handle.MPAI_AIFM_RuledStorage_Get(key, out var old) == StorageOutcome.OK ? old : [];
+                MPAI_AIFM_SharedStorage_Put(key, offset == 0 ? data : SharedStorageRanges.Write(existing, data, offset));
+            }
         }
 
         public byte[] MPAI_AIFM_SharedStorage_Get(string key)
@@ -399,7 +447,7 @@ public sealed class RuledStore
         {
             Check(handle.MPAI_AIFM_RuledStorage_Trace(key, out var trace), key);
             handle.MPAI_AIFM_RuledStorage_Get(key, out var data);
-            return new KeyInfo { StoredBy = trace!.Writer, RequestedBy = requestedBy, StoredAt = trace.Stamp.UtcDateTime, Length = data.LongLength };
+            return new KeyInfo { StoredBy = trace!.Writer, RequestedBy = trace.RequestedBy, StoredAt = trace.Stamp.UtcDateTime, Length = data.LongLength };
         }
 
         public string Holder => handle.Holder.ToString();

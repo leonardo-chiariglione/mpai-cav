@@ -12,7 +12,7 @@ namespace Mpai.Aif.PortData;
 // OSD-STM-V1.5 - Simple Time.
 //
 // A DATA TYPE IN ITS OWN RIGHT, AND A REFERENCED ONE. Simple Time is carried on
-// MMC-MAD's InputSpeechTime Port, and it is also embedded in every frame of a
+// a Speech Object's time Port, and it is also embedded in every frame of a
 // Face Descriptors Object. The conversion therefore lives in SimpleTimeWire,
 // which both this serialiser and the FDO serialiser call - one definition, so
 // the two cannot drift.

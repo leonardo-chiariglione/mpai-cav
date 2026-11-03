@@ -65,4 +65,21 @@ public sealed class CompositeProvider : IAimProvider
             $"No provider in this Service makes '{aimName}'. " +
             "The Service was told to offer an App whose AIMs it cannot build.");
     }
+
+    public IAimProcessor Create(
+        string aimName,
+        IReadOnlyDictionary<string, string> settings,
+        ISharedStorage? storage,
+        ISharedStorage? privateStorage,
+        IRuledStorage? moduleStorage,
+        IAccessReader? access)
+    {
+        foreach (var p in providers)
+            if (p.CanCreate(aimName))
+                return p.Create(aimName, settings, storage, privateStorage, moduleStorage, access);
+
+        throw new NotSupportedException(
+            $"No provider in this Service makes '{aimName}'. " +
+            "The Service was told to offer an App whose AIMs it cannot build.");
+    }
 }

@@ -1,0 +1,38 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/AudioInstanceIdentification.json",
+  "title":                "Audio Instance Identification V2.5",
+  "Header":               "CAE-AII-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Audio Instance Identification (CAE-AII) of CAE-USC V2.5: receives AudioSceneDescriptors, AudioObjects and produces AudioInstanceIdentifier.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "AudioSceneDescriptors", "Direction": "Input", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioObjects", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "AudioInstanceIdentifier", "Direction": "Output", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [ ],
+  "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "sound-classifier", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "YamnetModel", "AsFile": "yamnet.onnx", "Description": "The sound classification model (YAMNet, 521 classes of AudioSet)."},
+                      {"Name": "sound-classes", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "YamnetClassMap", "AsFile": "yamnet_class_map.csv", "Description": "The names of the classes the sound classification model gives."}],
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/audio-object-identification/"}]}

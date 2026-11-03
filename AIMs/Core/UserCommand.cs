@@ -36,26 +36,28 @@ public sealed class UserCommand
     public string      UserCommandID   { get; init; } = string.Empty;
     public SimpleTime? UserCommandTime { get; init; }
 
-    public UserCommandData? UserCommandData { get; init; }
+    public UserCommandRQ? UserCommandRQ { get; init; }
 
-    // THE OUTPUT HALF (the author, 2026/10/04: "User Command schema should have one
-    // half for input and one for Output (report)"): how the AIM that executed the
-    // command did, under the command's own UserCommandID.
-    public UserCommandReport? UserCommandReport { get; init; }
+    // THE RESPONSE (the author, 2026/10/04: "User Command schema should have one half for input and one for Output"; 2026/10/26: RQ and RS, one or the other, as in the
+    // other Data Types with a request and a response): how the AIM that executed the command did, under the command's own UserCommandID.
+    public UserCommandRS? UserCommandRS { get; init; }
 
     public string? DescrMetadata { get; init; }
 }
 
-public sealed class UserCommandReport
+public sealed class UserCommandRS
 {
     public SimpleTime?        ReportTime { get; init; }
     public string             Outcome    { get; init; } = "Done";   // Done | Partly | Failed | Ignored
     public List<ReportAction> Actions    { get; init; } = new();
+
+    // THE ANSWER TO A LIST (the author, 2026/10/26): the names of the Objects and Scenes asked for - never a storage key.
+    public List<ListedObject>? ListedObjects { get; init; }
 }
 
 public sealed class ReportAction
 {
-    public string  Action   { get; init; } = "";       // the UserCommandData field it comes from
+    public string  Action   { get; init; } = "";       // the UserCommandRQ field it comes from
     public string? ObjectID { get; init; }
     public string  Outcome  { get; init; } = "Done";   // Done | Failed | NotSupported
     public string? ResultID { get; set; }
@@ -67,6 +69,7 @@ public sealed class ReportAction
 public sealed class CommandReport(UserCommand command)
 {
     private readonly List<ReportAction> actions = new();
+    private List<ListedObject>? listed;
 
     public void Done(string action, string? objectId, string? resultId = null) =>
         actions.Add(new ReportAction { Action = action, ObjectID = objectId, ResultID = resultId });
@@ -77,10 +80,17 @@ public sealed class CommandReport(UserCommand command)
     public void NotSupported(string action, string? objectId, string reason) =>
         actions.Add(new ReportAction { Action = action, ObjectID = objectId, Outcome = "NotSupported", Reason = reason });
 
+    // The answer to a List: what the AIM keeps of the Kind asked for, by name.
+    public void Listed(IEnumerable<ListedObject> entries, string? resultId = null)
+    {
+        (listed ??= new()).AddRange(entries);
+        actions.Add(new ReportAction { Action = "ListedObjects", ResultID = resultId });
+    }
+
     // The version the actions done so far produced, for those that do not name one yet.
     public void Produced(string resultId)
     {
-        foreach (var a in actions) if (a.Outcome == "Done" && a.ResultID is null) a.ResultID = resultId;
+        foreach (var a in actions) if (a.Outcome == "Done" && a.ResultID is null && a.Action != "ListedObjects") a.ResultID = resultId;
     }
 
     public bool Any => actions.Count > 0;
@@ -89,19 +99,19 @@ public sealed class CommandReport(UserCommand command)
     {
         MInstanceID = command.MInstanceID, UEnvironmentID = command.UEnvironmentID,
         UserCommandID = command.UserCommandID, UserCommandTime = command.UserCommandTime ?? SimpleTime.At(DateTimeOffset.UtcNow),
-        UserCommandData = command.UserCommandData,
-        UserCommandReport = new UserCommandReport
+        UserCommandRS = new UserCommandRS
         {
             ReportTime = SimpleTime.At(DateTimeOffset.UtcNow),
             Outcome = actions.Count == 0 ? "Ignored"
                     : actions.All(a => a.Outcome == "Done") ? "Done"
                     : actions.Any(a => a.Outcome == "Done") ? "Partly" : "Failed",
-            Actions = actions.ToList()
+            Actions = actions.ToList(),
+            ListedObjects = listed
         }
     };
 }
 
-public sealed class UserCommandData
+public sealed class UserCommandRQ
 {
     // Qualify an operation rather than being one.
     public PointOfView? UserPoV { get; init; }
@@ -116,7 +126,11 @@ public sealed class UserCommandData
     public ManagedObject?   DeliveredObject { get; init; }
 
     public ObjectPlacements? AddedObjects    { get; init; }
+    // THE LIST (the author, 2026/10/26): the Objects and Scenes the Module keeps, of one Kind or of all, by name.
+    public ObjectListing?    ListedObjects   { get; init; }
     public ObjectPlacements? RemovedObjects  { get; init; }
+    // THE DELETION (the author, 2026/10/27): the Objects and Scenes named are deleted from where the Module keeps them, with all their versions; not RemovedObjects, which only takes an Object out of the open Scene.
+    public ObjectPlacements? DeletedObjects  { get; init; }
     public ObjectMovements?  MovedObjects    { get; init; }
     public ObjectChanges?    ChangedObjects  { get; init; }
     public ObjectChanges?    ModifiedObjects { get; init; }
@@ -124,6 +138,11 @@ public sealed class UserCommandData
     // THE SPACE THE OPEN SCENE IS IN (a room built round its objects): a Closed Space (OSD-CSP), by ID or in full, as the scene itself carries it. It replaces
     // the one the scene had. Audio Scene Editing's.
     public JsonArray?        ClosedSpace     { get; init; }
+
+    // THE SCENES BY NAME (the author, 2026/10/28): a new empty Scene is opened; a Scene kept is opened; the open Scene is given a name. The Scene that was open stays kept. Audio Scene Editing's.
+    public string?           NewScene        { get; init; }
+    public string?           OpenedScene     { get; init; }
+    public string?           NamedScene      { get; init; }
 
     // THE ACOUSTICS OF THE OPEN SCENE (the Scene part of the Acoustic Profile: reflectivity, reverberation, diffusion, absorption, Doppler), as the Scene is to have
     // them. Audio Scene Editing's, as ModifiedObjects, with the Object part of the profile, is Audio Object Editing's.
@@ -151,13 +170,48 @@ public sealed class ManagedObject
 
 public sealed class ObjectPlacements
 {
+    // The name of the Audio Object, or of the Scene, that an AddedObjects makes (the author, 2026/10/26: a thing is created under a name the User gives, never a name made
+    // up). Needed when the command makes one; not used by RemovedObjects.
+    public string? ObjectID { get; init; }
     public List<ObjectPlacement> Objects { get; init; } = new();
+}
+
+public sealed class ObjectListing
+{
+    public string? Kind { get; init; }       // Audio Object | Basic Audio Object | Speech Object | Basic Speech Object | Audio Scene | Speech Scene | Multimodal Scene | All
+
+    // THE ONE TO LIST (the author, 2026/10/26): the name of a Scene (or of an Object) whose entry is wanted. For a Scene the entry gives the number of its members and, for
+    // each member, its name and its PoV - its position and orientation as provided in the Scene. Absent, every thing of the Kind is listed.
+    public string? ObjectID { get; init; }
+}
+
+// THE AMOUNTS OF A COMMAND ARE THE USER'S (the author, 2026/10/26): a position, an orientation, a loudness is a number the command carries; an AIM that finds none does not
+// guess one - it reports why.
+public static class Amounts
+{
+    // Why a placement is not one, or null when it is.
+    public static string? PlaceProblem(SpatialAttitude? attitude) =>
+        attitude is null ? "the Spatial Attitude with a position and an orientation is required"
+        : attitude.Position is not { } p || !(p.CartPosition is { Length: >= 3 } || p.SpherPosition is { Length: >= 3 }) ? "the position needs its coordinates (three numbers)"
+        : attitude.Orientation is null ? "the orientation is required"
+        : null;
+
+    // Why a Spatial Attitude that may state only the parts that change is not one (a move, a change), or null when it is: at least one of the position, the orientation and the time,
+    // and a position that is stated has its coordinates.
+    public static string? ChangeProblem(SpatialAttitude? attitude) =>
+        attitude is null ? "the new Spatial Attitude is required: the position, the orientation or the time, as numbers"
+        : !attitude.PositionStated && !attitude.OrientationStated && attitude.SpatialAttitudeTime is null ? "the new Spatial Attitude states nothing: a position, an orientation or a time is required"
+        : attitude.PositionStated && !(attitude.Position.CartPosition is { Length: >= 3 } || attitude.Position.SpherPosition is { Length: >= 3 }) ? "the position needs its coordinates (three numbers)"
+        : null;
 }
 
 public sealed class ObjectPlacement
 {
     public ManagedObject?    ObjectID        { get; init; }
     public SpatialAttitude?  SpatialAttitude { get; init; }
+
+    // A kept Acoustic Profile to delete, by its AcousticProfileID (DeletedObjects).
+    public string?           AcousticProfileID { get; init; }
 }
 
 public sealed class ObjectMovements
@@ -168,8 +222,11 @@ public sealed class ObjectMovements
 public sealed class ObjectMovement
 {
     public ManagedObject?   ObjectID           { get; init; }
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile    { get; init; }
     public SpatialAttitude? OldSpatialAttitude { get; init; }
+    // In full, or only the parts that change (Position, Orientation, SpatialAttitudeTime); what is not stated keeps its value.
+    [JsonConverter(typeof(SpatialAttitudeOrChangeConverter))]
     public SpatialAttitude? NewSpatialAttitude { get; init; }
 }
 
@@ -201,6 +258,8 @@ public sealed class ObjectTranslation
 
 public sealed class SceneChange
 {
+    // In full, or the AcousticProfileID of a kept one.
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile { get; init; }
 }
 
@@ -212,12 +271,52 @@ public sealed class ObjectChanges
 public sealed class ObjectChange
 {
     public ManagedObject?   ObjectID        { get; init; }
+    [JsonConverter(typeof(SpatialAttitudeOrChangeConverter))]
     public SpatialAttitude? SpatialAttitude { get; init; }
+    [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile { get; init; }
 
-    // Present on ChangedObjects in the schema; describes the object's own
-    // nature rather than its placement.
-    public object? Qualifier { get; init; }
+    // THE LOUDNESS OF THE OBJECT in a ModifiedObjects entry (M3282 UCM-5), in LUFS. Not a feature of ChangedObjects (its feature is Level).
+    public double?          LUFS            { get; init; }
+
+    // THE FEATURES OF AN OBJECT THAT A ChangedObjects COMMAND EDITS (the author, 2026/10/26): a defined list, each feature changed by a value. The schema lists them by name,
+    // so that nothing else is allowed; an AIM that finds another name reports it (Unknown). The sound itself is not a feature: it is not edited.
+    //   Audio Object:        Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, and per child its SpaceTime inside the parent (Children)
+    //   Basic Audio Object:  Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata
+    // SpatialAttitude, the place of an Object in a Scene, is the Scene Editing AIMs'.
+    public string?          Name                 { get; init; }
+    public SimpleTime?      Time                 { get; init; }
+    public SpaceTime?       SpaceTime            { get; init; }
+    public PointOfView?     UserPoV              { get; init; }
+    public List<string>?    ParentAudioObjectIDs { get; init; }
+    public string?          DescrMetadata        { get; init; }
+    public List<ChildSpaceTime>? Children        { get; init; }
+    public string?          DeviceID             { get; init; }
+    public double?          Level                { get; init; }
+    public bool?            PerceptStatus        { get; init; }
+    public AudioQualifier?  AudioQualifier       { get; init; }
+
+    // The Speech Qualifier of a Speech Object (Speech Object Editing's; the schema's Qualifier, as before).
+    public object?          Qualifier            { get; init; }
+
+    // What the command carries that is no feature: reported, never silently dropped.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
+
+    [JsonIgnore]
+    public bool HasFeature =>
+        Name is not null || Time is not null || SpaceTime is not null || UserPoV is not null || ParentAudioObjectIDs is not null || DescrMetadata is not null ||
+        Children is { Count: > 0 } || DeviceID is not null || Level is not null || PerceptStatus is not null || AcousticProfile is not null || AudioQualifier is not null || Qualifier is not null;
+}
+
+// A child of an Audio Object, by its name, and where and when it is inside the parent.
+public sealed class ChildSpaceTime
+{
+    public string?    ObjectID  { get; init; }
+    public SpaceTime? SpaceTime { get; init; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Unknown { get; set; }
 }
 
 public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>
@@ -253,16 +352,33 @@ public sealed class ManagedObjectConverter : JsonConverter<ManagedObject>
     }
 }
 
-// MMC-TFU-V1.5 - Text For UA (MMC/V2.5/data/TextForUA.json): what a dialogue AIM
-// addresses to the User Agent, not to the User - an action only the User Agent
-// performs (in CAE-ASM: undo, save, stop), in the App's vocabulary.
-public sealed class TextForUA
+// A COMMAND THAT CANNOT BE READ IS REPORTED, NOT GUESSED (the author, 2026/10/26): a number given as a word, an amount of the wrong type. The AIM does not stop, nor does it
+// make the number up: the command's own ID, with the operation that could not be read, failed, and why.
+public static class CommandReader
 {
-    public string Header { get; init; } = "MMC-TFU-V1.5";
-    public string? MInstanceID { get; init; }
-    public string? UEnvironmentID { get; init; }
-    public string TextForUAID { get; init; } = Guid.NewGuid().ToString();
-    public SimpleTime? TextForUATime { get; init; }
-    public string Text { get; init; } = "";
-    public string? DescrMetadata { get; init; }
+    public static readonly string[] Operations =
+        ["UserPoV", "LUFS", "RevokedUserCommandID", "AcquiredObject", "DeliveredObject", "AddedObjects", "RemovedObjects", "DeletedObjects", "MovedObjects", "ChangedObjects", "ModifiedObjects",
+         "ClosedSpace", "ModifiedScene", "TranslatedObjects", "ListedObjects", "NewScene", "OpenedScene", "NamedScene"];
+
+    // The command; null when the JSON is not one, and then rejection is the report to give.
+    public static UserCommand? Read(string json, out UserCommand? rejection)
+    {
+        rejection = null;
+        try { return MpaiJson.FromJson<UserCommand>(json); }
+        catch (Exception e) when (e is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            JsonNode? node = null;
+            try { node = JsonNode.Parse(json); } catch { }
+            var id = node?["UserCommandID"] is JsonValue v && v.TryGetValue<string>(out var s) ? s : Guid.NewGuid().ToString();
+            var report = new CommandReport(new UserCommand { UserCommandID = id });
+            var operations = (node?["UserCommandRQ"] as JsonObject)?.Select(p => p.Key).Where(Operations.Contains).ToList() ?? [];
+            var at = (e as JsonException)?.Path?.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (at is { Length: > 2 } && Operations.Contains(at[2].Split('[')[0])) operations = [at[2].Split('[')[0]];
+            var reason = "the command cannot be read as a User Command" + (e is JsonException { Path: { } path } ? $" (at {path})" : "") + ": every amount is a number the command carries";
+            if (operations.Count == 0) operations = ["AcquiredObject"];
+            foreach (var operation in operations) report.Failed(operation, null, reason);
+            rejection = report.Report();
+            return null;
+        }
+    }
 }

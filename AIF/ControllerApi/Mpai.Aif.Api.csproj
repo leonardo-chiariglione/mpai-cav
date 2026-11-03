@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Controller\AIF.Controller.csproj" />
-    <ProjectReference Include="..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\Store\AIF.Store.csproj" />
     <ProjectReference Include="..\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\AIMs\Core\Mpai.Core.csproj" />
   </ItemGroup>

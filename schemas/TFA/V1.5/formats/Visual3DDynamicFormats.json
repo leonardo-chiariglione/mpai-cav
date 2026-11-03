@@ -3,16 +3,16 @@
   "title":   "Visual 3 DDynamic Formats V1.5",
   "type":    "string", "oneOf": [
     { "const": "FBX",
-      "description": "Filmbox (FBX) Ã¢â‚¬â€ a widely used Autodesk 3D scene format supporting complex animation, skeletal rigs, deformers, cameras, lighting, and full scene hierarchies."  },
+      "description": "Filmbox (FBX) — a widely used Autodesk 3D scene format supporting complex animation, skeletal rigs, deformers, cameras, lighting, and full scene hierarchies."  },
     { "const": "G-PCC",
-      "description": "Geometry-based Point Cloud Compression Ã¢â‚¬â€ an ISO/MPEG standard for compressing static and dynamic point cloud geometry." },
+      "description": "Geometry-based Point Cloud Compression — an ISO/MPEG standard for compressing static and dynamic point cloud geometry." },
     { "const": "V-PCC",
-      "description": "Video-based Point Cloud Compression Ã¢â‚¬â€ an ISO/MPEG standard that encodes dynamic point clouds using video blocks for efficient animated 3D content delivery." },
+      "description": "Video-based Point Cloud Compression — an ISO/MPEG standard that encodes dynamic point clouds using video blocks for efficient animated 3D content delivery." },
     { "const": "USD",
-      "description": "Universal Scene Description Ã¢â‚¬â€ PixarÃ¢â‚¬â„¢s extensible 3D scene format supporting time-sampled animated geometry, transforms, rigging, and layered scene composition." },
+      "description": "Universal Scene Description — Pixar’s extensible 3D scene format supporting time-sampled animated geometry, transforms, rigging, and layered scene composition." },
     { "const": "USDZ",
-      "description": "USDZ Ã¢â‚¬â€ a packaged, compressed delivery format based on USD, supporting textured and animated 3D objects for AR and mobile experiences."  },
+      "description": "USDZ — a packaged, compressed delivery format based on USD, supporting textured and animated 3D objects for AR and mobile experiences."  },
     { "const": "GLTF",
-      "description": "glTF Ã¢â‚¬â€ an open standard by the Khronos Group supporting keyframe and skeletal animation, PBR materials, and efficient runtime delivery of 3D scenes."  },
+      "description": "glTF — an open standard by the Khronos Group supporting keyframe and skeletal animation, PBR materials, and efficient runtime delivery of 3D scenes."  },
     { "const": "GLB",
-      "description": "Binary glTF (GLB) Ã¢â‚¬â€ a compact, single-file version of glTF containing geometry, animation, materials, and textures optimized for real-time engines and web delivery." } ] }
+      "description": "Binary glTF (GLB) — a compact, single-file version of glTF containing geometry, animation, materials, and textures optimized for real-time engines and web delivery." } ] }

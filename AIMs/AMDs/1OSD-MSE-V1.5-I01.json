@@ -1,0 +1,27 @@
+{ "Identifier":           {"ImplementerID": "1", "ImplementationID": "OSD-MSE-V1.5-I01", "AIMName": "1OSD-MSE-V1.5-I01"},
+  "Header":               "OSD-MSE-V1.5",
+
+  "APIProfile":           "Basic",
+  "Description":          "Multimodal Scene Editing: Basic Scenes and Basic Objects of at least two media - Audio, Visual, Speech, LiDAR, 3D Model, RADAR, Ultrasound, Offline Map - composed into a Multimodal Scene (a voice over music is a MSD of a ASD and a SSD, or of a AUO and a SPO). Each of its two Scene Ports takes a Basic Scene of any medium, and each of its two Object Ports a Basic Object of any medium, kept as it arrives. One Multimodal Scene is open at a time: the User Command places the Scenes and Objects, named as the User names them, in its common frame (AddedObjects), moves them, changes where they are, takes them out and sets where the Multimodal Scene is heard and seen from (UserPoV). The Scenes and Objects being edited are followed: a member that is the version last arrived on its Port is replaced by the new version. Every edit is a new version in Shared Storage. Outputs: the open Multimodal Scene - when its members are of at least two media - and the User Command, with its response (UserCommandRS) saying how each action was executed.",
+
+  "InternalTypes":        [],
+
+  "ExternalPorts":        [{"Name": "Scene", "Direction": "Input", "DataType": ["OSD-ASD-V1.5", "OSD-VSD-V1.5", "OSD-SSD-V1.5", "OSD-LSD-V1.5", "OSD-3SD-V1.5", "OSD-RSD-V1.5", "OSD-USD-V1.5", "OSD-OSD-V1.5"], "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OtherScene", "Direction": "Input", "DataType": ["OSD-ASD-V1.5", "OSD-VSD-V1.5", "OSD-SSD-V1.5", "OSD-LSD-V1.5", "OSD-3SD-V1.5", "OSD-RSD-V1.5", "OSD-USD-V1.5", "OSD-OSD-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "Object", "Direction": "Input", "DataType": ["OSD-AUO-V1.5", "OSD-VIO-V1.5", "OSD-SPO-V1.5", "OSD-3DO-V1.5", "OSD-RAO-V1.5", "OSD-OMO-V1.5"], "PortNumber": 1, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "OtherObject", "Direction": "Input", "DataType": ["OSD-AUO-V1.5", "OSD-VIO-V1.5", "OSD-SPO-V1.5", "OSD-3DO-V1.5", "OSD-RAO-V1.5", "OSD-OMO-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandRQ", "Direction": "Input", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MultimodalScene", "Direction": "Output", "DataType": "OSD-MSD-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UserCommandRS", "Direction": "Output", "DataType": "CAE-UCM-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":              [],
+  "Topology":             [],
+
+  "Implementations":      [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/MSE", "MASPort": 443, "BinaryName": "Mpai.Osd.Mse", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":     [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                           {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-osd/"}]}

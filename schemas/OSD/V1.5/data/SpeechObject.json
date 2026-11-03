@@ -7,7 +7,7 @@
   "required":                                   [ "Header", "SpeechObjectID", "SpeechObjectSpaceTime" ],
   "properties":                                 {
 
-    "Header":                                   { "type": "string", "const": "OSD-SPO-V1.5", "description": "Speech Object Header â€“ Standard OSD-SPO-Vx.y." },
+    "Header":                                   { "type": "string", "const": "OSD-SPO-V1.5", "description": "Speech Object Header – Standard OSD-SPO-Vx.y." },
     "MInstanceID":                              { "type": "string", "description": "Identifier of M-Instance." },
     "SpeechObjectID":                           { "type": "string", "description": "Identifier of the Speech Object." },
     "SpeechObjectSpaceTime":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Space-Time of Speech Object." },

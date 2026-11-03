@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Mpai.Aif.Tests;
 
 // AN AIM HOST IN A PROCESS OF ITS OWN (M3217 3.6), standing in for another
-// machine: the AIF.AimHost program, given the L3s of Test/Data/Phase5 and the test
+// machine: the AIF.AimHost program, given the L3s of AIMs/TST/Phase5 and the test
 // AIMs of this assembly as its provider. The port it listens on is read from what
 // it prints.
 public sealed class HostProcess : IDisposable
@@ -27,11 +27,12 @@ public sealed class HostProcess : IDisposable
     // bin: where the host runs from; extra: more of its arguments; provider: what builds
     // its AIMs (assembly:Type), the test AIMs where not given.
     public HostProcess(string? amds = null, string? anchor = null, string? trust = null, string? bin = null, string[]? extra = null,
-                       string? provider = null)
+                       string? provider = null, string? workingDirectory = null)
     {
         bin ??= AppContext.BaseDirectory;
         var info = new ProcessStartInfo("dotnet")
         {
+            WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,   // the models' relative paths are resolved from here
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

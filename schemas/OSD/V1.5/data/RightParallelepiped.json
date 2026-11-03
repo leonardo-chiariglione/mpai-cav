@@ -19,6 +19,7 @@
     "CartPositions":                { "type": "array", "minItems": 3, "maxItems": 4, "description": "The Positions of the selected vertices of the rectangle (3) or parallelepiped (4), in metres.",
                                       "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } } },
 
+    "SpatialQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json", "description": "Spatial Qualifier stating the conventions of the positions of the vertices: frame, axes and their handedness, units. A Qualifier of an inner Data Type overrides this one." },
     "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":                { "type": "string", "maxLength": 2048 } },
 

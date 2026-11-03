@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Trains the demonstration financial model of CUI-CPP V2.1 from the Polish Companies Bankruptcy dataset (CC BY 4.0) and writes it as a file the Prediction AIMs read as Access data.
+       A tool of the Implementer: the AIMs never run it, nor read the dataset. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\V2.1\Mpai.Cui.csproj" />
+  </ItemGroup>
+
+</Project>

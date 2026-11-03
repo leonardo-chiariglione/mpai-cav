@@ -1,0 +1,36 @@
+# =============================================================================
+#  ARP.orch - Audio Recording Preservation (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes continuously: the audio analysis and the video
+#  analysis exchange the irregularities they find until they agree, so the Module is not run an
+#  exchange at a time. The User Agent binds a device to every Port of the Module's boundary,
+#  each to one Port, by Data Type and Port Number:
+#
+#    what the person gives the Module -
+#      TapeIn        the digitised audio of the tape, as it was digitised (the Preservation Audio File)
+#      FilmIn        the film of the playback head, with its audio (the Preservation Audio-Visual File)
+#
+#    what the Module gives -
+#      AccessCopyOut      the Access Copy: the recording, restored where it needed it
+#      MasterOut          the Preservation Master: the recording as it is, with the irregularities
+#                         found, their images, the Editing List and a manifest
+# =============================================================================
+
+workflow ARP over 1CAE-ARP-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  TapeIn         (OSD-BAO-V1.5)   from device "TapeIn"
+    stream  FilmIn         (OSD-BMO-V1.5)   from device "FilmIn"
+
+    deliver AccessCopyOut  (OSD-BAO-V1.5:1) to device "AccessCopyOut"
+    deliver MasterOut      (OSD-BAO-V1.5:2) to device "MasterOut"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

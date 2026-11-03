@@ -8,6 +8,7 @@ namespace Mpai.Aif.Tests;
 // convening, invitations (no meeting code), seats assigned by the AVS Service, Speech Objects through the Secretary and the ASR Service into the minutes,
 // the minutes for the participants only, a participant taken out. Each step is recorded with what it gave; the record is the expected file.
 [Trait("Group", "Fast")]
+[Collection("MmmMeeting")]                       // they share the static state of the Meeting: one at a time
 [Trait("Blocks", "Yes")]
 public class MmmMeetingUseCaseTests
 {

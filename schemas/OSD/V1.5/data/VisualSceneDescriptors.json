@@ -7,7 +7,7 @@
   "required":                     [ "Header", "VisualDescriptorsID", "VisualDescriptorsSpaceTime" ],
   "properties":                   {
 
-    "Header":                     { "type": "string", "const": "OSD-VSD-V1.5", "description": "Visual Scene Descriptors Header â€“ Standard OSD-VSD-Vx.y." },
+    "Header":                     { "type": "string", "const": "OSD-VSD-V1.5", "description": "Visual Scene Descriptors Header – Standard OSD-VSD-Vx.y." },
     "MInstanceID":                { "type": "string", "description": "Identifier of the M-Instance." },
     "UEnvironmentID":             { "type": "string", "description": "Identifier of the U-Environment." },
     "VisualDescriptorsID":        { "type": "string", "description": "ID of this Visual Scene Descriptors instance." },

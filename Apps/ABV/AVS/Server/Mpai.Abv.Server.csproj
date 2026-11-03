@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- THE AVATAR VIDEOCONFERENCE SERVER of the live demo: serves the browser client, relays the participants' speech positioned in the room, and runs the AIMs of the AVS (PDX, PMX)
+       and, for each participant, a Videoconference Client Receiver. Minutes from Whisper. See ABV/PROTOCOL.md. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mpai.Abv.Server</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PDX\Mpai.Paf.Pdx.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PMX\Mpai.Paf.Pmx.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\VCR\Mpai.Paf.Vcr.csproj" />
+  </ItemGroup>
+
+</Project>

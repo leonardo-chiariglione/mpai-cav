@@ -87,11 +87,16 @@ public sealed class AimHost : IDisposable
             lc.Resume();
     }
 
+    // Whether the Module is Suspended: paused, and not yet resumed (Basic API state).
+    private bool _suspended;
+    public bool IsSuspended { get { lock (_module) return _suspended; } }
+
     // MPAI_AIFU_MODULE_Pause: every AIM completes what it is doing and waits.
     public void PauseModule()
     {
         lock (_module)
         {
+            _suspended = true;
             if (_running.Task.IsCompleted)
                 _running = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             foreach (var lc in _lifecycles.Values) lc.Pause();
@@ -103,6 +108,7 @@ public sealed class AimHost : IDisposable
     {
         lock (_module)
         {
+            _suspended = false;
             _running.TrySetResult();
             foreach (var lc in _lifecycles.Values) lc.Resume();
         }
@@ -186,6 +192,63 @@ public sealed class AimHost : IDisposable
     // its store, or - on an AIM host - the Controller's, read over the link.
     public IAccessReader? Access { get; set; }
 
+    // What obtains the items of a set of Access when an AIM first reads them (the Controller's, never on an AIM host).
+    public AccessFetcher? Fetcher { get; set; }
+
+    // The Module this host holds the AIMs of and the AIM that is its central control (Metadata StorageControl): who may read
+    // a datum of Access is decided as it is in Shared Storage, from the holder of the handle.
+    public string? ModuleName { get; set; }
+    public string? CentralControl { get; set; }
+
+    // WHAT EACH AIM MAY READ OF IT: the Access the AIM declares in its Metadata (AccessSources). An AIM that declares
+    // nothing reads none; the entries are those of its Instance, so what it may read is what its L3 says.
+    private readonly Dictionary<string, IReadOnlyList<AccessEntry>> _accessEntries = new(StringComparer.Ordinal);
+
+    public void BindAccess(string aim, IReadOnlyList<AccessEntry> entries)
+    {
+        lock (_module) _accessEntries[aim] = entries;
+    }
+
+    // The Access of one AIM, narrowed to what its Metadata declares; given to the AIM when it is built.
+    public IAccessReader? AccessFor(string aim) => AccessOf(aim);
+
+    private IAccessReader? AccessOf(string aim)
+    {
+        if (Access is null) return null;
+        IReadOnlyList<AccessEntry> entries;
+        lock (_module) entries = _accessEntries.GetValueOrDefault(aim) ?? [];
+        IAccessReader scoped = Access is RemoteAccess remote ? remote.ForAim(aim) : Access is AccessStore store
+            ? store.As(new AIF.SharedStorage.StorageHolder(ModuleName, aim),
+                       CentralControl is { } c ? new AIF.SharedStorage.StorageHolder(ModuleName, c) : null)
+            : Access;
+        var bound = new BoundAccess(scoped, entries, Fetcher, aim);
+        lock (_module) { if (!_handedOut.TryGetValue(aim, out var list)) _handedOut[aim] = list = []; list.Add(bound); }
+        return bound;
+    }
+
+    private readonly Dictionary<string, List<BoundAccess>> _handedOut = new(StringComparer.Ordinal);
+
+    // MPAI_AIFM_MODEL_UPDATE (Basic API 4.12.1), the Controller's part: the URI names a model of the AIM - one of its AccessSources, as the Metadata the Controller holds now states it. The Controller obtains
+    // what the Metadata pins for it, from where it states (a Source takes a new Version of the same URI when its SHA-256 is new), and what is obtained is checked against that SHA-256 before it is kept:
+    // the model the AIM was reading stays where it is until the new one is in Access. NOT_AUTHORISED where the Metadata of the AIM names no model at that URI; NOT_TRUSTED where what is found is not
+    // the SHA-256 it states, or is a model the Source held before; FAILED where it cannot be obtained.
+    public AifError ModelUpdate(string aim, string uri, IReadOnlyList<AccessEntry> now, out string why)
+    {
+        why = "";
+        if (Fetcher is null || Access is null) { why = "the Controller has no Access"; return AifError.Failed; }
+        var entry = now.FirstOrDefault(e => !e.IsPlaceholder && !e.IsSet && e.Locations.Contains(uri, StringComparer.Ordinal));
+        if (entry is null) { why = $"the Metadata of {aim} names no model at {uri}"; return AifError.NotAuthorised; }
+        switch (Fetcher.Ensure(entry, aim, out why))
+        {
+            case AccessOutcome.OK: break;
+            case AccessOutcome.Refused: return AifError.NotTrusted;
+            default: return AifError.Failed;
+        }
+        BindAccess(aim, now);
+        lock (_module) foreach (var bound in _handedOut.GetValueOrDefault(aim) ?? []) bound.Rebind(now);
+        return AifError.OK;
+    }
+
     public bool IsDead(string aim)
     {
         lock (_module)
@@ -244,7 +307,7 @@ public sealed class AimHost : IDisposable
         lock (_module)
             if (!_running.Task.IsCompleted) _lifecycles[instanceId].Pause();   // paused as it started
         return context.WithHost(text => Report(instanceId, text),
-            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"), Access);
+            aim => StopAimBy?.Invoke(aim, instanceId) ?? StopAim(aim, $"stopped by {instanceId}"), AccessOf(instanceId));
     }
 
     // Completes when the Module is not paused.

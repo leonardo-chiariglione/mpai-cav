@@ -1,4 +1,4 @@
-{ "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "PAF-FIR-V1.6"},
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
   "Header":            "PAF-FIR-V1.6",
 
   "APIProfile":       "Basic",
@@ -16,6 +16,12 @@
   "SubAIMs":         [ ],
 
   "Topology":        [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "face-detector", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "ScrfdModel", "AsFile": "scrfd_10g_bnkps.onnx", "Description": "The face detection model (SCRFD, 10 GFLOPs, with landmarks)."},
+                      {"Name": "face-embedder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "ArcFaceModel", "AsFile": "glintr100.onnx", "Description": "The face recognition model (ArcFace, ResNet-100, 512-value embeddings). Not the file of the insightface antelopev2 release: another export, whose embeddings are not those of that file."},
+                      {"Name": "reference-faces", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "IsOptional": true, "Description": "The face features of 5,731 known people (Labeled Faces in the Wild), one 512-value ArcFace vector per person, against which a face is also matched; the people enrolled by ACR are in Shared Storage."}],
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

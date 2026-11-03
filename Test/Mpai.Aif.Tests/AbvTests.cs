@@ -65,8 +65,8 @@ public class AbvTests
     // The room: the Audio-Visual Scene Descriptors of the meeting, which the participants' Portable Avatars do not have and the server adds.
     private static JsonObject Room() => new()
     {
-        ["Header"] = "OSD-BMS-V1.5", ["MInstanceID"] = "", ["BasicAVSceneDescriptorsID"] = "meeting-room",
-        ["BAVSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["MInstanceID"] = "", ["SpaceTimeID"] = "room-st" }
+        ["Header"] = "OSD-BMS-V1.5", ["MInstanceID"] = "", ["BasicMultimodalSceneDescriptorsID"] = "meeting-room",
+        ["BMSDescriptorsSpaceTime"] = new JsonObject { ["Header"] = "OSD-SPT-V1.5", ["MInstanceID"] = "", ["SpaceTimeID"] = "room-st" }
     };
 
     // THE VCT of a participant: the Portable Avatar. The introduction carries the ID, the model and the language; an update, the ID and what it brings.
@@ -118,10 +118,10 @@ public class AbvTests
             var pav = await Vct(a, who, introduction: true, says: null, n: 0);
             Assert.Equal(who, (string)pav["AvatarOrAvatarID"]!.AsArray().OfType<JsonValue>().Single());                  // the ID, and the model beside it
             Assert.NotNull(pav["AvatarOrAvatarID"]!.AsArray().OfType<JsonObject>().SingleOrDefault());
-            Assert.Null(pav["AVSceneDescriptors"]);                                                                     // the participant's avatar has no room
+            Assert.Null(pav["MultimodalSceneDescriptors"]);                                                                     // the participant's avatar has no room
             Assert.Null(pav["AvatarSpatialAttitude"]);                                                                  // and no seat
             var served = await Avs(a, pav);
-            Assert.Equal("meeting-room", (string)served["AVSceneDescriptors"]!["BasicAVSceneDescriptorsID"]!);          // the server added the room
+            Assert.Equal("meeting-room", (string)served["MultimodalSceneDescriptors"]!["BasicMultimodalSceneDescriptorsID"]!);          // the server added the room
             Assert.Equal($"osa-{who}", (string)served["AvatarSpatialAttitude"]!["ObjectSpatialAttitudeID"]!);           // and the seat
             Assert.NotNull(served["AvatarOrAvatarID"]!.AsArray().OfType<JsonObject>().SingleOrDefault());               // the model the participant sent was not lost
             introduced.Add(served);
@@ -157,7 +157,7 @@ public class AbvTests
         Assert.Equal("speech-anna-2", (string)last["SPOOrSPOID"]![0]!["BasicSpeechObjectID"]!);
         Assert.Equal(1, scene["BasicObjectsData"]!.AsArray().Count(m => Id(m!) == "anna"));                              // one Anna in the Scene
 
-        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD", "V1.5", "data", "BasicAudioVisualSceneDescriptors.json"))];
+        var schema = AIF.Metadata.PublishedSchemas.At(Repository.Schemas)[Path.GetFullPath(Path.Combine(Repository.Schemas, "OSD", "V1.5", "data", "BasicMultimodalSceneDescriptors.json"))];
         foreach (var g in given.Where(g => g.DataType == "OSD-BMS-V1.5"))
         {
             using var doc = JsonDocument.Parse(g.Json.ToJsonString());

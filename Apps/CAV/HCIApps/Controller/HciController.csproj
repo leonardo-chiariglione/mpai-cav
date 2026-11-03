@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- HciController - THE CONTROLLER of the Human-CAV Interaction App, a program of its own. The App (a User Agent: window, camera, microphone, avatar) speaks to it through the Controller API only
+       (carried over the routes of Mpai.Mas.Server); this Controller starts the Module (1CAV-HCI) and its AIMs as the L3 says. -->
+
+  <PropertyGroup>
+    <AssemblyName>HciController</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Mpai.Cav.Hci.Controller</RootNamespace>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\..\MAS\Service\src\ControllerApiRunner.cs" Link="ControllerApiRunner.cs" />
+    <Compile Include="HciProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <ProjectReference Include="..\..\..\MAS\Server\Mpai.Mas.Server.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Communication\SharedStorage\AIF.SharedStorage.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Communication\GlobalStorage\AIF.GlobalStorage.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\BAS\Mpai.Osd.Bas.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\BLS\Mpai.Osd.Bls.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\AVA\Mpai.Osd.Ava.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\VII\Mpai.Osd.Vii.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\ASI\Mpai.Cae.Asi.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\AII\Mpai.Cae.Aii.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CAE3\V1.0\QCV\Mpai.Cae.Qcv.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\CVE\V1.0\VSI\Mpai.Cve.Vsi.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SIR\Mpai.Mmc.Sir.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\OSD\V1.5\IDR\Mpai.Osd.Idr.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\NLU\Mpai.Mmc.Nlu.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\SPE\Mpai.Mmc.Spe.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\FPE\Mpai.Paf.Fpe.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\PMX\Mpai.Mmc.Pmx.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\EDP\Mpai.Mmc.Edp.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PSD\Mpai.Paf.Psd.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\PMX\Mpai.Paf.Pmx.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\MMC\V2.5\TTS\Mpai.Mmc.Tts.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\GFD\Mpai.Paf.Gfd.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\PAF\V1.6\GBD\Mpai.Paf.Gbd.csproj" />
+  </ItemGroup>
+
+</Project>

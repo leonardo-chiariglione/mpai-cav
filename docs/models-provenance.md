@@ -58,6 +58,8 @@ Path pattern: `huggingface.co/rhasspy/piper-voices/tree/main/<lang>/<region>/<na
 | `es_ES-davefx-medium.onnx` | 60 MB | es_ES/davefx/medium | |
 | `es_ES-mls_10246-low.onnx` | 60 MB | es_ES/mls_10246/low | |
 | `fr_FR-siwis-medium.onnx` | 60 MB | fr_FR/siwis/medium | |
+| `el_GR-rapunzelina-medium.onnx` | 63 MB | el_GR/rapunzelina/medium | rapunzelina (el_GR, CC0 dataset, MIT repo); fetched from main (the v1.0.0 tag has only low) |
+| `el_GR-rapunzelina-medium.onnx` | 63 MB | el_GR/rapunzelina/medium | rapunzelina (el_GR, CC0 dataset, MIT repo); fetched from main (the v1.0.0 tag has only low) |
 | `fr_FR-mls-medium.onnx` | 73 MB | fr_FR/mls/medium (or gilles) | verify exact name |
 | `it_IT-paola-medium.onnx` | 61 MB | it_IT/paola/medium | |
 | `it_IT-riccardo-x_low.onnx` | 27 MB | it_IT/riccardo/x_low | |
@@ -96,4 +98,4 @@ Each voice also needs its companion `.onnx.json` config from the same folder.
 | `SteamAudio/windows-x64/phonon.dll` | 53 MB | Steam Audio 4.8.1 native library, Windows x64 | Valve - `steamaudio_4.8.1.zip`, github.com/ValveSoftware/steam-audio/releases/tag/v4.8.1 (2026-02-11), `steamaudio/lib/windows-x64/phonon.dll` | Apache-2.0 |
 | `SteamAudio/linux-x64/libphonon.so` | 40 MB | Steam Audio 4.8.1 native library, Linux x64 | The same archive, `steamaudio/lib/linux-x64/libphonon.so` | Apache-2.0 |
 
-SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.
+SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `AIF/UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.

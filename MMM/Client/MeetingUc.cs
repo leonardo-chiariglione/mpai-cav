@@ -83,11 +83,12 @@ public static class MeetingUseCase
         }
         var spoken = 0;
         var lastSpeech = "";
-        // What a User says is placed, as a Speech Object, at its seat: that is where it is heard from. The Secretary hears it as any participant does, by capturing the room.
+        // What a User says is UM-Captured at its human's U-Location, Identified as a Speech Object and MM-Added at its seat: that is where it is heard from. The Secretary hears it as any
+        // participant does, by capturing the room.
         async Task<string> Speak(MmmClient who)
         {
             var id = lastSpeech = $"Speech-{who.ProcessID}-{++spoken}";
-            var added = await who.PerformAsync("MM-Add", Uc2.C(id, at: seatOfUser[who.ProcessID], with: Speech.Make(id, Tone(2), DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
+            var added = await Speech.CaptureAsync(who, id, $"ULoc-{who.ProcessID}", seatOfUser[who.ProcessID], Tone(2));
             await Settle();
             return $"{added.Http}; minutes: {services.TheMinutes.Count} lines";
         }

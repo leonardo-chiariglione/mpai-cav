@@ -15,7 +15,7 @@ namespace Mpai.Aif.PortData;
 //
 // ONE CODEC PER DATA TYPE, AND NO APPLICATION ANYWHERE. A codec knows a Data
 // Type. It does not know which Module is running, which application asked, or
-// what any port is called. Adding OSD-3OD means adding a codec; it never means
+// what any port is called. Adding a Data Type means adding a codec; it never means
 // editing the server that three applications share.
 public interface IPortDataCodec
 {
@@ -59,6 +59,31 @@ public sealed class PortDataCodecs
             .Register(new EntityPersonalStatusCodec())
             .Register(new Basic3DModelObjectCodec())
             .Register(new PortableAvatarCodec())
+            .Register(new PointCodec())
+            // Audio Scene Management: the same JSON instance inside and on the wire.
+            .Register(new JsonObjectCodec("OSD-BAO-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BAS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BSS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-BMS-V1.5"))
+            .Register(new JsonObjectCodec("OSD-AUO-V1.5"))
+            // the Audio Scene Descriptors and the other scenes the Module of ASM gives (ASM-VCI.orch)
+            .Register(new JsonObjectCodec("OSD-ASD-V1.5"))
+            .Register(new JsonObjectCodec("OSD-SPO-V1.5"))
+            .Register(new JsonObjectCodec("OSD-SSD-V1.5"))
+            .Register(new JsonObjectCodec("OSD-MSD-V1.5"))
+            .Register(new JsonObjectCodec("OSD-OPV-V1.5"))
+            .Register(new JsonObjectCodec("CAE-UCM-V1.0"))
+            // Company Performance Prediction (MPAI-CUI CPP V2.1): the descriptors and statements are written and read as the JSON instance of their schema, inside and on the wire.
+            .Register(new JsonObjectCodec("CUI-FND-V2.1"))
+            .Register(new JsonObjectCodec("CUI-GVS-V2.1"))
+            .Register(new JsonObjectCodec("CUI-LRD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-CRD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-SRS-V2.1"))
+            .Register(new JsonObjectCodec("CUI-ORD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-PDD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-PSD-V2.1"))
+            .Register(new JsonObjectCodec("CUI-SRM-V2.1"))
+            .Register(new NumberCodec())
             .Register(new BooleanCodec())
             .Register(new StringCodec());
 

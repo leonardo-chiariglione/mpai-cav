@@ -9,6 +9,7 @@ using Mpai.Cav.Map;
 using Mpai.Cav.Mas;
 using Mpai.Cav.Recordings;
 using Mpai.Rca;
+using Mpai.Ua;
 using Mpai.Wdl;
 
 namespace Mpai.Aif.Tests;
@@ -262,12 +263,12 @@ public class MasStage1Tests
     // bedOf: what the CAV perceives, the ground truth by default (TruthBed).
     // remote: before each step's description, what the CAV's FED hears from Remote CAVs.
     internal static Simulation Loop(Simulation sim, Action<Stepped> each, bool mas = false, Func<Simulation, Simulation.Sensed, string>? bedOf = null,
-                                    Action<FullEnvironmentDescription, Simulation.Sensed>? remote = null)
+                                    Action<FullEnvironmentDescription, Simulation.Sensed>? remote = null, IReadOnlyDictionary<string, string>? planning = null)
     {
         sim.Mechanical(seed: 9);
         var fed = new FullEnvironmentDescription(AmsProvider.Fed);
         fed.Know(JsonNode.Parse(sim.Map.ToOfflineMapObject(0))!);
-        var msp = new MotionSelectionPlanning(AmsProvider.Msp, new Dictionary<string, string>());
+        var msp = new MotionSelectionPlanning(AmsProvider.Msp, planning ?? new Dictionary<string, string>());
         msp.Follow(AmsStage1Tests.PathOf(sim));
         var toa = new TrafficObstacleAvoidance(AmsProvider.Toa, new Dictionary<string, string>());
         var ami = new AmsMasMessageInterpretation(MasProvider.Ami, new Dictionary<string, string>());
@@ -303,6 +304,7 @@ public class MasStage1Tests
             {
                 answer = mra.Answer(message);
                 toa.Answered(answer!);
+                msp.RoadState(answer!);
             }
             sim.Actuate(commands);
             responses = sim.Advance();

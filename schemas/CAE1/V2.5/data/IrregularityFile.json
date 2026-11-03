@@ -1,0 +1,32 @@
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/CAE1/V2.5/data/IrregularityFile.json",
+  "title":                              "Irregularity File V2.5",
+  "type":                               "object",
+  "required":                           [ "Header", "Irregularities" ],
+  "additionalProperties":               false,
+                                        "properties": {
+
+    "Header":                           { "type": "string", "const": "CAE-IRR-V2.5" },
+    "MInstanceID":                      { "type": "string" },
+    "UEnvironmentID":                   { "type": "string" },
+    "IrregularityFileID":                { "type": "string" },
+    "IrregularityFileTime":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "Offset":                           { "type": "integer", "minimum": 0 },
+
+    "Irregularities":                   { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object",
+                                          "required": ["IrregularityID", "Source", "TimeLabel"], "additionalProperties": false, "properties": {
+      "IrregularityID":                 { "type": "string", "format": "uuid" },
+      "Source":                         { "type": "string", "enum": ["a", "v", "b"] },
+      "TimeLabel":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+      "IrregularityType":               { "type": "string", "enum": ["sp","b","sot","eot","da","di","m","s","wf", "pps","ssv","esv","sb"] },
+      "IrregularityProperties":         { "type": "object", "additionalProperties": false, "properties": {
+        "ReadingSpeedStandard":         { "type": "number", "enum": [0.9375, 1.875, 3.75, 7.5, 15, 30] },
+        "ReadingEqualisationStandard":  { "type": "string", "enum": ["IEC", "IEC1", "IEC2"] },
+        "WritingSpeedStandard":         { "type": "number", "enum": [0.9375, 1.875, 3.75, 7.5, 15, 30] },
+        "WritingEqualisationStandard":  { "type": "string", "enum": ["IEC", "IEC1", "IEC2"] } } },
+      "ImageURI":                       { "type": "string", "format": "uri" },
+      "AudioFileURI":                   { "type": "string", "format": "uri" } }} },
+
+    "DataXMData":                   {"$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048 } } }

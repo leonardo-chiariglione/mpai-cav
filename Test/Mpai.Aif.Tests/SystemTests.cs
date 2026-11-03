@@ -54,8 +54,8 @@ public class SystemTests
         var l2s = Directory.EnumerateFiles(Repository.Schemas, "*.json", SearchOption.AllDirectories)
                            .Where(f => Path.GetFileName(Path.GetDirectoryName(f)) == "AIMs")
                            .Select(MetadataTests.TryParse)
-                           .Where(n => n?["Identifier"]?["AIMName"] is not null)
-                           .ToDictionary(n => n!["Identifier"]!["AIMName"]!.GetValue<string>(), n => n!);
+                           .Where(n => n?["Header"] is not null)
+                           .ToDictionary(n => n!["Header"]!.GetValue<string>(), n => n!);
         // An AIM has code if a plugin or a provider creates it (CodeIndex).
         var code = new CodeIndex(Repository.Root);
 
@@ -72,7 +72,7 @@ public class SystemTests
             if (l2s.TryGetValue(standard, out var l2))
             {
                 var subs = (l2["SubAIMs"]?.AsArray() ?? new JsonArray())
-                           .Select(s => s?["Identifier"]?["AIMName"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();
+                           .Select(s => s?["Header"]?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToList();   // an L2 Sub-AIM is its Header
                 var withCode = subs.Where(code.HasCode).ToList();
                 parts.Add($"L2 {standard} present; code for {withCode.Count} of {subs.Count} Sub-AIMs" +
                           (withCode.Count > 0 ? $" ({string.Join(", ", withCode)})" : ""));
@@ -128,7 +128,7 @@ public class SystemTests
                 : [p.GetProperty("DataType").GetString() ?? ""],
             Number: p.TryGetProperty("PortNumber", out var n) && n.ValueKind == JsonValueKind.Number ? n.GetInt32() : 1)).ToList();
         var subs = amd.TryGetProperty("SubAIMs", out var s) && s.ValueKind == JsonValueKind.Array
-            ? s.EnumerateArray().Select(x => x.GetProperty("Identifier").GetProperty("AIMName").GetString() ?? "").ToList()
+            ? s.EnumerateArray().Select(x => (x.TryGetProperty("Header", out var h) && h.ValueKind == JsonValueKind.String ? h.GetString() : x.GetProperty("Identifier").GetProperty("AIMName").GetString()) ?? "").ToList()   // an L2 Sub-AIM is its Header
             : [];
 
         if (subs.Count == 0)
@@ -190,7 +190,7 @@ public class SystemTests
         public CodeIndex(string root)
         {
             var sep = Path.DirectorySeparatorChar;
-            foreach (var dir in new[] { "AIMs", "MPAIApps", "CAV" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
+            foreach (var dir in new[] { "AIMs", Path.Combine("Apps", "CAV", "HCIApps"), Path.Combine("Test", "CAV") }.Select(d => Path.Combine(root, d)).Where(Directory.Exists))
                 foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories)
                                            .Where(f => !f.Contains($"{sep}obj{sep}") && !f.Contains($"{sep}bin{sep}")))
                     text[f] = File.ReadAllText(f);
@@ -300,41 +300,19 @@ public class SystemTests
 [Trait("Blocks", "Yes")]
 public class ModelTests
 {
-    // Every SHA256 entry of AIMs/aim-settings.json against the file its setting names.
-    [SkippableFact]
-    public void ModelHashes()
+    // THERE IS NO MODELS FOLDER AND NO MODEL IS PINNED OUTSIDE ITS L3: what an AIM reads is declared in the AccessSources of its L3, with the SHA-256 that pins
+    // it, and the Controller obtains it into Access. The settings of AIMs/aim-settings.json hold parameters, never the path of a model or a pin of a file.
+    [Fact]
+    public void NoSettingNamesAModelOrPinsAFile()
     {
-        var settingsFile = Path.Combine(Repository.Root, "AIMs", "aim-settings.json");
-        Skip.IfNot(Directory.Exists(Path.Combine(Repository.Root, "Models")),
-            "Models is absent: the model files are obtained separately (docs/MAS-App-Models.md).");
-
-        var settings = JsonNode.Parse(File.ReadAllText(settingsFile))!.AsObject();
-        var mismatches = new List<string>();
-        var checkedCount = 0;
-
+        var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
+        var found = new List<string>();
         foreach (var (aim, node) in settings)
-        {
-            if (node is not JsonObject entries) continue;
-            foreach (var (key, value) in entries)
-            {
-                if (!key.StartsWith("SHA256:", StringComparison.Ordinal)) continue;
-                var setting = key["SHA256:".Length..];
-                var path = entries[setting]?.GetValue<string>();
-                if (path is null) { mismatches.Add($"{aim} {setting}: no such setting"); continue; }
-
-                var full = Path.IsPathRooted(path) ? path : Path.Combine(Repository.Root, path);
-                if (!File.Exists(full)) { mismatches.Add($"{aim} {setting}: {path} missing"); continue; }
-
-                using var stream = File.OpenRead(full);
-                var actual = Convert.ToHexString(SHA256.HashData(stream));
-                checkedCount++;
-                if (!string.Equals(actual, value?.GetValue<string>(), StringComparison.OrdinalIgnoreCase))
-                    mismatches.Add($"{aim} {setting}: {path} has {actual}");
-            }
-        }
-
-        Assert.True(mismatches.Count == 0,
-            $"{mismatches.Count} of {checkedCount + mismatches.Count} model hashes do not match:\n  " + string.Join("\n  ", mismatches));
+            if (node is JsonObject entries)
+                foreach (var (key, value) in entries)
+                    if (key.StartsWith("SHA256:", StringComparison.Ordinal) || key.StartsWith("Source:", StringComparison.Ordinal) || (value?.GetValue<string>() ?? "").Contains("Models", StringComparison.Ordinal))
+                        found.Add($"{aim} {key}");
+        Assert.True(found.Count == 0, "These settings name a model or pin a file, which the L3 does: " + string.Join(", ", found));
     }
 }
 
@@ -349,7 +327,7 @@ public class WorkflowTests
     public void Workflows()
     {
         var files = Directory.EnumerateFiles(Path.Combine(Repository.Root, "Apps"), "*.orch", SearchOption.AllDirectories)
-                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "UserAgent", "Orchestration"), "MPAI-MAS.orch"))
+                             .Concat(Directory.EnumerateFiles(Path.Combine(Repository.Root, "AIF", "UserAgent", "Orchestration"), "MPAI-MAS.orch"))
                              .OrderBy(f => f, StringComparer.Ordinal);
 
         var result = new Dictionary<string, string>();

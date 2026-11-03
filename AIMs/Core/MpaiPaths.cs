@@ -3,10 +3,10 @@ namespace Mpai.Core;
 // Resolves the application root at runtime so the app is portable.
 //
 // The root is the first ancestor of the running executable that contains the
-// parts present in EVERY clone: the "AIMs" folder AND the "UserAgent" folder. Models/
-// and SharedStorage/ are machine-local (distributed separately) and are NOT
+// parts present in EVERY clone: the "AIMs" folder AND the "AIF/UserAgent" folder. Models/
+// and AIF/Access/ (its data) are machine-local (distributed separately) and are NOT
 // required to locate the root. A clone unzipped anywhere therefore finds its own
-// AIMs/AMDs, aim-settings.json and UserAgent/Assets, whether or not models are present.
+// AIMs/AMDs, AIMs/aim-settings.json and AIF/UserAgent/Assets, whether or not models are present.
 public static class MpaiPaths
 {
     private static string? _root;
@@ -16,7 +16,7 @@ public static class MpaiPaths
     // User-Agent side. These ship in the repository; Models/ need not.
     private static bool IsRoot(string dir) =>
         System.IO.Directory.Exists(System.IO.Path.Combine(dir, "AIMs")) &&
-        System.IO.Directory.Exists(System.IO.Path.Combine(dir, "UserAgent"));
+        System.IO.Directory.Exists(System.IO.Path.Combine(dir, "AIF", "UserAgent"));
 
     private static string FindRoot()
     {
@@ -28,7 +28,7 @@ public static class MpaiPaths
             System.AppContext.BaseDirectory
         };
 
-        // 1) The repository root: an ancestor holding both AIMs and UserAgent.
+        // 1) The repository root: an ancestor holding both AIMs and AIF/UserAgent.
         foreach (var start in starts)
         {
             if (string.IsNullOrEmpty(start)) continue;
@@ -36,7 +36,7 @@ public static class MpaiPaths
                 if (IsRoot(d.FullName)) return d.FullName;
         }
 
-        // 2) Looser: an ancestor holding AIMs (in case the UserAgent layout differs).
+        // 2) Looser: an ancestor holding AIMs (in case the AIF/UserAgent layout differs).
         foreach (var start in starts)
         {
             if (string.IsNullOrEmpty(start)) continue;
@@ -50,7 +50,12 @@ public static class MpaiPaths
                ?? System.AppContext.BaseDirectory;
     }
 
-    public static string Model(string fileName) => System.IO.Path.Combine(Root, "Models", fileName);
+    // A FILE AN AIM READS (a model, a database, a program): the setting the Controller gives it. The L3 of the AIM declares the file in its
+    // AccessSources, the Controller obtains it and gives the AIM the path; there is no folder where a model would be looked for.
+    public static string Given(System.Collections.Generic.IReadOnlyDictionary<string, string> settings, string key) =>
+        settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v)
+            ? v
+            : throw new System.InvalidOperationException($"The setting '{key}' is missing: the L3 of the AIM declares the file in its AccessSources, and the Controller gives its path.");
 
     // A SETTING THAT NAMES A PLACE MUST NOT NAME A MACHINE. Models are found under
     // Models\ beside the application, but the programs that read them - piper,
@@ -63,12 +68,36 @@ public static class MpaiPaths
         string.IsNullOrWhiteSpace(path) ? "" :
         System.IO.Path.IsPathRooted(path) ? path :
         System.IO.Path.Combine(Root, path);
+    // THE TEST INPUTS - the pictures and the sounds the tests use, and the demonstrations that need a real recording: Test/Data of the application.
+    public static string TestData => System.IO.Path.Combine(Root, "Test", "Data");
+    // Recordings of LibriSpeech speakers (1272, 1462, ...), one clip each, named clip<speaker>.wav: Test/Data/Speech.
+    public static string Clips => System.IO.Path.Combine(TestData, "Speech");
+    // The Python that has torch (the voice engine, the segmentation of the reference voices): a tool of this machine, kept in Support/Python of the
+    // application; MPAI_PYTHON names another; else the python of the PATH.
+    public static string Python
+    {
+        get
+        {
+            if (System.Environment.GetEnvironmentVariable("MPAI_PYTHON") is { Length: > 0 } p) return p;
+            foreach (var rel in new[] { System.IO.Path.Combine("Scripts", "python.exe"), System.IO.Path.Combine("bin", "python") })
+            {
+                var venv = System.IO.Path.Combine(Root, "Support", "Python", "pyannote-venv", rel);
+                if (System.IO.File.Exists(venv)) return venv;
+            }
+            return "python";
+        }
+    }
     public static string Gallery       => System.IO.Path.Combine(Root, "TestData", "gallery.json");
     public static string Amds          => System.IO.Path.Combine(Root, "AIMs", "AMDs");
     public static string Settings      => System.IO.Path.Combine(Root, "AIMs", "aim-settings.json");
-    public static string Assets        => System.IO.Path.Combine(Root, "UserAgent", "Assets");
-    // The governed Shared Storage area (AIF Shared Storage backing folder).
-    public static string SharedStorage => System.IO.Path.Combine(Root, "SharedStorage");
-    // Access, the Controller's static or slowly changing data (AIF V3.0, Storage 6).
-    public static string Access        => System.IO.Path.Combine(Root, "Access");
+    public static string Assets        => System.IO.Path.Combine(Root, "AIF", "UserAgent", "Assets");
+    // Access, the Controller's static or slowly changing data (AIF V3.0, Storage 6): what it obtains, once, because an AIM declares it. In the repository, its
+    // AIF/Access. Installed - the AIF of a user of the MPAI Store, unzipped in any folder, which may not be writable - in the user's own data folder
+    // (%LOCALAPPDATA%\MPAI\AIF\Access). MPAI_ACCESS names another place.
+    public static string Access =>
+        System.Environment.GetEnvironmentVariable("MPAI_ACCESS") is { Length: > 0 } named ? named
+        : IsRoot(Root) ? System.IO.Path.Combine(Root, "AIF", "Access")
+        : System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "MPAI", "AIF", "Access");
+    // The governed Shared Storage area (AIF Shared Storage backing folder), in Access.
+    public static string SharedStorage => System.IO.Path.Combine(Access, "SharedStorage");
 }

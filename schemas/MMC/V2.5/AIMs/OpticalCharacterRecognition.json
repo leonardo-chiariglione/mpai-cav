@@ -1,14 +1,22 @@
 {
-  "Identifier":       {"ImplementerID": "IIDRA-assigned", "ImplementationID": "/* String from Implementer */", "AIMName": "MMC-OCR-V2.5"},
+  "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "Header":           "MMC-OCR-V2.5",
 
   "APIProfile":       "Basic",
 
-  "Description":      "This AIM receives the image of a page as a Basic Visual Object and produces a Text Object: the lines of text found on the page, in reading order, each a Basic Text Object with its box on the page and its confidence. The box of a line is the Space-Time of the line in the Text Object: SpatialAttitude1 is its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down). The confidence of a line is in its Data Exchange Metadata.",
+  "Description":      "This AIM receives the image of a page as a Basic Visual Object and, optionally, a Point on it (OSD-PNT-V1.5), and produces a Text Object: the lines of text found on a band of the page about the Point (at the top of the page with no Point), in the full width of the page, in reading order, each a Basic Text Object with its box on the page and its confidence. The box of a line is the Space-Time of the line in the Text Object: SpatialAttitude1 is its top-left corner, SpatialAttitude2 its bottom-right corner, in the pixels of the image (X to the right, Y down). The confidence of a line is in its Data Exchange Metadata.",
 
   "ExternalPorts":    [{"Name": "PageImage", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""},
+                       {"Name": "PagePoint", "Direction": "Input", "DataType": "OSD-PNT-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": ""},
                        {"Name": "PageText", "Direction": "Output", "DataType": "OSD-TXO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": ""}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "ocr-det", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "DetModel", "AsFile": "ch_PP-OCRv5_server_det.onnx", "Description": "The text detection model (PP-OCRv5, server): finds the lines of text."},
+                      {"Name": "ocr-cls", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "ClsModel", "AsFile": "ch_ppocr_mobile_v2.0_cls_infer.onnx", "Description": "The orientation model: a line upside down is turned."},
+                      {"Name": "ocr-rec", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "RecModel", "AsFile": "latin_PP-OCRv5_rec_mobile_infer.onnx", "Description": "The recognition model of the latin alphabets."},
+                      {"Name": "ocr-keys", "Uri": "/* URI of the file or of the archive that holds it */", "Sha256": "/* SHA-256 of the file */", "Setting": "KeysFile", "AsFile": "ppocrv5_latin_dict.txt", "Description": "The characters the recognition model recognises."}],
 
   "Implementations":  [{"BinaryName": "/* provided by implementer */", "Architecture": "/* x86-64 | ARM64 */", "OperatingSystem": "/* Windows | Linux | MacOS */", "Version": "/* implementer version */", "Source": "/* AIMStorage | MPAIStore */", "Destination": "/* provided by implementer */"}],
 
@@ -17,5 +25,7 @@
                        {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */"},
                        {"Name": "GPU:Number", "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"}],
 
-  "DataXMData":       {}
+  "DataXMData":       {},
+
+  "Documentation":    [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/optical-character-recognition/"}]
 }

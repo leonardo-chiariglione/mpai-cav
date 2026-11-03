@@ -1,0 +1,62 @@
+{ "$id":                    "https://schemas.mpai.community/TFA/V1.5/data/SpatialQualifier.json",
+  "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "title":                  "Spatial Qualifier V1.5",
+  "description":            "Qualifier stating the conventions by which the numbers of a Spatial Attitude, of Spatial Data and of Pointing Data are to be read: the representation, the reference frame, the axes and their handedness, the units and the order of the rotations. It states what the data cannot state, and it does not change them. When the Qualifier is absent the data do not state their conventions. A Qualifier carried by a Data Type that contains another (a Path of Points of View, a Spatial Attitude with its Position and Orientation) applies to what it contains, unless the contained Data Type carries its own.",
+  "type":                   "object",
+  "required":               [ "Header", "SpatialQualifierID", "SubTypes", "Formats", "Attributes" ],
+  "additionalProperties":   false,
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "TFA-SAQ-V1.5" },
+    "MInstanceID":          { "type": "string" },
+    "UEnvironmentID":       { "type": "string" },
+    "SpatialQualifierID":   { "type": "string" },
+    "SpatialQualifierTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+
+    "SubTypes":             { "type": "object", "additionalProperties": false, "properties": { "Kind": { "type": "string", "enum": [ "Position", "Orientation", "SpatialAttitude", "SpatialData", "PointingData" ],
+                              "description": "The kind of data this Qualifier qualifies." } } },
+
+    "Formats":              { "type": "object", "additionalProperties": false, "properties": {
+      "PositionFormat":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/types/CoordinateTypes.json",
+                              "description": "How a position is expressed." },
+      "OrientationFormat":  { "type": "string", "enum": [ "EulerAngles", "Quaternion" ], "description": "How an orientation is expressed: three Euler angles, or a quaternion (four numbers, which has no gimbal lock)." } } },
+
+    "Attributes":           { "type": "object", "additionalProperties": false, "properties": {
+
+      "ReferenceFrame":     { "type": "object", "additionalProperties": false, "required": [ "Name" ], "properties": {
+        "Name":             { "type": "string", "description": "E.g. Ego, Local ENU, Map, Geocentric, Screen, Room." },
+        "Origin":           { "type": "string", "description": "What the origin is, e.g. the centre of the vehicle, the room centre, the top-left corner of the picture." } } },
+
+      "Handedness":         { "type": "string", "enum": [ "Right", "Left" ], "description": "Handedness of the Cartesian axes." },
+      "UpAxis":             { "$ref": "#/$defs/Axis" },
+      "ForwardAxis":        { "$ref": "#/$defs/Axis" },
+      "LengthUnit":         { "type": "string", "enum": [ "m", "cm", "mm", "km", "pixel" ] },
+      "AngleUnit":          { "type": "string", "enum": [ "degree", "radian" ] },
+      "PositiveRotation":   { "type": "string", "enum": [ "Anticlockwise", "Clockwise" ], "description": "Sense of a positive rotation about an axis, seen looking against the axis." },
+
+      "Euler":              { "type": "object", "additionalProperties": false, "properties": {
+        "Order":            { "type": "string", "enum": [ "XYZ", "XZY", "YXZ", "YZX", "ZXY", "ZYX", "XYX", "XZX", "YXY", "YZY", "ZXZ", "ZYZ" ],
+                              "description": "The order in which the three rotations are applied." },
+        "Rotations":        { "type": "string", "enum": [ "Intrinsic", "Extrinsic" ],
+                              "description": "Intrinsic: each rotation is about the axes already turned. Extrinsic: about the fixed axes." } } },
+
+      "Quaternion":         { "type": "object", "additionalProperties": false, "properties": {
+        "Order":            { "type": "string", "enum": [ "xyzw", "wxyz" ], "description": "Order of the four numbers." },
+        "Convention":       { "type": "string", "enum": [ "Hamilton", "JPL" ] } } },
+
+      "Spherical":          { "type": "object", "additionalProperties": false, "properties": {
+        "Order":            { "type": "string", "enum": [ "RadiusAzimuthPolar", "RadiusPolarAzimuth" ], "description": "Order of the three numbers." },
+        "PolarAngle":       { "type": "string", "enum": [ "Colatitude", "Elevation" ], "description": "Colatitude: from the up axis. Elevation: from the horizontal plane." },
+        "AzimuthZeroAxis":  { "$ref": "#/$defs/Axis", "description": "The axis from which the azimuth is measured." },
+        "AzimuthSense":     { "type": "string", "enum": [ "Anticlockwise", "Clockwise" ] } } },
+
+      "Geodetic":           { "type": "object", "additionalProperties": false, "properties": {
+        "Datum":            { "type": "string", "description": "E.g. WGS84." },
+        "Epoch":            { "type": "string", "description": "E.g. 2026.0." },
+        "HeightReference":  { "type": "string", "enum": [ "Ellipsoidal", "Orthometric" ] } } } } },
+
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } },
+
+  "$defs": {
+    "Axis":                 { "type": "string", "enum": [ "+X", "-X", "+Y", "-Y", "+Z", "-Z" ] } } }

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
+using System;
 using System.Collections.Generic;
 
 using Mpai.Core;
@@ -26,7 +29,6 @@ public sealed class SpeakerIdentityRecognitionAim : IDisposable
 {
     private readonly SpeakerEmbedder _embedder;
     private readonly SubjectGallery _gallery;
-    private const string TaxonomyUri = "https://schemas.mpai.community/taxonomies/sound.json";
 
     public SpeakerIdentityRecognitionAim(SpeakerEmbedder embedder, SubjectGallery gallery)
     {
@@ -49,8 +51,7 @@ public sealed class SpeakerIdentityRecognitionAim : IDisposable
                 LabelConfidenceLevel = m.Similarity,
                 Taxonomy = new InstanceTaxonomy
                 {
-                    TaxonomyLevelIDs = new List<string> { "sound", "speech", "speaker" },
-                    TaxonomyDataURI = TaxonomyUri
+                    TaxonomyLevelIDs = new List<string> { "sound", "speech", "speaker" }
                 },
                 TaxonomyConfidenceLevel = 1.0
             };
@@ -64,8 +65,7 @@ public sealed class SpeakerIdentityRecognitionAim : IDisposable
                 LabelConfidenceLevel = 1.0,   // it IS speech; the speaker is what's unknown
                 Taxonomy = new InstanceTaxonomy
                 {
-                    TaxonomyLevelIDs = new List<string> { "sound", "speech" },
-                    TaxonomyDataURI = TaxonomyUri
+                    TaxonomyLevelIDs = new List<string> { "sound", "speech" }
                 },
                 TaxonomyConfidenceLevel = 1.0
             };

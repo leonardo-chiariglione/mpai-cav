@@ -1,0 +1,4 @@
+{
+  "1CAE-SMC-V2.5-I01": { "SpeechModel": "openvoice" },
+  "1MMC-TTS-V2.5-I01": { "Tts": "piper", "SpeechModel": "openvoice" }
+}

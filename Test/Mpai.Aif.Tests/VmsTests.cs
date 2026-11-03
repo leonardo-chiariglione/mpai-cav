@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -92,15 +92,15 @@ public class VmsTests
         }
         finally { api.StopFlow(Vms); }
     }
-    // THE APP (Apps/VMS): its own workflow, run by the User Agent's interpreter over the
+    // THE APP (Apps/ABV/VMS): its own workflow, run by the User Agent's interpreter over the
     // Module, with the three devices it binds - a Participant that says what two
     // people say, waiting for the minutes before the next speaks; the Minutes; the
     // Secretary, whose Portable Avatar a client would play.
     [Fact]
     public async Task App()
     {
-        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "VMS", "PAF-VMS.orch")));
-        var app = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "VMS", "app.json")))!;
+        var workflow = new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "ABV", "VMS", "PAF-VMS.orch")));
+        var app = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "ABV", "VMS", "app.json")))!;
         Assert.Equal(Vms, (string?)app["Module"]);
 
         using var llm = new FakeOllama(new JsonObject
@@ -124,7 +124,7 @@ public class VmsTests
         var secretary = new List<string>();
         using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-        var devices = new Mpai.Rca.DeviceRegistry()
+        var devices = new Mpai.Ua.DeviceRegistry()
             .RegisterDevice("Participant", new Mpai.Rca.ParticipantDevice(async cancel =>
             {
                 await minutesSeen.WaitAsync(cancel);                  // each speaks after the minutes of the last
@@ -143,7 +143,7 @@ public class VmsTests
                 return Task.CompletedTask;
             }));
 
-        var interpreter = new Mpai.Rca.WorkflowInterpreter(api.Async(), devices, _ => { });
+        var interpreter = new Mpai.Ua.WorkflowInterpreter(api.Async(), devices, _ => { });
         try { await interpreter.RunAsync(workflow, stop.Token); } catch (OperationCanceledException) { }
 
         Assert.Equal(new[]

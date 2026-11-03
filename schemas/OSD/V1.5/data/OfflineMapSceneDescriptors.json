@@ -6,7 +6,7 @@
   "required":                  [ "Header", "OMSDescriptorsID", "OMSDescriptorsSpaceTime" ],
   "properties":                {
 
-    "Header":                  { "type": "string", "const": "OSD-OSD-V1.5", "description": "Offline Map Scene Descriptors Header â€“ Standard OSD-OSD-Vx.y" },
+    "Header":                  { "type": "string", "const": "OSD-OSD-V1.5", "description": "Offline Map Scene Descriptors Header – Standard OSD-OSD-Vx.y" },
     "MInstanceID":             { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Offline Map Scene is or is intended to be located." },
     "UEnvironmentID":          { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Offline Map Scene is or is intended to be located." },
     "OMSDescriptorsID":        { "type": "string", "description": "Unique identifier of this Offline Map Scene Descriptors instance." },

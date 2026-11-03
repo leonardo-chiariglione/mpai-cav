@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- THE FIRST SLICE OF AIH-HSP, narrated: two End Users with their Front Ends, the Back End (the Trust Authority) with a test Blockchain, a Third-Party User.
+       Each Front End and the Back End is a Controller with its Module, and the Module's AIMs run on an AIM host of their own (AIF.AimHost). -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AihDemo</AssemblyName>
+    <RootNamespace>Mpai.Aih.Demo</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mpai.Aih.Hsp.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Provider\Mpai.Aih.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\ControllerApi\Mpai.Aif.Api.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\AimHost\AIF.AimHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

@@ -3,9 +3,9 @@
   "title": "OfflineMapContentFormats",
   "type": "string", "oneOf": [
     { "const": "GeoJSON",
-      "description": "Lightweight JSONÃ¢â‚¬â€˜based geospatial format used to store vector map layers such as roads, POIs, lane polygons, and navigation attributes." },
+      "description": "Lightweight JSON‑based geospatial format used to store vector map layers such as roads, POIs, lane polygons, and navigation attributes." },
     { "const": "GML",
-      "description": "XMLÃ¢â‚¬â€˜based OGC Geography Markup Language, widely used for exchanging highly structured map, traffic, and infrastructure datasets." },
+      "description": "XML‑based OGC Geography Markup Language, widely used for exchanging highly structured map, traffic, and infrastructure datasets." },
     { "const": "GPX",
       "description": "GPS Exchange Format containing track logs, waypoints, and routes; common for vehicle traces, trip logging, and route import/export." },
     { "const": "KML",
@@ -21,5 +21,5 @@
     { "const": "TPK",
       "description": "Tile Package (Esri) containing raster map tiles optimized for offline rendering in vehicle navigation systems." },
     { "const": "VTPK",
-      "description": "Vector Tile Package (Esri) providing compact offline vector tiles for dynamic rendering in highÃ¢â‚¬â€˜resolution automotive displays." } ] }
+      "description": "Vector Tile Package (Esri) providing compact offline vector tiles for dynamic rendering in high‑resolution automotive displays." } ] }
 

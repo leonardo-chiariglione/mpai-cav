@@ -1,3 +1,6 @@
+// NOTICE (third-party models and data). This source file is released under the BSD 3-Clause licence of this repository.
+// The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
+// restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System;
 using System.Collections.Generic;
 
@@ -60,11 +63,11 @@ public sealed class AcrProvider : IAimProvider, IDisposable
         storage ?? throw new InvalidOperationException($"{aimName} registers into the Module's Shared Storage, and there is none: initialise it (SharedStorageInit).");
 
     private ArcFaceRecogniser ArcFace(IReadOnlyDictionary<string, string> s) =>
-        _arcFace ??= new ArcFaceRecogniser(Setting(s, "ArcFaceModel", MpaiPaths.Model("glintr100.onnx")));
+        _arcFace ??= new ArcFaceRecogniser(Mpai.Core.MpaiPaths.Given(s, "ArcFaceModel"));
     private SpeakerEmbedder Ecapa(IReadOnlyDictionary<string, string> s) =>
-        _ecapa ??= new SpeakerEmbedder(Setting(s, "EcapaModel", MpaiPaths.Model("ecapa-tdnn.onnx")));
+        _ecapa ??= new SpeakerEmbedder(Mpai.Core.MpaiPaths.Given(s, "EcapaModel"));
     private ScrfdFaceDetector Scrfd(IReadOnlyDictionary<string, string> s) =>
-        _scrfd ??= new ScrfdFaceDetector(Setting(s, "ScrfdModel", MpaiPaths.Model("scrfd_10g_bnkps.onnx")));
+        _scrfd ??= new ScrfdFaceDetector(Mpai.Core.MpaiPaths.Given(s, "ScrfdModel"));
 
     // A model's path, as the settings give it; a relative one is the repository's.
     private static string Setting(IReadOnlyDictionary<string, string> s, string key, string fallback) =>

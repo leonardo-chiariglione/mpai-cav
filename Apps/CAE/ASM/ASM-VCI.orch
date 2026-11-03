@@ -1,0 +1,60 @@
+# =============================================================================
+#  ASM-VCI.orch - Audio Scene Management by voice
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module: Audio Scene Management (CAE-ASM-V1.0). The Voice Command Interface
+#  (MMC-VCI-V2.5) is inside it, as the Reference Model draws it (2026/10/27): what the person says
+#  becomes a User Command (CAE-UCM request) for the editing AIMs, whose responses (CAE-UCM) come back
+#  to it and are said. Which AIM a Port is of is the Controller's; the User Agent binds devices to the
+#  Ports of the Module, each by Data Type and Port Number.
+#
+#    what the person gives -
+#      OSD-BSO-V1.5:1  what the person says (or types, spoken by the machine's voice)
+#      CAE-UCM-V1.0:1  a User Command, by hand: a sound loaded from a file arrives in AcquiredObject,
+#                      under the name the person gives it
+#
+#      OSD-ASD-V1.5:1  the scene to open, by its name (the one the Module kept from last time), given when the User Agent starts
+#
+#    what the person is given -
+#      OSD-BTO-V1.5:1  the words heard;  OSD-BTO-V1.5:2 and OSD-BSO-V1.5:1  the response, in text and in speech
+#      OSD-ASD-V1.5    the audio scene as edited
+# =============================================================================
+
+workflow ASM-VCI over 1CAE-ASM-V1.0-I01
+
+on Start:
+
+    ask Controller to start
+
+    stream  Voice          (OSD-BSO-V1.5:1)  from device "Voice"
+    stream  ObjectCommand  (CAE-UCM-V1.0:1)  from device "SoundIn"
+    stream  SceneCommand   (CAE-UCM-V1.0:2)  from device "SceneCommand"
+    stream  OpenScene      (OSD-ASD-V1.5:1)  from device "SceneIn"
+    stream  TypedText      (OSD-BTO-V1.5:1)  from device "TypedIn"
+
+    deliver Heard          (OSD-BTO-V1.5:1)  to device "Heard"
+    deliver ResponseText   (OSD-BTO-V1.5:2)  to device "ReplyText"
+    deliver ResponseSpeech (OSD-BSO-V1.5:1)  to device "ReplySpeech"
+
+    deliver Scene          (OSD-ASD-V1.5)    to device "Scene"
+    deliver ObjectOut      (OSD-AUO-V1.5)    to device "Unused"
+    deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "ObjectReport"
+    deliver SceneReport    (CAE-UCM-V1.0:2)  to device "SceneReport"
+    deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "Unused"
+    deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "Unused"
+    deliver MultimodalOut  (OSD-MSD-V1.5)    to device "Unused"
+    deliver SpeechReport   (CAE-UCM-V1.0:3)  to device "SpeechReport"
+    deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "SpeechSceneRep"
+    deliver MultimodalRep  (CAE-UCM-V1.0:5)  to device "MultimodalRep"
+
+    # The Module is up when the Controller says so. The first request is the proof and the welcome: the Module answers it, in text and in speech.
+    offer   Welcome        (OSD-BTO-V1.5:1) = "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+    ask     WelcomeText    (OSD-BTO-V1.5:2), WelcomeSpeech (OSD-BSO-V1.5:1)
+    present WelcomeText, WelcomeSpeech
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+
+    ask Controller to stop
