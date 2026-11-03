@@ -67,8 +67,8 @@ public class FinancialModelTests
     {
         var model = PdModel.Load(ModelFile);
         var reference = Primary(new PrimaryDefaultPrediction("ref"), false);
-        var trained = Primary(new PrimaryDefaultPrediction("trained", model), false);
-        var healthy = Primary(new PrimaryDefaultPrediction("trained", model), true);
+        var trained = Primary(new PrimaryDefaultPrediction("trained", fixedModel: model), false);
+        var healthy = Primary(new PrimaryDefaultPrediction("trained", fixedModel: model), true);
 
         Assert.NotEqual(reference.Probability, trained.Probability);
         Assert.True(trained.Probability > healthy.Probability, $"a company in difficulty {trained.Probability:F3} against a healthy one {healthy.Probability:F3}");
@@ -111,7 +111,7 @@ public class FinancialModelTests
             var damaged = Path.Combine(work, "model-damaged.json");
             File.WriteAllText(damaged, File.ReadAllText(ModelFile).Replace("\"Intercept\": -", "\"Intercept\": -9"));      // not the bytes the Metadata pins
 
-            var expected = Primary(new PrimaryDefaultPrediction("direct", PdModel.Load(ModelFile)), false).Probability;
+            var expected = Primary(new PrimaryDefaultPrediction("direct", fixedModel: PdModel.Load(ModelFile)), false).Probability;
             var reference = Primary(new PrimaryDefaultPrediction("ref"), false).Probability;
             Assert.Equal(expected, Run(copy), 4);                       // the AIM read the model that Access gave it
             Assert.Equal(reference, Run(damaged), 4);                   // refused as not what the Metadata pins: the AIM goes on with its reference model

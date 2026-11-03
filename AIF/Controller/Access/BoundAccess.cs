@@ -430,6 +430,9 @@ public sealed record AccessUpdate(string Name, string Uri, AccessOutcome Outcome
 // when the AIM first reads it, if the Key prefixes of its entry allow it. A file's Key is its name (an empty Key gives it).
 public sealed class BoundAccess(IAccessReader inner, IReadOnlyList<AccessEntry> entries, AccessFetcher? fetcher = null, string reader = "") : IAccessReader
 {
+    // WHAT THE METADATA NAMES NOW: the Controller read the Metadata of the AIM again (MPAI_AIFM_Model_Update) and the entries are those it found.
+    public void Rebind(IReadOnlyList<AccessEntry> now) => entries = now;
+
     // The entry for a Source and Key: several entries may name the same Source when it is an archive (each a member of it,
     // whose Key is the name of its file); an empty Key is the one entry, if there is one.
     private AccessEntry? EntryOf(string source, string key = "")

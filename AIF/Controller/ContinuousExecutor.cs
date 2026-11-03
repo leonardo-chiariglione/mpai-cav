@@ -392,6 +392,10 @@ public sealed partial class ContinuousExecutor
 
     // ---- the boundary (M3215 3.3) ------------------------------------------------
 
+    // The update of a model of an AIM, and the drift of the model of an AIM (Basic API 4.12): what the Controller does when an AIM calls MPAI_AIFM_Model_Update and MPAI_AIFM_Model_Drift.
+    public Func<string, string, Task<AifError>>? Models { get; set; }
+    public Func<string, double?>? Drift { get; set; }
+
     // The External Ports of the Module's AIMs, by the links the Controller opened (Basic API 5); set when the Module's External Ports are joined.
     public IExternalPorts? External { get; set; }
 
@@ -813,6 +817,10 @@ public sealed partial class ContinuousExecutor
             ExternalOutcome.Refused => AifError.NotAuthorised,
             _ => AifError.Failed
         };
+
+        public async ValueTask<AifError> ModelUpdateAsync(string modelName) => executor.Models is { } update ? await update(leaf.AIMName, modelName) : AifError.NotFound;
+
+        public double? ModelDrift(string aimName) => executor.Drift?.Invoke(aimName);
 
         public (int NumInRange, IReadOnlyList<(int ControllerID, string Metadata)> Controllers) ExternalList()
         {

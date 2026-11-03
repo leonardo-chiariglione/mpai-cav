@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
+
 namespace Mpai.Cui;
 
 // THE FINANCIAL MODEL OF THE PREDICTION AIMs: a logistic score of the financial ratios of a company. Each term is a ratio standardised (its distance from the mean in scales, within three) times a weight;
@@ -90,5 +92,77 @@ public sealed class PdModel
             loaded[path] = (written, model);
             return model;
         }
+    }
+}
+
+// THE MODEL OF AN AIM, KEPT UP TO DATE. It starts with the model the Controller gave it as the setting FinancialModel (or the reference model). When the Controller can say that a model is new
+// (MPAI_AIFM_Model_Update; the Metadata the Controller holds states a SHA-256 Access does not hold, for the same URI), the AIM takes it from Access (Access_Version, Access_Path) and swaps it in
+// between two computations: nothing computes on half a model, and a model that cannot be read leaves the AIM on the one it had. It also keeps how far the ratios it was given have been from those the
+// model was trained on (MPAI_AIFM_Model_Drift): the share, over the last Window ratios, that lie beyond three scales of the mean - the model holds a ratio to three scales, so beyond it the model no
+// longer tells companies apart.
+public sealed class ModelSource
+{
+    public const string SourceName = "financial-default-model";
+    public const int Window = 200;
+
+    // How long the AIM goes between asking the Controller whether its model is new, on the Controller's time base (tests set it to zero).
+    public static TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(1);
+
+    private readonly IAccessReader? access;
+    private readonly object gate = new();
+    private readonly Queue<bool> seen = new();
+    private PdModel? current;
+    private string? uri;
+    private long version = -1;
+    private DateTimeOffset? checkedAt;
+
+    public ModelSource(IReadOnlyDictionary<string, string> settings, IAccessReader? access)
+    {
+        this.access = access;
+        current = PdModel.FromSettings(settings);
+        if (access?.SourcesOf(SourceName) is { Count: > 0 } uris) { uri = uris[0]; version = access.Version(uri); }
+    }
+
+    // The model now in use: null is the reference model.
+    public PdModel? Model { get { lock (gate) return current; } }
+
+    // Between two computations: asks the Controller whether the model is new and, if Access has a new Version of it, reads it.
+    public async Task CheckAsync(IAimPorts ports)
+    {
+        if (access is null || uri is null) return;
+        var now = ports.Now;
+        if (checkedAt is { } at && now - at < Interval) return;
+        checkedAt = now;
+        if (await ports.ModelUpdateAsync(uri) != AifError.OK) return;                       // not new, not trusted, not obtainable: the AIM goes on with the one it has
+        var v = access.Version(uri);
+        if (v == version) return;
+        if (access.LocalPath(uri, "", out var path) != AccessOutcome.OK) return;
+        try
+        {
+            var model = PdModel.Load(path);
+            lock (gate) { current = model; version = v; seen.Clear(); }
+        }
+        catch (CuiDataException) { /* a file that is not a model: the AIM keeps the one it has */ }
+    }
+
+    // The ratios of a company, taken for what they say of the data the model is given.
+    public void Observe(IReadOnlyDictionary<string, double> ratios)
+    {
+        lock (gate)
+        {
+            var model = current ?? PdModel.Reference;
+            foreach (var f in model.Features)
+                if (ratios.TryGetValue(f.Name, out var x))
+                {
+                    seen.Enqueue(Math.Abs((x - f.Mean) / f.Scale) >= 3);
+                    while (seen.Count > Window) seen.Dequeue();
+                }
+        }
+    }
+
+    // How far the inputs have been from those the model was trained on: 0 (none beyond three scales) to 1 (all of them); null while the AIM has been given nothing.
+    public double? Drift
+    {
+        get { lock (gate) return seen.Count == 0 ? null : seen.Count(beyond => beyond) / (double)seen.Count; }
     }
 }

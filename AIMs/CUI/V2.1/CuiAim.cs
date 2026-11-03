@@ -36,6 +36,9 @@ public abstract class CuiAim(string instanceId) : IAimProcessor, IAimRunner
 
     public abstract IEnumerable<(string DataType, JsonNode Json)> Compute(IReadOnlyDictionary<string, JsonNode> inputs);
 
+    // Between two computations: where an AIM keeps something up to date (its model).
+    protected virtual Task BeforeComputeAsync(IAimPorts ports) => Task.CompletedTask;
+
     public async Task RunAsync(IAimPorts ports, AimContext context)
     {
         var latest = new Dictionary<string, JsonNode>(StringComparer.Ordinal);
@@ -49,6 +52,7 @@ public abstract class CuiAim(string instanceId) : IAimProcessor, IAimRunner
             {
                 var at = ports.Now;
                 clock = at;
+                await BeforeComputeAsync(ports);
                 foreach (var (type, json) in Compute(latest))
                     await ports.WriteAsync(type, 1, Stamp(json, type, ++count, at).ToJsonString());
             }

@@ -256,7 +256,7 @@ public class AccessProcessTests
 
         // what was removed is obtained again only when a Module declares it again
         Assert.Equal(AccessOutcome.OK, fetcher.Ensure(goneEntry, "aim", out _));
-        Assert.Equal(1, store.Version(goneEntry.Uri));
+        Assert.Equal(2, store.Version(goneEntry.Uri));                          // a Source made again goes on from the Version it had (it only rises)
 
         // an AIM cannot write Access: the Controller answers reads only
         var refused = RemoteAccess.Answer(store, new JsonObject { ["Function"] = "Delete", ["Source"] = goneEntry.Uri, ["Key"] = "gone.txt" });

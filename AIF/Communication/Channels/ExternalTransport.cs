@@ -484,7 +484,7 @@ public sealed class ExternalHub : IAsyncDisposable, IExternalPorts
                 var present = now - at <= options.LeaveAfter && options.InRange(id);
                 if (!present && links.TryRemove(id, out var gone))
                 {
-                    Said?.Invoke($"{id} left");
+                    Said?.Invoke($"{id} left (not heard for {(now - at).TotalSeconds:F1} s, in range {options.InRange(id)})");
                     await gone.DisposeAsync();
                 }
                 else if (present && !links.ContainsKey(id) && string.CompareOrdinal(options.ControllerId, id) < 0 && opening.TryAdd(id, 0))

@@ -78,7 +78,7 @@ public class CompanyAppTests
                 // What it printed is what the AIM computes with the model the Controller obtained as Access data.
                 var out1 = JsonNode.Parse(File.ReadAllText(Path.Combine(work, "distressed-out.json")))!;
                 var p1 = (double)out1["CUI-PDD-V2.1"]!["PrimaryDefaultDescriptors"]![0]!["PrimaryDefaultProbability"]!;
-                var expected = (double)new PrimaryDefaultPrediction("direct", PdModel.Load(model)).Compute(new Dictionary<string, JsonNode>
+                var expected = (double)new PrimaryDefaultPrediction("direct", fixedModel: PdModel.Load(model)).Compute(new Dictionary<string, JsonNode>
                 {
                     [CuiTypes.PredictionHorizon] = JsonValue.Create(12)!, [CuiTypes.FinancialDescriptors] = Companies.Financial(false)
                 }).Single().Item2["PrimaryDefaultDescriptors"]![0]!["PrimaryDefaultProbability"]!;

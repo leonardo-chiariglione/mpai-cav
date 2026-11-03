@@ -146,6 +146,20 @@ public sealed class UserAgent
         return fetcher is null ? [] : LeavesOf(moduleName).SelectMany(l => fetcher.Refresh(l.AccessSources, l.AIMName)).ToList();
     }
 
+    // MPAI_AIFM_MODEL_UPDATE: the Controller reads the Metadata of the Module again - as the Store gave it - and obtains the model the AIM names, as ModelUpdate of the host says.
+    private Task<AifError> ModelUpdateAsync(string moduleName, AimHost host, string aim, string uri) => Task.Run(() =>
+    {
+        _store.Scan();
+        var leaf = LeavesOf(moduleName).FirstOrDefault(l => l.AIMName == aim);
+        return leaf is null ? AifError.NotFound : host.ModelUpdate(aim, uri, leaf.AccessSources, out _);
+    });
+
+    // The same, for a caller that is the Controller's own (a test, a tool): the AIM of a running Module.
+    public Task<AifError> ModelUpdate(int moduleId, string aim, string uri) =>
+        _running.TryGetValue(moduleId, out var module) && module.Continuous?.Models is { } update ? update(aim, uri) : Task.FromResult(AifError.NotStarted);
+
+    public double? ModelDrift(int moduleId, string aim) => _running.TryGetValue(moduleId, out var module) ? module.Continuous?.Drift?.Invoke(aim) : null;
+
     // REMOVING FROM ACCESS: the Controller removes the Sources that the Metadata of no Module in its catalogue declares, and
     // keeps those that one does. An AIM, the User Agent and a Provider have no such call.
     public (IReadOnlyList<string> Removed, IReadOnlyList<string> Kept) PruneAccess()
@@ -783,6 +797,9 @@ public sealed class UserAgent
                 Storage    = moduleStore
             };
             started.Hosts.AddRange(hosts);
+            // MACHINE LEARNING (Basic API 4.12): what an AIM of this Module asks of the Controller about its models.
+            channels.Models = (aim, uri) => ModelUpdateAsync(name, host, aim, uri);
+            channels.Drift = aim => host.Processor(aim) is IModelDrift drifting ? drifting.Drift : null;
             foreach (var (aim, address) in placement) started.Placed[aim] = HostAt(address);
             if (placement.Count > 0)
             {

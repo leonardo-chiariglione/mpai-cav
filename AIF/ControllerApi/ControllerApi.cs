@@ -20,9 +20,15 @@ public sealed class ControllerApi : IControllerApi, IDisposable
     // routes Data Types and payloads and does not know what an MPAI Object is.
     // The Controller API knows both, so the inspector is installed here - once, for every
     // application and both servers, since all of them construct a ControllerApi.
+    // A CONTROLLER SERVES MANY CALLS THAT WAIT AT ONCE: each OutputRead or InputWrite with a timeout holds a thread of the pool while it waits, and so do the workflows of the User Agents that share
+    // the process. The pool adds threads slowly when it has none to spare, and what has to run meanwhile - the announcements of the Controllers, their links, the Messages between them - waits seconds
+    // behind them: a Controller then looks absent to the others and its link is closed (found 2026-11-03: announcements 10 to 20 s late, with 20 to 30 work items waiting, closed the links of AIH-HSP
+    // under test). The pool's minimum is raised, once, so that it starts the threads it needs at once.
     static ControllerApi()
     {
         AIF.Controller.ContinuousExecutor.ObjectInspector = Mpai.Core.QualifierCheck.Inspect;
+        System.Threading.ThreadPool.GetMinThreads(out var workers, out var io);
+        if (workers < 128) System.Threading.ThreadPool.SetMinThreads(128, io);
     }
 
     // THE CODECS RESOLVE A REFERENCE THIS CONTROLLER ISSUED (M3215 3.6), through the
@@ -605,6 +611,19 @@ public sealed class ControllerApi : IControllerApi, IDisposable
             _ua.MPAI_AIFU_MODULE_GetState(started.Id, out var state);
             return new ModuleStatus(err, aims) { State = state, Stopped = started.Stopped || _ua.ModuleStopped(started.Id), Record = _ua.RecordStatus(started.Id)?.Totals };
         }
+    }
+
+    // MPAI_AIFM_Model_Update and MPAI_AIFM_Model_Drift are called by an AIM, through its Ports; these are the Controller's side of them, for the Controller's own callers (a test, a tool).
+    public AifError ModelUpdate(string moduleName, string aimName, string uri)
+    {
+        int id;
+        lock (_tables) { if (!_running.TryGetValue(moduleName, out var started) || started.Stopped) return AifError.NotStarted; id = started.Id; }
+        return _ua.ModelUpdate(id, aimName, uri).GetAwaiter().GetResult();
+    }
+
+    public double? ModelDrift(string moduleName, string aimName)
+    {
+        lock (_tables) return _running.TryGetValue(moduleName, out var started) && !started.Stopped ? _ua.ModelDrift(started.Id, aimName) : null;
     }
 
     public AifError StopAim(string moduleName, string aimName)

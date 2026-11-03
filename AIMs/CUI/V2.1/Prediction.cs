@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 
+using AIF.Controller;
+
 namespace Mpai.Cui;
 
 // THE REFERENCE MODELS. MPAI-CUI specifies what the Prediction AIMs receive and give, not the model inside - a trained model is the Implementer's. These are the transparent models of
@@ -77,14 +79,19 @@ public static class ReferenceModels
 }
 
 // PRIMARY DEFAULT PREDICTION (CUI-CDP): the Primary Default Descriptors - the probability of default within the Prediction Horizon and the importance of each Financial Descriptor to it.
-public sealed class PrimaryDefaultPrediction(string instanceId, PdModel? model = null) : CuiAim(instanceId)
+public sealed class PrimaryDefaultPrediction(string instanceId, ModelSource? models = null, PdModel? fixedModel = null) : CuiAim(instanceId), IModelDrift
 {
+    private PdModel? model => models?.Model ?? fixedModel;
+    public double? Drift => models?.Drift;
+    protected override Task BeforeComputeAsync(IAimPorts ports) => models?.CheckAsync(ports) ?? Task.CompletedTask;
+
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.FinancialDescriptors, true)];
 
     public override IEnumerable<(string, JsonNode)> Compute(IReadOnlyDictionary<string, JsonNode> inputs)
     {
         var months = Horizon(inputs);
         var terms = ReferenceModels.FinancialTerms(inputs[CuiTypes.FinancialDescriptors], model);
+        models?.Observe(ReferenceModels.Ratios(inputs[CuiTypes.FinancialDescriptors]));
         if (terms.Count == 0) throw new CuiDataException("The Financial Descriptors give none of the codes the model reads.");
         var impacts = new JsonArray(ReferenceModels.Shares(terms).Select(s => (JsonNode)new JsonObject { ["PrimaryDefaultDescriptorID"] = s.Name, ["PrimaryDefaultDescriptorImpact"] = s.Percent }).ToArray());
         yield return (CuiTypes.PrimaryDefault, new JsonObject
@@ -97,8 +104,12 @@ public sealed class PrimaryDefaultPrediction(string instanceId, PdModel? model =
 
 // ORGANISATION MODEL ASSESSMENT (CUI-OMA): the Organisation Descriptors - what the organisation does to the probability of default within the horizon, and the importance of each Governance Descriptor
 // to it. A weaker organisation raises it, and weaker finances amplify that. (The names of the properties are those of the V2.0 schema, GovernaceDescriptorID included.)
-public sealed class OrganisationModelAssessment(string instanceId, PdModel? model = null) : CuiAim(instanceId)
+public sealed class OrganisationModelAssessment(string instanceId, ModelSource? models = null, PdModel? fixedModel = null) : CuiAim(instanceId), IModelDrift
 {
+    private PdModel? model => models?.Model ?? fixedModel;
+    public double? Drift => models?.Drift;
+    protected override Task BeforeComputeAsync(IAimPorts ports) => models?.CheckAsync(ports) ?? Task.CompletedTask;
+
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.GovernanceDescriptors, true), (CuiTypes.FinancialDescriptors, true)];
 
     public override IEnumerable<(string, JsonNode)> Compute(IReadOnlyDictionary<string, JsonNode> inputs)
@@ -121,8 +132,12 @@ public sealed class OrganisationModelAssessment(string instanceId, PdModel? mode
 // PRIMARY DISCONTINUITY PREDICTION (CUI-PDP): the probability that operations are interrupted within the horizon from the risks that have descriptors - financial, governance and, where given, climate
 // and cyber - and what each contributes. The risks combine as independent ones; the Climate and Cyber Risk Descriptors are optional, as the Primary Risks that have AIMs are. The first entry of the
 // descriptors is the company's, each contribution a category of descriptors; one entry follows for each Primary Risk given, with the impact of its descriptors.
-public sealed class PrimaryDiscontinuityPrediction(string instanceId, PdModel? model = null) : CuiAim(instanceId)
+public sealed class PrimaryDiscontinuityPrediction(string instanceId, ModelSource? models = null, PdModel? fixedModel = null) : CuiAim(instanceId), IModelDrift
 {
+    private PdModel? model => models?.Model ?? fixedModel;
+    public double? Drift => models?.Drift;
+    protected override Task BeforeComputeAsync(IAimPorts ports) => models?.CheckAsync(ports) ?? Task.CompletedTask;
+
     protected override (string, bool)[] Inputs => [(CuiTypes.PredictionHorizon, true), (CuiTypes.ClimateRisk, false), (CuiTypes.CyberRisk, false), (CuiTypes.GovernanceDescriptors, true), (CuiTypes.FinancialDescriptors, true)];
 
     // The climate risk, 0 to 0.2, from the descriptors that say a place is extreme.

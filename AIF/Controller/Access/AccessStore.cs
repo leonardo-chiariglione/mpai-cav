@@ -100,7 +100,9 @@ private sealed record ItemInfo(string Key, string Writer, DateTimeOffset Stamp, 
     private static void Retire(Ledger ledger, string source, string key, ItemInfo item)
     {
         var k = LedgerKey(source, key);
-        ledger.Hashes[k] = (ledger.Hashes.GetValueOrDefault(k) ?? []).Concat(item.Earlier ?? []).Append(item.Sha256 ?? "").Where(h => h.Length > 0)
+        // What the item held before its latest content stays refused. The latest content itself is the state the Source was left in - not an earlier one - and a Module that declares it again (after the
+        // Controller removed the Source it no longer declared) obtains it again.
+        ledger.Hashes[k] = (ledger.Hashes.GetValueOrDefault(k) ?? []).Concat(item.Earlier ?? []).Where(h => h.Length > 0)
             .Select(h => h.ToUpperInvariant()).Distinct().ToList();
     }
 

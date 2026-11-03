@@ -51,9 +51,9 @@ public class ConformanceTests
         {
             var inputs = Inputs(company, months);
             JsonNode One(CuiAim aim, params string[] types) => aim.Compute(inputs.Where(p => types.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value)).First().Item2;
-            var pdd = One(new PrimaryDefaultPrediction("cdp", model), CuiTypes.PredictionHorizon, CuiTypes.FinancialDescriptors);
-            var org = One(new OrganisationModelAssessment("oma", model), CuiTypes.PredictionHorizon, CuiTypes.GovernanceDescriptors, CuiTypes.FinancialDescriptors);
-            var psd = One(new PrimaryDiscontinuityPrediction("pdp", model), CuiTypes.PredictionHorizon, CuiTypes.ClimateRisk, CuiTypes.CyberRisk, CuiTypes.GovernanceDescriptors, CuiTypes.FinancialDescriptors);
+            var pdd = One(new PrimaryDefaultPrediction("cdp", fixedModel: model), CuiTypes.PredictionHorizon, CuiTypes.FinancialDescriptors);
+            var org = One(new OrganisationModelAssessment("oma", fixedModel: model), CuiTypes.PredictionHorizon, CuiTypes.GovernanceDescriptors, CuiTypes.FinancialDescriptors);
+            var psd = One(new PrimaryDiscontinuityPrediction("pdp", fixedModel: model), CuiTypes.PredictionHorizon, CuiTypes.ClimateRisk, CuiTypes.CyberRisk, CuiTypes.GovernanceDescriptors, CuiTypes.FinancialDescriptors);
             JsonNode? sdp = null;
             if (inputs.ContainsKey(CuiTypes.SecondaryStatements))
             {
