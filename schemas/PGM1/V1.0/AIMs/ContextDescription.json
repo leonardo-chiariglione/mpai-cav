@@ -58,6 +58,14 @@
       "IsRemote": false
     },
     {
+      "Name": "SpeechObject",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
       "Name": "ContextDescriptors",
       "Direction": "Output",
       "DataType": "PGM-CXD-V1.0",
@@ -326,41 +334,41 @@
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-AVA-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-AVA-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       }
     },
     {
@@ -399,11 +407,11 @@
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       }
     },
     {
@@ -442,11 +450,11 @@
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       }
     },
     {
@@ -523,6 +531,36 @@
         "AIMName": "PGM-CDM-V1.0",
         "DataType": "PGM-DOM-V1.0",
         "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-USD-V1.0",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AVA-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-USD-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-USD-V1.0",
+        "DataType": "OSD-BTO-V1.5"
       }
     }
   ],

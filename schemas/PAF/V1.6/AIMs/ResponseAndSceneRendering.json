@@ -24,6 +24,8 @@
                           {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "FaceMotionObject", "Direction": "Input", "DataType": "PAF-FMO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                          {"Name": "BodyMotionObject", "Direction": "Input", "DataType": "PAF-BMO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "OutputPointOfView", "Direction": "Output", "DataType": "OSD-OPV-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
@@ -41,6 +43,8 @@
                           {"Output": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "MMC-PDX-V2.5", "DataType": "MMC-FPS-V2.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "MMC-FPS-V2.5"}},
+                          {"Output": {"AIMName": "", "DataType": "PAF-FMO-V1.6"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "PAF-FMO-V1.6"}},
+                          {"Output": {"AIMName": "", "DataType": "PAF-BMO-V1.6"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "PAF-BMO-V1.6"}},
                           {"Output": {"AIMName": "MMC-PDX-V2.5", "DataType": "MMC-BPS-V2.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "MMC-BPS-V2.5"}},
                           {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
                           {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-SAF-V1.6", "DataType": "OSD-B3O-V1.5"}},

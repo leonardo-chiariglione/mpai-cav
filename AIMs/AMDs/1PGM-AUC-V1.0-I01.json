@@ -1,0 +1,240 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-AUC-V1.0-I01",
+    "AIMName": "1PGM-AUC-V1.0-I01"
+  },
+  "Header": "PGM-AUC-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The A-User Control (PGM-AUC) AIM serves as the central coordinator for Action execution, AIM orchestration, and system traceability. It governs the lifecycle of the A-User and orchestrates its interactions with the responsible human, the M-Instance, and the Processes and Items with which the A-User interacts. A-User Control holds goal authority but not necessarily epistemic capability: it carries the objectives given to it by the responsible human or by specification, and it asserts those objectives authoritatively. It it does not itself understand the environment or the User because that unde",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "HumanCommand",
+      "Direction": "Input",
+      "DataType": "PGM-HCM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ProcessActionResponse",
+      "Direction": "Input",
+      "DataType": "MMM-PAC-V2.2",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ProcessActions",
+      "Direction": "Input",
+      "DataType": "MMM-PAT-V2.2",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PortableAvatar",
+      "Direction": "Input",
+      "DataType": "PAF-PAV-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCCXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCBKNResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCK-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCDACResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCUSRResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPALResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCAUFResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCF-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCAUSResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "Action",
+      "Direction": "Output",
+      "DataType": "MMM-ACT-V2.2",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PortableAvatar",
+      "Direction": "Output",
+      "DataType": "PAF-PAV-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ProcessActionRequest",
+      "Direction": "Output",
+      "DataType": "MMM-PAC-V2.2",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCCXTRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCBKNRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCK-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCDACRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCUSRRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPALRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCAUFRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCF-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "HumanCommandResponse",
+      "Direction": "Output",
+      "DataType": "PGM-HCM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCAUSRequest",
+      "Direction": "Output",
+      "DataType": "PGM-UCS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-AUC-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Auc",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

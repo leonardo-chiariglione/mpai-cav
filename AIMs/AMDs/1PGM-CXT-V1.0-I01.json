@@ -1,0 +1,594 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-CXT-V1.0-I01",
+    "AIMName": "1PGM-CXT-V1.0-I01"
+  },
+  "Header": "PGM-CXT-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The Context Description (PGM-CXT) AIM is the A-User's perceptual front end to the spatial environment, integrating in a single Composite AIM the active capture of a multimodal scene and its interpretative enrichment. It receives raw Audio and Visual Objects, captures and structures the scene without LLM involvement and without MCP interactions, and then applies modality-specific analysis (audio and visual), cross-modal alignment, and optional domain knowledge to produce Enhanced Audio Scene Descriptors and Enhanced Visual Scene Descriptors together with an interpreted description of the User S",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AudioObject",
+      "Direction": "Input",
+      "DataType": "OSD-BAO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "CXTInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TextObject",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechObject",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ContextDescriptors",
+      "Direction": "Output",
+      "DataType": "PGM-CXD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "CXTInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-CDD-V1.0-I01",
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-ASE-V1.0-I01",
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-VSE-V1.0-I01",
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-AVA-V1.0-I01",
+        "AIMName": "1PGM-AVA-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-USD-V1.0-I01",
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-CDM-V1.0-I01",
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-CXD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BAO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "OSD-BAO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "OSD-BAO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "OSD-BAO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-AVA-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-AVA-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 3
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 3
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CDD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 3
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "OSD-EAD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASE-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "OSD-EVD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-VSE-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CDM-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-AVA-V1.0-I01",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USD-V1.0-I01",
+        "DataType": "OSD-BTO-V1.5"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-CXT-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Cxt",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

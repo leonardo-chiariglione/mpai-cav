@@ -1,0 +1,88 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-ENG-V1.0-I01",
+    "AIMName": "1PGM-ENG-V1.0-I01"
+  },
+  "Header": "PGM-ENG-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Engagement Recalibration",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCUSRRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Input",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "USRInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "EngagementMetrics",
+      "Direction": "Output",
+      "DataType": "PGM-ENM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "USRInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-ENG-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Eng",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

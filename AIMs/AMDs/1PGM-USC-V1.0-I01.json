@@ -1,0 +1,166 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-USC-V1.0-I01",
+    "AIMName": "1PGM-USC-V1.0-I01"
+  },
+  "Header": "PGM-USC-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "User State Creation",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "HarmonisedMultimodalContext",
+      "Direction": "Input",
+      "DataType": "PGM-MIH-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "LinguisticParalinguisticEvidence",
+      "Direction": "Input",
+      "DataType": "PGM-LPE-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BehaviouralandExpressiveIndicators",
+      "Direction": "Input",
+      "DataType": "PGM-BEE-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "CrossModalInterpretativeEvidence",
+      "Direction": "Input",
+      "DataType": "PGM-CMI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserDomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserDomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Output",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserDomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-USC-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Usc",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-VSM-V1.0-I01",
+    "AIMName": "1PGM-VSM-V1.0-I01"
+  },
+  "Header": "PGM-VSM-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The Visual Salience Mapping (PGM-VSM) AIM is a Sub-AIM of Visual Scene Enhancement (PGM-VSE). It determines the relative perceptual importance of Visual Objects with respect to user interaction and context, and produces the Salient Object Matrix. Each Sub-AIM of Visual Scene Enhancement independently generates a Visual CXT Response, a Visual Domain Request and a Visual Interaction History Request. Visual Enhancement Multiplexing multiplexes them into the corresponding external output signals of Visual Scene Enhancement. [High-level specification derived from the Visual Scene Enhancement page. ",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "VisualObjectTypes",
+      "Direction": "Input",
+      "DataType": "PGM-VOT-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BVS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainResponse",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AffordanceTags",
+      "Direction": "Input",
+      "DataType": "OSD-AFT-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "InteractionPotential",
+      "Direction": "Input",
+      "DataType": "OSD-IAP-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SalientObjectMatrix",
+      "Direction": "Output",
+      "DataType": "PGM-SOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AffordanceTags",
+      "Direction": "Output",
+      "DataType": "OSD-AFT-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-VSM-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Vsm",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "SM",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

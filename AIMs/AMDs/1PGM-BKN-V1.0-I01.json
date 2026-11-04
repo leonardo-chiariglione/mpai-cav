@@ -1,0 +1,150 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-BKN-V1.0-I01",
+    "AIMName": "1PGM-BKN-V1.0-I01"
+  },
+  "Header": "PGM-BKN-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Basic Knowledge",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCBKNRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCK-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PCPrompt",
+      "Direction": "Input",
+      "DataType": "PGM-PCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCResponse",
+      "Direction": "Input",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNDACResponse",
+      "Direction": "Input",
+      "DataType": "PGM-KDA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNUSRResponse",
+      "Direction": "Input",
+      "DataType": "PGM-KUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPALResponse",
+      "Direction": "Input",
+      "DataType": "PGM-KPA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "FinalResponse",
+      "Direction": "Output",
+      "DataType": "PGM-FRS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCBKNResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCK-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCRequest",
+      "Direction": "Output",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNDACRequest",
+      "Direction": "Output",
+      "DataType": "PGM-KDA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNUSRRequest",
+      "Direction": "Output",
+      "DataType": "PGM-KUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPALRequest",
+      "Direction": "Output",
+      "DataType": "PGM-KPA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-BKN-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Bkn",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "4 GB",
+      "Request": "8 GB",
+      "Maximum": "16 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Medium",
+      "Request": "High",
+      "Maximum": "High"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "0",
+      "Request": "1",
+      "Maximum": "1"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

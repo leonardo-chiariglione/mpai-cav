@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/MMC/V2.5/data/TextWord.json",
+  "title": "Text Word V2.5",
+  "description": "A word of a Text, with the time it spans and the confidence with which it was recognised.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "TextWordID",
+    "TextWordData"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "MMC-TXW-V2.5",
+      "description": "Text Word Header - Standard MMC-TXW-Vx.y"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance (Virtual Space) where this Text Word is or is intended to be located."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment (Real Space) where this Text Word is or is intended to be located."
+    },
+    "TextWordID": {
+      "type": "string",
+      "description": "Unique identifier of this Text Word instance."
+    },
+    "TextWordTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+      "description": "Time this Text Word was produced."
+    },
+    "TextQualifier": {
+      "$ref": "https://schemas.mpai.community/TFA/V1.5/data/TextQualifier.json",
+      "description": "Qualifier providing information on Sub-Types, Formats and Attributes of the Text."
+    },
+    "TextWordData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Time": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+          "description": "Time span of the word."
+        },
+        "ConfidenceScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence with which the word was recognised, 0 to 1."
+        },
+        "Word": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The word, as one or more strings."
+        }
+      },
+      "description": "Text Word Data."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal and security information on the Data."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Human-readable descriptive metadata of the Text Word (plain text, max 2048 characters)."
+    }
+  }
+}

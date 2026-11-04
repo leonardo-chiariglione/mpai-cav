@@ -12,7 +12,7 @@
     {
       "Name": "EnhancedAudioSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-EAS-V1.5",
+      "DataType": "OSD-EAD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -20,7 +20,7 @@
     {
       "Name": "EnhancedVisualSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-EVS-V1.5",
+      "DataType": "OSD-EVD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -37,6 +37,14 @@
       "Name": "TextDescriptors",
       "Direction": "Input",
       "DataType": "MMC-TDO-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TextObject",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

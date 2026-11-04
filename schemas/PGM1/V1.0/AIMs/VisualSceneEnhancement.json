@@ -44,7 +44,7 @@
     {
       "Name": "EnhancedVisualSceneDescriptors",
       "Direction": "Output",
-      "DataType": "OSD-EVS-V1.5",
+      "DataType": "OSD-EVD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -125,11 +125,11 @@
     {
       "Output": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       }
     },
     {

@@ -1,0 +1,185 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-CDM-V1.0-I01",
+    "AIMName": "1PGM-CDM-V1.0-I01"
+  },
+  "Header": "PGM-CDM-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The Context Description Multiplexing (PGM-CDM) AIM is a Sub-AIM of Context Description. It multiplexes the per-modality results into the aggregated Context Descriptors (to be delivered to Prompt Creation), Domain Request, Interaction History Request and AUC-CXT Response. [Template: to be completed.] The Context Description Multiplexing AIM:",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "EnhancedAudioSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-EAD-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioCXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioCXTInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioDomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "EnhancedVisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-EVD-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualCXTInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualDomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Input",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 3,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserCXTInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 3,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserDomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 3,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ContextDescriptors",
+      "Direction": "Output",
+      "DataType": "PGM-CXD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainRequest",
+      "Direction": "Output",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "CXTInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCCXTResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCC-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-CDM-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Cdm",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

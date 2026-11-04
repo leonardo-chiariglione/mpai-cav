@@ -15,6 +15,8 @@
                            {"Name": "AvatarID", "Direction": "Output", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AvatarSpaceTime", "Direction": "Output", "DataType": "OSD-SPT-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "AvatarModel", "Direction": "Output", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "BodyDescriptors", "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "LanguageSelector", "Direction": "Output", "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SpeechObject", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "TextObject", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},

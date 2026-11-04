@@ -1,0 +1,156 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-PPF-V1.0-I01",
+    "AIMName": "1PGM-PPF-V1.0-I01"
+  },
+  "Header": "PGM-PPF-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Prompt Planning and Formatting",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "Intent",
+      "Direction": "Input",
+      "DataType": "MMC-EIT-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "Proposition",
+      "Direction": "Input",
+      "DataType": "PGM-PRP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "Goal",
+      "Direction": "Input",
+      "DataType": "MMC-GOA-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "Personality",
+      "Direction": "Input",
+      "DataType": "PGM-PRS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCR-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PRCInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCRequest",
+      "Direction": "Input",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCResponse",
+      "Direction": "Input",
+      "DataType": "PGM-UCR-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PRCInteractionHistoryRequest",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PCPrompt",
+      "Direction": "Output",
+      "DataType": "PGM-PCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCResponse",
+      "Direction": "Output",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PRCInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-PPF-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Ppf",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.1 GB",
+      "Request": "0.2 GB",
+      "Maximum": "0.5 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Low",
+      "Maximum": "Medium"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

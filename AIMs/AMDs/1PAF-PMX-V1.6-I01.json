@@ -15,6 +15,7 @@
                        {"Name": "InputText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "FaceDescriptors", "Direction": "Input", "DataType": "PAF-FDO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "BodyDescriptors", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                       {"Name": "SpeechModel", "Direction": "Input", "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "PersonalStatus", "Direction": "Input", "DataType": "MMC-EPS-V2.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "AVSceneSpaceTime", "Direction": "Input", "DataType": "OSD-SPT-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                        {"Name": "MultimodalSceneDescriptors", "Direction": "Input", "DataType": "OSD-BMS-V1.5", "IsOptional": true, "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},

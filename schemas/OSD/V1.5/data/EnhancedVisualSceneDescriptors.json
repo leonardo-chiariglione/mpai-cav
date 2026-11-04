@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
+  "title": "Enhanced Visual Scene Descriptors V1.5",
+  "description": "Enriched representation of a scene described by Visual Scene Descriptors, with the information produced by Visual Scene Enhancement and the AIMs it uses (object identification, relative depth, occlusion, affordances, interaction potential, salience, domain information). It extends a base Visual Scene Descriptors instance without duplicating its structure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "EnhancedVisualSceneDescriptorsID",
+    "BaseVSDID",
+    "Entities"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-EVD-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the virtual space associated with the descriptors."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the real space associated with the descriptors."
+    },
+    "EnhancedVisualSceneDescriptorsID": {
+      "type": "string",
+      "description": "Unique identifier of this Enhanced Visual Scene Descriptors instance."
+    },
+    "EnhancedVisualSceneDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "EnhancedVisualSceneDescriptorsSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "BaseVSDID": {
+      "type": "string",
+      "description": "Identifier of the Visual Scene Descriptors instance being extended."
+    },
+    "Entities": {
+      "type": "array",
+      "description": "Enhanced entities derived from the visual objects of the base Visual Scene Descriptors.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "EntityID",
+          "VSDItemID"
+        ],
+        "properties": {
+          "EntityID": {
+            "type": "string",
+            "description": "Unique identifier of the enhanced entity."
+          },
+          "VSDItemID": {
+            "type": "string",
+            "description": "Identifier of the corresponding item of the base Visual Scene Descriptors."
+          },
+          "VisualObject": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json"
+          },
+          "RelativeDepth": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Depth.json"
+          },
+          "OcclusionFlag": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/OcclusionFlag.json"
+          },
+          "Affordance": {
+            "type": "array",
+            "description": "Possible interactions with the entity.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "Tag"
+              ],
+              "properties": {
+                "Tag": {
+                  "type": "string",
+                  "description": "Type of affordance (e.g., graspable, pushable, openable, rotatable, liftable, insertable, selectable)."
+                },
+                "Feasible": {
+                  "type": "boolean"
+                },
+                "Constraints": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "Constraint"
+                    ],
+                    "properties": {
+                      "Constraint": {
+                        "type": "string",
+                        "description": "Condition limiting the affordance (e.g., occluded, out_of_reach, safety_violation)."
+                      },
+                      "Severity": {
+                        "type": "string",
+                        "enum": [
+                          "info",
+                          "warning",
+                          "error"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Referent": {
+                  "type": "string",
+                  "description": "Identifier of the entity to which the affordance applies."
+                },
+                "Confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "Compliance": {
+                  "type": "boolean",
+                  "description": "Whether the affordance complies with applicable rules."
+                },
+                "FallbackApplied": {
+                  "type": "boolean"
+                },
+                "FallbackTag": {
+                  "type": "string",
+                  "description": "Fallback affordance type."
+                }
+              }
+            }
+          },
+          "InteractionPotential": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InteractionPotential.json"
+          },
+          "Salience": {
+            "type": "number",
+            "description": "Perceptual prominence of the entity."
+          }
+        }
+      }
+    },
+    "RankedEntities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "EntityIDs ordered by salience."
+    },
+    "SalientEntities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "EntityIDs selected as most relevant."
+    },
+    "VisualCXERequest": {
+      "type": "object",
+      "description": "Request issued to the execution environment on the basis of the visual analysis."
+    },
+    "VisualCXEResponse": {
+      "type": "object",
+      "description": "Response returned by the execution environment."
+    },
+    "DomainRequest": {
+      "type": "object",
+      "description": "Request issued to a domain module."
+    },
+    "DomainResponse": {
+      "type": "object",
+      "description": "Response returned by the domain module."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

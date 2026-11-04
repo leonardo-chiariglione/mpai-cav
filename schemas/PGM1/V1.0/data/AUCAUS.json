@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCAUS.json",
+  "title": "AUC-AUS V1.0",
+  "description": "The Data Type exchanged between A-User Control (AUC) and the Private Storage of the Module, through the Controller. It has two modes, told apart by Mode: Request (RQ), sent by AUC, which establishes for an A-User session the storage scopes, the retention and life cycle policy and the access rights that Private Storage enforces; and Response (RS), sent by Private Storage, which reports the outcome of the life cycle command, the operations served, the enforcement of the access rights and retention, and the integrity and capacity of the storage. Every Request is answered by a Response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "AUCAUSID",
+    "AUCAUSTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-UCS-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request (AUC to Private Storage, through the Controller). RS: Response (Private Storage to AUC, through the Controller)."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "AUCAUSID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "AUCAUSTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "Lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Command": {
+          "type": "string",
+          "enum": [
+            "Open",
+            "Close",
+            "Archive",
+            "Delete"
+          ],
+          "description": "Storage lifecycle command."
+        },
+        "RetentionPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "SessionScope": {
+              "type": "string"
+            },
+            "HistoricalScope": {
+              "type": "string"
+            }
+          },
+          "description": "Retention policy applied to the stored content of each scope."
+        }
+      },
+      "description": "Request only. The storage lifecycle command and the retention policy."
+    },
+    "StorageScopes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SessionScope": {
+          "type": "string",
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
+        },
+        "HistoricalScope": {
+          "type": "string",
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
+        }
+      },
+      "description": "Request only. The storage scopes active or available for the session."
+    },
+    "AccessRights": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "HistoricalReadAuthorisation": {
+          "type": "string",
+          "enum": [
+            "granted",
+            "denied"
+          ],
+          "description": "Whether the AIMs may read historical-scope content. Session-scope reads are implicit and need no authorisation."
+        },
+        "WriteAuthorisation": {
+          "type": "string",
+          "enum": [
+            "granted",
+            "denied"
+          ],
+          "description": "Whether writes to the active scope are permitted."
+        }
+      },
+      "description": "Request only. The access rights that Private Storage enforces on the operations of the AIMs."
+    },
+    "LifecycleOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Command": {
+          "type": "string",
+          "enum": [
+            "Open",
+            "Close",
+            "Archive",
+            "Delete"
+          ]
+        },
+        "Result": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "partial"
+          ]
+        }
+      },
+      "description": "Response only. The lifecycle command executed and its result."
+    },
+    "OperationOutcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ReadCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "WriteCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "RejectedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Operations rejected for lack of authorisation."
+        }
+      },
+      "description": "Response only. The storage operations served in the reporting window."
+    },
+    "Enforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "HistoricalReadEnforced": {
+          "type": "string",
+          "enum": [
+            "granted",
+            "denied"
+          ]
+        },
+        "WriteEnforced": {
+          "type": "string",
+          "enum": [
+            "granted",
+            "denied"
+          ]
+        },
+        "RetentionApplied": {
+          "type": "boolean"
+        }
+      },
+      "description": "Response only. How the access rights and the retention policy were enforced."
+    },
+    "StorageState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Integrity": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "degraded",
+            "error"
+          ]
+        },
+        "CapacityStatus": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "limited",
+            "full"
+          ]
+        }
+      },
+      "description": "Response only. Integrity and capacity of the storage."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

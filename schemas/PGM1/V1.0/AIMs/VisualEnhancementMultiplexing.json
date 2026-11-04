@@ -68,7 +68,7 @@
     {
       "Name": "EnhancedVisualSceneDescriptors",
       "Direction": "Output",
-      "DataType": "OSD-EVS-V1.5",
+      "DataType": "OSD-EVD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

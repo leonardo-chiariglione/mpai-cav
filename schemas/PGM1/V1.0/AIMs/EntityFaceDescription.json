@@ -34,6 +34,14 @@
       "IsRemote": false
     },
     {
+      "Name": "FaceMotionObject",
+      "Direction": "Input",
+      "DataType": "PAF-FMO-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
       "Name": "FacePersonalStatus",
       "Direction": "Input",
       "DataType": "MMC-FPS-V2.5",

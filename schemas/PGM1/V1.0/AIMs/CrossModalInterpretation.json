@@ -58,7 +58,7 @@
       "IsRemote": false
     },
     {
-      "Name": "CrossModalInterpretationEvidence",
+      "Name": "CrossModalInterpretativeEvidence",
       "Direction": "Output",
       "DataType": "PGM-CMI-V1.0",
       "Technology": "Software",

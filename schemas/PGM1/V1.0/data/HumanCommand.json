@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/HumanCommand.json",
+  "title": "Human Command V1.0",
+  "description": "The Data Type with which the human responsible for the A-User influences its behaviour, state or decision-making, and with which A-User Control reports the outcome. It has two modes, told apart by Mode: Request (RQ), the Human Command, an authenticated instruction, structured or expressed with audio, text or visual media, that may trigger the execution of an action, override logic, escalation or the reconfiguration of an AIM; and Response (RS), the Human Command Status, produced by A-User Control after processing a Human Command, that reports the outcome (accepted, rejected, escalated or ignored), the lifecycle transition, the AIMs affected and the override report. A Response carries the identifier of the Request it answers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "HumanCommandID",
+    "HumanCommandTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-HCM-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request. RS: Response."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "HumanCommandID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "HumanCommandTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+      "description": "Time of the Request or Response."
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "CommandType": {
+      "type": "string",
+      "enum": [
+        "override",
+        "confirm",
+        "escalate",
+        "pause",
+        "resume",
+        "terminate",
+        "instruct"
+      ],
+      "description": "Request only. The nature of the human intervention. instruct: the human gives the A-User a Goal, expressed in the Content (for example, \"go and open the doors\"); the other values act on the A-User or on its AIMs."
+    },
+    "TargetScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "TargetAIM": {
+          "type": "string",
+          "description": "Name of the AIM addressed."
+        },
+        "TargetAction": {
+          "type": "string",
+          "description": "Specific action or behaviour influenced."
+        },
+        "TargetEntityID": {
+          "type": "string",
+          "description": "Entity involved in the command."
+        }
+      },
+      "description": "Request only. The AIM, process or behaviour to which the command applies."
+    },
+    "CommandIntent": {
+      "type": "string",
+      "description": "Request only. The semantic purpose or goal of the command."
+    },
+    "Content": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "AudioObject": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json",
+          "description": "Audio of the human, as captured by the Units of the User Agent. Used when the User Agent has not recognised the audio as speech."
+        },
+        "SpeechObject": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json",
+          "description": "Speech of the human. The User Agent gives a Speech Object when it has recognised that the audio it captured is speech."
+        },
+        "TextObject": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicTextObject.json",
+          "description": "Text typed or otherwise provided by the human."
+        },
+        "VisualObject": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json",
+          "description": "Visual expression of the human (e.g., a gesture) acquired by a Unit that captures Visual Objects."
+        }
+      },
+      "minProperties": 1,
+      "description": "Request only. The command as expressed by the human with one or more media, as captured by the Units of the User Agent and passed through the Controller. The User Agent captures audio; if it recognises that the audio is speech, it gives a Speech Object instead. The same objects reach Context Description. CommandIntent, if present, is the semantic purpose already known to the sender."
+    },
+    "AuthenticationToken": {
+      "type": "string",
+      "description": "Request only. Token or credential that validates the source and the authority of the command."
+    },
+    "UrgencyLevel": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "critical"
+      ],
+      "description": "Request only. Priority or time sensitivity."
+    },
+    "Trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "IssuerID": {
+          "type": "string",
+          "description": "Identifier of the human or system that issues the command."
+        },
+        "Timestamp": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+        }
+      },
+      "description": "Request only. Provenance of the command, for auditability."
+    },
+    "ExecutionResult": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "escalated",
+        "ignored"
+      ],
+      "description": "Response only. Outcome of the processing of the command. A-User Control produces the Response when it has decided the outcome (accepted, rejected, escalated or ignored), not when the Goal has been reached; a Response is produced for every Request."
+    },
+    "LifecycleTransition": {
+      "type": "string",
+      "enum": [
+        "none",
+        "paused",
+        "resumed",
+        "terminated"
+      ],
+      "description": "Response only. Lifecycle change triggered by the command."
+    },
+    "AIMImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Activated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Suspended": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Reconfigured": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Response only. AIMs activated, suspended or reconfigured by the command."
+    },
+    "OverrideReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "OverrideApplied": {
+          "type": "boolean"
+        },
+        "OverrideType": {
+          "type": "string"
+        }
+      },
+      "description": "Response only. Whether override logic was applied and of which type."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

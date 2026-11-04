@@ -12,7 +12,7 @@
     {
       "Name": "EnhancedAudioSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-EAS-V1.5",
+      "DataType": "OSD-EAD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -20,7 +20,7 @@
     {
       "Name": "EnhancedVisualSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-EVS-V1.5",
+      "DataType": "OSD-EVD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -45,6 +45,30 @@
       "Name": "UserInteractionHistoryResponse",
       "Direction": "Input",
       "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechObject",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioVisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TextObject",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -83,6 +107,15 @@
     }
   ],
   "SubAIMs": [
+    {
+      "Header": "CAE-ASI-V2.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
     {
       "Header": "PGM-ASR-V1.0",
       "Identifier": {
@@ -362,21 +395,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-MIH-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       },
       "Input": {
         "AIMName": "PGM-MIH-V1.0",
-        "DataType": "OSD-EVS-V1.5"
+        "DataType": "OSD-EVD-V1.5"
       }
     },
     {
@@ -814,6 +847,80 @@
       "Input": {
         "AIMName": "PGM-USC-V1.0",
         "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CAE-ASI-V2.5",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-ASR-V1.0",
+        "DataType": "OSD-BSO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-ASR-V1.0",
+        "DataType": "OSD-BSO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-EAD-V1.5"
+      },
+      "Input": {
+        "AIMName": "CAE-ASI-V2.5",
+        "DataType": "OSD-EAD-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-MIH-V1.0",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "CAE-ASI-V2.5",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-ASR-V1.0",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-MIH-V1.0",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-MIH-V1.0",
+        "DataType": "OSD-BTO-V1.5",
         "PortNumber": 2
       }
     }

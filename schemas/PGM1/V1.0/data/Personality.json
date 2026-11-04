@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/Personality.json",
+  "title": "Personality V1.0",
+  "description": "The expressive configuration of the A-User determined by Prompt Contextualisation from the User States and the interaction context: tone, style, pacing and narrative goal. It is used by Prompt Planning and Formatting to assemble the PC Prompt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "PersonalityID",
+    "PersonalityTime",
+    "Tone"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-PRS-V1.0"
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "PersonalityID": {
+      "type": "string",
+      "description": "Identifier of this instance."
+    },
+    "PersonalityTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "UserID": {
+      "type": "string",
+      "description": "Identifier of the User to whom the configuration is addressed."
+    },
+    "Tone": {
+      "type": "string",
+      "description": "Tone of the response."
+    },
+    "Style": {
+      "type": "string",
+      "description": "Style of the response."
+    },
+    "Pacing": {
+      "type": "string",
+      "description": "Pacing of the response."
+    },
+    "NarrativeGoal": {
+      "type": "string",
+      "description": "Narrative goal of the response."
+    },
+    "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence, 0 to 1."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

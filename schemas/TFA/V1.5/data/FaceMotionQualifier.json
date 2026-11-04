@@ -1,24 +1,57 @@
-{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/TFA/V1.5/data/FaceMotionQualifier.json",
-  "title":                    "Face Motion Qualifier V1.5",
-  "description":              "Motion of the face of the Persona (e.g., gaze, expression, nod) as a mini-PA, in a vocabulary named by its Qualifier.",
-  "type":                     "object",
-  "additionalProperties":     false,
-  "required":                 [ "Header", "FaceMotionQualifierID", "Formats" ],
-  "properties":               {
-
-    "Header":                 { "type": "string", "const": "TFA-FMQ-V1.5" },
-    "MInstanceID":            { "type": "string" },
-    "UEnvironmentID":         { "type": "string" },
-    "FaceMotionQualifierID":      { "type": "string" },
-    "FaceMotionQualifierTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-
-    "Formats":                { "type": "object", "additionalProperties": false, "required": [ "ContentFormat" ], "properties": {
-      "ContentFormat":        { "type": "string",
-                               "description": "Identifier (name or URI) of the vocabulary or format of the content of the Object. MPAI recognises the identifiers it needs; this Data Type does not enumerate them." },
-      "TransportFormat":      { "type": "string" } } },
-
-    "Attributes":             { "type": "object" },
-
-    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
-    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/TFA/V1.5/data/FaceMotionQualifier.json",
+  "title": "Face Motion Qualifier V1.5",
+  "description": "Qualifier of the Face Motion Object: it names the vocabulary (Format) in which a motion of the face of the Persona (gaze, expression, nod) is expressed and carries the Attributes of the vocabulary used.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "FaceMotionQualifierID",
+    "Formats"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "TFA-FMQ-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string"
+    },
+    "UEnvironmentID": {
+      "type": "string"
+    },
+    "FaceMotionQualifierID": {
+      "type": "string"
+    },
+    "FaceMotionQualifierTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "Formats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ContentFormat"
+      ],
+      "properties": {
+        "ContentFormat": {
+          "type": "string",
+          "description": "Identifier (name or URI) of the vocabulary or format of the content of the Object. MPAI recognises the identifiers it needs; this Data Type does not enumerate them."
+        },
+        "TransportFormat": {
+          "type": "string"
+        }
+      }
+    },
+    "Attributes": {
+      "type": "object"
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

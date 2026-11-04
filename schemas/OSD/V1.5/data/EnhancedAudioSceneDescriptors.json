@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
+  "title": "Enhanced Audio Scene Descriptors V1.5",
+  "description": "Enriched representation of a scene described by Audio Scene Descriptors, with the information produced by Audio Scene Enhancement and the AIMs it uses (audio object descriptions, spatial attitudes, motion, proximity, acoustic environment, salience, domain information). It extends a base Audio Scene Descriptors instance without duplicating its structure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "EnhancedAudioSceneDescriptorsID",
+    "BaseASDID",
+    "Entities"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-EAD-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the virtual space associated with the descriptors."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the real space associated with the descriptors."
+    },
+    "EnhancedAudioSceneDescriptorsID": {
+      "type": "string",
+      "description": "Unique identifier of this Enhanced Audio Scene Descriptors instance."
+    },
+    "EnhancedAudioSceneDescriptorTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "BaseASDID": {
+      "type": "string",
+      "description": "Identifier of the Audio Scene Descriptors instance being extended (a Basic or Full Audio Scene Descriptors instance)."
+    },
+    "EnhancedAudioSceneDescriptorsSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "Entities": {
+      "type": "array",
+      "description": "Entities representing the audio objects derived from the base Audio Scene Descriptors.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "EntityID",
+          "ASDItemID"
+        ],
+        "properties": {
+          "EntityID": {
+            "type": "string",
+            "description": "Unique identifier of the entity within this Enhanced Audio Scene."
+          },
+          "ASDItemID": {
+            "type": "string",
+            "description": "Identifier of the corresponding item in the base Audio Scene Descriptors."
+          },
+          "AudioObject": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json"
+          }
+        }
+      }
+    },
+    "Relations": {
+      "type": "array",
+      "description": "Relationships between entities.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "RelationType",
+          "SourceID",
+          "TargetID"
+        ],
+        "properties": {
+          "RelationType": {
+            "type": "string",
+            "enum": [
+              "Proximity",
+              "Masking",
+              "Dominance",
+              "SpatialRelation"
+            ]
+          },
+          "SourceID": {
+            "type": "string",
+            "description": "EntityID of the source entity."
+          },
+          "TargetID": {
+            "type": "string",
+            "description": "EntityID of the target entity."
+          },
+          "Weight": {
+            "type": "number",
+            "description": "Strength or relevance of the relation."
+          }
+        }
+      }
+    },
+    "ProximityClasses": {
+      "type": "array",
+      "description": "Classification of entities according to their proximity to the listener Point of View.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "EntityID",
+          "ProximityClass"
+        ],
+        "properties": {
+          "EntityID": {
+            "type": "string"
+          },
+          "ProximityClass": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MotionFlags": {
+      "type": "array",
+      "description": "Motion state of dynamic entities.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "EntityID",
+          "Moving"
+        ],
+        "properties": {
+          "EntityID": {
+            "type": "string"
+          },
+          "Moving": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "RankedEntities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "EntityIDs ordered by salience or domain relevance."
+    },
+    "FilteredEntities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "EntityIDs excluded from further processing by domain rules or salience thresholds."
+    },
+    "SceneState": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Scene-level properties derived from the analysis.",
+      "properties": {
+        "AcousticProfile": {
+          "$ref": "https://schemas.mpai.community/CAE3/V1.0/data/AcousticProfile.json#/$defs/Scene"
+        },
+        "AudioCXEResponse": {
+          "type": "object",
+          "description": "Processing outcome reported by Audio Scene Enhancement."
+        }
+      }
+    },
+    "DomainRequest": {
+      "type": "object",
+      "description": "Request for domain-specific interpretation sent to Domain Access."
+    },
+    "DomainResponse": {
+      "type": "object",
+      "description": "Domain-specific response received from Domain Access."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-USR-V1.0-I01",
+    "AIMName": "1PGM-USR-V1.0-I01"
+  },
+  "Header": "PGM-USR-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The User State Refinement (PGM-USR) AIM improves the A-User's understanding of the evolving User State. It refines the baseline User State produced by Context Description into an authoritative, up-to-date User State (represented by an Entity State) that it passes to Personality Alignment. It refines the Engagement (level and mode) and the Entity State. User State Refinement operates through one operative interface and one semantic interface:",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCUSRRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Input",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNUSRRequest",
+      "Direction": "Input",
+      "DataType": "PGM-KUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "USRInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Output",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCUSRResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCU-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNUSRResponse",
+      "Direction": "Output",
+      "DataType": "PGM-KUS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "USRInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-ENG-V1.0-I01",
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-ESR-V1.0-I01",
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-USY-V1.0-I01",
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "PGM-UCU-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCU-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "PGM-KUS-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-KUS-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCU-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "PGM-UCU-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCU-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "PGM-UCU-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "PGM-ENM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "PGM-ENM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-KUS-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "PGM-KUS-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCU-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "PGM-UCU-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "MMC-EST-V2.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ENG-V1.0-I01",
+        "DataType": "PGM-ENM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "PGM-ENM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ESR-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "MMC-EST-V2.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-USY-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-USR-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Usr",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

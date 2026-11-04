@@ -1,0 +1,276 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-PAL-V1.0-I01",
+    "AIMName": "1PGM-PAL-V1.0-I01"
+  },
+  "Header": "PGM-PAL-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "The Personality Alignment (PGM-PAL) AIM decides the stance the A-User should adopt and produces the A-User State that the A-User Formation AIM renders. It is a reasoning AIM: knowing how the User feels and the context of the interaction, it judges what stance is appropriate for the A-User, which is not the same as mirroring the User. If the User laughs, the A-User laughing may be appropriate in a pub but improper in a church; the Personality Alignment AIM makes that judgement. To make it, the Personality Alignment AIM needs two things only: the User's internal state and the context. It receive",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCPALRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "UserState",
+      "Direction": "Input",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPALRequest",
+      "Direction": "Input",
+      "DataType": "PGM-KPA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PALInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUserState",
+      "Direction": "Output",
+      "DataType": "MMC-EST-V2.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPALResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPALResponse",
+      "Direction": "Output",
+      "DataType": "PGM-KPA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PALInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-CXR-V1.0-I01",
+        "AIMName": "1PGM-CXR-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-STS-V1.0-I01",
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-ASC-V1.0-I01",
+        "AIMName": "1PGM-ASC-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-DEX-V1.0-I01",
+        "AIMName": "1PGM-DEX-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "1PGM-ASC-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-ASC-V1.0-I01",
+        "DataType": "PGM-UCP-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-DEX-V1.0-I01",
+        "DataType": "PGM-KPA-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-KPA-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CXR-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-CXR-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-CXR-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "MMC-EST-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "DataType": "MMC-EST-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-CXR-V1.0-I01",
+        "DataType": "PGM-RCX-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "DataType": "PGM-RCX-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCP-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "DataType": "PGM-UCP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "DataType": "PGM-STN-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ASC-V1.0-I01",
+        "DataType": "PGM-STN-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCP-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-ASC-V1.0-I01",
+        "DataType": "PGM-UCP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-STS-V1.0-I01",
+        "DataType": "PGM-STN-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-DEX-V1.0-I01",
+        "DataType": "PGM-STN-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-KPA-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-DEX-V1.0-I01",
+        "DataType": "PGM-KPA-V1.0"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-PAL-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Pal",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-PRC-V1.0-I01",
+    "AIMName": "1PGM-PRC-V1.0-I01"
+  },
+  "Header": "PGM-PRC-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Prompt Creation",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "ContextDescriptors",
+      "Direction": "Input",
+      "DataType": "PGM-CXD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PRCInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCRequest",
+      "Direction": "Input",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PCPrompt",
+      "Direction": "Output",
+      "DataType": "PGM-PCP-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNPRCResponse",
+      "Direction": "Output",
+      "DataType": "PGM-KPR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCPRCResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCR-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PRCInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-IPD-V1.0-I01",
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-PTA-V1.0-I01",
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-IRA-V1.0-I01",
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-PCX-V1.0-I01",
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-PPF-V1.0-I01",
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-PCP-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-PCP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-KPR-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-KPR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-CXD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-KPR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-KPR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "MMC-TDO-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "MMC-TDO-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "MMC-EIT-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "MMC-EIT-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-CXD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "MMC-EIT-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "MMC-EIT-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-PRP-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "MMC-GOA-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "MMC-GOA-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-PRS-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-PRS-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IPD-V1.0-I01",
+        "DataType": "PGM-KPR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-KPR-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-UCR-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PTA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-IRA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PCX-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PPF-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-PRC-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Prc",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

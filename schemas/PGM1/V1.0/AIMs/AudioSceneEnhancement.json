@@ -52,7 +52,7 @@
     {
       "Name": "EnhancedAudioSceneDescriptors",
       "Direction": "Output",
-      "DataType": "OSD-EAS-V1.5",
+      "DataType": "OSD-EAD-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -155,11 +155,11 @@
     {
       "Output": {
         "AIMName": "PGM-EAM-V1.0",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "OSD-EAS-V1.5"
+        "DataType": "OSD-EAD-V1.5"
       }
     },
     {

@@ -26,17 +26,17 @@
       "IsRemote": false
     },
     {
-      "Name": "ProcessActions",
+      "Name": "BodyPersonalStatus",
       "Direction": "Input",
-      "DataType": "MMM-PAT-V2.2",
+      "DataType": "MMC-BPS-V2.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
     },
     {
-      "Name": "BodyPersonalStatus",
+      "Name": "BodyMotionObject",
       "Direction": "Input",
-      "DataType": "MMC-BPS-V2.5",
+      "DataType": "PAF-BMO-V1.6",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

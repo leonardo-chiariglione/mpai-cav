@@ -1,0 +1,450 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCAUF.json",
+  "title": "AUC-AUF V1.0",
+  "description": "The Data Type exchanged between A-User Control (AUC) and A-User Formation (AUF). It has two modes, told apart by Mode: Request (RQ), sent by AUC to AUF, and Response (RS), sent by AUF to AUC. A-User Formation receives the Final Response of Basic Knowledge, which holds all the outputs of Basic Knowledge. A Sub-AIM of A-User Formation divides the Process Actions into those that concern the A-User as an entity (their subject is the Persona of the A-User), from which it generates Motion Objects for the rendering of the Portable Avatar, and those whose subject is another Item or Process, which A-User Formation passes to AUC. A-User Formation also forms the Portable Avatar and gives it to AUC. The Request controls the formation and each motion; the Response reports the outcome of each step, how the Process Actions have been divided and the progress of the motions. A-User Formation sends nothing to the M-Instance and the Portable Avatar leaves the A-User only if AUC authorises it. Every Request is answered by a Response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "AUCAUFID",
+    "AUCAUFTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-UCF-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request (AUC to AUF). RS: Response (AUF to AUC)."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "AUCAUFID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "AUCAUFTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "Exchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Phase": {
+          "type": "string",
+          "enum": [
+            "new",
+            "continuation"
+          ]
+        },
+        "ResponseID": {
+          "type": "string",
+          "description": "ID of the Response to which a continuation Request follows."
+        }
+      },
+      "required": [
+        "Phase"
+      ],
+      "description": "Request only."
+    },
+    "FormationControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Speech": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "Face": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "Body": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "Avatar": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "not_requested"
+          ]
+        },
+        "ExpressiveDelivery": {
+          "type": "string",
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
+        },
+        "SpatialOutput": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json"
+        }
+      },
+      "description": "Request only. What A-User Formation forms (Speech, Face, Body and Avatar: required, optional or not_requested), whether the Personal Status modulates the delivery, and the spatial placement and orientation of the Portable Avatar."
+    },
+    "ProcessActionControl": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ProcessActionID": {
+            "type": "string"
+          },
+          "Control": {
+            "type": "string",
+            "enum": [
+              "proceed",
+              "stop"
+            ]
+          }
+        },
+        "required": [
+          "ProcessActionID",
+          "Control"
+        ]
+      },
+      "description": "Request only. For a Process Action that A-User Formation is turning into Motion Objects: proceed with the motion or stop it."
+    },
+    "Storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Write": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Category": {
+                "type": "string"
+              },
+              "Readers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "Time": {
+                "type": "string",
+                "enum": [
+                  "module",
+                  "session",
+                  "persistent"
+                ]
+              }
+            },
+            "required": [
+              "Category"
+            ]
+          }
+        },
+        "Read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. What A-User Formation may read from and write to the Private Storage of the Module, under the rules set by AUC. The Avatar Model and the Speech Model are read from there."
+    },
+    "ProcessActionOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "PAStatus": {
+          "type": "string"
+        },
+        "Complements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Constraint": {
+          "type": "string",
+          "description": "Resulting constraint on the Goal."
+        }
+      },
+      "description": "Request only. Outcome of a Process Action performed by AUC in the M-Instance, conveyed so that the AIM operates knowing the current M-Instance state."
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "achieved",
+        "achieved_differently",
+        "not_achieved"
+      ],
+      "description": "Response only. The outcome reached."
+    },
+    "Reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Code": {
+          "type": "string",
+          "enum": [
+            "none",
+            "ambiguity_unresolved",
+            "partner_unavailable",
+            "constraint_conflict",
+            "insufficient_context",
+            "deadline_exceeded",
+            "not_permitted"
+          ]
+        },
+        "Description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Code"
+      ],
+      "description": "Response only. Structured reason, required when Outcome is not 'achieved'."
+    },
+    "RenderState": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "rendering",
+        "rendered",
+        "not_rendered"
+      ],
+      "description": "Response only. Current state of the formation of the Portable Avatar."
+    },
+    "ElementOutcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SpeechSynthesis": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Outcome": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failure",
+                "not_requested"
+              ]
+            },
+            "Reason": {
+              "type": "string",
+              "enum": [
+                "none",
+                "model_unavailable",
+                "asset_missing",
+                "synthesis_error",
+                "unsupported_qualifier",
+                "input_invalid"
+              ]
+            }
+          },
+          "required": [
+            "Outcome"
+          ]
+        },
+        "FaceDescription": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Outcome": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failure",
+                "not_requested"
+              ]
+            },
+            "Reason": {
+              "type": "string",
+              "enum": [
+                "none",
+                "model_unavailable",
+                "asset_missing",
+                "synthesis_error",
+                "unsupported_qualifier",
+                "input_invalid"
+              ]
+            }
+          },
+          "required": [
+            "Outcome"
+          ]
+        },
+        "BodyDescription": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Outcome": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failure",
+                "not_requested"
+              ]
+            },
+            "Reason": {
+              "type": "string",
+              "enum": [
+                "none",
+                "model_unavailable",
+                "asset_missing",
+                "synthesis_error",
+                "unsupported_qualifier",
+                "input_invalid"
+              ]
+            }
+          },
+          "required": [
+            "Outcome"
+          ]
+        },
+        "AvatarSynthesis": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Outcome": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failure",
+                "not_requested"
+              ]
+            },
+            "Reason": {
+              "type": "string",
+              "enum": [
+                "none",
+                "model_unavailable",
+                "asset_missing",
+                "synthesis_error",
+                "unsupported_qualifier",
+                "input_invalid"
+              ]
+            }
+          },
+          "required": [
+            "Outcome"
+          ]
+        }
+      },
+      "description": "Response only. Outcome, and reason for any failure, of each formation step."
+    },
+    "Separation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "MotionProcessActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Identifiers of the Process Actions whose subject is the Persona of the A-User (its avatar: position, movement, gestures), turned into Motion Objects."
+        },
+        "ReturnedProcessActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Identifiers of the Process Actions whose subject is another Item or Process, passed to A-User Control unchanged."
+        }
+      },
+      "description": "Response only. How A-User Formation has divided the Process Actions of the Final Response. A Process Action is in exactly one of the two lists."
+    },
+    "ProcessActionStatus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ProcessActionID": {
+            "type": "string"
+          },
+          "PAStatus": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ProcessActionID",
+          "PAStatus"
+        ]
+      },
+      "description": "Response only. Progress, with the PA Status, of the Process Actions turned into Motion Objects."
+    },
+    "PortableAvatarID": {
+      "type": "string",
+      "description": "Response only. Identifier of the Portable Avatar produced and given to A-User Control for authorisation."
+    },
+    "StorageOutcome": {
+      "type": "array",
+      "description": "Response only. Outcome of the writes instructed by the Request.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string"
+          },
+          "Result": {
+            "type": "string",
+            "enum": [
+              "written",
+              "not_authorised",
+              "not_attempted"
+            ]
+          }
+        },
+        "required": [
+          "Category",
+          "Result"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PGM-DAC-V1.0-I01",
+    "AIMName": "1PGM-DAC-V1.0-I01"
+  },
+  "Header": "PGM-DAC-V1.0",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Domain Access",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AUCDACRequest",
+      "Direction": "Input",
+      "DataType": "PGM-UCD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainRequest",
+      "Direction": "Input",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNDACRequest",
+      "Direction": "Input",
+      "DataType": "PGM-KDA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DACInteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DomainResponse",
+      "Direction": "Output",
+      "DataType": "PGM-DOM-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BKNDACResponse",
+      "Direction": "Output",
+      "DataType": "PGM-KDA-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "DACInteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AUCDACResponse",
+      "Direction": "Output",
+      "DataType": "PGM-UCD-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-PDA-V1.0-I01",
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PGM-DDA-V1.0-I01",
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-KDA-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-KDA-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-UCD-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-UCD-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-UCD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-UCD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-PDA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCD-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-UCD-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-KDA-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-KDA-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "1PGM-DDA-V1.0-I01",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-DAC-V1.0-I01.json",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Pgm.Dac",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/"
+    }
+  ]
+}

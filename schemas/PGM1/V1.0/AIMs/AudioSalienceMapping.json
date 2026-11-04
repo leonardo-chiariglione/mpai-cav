@@ -90,7 +90,7 @@
       "IsRemote": false
     },
     {
-      "Name": "AudioInteractionHistory",
+      "Name": "AudioInteractionHistoryRequest",
       "Direction": "Output",
       "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
