@@ -53,7 +53,8 @@
           "AssociationScore": {
             "type": "number",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "description": "Score of the pairing, 0 to 1, combining the four kinds of evidence."
           },
           "Evidence": {
             "type": "object",
@@ -66,15 +67,18 @@
                   "Score": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 1
+                    "maximum": 1,
+                    "description": "Score of this kind of evidence, 0 to 1."
                   },
                   "Available": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if this kind of evidence was available for the pairing."
                   }
                 },
                 "required": [
                   "Available"
-                ]
+                ],
+                "description": "Agreement between the direction of arrival and, where available, the distance of the Audio Entity and the position of the Visual Entity."
               },
               "Temporal": {
                 "type": "object",
@@ -83,15 +87,18 @@
                   "Score": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 1
+                    "maximum": 1,
+                    "description": "Score of this kind of evidence, 0 to 1."
                   },
                   "Available": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if this kind of evidence was available for the pairing."
                   }
                 },
                 "required": [
                   "Available"
-                ]
+                ],
+                "description": "Agreement between the onset, offset and activity of the Audio Entity and the motion of the Visual Entity."
               },
               "MotionCorrelation": {
                 "type": "object",
@@ -100,15 +107,18 @@
                   "Score": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 1
+                    "maximum": 1,
+                    "description": "Score of this kind of evidence, 0 to 1."
                   },
                   "Available": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if this kind of evidence was available for the pairing."
                   }
                 },
                 "required": [
                   "Available"
-                ]
+                ],
+                "description": "Agreement between the displacement of the Audio Entity and that of the Visual Entity over the capture interval."
               },
               "Precedence": {
                 "type": "object",
@@ -117,15 +127,18 @@
                   "Score": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 1
+                    "maximum": 1,
+                    "description": "Score of this kind of evidence, 0 to 1."
                   },
                   "Available": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if this kind of evidence was available for the pairing."
                   }
                 },
                 "required": [
                   "Available"
-                ]
+                ],
+                "description": "Whether the same pairing was established in earlier captures of the session."
               }
             },
             "description": "The contribution of each kind of evidence, with whether it was available."
@@ -149,7 +162,8 @@
           "VisualEntityID",
           "AssociationScore"
         ]
-      }
+      },
+      "description": "The admissible pairings of an Audio Entity with a Visual Entity."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

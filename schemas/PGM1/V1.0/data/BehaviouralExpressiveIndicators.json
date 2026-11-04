@@ -69,46 +69,58 @@
                 "additionalProperties": false,
                 "properties": {
                   "Label": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Label."
                   },
                   "Intensity": {
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 1
+                    "maximum": 1,
+                    "description": "Intensity."
                   }
-                }
+                },
+                "description": "Facial expression and its intensity."
               },
               "Gaze": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "Direction": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Direction."
                   },
                   "Fixation": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if the gaze is fixed."
                   }
-                }
+                },
+                "description": "Gaze direction and fixation."
               },
               "Head": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "Pose": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Head pose."
                   },
                   "Nodding": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if the head nods."
                   },
                   "Shaking": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if the head shakes."
                   }
-                }
+                },
+                "description": "Head pose, nodding and shaking."
               },
               "Blink": {
-                "type": "string"
+                "type": "string",
+                "description": "Blink and eye-opening behaviour."
               }
-            }
+            },
+            "description": "Indicators carried by the face, the gaze and the head."
           },
           "Behavioural": {
             "type": "object",
@@ -119,33 +131,40 @@
                 "additionalProperties": false,
                 "properties": {
                   "Label": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Label."
                   },
                   "OrientationTowards": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    }
+                    },
+                    "description": "Identifiers of the Entities towards which the posture is oriented."
                   }
-                }
+                },
+                "description": "Posture and its orientation."
               },
               "Gesture": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "Label": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Label."
                   },
                   "Deictic": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "True if the gesture is deictic."
                   },
                   "ReferentIDs": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    }
+                    },
+                    "description": "Identifiers of the Entities and Objects the gesture refers to."
                   }
-                }
+                },
+                "description": "Gesture and its referent."
               },
               "Movement": {
                 "type": "string",
@@ -154,7 +173,8 @@
                   "withdrawal",
                   "stillness",
                   "other"
-                ]
+                ],
+                "description": "Movement in the Space."
               },
               "Manipulation": {
                 "type": "object",
@@ -164,15 +184,18 @@
                     "type": "array",
                     "items": {
                       "type": "string"
-                    }
+                    },
+                    "description": "Identifiers of the Objects manipulated."
                   },
                   "Affordances": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    }
+                    },
+                    "description": "The affordances exercised."
                   }
-                }
+                },
+                "description": "Manipulation of Objects in the Space."
               },
               "ExchangeRhythm": {
                 "type": "string",
@@ -181,9 +204,11 @@
                   "overlapping",
                   "waiting",
                   "other"
-                ]
+                ],
+                "description": "Rhythm of the exchange."
               }
-            }
+            },
+            "description": "Indicators carried by posture, gesture and movement."
           },
           "AttentionTarget": {
             "type": "string",
@@ -205,7 +230,8 @@
               "reinforcing",
               "at_variance",
               "one_absent"
-            ]
+            ],
+            "description": "Whether the bodily evidence reinforces the Linguistic-Paralinguistic Evidence, is at variance with it, or one of the two is absent or unusable."
           },
           "ObservationQuality": {
             "type": "string",
@@ -228,7 +254,8 @@
           "EntityID",
           "Interval"
         ]
-      }
+      },
+      "description": "The Entities."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

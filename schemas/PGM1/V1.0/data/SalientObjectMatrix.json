@@ -56,12 +56,14 @@
           },
           "Rank": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "description": "Position in the ranking, starting from 1."
           },
           "SalienceScore": {
             "type": "number",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "description": "Salience score, 0 to 1."
           },
           "Scores": {
             "type": "object",
@@ -84,7 +86,8 @@
           "Rank",
           "SalienceScore"
         ]
-      }
+      },
+      "description": "The rows of the matrix, one for each Visual Object."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

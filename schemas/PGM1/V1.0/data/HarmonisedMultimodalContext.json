@@ -48,7 +48,8 @@
         },
         "Tolerance": {
           "type": "number",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Tolerance on the common time base, in seconds."
         },
         "Streams": {
           "type": "array",
@@ -63,13 +64,16 @@
                   "visual",
                   "text",
                   "speech"
-                ]
+                ],
+                "description": "The stream."
               },
               "Rate": {
-                "type": "number"
+                "type": "number",
+                "description": "Rate at which the stream is produced."
               },
               "Offset": {
-                "type": "number"
+                "type": "number",
+                "description": "Offset of the stream with respect to the common time base."
               },
               "AbsentIntervals": {
                 "type": "array",
@@ -85,13 +89,15 @@
                     }
                   },
                   "description": "Time interval, on the time base of the capture."
-                }
+                },
+                "description": "Intervals for which the stream is absent."
               }
             },
             "required": [
               "Stream"
             ]
-          }
+          },
+          "description": "How each stream refers to the common time base."
         }
       },
       "description": "The common time base and how each stream refers to it."
@@ -117,25 +123,29 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "description": "Identifiers used by the audio modality."
               },
               "Visual": {
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "description": "Identifiers used by the visual modality."
               },
               "Text": {
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "description": "Text of the referring expression."
               },
               "Speech": {
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "description": "Identifiers used by the speech."
               }
             },
             "description": "The identifier of each modality, retained."
@@ -144,7 +154,8 @@
         "required": [
           "HarmonisedEntityID"
         ]
-      }
+      },
+      "description": "The Entities."
     },
     "Utterances": {
       "type": "array",
@@ -182,7 +193,8 @@
           "UtteranceID",
           "Interval"
         ]
-      }
+      },
+      "description": "The utterances."
     },
     "AudioEvidence": {
       "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
@@ -199,7 +211,8 @@
         "additionalProperties": false,
         "properties": {
           "Stream": {
-            "type": "string"
+            "type": "string",
+            "description": "The stream."
           },
           "ItemID": {
             "type": "string"
@@ -234,13 +247,15 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "The modalities that disagree."
           },
           "HarmonisedEntityID": {
             "type": "string"
           },
           "Description": {
-            "type": "string"
+            "type": "string",
+            "description": "Description of the reason."
           }
         }
       },

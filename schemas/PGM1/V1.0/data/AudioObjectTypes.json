@@ -74,7 +74,8 @@
           "AudioObjectID",
           "ObjectType"
         ]
-      }
+      },
+      "description": "The object types assigned, one for each object of the scene."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

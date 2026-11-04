@@ -62,7 +62,8 @@
             "enum": [
               "momentary",
               "sustained"
-            ]
+            ],
+            "description": "Whether the reading is momentary or sustained."
           },
           "ChangePoint": {
             "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
@@ -97,13 +98,15 @@
         "additionalProperties": false,
         "properties": {
           "Expression": {
-            "type": "string"
+            "type": "string",
+            "description": "The referring expression."
           },
           "TargetIDs": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Identifiers of the Objects and Entities denoted."
           },
           "AddresseeID": {
             "type": "string"
@@ -118,19 +121,22 @@
                 "posture",
                 "domain"
               ]
-            }
+            },
+            "description": "The evidence on which the binding rests."
           }
         },
         "required": [
           "Expression"
         ]
-      }
+      },
+      "description": "Bindings of referring expressions to the Objects and Entities they denote."
     },
     "UnresolvedReferences": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Referring expressions that remain unresolved."
     },
     "Disagreements": {
       "type": "array",
@@ -142,7 +148,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "The modalities that disagree."
           },
           "Interval": {
             "type": "object",
@@ -163,16 +170,19 @@
               "meaningful",
               "apparent",
               "unresolved"
-            ]
+            ],
+            "description": "Kind of disagreement."
           },
           "Description": {
-            "type": "string"
+            "type": "string",
+            "description": "Description of the reason."
           }
         },
         "required": [
           "Kind"
         ]
-      }
+      },
+      "description": "Disagreements between modalities."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

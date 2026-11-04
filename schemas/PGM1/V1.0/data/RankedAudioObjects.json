@@ -49,12 +49,14 @@
           },
           "Rank": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "description": "Position in the ranking, starting from 1."
           },
           "SalienceScore": {
             "type": "number",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "description": "Salience score, 0 to 1."
           },
           "Components": {
             "type": "object",
@@ -87,7 +89,8 @@
           "Rank",
           "SalienceScore"
         ]
-      }
+      },
+      "description": "The ranking, in order of rank."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

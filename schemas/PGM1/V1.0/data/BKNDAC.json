@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/BKNDAC.json",
+  "title": "BKN-DAC V1.0",
+  "description": "The Data Type exchanged between Basic Knowledge and Domain Access (Deliberative Domain Access) through the Dialogic Semantic Query Interface, implemented with the Model Context Protocol. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that asks for domain knowledge (grounding of terms, affordances, constraints, behavioural expectations), for the validation of the feasibility of Process Actions that Basic Knowledge is considering, or for the retention of semantic commitments; and Response (RS), sent by Domain Access. The exchanges of one dialogue are told apart by TurnIndex within the DialogID; Domain Access retains the commitments for the duration of the dialogue.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "DialogID",
+    "TurnIndex",
+    "QueryID",
+    "QueryTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-KDA-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request. RS: Response."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "QueryID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "QueryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "DialogID": {
+      "type": "string",
+      "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs. Semantic commitments are kept for the duration of the dialogue."
+    },
+    "TurnIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request."
+    },
+    "Kind": {
+      "type": "string",
+      "enum": [
+        "semantic_grounding",
+        "affordances",
+        "constraints",
+        "behavioural_expectations",
+        "feasibility",
+        "clarification",
+        "commitment"
+      ],
+      "description": "Request only. What Basic Knowledge asks for."
+    },
+    "Question": {
+      "type": "string",
+      "description": "Request only. The question or goal of Basic Knowledge, in natural language."
+    },
+    "Terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Text": {
+            "type": "string"
+          },
+          "Class": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "Text"
+        ]
+      },
+      "description": "Request only. Terms to be grounded in the domain."
+    },
+    "EntityIDs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Request only. Identifiers of the Entities and Items the Request concerns."
+    },
+    "Space": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SpaceID": {
+          "type": "string"
+        },
+        "MLocation": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleLocation.json"
+        }
+      },
+      "description": "Request only. The Space the Request concerns."
+    },
+    "ProcessActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Step": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "Statement": {
+            "type": "string",
+            "description": "A Process Action statement conforming with the grammar of MMM-TEC V2.2."
+          }
+        },
+        "required": [
+          "Step",
+          "Statement"
+        ]
+      },
+      "minItems": 1,
+      "description": "Request only. The Process Actions whose feasibility is to be validated, when Kind is feasibility."
+    },
+    "Commitments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "CommitmentID": {
+            "type": "string"
+          },
+          "Statement": {
+            "type": "string",
+            "description": "A semantic commitment to be retained for the dialogue."
+          }
+        },
+        "required": [
+          "CommitmentID",
+          "Statement"
+        ]
+      },
+      "description": "Request only. Semantic commitments Domain Access is asked to retain."
+    },
+    "ReleasedCommitmentIDs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Request only. Commitments Domain Access may stop retaining."
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "answered",
+        "partially_answered",
+        "not_answered"
+      ],
+      "description": "Response only. The outcome."
+    },
+    "Answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ObjectClasses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Class": {
+                "type": "string",
+                "format": "uri"
+              },
+              "Label": {
+                "type": "string"
+              },
+              "Confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence, 0 to 1."
+              }
+            },
+            "required": [
+              "Class"
+            ]
+          }
+        },
+        "Relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Subject": {
+                "type": "string"
+              },
+              "Predicate": {
+                "type": "string"
+              },
+              "Object": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Subject",
+              "Predicate",
+              "Object"
+            ]
+          }
+        },
+        "Affordances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "EntityID": {
+                "type": "string"
+              },
+              "Class": {
+                "type": "string",
+                "format": "uri"
+              },
+              "Action": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Action"
+            ]
+          }
+        },
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "BehaviouralExpectations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Text": {
+          "type": "string",
+          "description": "The answer in natural language."
+        }
+      },
+      "description": "Response only. The domain knowledge returned, as appropriate to the Kind of the Request."
+    },
+    "CommitmentStatus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "CommitmentID": {
+            "type": "string"
+          },
+          "Status": {
+            "type": "string",
+            "enum": [
+              "retained",
+              "released",
+              "conflicting"
+            ]
+          }
+        },
+        "required": [
+          "CommitmentID",
+          "Status"
+        ]
+      },
+      "description": "Response only. Status of the commitments of the dialogue."
+    },
+    "Feasibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Step": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "PAStatus": {
+                "type": "string",
+                "enum": [
+                  "Ack",
+                  "Clash",
+                  "FaultyReq",
+                  "IncID",
+                  "IncDQ",
+                  "InsRights",
+                  "InsValue",
+                  "LocOOR",
+                  "PostRef",
+                  "QualNS"
+                ],
+                "description": "The PA Status of MMM-TEC V2.2 that the Process Action would receive."
+              },
+              "Reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Step",
+              "PAStatus"
+            ]
+          }
+        },
+        "Overall": {
+          "type": "string",
+          "enum": [
+            "feasible",
+            "partially_feasible",
+            "infeasible"
+          ]
+        }
+      },
+      "required": [
+        "Steps",
+        "Overall"
+      ],
+      "description": "Response only. Result of the validation of the Process Actions of the Request."
+    },
+    "SourcesUsed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Response only. The domain knowledge sources used."
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Service": {
+          "type": "string"
+        },
+        "Request": {
+          "type": "string"
+        },
+        "Nature": {
+          "type": "string",
+          "enum": [
+            "transient",
+            "permanent"
+          ]
+        }
+      },
+      "required": [
+        "Service",
+        "Nature"
+      ],
+      "description": "Response only. Failure of a source of domain knowledge."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

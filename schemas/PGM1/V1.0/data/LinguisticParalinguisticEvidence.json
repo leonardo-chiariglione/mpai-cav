@@ -82,7 +82,8 @@
                   "declining",
                   "acknowledging",
                   "other"
-                ]
+                ],
+                "description": "The speech act the utterance performs."
               },
               "ReferringExpressions": {
                 "type": "array",
@@ -91,19 +92,22 @@
                   "additionalProperties": false,
                   "properties": {
                     "Text": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Text of the referring expression."
                     },
                     "EntityIDs": {
                       "type": "array",
                       "items": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Identifiers of the Entities."
                     }
                   },
                   "required": [
                     "Text"
                   ]
-                }
+                },
+                "description": "The referring expressions of the utterance and the Entities they denote."
               },
               "DiscourseRole": {
                 "type": "string",
@@ -113,24 +117,31 @@
                   "continuing",
                   "closing",
                   "interrupting"
-                ]
+                ],
+                "description": "Role of the utterance in the exchange."
               },
               "Sentiment": {
-                "type": "string"
+                "type": "string",
+                "description": "Sentiment expressed by the words."
               },
               "Stance": {
-                "type": "string"
+                "type": "string",
+                "description": "Stance expressed by the words."
               },
               "Language": {
-                "type": "string"
+                "type": "string",
+                "description": "Language of the utterance."
               },
               "Register": {
-                "type": "string"
+                "type": "string",
+                "description": "Register of the utterance."
               },
               "Formality": {
-                "type": "string"
+                "type": "string",
+                "description": "Formality of the utterance."
               }
-            }
+            },
+            "description": "Evidence borne by the words of the utterance."
           },
           "Paralinguistic": {
             "type": "object",
@@ -141,48 +152,61 @@
                 "additionalProperties": false,
                 "properties": {
                   "PitchContour": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Pitch contour."
                   },
                   "Stress": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Stress."
                   },
                   "Intonation": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Intonation."
                   }
-                }
+                },
+                "description": "Prosody of the delivery."
               },
               "Timing": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "SpeechRate": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "Speech rate."
                   },
                   "Pausing": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Pausing."
                   },
                   "Hesitation": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Hesitation."
                   }
-                }
+                },
+                "description": "Timing of the delivery."
               },
               "VoiceQuality": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "Intensity": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Intensity."
                   },
                   "Breathiness": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Breathiness."
                   },
                   "Tension": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Tension."
                   },
                   "Tremor": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Tremor."
                   }
-                }
+                },
+                "description": "Voice quality."
               },
               "Disfluency": {
                 "type": "array",
@@ -193,7 +217,8 @@
                     "repair",
                     "filled_pause"
                   ]
-                }
+                },
+                "description": "Disfluencies found in the utterance."
               },
               "NonVerbal": {
                 "type": "array",
@@ -205,9 +230,11 @@
                     "throat_clearing",
                     "other"
                   ]
-                }
+                },
+                "description": "Non-verbal vocalisations found in the utterance."
               }
-            }
+            },
+            "description": "Evidence borne by the manner of delivery of the utterance."
           },
           "Agreement": {
             "type": "string",
@@ -229,7 +256,8 @@
           "UtteranceID",
           "Interval"
         ]
-      }
+      },
+      "description": "The utterances."
     },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"

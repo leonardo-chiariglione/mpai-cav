@@ -52,13 +52,15 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Identifiers of the Audio Entities."
           },
           "VisualEntityIDs": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Identifiers of the Visual Entities."
           },
           "Cardinality": {
             "type": "string",
@@ -66,7 +68,8 @@
               "one_to_one",
               "many_to_one",
               "one_to_many"
-            ]
+            ],
+            "description": "Cardinality of the correspondence."
           },
           "Confidence": {
             "type": "number",
@@ -88,24 +91,28 @@
                   "type": "array",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "description": "Identifiers of the Audio Entities."
                 },
                 "VisualEntityIDs": {
                   "type": "array",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "description": "Identifiers of the Visual Entities."
                 },
                 "Score": {
                   "type": "number",
                   "minimum": 0,
-                  "maximum": 1
+                  "maximum": 1,
+                  "description": "Score of this kind of evidence, 0 to 1."
                 }
               },
               "required": [
                 "Score"
               ]
-            }
+            },
+            "description": "Close alternatives excluded by the assignment, each with its score."
           }
         },
         "required": [
@@ -115,7 +122,8 @@
           "Cardinality",
           "Confidence"
         ]
-      }
+      },
+      "description": "The correspondences established between Audio Entities and Visual Entities."
     },
     "EndedCorrespondences": {
       "type": "array",
@@ -127,7 +135,8 @@
             "type": "string"
           },
           "Reason": {
-            "type": "string"
+            "type": "string",
+            "description": "The reason."
           }
         },
         "required": [
