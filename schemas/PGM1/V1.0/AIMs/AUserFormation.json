@@ -6,7 +6,7 @@
   },
   "Header": "PGM-AUF-V1.0",
   "APIProfile": "Basic",
-  "Description": "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge) with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. The A-User State conveys the full Entity State of the A-User; the current A-User Formation SubAIMs consume only its Personal Status component, since the speech, face, and body rendering Sub",
+  "Description": "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge: the text and the Action Objects) and the Process Actions produced by Basic Knowledge with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. Its function is that of Response and Scene Rendering (PAF-RSR) of MPAI-PAF, to which it adds the Request",
   "InternalTypes": [],
   "ExternalPorts": [
     {
@@ -36,7 +36,15 @@
     {
       "Name": "FinalResponse",
       "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
+      "DataType": "PGM-FRS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ProcessActions",
+      "Direction": "Input",
+      "DataType": "MMM-PAT-V2.2",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -195,16 +203,6 @@
     },
     {
       "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTS-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
         "AIMName": "PGM-PSD-V1.0",
         "DataType": "MMC-SPS-V2.5"
       },
@@ -236,11 +234,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
       },
       "Input": {
         "AIMName": "PGM-EFD-V1.0",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
       }
     },
     {
@@ -276,11 +274,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
       },
       "Input": {
         "AIMName": "PGM-EBD-V1.0",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "MMM-PAT-V2.2"
+      },
+      "Input": {
+        "AIMName": "PGM-EBD-V1.0",
+        "DataType": "MMM-PAT-V2.2"
       }
     },
     {
@@ -311,28 +319,6 @@
       "Input": {
         "AIMName": "PAF-PMX-V1.6",
         "DataType": "OSD-BSO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-PMX-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-PMX-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
       }
     },
     {

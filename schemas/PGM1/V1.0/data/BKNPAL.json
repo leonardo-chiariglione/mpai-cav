@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/BKNPAL.json",
+  "title": "BKN-PAL V1.0",
+  "description": "The Data Type exchanged between Basic Knowledge and Personality Alignment (Deliberation Exchange) through the Model Context Protocol. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that asks for the personality-aligned stance, and Response (RS), sent by Personality Alignment, that supplies the selected stance. The exchanges of one dialogue are told apart by TurnIndex within the DialogID.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "DialogID",
+    "TurnIndex",
+    "QueryID",
+    "QueryTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-KPA-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request. RS: Response."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "QueryID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "QueryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "DialogID": {
+      "type": "string",
+      "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs."
+    },
+    "TurnIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request."
+    },
+    "Question": {
+      "type": "string",
+      "description": "Request only. The question of Basic Knowledge about the stance, in natural language."
+    },
+    "Constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Role": {
+          "type": "string"
+        },
+        "Locale": {
+          "type": "string"
+        },
+        "ExpressiveConstraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. Constraints that Basic Knowledge asks the stance to satisfy."
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "answered",
+        "partially_answered",
+        "not_answered"
+      ],
+      "description": "Response only. The outcome."
+    },
+    "Stance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Label": {
+          "type": "string"
+        },
+        "Role": {
+          "type": "string"
+        },
+        "Locale": {
+          "type": "string"
+        },
+        "ExpressiveConstraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Rationale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Label"
+      ],
+      "description": "Response only. The personality-aligned stance of the A-User, with its role and locale constraints."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

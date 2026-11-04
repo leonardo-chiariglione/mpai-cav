@@ -26,6 +26,14 @@
       "IsRemote": false
     },
     {
+      "Name": "ProcessActions",
+      "Direction": "Input",
+      "DataType": "MMM-PAT-V2.2",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
       "Name": "AUCCXTResponse",
       "Direction": "Input",
       "DataType": "PGM-UCC-V1.0",
@@ -77,22 +85,6 @@
       "Name": "AUCAUFResponse",
       "Direction": "Input",
       "DataType": "PGM-UCF-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "ProcessActions",
-      "Direction": "Input",
-      "DataType": "MMM-PAT-V2.2",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "FinalResponse",
-      "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

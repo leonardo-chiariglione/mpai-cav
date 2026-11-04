@@ -20,7 +20,15 @@
     {
       "Name": "FinalResponse",
       "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
+      "DataType": "PGM-FRS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "ProcessActions",
+      "Direction": "Input",
+      "DataType": "MMM-PAT-V2.2",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

@@ -289,26 +289,6 @@
     },
     {
       "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "MMM-PAT-V2.2"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "MMM-PAT-V2.2"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
         "AIMName": "",
         "DataType": "OSD-BAO-V1.5"
       },
@@ -540,11 +520,11 @@
     {
       "Output": {
         "AIMName": "PGM-BKN-V1.0",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AUF-V1.0",
-        "DataType": "OSD-BTO-V1.5"
+        "DataType": "PGM-FRS-V1.0"
       }
     },
     {

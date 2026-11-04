@@ -60,7 +60,7 @@
     {
       "Name": "FinalResponse",
       "Direction": "Output",
-      "DataType": "OSD-BTO-V1.5",
+      "DataType": "PGM-FRS-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -101,14 +101,6 @@
       "Name": "BKNPALRequest",
       "Direction": "Output",
       "DataType": "PGM-KPA-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "ProcessActions",
-      "Direction": "Output",
-      "DataType": "MMM-PAT-V2.2",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
