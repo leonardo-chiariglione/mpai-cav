@@ -28,7 +28,7 @@
     {
       "Name": "AVACXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "AVADomainResponse",
       "Direction": "Input",
-      "DataType": "PGM-DAV-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -44,7 +44,7 @@
     {
       "Name": "AVAInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IAV-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "AVACXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "AVADomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DAV-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -76,7 +76,7 @@
     {
       "Name": "AVAInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IAV-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -153,111 +153,111 @@
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-SGC-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -283,31 +283,31 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -343,21 +343,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -403,11 +403,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-SGC-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
@@ -453,21 +453,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
@@ -493,96 +493,96 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0",
+        "DataType": "PGM-UCC-V1.0",
         "PortNumber": 1
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0",
+        "DataType": "PGM-UCC-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0",
+        "DataType": "PGM-UCC-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-SGC-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0",
+        "DataType": "PGM-UCC-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-CAV-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-CAV-V1.0",
+        "DataType": "PGM-UCC-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AVR-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-DAV-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CCA-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CRE-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AVM-V1.0",
-        "DataType": "PGM-IAV-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     }
   ],

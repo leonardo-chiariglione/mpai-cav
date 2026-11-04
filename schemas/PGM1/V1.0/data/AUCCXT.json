@@ -1758,6 +1758,258 @@
     "DescrMetadata": {
       "type": "string",
       "maxLength": 2048
+    },
+    "AVA": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Properties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "CandidateAssociation": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional",
+                "not_requested"
+              ]
+            },
+            "CorrespondenceResolution": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional",
+                "not_requested"
+              ]
+            },
+            "SceneGeometry": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional",
+                "not_requested"
+              ]
+            },
+            "JointSalience": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional",
+                "not_requested"
+              ]
+            }
+          }
+        },
+        "PositionTolerance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Tolerance on the divergence of the position estimates of the two modalities."
+        },
+        "SalienceCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request only. The alignment of audio and visual Entities: what is required, the tolerance on positions and the criteria for the Joint Salience (produced only when required)."
+    },
+    "AVAOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Outcome": {
+          "type": "string",
+          "enum": [
+            "produced",
+            "partial",
+            "failed",
+            "not_requested"
+          ]
+        },
+        "ChannelState": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "error"
+          ]
+        },
+        "Reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Reason": {
+                "type": "string",
+                "enum": [
+                  "occluded",
+                  "out_of_range",
+                  "target_lost",
+                  "no_signal",
+                  "insufficient_data",
+                  "not_permitted",
+                  "deadline_exceeded"
+                ]
+              },
+              "EntityID": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Reason"
+            ]
+          }
+        },
+        "PropertyFulfilment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ObjectIdentifiers": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Velocity": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Distances": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "ProximityClass": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "FrequencyRange": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Timbre": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Spectrogram": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Loudness": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Reflectivity": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Reverberation": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Diffusion": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Absorption": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "Doppler": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "RankedObjects": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            },
+            "FilteredSalientObjects": {
+              "type": "string",
+              "enum": [
+                "produced",
+                "partial",
+                "missing",
+                "not_requested"
+              ]
+            }
+          },
+          "description": "Fulfilment of the requested properties."
+        }
+      },
+      "required": [
+        "Outcome"
+      ],
+      "description": "Response only. Outcome for the alignment of audio and visual Entities."
     }
   },
   "allOf": [

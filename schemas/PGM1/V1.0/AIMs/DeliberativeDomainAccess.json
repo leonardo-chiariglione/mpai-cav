@@ -28,7 +28,7 @@
     {
       "Name": "DACInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IDA-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -44,7 +44,7 @@
     {
       "Name": "DACInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IDA-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

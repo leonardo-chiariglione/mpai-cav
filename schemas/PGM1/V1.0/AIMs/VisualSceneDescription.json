@@ -20,7 +20,7 @@
     {
       "Name": "VisualCXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "VisualCXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

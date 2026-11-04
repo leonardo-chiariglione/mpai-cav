@@ -28,7 +28,7 @@
     {
       "Name": "AVACXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "AVADomainResponse",
       "Direction": "Input",
-      "DataType": "PGM-DAV-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -44,7 +44,7 @@
     {
       "Name": "AVAInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IAV-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "AVACXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "AVADomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DAV-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -76,7 +76,7 @@
     {
       "Name": "AVAInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IAV-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

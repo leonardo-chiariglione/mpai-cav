@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/SalienceResults.json",
+  "title": "Salience Results V1.0",
+  "description": "The Ranked Audio Objects and the Filtered Salient Audio Objects produced by Audio Salience Mapping, as received by Enhanced Audio Multiplexing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "SalienceResultsID",
+    "SalienceResultsTime",
+    "RankedAudioObjects"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-SAR-V1.0"
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "SalienceResultsID": {
+      "type": "string",
+      "description": "Identifier of this instance."
+    },
+    "SalienceResultsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RankedAudioObjects": {
+      "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/RankedAudioObjects.json"
+    },
+    "FilteredSalientAudioObjects": {
+      "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/FilteredSalientAudioObjects.json"
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

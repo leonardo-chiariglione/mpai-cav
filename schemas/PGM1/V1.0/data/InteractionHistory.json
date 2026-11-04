@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/InteractionHistory.json",
+  "title": "Interaction History V1.0",
+  "description": "The Data Type exchanged between any AIM of the A-User and Private Storage, through the Controller, for the content of earlier captures and turns of the session. It has two modes, told apart by Mode: Request (RQ), that states what is to be read and what is to be written, and Response (RS), that returns the content read and the outcome of the writes. SourceAIM states which AIM or Sub-AIM sends the Request or receives the Response, and Subject which medium or User it relates to. All access is under the rules set by A-User Control.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "Mode",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "SourceAIM",
+    "Subject",
+    "ExchangeID",
+    "ExchangeTime"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-IHI-V1.0"
+    },
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "RQ",
+        "RS"
+      ],
+      "description": "RQ: Request. RS: Response."
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "ExchangeID": {
+      "type": "string",
+      "description": "Identifier of this Request or Response."
+    },
+    "ExchangeTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RequestID": {
+      "type": "string",
+      "description": "Response only. ID of the Request this Response answers."
+    },
+    "CaptureIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Position of the capture within the session to which the exchange refers."
+    },
+    "SourceAIM": {
+      "type": "string",
+      "pattern": "^PGM-[A-Z]{3}-V1\\.0$",
+      "description": "Header of the AIM or Sub-AIM that sends the Request or the Response (e.g., PGM-ASD-V1.0), or of the AIM to which a Response is sent."
+    },
+    "Subject": {
+      "type": "string",
+      "enum": [
+        "audio",
+        "visual",
+        "user",
+        "ava",
+        "context",
+        "prompt",
+        "personality",
+        "deliberation"
+      ],
+      "description": "The medium or the entity the exchange relates to: the audio scene, the visual scene, the User, the alignment of audio and visual Entities, or the context, prompt, personality or deliberation of the A-User."
+    },
+    "UserIDs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Identifiers of the Users the exchange relates to, where the Subject is user."
+    },
+    "Read": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string",
+            "enum": [
+              "AudioSceneDescriptors",
+              "EnhancedAudioSceneDescriptors",
+              "AcousticProfile",
+              "AudioObjectTypes",
+              "SalienceResults",
+              "VisualSceneDescriptors",
+              "EnhancedVisualSceneDescriptors",
+              "VisualProfile",
+              "VisualObjectTypes",
+              "AffordanceTags",
+              "InteractionPotential",
+              "SalientObjectMatrix",
+              "HarmonisedMultimodalContext",
+              "LinguisticParalinguisticEvidence",
+              "BehaviouralExpressiveIndicators",
+              "CrossModalInterpretativeEvidence",
+              "UserState",
+              "HarmonisedEntityIDs",
+              "AssociationCandidates",
+              "EntityCorrespondences",
+              "UnmatchedEntities",
+              "JointSalience",
+              "AlignedEntityIDs",
+              "ContextDescriptors",
+              "PCPrompt",
+              "BKNResponse",
+              "Turns"
+            ],
+            "description": "Category of the content, which is in the Data Type of the same name."
+          },
+          "FromCaptureIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ToCaptureIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "EntityIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "Category"
+        ]
+      },
+      "description": "Request only. What is to be read from Private Storage."
+    },
+    "Write": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string",
+            "enum": [
+              "AudioSceneDescriptors",
+              "EnhancedAudioSceneDescriptors",
+              "AcousticProfile",
+              "AudioObjectTypes",
+              "SalienceResults",
+              "VisualSceneDescriptors",
+              "EnhancedVisualSceneDescriptors",
+              "VisualProfile",
+              "VisualObjectTypes",
+              "AffordanceTags",
+              "InteractionPotential",
+              "SalientObjectMatrix",
+              "HarmonisedMultimodalContext",
+              "LinguisticParalinguisticEvidence",
+              "BehaviouralExpressiveIndicators",
+              "CrossModalInterpretativeEvidence",
+              "UserState",
+              "HarmonisedEntityIDs",
+              "AssociationCandidates",
+              "EntityCorrespondences",
+              "UnmatchedEntities",
+              "JointSalience",
+              "AlignedEntityIDs",
+              "ContextDescriptors",
+              "PCPrompt",
+              "BKNResponse",
+              "Turns"
+            ],
+            "description": "Category of the content, which is in the Data Type of the same name."
+          },
+          "Content": {
+            "type": [
+              "object",
+              "array"
+            ],
+            "description": "The content, in the Data Type of the Category."
+          }
+        },
+        "required": [
+          "Category",
+          "Content"
+        ]
+      },
+      "description": "Request only. What is to be written to Private Storage."
+    },
+    "Items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string",
+            "enum": [
+              "AudioSceneDescriptors",
+              "EnhancedAudioSceneDescriptors",
+              "AcousticProfile",
+              "AudioObjectTypes",
+              "SalienceResults",
+              "VisualSceneDescriptors",
+              "EnhancedVisualSceneDescriptors",
+              "VisualProfile",
+              "VisualObjectTypes",
+              "AffordanceTags",
+              "InteractionPotential",
+              "SalientObjectMatrix",
+              "HarmonisedMultimodalContext",
+              "LinguisticParalinguisticEvidence",
+              "BehaviouralExpressiveIndicators",
+              "CrossModalInterpretativeEvidence",
+              "UserState",
+              "HarmonisedEntityIDs",
+              "AssociationCandidates",
+              "EntityCorrespondences",
+              "UnmatchedEntities",
+              "JointSalience",
+              "AlignedEntityIDs",
+              "ContextDescriptors",
+              "PCPrompt",
+              "BKNResponse",
+              "Turns"
+            ],
+            "description": "Category of the content, which is in the Data Type of the same name."
+          },
+          "CaptureIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "Content": {
+            "type": [
+              "object",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "Category",
+          "Content"
+        ]
+      },
+      "description": "Response only. The content read, in the Data Type of its Category."
+    },
+    "WriteOutcome": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Category": {
+            "type": "string",
+            "enum": [
+              "AudioSceneDescriptors",
+              "EnhancedAudioSceneDescriptors",
+              "AcousticProfile",
+              "AudioObjectTypes",
+              "SalienceResults",
+              "VisualSceneDescriptors",
+              "EnhancedVisualSceneDescriptors",
+              "VisualProfile",
+              "VisualObjectTypes",
+              "AffordanceTags",
+              "InteractionPotential",
+              "SalientObjectMatrix",
+              "HarmonisedMultimodalContext",
+              "LinguisticParalinguisticEvidence",
+              "BehaviouralExpressiveIndicators",
+              "CrossModalInterpretativeEvidence",
+              "UserState",
+              "HarmonisedEntityIDs",
+              "AssociationCandidates",
+              "EntityCorrespondences",
+              "UnmatchedEntities",
+              "JointSalience",
+              "AlignedEntityIDs",
+              "ContextDescriptors",
+              "PCPrompt",
+              "BKNResponse",
+              "Turns"
+            ],
+            "description": "Category of the content, which is in the Data Type of the same name."
+          },
+          "Result": {
+            "type": "string",
+            "enum": [
+              "written",
+              "not_authorised",
+              "not_attempted"
+            ]
+          }
+        },
+        "required": [
+          "Category",
+          "Result"
+        ]
+      },
+      "description": "Response only. Outcome of the writes of the Request."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

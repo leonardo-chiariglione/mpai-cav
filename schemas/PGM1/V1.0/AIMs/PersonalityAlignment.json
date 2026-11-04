@@ -36,7 +36,7 @@
     {
       "Name": "PALInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IPA-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "PALInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IPA-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -146,11 +146,11 @@
     {
       "Output": {
         "AIMName": "PGM-CXR-V1.0",
-        "DataType": "PGM-IPA-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IPA-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -166,11 +166,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IPA-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CXR-V1.0",
-        "DataType": "PGM-IPA-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {

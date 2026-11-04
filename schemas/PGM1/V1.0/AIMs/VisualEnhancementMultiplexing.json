@@ -20,7 +20,7 @@
     {
       "Name": "VisualCXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "VisualDomainResponse",
       "Direction": "Input",
-      "DataType": "PGM-DVI-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -44,7 +44,7 @@
     {
       "Name": "VisualInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IVI-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -76,7 +76,7 @@
     {
       "Name": "VisualCXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -84,7 +84,7 @@
     {
       "Name": "VisualDomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DVI-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -92,7 +92,7 @@
     {
       "Name": "VisualInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IVI-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

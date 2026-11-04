@@ -60,7 +60,7 @@
     {
       "Name": "AudioCXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CAU-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "AudioDomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DAU-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -76,7 +76,7 @@
     {
       "Name": "AudioInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IAU-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

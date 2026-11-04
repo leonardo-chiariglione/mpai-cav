@@ -28,7 +28,7 @@
     {
       "Name": "PRCInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IPR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "PRCInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IPR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -185,41 +185,41 @@
     {
       "Output": {
         "AIMName": "PGM-PTA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-IRA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-PCX-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-PPF-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -245,11 +245,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-IPD-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -285,11 +285,11 @@
     {
       "Output": {
         "AIMName": "PGM-IPD-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PTA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -315,11 +315,11 @@
     {
       "Output": {
         "AIMName": "PGM-IPD-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-IRA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -365,11 +365,11 @@
     {
       "Output": {
         "AIMName": "PGM-IPD-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PCX-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -446,11 +446,11 @@
     {
       "Output": {
         "AIMName": "PGM-IPD-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PPF-V1.0",
-        "DataType": "PGM-IPR-V1.0",
+        "DataType": "PGM-IHI-V1.0",
         "PortNumber": 1
       }
     },
@@ -500,33 +500,33 @@
     {
       "Output": {
         "AIMName": "PGM-PTA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PPF-V1.0",
-        "DataType": "PGM-IPR-V1.0",
+        "DataType": "PGM-IHI-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-IRA-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PPF-V1.0",
-        "DataType": "PGM-IPR-V1.0",
+        "DataType": "PGM-IHI-V1.0",
         "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-PCX-V1.0",
-        "DataType": "PGM-IPR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-PPF-V1.0",
-        "DataType": "PGM-IPR-V1.0",
+        "DataType": "PGM-IHI-V1.0",
         "PortNumber": 2
       }
     }

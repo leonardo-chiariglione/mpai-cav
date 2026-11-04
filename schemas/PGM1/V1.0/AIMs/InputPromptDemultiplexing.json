@@ -28,7 +28,7 @@
     {
       "Name": "PRCInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IPR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "PRCInteractionHistoryResponse",
       "Direction": "Output",
-      "DataType": "PGM-IPR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

@@ -44,7 +44,7 @@
     {
       "Name": "AVACXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "AVACXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CAV-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

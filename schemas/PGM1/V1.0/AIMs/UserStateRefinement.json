@@ -36,7 +36,7 @@
     {
       "Name": "USRInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IUR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "USRInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IUR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -137,21 +137,21 @@
     {
       "Output": {
         "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -177,11 +177,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -269,11 +269,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-IUR-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     }
   ],

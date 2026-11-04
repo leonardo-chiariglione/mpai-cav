@@ -20,7 +20,7 @@
     {
       "Name": "VisualCXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -28,7 +28,7 @@
     {
       "Name": "VisualDomainResponse",
       "Direction": "Input",
-      "DataType": "PGM-DVI-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "VisualInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IVI-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -52,7 +52,7 @@
     {
       "Name": "VisualCXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "VisualDomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DVI-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "VisualInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IVI-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -135,131 +135,131 @@
     {
       "Output": {
         "AIMName": "PGM-VSD-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -275,51 +275,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VSD-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-CVI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-VSD-V1.0",
-        "DataType": "OSD-BVS-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-VII-V1.0",
-        "DataType": "OSD-BVS-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-DVI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-VII-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
@@ -328,6 +298,36 @@
         "DataType": "OSD-BVS-V1.5"
       },
       "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-VII-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-VSD-V1.0",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
         "AIMName": "PGM-VEA-V1.0",
         "DataType": "OSD-BVS-V1.5"
       }
@@ -335,31 +335,31 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEA-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -375,11 +375,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
@@ -395,21 +395,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VSM-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -445,11 +445,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
@@ -465,21 +465,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-VEM-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {

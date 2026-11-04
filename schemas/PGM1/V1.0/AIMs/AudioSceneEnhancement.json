@@ -12,7 +12,7 @@
     {
       "Name": "AudioInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IAU-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -28,7 +28,7 @@
     {
       "Name": "AudioCXTRequest",
       "Direction": "Input",
-      "DataType": "PGM-CAU-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +36,7 @@
     {
       "Name": "AudioDomainResponse",
       "Direction": "Input",
-      "DataType": "PGM-DAU-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -44,7 +44,7 @@
     {
       "Name": "AudioInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IAU-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +60,7 @@
     {
       "Name": "AudioCXTResponse",
       "Direction": "Output",
-      "DataType": "PGM-CAU-V1.0",
+      "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +68,7 @@
     {
       "Name": "AudioDomainRequest",
       "Direction": "Output",
-      "DataType": "PGM-DAU-V1.0",
+      "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -125,31 +125,31 @@
     {
       "Output": {
         "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-EAM-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -165,91 +165,91 @@
     {
       "Output": {
         "AIMName": "PGM-ASD-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AEA-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-EAM-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AEA-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-EAM-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
@@ -265,61 +265,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ASD-V1.0",
-        "DataType": "PGM-CAU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ASD-V1.0",
-        "DataType": "OSD-BAS-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-AEA-V1.0",
-        "DataType": "OSD-BAS-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AEA-V1.0",
-        "DataType": "PGM-CAU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AEA-V1.0",
-        "DataType": "PGM-DAU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AEA-V1.0",
-        "DataType": "PGM-IAU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
@@ -328,6 +278,56 @@
         "DataType": "OSD-BAS-V1.5"
       },
       "Input": {
+        "AIMName": "PGM-AEA-V1.0",
+        "DataType": "OSD-BAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AEA-V1.0",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-DOM-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AEA-V1.0",
+        "DataType": "PGM-DOM-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AEA-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-UCC-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AII-V1.0",
+        "DataType": "PGM-UCC-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-ASD-V1.0",
+        "DataType": "OSD-BAS-V1.5"
+      },
+      "Input": {
         "AIMName": "PGM-AII-V1.0",
         "DataType": "OSD-BAS-V1.5"
       }
@@ -335,21 +335,21 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-AII-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -385,31 +385,31 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {

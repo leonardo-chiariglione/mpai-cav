@@ -44,7 +44,7 @@
     {
       "Name": "CXTInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-ICX-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -76,7 +76,7 @@
     {
       "Name": "CXTInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-ICX-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -170,11 +170,11 @@
     {
       "Output": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-ICX-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "",
-        "DataType": "PGM-ICX-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -210,11 +210,11 @@
     {
       "Output": {
         "AIMName": "",
-        "DataType": "PGM-ICX-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-ICX-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -240,11 +240,12 @@
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 1
       },
       "Input": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -260,21 +261,23 @@
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 1
       },
       "Input": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 1
       },
       "Input": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
@@ -290,31 +293,34 @@
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 2
       },
       "Input": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 2
       },
       "Input": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
       },
       "Input": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -360,31 +366,34 @@
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-CUS-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 3
       },
       "Input": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-CUS-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-DUS-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 3
       },
       "Input": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-DUS-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       }
     },
     {
       "Output": {
         "AIMName": "PGM-CDD-V1.0",
-        "DataType": "PGM-IUS-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 3
       },
       "Input": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-IUS-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       }
     },
     {
@@ -400,31 +409,34 @@
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-CAU-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 1
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-IAU-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 1
       }
     },
     {
       "Output": {
         "AIMName": "PGM-ASE-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-DAU-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 1
       }
     },
     {
@@ -440,31 +452,34 @@
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-CVI-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-IVI-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 2
       }
     },
     {
       "Output": {
         "AIMName": "PGM-VSE-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-DVI-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 2
       }
     },
     {
@@ -480,31 +495,34 @@
     {
       "Output": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-CUS-V1.0"
+        "DataType": "PGM-UCC-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-CUS-V1.0"
+        "DataType": "PGM-UCC-V1.0",
+        "PortNumber": 3
       }
     },
     {
       "Output": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-IUS-V1.0"
+        "DataType": "PGM-IHI-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-IUS-V1.0"
+        "DataType": "PGM-IHI-V1.0",
+        "PortNumber": 3
       }
     },
     {
       "Output": {
         "AIMName": "PGM-USD-V1.0",
-        "DataType": "PGM-DUS-V1.0"
+        "DataType": "PGM-DOM-V1.0"
       },
       "Input": {
         "AIMName": "PGM-CDM-V1.0",
-        "DataType": "PGM-DUS-V1.0"
+        "DataType": "PGM-DOM-V1.0",
+        "PortNumber": 3
       }
     }
   ],

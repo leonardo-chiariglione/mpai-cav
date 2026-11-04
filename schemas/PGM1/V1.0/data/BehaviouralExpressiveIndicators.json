@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/BehaviouralExpressiveIndicators.json",
+  "title": "Behavioural and Expressive Indicators V1.0",
+  "description": "The indicators provided by the conduct of an Entity and by the expression of its body, produced by Behavioural and Expressive Analysis, including their agreement with the Linguistic-Paralinguistic Evidence. An indicator derived while the Entity was imperfectly observed is qualified.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "BehaviouralExpressiveIndicatorsID",
+    "BehaviouralExpressiveIndicatorsTime",
+    "Entities"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-BEE-V1.0"
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "BehaviouralExpressiveIndicatorsID": {
+      "type": "string",
+      "description": "Identifier of this instance."
+    },
+    "BehaviouralExpressiveIndicatorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "Entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "EntityID": {
+            "type": "string"
+          },
+          "Interval": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "StartTime": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+              },
+              "EndTime": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+              }
+            },
+            "description": "Time interval, on the time base of the capture."
+          },
+          "Expressive": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "FacialExpression": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "Label": {
+                    "type": "string"
+                  },
+                  "Intensity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              "Gaze": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "Direction": {
+                    "type": "string"
+                  },
+                  "Fixation": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "Head": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "Pose": {
+                    "type": "string"
+                  },
+                  "Nodding": {
+                    "type": "boolean"
+                  },
+                  "Shaking": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "Blink": {
+                "type": "string"
+              }
+            }
+          },
+          "Behavioural": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Posture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "Label": {
+                    "type": "string"
+                  },
+                  "OrientationTowards": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "Gesture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "Label": {
+                    "type": "string"
+                  },
+                  "Deictic": {
+                    "type": "boolean"
+                  },
+                  "ReferentIDs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "Movement": {
+                "type": "string",
+                "enum": [
+                  "approach",
+                  "withdrawal",
+                  "stillness",
+                  "other"
+                ]
+              },
+              "Manipulation": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ObjectIDs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "Affordances": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "ExchangeRhythm": {
+                "type": "string",
+                "enum": [
+                  "turn_taking",
+                  "overlapping",
+                  "waiting",
+                  "other"
+                ]
+              }
+            }
+          },
+          "AttentionTarget": {
+            "type": "string",
+            "description": "Entity or Object the Entity attends to."
+          },
+          "Engagement": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Degree of participation in the exchange."
+          },
+          "Disposition": {
+            "type": "string",
+            "description": "Interpersonal disposition towards the A-User."
+          },
+          "AgreementWithLinguistic": {
+            "type": "string",
+            "enum": [
+              "reinforcing",
+              "at_variance",
+              "one_absent"
+            ]
+          },
+          "ObservationQuality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "partial",
+              "occluded",
+              "out_of_frame"
+            ],
+            "description": "Qualification from the Enhanced Visual Scene Descriptors."
+          },
+          "Confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence, 0 to 1."
+          }
+        },
+        "required": [
+          "EntityID",
+          "Interval"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

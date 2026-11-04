@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/CrossModalInterpretativeEvidence.json",
+  "title": "Cross-Modal Interpretative Evidence V1.0",
+  "description": "The readings supported by the evidence of all modalities, in order of confidence, with the established reference bindings and the identified disagreements, produced by Cross-Modal Interpretation. Discounted readings are not discarded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "CrossModalInterpretativeEvidenceID",
+    "CrossModalInterpretativeEvidenceTime",
+    "Readings"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-CMI-V1.0"
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "CrossModalInterpretativeEvidenceID": {
+      "type": "string",
+      "description": "Identifier of this instance."
+    },
+    "CrossModalInterpretativeEvidenceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "Readings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "EntityID": {
+            "type": "string"
+          },
+          "Reading": {
+            "type": "string",
+            "description": "What the evidence supports."
+          },
+          "Confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence, 0 to 1."
+          },
+          "Persistence": {
+            "type": "string",
+            "enum": [
+              "momentary",
+              "sustained"
+            ]
+          },
+          "ChangePoint": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+          },
+          "SupportedBy": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "linguistic",
+                "paralinguistic",
+                "behavioural",
+                "expressive",
+                "domain",
+                "history"
+              ]
+            },
+            "description": "Evidence the reading rests on."
+          }
+        },
+        "required": [
+          "Reading",
+          "Confidence"
+        ]
+      },
+      "description": "Readings in order of decreasing confidence."
+    },
+    "ReferenceBindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Expression": {
+            "type": "string"
+          },
+          "TargetIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "AddresseeID": {
+            "type": "string"
+          },
+          "By": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "deictic_gesture",
+                "gaze",
+                "posture",
+                "domain"
+              ]
+            }
+          }
+        },
+        "required": [
+          "Expression"
+        ]
+      }
+    },
+    "UnresolvedReferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Disagreements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Modalities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Interval": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "StartTime": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+              },
+              "EndTime": {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+              }
+            },
+            "description": "Time interval, on the time base of the capture."
+          },
+          "Kind": {
+            "type": "string",
+            "enum": [
+              "meaningful",
+              "apparent",
+              "unresolved"
+            ]
+          },
+          "Description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Kind"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

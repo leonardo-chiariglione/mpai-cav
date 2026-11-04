@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/ContextDescriptors.json",
+  "title": "Context Descriptors V1.0",
+  "description": "The aggregated result of Context Description, delivered to Prompt Creation: the Enhanced Audio Scene Descriptors, the Enhanced Visual Scene Descriptors and the User State.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MInstance",
+    "UEnvironment",
+    "SessionID",
+    "ContextDescriptorsID",
+    "ContextDescriptorsTime",
+    "EnhancedAudioSceneDescriptors",
+    "EnhancedVisualSceneDescriptors",
+    "UserState"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "PGM-CXD-V1.0"
+    },
+    "MInstance": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironment": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SessionID": {
+      "type": "string",
+      "description": "Identifier of the A-User session."
+    },
+    "ContextDescriptorsID": {
+      "type": "string",
+      "description": "Identifier of this instance."
+    },
+    "ContextDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "EnhancedAudioSceneDescriptors": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
+      "description": "The audio scene with all derived and semantic attributes."
+    },
+    "EnhancedVisualSceneDescriptors": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
+      "description": "The visual scene with all derived and semantic attributes."
+    },
+    "AudioVisualSceneDescriptors": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json",
+      "description": "Optional. The Audio-Visual Scene Descriptors, with the Joint Salience attached to the AV Entities, when Audio-Visual Alignment was required."
+    },
+    "UserState": {
+      "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
+      "description": "The interpreted description of the User State."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

@@ -20,7 +20,8 @@
     {
       "Name": "AudioCXTResponse",
       "Direction": "Input",
-      "DataType": "PGM-CAU-V1.0",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 1,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -28,7 +29,8 @@
     {
       "Name": "AudioCXTInteractionHistoryRequest",
       "Direction": "Input",
-      "DataType": "PGM-IAU-V1.0",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 1,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -36,7 +38,8 @@
     {
       "Name": "AudioDomainRequest",
       "Direction": "Input",
-      "DataType": "PGM-DAU-V1.0",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 1,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -52,7 +55,8 @@
     {
       "Name": "VisualCXTResponse",
       "Direction": "Input",
-      "DataType": "PGM-CVI-V1.0",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 2,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -60,7 +64,8 @@
     {
       "Name": "VisualCXTInteractionHistoryRequest",
       "Direction": "Input",
-      "DataType": "PGM-IVI-V1.0",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 2,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -68,7 +73,8 @@
     {
       "Name": "VisualDomainRequest",
       "Direction": "Input",
-      "DataType": "PGM-DVI-V1.0",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 2,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -84,7 +90,8 @@
     {
       "Name": "UserCXTResponse",
       "Direction": "Input",
-      "DataType": "PGM-CUS-V1.0",
+      "DataType": "PGM-UCC-V1.0",
+      "PortNumber": 3,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -92,7 +99,8 @@
     {
       "Name": "UserCXTInteractionHistoryRequest",
       "Direction": "Input",
-      "DataType": "PGM-IUS-V1.0",
+      "DataType": "PGM-IHI-V1.0",
+      "PortNumber": 3,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -100,7 +108,8 @@
     {
       "Name": "UserDomainRequest",
       "Direction": "Input",
-      "DataType": "PGM-DUS-V1.0",
+      "DataType": "PGM-DOM-V1.0",
+      "PortNumber": 3,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -124,7 +133,7 @@
     {
       "Name": "CXTInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-ICX-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

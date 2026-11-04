@@ -46,7 +46,7 @@
     {
       "Name": "USRInteractionHistoryResponse",
       "Direction": "Input",
-      "DataType": "PGM-IUR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -70,7 +70,7 @@
     {
       "Name": "USRInteractionHistoryRequest",
       "Direction": "Output",
-      "DataType": "PGM-IUR-V1.0",
+      "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
