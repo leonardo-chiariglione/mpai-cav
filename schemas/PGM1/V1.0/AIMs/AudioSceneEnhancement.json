@@ -365,11 +365,11 @@
     {
       "Output": {
         "AIMName": "PGM-AEA-V1.0",
-        "DataType": "OSD-ACP-V1.5"
+        "DataType": "CAE-ACP-V1.0"
       },
       "Input": {
         "AIMName": "PGM-ASM-V1.0",
-        "DataType": "OSD-ACP-V1.5"
+        "DataType": "CAE-ACP-V1.0"
       }
     },
     {
@@ -435,11 +435,11 @@
     {
       "Output": {
         "AIMName": "PGM-AEA-V1.0",
-        "DataType": "OSD-ACP-V1.5"
+        "DataType": "CAE-ACP-V1.0"
       },
       "Input": {
         "AIMName": "PGM-EAM-V1.0",
-        "DataType": "OSD-ACP-V1.5"
+        "DataType": "CAE-ACP-V1.0"
       }
     },
     {

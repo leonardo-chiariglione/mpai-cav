@@ -44,7 +44,7 @@
     {
       "Name": "AcousticProfile",
       "Direction": "Output",
-      "DataType": "OSD-ACP-V1.5",
+      "DataType": "CAE-ACP-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
