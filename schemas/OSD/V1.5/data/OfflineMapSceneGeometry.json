@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/OfflineMapSceneGeometry.json",
+  "title": "Offline Map Scene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "OfflineMapSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-OSG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "OfflineMapSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this OfflineMap Scene Geometry instance."
+    },
+    "OfflineMapSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "OfflineMapSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "ObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Objects in OfflineMap Scene."
+    },
+    "OfflineMapSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "OfflineMapSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          },
+          "OfflineMapSceneObjectQualifier": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/OfflineMapQualifier.json"
+          }
+        }
+      },
+      "description": "Set of Data related to OfflineMap Objects in the OfflineMap Scene."
+    },
+    "SubOfflineMapSceneCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Sub-OfflineMap Scenes in the OfflineMap Scene."
+    },
+    "SubOfflineMapScenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "SubOfflineMapSceneSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to OfflineMap Objects in the OfflineMap Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

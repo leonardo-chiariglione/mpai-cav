@@ -4,7 +4,7 @@
   "title": "Audio Segmentation V1.5",
 
   "Identifier":   { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */" },
-  "Header":       "OSD-AUS-V1.5",
+  "Header":       "CAE-AUS-V1.0",
 
   "APIProfile":   "Basic",
   "Description":  "This AIM implements the segmentation of an audio program.",
@@ -13,7 +13,7 @@
     { "Name": "SpeechFile"   , "Direction": "Input",   "DataType": ["OSD-SPO-V1.5", "OSD-BSO-V1.5"],  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeechObject" , "Direction": "Output",  "DataType": "OSD-SPO-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
     { "Name": "SpeakerTime"  , "Direction": "Output",  "DataType": "OSD-STM-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false },
-    { "Name": "SpeechOverlap", "Direction": "Output",  "DataType": "OSD-SOL-V1.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
+    { "Name": "SpeechOverlap", "Direction": "Output",  "DataType": "MMC-SOL-V2.5",  "Technology": "Software", "Protocol": "", "IsRemote": false }
   ],
 
   "SubAIMs":  [ ],
@@ -46,4 +46,4 @@
 
   "DataXMData":  { },
 
-  "Documentation":  [{ "Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/audio-segmentation/" }] }
+  "Documentation":  [{ "Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-cae/v3-0/ai-modules/audio-segmentation/" }] }

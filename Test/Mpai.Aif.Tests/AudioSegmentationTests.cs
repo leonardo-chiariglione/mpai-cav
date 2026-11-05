@@ -4,11 +4,11 @@ using AIF.Controller;
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Mmc.Sir;
-using Mpai.Osd.Aus;
+using Mpai.Cae.Aus;
 
 namespace Mpai.Aif.Tests;
 
-// AUDIO SEGMENTATION (OSD-AUS-V1.5). Two voices that are not the CAV's - Piper's
+// AUDIO SEGMENTATION (CAE-AUS-V1.0). Two voices that are not the CAV's - Piper's
 // en_GB-alan-medium and en_US-lessiac-medium - say a sentence each in the order A, B, A with a
 // second of silence between; the AIM must find THREE turns of TWO speakers, in that order,
 // beginning where the voices begin. Then the same through the AIM, by its Ports: a Speech
@@ -17,7 +17,7 @@ namespace Mpai.Aif.Tests;
 [Trait("Group", "Models")]
 public class AudioSegmentationTests
 {
-    private const string Aim = "1OSD-AUS-V1.5-I01";
+    private const string Aim = "1CAE-AUS-V1.0-I01";
     private const double Silence = 1.0;                      // seconds between the voices
 
     private static (float[] Samples, double[] Starts) Dialogue(params (string Text, string Voice)[] says)
@@ -140,15 +140,15 @@ public class AudioSegmentationTests
         var speech = JsonNode.Parse(reply.Ports[ports.Output("OSD-SPO-V1.5")])!;
         Assert.Equal("OSD-SPO-V1.5", (string?)speech["Header"]);
         Assert.Equal(3, speech["BasicSpeechObjects"]!.AsArray().Count);
-        var who = speech["BasicSpeechObjects"]!.AsArray().Select(e => (string?)e!["BSObjectIDOrBSObject"]!["DescrMetadata"]).ToArray();
+        var who = speech["BasicSpeechObjects"]!.AsArray().Select(e => (string?)e!["BSObjectIDOrBSObject"]![0]!["DescrMetadata"]).ToArray();
         Assert.Equal(new[] { "Speaker 1", "Speaker 2", "Speaker 1" }, who);
 
         var times = JsonNode.Parse(reply.Ports[ports.Output("OSD-STM-V1.5")])!;
         Assert.Equal("OSD-STM-V1.5", (string?)times["Header"]);
         Assert.Equal(3, times["SimpleTimeData"]!.AsArray().Count);
 
-        var overlap = JsonNode.Parse(reply.Ports[ports.Output("OSD-SOL-V1.5")])!;
-        Assert.Equal("OSD-SOL-V1.5", (string?)overlap["Header"]);
+        var overlap = JsonNode.Parse(reply.Ports[ports.Output("MMC-SOL-V2.5")])!;
+        Assert.Equal("MMC-SOL-V2.5", (string?)overlap["Header"]);
         Assert.Equal(3, overlap["SpeechOverlapData"]!.AsArray().Count);
         foreach (var o in overlap["SpeechOverlapData"]!.AsArray())
         {

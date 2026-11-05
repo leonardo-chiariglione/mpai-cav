@@ -1,0 +1,466 @@
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "OSD-TMA-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Television Media Analysis: analyses a television programme (audio-video with an auxiliary text) and produces the Multimodal Event Descriptors of the programme: the relevant objects, the IDs of speakers and faces with their positions, and the text of the utterances. A Composite AIM that replaces the TMA AI Workflow of MPAI-OSD V1.4.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "AudioVideoObject",
+      "Direction": "Input",
+      "DataType": "OSD-MMO-V1.5",
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "AuxiliaryTextObject",
+      "Direction": "Input",
+      "DataType": "OSD-TXO-V1.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "MultimodalEventDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-MEV-V1.5",
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Header": "OSD-TVS-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "CVE-VCD-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "CAE-AUS-V1.0",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-FBO-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "PAF-FIR-V1.6",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "MMC-SIR-V2.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "MMC-ASR-V2.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-IDR-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-BSS-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-BVS-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-SMX-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    },
+    {
+      "Header": "OSD-MED-V1.5",
+      "Identifier": {
+        "ImplementerID": "/* String assigned by IIDRA */",
+        "ImplementationID": "/* String assigned by Implementer */",
+        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
+        "Relation": ""
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-MMO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-MMO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-TXO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-TXO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "CVE-VCD-V1.0",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "CAE-AUS-V1.0",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-TXO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PAF-FIR-V1.6",
+        "DataType": "OSD-TXO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-TXO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-SIR-V2.5",
+        "DataType": "OSD-TXO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-TVS-V1.5",
+        "DataType": "OSD-TXO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-TXO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CVE-VCD-V1.0",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PAF-FIR-V1.6",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CVE-VCD-V1.0",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-BVS-V1.5",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CAE-AUS-V1.0",
+        "DataType": "MMC-SOL-V2.5"
+      },
+      "Input": {
+        "AIMName": "MMC-SIR-V2.5",
+        "DataType": "MMC-SOL-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CAE-AUS-V1.0",
+        "DataType": "MMC-SOL-V2.5"
+      },
+      "Input": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "MMC-SOL-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PAF-FIR-V1.6",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-IDR-V1.5",
+        "DataType": "OSD-IID-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-SIR-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-IDR-V1.5",
+        "DataType": "OSD-IID-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-SIR-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-IID-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-IDR-V1.5",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-SMX-V1.5",
+        "DataType": "OSD-IID-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-TXO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-SMX-V1.5",
+        "DataType": "OSD-TXO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-BSS-V1.5",
+        "DataType": "OSD-BSS-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-SMX-V1.5",
+        "DataType": "OSD-BSS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-BVS-V1.5",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-SMX-V1.5",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-SMX-V1.5",
+        "DataType": "OSD-BMS-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-MED-V1.5",
+        "DataType": "OSD-BMS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-MED-V1.5",
+        "DataType": "OSD-MEV-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-MEV-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "CAE-AUS-V1.0",
+        "DataType": "OSD-SPO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-FBO-V1.5",
+        "DataType": "OSD-SPO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-FBO-V1.5",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-SIR-V2.5",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-FBO-V1.5",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-ASR-V2.5",
+        "DataType": "OSD-BSO-V1.5",
+        "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "OSD-FBO-V1.5",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "OSD-BSS-V1.5",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    }
+  ],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/television-media-analysis/"
+    }
+  ]
+}

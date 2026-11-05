@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/RADAREventDescriptors.json",
+  "title": "RADAREvent Descriptors V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "RADAREventDescriptorsID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-REV-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "RADAREventDescriptorsID": {
+      "type": "string",
+      "description": "ID of this RADAR Event Descriptors instance."
+    },
+    "RADAREventDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RADAREventDescriptorsSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "RADARSceneDescriptors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RADARSceneDescriptors.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Set of RADAR Scene Descriptors in the RADAR Event."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

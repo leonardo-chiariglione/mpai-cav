@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapSceneGeometry.json",
+  "title": "Basic Offline Map Scene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "OfflineMapSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-BOG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "OfflineMapSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this OfflineMap Scene Geometry instance."
+    },
+    "OfflineMapSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "OfflineMapObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of OfflineMapObjects in Scene."
+    },
+    "OfflineMapSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "BasicOfflineMapSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "OfflineMapSceneObjectQualifiers": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/OfflineMapQualifier.json"
+          },
+          "BasicOfflineMapSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to OfflineMapObjects in the OfflineMap Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

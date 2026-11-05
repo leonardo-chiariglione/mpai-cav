@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/LiDAREventDescriptors.json",
+  "title": "Li DAREvent Descriptors V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "LiDAREventDescriptorsID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-LEV-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "LiDAREventDescriptorsID": {
+      "type": "string",
+      "description": "ID of this LiDAR Event Descriptors instance."
+    },
+    "LiDAREventDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "LiDAREventDescriptorsSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "LiDARSceneDescriptors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LiDARSceneDescriptors.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Set of LiDAR Scene Descriptors in the LiDAR Event."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

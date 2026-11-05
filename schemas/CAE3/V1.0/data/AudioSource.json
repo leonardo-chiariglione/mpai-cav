@@ -1,12 +1,12 @@
 { "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/AudioSource.json",
-  "title":                    "Audio Source V1.5",
+  "$id":                      "https://schemas.mpai.community/CAE3/V1.0/data/AudioSource.json",
+  "title":                    "Audio Source V1.0",
   "type":                     "object",
   "required":                 ["Header", "MInstanceID", "AudioSourceID", "AudioSourceSpaceTime"],
   "additionalProperties":     false,
   "properties":               {
 
-    "Header":                 { "type": "string", "const": "OSD-AUS-V1.5" },
+    "Header":                 { "type": "string", "const": "CAE-AUS-V1.0" },
     "MInstanceID":            { "type": "string" },
     "UEnvironmentID":         { "type": "string" },
     "AudioSourceID":          { "type": "string" },

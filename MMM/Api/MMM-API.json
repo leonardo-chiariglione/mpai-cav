@@ -18055,7 +18055,7 @@
     "properties": {
      "Header": {
       "type": "string",
-      "const": "OSD-AUS-V1.5"
+      "const": "CAE-AUS-V1.0"
      },
      "MInstanceID": {
       "type": "string"

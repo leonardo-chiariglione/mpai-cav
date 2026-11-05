@@ -67,7 +67,7 @@ public sealed class SalienceScore { }     // OSD/V1.5/data/SalienceScore.json
 // ---------------------------------------------------------------------------
 public sealed class AudioSource
 {
-    public string Header { get; init; } = "OSD-AUS-V1.5";   // schema's Header pattern has the same typo as SimpleTime's
+    public string Header { get; init; } = "CAE-AUS-V1.0";   // schema's Header pattern has the same typo as SimpleTime's
     public string MInstanceID { get; init; } = "";
     public string? UEnvironmentID { get; init; }
     public string AudioSourceID { get; init; } = "";

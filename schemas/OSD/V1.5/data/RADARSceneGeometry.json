@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/RADARSceneGeometry.json",
+  "title": "RADARScene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "RADARSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-RSG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "RADARSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this RADAR Scene Geometry instance."
+    },
+    "RADARSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "RADARSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "ObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Objects in RADAR Scene."
+    },
+    "RADARSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "OfflineMapSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          },
+          "OfflineMapSceneObjectQualifier": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/RADARQualifier.json"
+          }
+        }
+      },
+      "description": "Set of Data related to RADAR Objects in the RADAR Scene."
+    },
+    "SubRADARSceneCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Sub-RADAR Scenes in the RADAR Scene."
+    },
+    "SubRADARScenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "SubOfflineMapSceneSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to RADAR Objects in the RADAR Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

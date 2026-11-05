@@ -12,7 +12,7 @@
     "REPerformanceDescriptorsID":   { "type": "string" },
     "REPerformanceDescriptorsTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
-    "MultimodalSceneDescriptors":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
+    "MultimodalSceneDescriptors":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
 
     "REPerformanceDescriptorsData": { "type": "array", "minItems": 0, "items": { "type": "object", "required": ["REPerformerID"], "additionalProperties": false, "properties": {
       "REPerformerID":              { "type": "string" },
@@ -21,7 +21,7 @@
       "SpatialAttitude":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" },
       "UtteredSpeech":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpeechObject.json" },
       "BiometricData":              { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/BiometricData.json" },
-      "Brainwaves": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" } } } },
+      "Brainwaves":                 { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" } } } },
 
     "REObjectDescriptors":          { "type": "array", "minItems": 0, "items": { "type": "object", "required": ["REObjectID"], "additionalProperties": false, "properties": {
       "REObjectID":                 { "type": "string" },

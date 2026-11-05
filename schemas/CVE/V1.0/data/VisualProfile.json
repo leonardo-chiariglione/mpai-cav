@@ -36,7 +36,7 @@
       "VisualProfileTime":    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
 
       "LightSources":         { "type": "array", "description": "The Light Sources of the Scene.", "items": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "oneOf": [
-                              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json" },
+                              { "$ref": "https://schemas.mpai.community/CVE/V1.0/data/LightSource.json" },
                               { "type": "string" } ] } } },
       "AmbientLight":         { "type": "object", "additionalProperties": false, "description": "The light reaching every point from no particular direction.", "properties": {
         "Colour":             { "$ref": "#/$defs/Colour" },

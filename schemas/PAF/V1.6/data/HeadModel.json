@@ -1,13 +1,13 @@
 { "$schema":                    "https://json-schema.org/draft/2020-12/schema",
-  "$id":                        "https://schemas.mpai.community/OSD/V1.5/data/HeadModel.json",
-  "title":                      "Head Model V1.5",
+  "$id":                        "https://schemas.mpai.community/PAF/V1.6/data/HeadModel.json",
+  "title":                      "Head Model V1.6",
   "description":                "The head of an avatar as the propagation of its speech needs it, in its simplest, parametric form: a sphere, the mouth in front of the characteristic point of the face that gives the avatar's Spatial Attitude, and the radiation of the speech as a dipole.",
   "type":                       "object",
   "additionalProperties":       false,
   "required":                   [ "Header", "HeadModelID" ],
   "properties":                 {
 
-    "Header":                   { "type": "string", "const": "OSD-HDM-V1.5", "description": "Identifier and version (OSD-HDM-V1.5)." },
+    "Header":                   { "type": "string", "const": "PAF-HDM-V1.6", "description": "Identifier and version (PAF-HDM-V1.6)." },
     "MInstanceID":              { "type": "string", "description": "Identifier of M-Instance." },
     "UEnvironmentID":           { "type": "string", "description": "Identifier of UEnvironment." },
     "HeadModelID":              { "type": "string", "description": "Identifier of the Head Model." },

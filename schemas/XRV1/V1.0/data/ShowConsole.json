@@ -25,7 +25,7 @@
       "SkyBox":                { "type": "object", "additionalProperties": false, "properties": {
         "ManufacturerID":      { "type": "string" },
         "OperationID":         { "type": "string" },
-        "LightSource":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LightSource.json" },
+        "LightSource":         { "$ref": "https://schemas.mpai.community/CVE/V1.0/data/LightSource.json" },
         "ControlObject":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ControlObject.json" } } },
 
       "StageAutomation":       { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": {

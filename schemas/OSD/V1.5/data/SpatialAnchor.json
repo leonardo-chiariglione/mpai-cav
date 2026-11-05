@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAnchor.json",
+  "title": "Spatial Anchor V1.5",
+  "description": "A physical or conceptual reference used to determine position, orientation or spatial relationships in a Space: an absolute location, a relative object, a semantic zone or a defined 3D volume.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "SpatialAnchorID",
+    "AnchorType"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-SPA-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "ID of the Virtual Space the Spatial Anchor refers to."
+    },
+    "SpatialAnchorID": {
+      "type": "string",
+      "description": "Identifier of this Spatial Anchor instance."
+    },
+    "AnchorType": {
+      "type": "string",
+      "enum": [
+        "absolute",
+        "relative",
+        "semantic",
+        "volume"
+      ],
+      "description": "Nature of the spatial anchor: absolute (fixed spatial reference), relative (anchored to a reference object), semantic (named human-meaningful zone), volume (spatial region described using a 3D Location structure)."
+    },
+    "LocationRef": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json",
+      "description": "Reference to a spatial 3D Location. Required when AnchorType = volume."
+    },
+    "ReferenceObject": {
+      "type": "string",
+      "description": "Identifier of the object used as the spatial reference point for relative anchoring. Required when AnchorType = relative."
+    },
+    "SemanticZone": {
+      "type": "string",
+      "description": "Name of a semantically meaningful area or zone (e.g., kitchen, stage_left, meeting room). Required when AnchorType = semantic."
+    },
+    "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence score indicating reliability of the anchor interpretation or the certainty that the anchor reference is correct."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "Metadata optionally supporting regulated or controlled exchange of Spatial Anchor data, as defined by AIF V3.0."
+    },
+    "Trace": {
+      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
+      "description": "Provenance information defined by AIF V3.0."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "AnchorType": {
+            "const": "volume"
+          }
+        },
+        "required": [
+          "AnchorType"
+        ]
+      },
+      "then": {
+        "required": [
+          "LocationRef"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "AnchorType": {
+            "const": "relative"
+          }
+        },
+        "required": [
+          "AnchorType"
+        ]
+      },
+      "then": {
+        "required": [
+          "ReferenceObject"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "AnchorType": {
+            "const": "semantic"
+          }
+        },
+        "required": [
+          "AnchorType"
+        ]
+      },
+      "then": {
+        "required": [
+          "SemanticZone"
+        ]
+      }
+    }
+  ]
+}

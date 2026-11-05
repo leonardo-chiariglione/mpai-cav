@@ -159,7 +159,7 @@
       }
     },
     {
-      "Header": "OSD-VOI-V1.5",
+      "Header": "CVE-DVI-V1.0",
       "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
         "ImplementationID": "/* String assigned by Implementer */",
@@ -314,31 +314,11 @@
     {
       "Output": {
         "AIMName": "OSD-SDX-V1.5",
-        "DataType": "PAF-BDO-V1.6"
-      },
-      "Input": {
-        "AIMName": "OSD-VOI-V1.5",
-        "DataType": "PAF-BDO-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "OSD-SDX-V1.5",
-        "DataType": "OSD-BVG-V1.5"
-      },
-      "Input": {
-        "AIMName": "OSD-VOI-V1.5",
-        "DataType": "OSD-BVG-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "OSD-SDX-V1.5",
         "DataType": "OSD-BVO-V1.5",
         "PortNumber": 1
       },
       "Input": {
-        "AIMName": "OSD-VOI-V1.5",
+        "AIMName": "CVE-DVI-V1.0",
         "DataType": "OSD-BVO-V1.5"
       }
     },
@@ -481,7 +461,7 @@
     },
     {
       "Output": {
-        "AIMName": "OSD-VOI-V1.5",
+        "AIMName": "CVE-DVI-V1.0",
         "DataType": "OSD-IID-V1.5"
       },
       "Input": {
@@ -492,7 +472,7 @@
     },
     {
       "Output": {
-        "AIMName": "OSD-VOI-V1.5",
+        "AIMName": "CVE-DVI-V1.0",
         "DataType": "OSD-IID-V1.5"
       },
       "Input": {

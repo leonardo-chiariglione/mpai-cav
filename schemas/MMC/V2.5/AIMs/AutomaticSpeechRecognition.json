@@ -1,49 +1,211 @@
-{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
-  "Header":            "MMC-ASR-V2.5",
-
-  "APIProfile":       "Basic",
-  "Description":      "Automatic Speech Recognition: receives an Audio Object and provides a Text Object and Speech Descriptors.",
-
-  "InternalTypes":   [ ],
-
-  "ExternalPorts":   [{"Name": "LanguageSelector",  "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "AuxiliaryText",     "Direction": "Input",  "DataType": "OSD-TXO-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeakerID",         "Direction": "Input",  "DataType": "OSD-IID-V1.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechOverlap",     "Direction": "Input",  "DataType": "MMC-SOL-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "RecognisedText",    "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1,                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "SpeechDescriptors", "Direction": "Output", "DataType": "MMC-SDO-V2.5",                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "ImageSpeech",       "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "PortNumber": 1,                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "ResponseSpeech",    "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "PortNumber": 2,                   "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "TextQuestion",      "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 2,                                       "Technology": "", "Protocol": "", "IsRemote": ""}],
-
-  "SubAIMs":         [ ],
-
-  "Topology":        [ ],
-
-  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-
-  "AccessSources":   [{"Name": "asr-model", "Uri": "/* URI of the speech recognition model */", "Sha256": "/* SHA-256 */", "Setting": "ModelPath", "Description": "The speech recognition model that the program of the Implementation reads."},
-                      {"Name": "asr-program", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the program inside the archive */", "Setting": "ExecutablePath", "Description": "The program that reads the speech recognition model."},
-                      {"Name": "asr-server", "Uri": "/* URI of the archive of the speech recognition program */", "Sha256": "/* SHA-256 of the archive */", "Unpack": true, "Inside": "/* path of the server inside the archive */", "Setting": "ServerPath", "Description": "The server that keeps the model loaded between turns."}],
-
-  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
-                        "BinaryName":       "/* provided by implementer */",
-                        "Architecture":     "/* x86-64 | ARM64 */",
-                        "MASPort":          443,
-                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
-                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
-                        "Version":          "/* implementer version */",
-                        "Source":           "/* AIMStorage | MPAIStore */",
-                        "Destination":      "/* provided by implementer */" }],
-
-  "ResourcePolicies":[{ "Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
-                      { "Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
-                      { "Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */" },
-                      { "Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */" },
-                      { "Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */" },
-                      { "Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */" } ],
-
-  "DataXMData":         { },
-
-  "Documentation":     [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}
+{
+  "Identifier": {
+    "ImplementerID": "/* String assigned by IIDRA */",
+    "ImplementationID": "/* String assigned by Implementer */",
+    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
+  },
+  "Header": "MMC-ASR-V2.5",
+  "APIProfile": "Basic",
+  "Description": "Automatic Speech Recognition: receives an Audio Object and provides a Text Object and Speech Descriptors.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "LanguageSelector",
+      "Direction": "Input",
+      "DataType": "OSD-SEL-V1.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "AuxiliaryText",
+      "Direction": "Input",
+      "DataType": "OSD-TXO-V1.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "SpeakerID",
+      "Direction": "Input",
+      "DataType": "OSD-IID-V1.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "SpeechOverlap",
+      "Direction": "Input",
+      "DataType": "MMC-SOL-V2.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "RecognisedText",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "SpeechDescriptors",
+      "Direction": "Output",
+      "DataType": "MMC-SDO-V2.5",
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "ImageSpeech",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "ResponseSpeech",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "PortNumber": 2,
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "TextQuestion",
+      "Direction": "Output",
+      "DataType": "OSD-BTO-V1.5",
+      "PortNumber": 2,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    },
+    {
+      "Name": "SpeechToRecognise",
+      "Direction": "Input",
+      "DataType": "OSD-BSO-V1.5",
+      "IsOptional": true,
+      "PortNumber": 3,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+  "AccessSources": [
+    {
+      "Name": "asr-model",
+      "Uri": "/* URI of the speech recognition model */",
+      "Sha256": "/* SHA-256 */",
+      "Setting": "ModelPath",
+      "Description": "The speech recognition model that the program of the Implementation reads."
+    },
+    {
+      "Name": "asr-program",
+      "Uri": "/* URI of the archive of the speech recognition program */",
+      "Sha256": "/* SHA-256 of the archive */",
+      "Unpack": true,
+      "Inside": "/* path of the program inside the archive */",
+      "Setting": "ExecutablePath",
+      "Description": "The program that reads the speech recognition model."
+    },
+    {
+      "Name": "asr-server",
+      "Uri": "/* URI of the archive of the speech recognition program */",
+      "Sha256": "/* SHA-256 of the archive */",
+      "Unpack": true,
+      "Inside": "/* path of the server inside the archive */",
+      "Setting": "ServerPath",
+      "Description": "The server that keeps the model loaded between turns."
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "/* absolute URI locating the Implementation */",
+      "BinaryName": "/* provided by implementer */",
+      "Architecture": "/* x86-64 | ARM64 */",
+      "MASPort": 443,
+      "Firewall": [
+        {
+          "Protocol": "TCP | UDP",
+          "Version": "IPV4 | IPV6",
+          "Direction": "Ingress | Egress | Both",
+          "Range": "9990[-9999]",
+          "Source": "0.0.0.0/0"
+        }
+      ],
+      "OperatingSystem": "/* Windows | Linux | MacOS */",
+      "Version": "/* implementer version */",
+      "Source": "/* AIMStorage | MPAIStore */",
+      "Destination": "/* provided by implementer */"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "CPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:Number",
+      "Minimum": "/* integer, 0=all */",
+      "Maximum": "/* integer, 0=all */",
+      "Request": "/* integer */"
+    },
+    {
+      "Name": "GPU:CUDA:Class",
+      "Minimum": "/* string */",
+      "Maximum": "/* string */",
+      "Request": "/* string */"
+    },
+    {
+      "Name": "GPU:CUDA:FrameBuffer",
+      "Minimum": "/* GB */",
+      "Maximum": "/* GB */",
+      "Request": "/* GB */"
+    },
+    {
+      "Name": "GPU:CUDA:MemorySpeed",
+      "Minimum": "/* GB/s */",
+      "Maximum": "/* GB/s */",
+      "Request": "/* GB/s */"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"
+    }
+  ]
+}

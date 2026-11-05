@@ -6,64 +6,100 @@
   },
   "Header": "OSD-SMX-V1.5",
   "APIProfile": "Basic",
-  "Description": "This AIM multiplexes the Speech, Audio, and Visual Objects and the corresponding Scene Geometries and produces Multimodal Scene Descriptors.",
+  "Description": "Multimodal Scene Multiplexing: combines the Scene Descriptors of the modalities - Speech, Audio, LiDAR and Visual, in their Basic or full form - into the Multimodal Scene Descriptors of the Scene, with the Text and the Instance Identifiers that describe it.",
   "InternalTypes": [],
   "ExternalPorts": [
     {
-      "Name": "SpeechObject",
+      "Name": "SpeechSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-SPO-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BSS-V1.5",
+        "OSD-SSD-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     },
     {
-      "Name": "AudioObject",
+      "Name": "AudioSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-AUO-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BAS-V1.5",
+        "OSD-ASD-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     },
     {
-      "Name": "VisualObject",
+      "Name": "LiDARSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-VIO-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BLS-V1.5",
+        "OSD-LSD-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     },
     {
-      "Name": "SpeechSceneGeometry",
+      "Name": "VisualSceneDescriptors",
       "Direction": "Input",
-      "DataType": "OSD-SSG-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BVS-V1.5",
+        "OSD-VSD-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     },
     {
-      "Name": "AudioSceneGeometry",
+      "Name": "Text",
       "Direction": "Input",
-      "DataType": "OSD-ASG-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     },
     {
-      "Name": "VisualSceneGeometry",
+      "Name": "InstanceIdentifier",
       "Direction": "Input",
-      "DataType": "OSD-VSG-V1.5",
-      "Technology": "Software",
+      "DataType": "OSD-IID-V1.5",
+      "IsOptional": true,
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
+    },
+    {
+      "Name": "MultimodalSceneToAugment",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-BMS-V1.5",
+        "OSD-MSD-V1.5"
+      ],
+      "IsOptional": true,
+      "Technology": "",
+      "Protocol": "",
+      "IsRemote": ""
     },
     {
       "Name": "MultimodalSceneDescriptors",
       "Direction": "Output",
-      "DataType": "OSD-MSD-V1.5",
-      "Technology": "Software",
+      "DataType": [
+        "OSD-BMS-V1.5",
+        "OSD-MSD-V1.5"
+      ],
+      "Technology": "",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": ""
     }
   ],
   "SubAIMs": [],

@@ -19,7 +19,7 @@
       "Mass":                       { "type": "number", "description": "Mass of the Visual Object." },
       "Material":                   { "type": "boolean", "description": "Material property of the Visual Object." },
       "Gravity":                    { "type": "boolean", "description": "Gravity property of the Visual Object." },
-      "TextureMap":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextureMap.json", "description": "Texture Map of the Visual Object." } } },
+      "TextureMap":                 { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/TextureMap.json", "description": "Texture Map of the Visual Object." } } },
 
     "BasicVisualObjectCount":       { "type": "integer", "minimum": 0, "description": "Number of Basic Visual Objects." },
     "BasicVisualObjects":           { "type": "array", "minItems": 0, "description": "Set of Basic Visual Objects.",

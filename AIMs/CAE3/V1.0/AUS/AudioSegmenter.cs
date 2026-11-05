@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Mpai.Osd.Aus;
+namespace Mpai.Cae.Aus;
 
-// One speaker's turn (OSD-AUS-V1.5): one or more adjacent utterances of the same speaker.
+// One speaker's turn (CAE-AUS-V1.0): one or more adjacent utterances of the same speaker.
 // Speaker is numbered from 1 in the order the speakers first speak; Start and End are
 // seconds from the start of the audio; Overlap is how likely it is that someone else
 // speaks at the same time (0 to 1) - an ESTIMATE, see AudioSegmenter.
 public sealed record Turn(int Speaker, double Start, double End, double Overlap);
 
-// AUDIO SEGMENTATION, the logic (OSD-AUS-V1.5). From 16 kHz mono samples to the turns of
+// AUDIO SEGMENTATION, the logic (CAE-AUS-V1.0). From 16 kHz mono samples to the turns of
 // the speakers in them. No model of its own and no training: a voice-activity detector
 // finds where there is speech, an embedder - the ECAPA speaker embedder, given as a
 // function - describes the voice in each short window of it, and windows whose voices are

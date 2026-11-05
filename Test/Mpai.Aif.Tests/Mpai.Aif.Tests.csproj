@@ -42,11 +42,13 @@
     <ProjectReference Include="..\..\Apps\CAV\CAO\Ua\Mpai.Cav.Ua.csproj" />
     <ProjectReference Include="..\..\AIMs\PAF\V1.6\VCR\Mpai.Paf.Vcr.csproj" />
     <ProjectReference Include="..\..\AIMs\Providers\Mpai.Providers.csproj" />
+    <ProjectReference Include="..\..\AIMs\PGM\V1.0\Mpai.Pgm.csproj" />
+    <ProjectReference Include="..\..\AIMs\PAF\V1.6\PDX\Mpai.Paf.Pdx.csproj" />
     <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />
     <ProjectReference Include="..\..\MMM\Server\Mpai.Mmm.Server.csproj" />
     <ProjectReference Include="..\..\MMM\Client\Mpai.Mmm.Client.csproj" />
     <ProjectReference Include="..\..\AIMs\MMC\V2.5\OCR\Mpai.Mmc.Ocr.csproj" />
-    <ProjectReference Include="..\..\AIMs\OSD\V1.5\AUS\Mpai.Osd.Aus.csproj" />
+    <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AUS\Mpai.Cae.Aus.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\AOE\Mpai.Cae.Aoe.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE3\V1.0\ASE\Mpai.Cae.Ase.csproj" />
     <ProjectReference Include="..\..\AIF\UserAgent\UaKit\SpatialAudio\Mpai.SpatialAudio.csproj" />

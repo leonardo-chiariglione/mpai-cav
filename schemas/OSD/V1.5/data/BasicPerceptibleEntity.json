@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicPerceptibleEntity.json",
+  "title": "Basic Perceptible Entity V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "BasicPerceptibleEntityID",
+    "BasicPerceptibleEntityData"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-BPE-V1.5",
+      "description": "Basic Perceptible Entity Header – Standard OSD-PCE-Vx.y"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance (Virtual Space) where this Basic Perceptible Entity is located."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment (Real Space) where this Basic Perceptible Entity is located."
+    },
+    "BasicPerceptibleEntityID": {
+      "type": "string",
+      "description": "Unique identifier of this Basic Perceptible Entity instance."
+    },
+    "BasicPerceptibleEntityTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
+      "description": "Time this Basic Perceptible Entity was produced."
+    },
+    "BasicPerceptibleEntitySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
+      "description": "Space/Time where/when this Basic Perceptible Entity is located."
+    },
+    "BasicPerceptibleEntityData": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The content of the Basic Perceptible Entity: one of Basic Object, Basic Scene Descriptors, or Basic Event Descriptors.",
+      "properties": {
+        "BasicObject": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicObject.json",
+          "description": "One of the supported Basic Object types: Basic 3D Model, Audio, Multimodal, Speech, Text, or Visual Object."
+        },
+        "BasicSceneDescriptors": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneDescriptors.json",
+          "description": "One of the supported Basic Scene Descriptor types: 3D Model, Audio, Multimodal, Speech, or Visual Scene."
+        },
+        "BasicEventDescriptors": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicEventDescriptors.json",
+          "description": "One of the supported Basic Event Descriptor types: 3D Model, Audio, Multimodal, Speech, or Visual Event."
+        }
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal, security, and confidence information associated with this Basic Perceptible Entity in a trusted data exchange context."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Human-readable descriptive metadata of the Basic Perceptible Entity (plain text, max 2048 characters)."
+    }
+  }
+}

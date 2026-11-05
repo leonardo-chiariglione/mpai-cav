@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneGeometry.json",
+  "title": "Basic Multimodal Scene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "MultimodalSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-BMG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "MultimodalSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this Multimodal Scene Geometry instance."
+    },
+    "MultimodalSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "MultimodalObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of MultimodalObjects in Scene."
+    },
+    "MultimodalSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "BasicMultimodalSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "MultimodalSceneObjectQualifiers": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AnyQualifier.json"
+          },
+          "BasicMultimodalSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to MultimodalObjects in the Multimodal Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

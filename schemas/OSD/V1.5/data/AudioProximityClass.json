@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/AudioProximityClass.json",
+  "title": "Audio Proximity Class V1.5",
+  "description": "Perceived distance class of Audio Objects relative to the user within an OSD-defined Virtual Space: a discrete proximity level, a confidence score, an optional distance estimate and the time window of the evaluation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "AudioProximityClassID",
+    "AudioProximityClass"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-APC-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "ID of the Virtual Space the audio scene refers to."
+    },
+    "AudioProximityClassID": {
+      "type": "string",
+      "description": "Identifier of this Audio Proximity Class entry."
+    },
+    "AudioProximityClass": {
+      "type": "array",
+      "description": "List of proximity classifications, one per Audio Object.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "AudioObjectID": {
+            "type": "string",
+            "description": "Unique identifier of the Audio Object."
+          },
+          "ProximityLevel": {
+            "type": "string",
+            "enum": [
+              "Near",
+              "Mid",
+              "Far"
+            ],
+            "description": "Discrete proximity class relative to the user."
+          },
+          "ProximityConfidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence score associated with the proximity classification."
+          },
+          "DistanceEstimate": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional distance in metres from the user for the Audio Object."
+          },
+          "TemporalWindow": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+            "description": "Evaluation window."
+          }
+        },
+        "required": [
+          "AudioObjectID",
+          "ProximityLevel"
+        ]
+      }
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "Metadata optionally used for regulated exchange of Audio Proximity Class information."
+    },
+    "Trace": {
+      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
+      "description": "Provenance trace including Source and Time per AIF V3.0 rules."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

@@ -1,10 +1,10 @@
 { "$schema":                  "https://json-schema.org/draft/2020-12/schema",
-  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/TextureMap.json",
-  "title":                    "Texture Map V1.5",
+  "$id":                      "https://schemas.mpai.community/PAF/V1.6/data/TextureMap.json",
+  "title":                    "Texture Map V1.6",
   "type":                     "object",
   "properties":               {
 
-    "Header":                 { "type": "string", "const": "OSD-TEM-V1.5" },
+    "Header":                 { "type": "string", "const": "PAF-TEM-V1.6" },
     "MInstanceID":            { "type": "string" },
     "EnvironmentID":          { "type": "string" },
     "TextureMapID":           { "type": "string" },

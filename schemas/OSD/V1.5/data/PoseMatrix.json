@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/PoseMatrix.json",
+  "title": "Pose Matrix V1.5",
+  "description": "Position, orientation and scale of an object in a Virtual Space through a homogeneous 4x4 transformation matrix, relative to a specified Reference Frame.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "PoseMatrixID",
+    "Matrix"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-PMX-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "ID of the Virtual Space the pose refers to."
+    },
+    "PoseMatrixID": {
+      "type": "string",
+      "description": "Identifier of this Pose Matrix entry."
+    },
+    "Matrix": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "number"
+      },
+      "description": "A homogeneous 4x4 transformation matrix (16 numbers) in row-major order. It encodes position, orientation and scale of an object within the declared Reference Frame."
+    },
+    "ReferenceFrame": {
+      "type": "string",
+      "description": "Optional name of the coordinate system in which the Matrix is defined (e.g., UserView, World, Camera)."
+    },
+    "Precision": {
+      "type": "string",
+      "enum": [
+        "float32",
+        "float64"
+      ],
+      "description": "Numeric precision of the matrix values."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "Metadata optionally supporting regulated exchange of Pose Matrix data as defined by AIF V3.0."
+    },
+    "Trace": {
+      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
+      "description": "Provenance information identifying the producing AIM and the time of generation."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

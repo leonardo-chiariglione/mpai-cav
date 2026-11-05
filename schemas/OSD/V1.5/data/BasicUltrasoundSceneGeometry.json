@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundSceneGeometry.json",
+  "title": "Basic Ultrasound Scene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "UltrasoundSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-BUG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "UltrasoundSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this Basic Ultrasound Scene Geometry instance."
+    },
+    "UltrasoundSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "UltrasoundObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Ultrasound Objects in Scene."
+    },
+    "UltrasoundSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "BasicUltrasoundSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "BasicUltrasoundSceneObjectQualifiers": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/UltrasoundQualifier.json"
+          },
+          "BasicUltrasoundSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to Ultrasound Objects in the Ultrasound Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

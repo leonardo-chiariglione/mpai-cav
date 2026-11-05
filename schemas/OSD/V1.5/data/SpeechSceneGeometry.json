@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/SpeechSceneGeometry.json",
+  "title": "Speech Scene Geometry V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "SpeechSceneGeometryID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-SSG-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "SpeechSceneGeometryID": {
+      "type": "string",
+      "description": "ID of this Speech Scene Geometry instance."
+    },
+    "SpeechSceneGeometryTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "SpeechSceneGeometrySpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "ObjectCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Objects in Speech Scene."
+    },
+    "SpeechSceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "SpeechSceneObjectSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          },
+          "SpeechSceneObjectQualifier": {
+            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json"
+          }
+        }
+      },
+      "description": "Set of Data related to Speech Objects in the Speech Scene."
+    },
+    "SubSpeechSceneCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of Sub-Speech Scenes in the Speech Scene."
+    },
+    "SubSpeechScenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "SubOfflineMapSceneSpaceTime": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+          }
+        }
+      },
+      "description": "Set of Data related to Speech Objects in the Speech Scene."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

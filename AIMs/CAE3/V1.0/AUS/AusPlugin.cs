@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using AIF.Controller;
 using Mpai.Mmc.Sir;
 
-namespace Mpai.Osd.Aus;
+namespace Mpai.Cae.Aus;
 
 // Plug-in for Audio Segmentation. Builds and caches the ECAPA speaker embedder (the model
 // path from settings, defaulting to Models\ecapa-tdnn.onnx). Discovered dynamically (IAimPlugin).
@@ -14,7 +14,7 @@ public sealed class AusPlugin : IAimPlugin
 {
     private SpeakerEmbedder? _ecapa;
 
-    public string AimName => "OSD-AUS-V1.5";
+    public string AimName => "CAE-AUS-V1.0";
 
     public IAimProcessor Create(AimPortReader ports, IReadOnlyDictionary<string, string> settings)
         => new AusAimProcessor(

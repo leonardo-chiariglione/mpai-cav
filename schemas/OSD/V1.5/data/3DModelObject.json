@@ -22,7 +22,7 @@
       "Mass":                       { "type": "number", "description": "Mass of the 3D Model Object in kilograms." },
       "Material":                   { "type": "string", "description": "Material type or descriptor applied to this 3D Model Object." },
       "Gravity":                    { "type": "boolean", "description": "Indicates whether gravity applies to this 3D Model Object." },
-      "TextureMap":                 { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextureMap.json",
+      "TextureMap":                 { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/TextureMap.json",
                                       "description": "Texture map applied to the surface of this 3D Model Object." } } },
 
     "ParentObjectIDs":              { "type": "array", "minItems": 0, "items": { "type": "string" },

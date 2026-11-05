@@ -1,0 +1,598 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/ObjectAffordance.json",
+  "title": "Object Affordance V1.5",
+  "description": "What interactions are feasible for objects in a scene, under stated roles, policies, constraints and contexts, with confidence, compliance and optional fallback strategies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "ObjectAffordanceID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-OAF-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "ID of the Virtual Space the Object Affordance refers to."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "ID of the Real Space the Object Affordance refers to."
+    },
+    "ObjectAffordanceID": {
+      "type": "string",
+      "description": "Identifier of this Object Affordance entry."
+    },
+    "BasicDescriptors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "BVSIDOrBVS": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json"
+            }
+          ],
+          "description": "Either an ID (string) or an embedded Basic Visual Scene Descriptors object."
+        },
+        "BASDIDOrBAS": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json"
+            }
+          ],
+          "description": "Either an ID (string) or an embedded Basic Audio Scene Descriptors object."
+        },
+        "EnhancersTime": {
+          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TimeExpression.json",
+          "description": "Time Expression specifying the interval when the Scene Enhancer is applicable."
+        }
+      },
+      "description": "References to basic scene descriptors and the time interval of enhancer validity."
+    },
+    "SceneEnhancerData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Scope": {
+          "type": "string",
+          "enum": [
+            "global",
+            "object",
+            "zone"
+          ],
+          "description": "Enhancer scope."
+        },
+        "ObjectID": {
+          "type": "string",
+          "description": "Identifier of the target object (required when Scope = object)."
+        },
+        "LocIDOrLoc": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json"
+              }
+            ]
+          },
+          "description": "Array of ID (string) or embedded LocationObject entries for object referencing."
+        },
+        "Roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "VisualRole": {
+                "type": "string",
+                "description": "Primary visual role (e.g., system, service, narrator, player)."
+              },
+              "AudioRole": {
+                "type": "string",
+                "description": "Primary audio role (e.g., voice, narration, music, effects, ambient)."
+              },
+              "AuthorityLevel": {
+                "type": "string",
+                "description": "Role authority tier/level."
+              },
+              "Affiliation": {
+                "type": "string",
+                "description": "Role affiliation (e.g., team, organisation, group, or platform)."
+              },
+              "RoleConfidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence associated with the role attribution."
+              }
+            }
+          },
+          "description": "Roles defining actor/viewpoint and authority context for the enhancer."
+        },
+        "Rights": {
+          "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rights.json",
+          "description": "Rights relevant to the enhancer context."
+        },
+        "Rule": {
+          "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Rules.json",
+          "description": "Reference to an MMM4 Rule specifying behaviour/policy constraints."
+        },
+        "ComplianceStatus": {
+          "type": "string",
+          "enum": [
+            "compliant",
+            "violating",
+            "unknown"
+          ],
+          "description": "Compliance evaluation result: compliant, violating, or unknown."
+        },
+        "RequiredDelegation": {
+          "type": "boolean",
+          "description": "Whether delegation is required for the enhancer to be effective."
+        },
+        "Events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "EventType": {
+                "type": "string",
+                "description": "Event category (e.g., gesture, display_change, notification, alarm, animation, object_motion, occlusion_change, lighting_change, countdown)."
+              },
+              "EventSubType": {
+                "type": "string",
+                "description": "Event subtype/refinement."
+              },
+              "Urgency": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "description": "Severity hint for event handling."
+              },
+              "Channel": {
+                "type": "string",
+                "description": "Named channel/stream/context to which the event relates."
+              },
+              "Intensity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Normalised intensity for event significance."
+              }
+            }
+          },
+          "description": "Event descriptors that may trigger or qualify the enhancer."
+        },
+        "DomainContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "LocationSemantic": {
+              "type": "string",
+              "description": "Semantic label for the location."
+            },
+            "ActivityPhase": {
+              "type": "string",
+              "description": "Lifecycle phase (e.g., lobby, warm-up, match, quest, intermission, ceremony, marketplace, maintenance)."
+            },
+            "ZoneID": {
+              "type": "string",
+              "description": "Zone identifier (required when Scope = zone)."
+            }
+          },
+          "description": "Scene/domain settings constraining applicability."
+        },
+        "Constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ReachableFrom": {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+              "description": "Point of View from which the target must be reachable."
+            },
+            "VisibleFrom": {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+              "description": "Point of View from which the target must be visible."
+            },
+            "AudibleFrom": {
+              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json",
+              "description": "Point of View from which the target must be audible."
+            },
+            "ExcludeOccluded": {
+              "type": "boolean",
+              "description": "If true, the enhancer is inapplicable when the target is occluded."
+            },
+            "DistanceLimitM": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Maximum allowed distance (metres) for enhancer validity."
+            },
+            "SoundPressureLimitDB": {
+              "type": "number",
+              "description": "Maximum allowed sound pressure level (dB) for enhancer validity."
+            }
+          },
+          "description": "Geometric/sensory constraints restricting enhancer applicability."
+        },
+        "ResolutionHints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "HintType": {
+                "type": "string",
+                "description": "Hint category (e.g., prioritise_gaze, prioritise_proximity, prefer_affordance, exclude_background)."
+              },
+              "HintValue": {
+                "type": "string",
+                "description": "Hint parameter/value associated with the HintType."
+              }
+            }
+          },
+          "description": "Hints guiding system resolution/prioritisation."
+        },
+        "VisualAffordances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Tag": {
+                "type": "string",
+                "description": "Affordance tag (e.g., Graspable, Pushable, Openable, Rotatable, Liftable, Insertable, Selectable)."
+              },
+              "Feasible": {
+                "type": "boolean",
+                "description": "Whether the interaction is feasible."
+              },
+              "Constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "Reason": {
+                      "type": "string",
+                      "description": "Specific cause limiting feasibility (e.g., locked, occluded, out_of_reach, safety_violation, domain_rule)."
+                    },
+                    "Severity": {
+                      "type": "string",
+                      "enum": [
+                        "info",
+                        "warning",
+                        "error"
+                      ],
+                      "description": "Impact level of the reason: info, warning, or error."
+                    }
+                  }
+                },
+                "description": "Reasons and severities restricting this specific affordance."
+              },
+              "Referent": {
+                "type": "string",
+                "description": "Optional identifier of an object or resource to which the affordance refers."
+              },
+              "Confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence that the interaction is feasible."
+              },
+              "Compliance": {
+                "type": "string",
+                "enum": [
+                  "compliant",
+                  "violating",
+                  "unknown"
+                ],
+                "description": "Affordance compliance result: compliant, violating, or unknown."
+              },
+              "FallbackApplied": {
+                "type": "boolean",
+                "description": "True if a fallback strategy has been applied for this affordance."
+              },
+              "FallbackTag": {
+                "type": "string",
+                "description": "Affordance tag to use when fallback is applied."
+              }
+            },
+            "required": [
+              "Tag"
+            ]
+          },
+          "description": "Visual affordances applicable at the declared scope."
+        },
+        "AudioAffordances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Tag": {
+                "type": "string",
+                "enum": [
+                  "AttentionCue",
+                  "Notification",
+                  "UrgencySignal",
+                  "InteractionPrompt"
+                ],
+                "description": "Audio affordance tag."
+              },
+              "Feasible": {
+                "type": "boolean",
+                "description": "Whether the interaction is feasible."
+              },
+              "Constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "Reasons": {
+                      "type": "string",
+                      "description": "Cause limiting feasibility: muted, out_of_range, domain_rule, safety_violation."
+                    },
+                    "Severity": {
+                      "type": "string",
+                      "enum": [
+                        "info",
+                        "warning",
+                        "error"
+                      ],
+                      "description": "Impact level of the reason: info, warning, or error."
+                    }
+                  }
+                },
+                "description": "Reasons and severities restricting this specific affordance."
+              },
+              "Referent": {
+                "type": "string",
+                "description": "Optional identifier of an object or resource to which the affordance refers."
+              },
+              "AudioReferent": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "AudioObjectID": {
+                    "type": "string",
+                    "description": "Identifier of the referenced audio object."
+                  },
+                  "SceneDescriptorsID": {
+                    "type": "string",
+                    "description": "Identifier of the audio scene descriptor set used."
+                  }
+                },
+                "description": "Links the affordance to a specific audio entity."
+              },
+              "ChannelPolicy": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "music_only",
+                  "voice_only",
+                  "effects_only",
+                  "selected_channels"
+                ],
+                "description": "Channel selection policy."
+              },
+              "Confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence that the interaction is feasible."
+              },
+              "Compliance": {
+                "type": "string",
+                "enum": [
+                  "compliant",
+                  "violating",
+                  "unknown"
+                ],
+                "description": "Affordance compliance result: compliant, violating, or unknown."
+              },
+              "FallbackApplied": {
+                "type": "boolean",
+                "description": "True if a fallback strategy has been applied for this affordance."
+              },
+              "FallbackTag": {
+                "type": "string",
+                "description": "Affordance tag to use when fallback is applied."
+              }
+            },
+            "required": [
+              "Tag"
+            ]
+          },
+          "description": "Audio affordances applicable at the declared scope."
+        },
+        "HapticAffordances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "Tag": {
+                "type": "string",
+                "enum": [
+                  "Touchable",
+                  "Tappable",
+                  "Draggable",
+                  "PressureSensitive",
+                  "VibratoryCue"
+                ],
+                "description": "Haptic affordance tag."
+              },
+              "Feasible": {
+                "type": "boolean",
+                "description": "Whether the interaction is feasible."
+              },
+              "Constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "Reason": {
+                      "type": "string",
+                      "description": "Cause limiting feasibility: out_of_reach, disabled, domain_rule."
+                    },
+                    "Severity": {
+                      "type": "string",
+                      "enum": [
+                        "info",
+                        "warning",
+                        "error"
+                      ],
+                      "description": "Impact level of the reason: info, warning, or error."
+                    }
+                  }
+                },
+                "description": "Reasons and severities restricting this specific affordance."
+              },
+              "Reference": {
+                "type": "string",
+                "description": "Optional identifier of an object or resource to which the affordance refers."
+              },
+              "Confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence that the interaction is feasible."
+              },
+              "Compliance": {
+                "type": "string",
+                "enum": [
+                  "compliant",
+                  "violating",
+                  "unknown"
+                ],
+                "description": "Affordance compliance result: compliant, violating, or unknown."
+              },
+              "FallbackApplied": {
+                "type": "boolean",
+                "description": "True if a fallback strategy has been applied for this affordance."
+              },
+              "FallbackTag": {
+                "type": "string",
+                "description": "Affordance tag to use when fallback is applied."
+              }
+            },
+            "required": [
+              "Tag"
+            ]
+          },
+          "description": "Haptic interaction affordances applicable at the declared scope."
+        },
+        "Confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Overall enhancer confidence for the SceneEnhancerData block."
+        },
+        "Justifications": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "URIs pointing to evidence, rationales, or audit material that justify the enhancer settings."
+        }
+      },
+      "required": [
+        "Scope"
+      ],
+      "description": "Affordance enhancer data applied to the scene at a declared scope and context."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+      "description": "Metadata optionally used for regulated exchange of Object Affordance information."
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "SceneEnhancerData": {
+            "properties": {
+              "Scope": {
+                "const": "object"
+              }
+            },
+            "required": [
+              "Scope"
+            ]
+          }
+        },
+        "required": [
+          "SceneEnhancerData"
+        ]
+      },
+      "then": {
+        "properties": {
+          "SceneEnhancerData": {
+            "required": [
+              "ObjectID"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "SceneEnhancerData": {
+            "properties": {
+              "Scope": {
+                "const": "zone"
+              }
+            },
+            "required": [
+              "Scope"
+            ]
+          }
+        },
+        "required": [
+          "SceneEnhancerData"
+        ]
+      },
+      "then": {
+        "properties": {
+          "SceneEnhancerData": {
+            "properties": {
+              "DomainContext": {
+                "required": [
+                  "ZoneID"
+                ]
+              }
+            },
+            "required": [
+              "DomainContext"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

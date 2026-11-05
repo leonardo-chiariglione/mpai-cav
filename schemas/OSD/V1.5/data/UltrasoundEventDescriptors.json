@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundEventDescriptors.json",
+  "title": "Ultrasound Event Descriptors V1.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "UltrasoundEventDescriptorsID"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-UED-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "Identifier of the M-Instance."
+    },
+    "UEnvironmentID": {
+      "type": "string",
+      "description": "Identifier of the U-Environment."
+    },
+    "UltrasoundEventDescriptorsID": {
+      "type": "string",
+      "description": "ID of this Ultrasound Event Descriptors instance."
+    },
+    "UltrasoundEventDescriptorsTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
+    },
+    "UltrasoundEventDescriptorsSpaceTime": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
+    },
+    "UltrasoundSceneDescriptors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/UltrasoundSceneDescriptors.json"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Set of Ultrasound Scene Descriptors in the Ultrasound Event."
+    },
+    "DataXMData": {
+      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
+    },
+    "DescrMetadata": {
+      "type": "string",
+      "maxLength": 2048,
+      "description": "Descriptive Metadata"
+    }
+  }
+}

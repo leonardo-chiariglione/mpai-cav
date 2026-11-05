@@ -12,17 +12,17 @@ using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Mmc.Sir;
 
-namespace Mpai.Osd.Aus;
+namespace Mpai.Cae.Aus;
 
-// OSD-AUS-V1.5 - Audio Segmentation. Self-contained IAimProcessor; its Ports are read by
-// Data Type from its metadata (1OSD-AUS-V1.5-I01.json).
+// CAE-AUS-V1.0 - Audio Segmentation. Self-contained IAimProcessor; its Ports are read by
+// Data Type from its metadata (1CAE-AUS-V1.0-I01.json).
 //
 // Takes the speech of one or more speakers - a Speech Object (OSD-SPO-V1.5), or a Basic
 // Speech Object, which is a Speech Object of one - and gives
 //   OSD-SPO-V1.5  a Speech Object whose Basic Speech Objects are the speakers' TURNS, in
 //                 order, each stamped with the time it begins;
 //   OSD-STM-V1.5  the times at which a speaker begins to speak;
-//   OSD-SOL-V1.5  for each turn, how likely it is that others speak at the same time
+//   MMC-SOL-V2.5  for each turn, how likely it is that others speak at the same time
 //                 (an estimate: see AudioSegmenter).
 // Whose turn each is, is not said: the speakers are not identified (that is Speaker
 // Identity Recognition's); a turn's Basic Speech Object says "Speaker n" in its
@@ -41,19 +41,19 @@ public sealed class AusAimProcessor : IAimProcessor
         _inputPort   = ports.Input("OSD-SPO-V1.5");
         _speechPort  = ports.Output("OSD-SPO-V1.5");
         _timePort    = ports.Output("OSD-STM-V1.5");
-        _overlapPort = ports.Output("OSD-SOL-V1.5");
+        _overlapPort = ports.Output("MMC-SOL-V2.5");
     }
 
     public Task<Message> ProcessAsync(Message message)
     {
         if (!message.Ports.TryGetValue(_inputPort, out var json) || string.IsNullOrWhiteSpace(json))
-            return Task.FromResult(Message.Error(message.MessageId, InstanceId, $"OSD-AUS-V1.5: no speech on input port '{_inputPort}'."));
+            return Task.FromResult(Message.Error(message.MessageId, InstanceId, $"CAE-AUS-V1.0: no speech on input port '{_inputPort}'."));
 
         BasicSpeechObject? input;
         try { input = Basic(json); }
-        catch (Exception ex) { return Task.FromResult(Message.Error(message.MessageId, InstanceId, "OSD-AUS-V1.5: " + ex.Message)); }
+        catch (Exception ex) { return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-AUS-V1.0: " + ex.Message)); }
         if (input is null || input.Data.Length == 0)
-            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "OSD-AUS-V1.5: the speech carried no audio data."));
+            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-AUS-V1.0: the speech carried no audio data."));
 
         float[] samples = WavReader.ReadMono16k(input);
         var turns = _segmenter.Segment(samples);
@@ -95,7 +95,7 @@ public sealed class AusAimProcessor : IAimProcessor
         var time = new SimpleTime { SimpleTimeID = Guid.NewGuid().ToString(), SimpleTimeData = times };
         var overlap = new JsonObject
         {
-            ["Header"] = "OSD-SOL-V1.5", ["SpeechOverlapID"] = Guid.NewGuid().ToString(),
+            ["Header"] = "MMC-SOL-V2.5", ["SpeechOverlapID"] = Guid.NewGuid().ToString(),
             ["SpeechQualifier"] = JsonNode.Parse(MpaiJson.ToJson(Qualifier())),
             ["SpeechOverlapData"] = overlaps
         };

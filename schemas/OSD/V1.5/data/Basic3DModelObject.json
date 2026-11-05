@@ -40,7 +40,7 @@
       "Material":                     { "type": "boolean" },
       "Gravity":                      { "type": "boolean" },
       "TextureMapOrMapID":            { "type": "array", "items": { "oneOf": [
-                                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/TextureMap.json" },
+                                      { "$ref": "https://schemas.mpai.community/PAF/V1.6/data/TextureMap.json" },
                                       { "type": "string" } ] } },
 
       "Basic3DModelObjectIdentifier": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InstanceIdentifier.json" },

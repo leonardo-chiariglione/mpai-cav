@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mpai.community/OSD/V1.5/data/AudioMotionFlags.json",
+  "title": "Audio Motion Flags V1.5",
+  "description": "Detected motion patterns of Audio Objects within an OSD-described space: classification of motion behaviour, confidence, optional motion vector and temporal window for each Audio Object.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Header",
+    "AudioMotionFlagsID",
+    "AudioMotionFlagsData"
+  ],
+  "properties": {
+    "Header": {
+      "type": "string",
+      "const": "OSD-AMF-V1.5"
+    },
+    "MInstanceID": {
+      "type": "string",
+      "description": "ID of the Virtual Space the Audio Scene refers to."
+    },
+    "AudioMotionFlagsID": {
+      "type": "string",
+      "description": "Identifier of this Audio Motion Flags entry."
+    },
+    "AudioMotionFlagsData": {
+      "type": "array",
+      "description": "List of Audio Motion entries, one per Audio Object.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "AudioObjectID": {
+            "type": "string",
+            "description": "Unique identifier of the Audio Object."
+          },
+          "MotionType": {
+            "type": "string",
+            "enum": [
+              "Stationary",
+              "Approaching",
+              "Receding",
+              "Orbiting",
+              "Intermittent",
+              "Erratic"
+            ],
+            "description": "Classification of motion."
+          },
+          "MotionConfidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence level associated with the motion classification."
+          },
+          "MotionVector": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            },
+            "description": "Optional 3D vector (dx, dy, dz) expressing relative motion in user-relative coordinates."
+          },
+          "TemporalWindow": {
+            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
+            "description": "Temporal interval over which the motion classification was computed."
+          }
+        },
+        "required": [
+          "AudioObjectID",
+          "MotionType"
+        ]
+      }
+    },
+    "Trace": {
+      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
+      "description": "AIF V3.0 trace information identifying provenance and timestamp."
+    }
+  }
+}
