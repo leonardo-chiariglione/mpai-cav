@@ -53,6 +53,15 @@
       "IsOptional": true
     },
     {
+      "Name": "AvatarID",
+      "Direction": "Input",
+      "DataType": "OSD-IID-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false,
+      "IsOptional": true
+    },
+    {
       "Name": "PortableAvatar",
       "Direction": "Output",
       "DataType": "PAF-PAV-V1.6",
@@ -441,6 +450,36 @@
       "Input": {
         "AIMName": "PGM-FSM-V1.0",
         "DataType": "PGM-UCF-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-MOG-V1.0",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "MMC-TTS-V2.5",
+        "DataType": "OSD-BTO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-MOG-V1.0",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "PAF-PMX-V1.6",
+        "DataType": "OSD-BTO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "PAF-PMX-V1.6",
+        "DataType": "OSD-IID-V1.5"
       }
     }
   ],

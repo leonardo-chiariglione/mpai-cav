@@ -86,8 +86,8 @@
     },
     {
       "Name": "ApplicationContext",
-      "Uri": "https://raw.githubusercontent.com/leonardo-chiariglione/mpai-cav/main/MMM/Access/SecretaryApplicationContext.json",
-      "Sha256": "5CAEDF253D98A16759A585C43F84528398B0E7CACE4247A51BA483DF91DAB6DA",
+      "Uri": "https://raw.githubusercontent.com/leonardo-chiariglione/mpai-cav/main/Access/MMM/SecretaryApplicationContext.json",
+      "Sha256": "761EC6FBA18789450768D86B51750AEA290F16173A433B6F1E51F649849F730D",
       "Setting": "ApplicationContext",
       "Terms": {
         "Licence": "BSD-3-Clause",

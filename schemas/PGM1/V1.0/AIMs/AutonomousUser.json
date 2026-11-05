@@ -66,6 +66,42 @@
       "IsRemote": false
     },
     {
+      "Name": "InteractionHistoryResponse",
+      "Direction": "Input",
+      "DataType": "PGM-IHI-V1.0",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "StoredAvatarModel",
+      "Direction": "Input",
+      "DataType": "OSD-B3O-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "StoredSpeechModel",
+      "Direction": "Input",
+      "DataType": "AIP-MLO-V1.0",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "StoredAvatarID",
+      "Direction": "Input",
+      "DataType": "OSD-IID-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
       "Name": "HumanCommandResponse",
       "Direction": "Output",
       "DataType": "PGM-HCM-V1.0",
@@ -90,41 +126,25 @@
       "IsRemote": false
     },
     {
-      "Name": "AvatarSpeechObject",
-      "Direction": "Output",
-      "DataType": "OSD-BSO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AvatarModel",
-      "Direction": "Output",
-      "DataType": "OSD-B3O-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "FaceDescriptors",
-      "Direction": "Output",
-      "DataType": "PAF-FDO-V1.6",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "BodyDescriptors",
-      "Direction": "Output",
-      "DataType": "PAF-BDO-V1.6",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
       "Name": "AUCAUSRequest",
       "Direction": "Output",
       "DataType": "PGM-UCS-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "InteractionHistoryRequest",
+      "Direction": "Output",
+      "DataType": "PGM-IHI-V1.0",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PortableAvatar",
+      "Direction": "Output",
+      "DataType": "PAF-PAV-V1.6",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -196,15 +216,6 @@
     },
     {
       "Header": "PGM-AUF-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PAF-PDX-V1.6",
       "Identifier": {
         "ImplementerID": "/* String assigned by IIDRA */",
         "ImplementationID": "/* String assigned by Implementer */",
@@ -607,56 +618,6 @@
     {
       "Output": {
         "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "PAF-PDX-V1.6",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-PDX-V1.6",
-        "DataType": "OSD-BSO-V1.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "OSD-BSO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-PDX-V1.6",
-        "DataType": "OSD-B3O-V1.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "OSD-B3O-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-PDX-V1.6",
-        "DataType": "PAF-FDO-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-FDO-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-PDX-V1.6",
-        "DataType": "PAF-BDO-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-BDO-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
         "DataType": "PGM-UCS-V1.0"
       },
       "Input": {
@@ -682,6 +643,146 @@
       "Input": {
         "AIMName": "PGM-CXT-V1.0",
         "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-CXT-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-CXT-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-PRC-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-PRC-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-DAC-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-DAC-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-USR-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-USR-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-PAL-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "PGM-IHI-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-PAL-V1.0",
+        "DataType": "PGM-IHI-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-B3O-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AUF-V1.0",
+        "DataType": "OSD-B3O-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "AIP-MLO-V1.0"
+      },
+      "Input": {
+        "AIMName": "PGM-AUF-V1.0",
+        "DataType": "AIP-MLO-V1.0"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "PGM-AUC-V1.0",
+        "DataType": "PAF-PAV-V1.6"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PAF-PAV-V1.6"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "PGM-AUF-V1.0",
+        "DataType": "OSD-IID-V1.5"
       }
     }
   ],

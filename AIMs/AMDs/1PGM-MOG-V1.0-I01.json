@@ -57,6 +57,14 @@
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
+    },
+    {
+      "Name": "Text",
+      "Direction": "Output",
+      "DataType": "OSD-BTO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
     }
   ],
   "SubAIMs": [],

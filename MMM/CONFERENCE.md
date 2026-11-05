@@ -44,10 +44,21 @@ The meeting ends by itself at its time as well.
 
 ## Sharing a screen
 
-The chair has a button, bottom left: *Share my screen* (above *End the meeting for everyone*). The browser asks which screen or window; the chair's screen then fills everybody's window in the room, and the room is
-reduced to a stamp at the bottom right (a click on the stamp changes them over). *Stop sharing* ends it, and the end of the meeting does too. For now only the chair may share: the Right to place a screen in the room is
-given to the convener with the seat, and to nobody else. A shared screen is a Visual Object (OSD-BVO) that is a stream, placed in the room by MM-Add; whoever has an Item in the room sees it; it is sent as JPEG frames over
-a WebSocket, only when the picture changes (a slide that stays costs nothing). The sound of what is shared is carried too (24 kHz mono, in order): when the browser asks, tick *share tab audio* (or *share system audio*). Share the tab or window with the presentation, not the MMM tab: the voices of the room would go back into the room as an echo.
+The chair has the buttons *Share screen* and *Edit slides* (bottom left, with the other buttons of the meeting: *Mic*, *Raise hand*, *Summary*, *Secretary*, *Close meeting*). The shared screen is in the room, on its walls:
+all four walls of the meeting room show it (the east one, which has the door, a smaller one beside the door), and each participant looks at the wall it likes (A/D, the arrows or the wheel turn) and zooms with Ctrl + the wheel.
+While a screen is shown and a participant looks at the north wall (within 55 degrees), the three Personae seated on that side are drawn aside, at the ends of the wall, **in that participant's view only**: nobody sits in front of the picture,
+and turning away shows the real room. Their places never change, and the camera is never moved.
+
+**No browser bar.** The browser shows its own blue "Stop sharing" bar when a page captures a screen, and a page cannot remove it. The sharer therefore starts the **Screen Helper** on its PC
+(`Run-ScreenHelper.cmd`, in `Downloads\MMM-ScreenHelper`; a tray program that listens at 127.0.0.1:7391): the sharer chooses a window in the helper's own window and the helper sends the pictures to the M-Instance,
+with no browser capture at all. If the helper is not running, the page falls back to the browser's capture and the bar appears (the page says so). *Edit slides* shares the window of the slides and takes the sharer to it.
+A shared screen is a Visual Object (OSD-BVO) that is a stream, placed in the room by MM-Add; whoever has an Item in the room sees it; it is sent as JPEG frames over a WebSocket, only when the picture changes. The helper sends no sound.
+
+## The summary is for the participants
+
+Any participant can ask the Secretary for a summary (the *Summary* panel, or by voice through the *Secretary* button). The Secretary condenses the minutes once and **every participant is sent it**, written, in the language
+each has chosen in its panel (English until it chooses another); the one who asked gets it as it asked, written or spoken. A new request replaces the summary of everybody. The languages are English, Greek, French, German,
+Spanish, Portuguese, Italian, Japanese and Chinese. Somebody who is not a participant is sent nothing.
 
 ## What has been tried, and what has not
 

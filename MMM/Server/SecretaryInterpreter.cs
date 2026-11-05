@@ -10,7 +10,7 @@ namespace Mpai.Mmm.Server;
 
 // WHAT THE SECRETARY UNDERSTANDS (DRAFT). The Secretary is a User of the meeting; what a participant says to it is turned into a request by the Voice Command Interface - here its JSON Interface
 // (MMC-JSI), the real AIM, as the L3 1MMC-JSI-V2.5-I03 gives it the Application Context of the Secretary: the schema of the User Command of MMM (MMM-UCM-V2.2) and the guide
-// (MMM/Access/SecretaryApplicationContext.json). The Secretary carries out the request and says the answer in a few words. One JSON Interface for each participant: it remembers what that
+// (Access/MMM/SecretaryApplicationContext.json). The Secretary carries out the request and says the answer in a few words. One JSON Interface for each participant: it remembers what that
 // participant asked before ("in Greek" after a summary). The language model is Ollama's, loaded when somebody first speaks to the Secretary.
 public sealed class SecretaryInterpreter(string root, string model = "llama3.2:3b") : IDisposable
 {
@@ -24,7 +24,7 @@ public sealed class SecretaryInterpreter(string root, string model = "llama3.2:3
     private readonly Dictionary<string, JsiAimProcessor> byUser = new();
 
     public static string CommandSchemaFile(string root) => Path.Combine(root, "schemas", "MMM4", "V2.2", "data", "UserCommand.json");
-    public static string ContextFile(string root) => Path.Combine(root, "MMM", "Access", "SecretaryApplicationContext.json");
+    public static string ContextFile(string root) => Path.Combine(root, "Access", "MMM", "SecretaryApplicationContext.json");
     private const string SchemaUri = "https://schemas.mpai.community/MMM4/V2.2/data/UserCommand.json";
 
     private JsiAimProcessor For(string user)

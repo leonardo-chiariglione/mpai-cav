@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using Mpai.Mmm;
 using Mpai.Mmm.Client;
 using Mpai.Mmm.Server;
@@ -45,6 +45,7 @@ if (identity is not null || Arg("--chair") is not null || Arg("--host") is not n
     invite = [.. new[] { chairName, hostName }.Concat(invite).Concat(tokens.Values).Concat(guests.Values).Distinct()];
 if (worldMode)
 {
+    if (identity is not null) Mpai.Mmm.Client.Meeting.PlannedSeats = invite.Length + 1;      // the people invited and the Secretary: the room has that many seats
     World.Setup(m, repo);
     // The Personae a registering human chooses from (MMM/Viewer/personae/catalogue): the Rocketbox avatars.
     var catalogue = Path.Combine(repo, "MMM", "Viewer", "personae", "catalogue", "catalogue.json");

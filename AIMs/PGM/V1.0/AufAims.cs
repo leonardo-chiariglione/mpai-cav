@@ -46,14 +46,14 @@ public sealed class MogAim : PgmAim
     public static readonly string[] PersonaKinds = ["MM-Move", "MM-Animate", "MU-Move", "MU-Animate"];
     public static readonly string[] FaceGestures = ["smile", "frown", "blink", "wink", "nod", "shake", "raise-eyebrows"];
 
-    private readonly string _request, _final, _face, _body, _actions, _response;
+    private readonly string _request, _final, _face, _body, _actions, _response, _text;
     private readonly string _persona;
 
     public MogAim(string instanceId, AimPortReader ports, string persona = "a-user-persona") : base(instanceId, ports)
     {
         _persona = persona;
         _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0");
-        _face = Out("PAF-FMO-V1.6"); _body = Out("PAF-BMO-V1.6"); _actions = Out("MMM-PAT-V2.2"); _response = Out(Auc.Auf);
+        _face = Out("PAF-FMO-V1.6"); _body = Out("PAF-BMO-V1.6"); _actions = Out("MMM-PAT-V2.2"); _response = Out(Auc.Auf); _text = Out("OSD-BTO-V1.5");
     }
 
     public override Task<Message> ProcessAsync(Message message)
@@ -61,6 +61,8 @@ public sealed class MogAim : PgmAim
         var outputs = new List<(string, JsonNode?)>();
         if (Read(message, _final) is { } fr)
         {
+            // The text of the Final Response, for Text-To-Speech and for the Portable Avatar.
+            if (fr["Text"] is JsonObject textObject) outputs.Add((_text, textObject.DeepClone()));
             var returned = new JsonObject();
             var motionKinds = new List<string>();
             if (fr["ProcessActions"]?["ProcessActions"] is JsonObject pas)
@@ -169,7 +171,7 @@ public static class AufResponse
 // Motion Object Generation, Text-To-Speech (the synthesiser given), Entity Face Description, Entity Body Description, and the multiplexing of the Portable Avatar.
 public sealed class AufAim : PgmAim
 {
-    private readonly string _request, _model, _speechModel, _final, _state, _avatar, _response, _actions;
+    private readonly string _request, _model, _speechModel, _final, _state, _avatar, _response, _actions, _avatarIdPort;
     private readonly PsdAim _psd; private readonly MogAim _mog; private readonly EfdAim _efd; private readonly EbdAim _ebd;
     private readonly ISpeechSynthesiser _voice;
     private readonly string _avatarId;
@@ -178,7 +180,7 @@ public sealed class AufAim : PgmAim
     public AufAim(string instanceId, AimPortReader ports, PsdAim psd, MogAim mog, EfdAim efd, EbdAim ebd, ISpeechSynthesiser voice, string avatarId = "a-user-avatar") : base(instanceId, ports)
     {
         (_psd, _mog, _efd, _ebd, _voice, _avatarId) = (psd, mog, efd, ebd, voice, avatarId);
-        _request = In(Auc.Auf); _model = In("OSD-B3O-V1.5"); _speechModel = In("AIP-MLO-V1.0"); _final = In("PGM-FRS-V1.0"); _state = In("MMC-EST-V2.5");
+        _request = In(Auc.Auf); _model = In("OSD-B3O-V1.5"); _speechModel = In("AIP-MLO-V1.0"); _final = In("PGM-FRS-V1.0"); _state = In("MMC-EST-V2.5"); _avatarIdPort = In("OSD-IID-V1.5");
         _avatar = Out("PAF-PAV-V1.6"); _response = Out(Auc.Auf); _actions = Out("MMM-PAT-V2.2");
     }
 
@@ -206,7 +208,7 @@ public sealed class AufAim : PgmAim
         var mog = await _mog.ProcessAsync(new Message { Ports = With(_mog, (_mog.InputKey(Auc.Auf), request), (_mog.InputKey("PGM-FRS-V1.0"), final)) });
         var faceMotion = Take(mog, _mog, "PAF-FMO-V1.6"); var bodyMotion = Take(mog, _mog, "PAF-BMO-V1.6"); var others = Take(mog, _mog, "MMM-PAT-V2.2");
         // 3. Text-To-Speech
-        var words = TextOf(final["Text"] as JsonObject) ?? "";
+        var words = TextOf(Take(mog, _mog, "OSD-BTO-V1.5") ?? final["Text"] as JsonObject) ?? "";
         var speech = words.Length > 0 ? await _voice.SynthesiseAsync(words) : null;
         // 4. Entity Face Description, 5. Entity Body Description
         var efd = await _efd.ProcessAsync(new Message

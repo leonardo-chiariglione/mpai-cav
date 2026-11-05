@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -237,6 +237,7 @@ public static class MmmServer
         {
             var root = Path.GetFullPath(viewer);
             app.MapGet("/viewer/state", () => Results.Json(state?.Invoke() ?? m.Snapshot()));
+            app.MapGet("/viewer/seats", () => Results.Json(Mpai.Mmm.Client.Meeting.Seats.Select(s => s.ID)));      // the seats that were planned for the meeting (the viewer draws only their chairs)
             // Who the person is, through Tailscale; and if it registered before (its browser was closed), its Process is given a new token and told where its Persona stands.
             // On this machine (loopback), where nobody is told by Tailscale, the person is the one the address names (?user=): so that reloading the page does not lose its place either.
             app.MapGet("/viewer/whoami", (HttpContext ctx) =>

@@ -1,4 +1,4 @@
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -35,6 +35,16 @@ public static class Meeting
     ];
     public static (string ID, double X, double Y, double Yaw)[] Seats { get; set; } = DefaultSeats;
 
+    // THE ROOM HAS THE SEATS THAT WERE PLANNED, no more: the people invited, and the Secretary. null: all the seats the world has (the tests, the demonstrations).
+    public static int? PlannedSeats { get; set; }
+
+    // The seats are given in the order the world lists them (the Secretary, who takes its seat first, is at the side; the first two people sit across the table and see each other). Nobody is in front of a
+    // shared screen in the view of whoever looks at it: the viewer draws aside the Personae between the viewer and the wall it faces (MMM/Viewer/index.html, compactSeat).
+    public static IEnumerable<(string ID, double X, double Y, double Yaw)> InOrderFor(string user, IEnumerable<(string ID, double X, double Y, double Yaw)> seats) => seats;
+
+    // The seats kept when only n are planned: the first n of the world's, in its order.
+    public static (string ID, double X, double Y, double Yaw)[] Plan((string ID, double X, double Y, double Yaw)[] all, int n) => n >= all.Length ? all : all.Take(Math.Max(n, 1)).ToArray();
+
     // What the world (World.Setup) changes - where the building is, the seats, the doors - is put back as it was: the meeting of the demonstrations and of the tests is the one above.
     public static void Reset() { ParcelX = 12; ParcelY = 0; Seats = DefaultSeats; DoorsNeedRights = false; Doors = []; AllPlaces = []; Reception = null; }
 
@@ -44,7 +54,7 @@ public static class Meeting
     {
         m.AddService(Avs);
         m.AddService(Asr);                                  // the speech recognition: a service of its own, that any Process may ask
-        m.AddService(Secretary, SecretaryPersona, "Persona2.glb");
+        m.AddService(Secretary, SecretaryPersona, "catalogue/Female_Adult_05.glb");
         m.AddLocation(Parcel, owner: Avs, x: ParcelX, y: ParcelY, size: 12);
         m.AddLocation(Room, owner: Avs, x: 0, y: 0, size: 8, at: Parcel);
         foreach (var s in Seats) m.AddLocation(s.ID, owner: Avs, x: s.X, y: s.Y, size: 0.8, perceptible: false, at: Room);
@@ -125,10 +135,12 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     // Secretary tells the AVS Service how long each recognised utterance was).
     public const long HandLowersAfterMs = 5000;
     private readonly List<string> hands = [];
+    private readonly HashSet<string> sharers = [];      // the participants the convener has let show a screen
     private readonly Dictionary<string, long> handSpoken = new();
     public IReadOnlyList<string> HandsUp { get { lock (hands) return hands.ToList(); } }
 
-    // THE SUMMARY IS NOT A FEATURE OF THE MEETING: it exists only for who asks (summary;lang=el;mode=spoken), and only the Users that ask are sent it (an Item of its own for each).
+    // THE SUMMARY IS FOR THE PARTICIPANTS: when one of them asks (summary;lang=el;mode=spoken), the Secretary makes it once and every participant is sent it, in the language each chose (pref;lang=fr tells the Secretary
+    // the language of a participant; English if it has not) - written for those that did not ask, spoken or written as the one that asked wanted (an Item of its own for each: Summary-Latest-<User>).
     // The Secretary makes it, in English, from the minutes - in pieces if they are long, then the pieces - and translates it into the language the User chose; if the User wants it
     // spoken, it has it spoken in that language. What condenses, translates and speaks is not the Secretary's: the Processes it asks are given here, and with none there is no summary.
     public Summariser? Summarise { get; set; }
@@ -137,6 +149,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     public const int PieceChars = 6000;
     private readonly Queue<(string User, string ID, string Language, string Mode)> summaryAsked = new();
     private readonly SemaphoreSlim summaryOne = new(1, 1);
+    private readonly Dictionary<string, string> summaryLang = new();            // User -> the language of the summaries it is sent
 
     // THE DIALOGUE WITH THE SECRETARY. The Secretary is a User: a participant that wants it, and speaks to it, sends its speech to the Secretary (MM-Send of its Speech Object, a stream) instead of placing it
     // in the room, so that nobody else hears it. The Secretary has what it hears recognised (a longer pause ends a piece than in the room: a request has pauses in it), has the Voice Command Interface
@@ -147,7 +160,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     private readonly Queue<(string User, string Words)> dialogueAsked = new();
     private readonly HashSet<string> dialogueIds = new();                      // the pieces sent to the ASR Service that are a dialogue with the Secretary, not the meeting
     private readonly SemaphoreSlim dialogueOne = new(1, 1);
-    private sealed class Preference { public string Language = "en", Form = "spoken"; public bool WrittenAnswers; public int Sequence; }
+    private sealed class Preference { public string Language = "en", Form = "written"; public bool Voice; public int Sequence; }      // text is the default; the voice is an option
     private readonly Dictionary<string, Preference> preferences = new();
     private readonly HashSet<string> closing = new();                          // who was asked to be sure that the meeting is to be closed
     public const int DialoguePauseMs = 1200;
@@ -229,6 +242,18 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                     var who = part.Length > 2 && part[2].StartsWith("user=", StringComparison.Ordinal) && from == convener ? part[2][5..] : from;     // only the convener lowers another's hand
                     if (seatOf.ContainsKey(who) && who != Meeting.Secretary) await SetHand(who, part.Length > 1 && part[1] == "up", who == from ? "" : " (by the convener)");
                 }
+                else if (text.StartsWith("share;", StringComparison.Ordinal))
+                {
+                    // Showing a screen is the convener's to give, one participant at a time (and to take back).
+                    var part = text.Split(';'); var who = part.Length > 2 && part[2].StartsWith("user=", StringComparison.Ordinal) ? part[2][5..] : "";
+                    if (from != convener) { await Say(avs, $"Refused-{id}", from, "only the convener lets a participant share a screen"); continue; }
+                    if (seatOf.ContainsKey(who) && who != Meeting.Secretary)
+                    {
+                        var grant = part.Length > 1 && part[1] == "grant";
+                        lock (sharers) { if (grant) sharers.Add(who); else sharers.Remove(who); }
+                        await Say(avs, $"Sharing-for-{who}", who, grant ? "granted" : "revoked");
+                    }
+                }
                 else if (from == Meeting.Secretary && text.StartsWith("spoke;", StringComparison.Ordinal))
                 {
                     var part = Meeting.ParseSeat(text["spoke;".Length..]);
@@ -249,6 +274,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                     var persona = Meeting.ParseSeat(text.Replace("join;", "")).GetValueOrDefault("persona") ?? $"{from}-Persona";
                     await Seat(from, persona, $"Seat-{id}");
                     personaOf[from] = persona;
+                    bool mayShare; lock (sharers) mayShare = sharers.Contains(from);
+                    if (mayShare) await Say(avs, $"Sharing-for-{from}", from, "granted");
                     if (from != Meeting.Secretary && HandsUp.Count > 0) await ShowHands(from);                 // a newcomer is told who has a hand up - when somebody has one; with none there is nothing to tell
                     if (from != Meeting.Secretary) await Say(avs, $"Participant-{from}-{++sequence}", Meeting.Secretary, $"participant;user={from}");
                 }
@@ -285,6 +312,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                     }
                     lock (latencies) latencies.Add((who.Speaker, who.SpeechMs, (long)Stopwatch.GetElapsedTime(who.Since).TotalMilliseconds));
                 }
+                else if (text.StartsWith("pref;", StringComparison.Ordinal))
+                    lock (summaryLang) summaryLang[from] = (Meeting.ParseSeat(text["pref;".Length..]).GetValueOrDefault("lang") ?? "en").ToLowerInvariant();
                 else if (text.StartsWith("summary;", StringComparison.Ordinal))
                 {
                     var asking = Meeting.ParseSeat(text["summary;".Length..]);
@@ -449,7 +478,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
             return;
         }
         var say = new List<string>(); var ui = new JsonObject();
-        if (rq["Answers"] is JsonValue a) { pref.WrittenAnswers = a.GetValue<string>() == "Written"; say.Add(pref.WrittenAnswers ? "I will answer in writing too." : "I will answer by voice only."); }
+        if (rq["Answers"] is JsonValue a) { pref.Voice = a.GetValue<string>() == "Spoken"; say.Add(pref.Voice ? "I will answer by voice as well as in writing." : "I will answer in writing only."); }
         if (rq["Summary"] is JsonObject s)
         {
             var language = ((string?)s["Language"] ?? pref.Language).ToLowerInvariant(); var form = ((string?)s["Form"] ?? pref.Form).ToLowerInvariant();
@@ -481,8 +510,8 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     private async Task Reply(string user, string text, JsonObject? ui, Preference? pref = null)
     {
         pref ??= preferences.TryGetValue(user, out var p0) ? p0 : preferences[user] = new Preference();
-        var reply = new JsonObject { ["Say"] = text, ["Written"] = pref.WrittenAnswers, ["Do"] = ui ?? new JsonObject() };
-        if (Synthesise is not null) { try { reply["Speech"] = Convert.ToBase64String(await Synthesise(text, "en")); } catch (Exception) { } }          // 16 kHz, 16 bits, mono
+        var reply = new JsonObject { ["Say"] = text, ["Written"] = true, ["Do"] = ui ?? new JsonObject() };
+        if (pref.Voice && Synthesise is not null) { try { reply["Speech"] = Convert.ToBase64String(await Synthesise(text, "en")); } catch (Exception) { } }          // 16 kHz, 16 bits, mono
         await Say(secretary, $"Secretary-{user}-{++pref.Sequence}", user, reply.ToJsonString());
     }
 
@@ -505,11 +534,23 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
                 {
                     var english = await Condensed(said);
                     var language = r.Language.ToLowerInvariant();
-                    var text = language == "en" || Translate is null ? english : await Translate(english, language);
+                    lock (summaryLang) summaryLang[r.User] = language;
+                    var done = new Dictionary<string, string> { ["en"] = english };
+                    async Task<string> In(string lang) { if (done.TryGetValue(lang, out var had)) return had; var t = Translate is null ? english : await Translate(english, lang); done[lang] = t; return t; }
+                    var text = await In(language);
                     var reply = new JsonObject { ["Language"] = text == english ? "en" : language, ["Mode"] = r.Mode, ["Summary"] = SummaryOf($"{r.ID}-en", english) };
                     if (text != english) reply["TranslatedSummary"] = SummaryOf($"{r.ID}-{language}", text);
                     if (r.Mode == "spoken" && Synthesise is not null) reply["Speech"] = Convert.ToBase64String(await Synthesise(text, language));          // 16 kHz, 16 bits, mono
                     await Say(secretary, answer, r.User, reply.ToJsonString());
+                    // and the others: the participants are all sent it, written, in the language of each
+                    foreach (var other in participants.Where(u => u != r.User && u != Meeting.Secretary).ToList())
+                    {
+                        string lang; lock (summaryLang) lang = summaryLang.GetValueOrDefault(other, "en");
+                        var t = await In(lang);
+                        var push = new JsonObject { ["Version"] = r.ID, ["AskedBy"] = r.User, ["Language"] = t == english ? "en" : lang, ["Mode"] = "written", ["Summary"] = SummaryOf($"{r.ID}-en", english) };
+                        if (t != english) push["TranslatedSummary"] = SummaryOf($"{r.ID}-{lang}", t);
+                        await Say(secretary, $"Summary-Latest-{other}", other, push.ToJsonString());
+                    }
                 }
                 catch (Exception e) { await Say(secretary, answer, r.User, "failed: " + e.Message); }
             }
@@ -611,7 +652,7 @@ public sealed class MeetingServices(HttpClient http, MInstance m, Recognizer? re
     {
         if (!seatOf.TryGetValue(user, out var seatId))
         {
-            var free = Meeting.Seats.FirstOrDefault(s => !seatOf.ContainsValue(s.ID));
+            var free = Meeting.InOrderFor(user, Meeting.Seats.Where(s => !seatOf.ContainsValue(s.ID))).FirstOrDefault();
             if (free.ID is null) { await Say(avs, replyId, user, "full"); return; }
             seatOf[user] = seatId = free.ID;
         }

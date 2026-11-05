@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace Mpai.Mmm.Client;
@@ -38,6 +38,7 @@ public static class World
                 if ((string)r["id"]! != Meeting.Room) continue;
                 Meeting.ParcelX = (double)b["x"]! + (double)r["x"]!; Meeting.ParcelY = (double)b["y"]! + (double)r["y"]!;      // where the centre of the meeting room is in the world
                 Meeting.Seats = r["seats"]!.AsArray().OfType<JsonObject>().Select(s => ((string)s["id"]!, (double)s["x"]!, (double)s["y"]!, (double)s["yaw"]!)).ToArray();
+                if (Meeting.PlannedSeats is int planned) Meeting.Seats = Meeting.Plan(Meeting.Seats, planned);      // the room has the seats that were planned, and no more
                 foreach (var s in Meeting.Seats) m.AddLocation(s.ID, owner: Meeting.Avs, x: s.X, y: s.Y, size: 0.8, perceptible: false, at: Meeting.Room);
             }
         }
@@ -46,7 +47,7 @@ public static class World
         Meeting.AllPlaces = world["buildings"]!.AsArray().OfType<JsonObject>().SelectMany(b => b["rooms"]!.AsArray().OfType<JsonObject>()).Where(r => (bool?)r["public"] != true).Select(r => (string)r["id"]!).ToArray();
         m.AddService(Meeting.Avs);
         m.AddService(Meeting.Asr);
-        m.AddService(Meeting.Secretary, Meeting.SecretaryPersona, "Persona2.glb");
+        m.AddService(Meeting.Secretary, Meeting.SecretaryPersona, "catalogue/Female_Adult_05.glb");
         foreach (var b in world["buildings"]!.AsArray().OfType<JsonObject>())
             if (b["reception"] is JsonObject rc)
             {

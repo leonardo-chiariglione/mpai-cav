@@ -102,11 +102,9 @@ public class PgmSliceTests
         var request = rig.At("MMM-PAC-V2.2").Single();
         Assert.Equal("doors", (string?)request["RQ-Complements"]![0]!["ToItem"]);
 
-        // The Units get the speech, the face and the body of the A-User, and its model.
-        Assert.Single(rig.At("OSD-BSO-V1.5"));
-        Assert.Single(rig.At("PAF-FDO-V1.6"));
-        Assert.Single(rig.At("PAF-BDO-V1.6"));
-        Assert.Contains("nod", rig.At("PAF-FDO-V1.6").Single().ToJsonString());
+        // The Module gives the Portable Avatar (speech, face, body and model together) to the Controller; the User Agent separates it for its Units.
+        var avatar = rig.At("PAF-PAV-V1.6").Single();
+        Assert.Contains("nod", avatar.ToJsonString());
 
         // The test stub of the M-Instance answers the Process Action Request.
         var response = (JsonObject)request.DeepClone();

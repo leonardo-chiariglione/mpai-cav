@@ -123,8 +123,8 @@ public class MmmSecretaryDialogueTests
         var raised = await Say("raise my hand");
         Assert.Equal("Your hand is up.", (string?)raised["Say"]);
         Assert.Contains("Anna", services.HandsUp);                                                    // the Secretary did it
-        Assert.NotNull((string?)raised["Speech"]);                                                    // in a few spoken words
-        Assert.False((bool)raised["Written"]!);
+        Assert.Null((string?)raised["Speech"]);                                                       // text is the default: no voice unless asked
+        Assert.True((bool)raised["Written"]!);
         Assert.DoesNotContain(services.TheMinutes, line => line.Contains("raise my hand"));          // it is not the meeting: not in the minutes
 
         // The room does not hear it: Bruno, in the room, is not given the Speech Object, and cannot read the answer.
@@ -133,7 +133,7 @@ public class MmmSecretaryDialogueTests
 
         var summary = await Say("summarise in greek");
         Assert.Equal("el", (string?)summary["Do"]!["Summary"]!["Language"]);                           // the client is told which summary to ask for
-        Assert.Equal("spoken", (string?)summary["Do"]!["Summary"]!["Form"]);
+        Assert.Equal("written", (string?)summary["Do"]!["Summary"]!["Form"]);                         // text is the default
 
         var mute = await Say("mute me");
         Assert.Equal("Off", (string?)mute["Do"]!["Microphone"]);

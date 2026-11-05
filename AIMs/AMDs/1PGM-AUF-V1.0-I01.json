@@ -54,6 +54,15 @@
       "IsRemote": false
     },
     {
+      "Name": "AvatarID",
+      "Direction": "Input",
+      "DataType": "OSD-IID-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
       "Name": "PortableAvatar",
       "Direction": "Output",
       "DataType": "PAF-PAV-V1.6",

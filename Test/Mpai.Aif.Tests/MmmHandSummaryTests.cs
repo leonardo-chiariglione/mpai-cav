@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using Mpai.Mmm;
 using Mpai.Mmm.Client;
 using Mpai.Mmm.Server;
@@ -109,6 +109,20 @@ public class MmmHandSummaryTests
     }
 
     [Fact]
+    public async Task OnlyTheConvenerLetsAParticipantShareAScreen()
+    {
+        await using var room = await Room.Open();
+        string? Sharing(MmmClient u) => Meeting.TextOf(u.ReadAsync($"Sharing-for-{u.ProcessID}").Result.Item);
+        Assert.Null(Sharing(room.Bruno));                                                   // nobody was given anything
+        await room.Send(room.Bruno, Meeting.Avs, "share;grant;user=Bruno");                // Bruno is not the convener: refused
+        Assert.Null(Sharing(room.Bruno));
+        await room.Send(room.Anna, Meeting.Avs, "share;grant;user=Bruno");                 // the convener lets him
+        Assert.Equal("granted", Sharing(room.Bruno));
+        await room.Send(room.Anna, Meeting.Avs, "share;revoke;user=Bruno");                // and takes it back
+        Assert.Equal("revoked", Sharing(room.Bruno));
+    }
+
+    [Fact]
     public async Task AHandComesDownByItselfAfterFiveSecondsOfSpeechAndNotBefore()
     {
         await using var room = await Room.Open();
@@ -134,7 +148,7 @@ public class MmmHandSummaryTests
     }
 
     [Fact]
-    public async Task NoSummaryExistsUnlessSomebodyAsksAndItGoesOnlyToWhoAsked()
+    public async Task NoSummaryExistsUnlessSomebodyAsksAndThenItGoesToTheParticipants()
     {
         await using var room = await Room.Open();
         var condensed = new List<string>();
@@ -152,9 +166,31 @@ public class MmmHandSummaryTests
         Assert.Contains("Anna: we agreed to meet on Friday", condensed.Single());
         Assert.Contains("Bruno: I will bring the slides", condensed.Single());
         Assert.DoesNotContain("AVS:", condensed.Single());
-        // Anna did not ask: she has nothing, and cannot read Bruno's.
+        // Anna did not ask, and cannot read Bruno's own answer - but the summary is for the participants: she is sent it too, written, in English as she chose no other language.
         Assert.DoesNotContain(await room.Anna.InboxAsync(), i => i.ID.StartsWith("Summary-for-", StringComparison.Ordinal));
         Assert.Equal(403, (await room.Anna.ReadAsync(answer.ID)).Http);
+        var hers = JsonNode.Parse(Meeting.TextOf((await room.Anna.ReadAsync("Summary-Latest-Anna")).Item)!)!;
+        Assert.Equal("Bruno", (string)hers["AskedBy"]!); Assert.Equal("en", (string)hers["Language"]!); Assert.Equal("written", (string)hers["Mode"]!);
+        Assert.Equal("Friday was agreed.", (string)hers["Summary"]!["SummaryData"]![0]!["Data"]!);
+        // Carla is not a participant: she is sent nothing.
+        Assert.NotEqual(200, (await room.Carla.ReadAsync("Summary-Latest-Carla")).Http);
+    }
+
+    [Fact]
+    public async Task EveryParticipantIsSentTheSummaryInItsOwnLanguage()
+    {
+        await using var room = await Room.Open();
+        room.Services.Summarise = _ => Task.FromResult("Friday was agreed.");
+        room.Services.Translate = (english, language) => Task.FromResult(language == "el" ? "Η Παρασκευή συμφωνήθηκε." : "Vendredi a été convenu.");
+        await room.Speak(room.Anna, 3);
+        await room.Send(room.Anna, Meeting.Secretary, "pref;lang=el");                 // Anna reads Greek
+        await room.Send(room.Bruno, Meeting.Secretary, "summary;lang=fr;mode=written");   // Bruno asks, in French
+        await room.Services.PumpSummaryAsync();
+        var hers = JsonNode.Parse(Meeting.TextOf((await room.Anna.ReadAsync("Summary-Latest-Anna")).Item)!)!;
+        Assert.Equal("el", (string)hers["Language"]!);
+        Assert.Equal("Η Παρασκευή συμφωνήθηκε.", (string)hers["TranslatedSummary"]!["SummaryData"]![0]!["Data"]!);
+        var his = JsonNode.Parse(Meeting.TextOf((await room.Bruno.ReadAsync(room.Bruno.InboxAsync().Result.Single(i => i.ID.StartsWith("Summary-for-", StringComparison.Ordinal)).ID)).Item)!)!;
+        Assert.Equal("fr", (string)his["Language"]!);
     }
 
     [Fact]

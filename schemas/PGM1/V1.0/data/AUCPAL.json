@@ -46,6 +46,11 @@
     "AUCPALTime": {
       "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
     },
+    "Timeout": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "description": "Request only. The time, in milliseconds from the time of the Request, within which the Response shall be received. When it elapses without a Response, A-User Control treats the Request as not answered and the AIM shall not act on it any more."
+    },
     "RequestID": {
       "type": "string",
       "description": "Response only. ID of the Request this Response answers."

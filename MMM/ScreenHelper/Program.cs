@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
 using System.Net;
 using System.Net.WebSockets;
@@ -180,7 +180,27 @@ internal static class Windows
 
     public static Target? Find(string what) => what.Equals("screen", StringComparison.OrdinalIgnoreCase) ? List().First(t => t.Screen) : List().FirstOrDefault(t => !t.Screen && t.Title.Contains(what, StringComparison.CurrentCultureIgnoreCase));
 
-    public static void ToFront(IntPtr h) { if (IsIconic(h)) ShowWindow(h, 9); SetForegroundWindow(h); }
+    public static void Raise(IntPtr h) { ShowWindow(h, 9); ToFront(h); }
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool attach);
+    [DllImport("user32.dll")] private static extern bool BringWindowToTop(IntPtr h);
+    [DllImport("user32.dll")] private static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
+    [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
+
+    // TO THE FRONT, though this program is not in the foreground (the page of the meeting, in the browser, is): Windows refuses SetForegroundWindow to a program that does not have the focus, and the window
+    // only flashes in the taskbar. The refusal does not apply to a thread that shares the input of the foreground one, nor just after a key press: so the two threads are attached for the call, and an
+    // Alt key press (it changes nothing in any program) is sent first.
+    public static void ToFront(IntPtr h)
+    {
+        if (IsIconic(h)) ShowWindow(h, 9);
+        var fg = GetForegroundWindow();
+        var fgThread = fg == IntPtr.Zero ? 0u : GetWindowThreadProcessId(fg, out _);
+        var me = GetCurrentThreadId();
+        keybd_event(0x12, 0, 0, UIntPtr.Zero); keybd_event(0x12, 0, 2, UIntPtr.Zero);                          // Alt down, Alt up
+        var attached = fgThread != 0 && fgThread != me && AttachThreadInput(me, fgThread, true);
+        try { BringWindowToTop(h); SetForegroundWindow(h); }
+        finally { if (attached) AttachThreadInput(me, fgThread, false); }
+    }
 }
 
 internal sealed class PickerForm : Form
@@ -203,6 +223,9 @@ internal sealed class PickerForm : Form
         share.Click += (_, _) => Take(); list.DoubleClick += (_, _) => Take();
         Controls.Add(list); Controls.Add(bottom); Controls.Add(head);
         AcceptButton = share; CancelButton = cancel;
+        // The first window a program shows is shown as the program was started (hidden, or minimized, when it was started so: from a launcher, or at login): the picker would be there and not be seen. Shown once
+        // more as an ordinary window, and brought to the front, it is seen.
+        Shown += (_, _) => Windows.Raise(Handle);
     }
 }
 

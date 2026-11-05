@@ -1,4 +1,4 @@
-# A MEETING IN THE MMM WORLD: the guests install nothing, each opens a personal link.
+﻿# A MEETING IN THE MMM WORLD: the guests install nothing, each opens a personal link.
 #   MMM\Run-Meeting.ps1 -Chair Leonardo -Guests Anna,Bruno,Carla -Until 19:00
 #   MMM\Run-Meeting.ps1 -Chair Leonardo -Guests Anna,Bruno,Carla -Via cloudflare
 # It starts the M-Instance with its world (the Metaverse Square, the MPAI building: a public atrium and the wings of rooms) and puts it on the internet at an https address (the microphone needs
@@ -101,6 +101,16 @@ for ($i = 0; $i -lt 180 -and -not $up; $i++) {
 }
 if (-not $up) { Write-Host 'The server did not start. Look at its window.'; exit 1 }
 
+# THE SCREEN HELPER on this PC (the one the chair shares from): it shares a window with no browser "Stop sharing" bar. Started here, so nobody has to find it; it stays in the tray until Quit.
+$helperDll = Join-Path $here 'ScreenHelper\bin\Release\net10.0-windows\Mpai.Mmm.ScreenHelper.dll'
+$helperUp = $false
+try { $helperUp = [bool](Invoke-RestMethod 'http://127.0.0.1:7391/status' -TimeoutSec 2).helper } catch { }
+if (-not $helperUp) {
+    if (-not (Test-Path $helperDll)) { Write-Host 'Building the screen helper (once)...'; & $dotnet build "$here\ScreenHelper\Mpai.Mmm.ScreenHelper.csproj" -c Release -v q | Out-Null }
+    if (Test-Path $helperDll) { Start-Process -FilePath $dotnet -ArgumentList "`"$helperDll`"" -WindowStyle Hidden; Write-Host 'Screen helper started (tray icon).' }
+    else { Write-Host 'The screen helper could not be built: sharing will use the browser capture, with its own "Stop sharing" bar.' }
+}
+
 $base = $null
 if ($Via -eq 'funnel') {
     $ts = (Get-Command tailscale -ErrorAction SilentlyContinue).Source
@@ -132,13 +142,13 @@ foreach ($n in $names) { Write-Host ("    {0,-12} {1}/viewer/?world=1&mic=1&invi
 Write-Host "    the meeting ends: $(if ($Until) { 'at ' + $Until } else { 'in ' + $Hours + ' hours' }), or when you press the button (bottom left); the rights of everybody end with it"
 Write-Host ''
 Write-Host '  For you, on this PC:' -ForegroundColor Green
-Write-Host "    $local/viewer/?world=1&mic=1"
+Write-Host "    $local/viewer/?world=1&mic=1&user=$HostName"
 Write-Host "  For you, on another device (the same person - use it on one device or the other, not both at once): $base/viewer/?world=1&mic=1&invite=$hostToken" -ForegroundColor Yellow
 Write-Host ''
 Write-Host '  The first time, each chooses a Persona. Click the point to walk to - the MPAI doors, across the atrium to the south wing: the MMM meeting room is the first on the right. The wheel turns you, Ctrl + wheel zooms. Q stands up, E sits.'
 # THE EMAILS: one for each guest of the group, with the personal link, through Outlook (the account of this PC): shown first, sent only if you confirm - or saved as drafts.
 if ($Group -and $Mail -ne 'none') {
-    $mails = Get-Mails $base
+    $mails = @(Get-Mails $base)
     Write-Host ''
     Write-Host "  Emails to send ($($mails.Count)), from your Outlook:" -ForegroundColor Green
     foreach ($m in $mails) { Write-Host ("    {0,-10} {1}" -f $m.Name, $m.To) }
@@ -160,6 +170,6 @@ if ($Group -and $Mail -ne 'none') {
     }
 }
 if ($Stay) { Write-Host '  The server and the tunnel stay up (-Stay).'; exit 0 }
-Start-Process "$local/viewer/?world=1&mic=1"
+Start-Process "$local/viewer/?world=1&mic=1&user=$HostName"
 Read-Host 'Enter to take the meeting off the internet (the server has its own window)' | Out-Null
 if ($Via -eq 'funnel') { & $ts funnel reset | Out-Null } else { Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force }
