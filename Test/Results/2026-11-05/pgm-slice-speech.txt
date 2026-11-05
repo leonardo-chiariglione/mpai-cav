@@ -1,0 +1,2 @@
+2026-11-05T00:27:33	2.36 s	ASR heard: "57 data seen"	invalid: 0
+2026-11-05T09:37:42	6.41 s	ASR heard: "Go and open the doors."	57 data seen	invalid: 0

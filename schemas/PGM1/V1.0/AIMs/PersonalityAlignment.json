@@ -15,7 +15,8 @@
       "DataType": "PGM-UCP-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "UserState",
@@ -23,7 +24,8 @@
       "DataType": "MMC-EST-V2.5",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNPALRequest",
@@ -31,7 +33,8 @@
       "DataType": "PGM-KPA-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "PALInteractionHistoryResponse",
@@ -39,7 +42,8 @@
       "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUserState",

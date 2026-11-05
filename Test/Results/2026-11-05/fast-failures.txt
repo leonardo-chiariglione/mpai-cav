@@ -1,0 +1,24 @@
+Mpai.Aif.Tests.SystemTests.CavStatus | cav-status.json: 3 difference(s) from the recorded state. A new failure is a regression; a new success is acce
+Mpai.Aif.Tests.MetadataTests.Combination | Assert.Contains() Failure: Filter not matched in collection Collection: []
+Mpai.Aif.Tests.JsiGrammarTests.ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(words: "Place a room of four | Assert.Equal() Failure: Strings differ            ↓ (pos 0) Expected: "stage" Actual:   "concert"         
+Mpai.Aif.Tests.CaeUscV25Tests.EveryAimIsNamedByItsFileItsHeaderAndItsIdentifier | System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+Mpai.Aif.Tests.PlannerTests.AnOncomingVehicleThatTurnsAcrossTheWayIsNotHit(earlierBy: 0, turn: Left) | Assert.Empty() Failure: Collection was not empty Collection: [Tuple (45.800000000000004, "Turning"), Tuple (4
+Mpai.Aif.Tests.JsiGrammarTests.ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(words: "make the room 6 by 4 | Assert.Equal() Failure: Strings differ            ↓ (pos 0) Expected: "stage" Actual:   "concert"         
+Mpai.Aif.Tests.WorkflowTests.Workflows | workflows.json: 6 difference(s) from the recorded state. A new failure is a regression; a new success is accep
+Mpai.Aif.Tests.SystemTests.Loops | loops.json: 4 difference(s) from the recorded state. A new failure is a regression; a new success is accepted 
+Mpai.Aif.Tests.JsiGrammarTests.ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(words: "create a square room | Assert.Equal() Failure: Strings differ            ↓ (pos 0) Expected: "stage" Actual:   "concert"         
+Mpai.Aif.Tests.AsmVoiceWorkflowTests.WhatIsSaidEditsTheSceneAndTheMachineAnswers | "put the violin at x 2, y 1, z 0" was not answered. --- interpreter: workflow ASM-VCI over 1CAE-ASM-V1.0-I01 [
+Mpai.Aif.Tests.VciTests.WhatIsSaidBecomesACommandAndTheResponseIsSaid | NotProduced
+Mpai.Aif.Tests.CaeUscV25Tests.ThereAreTwentyEightAimsAndTheFourWorkflowsAreCompositeAims | Assert.Equal() Failure: Values differ Expected: 28 Actual:   29
+Mpai.Aif.Tests.JsiGrammarTests.ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(words: "build a 5 by 3 metre | Assert.Equal() Failure: Strings differ            ↓ (pos 0) Expected: "stage" Actual:   "concert"         
+Mpai.Aif.Tests.RevocationAimTests.TheLastCommandIsUndoneFirst | System.InvalidOperationException : No Input port 1 found for DataType 'OSD-AUO-V1.5'.
+Mpai.Aif.Tests.PlaybackTests.Refusals | playback-refusals.json: 1 difference(s) from the recorded state. A new failure is a regression; a new success 
+Mpai.Aif.Tests.RevocationAimTests.ASpeechObjectEditedInPlaceIsPutBack | System.InvalidOperationException : No Input port 1 found for DataType 'OSD-SPO-V1.5'.
+Mpai.Aif.Tests.ThirdPartyNoticesTests.TheNoticesListEveryModelAndEveryPieceOfDataTheMetadataDeclares | Assert.Equal() Failure: Strings differ                                    ↓ (pos 767) Expected: ···"|---|---
+Mpai.Aif.Tests.RevocationAimTests.AnEditOfAnObjectIsUndone | System.InvalidOperationException : No Input port 1 found for DataType 'OSD-AUO-V1.5'.
+Mpai.Aif.Tests.JsiGrammarTests.ABarePlaceIsAboutTheSoundJustLoaded(words: "put it at x 2, y 1, z 0", | System.NullReferenceException : Object reference not set to an instance of an object.
+Mpai.Aif.Tests.JsiGrammarTests.ATurnKeepsThePositionAndChangesTheYaw | System.NullReferenceException : Object reference not set to an instance of an object.
+Mpai.Aif.Tests.PlannerPropertyTests.RandomTrafficOnTheHighway(seed: 5) | others had to brake 9.0 m/s2
+Mpai.Aif.Tests.JsiGrammarTests.WhatSaysNothingKnownIsNotGuessedAt | Assert.Contains() Failure: Sub-string not found String:    "No command was formed. I did not understa"··· No
+Mpai.Aif.Tests.JsiGrammarTests.ARoomIsNeverAMoveAndIsMadeInAnEmptyScene(words: "place a room of 4x4  | Assert.Equal() Failure: Strings differ            ↓ (pos 0) Expected: "stage" Actual:   "concert"         
+Mpai.Aif.Tests.PlannerPropertyTests.RandomTrafficOnTheHighway(seed: 1) | others had to brake 9.0 m/s2

@@ -56,6 +56,10 @@
       "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
       "description": "The interpreted description of the User State."
     },
+    "RecognisedText": {
+      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicTextObject.json",
+      "description": "Optional. The words the human said or typed: the Text Object received or the text recognised from the Speech Object (Automatic Speech Recognition). Prompt Creation builds the PC Prompt from them."
+    },
     "DataXMData": {
       "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
     },

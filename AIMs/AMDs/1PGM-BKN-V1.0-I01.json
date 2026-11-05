@@ -14,6 +14,7 @@
       "Name": "AUCBKNRequest",
       "Direction": "Input",
       "DataType": "PGM-UCK-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -22,6 +23,7 @@
       "Name": "PCPrompt",
       "Direction": "Input",
       "DataType": "PGM-PCP-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -30,6 +32,7 @@
       "Name": "BKNPRCResponse",
       "Direction": "Input",
       "DataType": "PGM-KPR-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -38,6 +41,7 @@
       "Name": "BKNDACResponse",
       "Direction": "Input",
       "DataType": "PGM-KDA-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -46,6 +50,7 @@
       "Name": "BKNUSRResponse",
       "Direction": "Input",
       "DataType": "PGM-KUS-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -54,6 +59,7 @@
       "Name": "BKNPALResponse",
       "Direction": "Input",
       "DataType": "PGM-KPA-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

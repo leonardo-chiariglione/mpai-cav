@@ -14,6 +14,7 @@
       "Name": "HumanCommand",
       "Direction": "Input",
       "DataType": "PGM-HCM-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -22,6 +23,7 @@
       "Name": "ProcessActionResponse",
       "Direction": "Input",
       "DataType": "MMM-PAC-V2.2",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -30,6 +32,7 @@
       "Name": "ProcessActions",
       "Direction": "Input",
       "DataType": "MMM-PAT-V2.2",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -38,6 +41,7 @@
       "Name": "PortableAvatar",
       "Direction": "Input",
       "DataType": "PAF-PAV-V1.6",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -46,6 +50,7 @@
       "Name": "AUCCXTResponse",
       "Direction": "Input",
       "DataType": "PGM-UCC-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -54,6 +59,7 @@
       "Name": "AUCPRCResponse",
       "Direction": "Input",
       "DataType": "PGM-UCR-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -62,6 +68,7 @@
       "Name": "AUCBKNResponse",
       "Direction": "Input",
       "DataType": "PGM-UCK-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -70,6 +77,7 @@
       "Name": "AUCDACResponse",
       "Direction": "Input",
       "DataType": "PGM-UCD-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -78,6 +86,7 @@
       "Name": "AUCUSRResponse",
       "Direction": "Input",
       "DataType": "PGM-UCU-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -86,6 +95,7 @@
       "Name": "AUCPALResponse",
       "Direction": "Input",
       "DataType": "PGM-UCP-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -94,6 +104,7 @@
       "Name": "AUCAUFResponse",
       "Direction": "Input",
       "DataType": "PGM-UCF-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -102,6 +113,7 @@
       "Name": "AUCAUSResponse",
       "Direction": "Input",
       "DataType": "PGM-UCS-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

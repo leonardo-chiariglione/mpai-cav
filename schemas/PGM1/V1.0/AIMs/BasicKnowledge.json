@@ -15,7 +15,8 @@
       "DataType": "PGM-UCK-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "PCPrompt",
@@ -23,7 +24,8 @@
       "DataType": "PGM-PCP-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNPRCResponse",
@@ -31,7 +33,8 @@
       "DataType": "PGM-KPR-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNDACResponse",
@@ -39,7 +42,8 @@
       "DataType": "PGM-KDA-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNUSRResponse",
@@ -47,7 +51,8 @@
       "DataType": "PGM-KUS-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNPALResponse",
@@ -55,7 +60,8 @@
       "DataType": "PGM-KPA-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "FinalResponse",

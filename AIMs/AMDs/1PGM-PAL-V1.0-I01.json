@@ -14,6 +14,7 @@
       "Name": "AUCPALRequest",
       "Direction": "Input",
       "DataType": "PGM-UCP-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -22,6 +23,7 @@
       "Name": "UserState",
       "Direction": "Input",
       "DataType": "MMC-EST-V2.5",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -30,6 +32,7 @@
       "Name": "BKNPALRequest",
       "Direction": "Input",
       "DataType": "PGM-KPA-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -38,6 +41,7 @@
       "Name": "PALInteractionHistoryResponse",
       "Direction": "Input",
       "DataType": "PGM-IHI-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -75,172 +79,8 @@
       "IsRemote": false
     }
   ],
-  "SubAIMs": [
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-CXR-V1.0-I01",
-        "AIMName": "1PGM-CXR-V1.0-I01",
-        "Relation": "Internal"
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-STS-V1.0-I01",
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "Relation": "Internal"
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-ASC-V1.0-I01",
-        "AIMName": "1PGM-ASC-V1.0-I01",
-        "Relation": "Internal"
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-DEX-V1.0-I01",
-        "AIMName": "1PGM-DEX-V1.0-I01",
-        "Relation": "Internal"
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "1PGM-ASC-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ASC-V1.0-I01",
-        "DataType": "PGM-UCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-UCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-DEX-V1.0-I01",
-        "DataType": "PGM-KPA-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-KPA-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-CXR-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-CXR-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-CXR-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-CXR-V1.0-I01",
-        "DataType": "PGM-RCX-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "DataType": "PGM-RCX-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "DataType": "PGM-UCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "DataType": "PGM-STN-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ASC-V1.0-I01",
-        "DataType": "PGM-STN-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ASC-V1.0-I01",
-        "DataType": "PGM-UCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-STS-V1.0-I01",
-        "DataType": "PGM-STN-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-DEX-V1.0-I01",
-        "DataType": "PGM-STN-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-KPA-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-DEX-V1.0-I01",
-        "DataType": "PGM-KPA-V1.0"
-      }
-    }
-  ],
+  "SubAIMs": [],
+  "Topology": [],
   "Implementations": [
     {
       "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-PAL-V1.0-I01.json",

@@ -14,6 +14,7 @@
       "Name": "AUCUSRRequest",
       "Direction": "Input",
       "DataType": "PGM-UCU-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -22,6 +23,7 @@
       "Name": "UserState",
       "Direction": "Input",
       "DataType": "MMC-EST-V2.5",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -30,6 +32,7 @@
       "Name": "BKNUSRRequest",
       "Direction": "Input",
       "DataType": "PGM-KUS-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -38,6 +41,7 @@
       "Name": "USRInteractionHistoryResponse",
       "Direction": "Input",
       "DataType": "PGM-IHI-V1.0",
+      "IsOptional": true,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -75,206 +79,8 @@
       "IsRemote": false
     }
   ],
-  "SubAIMs": [
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-ENG-V1.0-I01",
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "Relation": "Internal"
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-ESR-V1.0-I01",
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "Relation": "Internal"
-      }
-    },
-    {
-      "Identifier": {
-        "ImplementerID": "1",
-        "ImplementationID": "PGM-USY-V1.0-I01",
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "Relation": "Internal"
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "PGM-ENM-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "PGM-ENM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "MMC-EST-V2.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ENG-V1.0-I01",
-        "DataType": "PGM-ENM-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "PGM-ENM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "1PGM-ESR-V1.0-I01",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "MMC-EST-V2.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "1PGM-USY-V1.0-I01",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    }
-  ],
+  "SubAIMs": [],
+  "Topology": [],
   "Implementations": [
     {
       "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-USR-V1.0-I01.json",

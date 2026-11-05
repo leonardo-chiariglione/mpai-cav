@@ -35,6 +35,7 @@ public sealed class PdxAimProcessor : IAimProcessor
 {
     private readonly string _instanceId;
     private readonly string _inPort;
+    private readonly string _faceDescriptorsPort, _bodyDescriptorsPort;
     private readonly string _avatarIdPort, _avatarSpaceTimePort, _modelPort, _selectorPort, _speechPort, _textPort, _speechModelPort, _psPort, _sceneSpaceTimePort, _scenePort;
 
     public PdxAimProcessor(string instanceId, AimPortReader ports)
@@ -52,6 +53,9 @@ public sealed class PdxAimProcessor : IAimProcessor
         _psPort              = ports.OutputOrDefault("MMC-EPS-V2.5", "");
         _sceneSpaceTimePort  = ports.OutputOrDefault("OSD-SPT-V1.5", 2, "");
         _scenePort           = ports.OutputOrDefault("OSD-BMS-V1.5", "");
+        // The Face and Body Descriptors of the Portable Avatar (the Metadata of PAF-PDX declares both Ports; the A-User needs them for the Units).
+        _faceDescriptorsPort = ports.OutputOrDefault("PAF-FDO-V1.6", "");
+        _bodyDescriptorsPort = ports.OutputOrDefault("PAF-BDO-V1.6", "");
     }
 
     public string InstanceId => _instanceId;
@@ -83,6 +87,8 @@ public sealed class PdxAimProcessor : IAimProcessor
         if (PersonalStatusOf(pav) is { } status) Give(_psPort, JsonNode.Parse(MpaiJson.ToJson(status)));
         Give(_sceneSpaceTimePort, pav["AVSceneSpaceTime"]);
         Give(_scenePort, pav["MultimodalSceneDescriptors"]);
+        Give(_faceDescriptorsPort, pav["FaceDescriptorsObject"]);
+        Give(_bodyDescriptorsPort, pav["BodyDescriptorsObject"]);
 
         // Speech or text, not both: a Portable Avatar may carry both (the transmitter puts in what it recognised); the text is then what was said, and the speech is not
         // given, so that the words are not recognised a second time and counted twice.

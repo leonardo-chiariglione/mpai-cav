@@ -18,11 +18,11 @@
 
     "PAStatus":         { "description": "Status of the ProcessAction", "type": "array",
                           "required": ["Ack", "Request", "Error" ], "items": { "oneOf": [
-                        { "description": "Acknowledgement of successful execution", "type": "object", "properties": {
+                        { "description": "Acknowledgement of successful execution", "type": "object", "required": ["Ack"], "properties": {
       "Ack":            { "type": "string", "enum": [ "Ack" ] } } },
-                        { "description": "Value Request", "type": "object", "properties": {
+                        { "description": "Value Request", "type": "object", "required": ["Request"], "properties": {
       "Request":        { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/Value.json" } } },
-                        { "description": "Error encountered during processing", "type": "object", "properties": {
+                        { "description": "Error encountered during processing", "type": "object", "required": ["Error"], "properties": {
       "Error":          { "type": "string", "enum": [ "Clash","FaultyReq","IncID","IncDQ","InsRights", "InsValue", "LocOOR",
                           "PostRef","QualNS" ] } } } ] } },
 

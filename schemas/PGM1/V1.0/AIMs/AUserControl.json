@@ -15,7 +15,8 @@
       "DataType": "PGM-HCM-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "ProcessActionResponse",
@@ -23,7 +24,8 @@
       "DataType": "MMM-PAC-V2.2",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "ProcessActions",
@@ -31,7 +33,8 @@
       "DataType": "MMM-PAT-V2.2",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "PortableAvatar",
@@ -39,7 +42,8 @@
       "DataType": "PAF-PAV-V1.6",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCCXTResponse",
@@ -47,7 +51,8 @@
       "DataType": "PGM-UCC-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCPRCResponse",
@@ -55,7 +60,8 @@
       "DataType": "PGM-UCR-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCBKNResponse",
@@ -63,7 +69,8 @@
       "DataType": "PGM-UCK-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCDACResponse",
@@ -71,7 +78,8 @@
       "DataType": "PGM-UCD-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCUSRResponse",
@@ -79,7 +87,8 @@
       "DataType": "PGM-UCU-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCPALResponse",
@@ -87,7 +96,8 @@
       "DataType": "PGM-UCP-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCAUFResponse",
@@ -95,7 +105,8 @@
       "DataType": "PGM-UCF-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCAUSResponse",
@@ -103,7 +114,8 @@
       "DataType": "PGM-UCS-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "Action",

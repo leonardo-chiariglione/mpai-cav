@@ -15,7 +15,8 @@
       "DataType": "PGM-CXD-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "AUCPRCRequest",
@@ -23,7 +24,8 @@
       "DataType": "PGM-UCR-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "PRCInteractionHistoryResponse",
@@ -31,7 +33,8 @@
       "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNPRCRequest",
@@ -39,7 +42,8 @@
       "DataType": "PGM-KPR-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "PCPrompt",

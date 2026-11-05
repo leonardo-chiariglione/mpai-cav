@@ -15,7 +15,8 @@
       "DataType": "PGM-UCD-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "DomainRequest",
@@ -23,7 +24,8 @@
       "DataType": "PGM-DOM-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "BKNDACRequest",
@@ -31,7 +33,8 @@
       "DataType": "PGM-KDA-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "DACInteractionHistoryResponse",
@@ -39,7 +42,8 @@
       "DataType": "PGM-IHI-V1.0",
       "Technology": "Software",
       "Protocol": "",
-      "IsRemote": false
+      "IsRemote": false,
+      "IsOptional": true
     },
     {
       "Name": "DomainResponse",

@@ -45,7 +45,7 @@
     {
       "Name": "SpeechOverlap",
       "Direction": "Input",
-      "DataType": "OSD-SOL-V1.5",
+      "DataType": "MMC-SOL-V2.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
