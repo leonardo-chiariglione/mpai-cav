@@ -1,10 +1,10 @@
 { "$schema":              "https://json-schema.org/draft/2020-12/schema",
   "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
-  "$id":                  "https://schemas.mpai.community/NNW1/V1.2/AIMs/PostTrainingWatermarkInsertion.json",
-  "title":                "Post-Training Watermark Insertion V1.2",
+  "$id":                  "https://schemas.mpai.community/NNW1/V2.0/AIMs/PostTrainingWatermarkInsertion.json",
+  "title":                "Post-Training Watermark Insertion V2.0",
 
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
-  "Header":               "NNW-PWI-V1.2",
+  "Header":               "NNW-PWI-V2.0",
 
   "APIProfile":           "/* Basic | Secure: Secure where the method uses a secret key (Security API) */",
   "Description":          "Post-Training Watermark Insertion: inserts the payload in an already trained neural network model, without training it again. It gives the watermarked model, a new ML Model Object of the same format and Qualifier as the model it was given. Where a Locator is given, the payload is inserted where it says and by the method it names; the AIM does not give the Locator back. Where the payload does not fit there, or the format of the model is not one it supports, it gives no model and reports why.",
