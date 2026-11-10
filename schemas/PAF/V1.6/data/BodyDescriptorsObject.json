@@ -17,17 +17,20 @@
     "BodyDescriptorsObjectSpaceTime": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
                                   "description": "Space/Time where/when this Body is located." },
 
-    "BodyDescriptorsData":      { "type": "array", "minItems": 0, "description": "Body Descriptors Data representing joints and posture of a human or humanoid body.",
+    "BodyDescriptorsData":      { "type": "array", "minItems": 0, "description": "Body Descriptors Data representing joints and posture of a human or humanoid body. Each item optionally carries a Time, making the array an animation timeline: a sequence of body descriptors over time. The Time is format-independent - it applies whatever the content format of the descriptors (skeleton joints, BVH, SMPL) declared by the Qualifier. A single item without Time is a static (single-pose) body.",
                                   "items": { "anyOf": [
                                 { "type": "object", "additionalProperties": false, "properties": {
       "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Descriptors describe the input as it is." },
+      "Time":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time of this body-descriptors frame within the animation. Format-independent; present when the Body Descriptors Data is a timeline." },
       "DataLength":             { "type": "integer", "description": "Length of the Body Descriptors Data." },
       "DataURI":                { "type": "string", "format": "uri", "description": "URI reference to the Body Descriptors Data." } } },
                                 { "type": "object", "additionalProperties": false, "properties": {
       "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Descriptors describe the input as it is." },
+      "Time":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time of this body-descriptors frame within the animation. Format-independent; present when the Body Descriptors Data is a timeline." },
       "Data":                   { "type": "string", "description": "Inline Body Descriptors Data." } } },
                                 { "type": "object", "additionalProperties": false, "properties": {
       "Confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "How likely it is that the Descriptors describe the input as it is." },
+      "Time":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time of this body-descriptors frame within the animation. Format-independent; present when the Body Descriptors Data is a timeline." },
       "DataID":                 { "type": "string", "description": "Identifier referencing Body Descriptors Data stored elsewhere." } } } ] } },
 
     "BodyDescriptorsQualifier": { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/BodyDescriptorsQualifier.json",
