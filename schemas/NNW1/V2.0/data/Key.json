@@ -1,0 +1,19 @@
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/NNW1/V2.0/data/Key.json",
+  "title":                 "Key V2.0",
+  "description":           "The key with which a watermark is inserted in a neural network and extracted from it: a sequence of real numbers, in single or double precision.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "KeyID", "Precision", "KeyData" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "NNW-KEY-V2.0" },
+    "MInstanceID":         { "type": "string" },
+    "UEnvironmentID":      { "type": "string" },
+    "KeyID":               { "type": "string", "minLength": 1 },
+    "KeyTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Precision":           { "type": "string", "enum": [ "Single", "Double" ], "description": "The precision of the reals of KeyData: Single (IEEE 754 binary32) or Double (IEEE 754 binary64)." },
+    "KeyData":             { "type": "array", "minItems": 1, "items": { "type": "number" }, "description": "The key, a sequence of reals in the stated Precision." },
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }
