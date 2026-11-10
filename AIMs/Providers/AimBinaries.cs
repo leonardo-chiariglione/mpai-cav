@@ -51,6 +51,16 @@ public static class AimBinaries
         ["1MMC-ESD-V2.5-I01"] = typeof(Mpai.Mmc.Esd.EsdAimProcessor),
         ["1MMC-OCR-V2.5-I01"] = typeof(Mpai.Aims.Ocr.OcrAimProcessor),
         ["1MMC-CTS-V2.5-I01"] = typeof(Mpai.Mmc.Cts.CtsAimProcessor),
+        ["1MMC-TSD-V2.5-I01"] = typeof(Mpai.Mmc.Tsd.TsdAimProcessor),
+        ["1MMC-ESD-V2.5-I02"] = typeof(Mpai.Mmc.Tsd.EsdOpenVoiceAimProcessor),
+        ["1MMC-ETD-V2.5-I01"] = typeof(Mpai.Mmc.Etd.EtdAimProcessor),
+        ["1MMC-PTI-V2.5-I01"] = typeof(Mpai.Mmc.Pti.PtiAimProcessor),
+        ["1MMC-ESD-V2.5-I03"] = typeof(Mpai.Mmc.Spe.EsdAffectAimProcessor),
+        ["1MMC-PSI-V2.5-I01"] = typeof(Mpai.Mmc.Psi.PsiAimProcessor),
+        ["1PAF-EFD-V1.6-I02"] = typeof(Mpai.Paf.Fpe.EfdAffectAimProcessor),
+        ["1PAF-PFI-V1.6-I01"] = typeof(Mpai.Paf.Pfi.PfiAimProcessor),
+        ["1PAF-EBD-V1.6-I01"] = typeof(Mpai.Paf.Ebd.EbdAimProcessor),
+        ["1PAF-PBI-V1.6-I01"] = typeof(Mpai.Paf.Pbi.PbiAimProcessor),
     };
 
     public static string? Of(string aimName) => Processors.TryGetValue(aimName, out var type) ? type.Assembly.Location : null;

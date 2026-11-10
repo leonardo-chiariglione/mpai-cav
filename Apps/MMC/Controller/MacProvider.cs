@@ -19,8 +19,8 @@ using Mpai.Aims.Tts;       // TtsAimProcessor, TtsFactory
 
 namespace HciMac;
 
-// Leaf provider for the MMC-MAC-V2.5 Module. The Controller builds the MMC-MAC
-// composite from its L3 (1MMC-MAC-V2.5-I01.json); this provider supplies ONLY
+// Leaf provider for the OSD-MAC-V1.5 Module. The Controller builds the OSD-MAC
+// composite from its L3 (1OSD-MAC-V1.5-I01.json); this provider supplies ONLY
 // the leaf AIMs the topology names:
 //   PAF-FIR - face recognition (SCRFD + ArcFace, against the shared gallery)
 //   MMC-SIR - speaker recognition (ECAPA, against the shared gallery)
@@ -45,7 +45,7 @@ internal sealed class MacProvider : IAimProvider, IDisposable
         // Gallery in governed Shared Storage; one-time import of a legacy
         // gallery.json if the store is empty. FIR and SIR share this instance.
         var shared = new AIF.SharedStorage.FileSharedStorage(
-            Mpai.Core.MpaiPaths.SharedStorage, "MMC-MAC-V2.5", "local");
+            Mpai.Core.MpaiPaths.SharedStorage, "OSD-MAC-V1.5", "local");
         if (shared.MPAI_AIFM_SharedStorage_List(SubjectGallery.SubjectKeyPrefix).Count == 0 &&
             !string.IsNullOrWhiteSpace(galleryJsonPath) && File.Exists(galleryJsonPath))
         {

@@ -94,6 +94,8 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
     public byte[] ToWire(
         string internalJson)
     {
+        // An Object already in the form of the schema (what an AIM gives since the Objects at the Ports are the schema's) is the wire form.
+        if (JsonNode.Parse(internalJson)?["BasicVisualObjectData"] is not null) return Encoding.UTF8.GetBytes(internalJson);
         var visual = MpaiJson.FromJson<BasicVisualObject>(internalJson);
 
         var wire = new JsonObject
@@ -125,6 +127,9 @@ public sealed class BasicVisualObjectCodec : IPortDataCodec
         var root = JsonNode.Parse(Encoding.UTF8.GetString(wire)) as JsonObject
                    ?? throw new FormatException(
                           "Basic Visual Object port-data is not a JSON object.");
+
+        // An Object in the internal form already (flat Data) is returned as it is.
+        if (root["BasicVisualObjectData"] is null && root["Data"] is not null) return root.ToJsonString();
 
         var visual = new BasicVisualObject
         {

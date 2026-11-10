@@ -15,16 +15,13 @@ namespace Mpai.Cae.Ase;
 // ---------------------------------------------------------------------------
 //  CAE-ASE-V1.0 - Audio Scene Editing.
 //
-//  Ported directly onto the proposed MPAI-AIF Shared Storage API, same
-//  approach as AoeAim: no intermediate Repository class or method
-//  vocabulary. The Module keeps each version of a Scene under a typed storage
-//  KEY (BAS000001 ...), private to the Module.
+//  WHERE THE SCENES ARE (the author, 2026/11/08): every version of a Scene is kept in the Private Storage of the Module at OSD-ASD-V1.5#1/<the Scene's own ID>@<version> by
+//  ModuleStore (the highest version is in force), and the Scene the Module gives is also offered in its Shared Storage at <Module>/OSD-ASD-V1.5#1/<ID>. No table, no counter.
 //
 //  A SCENE IS KNOWN BY ITS NAME (the author, 2026/10/26), as an Object is: the Scene as
 //  stored, as output and as a User Command names it carries the name the User gave it in
 //  its identifier (BasicAudioSceneDescriptorsID): "concert". The Scene is made of
-//  Basic Audio Objects, which it holds by the key of the version it was made with and
-//  tells by name. A name is unique among the Scenes; a second Scene given a name that is
+//  Basic Audio Objects, which it holds by their IDs - their names - and tells by name. A name is unique among the Scenes; a second Scene given a name that is
 //  taken is "concert 2". A Scene with no name is not created.
 //
 //  The Scene the Module edits is a BasicAudioSceneDescriptors (BAS) composing
@@ -34,26 +31,47 @@ namespace Mpai.Cae.Ase;
 // ---------------------------------------------------------------------------
 public sealed class AseAim
 {
-    private readonly ISharedStorage storage;
+    private readonly ModuleStore store;
 
     // NO AoeAim HERE. This class used to hold one and call it to expand each child object of a scene - one AIM invoking another directly, with no Controller between them.
-    // The Objects are read from the Module's Shared Storage, where Audio Object Editing keeps them.
+    // The Objects are read from the Private Storage of the Module, where Audio Object Editing keeps them (OSD-BAO-V1.5#1, OSD-AUO-V1.5#1).
     // The M-Instance or U-Environment the Scenes are made in: OSD requires the first
     // on a Basic Audio Scene. An application gives its own; ASM's own is "ASM".
     private readonly string mInstanceId;
 
-    public NameBook Names { get; }
-
     // The Acoustic Profiles the Module keeps, by their AcousticProfileID (M3282 UCM-4).
     public KeptProfiles Profiles { get; }
 
-    public AseAim(ISharedStorage storage, string mInstanceId = "ASM")
+    public AseAim(ModuleStore store, string mInstanceId = "ASM")
     {
-        this.storage = storage;
+        this.store = store;
         this.mInstanceId = mInstanceId;
-        Names = new NameBook(storage);
-        Profiles = new KeptProfiles(storage);
+        Profiles = new KeptProfiles(store);
+        store.Changed += Offer;
     }
+
+    // The Audio Scene the Module gives, in its Shared Storage: the version in force, with its Objects in it. One that is gone is withdrawn.
+    private void Offer(StoredKind kind, string id)
+    {
+        if (kind != Kinds.AudioScene) return;
+        store.Offer(Kinds.AudioScene, id, store.Holds(Kinds.AudioScene, id) ? Serialize(AsAudioScene(MaterializeBasicScene(id))) : null);
+    }
+
+    // What a Scene of one sub-scene, the Basic Scene, gives as the Audio Scene (OSD-ASD): the Scene is the one sub-scene, which stands at the origin of the Audio Scene's frame.
+    public static AudioSceneDescriptors AsAudioScene(BasicAudioSceneDescriptors basic) => new()
+    {
+        MInstanceID = basic.MInstanceID, UEnvironmentID = basic.UEnvironmentID,
+        AudioSceneDescriptorsID = basic.BasicAudioSceneDescriptorsID,
+        AudioSceneDescriptorsTime = basic.BasicAudioSceneDescriptorsTime,
+        AudioSceneDescriptorsSpaceTime = basic.BASSpaceTime ?? new SpaceTime(),
+        UserPoV = basic.UserPoV,
+        SubAudioSceneCount = 1,
+        SubAudioScenes = [new SubAudioSceneEntry { BasicScene = basic }]
+    };
+
+    // What a User Command wrote, to be undone (the last first); the AIM asks for it when the command is done.
+    public void ForgetSteps() => store.ForgetSteps();
+    public (Func<bool> Unchanged, Action Undo)? TakeSteps() => store.TakeSteps();
 
     // A Scene not yet placed is at the origin of its space.
     private static SpaceTime Origin() => new()
@@ -71,52 +89,51 @@ public sealed class AseAim
     private static byte[] Serialize<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value, DataOptions);
     private static T Deserialize<T>(byte[] bytes) => JsonSerializer.Deserialize<T>(bytes, DataOptions)!;
 
-    private string NextId(string typePrefix)
-    {
-        var counterKey = $"_counter:{typePrefix}";
-        long next = storage.Exists(counterKey)
-            ? long.Parse(Encoding.UTF8.GetString(storage.Get(counterKey))) + 1
-            : 1;
-        storage.Put(counterKey, Encoding.UTF8.GetBytes(next.ToString()));
-        return $"{typePrefix}{next:D6}";
-    }
+    // ---- names ----
 
-    private void PutReference(string fromId, string toId)
-    {
-        storage.Put($"ref:{fromId}:{toId}", Array.Empty<byte>());
-        storage.Put($"refby:{toId}:{fromId}", Array.Empty<byte>());
-    }
+    // The name of the Basic Scene the Module keeps under it (its ID); null when it keeps no Audio Scene of that name.
+    public string? KeptScene(string? name) => NameBook.Clean(name) is { } clean && store.Holds(Kinds.AudioScene, clean) ? clean : null;
 
-    private static bool IsType(string assetId, string prefix) => assetId.StartsWith(prefix, StringComparison.Ordinal);
-
-    // ---- names and keys ---------------------------------------------------
-
-    // The key of the Basic Scene in force under a name; null when the Module keeps no Audio Scene of that name.
-    public string? SceneKey(string? name) => Names.KeyOf(NamedKind.AudioScene, name);
-    public string? SceneName(string? key) => Names.NameOf(key);
-
-    // The key of the Audio Object (Basic, here) that Audio Object Editing keeps under a name.
-    public string? ObjectKey(string? name) => Names.KeyOf(NamedKind.AudioObject, name);
-    public string? ObjectName(string? key) => Names.NameOf(key);
+    // The name of the Audio Object (Basic or Full) that Audio Object Editing keeps under a name; null when none.
+    public string? KeptObject(string? name) => NameBook.Clean(name) is { } clean && (store.Holds(Kinds.BasicAudioObject, clean) || store.Holds(Kinds.AudioObject, clean)) ? clean : null;
 
     // THE OPEN SCENE IS GIVEN A NAME (the author, 2026/10/28): from now on it is kept under that name, and under no other; its earlier versions keep the name they had. The name must be free.
     // Null when it was done, else why not.
-    public string? RenameScene(string key, string? newName)
+    public string? RenameScene(string id, string? newName)
     {
         if (NameBook.Clean(newName) is not { } clean) return "a name is needed";
-        if (Names.KeyOf(NamedKind.AudioScene, clean) is not null) return "a Scene of that name is kept";
-        if (Names.NameOf(key) is { } old) Names.Release(NamedKind.AudioScene, old);
-        Names.Point(NamedKind.AudioScene, clean, key);
+        if (store.Holds(Kinds.AudioScene, clean)) return "a Scene of that name is kept";
+        var scene = Existing(id);
+        store.Move(Kinds.AudioScene, id, clean, Serialize(new BasicAudioSceneDescriptors
+        {
+            MInstanceID = scene.MInstanceID, BasicAudioSceneDescriptorsID = clean, BasicAudioSceneDescriptorsTime = scene.BasicAudioSceneDescriptorsTime,
+            BASSpaceTime = scene.BASSpaceTime, UserPoV = scene.UserPoV, ClosedSpace = scene.ClosedSpace, AcousticProfile = scene.AcousticProfile,
+            RenderingMode = scene.RenderingMode, ChannelCount = scene.ChannelCount,
+            AudioObjectCount = scene.AudioObjectCount, BasicAudioSceneDescriptorsEntries = scene.BasicAudioSceneDescriptorsEntries
+        }));
         return null;
     }
 
-    // The name designates this version of the Scene (an earlier one put back by a revocation).
-    public void Select(string? key)
-    {
-        if (key is not null && Names.NameOf(key) is { } name) Names.Point(NamedKind.AudioScene, name, key);
-    }
+    public bool IsBasicObject(string? id) => store.Holds(Kinds.BasicAudioObject, id);
+    public bool IsFullObject(string? id) => store.Holds(Kinds.AudioObject, id);
 
-    public bool IsBasicObject(string? key) => key is not null && IsType(key, "BAO") && storage.Exists(key);
+    // THE BASIC AUDIO OBJECTS OF A FULL AUDIO OBJECT (the author, 2026/11/08: everything in ASM is Full, a Basic Object is the case of one part): the Basic Audio Objects it holds, at any depth
+    // (its sub-Objects too), each with where it stands in the frame the Object is placed in - the placement of the Object composed with its own. A Basic Audio Object is its own leaf.
+    // A Basic Audio Scene holds Basic Audio Objects: so a Full Audio Object is placed in it part by part.
+    public IReadOnlyList<(string Key, SpaceTime? Placement)> Leaves(string key, SpaceTime? placement)
+    {
+        if (IsBasicObject(key)) return [(key, placement)];
+        var leaves = new List<(string Key, SpaceTime? Placement)>();
+        if (!IsFullObject(key)) return leaves;
+        var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, key)!);
+        foreach (var e in auo.BasicAudioObjects ?? [])
+            if (e.BAObjectIDOrBAObject?.BasicAudioObjectID is { } child && IsBasicObject(child))
+                leaves.Add((child, Mpai.Cae.Aoe.AoeAim.Within(placement, Mpai.Cae.Aoe.AoeAim.Within(auo.AudioObjectSpaceTime, e.BasicAudioObjectSpaceTime))));
+        foreach (var e in auo.SubAudioObjects ?? [])
+            if (e.SubAObjectIDOrSubAObject?.AudioObjectID is { } sub)
+                leaves.AddRange(Leaves(sub, Mpai.Cae.Aoe.AoeAim.Within(placement, Mpai.Cae.Aoe.AoeAim.Within(auo.AudioObjectSpaceTime, e.SubAudioObjectSpaceTime))));
+        return leaves;
+    }
 
     private static BasicAudioSceneEntry MakeBasicEntry(string basicAudioObjectKey, SpaceTime? placement) => new()
     {
@@ -134,9 +151,8 @@ public sealed class AseAim
             throw new InvalidOperationException("The Module keeps no such Basic Audio Object.");
         if (NameBook.Clean(sceneName) is null) throw new NameNeededException("the Audio Scene");
 
-        var key = NextId("BAS");
-        var name = Names.Claim(NamedKind.AudioScene, sceneName, key);
-        storage.Put(key, Serialize(new BasicAudioSceneDescriptors
+        var name = NameBook.Free(store, sceneName, Kinds.AudioScene);
+        store.Write(Kinds.AudioScene, name, Serialize(new BasicAudioSceneDescriptors
         {
             MInstanceID = mInstanceId,
             BasicAudioSceneDescriptorsID = name,
@@ -146,23 +162,20 @@ public sealed class AseAim
             BasicAudioSceneDescriptorsEntries = new() { MakeBasicEntry(basicAudioObjectKey, placement) }
         }));
 
-        PutReference(key, basicAudioObjectKey);
-
-        return new RepositoryAsset { AssetId = key, AssetType = AssetType.BAS };
+        return new RepositoryAsset { AssetId = name, AssetType = AssetType.BAS };
     }
 
     // A Scene with nothing in it yet, under the name given (a room can be built before any sound is put in it).
     public RepositoryAsset CreateEmptyBasicScene(PointOfView listenerPointOfView, string? sceneName)
     {
         if (NameBook.Clean(sceneName) is null) throw new NameNeededException("the Audio Scene");
-        var key = NextId("BAS");
-        var name = Names.Claim(NamedKind.AudioScene, sceneName, key);
-        storage.Put(key, Serialize(new BasicAudioSceneDescriptors
+        var name = NameBook.Free(store, sceneName, Kinds.AudioScene);
+        store.Write(Kinds.AudioScene, name, Serialize(new BasicAudioSceneDescriptors
         {
             MInstanceID = mInstanceId, BasicAudioSceneDescriptorsID = name, BASSpaceTime = Origin(), UserPoV = listenerPointOfView,
             AudioObjectCount = 0, BasicAudioSceneDescriptorsEntries = new()
         }));
-        return new RepositoryAsset { AssetId = key, AssetType = AssetType.BAS };
+        return new RepositoryAsset { AssetId = name, AssetType = AssetType.BAS };
     }
 
     // Adds an existing BasicAudioObject as a further placement in an existing Basic scene. Produces a NEW key (no-cascade Save rule).
@@ -198,7 +211,7 @@ public sealed class AseAim
         var entries = new List<BasicAudioSceneEntry>();
         foreach (var e in existing.BasicAudioSceneDescriptorsEntries)
         {
-            if (!found && ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID) == memberName)
+            if (!found && e.AudioObjectIDOrAudioObject?.BasicAudioObjectID == memberName)
             {
                 found = true;
                 if (change(e) is { } kept) entries.Add(kept);
@@ -214,6 +227,13 @@ public sealed class AseAim
     {
         var existing = Existing(sceneKey);
         return Store(sceneKey, existing, existing.BasicAudioSceneDescriptorsEntries, userPoV, existing.ClosedSpace, existing.AcousticProfile);
+    }
+
+    // Sets how a Basic scene is rendered for the listener (RenderingMode of the Scene, and ChannelCount for Multichannel; the count of any other mode is dropped): a NEW version, as every edit.
+    public RepositoryAsset SetBasicSceneRendering(string sceneKey, string renderingMode, int? channelCount)
+    {
+        var existing = Existing(sceneKey);
+        return Store(sceneKey, existing, existing.BasicAudioSceneDescriptorsEntries, existing.UserPoV, existing.ClosedSpace, existing.AcousticProfile, renderingMode, renderingMode == "Multichannel" ? channelCount : null, renders: true);
     }
 
     // Sets the acoustics of a Basic scene (the Scene part of the Acoustic Profile): a NEW version, as every edit.
@@ -244,18 +264,18 @@ public sealed class AseAim
     public SpaceTime? PlacementOf(string sceneKey, string memberName)
     {
         foreach (var e in Existing(sceneKey).BasicAudioSceneDescriptorsEntries)
-            if (ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID) == memberName) return e.AudioObjectSpaceTime;
+            if (e.AudioObjectIDOrAudioObject?.BasicAudioObjectID == memberName) return e.AudioObjectSpaceTime;
         return null;
     }
 
     // THE LISTENER and THE ROOM of a Scene, as the list tells them (M3282 UCM-2).
     public ListedObject ListedListener(string sceneKey) =>
-        new() { ObjectID = SceneName(sceneKey) ?? "", Kind = ListKinds.Listener, UserPoV = Existing(sceneKey).UserPoV };
+        new() { ObjectID = sceneKey, Kind = ListKinds.Listener, UserPoV = Existing(sceneKey).UserPoV };
 
     public ListedObject ListedClosedSpace(string sceneKey) =>
         new()
         {
-            ObjectID = SceneName(sceneKey) ?? "", Kind = ListKinds.ClosedSpace,
+            ObjectID = sceneKey, Kind = ListKinds.ClosedSpace,
             ClosedSpace = Existing(sceneKey).ClosedSpace is { Count: > 0 } room && room[0] is System.Text.Json.Nodes.JsonObject own ? (System.Text.Json.Nodes.JsonObject)own.DeepClone() : null
         };
 
@@ -282,22 +302,17 @@ public sealed class AseAim
 
     private BasicAudioSceneDescriptors Existing(string sceneKey)
     {
-        if (!storage.Exists(sceneKey) || !IsType(sceneKey, "BAS"))
+        if (store.Get(Kinds.AudioScene, sceneKey) is not { } bytes)
             throw new InvalidOperationException("The Module keeps no such Audio Scene.");
-        return Deserialize<BasicAudioSceneDescriptors>(storage.Get(sceneKey));
+        return Deserialize<BasicAudioSceneDescriptors>(bytes);
     }
 
-    // The new version of a Scene: a fresh key, which the Scene's name designates from now on; the version it comes from keeps its key and its name.
-    private RepositoryAsset Store(string oldKey, BasicAudioSceneDescriptors existing, IEnumerable<BasicAudioSceneEntry> entries, PointOfView? userPoV,
-                                  System.Text.Json.Nodes.JsonArray? closedSpace, AcousticProfile? acousticProfile)
+    // The new version of a Scene: the next number under the Scene's name, which designates it from now on; the version it comes from keeps its place.
+    private RepositoryAsset Store(string name, BasicAudioSceneDescriptors existing, IEnumerable<BasicAudioSceneEntry> entries, PointOfView? userPoV,
+                                  System.Text.Json.Nodes.JsonArray? closedSpace, AcousticProfile? acousticProfile, string? renderingMode = null, int? channelCount = null, bool renders = false)
     {
-        var name = Names.NameOf(oldKey) ?? throw new InvalidOperationException("The Scene has no name.");
-        var newKey = NextId("BAS");
-        Names.Point(NamedKind.AudioScene, name, newKey);
         var kept = entries.ToList();
-        foreach (var e in kept)
-            if (e.AudioObjectIDOrAudioObject?.BasicAudioObjectID is { Length: > 0 } member) PutReference(newKey, member);
-        storage.Put(newKey, Serialize(new BasicAudioSceneDescriptors
+        store.Write(Kinds.AudioScene, name, Serialize(new BasicAudioSceneDescriptors
         {
             MInstanceID = mInstanceId,
             BasicAudioSceneDescriptorsID = name,
@@ -306,31 +321,32 @@ public sealed class AseAim
             UserPoV = userPoV,
             ClosedSpace = closedSpace,
             AcousticProfile = acousticProfile,
+            RenderingMode = renders ? renderingMode : existing.RenderingMode, ChannelCount = renders ? channelCount : existing.ChannelCount,
             AudioObjectCount = kept.Count,
             BasicAudioSceneDescriptorsEntries = kept
         }));
-        return new RepositoryAsset { AssetId = newKey, AssetType = AssetType.BAS };
+        return new RepositoryAsset { AssetId = name, AssetType = AssetType.BAS };
     }
 
     // ---- reading --------------------------------------------------------------
 
-    public bool Has(string? key) => !string.IsNullOrWhiteSpace(key) && storage.Exists(key);
+    public bool Has(string? id) => store.Holds(Kinds.AudioScene, id);
 
     // Resolves a stored Basic scene into a fully self-contained structure: its own fields, with every ID-stub BasicAudioObject entry replaced by its full, live content
     // (which carries its name), and the Scene itself named by its name.
     public BasicAudioSceneDescriptors MaterializeBasicScene(string sceneKey)
     {
         var scene = Existing(sceneKey);
-        var name = Names.NameOf(sceneKey) ?? throw new InvalidOperationException("The Scene has no name.");
+        var name = sceneKey;
 
         var resolvedEntries = new List<BasicAudioSceneEntry>();
 
         foreach (var entry in scene.BasicAudioSceneDescriptorsEntries)
         {
             var childKey = entry.AudioObjectIDOrAudioObject?.BasicAudioObjectID;
-            if (string.IsNullOrEmpty(childKey) || !storage.Exists(childKey)) continue;
+            if (string.IsNullOrEmpty(childKey) || !store.Holds(Kinds.BasicAudioObject, childKey)) continue;
 
-            var bao = Deserialize<BasicAudioObject>(storage.Get(childKey));
+            var bao = Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, childKey)!);
 
             resolvedEntries.Add(new BasicAudioSceneEntry
             {
@@ -350,6 +366,7 @@ public sealed class AseAim
             UserPoV = scene.UserPoV,
             ClosedSpace = scene.ClosedSpace,
             AcousticProfile = scene.AcousticProfile,
+            RenderingMode = scene.RenderingMode, ChannelCount = scene.ChannelCount,
             AudioObjectCount = resolvedEntries.Count,
             BasicAudioSceneDescriptorsEntries = resolvedEntries
         };
@@ -363,11 +380,11 @@ public sealed class AseAim
     {
         var found = new List<ListedObject>();
         if (!ListKinds.Asks(requested, ListKinds.AudioScene)) return found;
-        foreach (var (name, key) in Names.All(NamedKind.AudioScene))
+        foreach (var (name, _) in store.All(Kinds.AudioScene))
         {
             if (named is not null && name != named) continue;
-            var entries = storage.Exists(key) ? Deserialize<BasicAudioSceneDescriptors>(storage.Get(key)).BasicAudioSceneDescriptorsEntries : null;
-            var members = entries?.Select(e => ObjectName(e.AudioObjectIDOrAudioObject?.BasicAudioObjectID)).Where(n => n is not null).Select(n => n!).ToList();
+            var entries = Deserialize<BasicAudioSceneDescriptors>(store.Get(Kinds.AudioScene, name)!).BasicAudioSceneDescriptorsEntries;
+            var members = entries?.Select(e => e.AudioObjectIDOrAudioObject?.BasicAudioObjectID).Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList();
             double? duration = null;
             List<ListedMember>? told = null;
             if (named is not null && entries is not null)
@@ -376,10 +393,10 @@ public sealed class AseAim
                 foreach (var e in entries)
                 {
                     var memberKey = e.AudioObjectIDOrAudioObject?.BasicAudioObjectID;
-                    var sound = memberKey is not null && storage.Exists(memberKey) ? Deserialize<BasicAudioObject>(storage.Get(memberKey)) : null;
+                    var sound = memberKey is not null && store.Holds(Kinds.BasicAudioObject, memberKey) ? Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, memberKey)!) : null;
                     told.Add(new ListedMember
                     {
-                        ObjectID = ObjectName(memberKey) ?? "", PoV = e.AudioObjectSpaceTime?.SpatialAttitude1,
+                        ObjectID = memberKey ?? "", PoV = e.AudioObjectSpaceTime?.SpatialAttitude1,
                         Time = e.AudioObjectSpaceTime?.Time is { SimpleTimeData.Count: > 0 } time ? time : null,
                         Level = sound?.BasicAudioObjectProperties?.Level
                     });
@@ -398,27 +415,11 @@ public sealed class AseAim
         return found;
     }
 
-    // --- Deletion (surfaces the sixth Shared Storage primitive, Delete) ---
-    public IReadOnlyList<string> ReferencedBy(string key) =>
-        storage.List($"refby:{key}:").Select(k => k[$"refby:{key}:".Length..]).ToList();
-
-    public IReadOnlyList<string> References(string key) =>
-        storage.List($"ref:{key}:").Select(k => k[$"ref:{key}:".Length..]).ToList();
-
-    // Deletes a single key together with its own ref:/refby: bookkeeping (both directions). Deleting a non-existent key is not an error (Section 4.10.3). Does NOT itself
-    // cascade - the caller decides, one level, with user consent.
-    public void Delete(string key)
+    // DELETION of a Scene by its name, with all its versions. Nothing holds a Scene.
+    public (DeletionOutcome Outcome, string? Reason) Delete(string? name)
     {
-        foreach (var toId in References(key))
-        {
-            storage.Delete($"ref:{key}:{toId}");
-            storage.Delete($"refby:{toId}:{key}");
-        }
-        foreach (var fromId in ReferencedBy(key))
-        {
-            storage.Delete($"ref:{fromId}:{key}");
-            storage.Delete($"refby:{key}:{fromId}");
-        }
-        storage.Delete(key);
+        if (KeptScene(name) is not { } id) return (DeletionOutcome.NotKept, null);
+        store.Delete(Kinds.AudioScene, id);
+        return (DeletionOutcome.Deleted, null);
     }
 }

@@ -6,10 +6,11 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Eae;
 
-// CAE-SDS-V2.5, Speech Detection and Separation: the Audio Object of the Spherical Harmonic Decomposition Coefficients (and, if there is one, the Audio Scene Reference) in; the Audio Object
+// CAE-SDS-V2.5, Speech Detection and Separation: the Audio Object of the Spherical Harmonic Decomposition Coefficients in; the Audio Object
 // in the transform domain with a channel for each source found, and the Audio Scene Geometry (Basic Audio Scene Descriptors) with where each is and when it is active, out.
 //
 // The page says the sources are "either a speech or a non-speech signal": the AIM finds the SOURCES, it does not tell speech from noise.
@@ -20,9 +21,11 @@ namespace Mpai.Cae.Usc.Eae;
 //   inverse of the harmonics of the directions, regularised); the beams are of the amplitude of the wave, and their number is at most the number of coefficients minus one.
 //   Detection of the activity: a source is active in a block if its energy is within 20 dB of its loudest block and well above the noise (the median energy of the points), and one block more
 //   on each side (the blocks overlap).
-// The Audio Scene Reference (a polynomial in the sine or cosine of an angle) is read and given on, not used: the page does not say what its terms are the model OF.
-public sealed class SdsAimProcessor(string instanceId, string shdKey, string asrKey, string transformKey, string geometryKey, string asrOutKey) : IAimProcessor
+// The Audio Scene Reference (a polynomial in the sine or cosine of an angle) is not an input: it comes from Access (AccessSources, Setting "AudioSceneReference"), which the Controller has
+// obtained and checked, and is read and checked to be a CAE-ASR-V1.0, not used: the page does not say what its terms are the model OF.
+public sealed class SdsAimProcessor(string instanceId, string shdKey, string transformKey, string geometryKey, IReadOnlyDictionary<string, string>? settings = null) : IAimProcessor
 {
+    public const string AudioSceneReferenceSetting = "AudioSceneReference";
     public string InstanceId { get; } = instanceId;
     public int MaxSources { get; init; } = 4;
 
@@ -34,12 +37,8 @@ public sealed class SdsAimProcessor(string instanceId, string shdKey, string asr
             return Task.FromResult(Message.Error(message.MessageId, InstanceId, $"CAE-SDS-V2.5: no Spherical Harmonic Decomposition Coefficients on input port '{shdKey}'."));
         try
         {
-            string? asr = null;
-            if (message.Ports.TryGetValue(asrKey, out var a) && !string.IsNullOrWhiteSpace(a))
-            {
-                if ((JsonNode.Parse(a) as JsonObject)?["Header"]?.GetValue<string>() != "CAE-ASR-V1.0") throw new FormatException("The Audio Scene Reference is not a CAE-ASR-V1.0.");
-                asr = a;
-            }
+            if (SettingFile.ReadText(settings ?? new Dictionary<string, string>(), AudioSceneReferenceSetting) is { } asr &&
+                (JsonNode.Parse(asr) as JsonObject)?["Header"]?.GetValue<string>() != "CAE-ASR-V1.0") throw new FormatException("The Audio Scene Reference given under the Setting is not a CAE-ASR-V1.0.");
             var (t, geometry) = TransformObject.Read(shdJson);
             var k = t.Channels; var order = (int)Math.Round(Math.Sqrt(k)) - 1;
             if (k < 4 || (order + 1) * (order + 1) != k) throw new FormatException($"The coefficients are {k}: it needs (N + 1)^2 of them, N at least one.");
@@ -80,7 +79,6 @@ public sealed class SdsAimProcessor(string instanceId, string shdKey, string asr
             var transform = TransformObject.Make("sds-" + Guid.NewGuid().ToString("N")[..12], new TransformBlocks(t.Rate, t.BlockSize, t.Samples, beams), "Transform", geometry);
             var scene = SceneDescriptors.Make("sds-scene-" + Guid.NewGuid().ToString("N")[..8], sources);
             var ports = new Dictionary<string, string> { [transformKey] = transform, [geometryKey] = scene };
-            if (asr is not null) ports[asrOutKey] = asr;
             return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "BasicAudioObject", DataType = AudioObject.Header, Payload = transform, Ports = ports });
         }
         catch (Exception ex) when (ex is FormatException or ArgumentException or InvalidOperationException)

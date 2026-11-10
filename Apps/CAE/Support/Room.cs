@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using Mpai.Cae.Usc;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Apps;
 

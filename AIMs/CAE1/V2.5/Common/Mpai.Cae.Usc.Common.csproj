@@ -5,4 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\OSD\V1.5\Speech\Mpai.Osd.Speech.csproj" />
+  </ItemGroup>
 </Project>

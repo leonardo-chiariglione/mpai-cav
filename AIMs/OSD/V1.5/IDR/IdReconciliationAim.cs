@@ -11,7 +11,7 @@ namespace Mpai.Hci.Idr;
 //  the work is policy." (M3154)
 //
 //  Reconciles the face-identity evidence (FIR) and speaker-identity evidence
-//  (SIR) for ONE person - whom AVA has associated across the two modalities -
+//  (SIR) for ONE person - whom MAL has associated across the two modalities -
 //  into a single reconciled identity. Score-level biometric fusion:
 //
 //    1. Each modality gives a score VECTOR over the common subject space

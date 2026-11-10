@@ -99,3 +99,5 @@ Each voice also needs its companion `.onnx.json` config from the same folder.
 | `SteamAudio/linux-x64/libphonon.so` | 40 MB | Steam Audio 4.8.1 native library, Linux x64 | The same archive, `steamaudio/lib/linux-x64/libphonon.so` | Apache-2.0 |
 
 SHA-256 in `AIMs/aim-settings.json` (`UserAgent:SpatialAudio`). The C API declarations of `AIF/UserAgent/SpatialAudio/SteamAudio.cs` follow the archive's `include/phonon.h`.
+
+**Update 2026-11-07:** the body keypoint model of PAF-EBD is no longer the file `pose_landmarks_detector_full.onnx` (source uncertain, not used). It is `pose_estimation_mediapipe_2023mar.onnx` of the OpenCV Zoo (https://huggingface.co/opencv/pose_estimation_mediapipe, commit 8cd55743af63a8578effaf144a68cb58f6450fe9, Apache-2.0), declared in the AccessSources of 1PAF-EBD-V1.6-I01 with its SHA-256; see `docs/model-licence-findings.md`.

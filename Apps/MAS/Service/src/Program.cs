@@ -32,9 +32,9 @@ namespace Mpai.Mas.Service;
 // those conditions stops the server with a message naming what was missing.
 internal static class Program
 {
-    private const string AcrModule = "1MMC-ACR-V2.5-I01";
+    private const string AcrModule = "1OSD-ACR-V1.5-I01";
     internal const string AmqModule = "1MMC-AMQ-V2.5-I01";
-    private const string MacModule = "1MMC-MAC-V2.5-I01";
+    private const string MacModule = "1OSD-MAC-V1.5-I01";
     internal const string MasModule = "1MAS-APP-V1.0-I01";
 
     // THE MODULES THIS SERVICE RUNS: those of the Apps it offers - the Module each App's app.json names - and the launcher's. A Service given no Apps runs

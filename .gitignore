@@ -111,3 +111,5 @@ MMM/tools/Microsoft-Rocketbox/
 
 # the packages of the MPAI Store are release assets, not kept here
 MPAIStore/Packages/*.zip
+Test/Data/Music/cache16k/
+Test/Data/Music/dataset/

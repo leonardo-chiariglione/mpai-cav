@@ -1,0 +1,326 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "OSD-MFD-V1.5-I01",
+    "AIMName": "1OSD-MFD-V1.5-I01"
+  },
+  "Header": "OSD-MFD-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Multimodal Frontend Description: from the Basic Audio, LiDAR and Visual Objects of the real world gives the Speech, Audio, Face, Body and other Visual Objects, typed, the aligned Audio and Visual Scene Descriptors. Basic Audio, LiDAR and Visual Scene Description give the Basic Scene Descriptors of each medium, Multimodal Alignment aligns them, Audio Scene Object Identification gives the Speech and the Audio Objects of the aligned Audio Scene, and Visual Scene Object Identification gives the Face, Body and other Visual Objects of the aligned Visual Scene.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "BasicAudioObject",
+      "Direction": "Input",
+      "DataType": "OSD-BAO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BasicLiDARObject",
+      "Direction": "Input",
+      "DataType": "OSD-BLO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BasicVisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechObjects",
+      "Direction": "Output",
+      "DataType": "OSD-BSO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioObjects",
+      "Direction": "Output",
+      "DataType": "OSD-BAO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "FaceObjects",
+      "Direction": "Output",
+      "DataType": "OSD-BVO-V1.5",
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BodyObjects",
+      "Direction": "Output",
+      "DataType": "OSD-BVO-V1.5",
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObjects",
+      "Direction": "Output",
+      "DataType": "OSD-BVO-V1.5",
+      "PortNumber": 3,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-BAS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-BVS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "OSD-BAS-V1.5-I01",
+        "AIMName": "1OSD-BAS-V1.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "OSD-BLS-V1.5-I01",
+        "AIMName": "1OSD-BLS-V1.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "OSD-BVS-V1.5-I01",
+        "AIMName": "1OSD-BVS-V1.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "OSD-MAL-V1.5-I01",
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "CAE-ASI-V2.5-I01",
+        "AIMName": "1CAE-ASI-V2.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "CVE-VSI-V1.0-I01",
+        "AIMName": "1CVE-VSI-V1.0-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BAO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-BAS-V1.5-I01",
+        "DataType": "OSD-BAO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BLO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-BLS-V1.5-I01",
+        "DataType": "OSD-BLO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-BVS-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-BAS-V1.5-I01",
+        "DataType": "OSD-BAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-BLS-V1.5-I01",
+        "DataType": "OSD-BLS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BLS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-BVS-V1.5-I01",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1CAE-ASI-V2.5-I01",
+        "DataType": "OSD-BAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1CVE-VSI-V1.0-I01",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BAS-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BAS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MAL-V1.5-I01",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CAE-ASI-V2.5-I01",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CAE-ASI-V2.5-I01",
+        "DataType": "OSD-BAO-V1.5"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BAO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CVE-VSI-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CVE-VSI-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CVE-VSI-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 3
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 3
+      }
+    }
+  ],
+  "Implementations": [],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "2 GB",
+      "Request": "4 GB",
+      "Maximum": "8 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Medium",
+      "Request": "High",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/"
+    }
+  ]
+}

@@ -153,6 +153,51 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
         }
     }
 
+    // ---- what the Back End's operator starts: an audit, a processing ----
+    // The Back End starts these itself (a command of its operator device; the Back End's operator is the trigger, simplest reading). It is not a user and has no Tokens: AIH Data Processing
+    // answers its own requests, and the licence terms are checked where they are: the Blockchain, asked by AIH Data Processing and by Auditing, never by the workflow.
+
+    // Audits the use of the AIH Data of one End User, for the period given. Returns the answer of Auditing.
+    public JsonObject AuditOf(string endUserId, TimeSpan? period = null)
+    {
+        lock (gate)
+        {
+            s.Drain();
+            s.Send("RequestIn", Request(me, AihJson.TokensFor(me, ["Auditing"]), JsonValue.Create(endUserId)!, "Auditing"));
+            var held = s.Receive("ResponseOut", 10_000) is { } answer && AihJson.ResponseOf(AihJson.Parse(answer, "AIH Data Process")) is { } r && r["ProcessingStatus"]?.GetValue<bool>() == true
+                ? (r["AIHDataOrAIHDataID"] as JsonArray)?.Select(i => i?.GetValue<string>() ?? "").ToList() ?? []
+                : throw new InvalidOperationException($"AIH Data Processing did not give the AIH Data of {endUserId} for the audit.");
+            foreach (var id in held)
+                s.Send("AhdAuditIn", Fetch(id) ?? throw new InvalidOperationException($"AIH Data Processing did not give the AIH Data {id} of {endUserId} for the audit."));
+            s.Drain();
+            s.Send("AuditIn", new JsonObject
+            {
+                ["Header"] = AihJson.Audit, ["UserID"] = endUserId, ["AuditID"] = AihJson.NewId("adt"), ["AuditTime"] = AihJson.Time(),
+                ["Audit"] = new JsonObject
+                {
+                    ["Request"] = new JsonObject
+                    {
+                        ["AuditPeriod"] = AihJson.Time(DateTimeOffset.UtcNow - (period ?? TimeSpan.FromDays(1))),
+                        ["ProcessingOperations"] = new JsonArray(new JsonObject { ["ProcessingOperation"] = "PhysiologicalRiskPrediction", ["DataClass"] = "AIH-ECO" }),
+                        ["Tokens"] = AihJson.TokensFor(me, ["Auditing"])
+                    }
+                }
+            }.ToJsonString());
+            return AihJson.Parse(Answer("AuditOut", "answer of the audit"), "Audit");
+        }
+    }
+
+    // Processes one AIH Data, as the licence terms allow the Back End: AIH Data Processing asks the Blockchain; the answer holds the AIH Data and what was found, or is a refusal.
+    public JsonObject ProcessData(string aihDataId)
+    {
+        lock (gate)
+        {
+            s.Drain();
+            s.Send("RequestIn", Request(me, AihJson.TokensFor(me, ["AIHDataProcessing"]), JsonValue.Create(aihDataId)!, "AIHDataProcessing"));
+            return AihJson.Parse(Answer("ResponseOut", "answer to the processing"), "AIH Data Process");
+        }
+    }
+
     // ---- Health Federated Learning ----
 
     private JsonObject Request(string frontEndId, string preLearnModelId)
@@ -241,12 +286,12 @@ public sealed class HbeUserAgent : IBackEnd, IDisposable
         return AihJson.ResponseOf(AihJson.Parse(answer, "AIH Data Process"))?["AIHDataOrAIHDataID"]?[0] is JsonObject data ? data.ToJsonString() : null;
     }
 
-    private static string Request(string requester, JsonObject tokens, JsonNode item) => new JsonObject
+    private static string Request(string requester, JsonObject tokens, JsonNode item, string type = "Store") => new JsonObject
     {
         ["Header"] = AihJson.Process, ["UserID"] = requester, ["AIHDataProcessID"] = AihJson.NewId("ahp"), ["AIHDataProcessTime"] = AihJson.Time(),
         ["AIHDataProcess"] = new JsonArray(new JsonObject
         {
-            ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = new JsonArray(item.DeepClone()), ["ProcessingType"] = "Store", ["Tokens"] = tokens.DeepClone() }
+            ["Request"] = new JsonObject { ["AIHDataOrAIHDataID"] = new JsonArray(item.DeepClone()), ["ProcessingType"] = type, ["Tokens"] = tokens.DeepClone() }
         })
     }.ToJsonString();
 }

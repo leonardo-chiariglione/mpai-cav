@@ -29,7 +29,7 @@ public sealed class UscProvider : IAimProvider
     public const string Smc = "1CAE-SMC-V2.5-I01", Sra = "1CAE-SRA-V2.5-I01", Tts = "1MMC-TTS-V2.5-I01",
                         Sfa = "1CAE-SFA-V2.5-I01", Sfb = "1CAE-SFB-V2.5-I01", Efp = "1CAE-EFP-V2.5-I01", Pei = "1CAE-PEI-V2.5-I01", Nei = "1CAE-NEI-V2.5-I01",
                         Aap = "1CAE-AAP-V2.5-I01", Vap = "1CAE-VAP-V2.5-I01", Tic = "1CAE-TIC-V2.5-I01", Tar = "1CAE-TAR-V2.5-I01", Pap = "1CAE-PAP-V2.5-I01",
-                        Aat = "1CAE-AAT-V2.5-I01", Sfd = "1CAE-SFD-V2.5-I01", Sds = "1CAE-SDS-V2.5-I01", Ncm = "1CAE-NCM-V2.5-I01", Ast = "1CAE-AST-V2.5-I01", Amx = "1CAE-AMX-V2.5-I01";
+                        Sft = "1CAE-SFT-V2.5-I01", Sfd = "1CAE-SFD-V2.5-I01", Sds = "1CAE-SDS-V2.5-I01", Ncm = "1CAE-NCM-V2.5-I01", Ast = "1CAE-AST-V2.5-I01", Amx = "1CAE-AMX-V2.5-I01";
 
     private readonly AmdStore _amds;
     public UscProvider(AmdStore amds) => _amds = amds;
@@ -37,7 +37,7 @@ public sealed class UscProvider : IAimProvider
     // The setting "SpeechModel": "stand-in" (the default) is the three numbers of the stand-in; "openvoice" is the tone-colour embedding of OpenVoice V2, made by Speech Model Creation and spoken in by the Piper Text To Speech.
     private static bool OpenVoiceModel(IReadOnlyDictionary<string, string> settings) => settings.GetValueOrDefault("SpeechModel", "stand-in") == "openvoice";
 
-    public bool CanCreate(string aimName) => aimName is Smc or Sra or Tts or Sfa or Sfb or Efp or Pei or Nei or Aap or Vap or Tic or Tar or Pap or Aat or Sfd or Sds or Ncm or Ast or Amx;
+    public bool CanCreate(string aimName) => aimName is Smc or Sra or Tts or Sfa or Sfb or Efp or Pei or Nei or Aap or Vap or Tic or Tar or Pap or Sft or Sfd or Sds or Ncm or Ast or Amx;
 
     // THE BINARY THAT IMPLEMENTS AN AIM, which the Controller has measured and the Store approved (the L3 names it by BinaryName): the project of the AIM, not of this provider.
     public string? ImplementationOf(string aimName) => aimName switch
@@ -47,7 +47,7 @@ public sealed class UscProvider : IAimProvider
         Tts => typeof(TtsAimProcessor).Assembly.Location,
         Sfa or Sfb or Efp or Pei or Nei => typeof(SfaAimProcessor).Assembly.Location,
         Aap or Vap or Tic or Tar or Pap => typeof(AapAimProcessor).Assembly.Location,
-        Aat or Sfd or Sds or Ncm or Ast or Amx => typeof(AatAimProcessor).Assembly.Location,
+        Sft or Sfd or Sds or Ncm or Ast or Amx => typeof(SftAimProcessor).Assembly.Location,
         _ => null
     };
 
@@ -76,15 +76,18 @@ public sealed class UscProvider : IAimProvider
             Aap => new AapAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Input("OSD-BMO-V1.5"), ports.Input("CAE-IRR-V2.5"), ports.Output("OSD-BAO-V1.5"), ports.Output("CAE-IRR-V2.5")),
             Vap => new VapAimProcessor(aimName, ports.Input("OSD-BMO-V1.5"), ports.Input("CAE-IRR-V2.5"), ports.Output("CAE-IRR-V2.5"), ports.Output("OSD-BVO-V1.5")),
             Tic => new TicAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Input("CAE-IRR-V2.5", 1), ports.Input("OSD-BVO-V1.5"), ports.Input("CAE-IRR-V2.5", 2), ports.Output("CAE-IRR-V2.5"), ports.Output("OSD-BVO-V1.5"),
-                                       settings.TryGetValue("FilmEndSeconds", out var end) && double.TryParse(end, System.Globalization.CultureInfo.InvariantCulture, out var seconds) ? seconds : null),
+                                       settings.TryGetValue("FilmEndSeconds", out var end) && double.TryParse(end, System.Globalization.CultureInfo.InvariantCulture, out var seconds) ? seconds : null,
+                                       // The trained classifier is the file the Controller obtained from Access (AccessSources of the L3, Setting "TicModel"); without it the rules classify.
+                                       settings.TryGetValue("TicModel", out var model) && model.Length > 0 ? new TapeIrregularityModel(model) : null,
+                                       settings.TryGetValue("TicMinProbability", out var minimum) && double.TryParse(minimum, System.Globalization.CultureInfo.InvariantCulture, out var probability) ? probability : 0.8),
             Tar => new TarAimProcessor(aimName, ports.Input("CAE-IRR-V2.5"), ports.Input("OSD-BAO-V1.5"), ports.Output("CAE-ELS-V2.5"), ports.Output("OSD-BAO-V1.5")),
             Pap => new PapAimProcessor(aimName, ports.Input("OSD-BAO-V1.5", 1), ports.Input("OSD-BAO-V1.5", 2), ports.Input("CAE-ELS-V2.5"), ports.Input("CAE-IRR-V2.5"), ports.Input("OSD-BVO-V1.5"), ports.Input("OSD-BMO-V1.5"),
                                        ports.Output("OSD-BAO-V1.5", 1), ports.Output("OSD-BAO-V1.5", 2)),
             // Enhanced Audioconference Experience.
-            Aat => new AatAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5")),
-            Sfd => new SfdAimProcessor(aimName, ports.Input("CAE-MAG-V2.5"), ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5")),
-            Sds => new SdsAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Input("CAE-ASR-V1.0"), ports.Output("OSD-BAO-V1.5"), ports.Output("OSD-BAS-V1.5"), ports.Output("CAE-ASR-V1.0")),
-            Ncm => new NcmAimProcessor(aimName, ports.Input("OSD-BAO-V1.5", 1), ports.Input("OSD-BAO-V1.5", 2), ports.Input("OSD-BAS-V1.5"), ports.Input("CAE-ASR-V1.0"), ports.Output("OSD-BAO-V1.5")),
+            Sft => new SftAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5")),
+            Sfd => new SfdAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5")),
+            Sds => new SdsAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5"), ports.Output("OSD-BAS-V1.5"), settings),
+            Ncm => new NcmAimProcessor(aimName, ports.Input("OSD-BAO-V1.5", 1), ports.Input("OSD-BAO-V1.5", 2), ports.Input("OSD-BAS-V1.5"), ports.Output("OSD-BAO-V1.5"), settings),
             Ast => new AstAimProcessor(aimName, ports.Input("OSD-BAO-V1.5"), ports.Output("OSD-BAO-V1.5")),
             Amx => new AmxAimProcessor(aimName, ports.Input("OSD-SPT-V1.5"), ports.Input("OSD-BAO-V1.5"), ports.Input("OSD-BAS-V1.5"), ports.Output("OSD-BAS-V1.5")),
             _ => throw new ArgumentException($"{aimName} is not an AIM this provider builds.")

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Arp;
 
@@ -19,7 +20,7 @@ namespace Mpai.Cae.Usc.Arp;
 // Preservation Audio File has a negative offset, which the file cannot say, and the AIM says so. It runs whenever a Message arrives (continuous execution: it has a loop).
 public sealed class AapAimProcessor(string instanceId, string audioKey, string avKey, string videoIrregularityKey, string filesKey, string irregularityKey) : IAimProcessor
 {
-    private const double Margin = 1.0;
+    public const double Margin = 1.0;                      // seconds of the tape kept before and after an irregularity in its Audio File (CAE-TIC knows it)
     public string InstanceId { get; } = instanceId;
 
     private Audio? _audio, _avAudio;

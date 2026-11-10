@@ -57,8 +57,9 @@ public sealed class AseAimProcessor : IAimProcessor
     private readonly string _sceneOut;
     private readonly string _reportOut;
 
-    // What is open, between runs: the key of the version in force (the Module's own; the User is told the name).
+    // What is open, between runs: the name of the Scene (the Module keeps its versions under it; the version in force is the highest).
     private string? _open;
+    private AudioSceneDescriptors? _frame;                  // the Full Audio Scene the open Basic Scene was given in, if it was Full
     private readonly UndoJournal _undo = new();
 
     public string InstanceId { get; }
@@ -75,7 +76,7 @@ public sealed class AseAimProcessor : IAimProcessor
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
 
-    private string? N(string? key) => _ase.SceneName(key);
+    private static string? N(string? id) => id;
 
     public Task<Message> ProcessAsync(Message message)
     {
@@ -84,9 +85,16 @@ public sealed class AseAimProcessor : IAimProcessor
         // 1. opening, by Port.
         if (message.Ports.TryGetValue(_scenePort, out var sceneJson) && !string.IsNullOrWhiteSpace(sceneJson))
         {
-            var id = BasicSceneOf(MpaiJson.FromJson<AudioSceneDescriptors>(sceneJson));
+            var arrived = MpaiJson.FromJson<AudioSceneDescriptors>(sceneJson);
+            var id = BasicSceneOf(arrived);
             // A Scene the storage does not hold cannot be opened: the one open stays, and nothing is raised - an AIM that threw would stop the Module.
-            if (id is not null && _ase.Has(id)) { _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {N(_open)}"); }
+            if (id is not null && _ase.Has(id))
+            {
+                _open = id; Console.WriteLine($"[CAE-ASE-V1.0] opened {N(_open)}");
+                // A Full Audio Scene (several sub-scenes, or sub-scenes that are themselves Full) is the frame the open Basic Scene is edited in: what is given back is that Scene, with the Basic
+                // Scenes the Module keeps as they now stand; a lone Basic Scene, or a Scene of one, is the case of one part and is given as it always was.
+                _frame = IsFull(arrived) ? arrived : null;
+            }
         }
 
         PointOfView? pov = null;
@@ -105,8 +113,15 @@ public sealed class AseAimProcessor : IAimProcessor
                 else
                 {
                     var before = _open;
+                    _ase.ForgetSteps();
                     Apply(command, pov, report);
-                    _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { _open = v; _ase.Select(v); }, N);
+                    // What the command wrote is put back by taking the versions it wrote away (a new name: the versions the old name had back); nothing is recorded when it wrote nothing
+                    // and left the same Scene open.
+                    var after = _open;
+                    if (_ase.TakeSteps() is { } steps)
+                        _undo.Record(command.UserCommandID, () => _open == after && steps.Unchanged(), () => { steps.Undo(); _open = before; return before; });
+                    else if (before != after)
+                        _undo.Record(command.UserCommandID, () => _open == after, () => { _open = before; return before; });
                 }
                 if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
@@ -130,13 +145,50 @@ public sealed class AseAimProcessor : IAimProcessor
     private string? BasicSceneOf(AudioSceneDescriptors scene)
     {
         foreach (var sub in scene.SubAudioScenes ?? [])
-            if (_ase.SceneKey(sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId) is { } held) return held;
-        return _ase.SceneKey(scene.AudioSceneDescriptorsID);
+        {
+            if (_ase.KeptScene(sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId) is { } held) return held;
+            if (sub.SubAudioSceneIDOrSubAudioScene is { } inner && BasicSceneOf(inner) is { } deeper) return deeper;      // a Full sub-scene: the first Basic Scene in it
+        }
+        return _ase.KeptScene(scene.AudioSceneDescriptorsID);
     }
+
+    // A Scene that is Full: more than one sub-scene, or a sub-scene that is not Basic, or Objects of its own.
+    private static bool IsFull(AudioSceneDescriptors scene) =>
+        (scene.SubAudioScenes?.Count ?? 0) > 1 || (scene.SubAudioScenes ?? []).Any(s => s.SubAudioSceneIDOrSubAudioScene is not null) || (scene.AudioObjects?.Count ?? 0) > 0;
+
+    // The names of the Basic Scenes a Full Scene holds, at any depth.
+    private static IEnumerable<string> BasicNames(AudioSceneDescriptors scene)
+    {
+        foreach (var sub in scene.SubAudioScenes ?? [])
+        {
+            if ((sub.BasicScene?.BasicAudioSceneDescriptorsID ?? sub.SceneId) is { Length: > 0 } name) yield return name;
+            if (sub.SubAudioSceneIDOrSubAudioScene is { } inner) foreach (var n in BasicNames(inner)) yield return n;
+        }
+    }
+
+    // The Full Scene again, each Basic Scene the Module keeps as it now stands (the version in force under its name); what it does not keep stays as it was given.
+    private AudioSceneDescriptors Refreshed(AudioSceneDescriptors scene) => new()
+    {
+        MInstanceID = scene.MInstanceID, UEnvironmentID = scene.UEnvironmentID, AudioSceneDescriptorsID = scene.AudioSceneDescriptorsID, AudioSceneDescriptorsTime = scene.AudioSceneDescriptorsTime,
+        AudioSceneDescriptorsSpaceTime = scene.AudioSceneDescriptorsSpaceTime, UserPoV = scene.UserPoV, ClosedSpace = scene.ClosedSpace,
+        AudioObjectCount = scene.AudioObjectCount, AudioObjects = scene.AudioObjects, SubAudioSceneCount = scene.SubAudioSceneCount,
+        SubAudioScenes = scene.SubAudioScenes?.Select(e =>
+        {
+            if (_ase.KeptScene(e.BasicScene?.BasicAudioSceneDescriptorsID ?? e.SceneId) is { } kept) return new SubAudioSceneEntry { SubAudioSceneSpaceTime = e.SubAudioSceneSpaceTime, BasicScene = _ase.MaterializeBasicScene(kept) };
+            if (e.SubAudioSceneIDOrSubAudioScene is { } inner) return new SubAudioSceneEntry { SubAudioSceneSpaceTime = e.SubAudioSceneSpaceTime, SubAudioSceneIDOrSubAudioScene = Refreshed(inner) };
+            return e;
+        }).ToList(),
+        DataXMData = scene.DataXMData, DescrMetadata = scene.DescrMetadata
+    };
 
     // The open Basic Audio Scene as the Audio Scene this AIM gives: the Scene is the one sub-scene, which stands at the origin of the Audio Scene's frame.
     private AudioSceneDescriptors Given(string basicSceneId)
     {
+        if (_frame is not null)
+        {
+            if (N(basicSceneId) is { } openName && BasicNames(_frame).Contains(openName)) return Refreshed(_frame);
+            _frame = null;                                                        // the open Scene is not one of the frame: another was opened, made or renamed: it is given alone
+        }
         var basic = _ase.MaterializeBasicScene(basicSceneId);
         return new AudioSceneDescriptors
         {
@@ -145,6 +197,7 @@ public sealed class AseAimProcessor : IAimProcessor
             AudioSceneDescriptorsTime = basic.BasicAudioSceneDescriptorsTime,
             AudioSceneDescriptorsSpaceTime = basic.BASSpaceTime ?? new SpaceTime(),
             UserPoV = basic.UserPoV,
+            RenderingMode = basic.RenderingMode, ChannelCount = basic.ChannelCount,
             SubAudioSceneCount = 1,
             SubAudioScenes = [new SubAudioSceneEntry { BasicScene = basic }]
         };
@@ -162,28 +215,32 @@ public sealed class AseAimProcessor : IAimProcessor
         // THE SCENES BY NAME (the author, 2026/10/28): a new empty Scene is opened, a Scene kept is opened, the open Scene is given a name. The Scene that was open stays kept.
         if (NameBook.Clean(data.NewScene) is { } fresh)
         {
-            if (_ase.SceneKey(fresh) is not null) report.Failed("NewScene", fresh, "a Scene of that name is kept");
+            if (_ase.KeptScene(fresh) is not null) report.Failed("NewScene", fresh, "a Scene of that name is kept");
             else
                 try { _open = _ase.CreateEmptyBasicScene(listener ?? Origin(), fresh).AssetId; report.Done("NewScene", fresh, N(_open)); }
                 catch (Exception failure) { report.Failed("NewScene", fresh, failure.Message); }
         }
         if (NameBook.Clean(data.OpenedScene) is { } wanted)
         {
-            if (_ase.SceneKey(wanted) is not { } held) report.Failed("OpenedScene", wanted, "the Module has no saved Audio Scene of that name");
-            else { _open = held; _ase.Select(held); report.Done("OpenedScene", wanted, N(_open)); }
+            if (_ase.KeptScene(wanted) is not { } held) report.Failed("OpenedScene", wanted, "the Module has no saved Audio Scene of that name");
+            else { _open = held; report.Done("OpenedScene", wanted, N(_open)); }
         }
         if (NameBook.Clean(data.NamedScene) is { } given)
         {
             if (_open is null) report.Failed("NamedScene", given, "no Basic Audio Scene is open");
             else if (_ase.RenameScene(_open, given) is { } problem) report.Failed("NamedScene", given, problem);
-            else report.Done("NamedScene", given, N(_open));
+            else { _open = given; report.Done("NamedScene", given, N(_open)); }
         }
-        { var gone = Deletions.Apply(data, _ase.Names, NamedKind.AudioScene, "Audio Scene", report); if (_open is not null && gone.Contains(_open)) _open = null; }
+        { var gone = Deletions.Apply(data, _ase.Delete, "Audio Scene", report); if (_open is not null && gone.Contains(_open)) _open = null; }
         foreach (var entry in data.DeletedObjects?.Objects ?? [])
             if (entry.ObjectID is null && NameBook.Clean(entry.AcousticProfileID) is { } kept)
             {
-                if (_ase.Profiles.Delete(kept)) report.Done("DeletedObjects", kept);
-                else report.Failed("DeletedObjects", kept, "the Module keeps no Acoustic Profile of that name");
+                try
+                {
+                    if (_ase.Profiles.Delete(kept)) report.Done("DeletedObjects", kept);
+                    else report.Failed("DeletedObjects", kept, "the Module keeps no Acoustic Profile of that name");
+                }
+                catch (UnauthorizedAccessException refused) { report.Failed("DeletedObjects", kept, refused.Message); }
             }
         // THE LOUDNESS OF A SCENE (M3282 UCM-5, the programme): the Audio Scene Descriptors carry no loudness of a Scene, so it is not set here; the Level of each Object is.
         if (data.LUFS is not null)
@@ -201,8 +258,8 @@ public sealed class AseAimProcessor : IAimProcessor
             foreach (var entry in added.Objects)
             {
                 var id = IdOf(entry.ObjectID);
-                var key = _ase.ObjectKey(id);
-                if (!_ase.IsBasicObject(key))
+                var key = _ase.KeptObject(id);
+                if (!_ase.IsBasicObject(key) && !_ase.IsFullObject(key))
                 {
                     report.Failed("AddedObjects", id, "a Basic Audio Scene holds Basic Audio Objects, named by their names");
                     continue;
@@ -215,9 +272,14 @@ public sealed class AseAimProcessor : IAimProcessor
                 }
                 try
                 {
-                    _open = _open is null
-                        ? _ase.CreateBasicScene(key!, listener ?? Origin(), Placement(entry.SpatialAttitude), added.ObjectID).AssetId
-                        : _ase.AddObjectToBasicScene(_open, key!, Placement(entry.SpatialAttitude)).AssetId;
+                    // A Basic Audio Object is placed as it is; a Full Audio Object (several Basic Audio Objects, sub-Objects) part by part, each where the Object's placement and its own put it: a
+                    // Basic Audio Scene holds Basic Audio Objects (the simplest reading of how a Full Object is placed: each part, not the Object as one).
+                    var placedLeaves = _ase.Leaves(key!, Placement(entry.SpatialAttitude));
+                    if (placedLeaves.Count == 0) throw new InvalidOperationException("The Audio Object holds no Basic Audio Object to place.");
+                    foreach (var (leaf, at) in placedLeaves)
+                        _open = _open is null
+                            ? _ase.CreateBasicScene(leaf, listener ?? Origin(), at, added.ObjectID).AssetId
+                            : _ase.AddObjectToBasicScene(_open, leaf, at).AssetId;
                     report.Done("AddedObjects", id, N(_open));
                 }
                 catch (Exception failure) { report.Failed("AddedObjects", id, failure.Message); }
@@ -272,6 +334,15 @@ public sealed class AseAimProcessor : IAimProcessor
                 if (!acoustics.Reference && _ase.AcousticProfileOf(_open) is { } now) _ase.Profiles.Keep(now);
                 report.Done("ModifiedScene", N(_open), N(_open));
             }
+        }
+
+        // How the Scene is rendered for the listener: a property of the Scene itself.
+        if (data.ModifiedScene?.RenderingMode is { } mode)
+        {
+            if (_open is null) report.Failed("ModifiedScene", null, "no Basic Audio Scene is open");
+            else if (mode is not ("Mono" or "Stereo" or "Multichannel" or "Binaural")) report.Failed("ModifiedScene", N(_open), $"the rendering mode '{mode}' is none of Mono, Stereo, Multichannel, Binaural");
+            else if (mode == "Multichannel" && data.ModifiedScene.ChannelCount is not (4 or 6 or 8)) report.Failed("ModifiedScene", N(_open), "a Multichannel rendering needs a ChannelCount of 4, 6 or 8");
+            else { _open = _ase.SetBasicSceneRendering(_open, mode, data.ModifiedScene.ChannelCount).AssetId; report.Done("ModifiedScene", N(_open), N(_open)); }
         }
 
         // The room: the space the Scene is in, replaced as given.
@@ -397,11 +468,11 @@ public sealed class AseAimProcessor : IAimProcessor
         if (listing.Kind is ListKinds.AcousticProfile or ListKinds.Listener or ListKinds.ClosedSpace)
         {
             // Of the Scene named in the request, else of the open one: the Acoustic Profile it has, the Point of View it is heard from, the room it is in.
-            var key = listing.ObjectID is { } named && NameBook.Clean(named) is { } clean ? _ase.SceneKey(clean) : _open;
+            var key = listing.ObjectID is { } named && NameBook.Clean(named) is { } clean ? _ase.KeptScene(clean) : _open;
             if (key is null || !_ase.Has(key)) { report.Failed("ListedObjects", listing.ObjectID, listing.ObjectID is null ? "no Basic Audio Scene is open" : "the Module keeps no Audio Scene of that name"); return; }
             report.Listed([listing.Kind == ListKinds.Listener ? _ase.ListedListener(key)
                          : listing.Kind == ListKinds.ClosedSpace ? _ase.ListedClosedSpace(key)
-                         : new ListedObject { ObjectID = _ase.SceneName(key) ?? "", Kind = ListKinds.AcousticProfile, AcousticProfile = _ase.AcousticProfileOf(key) }]);
+                         : new ListedObject { ObjectID = key, Kind = ListKinds.AcousticProfile, AcousticProfile = _ase.AcousticProfileOf(key) }]);
             return;
         }
         if (listing.Kind != ListKinds.All && listing.Kind != ListKinds.AudioScene)

@@ -1,0 +1,79 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "OSD-VOE-V1.5-I01",
+    "AIMName": "1OSD-VOE-V1.5-I01"
+  },
+  "Header": "OSD-VOE-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Visual Object Extraction: from the Visual Objects of a Visual Scene takes the Target Visual Object that a Point of View crosses in the Visual Scene Geometry.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "PointofView",
+      "Direction": "Input",
+      "DataType": "OSD-OPV-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneGeometry",
+      "Direction": "Input",
+      "DataType": "OSD-VSG-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObjects",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TargetVisualObject",
+      "Direction": "Output",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/VOE",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Osd.Voe",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/"
+    }
+  ]
+}

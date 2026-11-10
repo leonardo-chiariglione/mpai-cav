@@ -1,0 +1,100 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "OSD-MSM-V1.5-I01",
+    "AIMName": "1OSD-MSM-V1.5-I01"
+  },
+  "Header": "OSD-MSM-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Multimodal Scene Multiplexing. Puts the Scenes of speech and of pictures, the Text and the Instance Identifier in a Basic Multimodal Scene.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "SpeechSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BSS-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BAS-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BVS-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "Text",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "InstanceIdentifier",
+      "Direction": "Input",
+      "DataType": "OSD-IID-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MultimodalSceneDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/TMA",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Osd.Tma",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.5",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "1 GB",
+      "Request": "2 GB",
+      "Maximum": "4 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/multimodal-scene-multiplexing/"
+    }
+  ]
+}

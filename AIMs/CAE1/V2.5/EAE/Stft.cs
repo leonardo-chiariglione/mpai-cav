@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace Mpai.Cae.Usc.Eae;
 
-// The transform of Audio Analysis Transform and Audio Synthesis Transform: a short-time Fourier transform of blocks of BlockSize samples (a power of two) with 50 % overlap, the
+// The transform of Short-Time Fourier Transform and Audio Synthesis Transform: a short-time Fourier transform of blocks of BlockSize samples (a power of two) with 50 % overlap, the
 // analysis and the synthesis window a sine window - their squares sum to one at that overlap, so synthesis returns what analysis took (to the rounding of the samples). The block k
 // covers the samples from (k - 1) x BlockSize / 2: the first block starts half a block before the audio, and the last ends half a block after it.
 public static class Stft

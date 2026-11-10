@@ -22,26 +22,21 @@ namespace Mpai.Mmc.Soe;
 // translation, at its place.
 public static class SpeechStore
 {
-    private static NameBook Book(ISharedStorage storage) => new(storage);
-
-    // The key the Module keeps the Speech Object under; null when it keeps none of that name.
-    private static string? KeyOf(ISharedStorage storage, string? name) => Book(storage).KeyOf(NamedKind.SpeechObject, name);
-
-    public static bool Holds(ISharedStorage storage, string? name) => KeyOf(storage, name) is not null;
+    public static bool Holds(ModuleStore storage, string? name) =>
+        NameBook.Clean(name) is { } n && (storage.Holds(Kinds.BasicSpeechObject, n) || storage.Holds(Kinds.SpeechObject, n));
 
     // A Basic Speech Object kept under its name - or the next free one if the name is taken: the name it has is returned. One with no name is not kept.
-    public static string Keep(ISharedStorage storage, BasicSpeechObject speech)
+    public static string Keep(ModuleStore storage, BasicSpeechObject speech)
     {
         if (NameBook.Clean(speech.BasicSpeechObjectID) is not { } wanted) throw new NameNeededException("the Basic Speech Object");
-        var key = Next(storage, "BSO");
-        var name = Book(storage).Claim(NamedKind.SpeechObject, wanted, key);
+        var name = NameBook.Free(storage, wanted, Kinds.BasicSpeechObject, Kinds.SpeechObject);
         speech = With(speech, id: name);
-        storage.MPAI_AIFM_SharedStorage_Put(key, Encoding.UTF8.GetBytes(MpaiJson.ToJson(speech)));
+        storage.Put(Kinds.BasicSpeechObject, name, 1, Encoding.UTF8.GetBytes(MpaiJson.ToJson(speech)));
         return name;
     }
 
     // Is this arriving Basic Speech Object the speech kept under its name? One that carries no speech, or the same speech, is.
-    public static bool IsTheSpeech(ISharedStorage storage, BasicSpeechObject arriving)
+    public static bool IsTheSpeech(ModuleStore storage, BasicSpeechObject arriving)
     {
         if (arriving.Data is not { Length: > 0 }) return true;
         return Get(storage, arriving.BasicSpeechObjectID) is { } held && held.Data.AsSpan().SequenceEqual(arriving.Data);
@@ -64,9 +59,26 @@ public static class SpeechStore
     public static SpeechObject Parse(string json) =>
         JsonNode.Parse(json)?["Header"]?.GetValue<string>() == "OSD-BSO-V1.5" ? Wrap(MpaiJson.FromJson<BasicSpeechObject>(json)) : MpaiJson.FromJson<SpeechObject>(json);
 
+    // THE BASIC SPEECH OBJECTS OF A SPEECH OBJECT (the author, 2026/11/08: everything in ASM is Full, a Basic Object is the case of one part): the Basic Speech Objects the name stands for, at any
+    // depth (its sub-Objects too), each with where it stands in the frame the Object is placed in - the placement of the Object composed with its own. A Basic Speech Object is its own part.
+    public static IReadOnlyList<(string Name, SpaceTime? Placement)> Leaves(ModuleStore storage, string? name, SpaceTime? placement)
+    {
+        if (name is null) return [];
+        if (Get(storage, name) is not null) return [(name, placement)];
+        if (GetObject(storage, name, resolve: false) is not { } speech) return [];
+        var leaves = new List<(string Name, SpaceTime? Placement)>();
+        foreach (var e in speech.BasicSpeechObjects ?? [])
+            if (e.BSObjectIDOrBSObject?.BasicSpeechObjectID is { } child && Get(storage, child) is not null)
+                leaves.Add((child, Placements.Within(placement, Placements.Within(speech.SpeechObjectSpaceTime, e.BasicSpeechObjectSpaceTime))));
+        foreach (var e in speech.SubSpeechObjects ?? [])
+            if (e.SubSObjectIDOrSubSObject?.SpeechObjectID is { } sub)
+                leaves.AddRange(Leaves(storage, sub, Placements.Within(placement, Placements.Within(speech.SpeechObjectSpaceTime, e.SubSpeechObjectSpaceTime))));
+        return leaves;
+    }
+
     // A Speech Object of more than one Basic Speech Object is kept here: each Basic Speech Object as a new Object, if the storage does not hold it, and the Speech
     // Object, under its own name, holding them by their names. One the storage holds already is that one. The name it has is returned.
-    public static string KeepObject(ISharedStorage storage, SpeechObject speech)
+    public static string KeepObject(ModuleStore storage, SpeechObject speech)
     {
         if (NameBook.Clean(speech.SpeechObjectID) is not { } wanted) throw new NameNeededException("the Speech Object");
         if (GetObject(storage, wanted, resolve: false) is not null) return wanted;
@@ -82,8 +94,7 @@ public static class SpeechStore
             return new SubSpeechObjectEntry { SubSpeechObjectSpaceTime = e.SubSpeechObjectSpaceTime, SubSObjectIDOrSubSObject = new SpeechObject { SpeechObjectID = KeepObject(storage, s) } };
         }).ToList();
         if (basics.Count + subs.Count == 0) throw new InvalidOperationException("The Speech Object holds no speech.");
-        var key = Next(storage, "SPO");
-        var kept = Book(storage).Claim(NamedKind.SpeechObject, wanted, key);
+        var kept = NameBook.Free(storage, wanted, Kinds.BasicSpeechObject, Kinds.SpeechObject);
         var stored = new SpeechObject
         {
             MInstanceID = speech.MInstanceID, SpeechObjectID = kept, SpeechObjectSpaceTime = speech.SpeechObjectSpaceTime ?? new SpaceTime(), UserPoV = speech.UserPoV,
@@ -91,17 +102,16 @@ public static class SpeechStore
             SubSpeechObjectCount = subs.Count, SubSpeechObjects = subs.Count > 0 ? subs : null,
             DataXMData = speech.DataXMData, DescrMetadata = speech.DescrMetadata
         };
-        storage.MPAI_AIFM_SharedStorage_Put(key, Encoding.UTF8.GetBytes(MpaiJson.ToJson(stored)));
+        storage.Put(Kinds.SpeechObject, kept, 1, Encoding.UTF8.GetBytes(MpaiJson.ToJson(stored)));
         return kept;
     }
 
     // The Speech Object kept under this name, with the Objects it holds as the storage now has them (a Basic Speech Object translated in its place is the
     // translation in it); null when there is none - or what is there is not a Speech Object.
-    public static SpeechObject? GetObject(ISharedStorage storage, string? name, bool resolve = true)
+    public static SpeechObject? GetObject(ModuleStore storage, string? name, bool resolve = true)
     {
-        var key = KeyOf(storage, name);
-        if (key is null || !storage.MPAI_AIFM_SharedStorage_Exists(key)) return null;
-        var json = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(key));
+        if (storage.Get(Kinds.SpeechObject, NameBook.Clean(name)) is not { } bytes) return null;
+        var json = Encoding.UTF8.GetString(bytes);
         SpeechObject? speech;
         try { speech = JsonNode.Parse(json)?["Header"]?.GetValue<string>() == "OSD-SPO-V1.5" ? MpaiJson.FromJson<SpeechObject>(json) : null; }
         catch { return null; }
@@ -125,14 +135,6 @@ public static class SpeechStore
         };
     }
 
-    private static string Next(ISharedStorage storage, string prefix)
-    {
-        var counter = $"_counter:{prefix}";
-        long next = storage.MPAI_AIFM_SharedStorage_Exists(counter) ? long.Parse(Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(counter))) + 1 : 1;
-        storage.MPAI_AIFM_SharedStorage_Put(counter, Encoding.UTF8.GetBytes(next.ToString()));
-        return $"{prefix}{next:D6}";
-    }
-
     // The same Basic Speech Object with some of its fields changed.
     public static BasicSpeechObject With(BasicSpeechObject s, string? id = null, PointOfView? userPoV = null,
                                          SpaceTime? spaceTime = null, SpeechQualifier? qualifier = null) => new()
@@ -145,31 +147,32 @@ public static class SpeechStore
     };
 
     // Puts a Basic Speech Object the Module keeps back where it is, under its name: a Speech Object is edited in place.
-    public static void Put(ISharedStorage storage, BasicSpeechObject speech)
+    public static void Put(ModuleStore storage, BasicSpeechObject speech)
     {
-        var key = KeyOf(storage, speech.BasicSpeechObjectID) ?? throw new InvalidOperationException("The Module keeps no Speech Object of that name.");
-        storage.MPAI_AIFM_SharedStorage_Put(key, Encoding.UTF8.GetBytes(MpaiJson.ToJson(speech)));
+        if (NameBook.Clean(speech.BasicSpeechObjectID) is not { } id || !storage.Holds(Kinds.BasicSpeechObject, id)) throw new InvalidOperationException("The Module keeps no Speech Object of that name.");
+        storage.Put(Kinds.BasicSpeechObject, id, 1, Encoding.UTF8.GetBytes(MpaiJson.ToJson(speech)));
     }
 
     // The Basic Speech Object stored under this name, or null when there is
     // none - or what is there is not a Speech Object.
-    public static BasicSpeechObject? Get(ISharedStorage storage, string? name)
+    public static BasicSpeechObject? Get(ModuleStore storage, string? name)
     {
-        var key = KeyOf(storage, name);
-        if (key is null || !storage.MPAI_AIFM_SharedStorage_Exists(key)) return null;
-        var json = Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(key));
+        if (storage.Get(Kinds.BasicSpeechObject, NameBook.Clean(name)) is not { } bytes) return null;
+        var json = Encoding.UTF8.GetString(bytes);
         try { return JsonNode.Parse(json)?["Header"]?.GetValue<string>() == "OSD-BSO-V1.5" ? MpaiJson.FromJson<BasicSpeechObject>(json) : null; }
         catch { return null; }
     }
 
     // THE LIST (the author, 2026/10/26): the Speech Objects and Basic Speech Objects the Module keeps, by name; a Speech Object with the names of those it holds.
-    public static IReadOnlyList<ListedObject> Listing(ISharedStorage storage, string requested, string? named = null)
+    public static IReadOnlyList<ListedObject> Listing(ModuleStore storage, string requested, string? named = null)
     {
         var found = new List<ListedObject>();
-        foreach (var (name, key) in Book(storage).All(NamedKind.SpeechObject))
+        var all = storage.All(Kinds.BasicSpeechObject).Select(e => (e.Id, e.Version, Basic: true))
+            .Concat(storage.All(Kinds.SpeechObject).Select(e => (e.Id, e.Version, Basic: false)))
+            .OrderBy(e => e.Id, StringComparer.Ordinal);
+        foreach (var (name, version, basic) in all)
         {
             if (named is not null && name != named) continue;
-            var basic = key.StartsWith("BSO", StringComparison.Ordinal);
             if (!ListKinds.Asks(requested, basic ? ListKinds.BasicSpeechObject : ListKinds.SpeechObject)) continue;
             List<string>? members = null;
             if (!basic && GetObject(storage, name, resolve: false) is { } speech)
@@ -188,13 +191,13 @@ public static class SpeechStore
             found.Add(new ListedObject
             {
                 ObjectID = name, Kind = basic ? ListKinds.BasicSpeechObject : ListKinds.SpeechObject, MemberObjectIDs = members,
-                Duration = duration, ChildCount = children, Version = Book(storage).VersionsOf(name, "BSO", "SPO")
+                Duration = duration, ChildCount = children, Version = version
             });
         }
         return found;
     }
 
-    private static double? DurationOf(ISharedStorage storage, SpeechObject whole)
+    private static double? DurationOf(ModuleStore storage, SpeechObject whole)
     {
         var ends = new List<double>();
         foreach (var e in whole.BasicSpeechObjects ?? [])

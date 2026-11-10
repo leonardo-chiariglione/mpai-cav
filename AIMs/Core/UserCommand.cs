@@ -261,6 +261,10 @@ public sealed class SceneChange
     // In full, or the AcousticProfileID of a kept one.
     [JsonConverter(typeof(AcousticProfileOrIdConverter))]
     public AcousticProfile? AcousticProfile { get; init; }
+
+    // How the open Scene is rendered for the listener: Mono, Stereo, Multichannel (with ChannelCount 4, 6 or 8) or Binaural. A property of the Scene itself.
+    public string? RenderingMode { get; init; }
+    public int? ChannelCount { get; init; }
 }
 
 public sealed class ObjectChanges

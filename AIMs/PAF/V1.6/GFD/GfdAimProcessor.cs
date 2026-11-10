@@ -172,7 +172,7 @@ public sealed class GfdAimProcessor : IAimProcessor
         if (!message.Ports.TryGetValue(_speechPort, out var json) || string.IsNullOrWhiteSpace(json))
             return (0, Array.Empty<double>());
         byte[] wav;
-        try { wav = MpaiJson.FromJson<BasicSpeechObject>(json)?.Data ?? Array.Empty<byte>(); }
+        try { wav = Mpai.Aif.PortData.PortObjects.ReadSpeech(json)?.Data ?? Array.Empty<byte>(); }
         catch { return (0, Array.Empty<double>()); }
         if (wav.Length < 44) return (0, Array.Empty<double>());
 

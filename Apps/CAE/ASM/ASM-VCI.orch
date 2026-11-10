@@ -47,8 +47,8 @@ on Start:
     deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "SpeechSceneRep"
     deliver MultimodalRep  (CAE-UCM-V1.0:5)  to device "MultimodalRep"
 
-    # The Module is up when the Controller says so. The first request is the proof and the welcome: the Module answers it, in text and in speech.
-    offer   Welcome        (OSD-BTO-V1.5:1) = "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+    # The Module is up when the Controller says so. The first request is the proof and the welcome: the Module answers it, in text and in speech (it says hello to a hello: the Asks of the Application Context; what it says is not read as a request, which the words of the welcome would be).
+    offer   Welcome        (OSD-BTO-V1.5:1) = "Hello."
     ask     WelcomeText    (OSD-BTO-V1.5:2), WelcomeSpeech (OSD-BSO-V1.5:1)
     present WelcomeText, WelcomeSpeech
 

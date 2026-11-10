@@ -4,9 +4,9 @@
     "Icon": "icon.svg",
     "Pane": "none",
     "Version": "1.0",
-    "Standard": "MPAI-MMC V2.5",
+    "Standard": "MPAI-OSD V1.5",
     "UseCase": "MAC",
-    "Module": "1MMC-MAC-V2.5-I01",
+    "Module": "1OSD-MAC-V1.5-I01",
     "Keywords": [
         "access",
         "control",

@@ -34,7 +34,7 @@ namespace Mpai.Mmc.Soe;
 //
 // A SPEECH OBJECT IS NAMED BY THE USER (the author, 2026/10/26): in the data, the commands and
 // the replies it is identified only by its name - "hello" - the value of its
-// BasicSpeechObjectID or SpeechObjectID; the Module's storage keys never leave it. A second
+// BasicSpeechObjectID or SpeechObjectID; the Module's storage keys (Data Type, Port and that name) never leave it. A second
 // Object given a name that is taken is "hello 2". An Object arriving with no name is not
 // kept: the report says that a name is needed. ListedObjects lists the Speech Objects the
 // Module keeps, by name. A placement is the command's amount: a ChangedObjects without
@@ -43,7 +43,7 @@ namespace Mpai.Mmc.Soe;
 // A Speech Object is kept under its own name, changed in place.
 public sealed class SoeAimProcessor : IAimProcessor
 {
-    private readonly ISharedStorage _storage;
+    private readonly ModuleStore _store;
 
     private readonly string _commandPort;
     private readonly string _povPort;
@@ -55,6 +55,7 @@ public sealed class SoeAimProcessor : IAimProcessor
     private readonly string _reportOut;
 
     private string? _open;
+    private string? _openFull;      // the name of the Speech Object (of several) that is open, when one is: the commands act on each Basic Speech Object it holds
     private readonly UndoJournal _undo = new();
 
     // The translation asked for and not yet arrived, and the report that waits for it:
@@ -63,10 +64,11 @@ public sealed class SoeAimProcessor : IAimProcessor
 
     public string InstanceId { get; }
 
-    public SoeAimProcessor(string instanceId, ISharedStorage storage, AimPortReader ports)
+    public SoeAimProcessor(string instanceId, ModuleStore store, AimPortReader ports)
     {
         InstanceId       = instanceId;
-        _storage         = storage;
+        _store           = store;
+        store.Changed += Offer;
         _commandPort     = ports.Input("CAE-UCM-V1.0");
         _povPort         = ports.InputOrDefault("OSD-OPV-V1.5", "");
         _objectPort      = ports.InputOrDefault("OSD-SPO-V1.5", 1, "");
@@ -98,7 +100,8 @@ public sealed class SoeAimProcessor : IAimProcessor
             if (acquiring.SpeechObject is { } speechObject) { objectJson = MpaiJson.ToJson(speechObject); acquired = speechObject.BasicSpeechObjectID; }
             else if (acquiring.AudioObject is null && acquiring.BasicAudioObject is null && acquiring.VisualObject is null && acquiring.ObjectID is { Length: > 0 } wanted)
             {
-                if (SpeechStore.Get(_storage, wanted) is not null) { _open = wanted; acquired = wanted; }
+                if (SpeechStore.Get(_store, wanted) is not null) { _open = wanted; _openFull = null; acquired = wanted; }
+                else if (SpeechStore.GetObject(_store, wanted, resolve: false) is not null) { _openFull = wanted; _open = null; acquired = wanted; }
                 else unnamed = $"the Module keeps no Speech Object named {wanted}";
             }
         }
@@ -110,12 +113,14 @@ public sealed class SoeAimProcessor : IAimProcessor
                 if (SpeechStore.Alone(arrived) is { } speech)
                 {
                     if (NameBook.Clean(speech.BasicSpeechObjectID) is null) throw new NameNeededException("the Basic Speech Object");
-                    _open = SpeechStore.Get(_storage, speech.BasicSpeechObjectID) is not null && SpeechStore.IsTheSpeech(_storage, speech) ? speech.BasicSpeechObjectID.Trim() : SpeechStore.Keep(_storage, speech);
+                    _open = SpeechStore.Get(_store, speech.BasicSpeechObjectID) is not null && SpeechStore.IsTheSpeech(_store, speech) ? speech.BasicSpeechObjectID.Trim() : SpeechStore.Keep(_store, speech);
+                    _openFull = null;
                     Console.WriteLine($"[MMC-SOE-V2.5] open {_open}");
                 }
                 else
                 {
-                    several = SpeechStore.KeepObject(_storage, arrived);
+                    several = SpeechStore.KeepObject(_store, arrived);
+                    _openFull = several; _open = null;               // a Speech Object of several is open as a Basic one is: the commands that follow act on each Basic Speech Object it holds
                     Console.WriteLine($"[MMC-SOE-V2.5] speech object {several}");
                 }
             }
@@ -125,7 +130,7 @@ public sealed class SoeAimProcessor : IAimProcessor
 
         // 2. a User PoV on its Port.
         if (In(_povPort) is { } povJson && Open() is { } heard)
-            SpeechStore.Put(_storage, SpeechStore.With(heard, userPoV: MpaiJson.FromJson<PointOfView>(povJson)));
+            SpeechStore.Put(_store, SpeechStore.With(heard, userPoV: MpaiJson.FromJson<PointOfView>(povJson)));
 
         // 3. a translation come back: it replaces its original, and the command is reported.
         if (In(_translationPort) is { } translationJson && _pending is { } pending)
@@ -133,12 +138,12 @@ public sealed class SoeAimProcessor : IAimProcessor
             _pending = null;
             var report = new CommandReport(pending.Command);
             var id = IdOf(pending.Entry.ObjectID);
-            if (id is not null && SpeechStore.Get(_storage, id) is { } original && MpaiJson.FromJson<BasicSpeechObject>(translationJson) is { } translation)
+            if (id is not null && SpeechStore.Get(_store, id) is { } original && MpaiJson.FromJson<BasicSpeechObject>(translationJson) is { } translation)
             {
-                SpeechStore.Put(_storage, SpeechStore.Replacing(original, translation, pending.Entry.SpeechQualifier));
+                SpeechStore.Put(_store, SpeechStore.Replacing(original, translation, pending.Entry.SpeechQualifier));
                 _open = id;
                 // what the translation replaced is kept: revoking the command puts the original back, in every Scene that holds it
-                _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_storage, original); return id; });
+                _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_store, original); return id; });
                 report.Done("TranslatedObjects", id, id);
                 Console.WriteLine($"[MMC-SOE-V2.5] {id} replaced by its translation into {pending.Entry.TargetLanguage}");
             }
@@ -159,7 +164,7 @@ public sealed class SoeAimProcessor : IAimProcessor
             if (_overwritten.Count > 0)
             {
                 var kept = _overwritten.ToList(); _overwritten.Clear();
-                _undo.Record(command.UserCommandID, () => true, () => { for (var i = kept.Count - 1; i >= 0; i--) SpeechStore.Put(_storage, kept[i]); return _open; });
+                _undo.Record(command.UserCommandID, () => true, () => { for (var i = kept.Count - 1; i >= 0; i--) SpeechStore.Put(_store, kept[i]); return _open; });
             }
             // A translation is reported when it comes back; anything else now.
             if (!waiting && _reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
@@ -174,7 +179,7 @@ public sealed class SoeAimProcessor : IAimProcessor
 
         // 5. the Speech Object: one stored in this run, else the open Object as a Speech Object of one.
         opened:
-        var given = several is not null ? SpeechStore.GetObject(_storage, several) : Open() is { } open ? SpeechStore.Wrap(open) : null;
+        var given = several is not null ? SpeechStore.GetObject(_store, several) : Open() is { } open ? SpeechStore.Wrap(open) : _openFull is not null ? SpeechStore.GetObject(_store, _openFull) : null;
         if (given is not null) outputs[_objectOut] = MpaiJson.ToJson(given);
         return Task.FromResult(new Message
         {
@@ -191,7 +196,24 @@ public sealed class SoeAimProcessor : IAimProcessor
     private readonly List<BasicSpeechObject> _overwritten = new();
     private void Keep(BasicSpeechObject speech) => _overwritten.Add(speech);
 
-    private BasicSpeechObject? Open() => _open is null ? null : SpeechStore.Get(_storage, _open);
+    // DELETION of a Speech Object (Basic or of several) by its name. Nothing holds one here: a Speech Scene that holds it keeps a member that is gone as it was given.
+    private (DeletionOutcome Outcome, string? Reason) Delete(string name)
+    {
+        if (!SpeechStore.Holds(_store, name)) return (DeletionOutcome.NotKept, null);
+        _store.Delete(Kinds.BasicSpeechObject, name);
+        _store.Delete(Kinds.SpeechObject, name);
+        return (DeletionOutcome.Deleted, null);
+    }
+
+    // The Speech Object the Module gives (OSD-SPO #1), in its Shared Storage: the Object as the Module now holds it, a Basic one as a Speech Object of one. One that is gone is withdrawn.
+    private void Offer(StoredKind kind, string id)
+    {
+        if (kind != Kinds.BasicSpeechObject && kind != Kinds.SpeechObject) return;
+        SpeechObject? given = SpeechStore.GetObject(_store, id) ?? (SpeechStore.Get(_store, id) is { } basic ? SpeechStore.Wrap(basic) : null);
+        _store.Offer(Kinds.SpeechObject, id, given is null ? null : System.Text.Encoding.UTF8.GetBytes(MpaiJson.ToJson(given)));
+    }
+
+    private BasicSpeechObject? Open() => _open is null ? null : SpeechStore.Get(_store, _open);
 
     // True when the command waits for a translation, which then reports it.
     private bool Apply(UserCommand command, CommandReport report, Dictionary<string, string> outputs)
@@ -199,7 +221,7 @@ public sealed class SoeAimProcessor : IAimProcessor
         var data = command.UserCommandRQ;
         if (data is null) return false;
         if (data.ListedObjects is { } listing) List(listing, report);
-        { var gone = Deletions.Apply(data, new NameBook(_storage), NamedKind.SpeechObject, "Speech Object", report); if (_open is not null && gone.Contains(_open)) _open = null; }
+        { var gone = Deletions.Apply(data, Delete, "Speech Object", report); if (_open is not null && gone.Contains(_open)) _open = null; }
         const string inScene = "where an Object is in a Scene is Speech Scene Editing's";
         foreach (var (action, any) in new[] { ("AddedObjects", data.AddedObjects is { Objects.Count: > 0 }),
                                               ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
@@ -210,15 +232,31 @@ public sealed class SoeAimProcessor : IAimProcessor
 
         if (data.UserPoV is not null)
         {
-            if (Open() is { } speech) { Keep(speech); SpeechStore.Put(_storage, SpeechStore.With(speech, userPoV: data.UserPoV)); report.Done("UserPoV", _open, _open); }
+            if (Open() is { } speech) { Keep(speech); SpeechStore.Put(_store, SpeechStore.With(speech, userPoV: data.UserPoV)); report.Done("UserPoV", _open, _open); }
+            else if (_openFull is not null && SpeechStore.Leaves(_store, _openFull, null) is { Count: > 0 } parts)
+            {
+                foreach (var (part, _) in parts) if (SpeechStore.Get(_store, part) is { } held) { Keep(held); SpeechStore.Put(_store, SpeechStore.With(held, userPoV: data.UserPoV)); }
+                report.Done("UserPoV", _openFull, _openFull);
+            }
             else report.Failed("UserPoV", null, "no Basic Speech Object is open");
         }
 
         if (data.ChangedObjects is { Objects.Count: > 0 } changed)
             foreach (var entry in changed.Objects)
             {
-                var id = IdOf(entry.ObjectID) ?? _open;
-                var speech = id is null ? null : SpeechStore.Get(_storage, id);
+                var id = IdOf(entry.ObjectID) ?? _open ?? _openFull;
+                var speech = id is null ? null : SpeechStore.Get(_store, id);
+                if (speech is null && id is not null && SpeechStore.Leaves(_store, id, null) is { Count: > 0 } parts)
+                {
+                    // A Speech Object of several: its Speech Qualifier is that of each Basic Speech Object it holds; where each is, is Speech Scene Editing's.
+                    if (entry.SpatialAttitude is not null) { report.Failed("ChangedObjects", id, "a Speech Object of several is placed part by part by Speech Scene Editing: name a Basic Speech Object to give it a Spatial Attitude"); continue; }
+                    if (entry.Qualifier is not { } wholeQualifier || System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(wholeQualifier))?["Header"]?.GetValue<string>() != SpeechQualifierHeader)
+                    { report.Failed("ChangedObjects", id, "nothing to change: a Speech Qualifier is required"); continue; }
+                    var wholeSpeechQualifier = MpaiJson.FromJson<SpeechQualifier>(System.Text.Json.JsonSerializer.Serialize(wholeQualifier));
+                    foreach (var (part, _) in parts) if (SpeechStore.Get(_store, part) is { } held) { Keep(held); SpeechStore.Put(_store, SpeechStore.With(held, qualifier: wholeSpeechQualifier)); }
+                    report.Done("ChangedObjects", id, id);
+                    continue;
+                }
                 if (speech is null) { report.Failed("ChangedObjects", id, "no such Basic Speech Object"); continue; }
                 SpeechQualifier? qualifier = null;
                 if (entry.Qualifier is { } q && System.Text.Json.JsonSerializer.Serialize(q) is var qJson &&
@@ -227,7 +265,7 @@ public sealed class SoeAimProcessor : IAimProcessor
                 if (qualifier is null && entry.SpatialAttitude is null) { report.Failed("ChangedObjects", id, "nothing to change: a Speech Qualifier or a Spatial Attitude is required"); continue; }
                 if (entry.SpatialAttitude is not null && Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("ChangedObjects", id, problem); continue; }
                 Keep(speech);
-                SpeechStore.Put(_storage, SpeechStore.With(speech, qualifier: qualifier,
+                SpeechStore.Put(_store, SpeechStore.With(speech, qualifier: qualifier,
                     spaceTime: entry.SpatialAttitude is null ? null : new SpaceTime { SpatialAttitude1 = entry.SpatialAttitude }));
                 report.Done("ChangedObjects", id, id);
             }
@@ -236,8 +274,9 @@ public sealed class SoeAimProcessor : IAimProcessor
         {
             var entry = translated.Objects[0];
             var id = IdOf(entry.ObjectID);
-            var speech = id is null ? null : SpeechStore.Get(_storage, id);
+            var speech = id is null ? null : SpeechStore.Get(_store, id);
             if (_speechOut.Length == 0 || _languageOut.Length == 0) report.Failed("TranslatedObjects", id, "this AIM has no Port to Text and Speech Translation");
+            else if (speech is null && id is not null && SpeechStore.Leaves(_store, id, null).Count > 0) report.NotSupported("TranslatedObjects", id, "a Speech Object of several is translated part by part: name a Basic Speech Object");
             else if (speech is null) report.Failed("TranslatedObjects", id, "no such Basic Speech Object");
             else if (entry.TargetLanguage is not { Length: > 0 } target) report.Failed("TranslatedObjects", id, "no target language");
             else
@@ -261,7 +300,7 @@ public sealed class SoeAimProcessor : IAimProcessor
         if (listing.Kind != ListKinds.All && ListKinds.ListedBy(listing.Kind) != "Speech Object Editing")
         { report.NotSupported("ListedObjects", null, $"the {listing.Kind}s are listed by {ListKinds.ListedBy(listing.Kind)}"); return; }
         if (listing.ObjectID is not null && listing.Kind == ListKinds.All) { report.Failed("ListedObjects", listing.ObjectID, "ObjectID names one thing of one Kind: the Kind is required, not All"); return; }
-        var listed = SpeechStore.Listing(_storage, listing.Kind!, NameBook.Clean(listing.ObjectID));
+        var listed = SpeechStore.Listing(_store, listing.Kind!, NameBook.Clean(listing.ObjectID));
         if (listing.ObjectID is not null && listed.Count == 0) { report.Failed("ListedObjects", listing.ObjectID, $"the Module keeps no {listing.Kind} of that name"); return; }
         report.Listed(listed);
     }

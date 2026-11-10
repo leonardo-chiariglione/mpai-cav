@@ -55,11 +55,10 @@ public sealed class AoeAimProcessor : IAimProcessor
     private readonly string _objectOut;   // the Audio Object out (OSD-AUO)
     private readonly string _reportOut;
 
-    // What is open, between runs: the key of the version in force (the Module's own; the User is told the name).
+    // What is open, between runs: the name of the Object (the Module keeps its versions under it; the version in force is the highest).
     private string? _open;
     private readonly UndoJournal _undo = new();
     private string? _composed;            // the Audio Object a command of this run made
-    private readonly List<(string Old, string New)> _changes = new();     // the versions the features edited by this command replaced
 
     public string InstanceId { get; }
 
@@ -74,7 +73,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         _reportOut   = ports.OutputOrDefault("CAE-UCM-V1.0", "");
     }
 
-    private string? N(string? key) => _aoe.NameOf(key);
+    private static string? N(string? id) => id;
 
     public Task<Message> ProcessAsync(Message message)
     {
@@ -103,7 +102,7 @@ public sealed class AoeAimProcessor : IAimProcessor
             }
             else if (acquiring.SpeechObject is null && acquiring.VisualObject is null && acquiring.ObjectID is { Length: > 0 } wanted)
             {
-                if (_aoe.KeyOf(wanted) is { } held) { _open = held; acquired = wanted; }
+                if (_aoe.Kept(wanted) is { } held) { _open = held; acquired = wanted; }
                 else unnamed = $"the Module keeps no Audio Object named {wanted}";
             }
         }
@@ -117,15 +116,15 @@ public sealed class AoeAimProcessor : IAimProcessor
                     // One Basic Audio Object: the Object the Module keeps under its name is opened when it is the same sound; any other is a new one, under that name or the next
                     // free one. An Object with no name is not created.
                     if (NameBook.Clean(basic.BasicAudioObjectID) is not { } name) throw new NameNeededException("the Basic Audio Object");
-                    var held = _aoe.KeyOf(name);
+                    var held = _aoe.IsBasic(name) ? name : null;
                     _open = held is not null && _aoe.IsTheSound(held, basic) ? held : _aoe.CreateObject(basic, name).AssetId;
                     Console.WriteLine($"[CAE-AOE-V1.0] open {N(_open)}");
                 }
                 else
                 {
                     // Several: an Audio Object the storage holds under its name is that one; else it is stored here, and given back as stored.
-                    var held = _aoe.KeyOf(auo.AudioObjectID);
-                    made = held is not null && held.StartsWith("AUO", StringComparison.Ordinal) ? held : _aoe.StoreAudioObject(auo).AssetId;
+                    made = _aoe.Kept(auo.AudioObjectID) is { } held && _aoe.IsFull(held) ? held : _aoe.StoreAudioObject(auo).AssetId;
+                    _open = made;                                   // a Full Audio Object is open as a Basic one is: the commands that follow act on it, on each Basic Audio Object it holds
                     Console.WriteLine($"[CAE-AOE-V1.0] audio object {N(made)}");
                 }
             }
@@ -135,7 +134,7 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         // 2. a User PoV on its Port: where the open Object is heard from.
         if (_povPort.Length > 0 && _open is not null && message.Ports.TryGetValue(_povPort, out var povJson) && !string.IsNullOrWhiteSpace(povJson))
-            _open = _aoe.EditBasicObjectProperties(_open, listenerPointOfView: MpaiJson.FromJson<PointOfView>(povJson)).AssetId;
+            _open = _aoe.EditObjectProperties(_open, listenerPointOfView: MpaiJson.FromJson<PointOfView>(povJson)).AssetId;
 
         // 3. acting, by Command; the report goes back under the command's identifier.
         if (message.Ports.TryGetValue(_commandPort, out var commandJson) && !string.IsNullOrWhiteSpace(commandJson))
@@ -151,25 +150,15 @@ public sealed class AoeAimProcessor : IAimProcessor
                 else
                 {
                     var before = _open;
-                    _changes.Clear();
+                    _aoe.ForgetSteps();
                     Apply(command, report);
-                    var edited = _changes.ToList();
-                    if (edited.Count == 0)
-                        _undo.RecordVersions(command.UserCommandID, before, _open, () => _open, v => { var from = _open; _open = v; _aoe.Select(v, from); }, N);
-                    else
-                    {
-                        // Features edited: each Object has the version it had, under the name it had, put back - the last first.
-                        var names = edited.Select(c => N(c.New)).ToList();
-                        _undo.Record(command.UserCommandID, () => edited.Select((c, i) => _aoe.KeyOf(names[i]) == c.New).All(x => x), () =>
-                        {
-                            for (var i = edited.Count - 1; i >= 0; i--)
-                            {
-                                _aoe.Select(edited[i].Old, edited[i].New);
-                                if (_open == edited[i].New) _open = edited[i].Old;
-                            }
-                            return N(edited[0].Old);
-                        });
-                    }
+                    // What the command wrote is put back by taking the versions it wrote away (or, for a new name, the versions the old name had back): nothing is recorded when it wrote nothing
+                    // and left the same Object open.
+                    var after = _open;
+                    if (_aoe.TakeSteps() is { } steps)
+                        _undo.Record(command.UserCommandID, () => _open == after && steps.Unchanged(), () => { steps.Undo(); _open = before; return before; });
+                    else if (before != after)
+                        _undo.Record(command.UserCommandID, () => _open == after, () => { _open = before; return before; });
                 }
                 if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
             }
@@ -208,7 +197,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         foreach (var entry in composed.Objects)
         {
             var name = IdOf(entry.ObjectID);
-            var key = _aoe.KeyOf(name);
+            var key = _aoe.Kept(name);
             if (key is null) { report.Failed("AddedObjects", name, "an Audio Object is made of Objects that the Module keeps, named by their names"); return; }
             if (Amounts.PlaceProblem(entry.SpatialAttitude) is { } problem) { report.Failed("AddedObjects", name, problem); return; }
             parts.Add((key, new SpaceTime { SpatialAttitude1 = entry.SpatialAttitude, Time = entry.SpatialAttitude!.SpatialAttitudeTime ?? new SimpleTime() }));
@@ -244,12 +233,12 @@ public sealed class AoeAimProcessor : IAimProcessor
             if (!entry.HasFeature)
             { if (entry.SpatialAttitude is null) report.Failed("ChangedObjects", name, "nothing to change: a feature, with its value, is required"); continue; }
             if (NameBook.Clean(name) is null) { report.Failed("ChangedObjects", null, "the Object to change is named by its name"); continue; }
-            var key = _aoe.KeyOf(name);
+            var key = _aoe.Kept(name);
             if (key is null) { report.Failed("ChangedObjects", name, "the Module keeps no Object of that name"); continue; }
             var (made, problem) = _aoe.ChangeFeatures(key, entry);
             if (made is null) { report.Failed("ChangedObjects", name, problem ?? "the Object was not changed"); continue; }
-            _changes.Add((key, made));
-            if (made.StartsWith("BAO", StringComparison.Ordinal)) _open = made; else _composed = made;
+            if (_open == key && made != key) _open = made;      // the open Object was given a new name
+            if (_aoe.IsBasic(made)) _open = made; else _composed = made;
             report.Done("ChangedObjects", name, N(made));
         }
     }
@@ -259,7 +248,7 @@ public sealed class AoeAimProcessor : IAimProcessor
         var data = command.UserCommandRQ;
         if (data is null) return;
         if (data.ListedObjects is { } listing) List(listing, report);
-        { var gone = Deletions.Apply(data, _aoe.Names, NamedKind.AudioObject, "Audio Object", report); if (_open is not null && gone.Contains(_open)) _open = null; if (_composed is not null && gone.Contains(_composed)) _composed = null; }
+        { var gone = Deletions.Apply(data, _aoe.Delete, "Audio Object", report); if (_open is not null && gone.Contains(_open)) _open = null; if (_composed is not null && gone.Contains(_composed)) _composed = null; }
 
         const string inScene = "where an Object is in a Scene is Audio Scene Editing's";
         foreach (var (action, any) in new[] { ("MovedObjects", data.MovedObjects is { Objects.Count: > 0 }),
@@ -275,9 +264,9 @@ public sealed class AoeAimProcessor : IAimProcessor
         if (data.ModifiedObjects is { Objects.Count: > 0 } first && first.Objects[0].ObjectID is { } target)
         {
             var given = IdOf(target);
-            var key = _aoe.KeyOf(given);
-            if (key is not null && key.StartsWith("BAO", StringComparison.Ordinal)) _open = key;
-            else { report.Failed("ModifiedObjects", given, key is null ? "the Module keeps no Basic Audio Object of that name" : "only a Basic Audio Object is modified here"); return; }
+            var key = _aoe.Kept(given);
+            if (key is not null) _open = key;
+            else { report.Failed("ModifiedObjects", given, "the Module keeps no Audio Object of that name"); return; }
         }
 
         if (_open is null)
@@ -290,7 +279,7 @@ public sealed class AoeAimProcessor : IAimProcessor
 
         if (data.UserPoV is not null)
         {
-            _open = _aoe.EditBasicObjectProperties(_open, listenerPointOfView: data.UserPoV).AssetId;
+            _open = _aoe.EditObjectProperties(_open, listenerPointOfView: data.UserPoV).AssetId;
             report.Done("UserPoV", N(_open), N(_open));
         }
 
@@ -303,9 +292,9 @@ public sealed class AoeAimProcessor : IAimProcessor
                 if (entry.ObjectID is { } named)
                 {
                     var given = IdOf(named);
-                    var key = _aoe.KeyOf(given);
-                    if (key is not null && key.StartsWith("BAO", StringComparison.Ordinal)) _open = key;
-                    else { report.Failed("ModifiedObjects", given, key is null ? "the Module keeps no Basic Audio Object of that name" : "only a Basic Audio Object is modified here"); continue; }
+                    var key = _aoe.Kept(given);
+                    if (key is not null) _open = key;
+                    else { report.Failed("ModifiedObjects", given, "the Module keeps no Audio Object of that name"); continue; }
                 }
                 if (entry.AcousticProfile is null && entry.LUFS is null)
                 { report.Failed("ModifiedObjects", N(_open), "nothing to modify: an Acoustic Profile, or a loudness (LUFS) as a number, is required"); continue; }
@@ -316,7 +305,7 @@ public sealed class AoeAimProcessor : IAimProcessor
                     if (profile is null) { report.Failed("ModifiedObjects", N(_open), $"the Module keeps no Acoustic Profile named \"{wanted.AcousticProfileID}\""); continue; }
                     if (!wanted.Reference) _aoe.Profiles.Keep(wanted);
                 }
-                _open = _aoe.EditBasicObjectProperties(_open, level: entry.LUFS, acousticProfile: profile).AssetId;
+                _open = _aoe.EditObjectProperties(_open, level: entry.LUFS, acousticProfile: profile).AssetId;
                 report.Done("ModifiedObjects", N(_open), N(_open));
             }
     }

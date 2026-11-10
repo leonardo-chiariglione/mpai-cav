@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Eae;
 
-// CAE-AAT-V2.5, Audio Analysis Transform: the Audio Object (the multichannel audio of a microphone array, with the geometry of the array in its Qualifier) in; the Audio Object in the
+// CAE-SFT-V2.5, Short-Time Fourier Transform: the Audio Object (the multichannel audio of a microphone array, with the geometry of the array in its Qualifier) in; the Audio Object in the
 // transform domain out - the spectrum of each channel for each block, the block size that of the array's geometry (512 where there is none), the geometry carried on to the next AIM.
-public sealed class AatAimProcessor(string instanceId, string audioKey, string outputKey) : IAimProcessor
+public sealed class SftAimProcessor(string instanceId, string audioKey, string outputKey) : IAimProcessor
 {
     public const int DefaultBlockSize = 512;
     public string InstanceId { get; } = instanceId;
@@ -17,18 +18,18 @@ public sealed class AatAimProcessor(string instanceId, string audioKey, string o
     public Task<Message> ProcessAsync(Message message)
     {
         if (!message.Ports.TryGetValue(audioKey, out var json) || string.IsNullOrWhiteSpace(json))
-            return Task.FromResult(Message.Error(message.MessageId, InstanceId, $"CAE-AAT-V2.5: no Audio Object on input port '{audioKey}'."));
+            return Task.FromResult(Message.Error(message.MessageId, InstanceId, $"CAE-SFT-V2.5: no Audio Object on input port '{audioKey}'."));
         try
         {
             var (audio, geometry) = AudioObject.ReadMultichannel(json);
             if (geometry is not null && geometry.Count != audio.Channels.Length) throw new FormatException($"The array has {geometry.Count} microphones and the audio {audio.Channels.Length} channels.");
             var blocks = Stft.Analyse(audio, geometry?.BlockSize ?? DefaultBlockSize);
-            var text = TransformObject.Make("aat-" + Guid.NewGuid().ToString("N")[..12], blocks, "Transform", geometry?.ToJson());
+            var text = TransformObject.Make("sft-" + Guid.NewGuid().ToString("N")[..12], blocks, "Transform", geometry?.ToJson());
             return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "BasicAudioObject", DataType = AudioObject.Header, Payload = text, Ports = new Dictionary<string, string> { [outputKey] = text } });
         }
         catch (Exception ex) when (ex is FormatException or ArgumentException or InvalidOperationException)
         {
-            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-AAT-V2.5: " + ex.Message));
+            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-SFT-V2.5: " + ex.Message));
         }
     }
 }

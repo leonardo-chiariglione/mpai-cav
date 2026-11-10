@@ -1,0 +1,183 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "OSD-MDX-V1.5-I01",
+    "AIMName": "1OSD-MDX-V1.5-I01"
+  },
+  "Header": "OSD-MDX-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Multimodal Scene Demultiplexing: demultiplexes the Basic Multimodal Scene Descriptors it receives into the Space-Time of the scene, the Speech Objects, the Text Object, the Audio Objects, the Visual Objects, the Face Object (a Visual Object that is a face), the Face and Body Descriptors, the Audio Scene Descriptors and the geometry of the scenes. What the scene does not hold is not produced.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "MultimodalSceneDescriptors",
+      "Direction": "Input",
+      "DataType": [
+        "OSD-MSD-V1.5",
+        "OSD-BMS-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpaceTime",
+      "Direction": "Output",
+      "DataType": "OSD-SPT-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechObjects",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BSO-V1.5",
+        "OSD-SPO-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "TextObject",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BTO-V1.5",
+        "OSD-TXO-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioObjects",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BAO-V1.5",
+        "OSD-AUO-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualObjects",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5"
+      ],
+      "PortNumber": 1,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "FaceObject",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVO-V1.5",
+        "OSD-VIO-V1.5"
+      ],
+      "PortNumber": 2,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "FaceDescriptors",
+      "Direction": "Output",
+      "DataType": "PAF-FDO-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BodyDescriptors",
+      "Direction": "Output",
+      "DataType": "PAF-BDO-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioSceneDescriptors",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BAS-V1.5",
+        "OSD-ASD-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "SpeechSceneGeometry",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BSG-V1.5",
+        "OSD-SSG-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AudioSceneGeometry",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BAG-V1.5",
+        "OSD-ASG-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneGeometry",
+      "Direction": "Output",
+      "DataType": [
+        "OSD-BVG-V1.5",
+        "OSD-VSG-V1.5"
+      ],
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/MDX",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Osd.Mdx",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.0",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/multimodal-scene-demultiplexing/"
+    }
+  ]
+}

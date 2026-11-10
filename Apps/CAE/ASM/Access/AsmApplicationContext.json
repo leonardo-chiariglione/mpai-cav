@@ -2,7 +2,7 @@
   "Header": "MMC-APC-V2.5",
   "Description": "The Application Context of Audio Scene Management (CAE-ASM) for the JSON Interface (MMC-JSI): what, beyond the schema of the User Command, describes the application. It is data of the Access of the implementation 1MMC-JSI-V2.5-I02 (Setting ApplicationContext), beside the schema of the User Command (Settings CommandSchema and ResponseSchema, one schema for both: the request is UserCommandRQ, the response UserCommandRS).",
   "Application": "The application edits an audio scene: sounds (objects) placed around a listener, the user. A command moves, turns, adds, removes or plays objects, sets their loudness, moves the listener, or undoes an earlier command.",
-  "Conventions": "Positions are in metres: x right of the user, y ahead, z up; the user is at (0, 0, 0) facing +y. An orientation is (alpha, beta, gamma) in degrees and only gamma is used: 0 faces away from the user, 180 faces the user, 90 faces the user's left, 270 the user's right.\nThe field by the verb:\n- MovedObjects (the NEW position and orientation of an object): move, shift, push, bring, put, place, raise, lift, lower, drop, turn, rotate, nearer, closer, farther, forward, back.\n- ChangedObjects (a Level in LUFS, negative: \"minus 20\" is -20): louder, quieter, softer, the level of an object. LUFS alone is for the whole scene.\n- AddedObjects: add, bring in. RemovedObjects: remove, take out. DeliveredObject: play, let me hear (the scene has a name too). UserPoV: the listener (me, I, let me listen). RevokedUserCommandID: undo, go back (a command sent before, the last unless another is said).\nA change by d from the current position (see the state of the application) changes ONE coordinate: right x+d; left x-d; forward, ahead y+d; back, behind y-d; up, raise, lift z+d; down, lower, drop z-d; closer, nearer: the distance from (0, 0, 0) gets d smaller (an object ahead y-d, behind y+d); farther: d larger (ahead y+d, behind y-d). \"To x, y, z\" is as said. A turn keeps the position; \"by n degrees\" adds n to gamma.\nAnother word may stand for an object (fiddle: violin; singer, vocals: voice; keyboard: piano). Stop, save, open and close are not commands: answer a Problem.\nA room (ClosedSpace) is a box on the floor (z = 0), 2.5 m high unless said, given by four corners in metres: the corner with the smallest x, y, z; then the corner along x; the corner along y; the corner along z. \"3 metres by 3 metres centred at 0 0\" is x from -1.5 to 1.5 and y from -1.5 to 1.5: corners (-1.5, -1.5, 0), (1.5, -1.5, 0), (-1.5, 1.5, 0), (-1.5, -1.5, 2.5). \"6 by 4\" is 6 along x and 4 along y, centred at 0 0 unless a centre is said.\nDELETE is not REMOVE: \"remove the violin\" (take out, take away) takes it out of the scene and it is still kept (RemovedObjects); \"delete the violin\", \"erase it\", \"forget the violin\", \"delete it from the store\" deletes it from where the application keeps things, for good (DeletedObjects, by name: an object or a scene). An object that is in a scene is not deleted until the scene is.",
+  "Conventions": "Positions are in metres: x right of the user, y ahead, z up; the user is at (0, 0, 0) facing +y. The walls of the room are also named by the compass: the north wall is ahead of the user (+y), the east wall to the right (+x), the south wall behind, the west wall to the left. An orientation is (alpha, beta, gamma) in degrees and only gamma is used: 0 faces away from the user, 180 faces the user, 90 faces the user's left, 270 the user's right.\nThe field by the verb:\n- MovedObjects (the NEW position and orientation of an object): move, shift, push, bring, put, place, raise, lift, lower, drop, turn, rotate, nearer, closer, farther, forward, back.\n- ChangedObjects (a Level in LUFS, negative: \"minus 20\" is -20): louder, quieter, softer, the level of an object. LUFS alone is for the whole scene.\n- AddedObjects: add, bring in. RemovedObjects: remove, take out. DeliveredObject: play, let me hear (the scene has a name too). UserPoV: the listener (me, I, let me listen). RevokedUserCommandID: undo, go back (a command sent before, the last unless another is said).\nA change by d from the current position (see the state of the application) changes ONE coordinate: right x+d; left x-d; forward, ahead y+d; back, behind y-d; up, raise, lift z+d; down, lower, drop z-d; closer, nearer: the distance from (0, 0, 0) gets d smaller (an object ahead y-d, behind y+d); farther: d larger (ahead y+d, behind y-d). \"To x, y, z\" is as said. A turn keeps the position; \"by n degrees\" adds n to gamma.\nAnother word may stand for an object (fiddle: violin; singer, vocals: voice; keyboard: piano). Stop, save, open and close are not commands: answer a Problem.\nA room (ClosedSpace) is a box on the floor (z = 0), 2.5 m high unless said, given by four corners in metres: the corner with the smallest x, y, z; then the corner along x; the corner along y; the corner along z. \"3 metres by 3 metres centred at 0 0\" is x from -1.5 to 1.5 and y from -1.5 to 1.5: corners (-1.5, -1.5, 0), (1.5, -1.5, 0), (-1.5, 1.5, 0), (-1.5, -1.5, 2.5). \"6 by 4\" is 6 along x and 4 along y, centred at 0 0 unless a centre is said.\nDELETE is not REMOVE: \"remove the violin\" (take out, take away) takes it out of the scene and it is still kept (RemovedObjects); \"delete the violin\", \"erase it\", \"forget the violin\", \"delete it from the store\" deletes it from where the application keeps things, for good (DeletedObjects, by name: an object or a scene). An object that is in a scene is not deleted until the scene is.",
   "Include": [
     "UserCommandRQ.UserPoV",
     "UserCommandRQ.LUFS",
@@ -22,6 +22,8 @@
     "UserCommandRQ.ModifiedScene.AcousticProfile.Reverberation",
     "UserCommandRQ.ModifiedScene.AcousticProfile.Reflectivity",
     "UserCommandRQ.ModifiedScene.AcousticProfile.Doppler",
+    "UserCommandRQ.ModifiedScene.RenderingMode",
+    "UserCommandRQ.ModifiedScene.ChannelCount",
     "UserCommandRQ.ModifiedScene.AcousticProfile.Walls",
     "UserCommandRQ.ModifiedScene.AcousticProfile.DefaultMaterial",
     "UserCommandRQ.ModifiedObjects.Objects.AcousticProfile.FrequencyRange",
@@ -1071,6 +1073,28 @@
     "NamedScene": "named the scene {0}"
   },
   "Asks": [
+    {
+      "Words": [
+        "which materials",
+        "what materials",
+        "list the materials",
+        "list materials",
+        "materials available",
+        "available materials",
+        "materials do you",
+        "materials can i",
+        "materials are there",
+        "show the materials",
+        "show materials"
+      ],
+      "Say": "I know these materials: concrete, brick, plaster, glass, wood, carpet, curtain and foam. Say for example: set the left wall to carpet, or cover the ceiling with foam."
+    },
+    {
+      "Words": [
+        "hello"
+      ],
+      "Say": "Hello. Speak to the audio scene, or type, and press Enter. To bring in a sound, press Load a sound."
+    },
     {
       "Words": [
         "new scene",
@@ -4076,7 +4100,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?<NUM:x>,? ?(?:and )?<NUM:y>,? ?(?:and )?<NUM:z>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?<NUM:x>,? ?(?:and )?<NUM:y>,? ?(?:and )?<NUM:z>(?: metres?)?",
       "Names": {
         "name": "Members"
       },
@@ -4102,7 +4126,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?,? ?(?:and )?z ?(?:=|is|equals?|equal to)? ?<NUM:z>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?,? ?(?:and )?z ?(?:=|is|equals?|equal to)? ?<NUM:z>(?: metres?)?",
       "Names": {
         "name": "Members"
       },
@@ -4128,7 +4152,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?",
       "Names": {
         "name": "Members"
       },
@@ -4154,7 +4178,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)? ?(?:at|to|in|on) (?:position )?<NUM:x>(?: metres?)?,? ?(?:and )?<NUM:y>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)? ?(?:at|to|in|on) (?:position )?<NUM:x>(?: metres?)?,? ?(?:and )?<NUM:y>(?: metres?)?",
       "Names": {
         "name": "Members"
       },
@@ -4180,7 +4204,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?<NUM:x>,? ?(?:and )?<NUM:y>,? ?(?:and )?<NUM:z>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?<NUM:x>,? ?(?:and )?<NUM:y>,? ?(?:and )?<NUM:z>(?: metres?)?",
       "Names": {
         "name": "Stored"
       },
@@ -4214,7 +4238,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?,? ?(?:and )?z ?(?:=|is|equals?|equal to)? ?<NUM:z>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?,? ?(?:and )?z ?(?:=|is|equals?|equal to)? ?<NUM:z>(?: metres?)?",
       "Names": {
         "name": "Stored"
       },
@@ -4248,7 +4272,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)?(?: (?:at|to))? ?x ?(?:=|is|equals?|equal to)? ?<NUM:x>(?: metres?)?,? ?(?:and )?y ?(?:=|is|equals?|equal to)? ?<NUM:y>(?: metres?)?",
       "Names": {
         "name": "Stored"
       },
@@ -4282,7 +4306,7 @@
       }
     },
     {
-      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>.+?)(?: is| are| should be| goes| stays| must be)? ?(?:at|to|in|on) (?:position )?<NUM:x>(?: metres?)?,? ?(?:and )?<NUM:y>(?: metres?)?",
+      "Pattern": "(?:(?:(?:bring in|move|shift|push|bring|place|put|position|set|slide|drag|relocate|take|nudge|add|insert)) )?(?:the )?(?<name>(?!(?:it|that|this|them|me|myself|the listener)\\b).+?)(?: is| are| should be| goes| stays| must be)? ?(?:at|to|in|on) (?:position )?<NUM:x>(?: metres?)?,? ?(?:and )?<NUM:y>(?: metres?)?",
       "Names": {
         "name": "Stored"
       },
@@ -4725,6 +4749,90 @@
                 "ObjectID": "{name}"
               }
             ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:(?:rename)) (?:the )?(?<name>.+?) (?:as|to|into)(?: be)? (?<text>.+)",
+      "Names": {
+        "name": "Kept"
+      },
+      "Raw": [
+        "text"
+      ],
+      "Command": {
+        "UserCommandRQ": {
+          "ChangedObjects": {
+            "Objects": [
+              {
+                "ObjectID": "{name}",
+                "Name": "{text}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:headphones|headphone|headset|earphones|earbuds|binaural)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Binaural"
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:stereo speakers|stereo loudspeakers|stereo|speakers|loudspeakers|speaker)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Stereo"
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:mono|one speaker)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Mono"
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:quad|quadraphonic|4 speakers|four speakers)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Multichannel",
+            "ChannelCount": 4
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:5.1|5.1 surround|surround|six speakers)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Multichannel",
+            "ChannelCount": 6
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))(?: (?:on|for|to|through|in|with|over))? (?:the |my )?(?:7.1|7.1 surround|eight speakers)(?: output| rendering)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "RenderingMode": "Multichannel",
+            "ChannelCount": 8
           }
         }
       }
@@ -13054,6 +13162,3462 @@
                     {
                       "Header": "OSD-MTR-V1.5",
                       "MaterialID": "back wall absorbing",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": "{v}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?concrete(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?concrete",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?brick(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?brick",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?plaster(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?plaster",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?glass(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?glass",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?wood(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?wood",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?carpet(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?carpet",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?curtain(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?curtain",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?foam(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?west\\ wall(?:'s)? (?:with|in) (?:the )?foam",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?west\\ wall(?:'s)?(?: surface)? absorption(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?<NUM:v>",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Left",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "west wall absorbing",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": "{v}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?concrete(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?concrete",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?brick(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?brick",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?plaster(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?plaster",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?glass(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?glass",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?wood(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?wood",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?carpet(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?carpet",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?curtain(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?curtain",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?foam(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?east\\ wall(?:'s)? (?:with|in) (?:the )?foam",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?east\\ wall(?:'s)?(?: surface)? absorption(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?<NUM:v>",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Right",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "east wall absorbing",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": "{v}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?concrete(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?concrete",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?brick(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?brick",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?plaster(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?plaster",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?glass(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?glass",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?wood(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?wood",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?carpet(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?carpet",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?curtain(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?curtain",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?foam(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?north\\ wall(?:'s)? (?:with|in) (?:the )?foam",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?north\\ wall(?:'s)?(?: surface)? absorption(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?<NUM:v>",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Front",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "north wall absorbing",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": "{v}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?concrete(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?concrete",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "concrete",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.01
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.02
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?brick(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?brick",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "brick",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.03
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?plaster(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?plaster",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "plaster",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.29
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.05
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.04
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.09
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?glass(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?glass",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "glass",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.35
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.25
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.18
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.12
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.04
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?wood(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?wood",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "wood",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.15
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.11
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.1
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.07
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?carpet(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?carpet",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "carpet",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.02
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.06
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.14
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.37
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.6
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.65
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?curtain(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?curtain",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "curtain",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.07
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.31
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.49
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.75
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.7
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.6
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: material| surface)?(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?(?:made of |of |in )?(?:the )?foam(?: surface| material)?",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:cover|line) (?:the )?south\\ wall(?:'s)? (?:with|in) (?:the )?foam",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "foam",
+                      "Acoustic": {
+                        "Absorption": [
+                          {
+                            "FrequencyHz": 125,
+                            "Fraction": 0.2
+                          },
+                          {
+                            "FrequencyHz": 250,
+                            "Fraction": 0.65
+                          },
+                          {
+                            "FrequencyHz": 500,
+                            "Fraction": 0.95
+                          },
+                          {
+                            "FrequencyHz": 1000,
+                            "Fraction": 0.9
+                          },
+                          {
+                            "FrequencyHz": 2000,
+                            "Fraction": 0.85
+                          },
+                          {
+                            "FrequencyHz": 4000,
+                            "Fraction": 0.8
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "Pattern": "(?:set|change|modify|make|give)? ?(?:the )?south\\ wall(?:'s)?(?: surface)? absorption(?: (?:to|at|is|are|should be|equals?|equal to|=|as))? ?<NUM:v>",
+      "Command": {
+        "UserCommandRQ": {
+          "ModifiedScene": {
+            "AcousticProfile": {
+              "AcousticProfileID": "walls",
+              "Walls": [
+                {
+                  "RightParallelepipedID": "room",
+                  "Face": "Back",
+                  "MaterialIDOrMaterial": [
+                    {
+                      "Header": "OSD-MTR-V1.5",
+                      "MaterialID": "south wall absorbing",
                       "Acoustic": {
                         "Absorption": [
                           {

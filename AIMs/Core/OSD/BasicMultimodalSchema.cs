@@ -67,12 +67,12 @@ public sealed class BasicMultimodalSceneDescriptors
     // 2026/10/05: BME integrates objects and scenes). Null when there are none.
     public List<BasicMultimodalObjectEntry>? BasicObjectsData { get; init; }
 
-    // OPTIONAL alignment layer (populated by the OSD-AVA AIM, absent in the
+    // OPTIONAL alignment layer (populated by the OSD-MAL AIM, absent in the
     // degenerate composition-only BMS). Each element combines the constituent
-    // per-modality objects that AVA determined to be the SAME entity (matched by
+    // per-modality objects that MAL determined to be the SAME entity (matched by
     // Spatial Attitude / PointOfView), tied by a shared AlignmentCode. Additive
     // and non-destructive: the original BAS/BVS scenes above keep their objects
-    // and PointOfViews exactly as measured; this is AVA's interpretation on top.
+    // and PointOfViews exactly as measured; this is MAL's interpretation on top.
     public List<AlignedMMObject> AlignedMMObjects { get; init; } = new();
 
     public DataExchangeMetadata? DataXMData { get; init; }
@@ -107,8 +107,8 @@ public sealed class BasicMultimodalObjectEntry
 
 // ---------------------------------------------------------------------------
 //  Aligned MultiModal Object - one element of BMS.AlignedMMObjects, produced by
-//  OSD-AVA. Combines the constituent per-modality objects (a BasicAudioObject +
-//  a BasicVisualObject, extensible to speech/3D) that AVA aligned as the same
+//  OSD-MAL. Combines the constituent per-modality objects (a BasicAudioObject +
+//  a BasicVisualObject, extensible to speech/3D) that MAL aligned as the same
 //  entity, by a shared AlignmentCode, with an optional consensus PointOfView.
 //
 //  AlignedObjects holds the constituents (or their id strings). Typed as object

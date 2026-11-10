@@ -15,78 +15,47 @@ namespace Mpai.Cae.Aoe;
 // ---------------------------------------------------------------------------
 //  CAE-AOE-V1.0 - Audio Object Editing.
 //
-//  Ported directly onto the proposed MPAI-AIF Shared Storage API
-//  (Put/Get/Delete/List/Exists/GetKeyInfo) - no intermediate Repository
-//  class or method vocabulary. The Module keeps each Object under a typed
-//  storage KEY (BAO000001, AUO000002 ...): the type prefix makes it
-//  self-describing for List(prefix) queries (Section 4.1 of the Shared
-//  Storage proposal). That key is PRIVATE to the Module.
+//  WHERE THE OBJECTS ARE (the author, 2026/11/08: "always write data type and port number; when Shared Storage also write the Module name"). Every instance is kept in the
+//  Private Storage of the Module at   <Data Type>#<Port>/<the Object's own ID>@<version>   - OSD-AUO-V1.5#1/band@2, OSD-BAO-V1.5#1/violin@1 - by ModuleStore; the Audio Object
+//  the Module gives (its Output Port) is also offered in its Shared Storage, at <Module>/OSD-AUO-V1.5#1/<ID>. There is no table and no counter: what is kept, the version in
+//  force (the highest) and the version number are found in what is stored.
 //
-//  AN OBJECT IS KNOWN BY ITS NAME (the author, 2026/10/26). The Object as stored,
-//  as output and as a User Command names it carries the name the User gave it in
-//  its identifier (BasicAudioObjectID, AudioObjectID): "violin". The NameBook of the
-//  Module is the table between the name and the key of the version in force; the
-//  key never leaves the Module. A name is unique among the Audio Objects the Module
-//  keeps: a second Object given a name that is taken is "violin 2". An Object with
-//  no name is not created.
+//  AN OBJECT IS KNOWN BY ITS NAME (the author, 2026/10/26). The Object as stored, as output and as a User Command names it carries the name the User gave it in its
+//  identifier (BasicAudioObjectID, AudioObjectID): "violin" - and that ID is the key. A name is unique among the Audio Objects the Module keeps: a second Object given a name
+//  that is taken is "violin 2". An Object with no name is not created.
 //
-//  Editing Principle preserved exactly: every edit produces a NEW key via a
-//  fresh Put - never an overwrite of an existing key's content. The name then
-//  designates the new version; the earlier one keeps its key and its name, for undo.
-//  A BasicAudioObject is the degenerate case of an AudioObject with no
-//  sub-objects, not a separate type to special-case.
+//  Editing Principle preserved: every edit produces a NEW version via a fresh Put - never an overwrite of an existing version's content. The ID then designates the new
+//  version; the earlier one keeps its place, for undo. A BasicAudioObject is the degenerate case of an AudioObject with no sub-objects, not a separate type to special-case.
 // ---------------------------------------------------------------------------
 public sealed class AoeAim
 {
-    private readonly ISharedStorage storage;
+    private readonly ModuleStore store;
 
     // The M-Instance or U-Environment the Objects are made in: OSD requires the
     // first on an Audio Object. An application gives its own; ASM's own is "ASM".
     private readonly string mInstanceId;
 
-    public NameBook Names { get; }
-
     // The Acoustic Profiles the Module keeps, by their AcousticProfileID (M3282 UCM-4).
     public KeptProfiles Profiles { get; }
 
-    public AoeAim(ISharedStorage storage, string mInstanceId = "ASM")
+    public AoeAim(ModuleStore store, string mInstanceId = "ASM")
     {
-        this.storage = storage;
+        this.store = store;
         this.mInstanceId = mInstanceId;
-        Names = new NameBook(storage);
-        Profiles = new KeptProfiles(storage);
+        Profiles = new KeptProfiles(store);
+        store.Changed += Offer;
     }
 
     private static readonly JsonSerializerOptions DataOptions = new() { Converters = { new JsonStringEnumConverter() } };
     private static byte[] Serialize<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value, DataOptions);
     private static T Deserialize<T>(byte[] bytes) => JsonSerializer.Deserialize<T>(bytes, DataOptions)!;
 
-    // A fresh, sequential, type-prefixed key per version (AUO000001, AUO000002, ...). The counter is itself a reserved key
-    // ("_counter:" prefix, which List(typePrefix) never matches), so it persists across sessions exactly like everything else.
-    private string NextId(string typePrefix)
-    {
-        var counterKey = $"_counter:{typePrefix}";
-        long next = storage.Exists(counterKey)
-            ? long.Parse(Encoding.UTF8.GetString(storage.Get(counterKey))) + 1
-            : 1;
-        storage.Put(counterKey, Encoding.UTF8.GetBytes(next.ToString()));
-        return $"{typePrefix}{next:D6}";
-    }
-
-    // Per Section 4.3 of the Shared Storage proposal.
-    private void PutReference(string fromId, string toId)
-    {
-        storage.Put($"ref:{fromId}:{toId}", Array.Empty<byte>());
-        storage.Put($"refby:{toId}:{fromId}", Array.Empty<byte>());
-    }
-
-    private static bool IsType(string assetId, string prefix) => assetId.StartsWith(prefix, StringComparison.Ordinal);
+    private static readonly StoredKind[] Both = [Kinds.AudioObject, Kinds.BasicAudioObject];
 
     // ID-stub entries: only the identifying field set, nothing else - a minimal but genuinely valid instance of the "object" branch of the schema's "object or id-string"
-    // oneOf. The stub holds the KEY of the version it composes (a composition composes the versions it was made of); Materialize() resolves it into the content, which
-    // carries the name.
-    private static BasicAudioObject IdStubBao(string key) => new() { BasicAudioObjectID = key };
-    private static AudioObject IdStubAuo(string key) => new() { AudioObjectID = key };
+    // oneOf. The stub holds the ID of the Object it composes; Materialize() resolves it into the content (the version in force).
+    private static BasicAudioObject IdStubBao(string id) => new() { BasicAudioObjectID = id };
+    private static AudioObject IdStubAuo(string id) => new() { AudioObjectID = id };
 
     // A Space/Time at the origin, for a composed Object that has not been placed. Position carries a CartPosition array, not X/Y/Z properties.
     private static SpaceTime AtTheOrigin() => new()
@@ -109,38 +78,34 @@ public sealed class AoeAim
         }
     };
 
-    // ---- names and keys ---------------------------------------------------
+    // ---- what the Module offers ----
 
-    // The key of the version in force under a name; null when the Module keeps no Audio Object of that name.
-    public string? KeyOf(string? name) => Names.KeyOf(NamedKind.AudioObject, name);
-    public string? NameOf(string? key) => Names.NameOf(key);
-    public bool Holds(string? name) => KeyOf(name) is not null;
-
-    // The name designates this version (an earlier one put back by a revocation). Replacing is the version it takes the place of: if that one was renamed, the new name
-    // designates nothing from now on.
-    public void Select(string? key, string? replacing = null)
+    // The Audio Object the Module gives, in its Shared Storage: the version in force, with the Objects it is made of in it (whole). One that is gone is withdrawn.
+    private void Offer(StoredKind kind, string id)
     {
-        if (key is null || Names.NameOf(key) is not { } name) return;
-        Names.Point(NamedKind.AudioObject, name, key);
-        if (replacing is not null && Names.NameOf(replacing) is { } other && other != name && Names.KeyOf(NamedKind.AudioObject, other) == replacing)
-            Names.Release(NamedKind.AudioObject, other);
+        if (kind != Kinds.AudioObject && kind != Kinds.BasicAudioObject) return;
+        byte[]? resolved = null;
+        if (Holds(id)) { try { resolved = Serialize(Materialize(id)); } catch (InvalidOperationException) { return; } }
+        store.Offer(Kinds.AudioObject, id, resolved);
     }
 
-    // A new version of a thing: a fresh key which the thing's name designates from now on.
-    private string NewVersion(string ofKey, string prefix)
-    {
-        var name = Names.NameOf(ofKey) ?? throw new InvalidOperationException("The Object has no name.");
-        var key = NextId(prefix);
-        Names.Point(NamedKind.AudioObject, name, key);
-        Names.Link(key, ofKey);
-        return key;
-    }
+    // What a User Command wrote, to be undone (the last first); the AIM asks for it when the command is done.
+    public void ForgetSteps() => store.ForgetSteps();
+    public (Func<bool> Unchanged, Action Undo)? TakeSteps() => store.TakeSteps();
+
+    // ---- names ----
+
+    // The name of the Audio Object (Basic or Full) the Module keeps under it; null when it keeps none. The name is the ID, and the ID is the key.
+    public string? Kept(string? name) => NameBook.Clean(name) is { } clean && Holds(clean) ? clean : null;
+    public bool Holds(string? name) => NameBook.Clean(name) is { } clean && (store.Holds(Kinds.BasicAudioObject, clean) || store.Holds(Kinds.AudioObject, clean));
+    public bool IsBasic(string? id) => store.Holds(Kinds.BasicAudioObject, id);
+    public bool IsFull(string? id) => store.Holds(Kinds.AudioObject, id);
 
     // Is this arriving Basic Audio Object the sound kept under its name? One that carries no sound, or the same sound, is.
-    public bool IsTheSound(string key, BasicAudioObject arriving)
+    public bool IsTheSound(string id, BasicAudioObject arriving)
     {
         if (arriving.BasicAudioObjectData.Count == 0) return true;
-        return IsType(key, "BAO") && storage.Exists(key) && Deserialize<BasicAudioObject>(storage.Get(key)).Data.AsSpan().SequenceEqual(arriving.Data);
+        return IsBasic(id) && Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, id)!).Data.AsSpan().SequenceEqual(arriving.Data);
     }
 
     // ---- creating ---------------------------------------------------------
@@ -157,7 +122,7 @@ public sealed class AoeAim
         {
             if (b.BAObjectIDOrBAObject is not { } bao) throw new InvalidOperationException("The Audio Object names a sound it does not hold.");
             if (NameBook.Clean(bao.BasicAudioObjectID) is not { } soundName) throw new NameNeededException("a Basic Audio Object");
-            var held = KeyOf(soundName);
+            var held = IsBasic(soundName) ? soundName : null;
             if (held is null && (bao.BasicAudioObjectData.Count == 0 || bao.Data.Length == 0)) throw new InvalidOperationException("The Audio Object names a sound it does not hold.");
             var key = held is not null && IsTheSound(held, bao) ? held : CreateObject(bao, soundName).AssetId;
             placed.Add((key, Within(auo.AudioObjectSpaceTime, b.BasicAudioObjectSpaceTime)));
@@ -171,45 +136,17 @@ public sealed class AoeAim
         return Compose(placed, auo.UserPoV, name);
     }
 
-    private static SpaceTime Within(SpaceTime? outer, SpaceTime? inner)
-    {
-        static double[] P(SpaceTime? s) => s?.SpatialAttitude1?.Position?.CartPosition is { Length: >= 3 } c ? c : new double[3];
-        static double Yaw(SpaceTime? s) => s?.SpatialAttitude1?.Orientation?.EulerAngles is { Length: >= 3 } a ? a[2] : 0;
-        static double Seconds(double v, string? unit) => unit switch { "01" => v / 1e3, "10" => v / 1e6, "11" => v / 1e9, _ => v };
-        static TimeSegment? Segment(SpaceTime? s) => s?.Time?.SimpleTimeData?.FirstOrDefault(x => x.TimeType == false);
-        double Start(SpaceTime? s) => Segment(s) is { } g ? Seconds(g.StartTime, g.TimeUnit) : 0;
-        double? End(SpaceTime? s) => Segment(s) is { } g && g.EndTime > g.StartTime ? Seconds(g.EndTime, g.TimeUnit) : null;
-
-        var (o, i) = (P(outer), P(inner));
-        var from = Start(outer);
-        var begins = from + Start(inner);
-        var ends = End(inner) is { } e ? from + e : (double?)null;
-        return new SpaceTime
-        {
-            SpatialAttitude1 = new SpatialAttitude
-            {
-                ObjectSpatialAttitudeID = Guid.NewGuid().ToString(),
-                Position = new Position { PositionID = Guid.NewGuid().ToString(), CartPosition = [o[0] + i[0], o[1] + i[1], o[2] + i[2]] },
-                Orientation = new Orientation { OrientationID = Guid.NewGuid().ToString(), EulerAngles = [0, 0, Yaw(outer) + Yaw(inner)] }
-            },
-            Time = new SimpleTime
-            {
-                SimpleTimeID = Guid.NewGuid().ToString(),
-                SimpleTimeData = { new TimeSegment { FlagsByte = 0, StartTime = begins, EndTime = ends is { } x && x > begins ? x : begins, AccuracyMode = "single", AccuracyPlusMinus = 0.0, TimeType = false, TimeUnit = "00" } }
-            }
-        };
-    }
+    // Where an inner placement stands in the frame of an outer one (position and yaw added, the time of the outer added to that of the inner): public for Audio Scene Editing, which places the parts of a Full Audio Object.
+    public static SpaceTime Within(SpaceTime? outer, SpaceTime? inner) => Placements.Within(outer, inner);
 
     // Stores a BasicAudioObject under the name wanted - or the next free one - and stops there. AN OBJECT HOLDING ONE OBJECT IS BASIC; one holding more than one is full.
     // The kind is a fact about the CONTENT, not a decision taken at creation, so acquiring a file yields a BAO and nothing else.
     public RepositoryAsset CreateObject(BasicAudioObject bao, string? name = null)
     {
         if (NameBook.Clean(name ?? bao.BasicAudioObjectID) is null) throw new NameNeededException("the Basic Audio Object");
-        var key = NextId("BAO");
-        var given = Names.Claim(NamedKind.AudioObject, name ?? bao.BasicAudioObjectID, key);
-        storage.Put(key, Serialize(bao.WithId(given)));
-
-        return new RepositoryAsset { AssetId = key, AssetType = AssetType.BAO };
+        var given = NameBook.Free(store, name ?? bao.BasicAudioObjectID, Both);
+        store.Write(Kinds.BasicAudioObject, given, Serialize(bao.WithId(given)));
+        return new RepositoryAsset { AssetId = given, AssetType = AssetType.BAO };
     }
 
     // Composes SEVERAL Objects into ONE new Audio Object, under the name given (never one made up).
@@ -231,20 +168,15 @@ public sealed class AoeAim
 
         foreach (var (childId, _) in placed)
         {
-            if (!storage.Exists(childId))
+            if (!Holds(childId))
                 throw new InvalidOperationException("An Audio Object is made of Objects the Module keeps.");
-            if (!IsType(childId, "BAO") && !IsType(childId, "AUO"))
-                throw new InvalidOperationException("An Audio Object is made of Basic Audio Objects and Audio Objects.");
         }
 
-        var newKey = NextId("AUO");
-        var given = Names.Claim(NamedKind.AudioObject, name, newKey);
+        var given = NameBook.Free(store, name, Both);
 
         foreach (var (childId, placement) in placed)
         {
-            PutReference(newKey, childId);
-
-            if (IsType(childId, "BAO"))
+            if (IsBasic(childId))
             {
                 basicEntries.Add(new BasicAudioObjectEntry
                 {
@@ -262,7 +194,7 @@ public sealed class AoeAim
             }
         }
 
-        storage.Put(newKey, Serialize(new AudioObject
+        store.Write(Kinds.AudioObject, given, Serialize(new AudioObject
         {
             MInstanceID = mInstanceId,
             AudioObjectID = given,
@@ -277,28 +209,28 @@ public sealed class AoeAim
             SubAudioObjects = subEntries.Count > 0 ? subEntries : null
         }));
 
-        return new RepositoryAsset { AssetId = newKey, AssetType = AssetType.AUO };
+        return new RepositoryAsset { AssetId = given, AssetType = AssetType.AUO };
     }
 
     // Produces a new version of a BasicAudioObject with updated properties (Level, PerceptStatus, AcousticProfile, BasicAudioObjectIdentifier). Unspecified (null)
     // parameters keep their existing value - this edits, it does not replace. The audio DATA itself is never touched here, consistent with "BAOs are static" - only the
-    // descriptive properties that sit alongside the data change, and that change is itself a new, immutable key, same as everywhere else. The new version has the name of
+    // descriptive properties that sit alongside the data change, and that change is itself a new, immutable version, same as everywhere else. The new version has the name of
     // the one it comes from, and the name designates it from now on.
     //
     // listenerPointOfView is where the listener stands relative to this Object. A lone Basic Object is AT THE ORIGIN - it is the thing being auditioned; what the user may
     // move is the EAR, which is why the schema puts UserPoV on the Basic Object itself.
     public RepositoryAsset EditBasicObjectProperties(
-        string basicAudioObjectKey,
+        string id,
         double? level = null,
         bool? perceptStatus = null,
         AcousticProfile? acousticProfile = null,
         InstanceIdentifier? identifier = null,
         PointOfView? listenerPointOfView = null)
     {
-        if (!storage.Exists(basicAudioObjectKey) || !IsType(basicAudioObjectKey, "BAO"))
+        if (!IsBasic(id))
             throw new InvalidOperationException("The Module keeps no such Basic Audio Object.");
 
-        var existingData = Deserialize<BasicAudioObject>(storage.Get(basicAudioObjectKey));
+        var existingData = Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, id)!);
         var existingProps = existingData.BasicAudioObjectProperties ?? new BasicAudioObjectProperties();
 
         var updatedProps = new BasicAudioObjectProperties
@@ -310,8 +242,7 @@ public sealed class AoeAim
             BasicAudioObjectIdentifier = identifier ?? existingProps.BasicAudioObjectIdentifier
         };
 
-        var newKey = NewVersion(basicAudioObjectKey, "BAO");
-        storage.Put(newKey, Serialize(new BasicAudioObject
+        store.Write(Kinds.BasicAudioObject, id, Serialize(new BasicAudioObject
         {
             Header = existingData.Header,
             MInstanceID = existingData.MInstanceID,
@@ -329,17 +260,52 @@ public sealed class AoeAim
             DescrMetadata = existingData.DescrMetadata
         }));
 
-        return new RepositoryAsset { AssetId = newKey, AssetType = AssetType.BAO };
+        return new RepositoryAsset { AssetId = id, AssetType = AssetType.BAO };
+    }
+
+    // THE PROPERTIES OF AN OBJECT, whether Basic or Full (the author, 2026/11/08: everything in ASM is Full, a Basic Object is the case of one part). A Basic Audio Object is edited as
+    // EditBasicObjectProperties does. A Full Audio Object has its Level and its Acoustic Profile on EACH Basic Audio Object it holds, at any depth (the simplest reading: the loudness or the
+    // room of an Object is that of every sound in it), and the point of view the listener stands at on the Audio Object itself. Each Basic Audio Object, and each Audio Object above it, is a
+    // new version under its name; the name of the Object.
+    public RepositoryAsset EditObjectProperties(string id, double? level = null, AcousticProfile? acousticProfile = null, PointOfView? listenerPointOfView = null)
+    {
+        if (IsBasic(id)) return EditBasicObjectProperties(id, level: level, acousticProfile: acousticProfile, listenerPointOfView: listenerPointOfView);
+        if (!IsFull(id)) throw new InvalidOperationException("The Module keeps no such Object.");
+        var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, id)!);
+        var basics = new List<BasicAudioObjectEntry>();
+        var subs = new List<SubAudioObjectEntry>();
+        foreach (var e in auo.BasicAudioObjects ?? [])
+        {
+            var child = e.BAObjectIDOrBAObject?.BasicAudioObjectID ?? throw new InvalidOperationException("The Audio Object names a sound it does not hold.");
+            if (level is not null || acousticProfile is not null) EditBasicObjectProperties(child, level: level, acousticProfile: acousticProfile);
+            basics.Add(new BasicAudioObjectEntry { BasicAudioObjectSpaceTime = e.BasicAudioObjectSpaceTime, BAObjectIDOrBAObject = IdStubBao(child) });
+        }
+        foreach (var e in auo.SubAudioObjects ?? [])
+        {
+            var child = e.SubAObjectIDOrSubAObject?.AudioObjectID ?? throw new InvalidOperationException("The Audio Object names an Audio Object it does not hold.");
+            if (level is not null || acousticProfile is not null) EditObjectProperties(child, level, acousticProfile);
+            subs.Add(new SubAudioObjectEntry { SubAudioObjectSpaceTime = e.SubAudioObjectSpaceTime, SubAObjectIDOrSubAObject = IdStubAuo(child) });
+        }
+        store.Write(Kinds.AudioObject, id, Serialize(new AudioObject
+        {
+            Header = auo.Header, MInstanceID = auo.MInstanceID, UEnvironmentID = auo.UEnvironmentID, AudioObjectID = id,
+            AudioObjectTime = auo.AudioObjectTime, AudioObjectSpaceTime = auo.AudioObjectSpaceTime, UserPoV = listenerPointOfView ?? auo.UserPoV,
+            ParentAudioObjectIDs = auo.ParentAudioObjectIDs,
+            BasicAudioObjectCount = basics.Count, BasicAudioObjects = basics.Count > 0 ? basics : null,
+            SubAudioObjectCount = subs.Count, SubAudioObjects = subs.Count > 0 ? subs : null,
+            DataXMData = auo.DataXMData, DescrMetadata = auo.DescrMetadata
+        }));
+        return new RepositoryAsset { AssetId = id, AssetType = AssetType.AUO };
     }
 
     // THE FEATURES OF AN OBJECT, EDITED (the author, 2026/10/26): a defined list, each changed by a value; every edit is a new version, which has the name of the Object
-    // (or the new name, when the name is a feature changed). The sound itself is not a feature. The Object is named by its name; the key of the version made, or why none.
+    // (or the new name, when the name is a feature changed). The sound itself is not a feature. The Object is named by its name; the name it has after, or why none.
     //   Audio Object:        Name, Time, SpaceTime, UserPoV, ParentAudioObjectIDs, DescrMetadata, Children (the SpaceTime of a child, by its name, inside the parent)
     //   Basic Audio Object:  Name, Time, UserPoV, DeviceID, Level, PerceptStatus, AcousticProfile, AudioQualifier, DescrMetadata
-    public (string? Key, string? Problem) ChangeFeatures(string key, ObjectChange change)
+    public (string? Key, string? Problem) ChangeFeatures(string id, ObjectChange change)
     {
-        var basic = IsType(key, "BAO");
-        if (!basic && !IsType(key, "AUO")) return (null, "the Module keeps no such Object");
+        var basic = IsBasic(id);
+        if (!basic && !IsFull(id)) return (null, "the Module keeps no such Object");
         var wrong = new List<string>();
         if (basic)
         {
@@ -368,36 +334,32 @@ public sealed class AoeAim
         }
         else if (profile is not null) Profiles.Keep(profile);
 
-        var name = Names.NameOf(key) ?? throw new InvalidOperationException("The Object has no name.");
+        var name = id;
         var newName = name;
-        if (NameBook.Clean(change.Name) is { } wanted && wanted != name) newName = Names.Free(NamedKind.AudioObject, wanted);
+        if (NameBook.Clean(change.Name) is { } wanted && wanted != name) newName = NameBook.Free(store, wanted, Both);
 
         AudioObject? auo = null;
         BasicAudioObject? bao = null;
-        if (basic) bao = Deserialize<BasicAudioObject>(storage.Get(key));
+        if (basic) bao = Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, id)!);
         else
         {
-            auo = Deserialize<AudioObject>(storage.Get(key));
+            auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, id)!);
             foreach (var c in change.Children ?? [])
             {
                 var child = NameBook.Clean(c.ObjectID);
                 if (child is null || c.SpaceTime is null) return (null, "Children: each child is named, with its SpaceTime inside the parent");
                 if (c.Unknown is { Count: > 0 }) return (null, $"Children: {string.Join(", ", c.Unknown.Keys)} is not a feature of a child");
-                var isChild = (auo.BasicAudioObjects ?? []).Any(e => NameOf(e.BAObjectIDOrBAObject?.BasicAudioObjectID) == child)
-                           || (auo.SubAudioObjects ?? []).Any(e => NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID) == child);
+                var isChild = (auo.BasicAudioObjects ?? []).Any(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID == child)
+                           || (auo.SubAudioObjects ?? []).Any(e => e.SubAObjectIDOrSubAObject?.AudioObjectID == child);
                 if (!isChild) return (null, $"Children: the Audio Object has no child named {child}");
             }
         }
 
-        var newKey = NextId(basic ? "BAO" : "AUO");
-        Names.Point(NamedKind.AudioObject, newName, newKey);
-        Names.Link(newKey, key);
-        if (newName != name) Names.Release(NamedKind.AudioObject, name);       // the old name designates nothing; its versions keep it
-
+        byte[] content;
         if (basic)
         {
             var props = bao!.BasicAudioObjectProperties ?? new BasicAudioObjectProperties();
-            storage.Put(newKey, Serialize(new BasicAudioObject
+            content = Serialize(new BasicAudioObject
             {
                 Header = bao.Header, MInstanceID = bao.MInstanceID, UEnvironmentID = bao.UEnvironmentID,
                 BasicAudioObjectID = newName,
@@ -417,7 +379,7 @@ public sealed class AoeAim
                 AudioQualifier = change.AudioQualifier ?? bao.AudioQualifier,
                 DataXMData = bao.DataXMData,
                 DescrMetadata = change.DescrMetadata ?? bao.DescrMetadata
-            }));
+            });
         }
         else
         {
@@ -425,15 +387,13 @@ public sealed class AoeAim
                 change.Children?.FirstOrDefault(c => NameBook.Clean(c.ObjectID) == childName)?.SpaceTime ?? current;
             var basics = auo!.BasicAudioObjects?.Select(e => new BasicAudioObjectEntry
             {
-                BasicAudioObjectSpaceTime = Inside(NameOf(e.BAObjectIDOrBAObject?.BasicAudioObjectID), e.BasicAudioObjectSpaceTime), BAObjectIDOrBAObject = e.BAObjectIDOrBAObject
+                BasicAudioObjectSpaceTime = Inside(e.BAObjectIDOrBAObject?.BasicAudioObjectID, e.BasicAudioObjectSpaceTime), BAObjectIDOrBAObject = e.BAObjectIDOrBAObject
             }).ToList();
             var subs = auo.SubAudioObjects?.Select(e => new SubAudioObjectEntry
             {
-                SubAudioObjectSpaceTime = Inside(NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID), e.SubAudioObjectSpaceTime), SubAObjectIDOrSubAObject = e.SubAObjectIDOrSubAObject
+                SubAudioObjectSpaceTime = Inside(e.SubAObjectIDOrSubAObject?.AudioObjectID, e.SubAudioObjectSpaceTime), SubAObjectIDOrSubAObject = e.SubAObjectIDOrSubAObject
             }).ToList();
-            foreach (var childKey in (basics ?? []).Select(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID).Concat((subs ?? []).Select(e => e.SubAObjectIDOrSubAObject?.AudioObjectID)))
-                if (!string.IsNullOrEmpty(childKey)) PutReference(newKey, childKey);
-            storage.Put(newKey, Serialize(new AudioObject
+            content = Serialize(new AudioObject
             {
                 Header = auo.Header, MInstanceID = auo.MInstanceID, UEnvironmentID = auo.UEnvironmentID,
                 AudioObjectID = newName,
@@ -445,43 +405,67 @@ public sealed class AoeAim
                 SubAudioObjectCount = auo.SubAudioObjectCount, SubAudioObjects = subs,
                 DataXMData = auo.DataXMData,
                 DescrMetadata = change.DescrMetadata ?? auo.DescrMetadata
+            });
+        }
+
+        var kind = basic ? Kinds.BasicAudioObject : Kinds.AudioObject;
+        if (newName == name) store.Write(kind, name, content);
+        else
+        {
+            // A new name: the Object, with the versions it had, is now under the new name; the old name designates nothing. The Audio Objects of the Module that hold it hold it by the new name.
+            store.Move(kind, name, newName, content);
+            RenameInParents(name, newName);
+        }
+        return (newName, null);
+    }
+
+    // The Audio Objects that hold an Object by its name hold it by the new name, as new versions of theirs.
+    private void RenameInParents(string from, string to)
+    {
+        foreach (var (parent, _) in store.All(Kinds.AudioObject))
+        {
+            var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, parent)!);
+            var holds = (auo.BasicAudioObjects ?? []).Any(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID == from)
+                     || (auo.SubAudioObjects ?? []).Any(e => e.SubAObjectIDOrSubAObject?.AudioObjectID == from);
+            if (!holds || parent == to) continue;
+            var basics = auo.BasicAudioObjects?.Select(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID == from
+                ? new BasicAudioObjectEntry { BasicAudioObjectSpaceTime = e.BasicAudioObjectSpaceTime, BAObjectIDOrBAObject = IdStubBao(to) } : e).ToList();
+            var subs = auo.SubAudioObjects?.Select(e => e.SubAObjectIDOrSubAObject?.AudioObjectID == from
+                ? new SubAudioObjectEntry { SubAudioObjectSpaceTime = e.SubAudioObjectSpaceTime, SubAObjectIDOrSubAObject = IdStubAuo(to) } : e).ToList();
+            store.Write(Kinds.AudioObject, parent, Serialize(new AudioObject
+            {
+                Header = auo.Header, MInstanceID = auo.MInstanceID, UEnvironmentID = auo.UEnvironmentID, AudioObjectID = auo.AudioObjectID,
+                AudioObjectTime = auo.AudioObjectTime, AudioObjectSpaceTime = auo.AudioObjectSpaceTime, UserPoV = auo.UserPoV,
+                ParentAudioObjectIDs = auo.ParentAudioObjectIDs,
+                BasicAudioObjectCount = auo.BasicAudioObjectCount, BasicAudioObjects = basics,
+                SubAudioObjectCount = auo.SubAudioObjectCount, SubAudioObjects = subs,
+                DataXMData = auo.DataXMData, DescrMetadata = auo.DescrMetadata
             }));
         }
-        return (newKey, null);
     }
 
     // ---- reading ------------------------------------------------------------
 
-    // Does the Module hold this key? (Keys are the Module's own: a name is looked for with Holds.)
-    public bool Has(string? key) => !string.IsNullOrWhiteSpace(key) && storage.Exists(key);
-
-    // The Object as Shared Storage keeps it (JSON).
-    public byte[] Raw(string key) => storage.Get(key);
+    // The Object as the Module keeps it (JSON), the version in force.
+    public byte[] Raw(string id) => store.Get(IsBasic(id) ? Kinds.BasicAudioObject : Kinds.AudioObject, id) ?? throw new InvalidOperationException("The Module keeps no such Object.");
 
     // A stored Basic Audio Object, as it is.
-    public BasicAudioObject Get(string basicAudioObjectKey) =>
-        IsType(basicAudioObjectKey, "BAO") && storage.Exists(basicAudioObjectKey)
-            ? Deserialize<BasicAudioObject>(storage.Get(basicAudioObjectKey))
-            : throw new InvalidOperationException("The Module keeps no such Basic Audio Object.");
+    public BasicAudioObject Get(string id) =>
+        IsBasic(id) ? Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, id)!) : throw new InvalidOperationException("The Module keeps no such Basic Audio Object.");
 
     // Resolves a stored Object into a fully self-contained structure - its own fields plus every BAO/sub-Audio Object it (transitively) composes, with each ID-stub entry
     // replaced by its full, live content - and names it by its name. A BASIC Object materialises as itself: an Object of one, resolved so that a consumer needs no
     // separate case for it.
-    public AudioObject Materialize(string key)
+    public AudioObject Materialize(string id)
     {
-        if (!storage.Exists(key))
-            throw new InvalidOperationException("The Module keeps no such Object.");
-
-        var name = NameOf(key) ?? throw new InvalidOperationException("The Object has no name.");
-
-        if (IsType(key, "BAO"))
+        if (IsBasic(id))
         {
-            var basic = Deserialize<BasicAudioObject>(storage.Get(key));
+            var basic = Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, id)!);
 
             return new AudioObject
             {
                 MInstanceID = mInstanceId,
-                AudioObjectID = name,
+                AudioObjectID = id,
                 AudioObjectSpaceTime = new SpaceTime(),      // the schema requires one: an Object of one stands where its Object does, at the origin of its own frame
                 BasicAudioObjectCount = 1,
                 BasicAudioObjects = new List<BasicAudioObjectEntry>
@@ -491,34 +475,34 @@ public sealed class AoeAim
             };
         }
 
-        if (!IsType(key, "AUO"))
+        if (!IsFull(id))
             throw new InvalidOperationException("The Module keeps no such Object.");
 
-        var audioObject = Deserialize<AudioObject>(storage.Get(key));
+        var audioObject = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, id)!);
 
         var basicChildren = new List<BasicAudioObjectEntry>();
         var subChildren = new List<SubAudioObjectEntry>();
 
         foreach (var entry in audioObject.BasicAudioObjects ?? new List<BasicAudioObjectEntry>())
         {
-            var childKey = entry.BAObjectIDOrBAObject?.BasicAudioObjectID;
-            if (childKey is null || !storage.Exists(childKey)) continue;
+            var child = entry.BAObjectIDOrBAObject?.BasicAudioObjectID;
+            if (child is null || !IsBasic(child)) continue;
 
-            basicChildren.Add(new BasicAudioObjectEntry { BasicAudioObjectSpaceTime = entry.BasicAudioObjectSpaceTime, BAObjectIDOrBAObject = Deserialize<BasicAudioObject>(storage.Get(childKey)) });
+            basicChildren.Add(new BasicAudioObjectEntry { BasicAudioObjectSpaceTime = entry.BasicAudioObjectSpaceTime, BAObjectIDOrBAObject = Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, child)!) });
         }
 
         foreach (var entry in audioObject.SubAudioObjects ?? new List<SubAudioObjectEntry>())
         {
-            var childKey = entry.SubAObjectIDOrSubAObject?.AudioObjectID;
-            if (string.IsNullOrEmpty(childKey) || !storage.Exists(childKey) || !IsType(childKey, "AUO")) continue;
+            var child = entry.SubAObjectIDOrSubAObject?.AudioObjectID;
+            if (string.IsNullOrEmpty(child) || !IsFull(child)) continue;
 
-            subChildren.Add(new SubAudioObjectEntry { SubAudioObjectSpaceTime = entry.SubAudioObjectSpaceTime, SubAObjectIDOrSubAObject = Materialize(childKey) });
+            subChildren.Add(new SubAudioObjectEntry { SubAudioObjectSpaceTime = entry.SubAudioObjectSpaceTime, SubAObjectIDOrSubAObject = Materialize(child) });
         }
 
         return new AudioObject
         {
             MInstanceID = mInstanceId,
-            AudioObjectID = name,
+            AudioObjectID = id,
             AudioObjectTime = audioObject.AudioObjectTime,
             AudioObjectSpaceTime = audioObject.AudioObjectSpaceTime,
             ParentAudioObjectIDs = audioObject.ParentAudioObjectIDs,
@@ -532,84 +516,79 @@ public sealed class AoeAim
     }
 
     // THE LIST (the author, 2026/10/26): the Audio Objects and Basic Audio Objects the Module keeps - the version in force of each - by name; an Audio Object with the names
-    // of the Objects it is made of. Never a key.
+    // of the Objects it is made of.
     public IReadOnlyList<ListedObject> Listing(string requested, string? named = null)
     {
         var found = new List<ListedObject>();
-        foreach (var (name, key) in Names.All(NamedKind.AudioObject))
+        var all = store.All(Kinds.BasicAudioObject).Select(e => (e.Id, e.Version, Basic: true))
+            .Concat(store.All(Kinds.AudioObject).Select(e => (e.Id, e.Version, Basic: false)))
+            .OrderBy(e => e.Id, StringComparer.Ordinal);
+        foreach (var (name, version, basic) in all)
         {
             if (named is not null && name != named) continue;
-            var basic = IsType(key, "BAO");
             if (!ListKinds.Asks(requested, basic ? ListKinds.BasicAudioObject : ListKinds.AudioObject)) continue;
             List<string>? members = null;
-            if (!basic && storage.Exists(key))
+            if (!basic)
             {
-                var auo = Deserialize<AudioObject>(storage.Get(key));
-                members = (auo.BasicAudioObjects ?? []).Select(e => NameOf(e.BAObjectIDOrBAObject?.BasicAudioObjectID))
-                    .Concat((auo.SubAudioObjects ?? []).Select(e => NameOf(e.SubAObjectIDOrSubAObject?.AudioObjectID)))
-                    .Where(n => n is not null).Select(n => n!).ToList();
+                var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, name)!);
+                members = (auo.BasicAudioObjects ?? []).Select(e => e.BAObjectIDOrBAObject?.BasicAudioObjectID)
+                    .Concat((auo.SubAudioObjects ?? []).Select(e => e.SubAObjectIDOrSubAObject?.AudioObjectID))
+                    .Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).ToList();
             }
-            found.Add(Describe(name, key, basic, members));
+            found.Add(Describe(name, version, basic, members));
         }
         return found;
     }
 
     // WHAT THE LIST SAYS OF AN OBJECT (the author, 2026/10/26): its Kind, its Duration (seconds: that of its sound, or for an Audio Object the end of the child that lasts longest
     // inside it), the number of children it is made of, its Version.
-    private ListedObject Describe(string name, string key, bool basic, List<string>? members)
+    private ListedObject Describe(string name, int version, bool basic, List<string>? members)
     {
         double? duration = null;
         var children = 0;
-        if (storage.Exists(key))
+        if (basic) duration = SoundLength.Seconds(Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, name)!).Data);
+        else
         {
-            if (basic) duration = SoundLength.Seconds(Deserialize<BasicAudioObject>(storage.Get(key)).Data);
-            else
-            {
-                var auo = Deserialize<AudioObject>(storage.Get(key));
-                children = (auo.BasicAudioObjects?.Count ?? 0) + (auo.SubAudioObjects?.Count ?? 0);
-                duration = DurationOf(key);
-            }
+            var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, name)!);
+            children = (auo.BasicAudioObjects?.Count ?? 0) + (auo.SubAudioObjects?.Count ?? 0);
+            duration = DurationOf(name);
         }
         return new ListedObject
         {
             ObjectID = name, Kind = basic ? ListKinds.BasicAudioObject : ListKinds.AudioObject, MemberObjectIDs = members,
-            Duration = duration, ChildCount = children, Version = Names.Depth(key)
+            Duration = duration, ChildCount = children, Version = version
         };
     }
 
-    private double? DurationOf(string auoKey)
+    private double? DurationOf(string id)
     {
-        var auo = Deserialize<AudioObject>(storage.Get(auoKey));
+        var auo = Deserialize<AudioObject>(store.Get(Kinds.AudioObject, id)!);
         var ends = new List<double>();
         foreach (var e in auo.BasicAudioObjects ?? [])
-            if (e.BAObjectIDOrBAObject?.BasicAudioObjectID is { } k && storage.Exists(k) && IsType(k, "BAO") &&
-                SoundLength.Seconds(Deserialize<BasicAudioObject>(storage.Get(k)).Data) is { } d) ends.Add(SoundLength.StartOf(e.BasicAudioObjectSpaceTime) + d);
+            if (e.BAObjectIDOrBAObject?.BasicAudioObjectID is { } k && IsBasic(k) &&
+                SoundLength.Seconds(Deserialize<BasicAudioObject>(store.Get(Kinds.BasicAudioObject, k)!).Data) is { } d) ends.Add(SoundLength.StartOf(e.BasicAudioObjectSpaceTime) + d);
         foreach (var e in auo.SubAudioObjects ?? [])
-            if (e.SubAObjectIDOrSubAObject?.AudioObjectID is { } k && storage.Exists(k) && IsType(k, "AUO") && DurationOf(k) is { } d) ends.Add(SoundLength.StartOf(e.SubAudioObjectSpaceTime) + d);
+            if (e.SubAObjectIDOrSubAObject?.AudioObjectID is { } k && IsFull(k) && DurationOf(k) is { } d) ends.Add(SoundLength.StartOf(e.SubAudioObjectSpaceTime) + d);
         return ends.Count > 0 ? Math.Round(ends.Max(), 6) : null;
     }
 
-    // --- Deletion (surfaces the sixth Shared Storage primitive, Delete) ---
-    public IReadOnlyList<string> ReferencedBy(string key) =>
-        storage.List($"refby:{key}:").Select(k => k[$"refby:{key}:".Length..]).ToList();
+    // ---- Deletion ----
 
-    public IReadOnlyList<string> References(string key) =>
-        storage.List($"ref:{key}:").Select(k => k[$"ref:{key}:".Length..]).ToList();
-
-    // Deletes a single key together with its own ref:/refby: bookkeeping (both directions). Deleting a non-existent key is not an error (Section 4.10.3). Does NOT itself
-    // cascade - the caller decides, one level, with user consent.
-    public void Delete(string key)
+    // DELETION: an Object by its name, with all its versions. Not deleted if a Scene holds it - an Object that is a member of a Scene (the Scene's version in force names it):
+    // the Scene is deleted first. Found by reading the Scenes that are kept, not from a table.
+    public (DeletionOutcome Outcome, string? Reason) Delete(string? name)
     {
-        foreach (var toId in References(key))
+        if (Kept(name) is not { } id) return (DeletionOutcome.NotKept, null);
+        var holders = new List<string>();
+        foreach (var (scene, _) in store.All(Kinds.AudioScene))
         {
-            storage.Delete($"ref:{key}:{toId}");
-            storage.Delete($"refby:{toId}:{key}");
+            var bytes = store.Get(Kinds.AudioScene, scene);
+            if (bytes is null) continue;
+            var entries = Deserialize<BasicAudioSceneDescriptors>(bytes).BasicAudioSceneDescriptorsEntries;
+            if (entries?.Any(e => e.AudioObjectIDOrAudioObject?.BasicAudioObjectID == id) == true) holders.Add(scene);
         }
-        foreach (var fromId in ReferencedBy(key))
-        {
-            storage.Delete($"ref:{fromId}:{key}");
-            storage.Delete($"refby:{key}:{fromId}");
-        }
-        storage.Delete(key);
+        if (holders.Count > 0) return (DeletionOutcome.Held, $"it is a member of {string.Join(", ", holders)}: delete that first");
+        store.Delete(IsBasic(id) ? Kinds.BasicAudioObject : Kinds.AudioObject, id);
+        return (DeletionOutcome.Deleted, null);
     }
 }

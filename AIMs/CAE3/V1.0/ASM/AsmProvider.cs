@@ -17,7 +17,7 @@ namespace Mpai.Cae.Asm;
 // Speech Translation (MMC-TST, from its own provider), and the Voice Command Interface
 // (MMC-VCI), which MMC specifies and the provider of MMC supplies: it issues the User
 // Commands to all the editing AIMs and takes their responses. All the editing AIMs keep
-// their Objects and Scenes in the Module's Shared Storage. Capture and playback are
+// their Objects and Scenes in the Module's Private Storage, by Data Type, Port and ID (ModuleStore), and offer what the Module gives in its Shared Storage. Capture and playback are
 // the User Agent's (the author: "AOD, SOD are for UA").
 public sealed class AsmProvider : IAimProvider
 {
@@ -43,14 +43,16 @@ public sealed class AsmProvider : IAimProvider
     {
         var ports = AimPortReader.Load(_amds.Store, aimName);
         string Setting(string key, string fallback) => settings.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v : fallback;
-        ISharedStorage Assets() => storage ?? throw new InvalidOperationException($"{aimName} keeps its Assets in Shared Storage, and the Module has none.");
+        // WHERE THE EDITORS KEEP WHAT THEY EDIT (the author, 2026/11/08): in the Private Storage of the Module, which its AIMs share, by Data Type, Port and the Object's own ID; what the Module
+        // offers to other Modules is also put in its Shared Storage, with the Module name in the key. A Module with no Private Storage cannot run them: nothing is kept in Shared Storage instead.
+        ModuleStore Keep() => new(moduleStorage, Module, storage, aimName);
         return aimName switch
         {
-            Aoe => new AoeAimProcessor(aimName, new AoeAim(Assets(), Setting("MInstanceID", "ASM")), ports),
-            Ase => new AseAimProcessor(aimName, new AseAim(Assets(), Setting("MInstanceID", "ASM")), ports),
-            Soe => new SoeAimProcessor(aimName, Assets(), ports),
-            Sse => new SseAimProcessor(aimName, Assets(), ports, Setting("MInstanceID", "ASM")),
-            Mse => new MseAimProcessor(aimName, Assets(), ports, Setting("MInstanceID", "ASM")),
+            Aoe => new AoeAimProcessor(aimName, new AoeAim(Keep(), Setting("MInstanceID", "ASM")), ports),
+            Ase => new AseAimProcessor(aimName, new AseAim(Keep(), Setting("MInstanceID", "ASM")), ports),
+            Soe => new SoeAimProcessor(aimName, Keep(), ports),
+            Sse => new SseAimProcessor(aimName, Keep(), ports, Setting("MInstanceID", "ASM")),
+            Mse => new MseAimProcessor(aimName, Keep(), privateStorage, ports, Setting("MInstanceID", "ASM")),
             _ => throw new ArgumentException($"{aimName} is not an AIM of Audio Scene Management.")
         };
     }

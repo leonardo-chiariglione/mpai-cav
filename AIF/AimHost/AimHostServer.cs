@@ -20,6 +20,7 @@ public sealed class AimHostServer
     private readonly IAimProvider provider;
     private readonly string storageRoot;
     private readonly ConcurrentDictionary<string, Hosted> modules = new();
+    private readonly ConcurrentDictionary<string, RuledStore> moduleStores = new();      // the Private Storage of each Module, as far as it is placed on this host
 
     // The AIMs of one Module instance held here, their lifecycle, the Controller
     // they are held for and - in a Continuous Module - what runs them.
@@ -144,7 +145,10 @@ public sealed class AimHostServer
                 var processor = provider.Create(aim, givenSettings,
                     new FileSharedStorage(scope, $"{module}/{aim}", "remote"),
                     new FileSharedStorage(Path.Combine(scope, "private", Uri.EscapeDataString(aim)), $"{module}/{aim}", "remote"),
-                    null, hosted.Host.AccessFor(aim));
+                    // The Private Storage of the Module (M3219 3.1), shared by the AIMs of it that are placed on this host: one store for the Module, a handle bound to each AIM.
+                    moduleStores.GetOrAdd(module, m => new RuledStore(() => Path.Combine(scope, "module-private"), () => DateTimeOffset.UtcNow, everyoneReads: false, centralControl: null))
+                                .For(new StorageHolder(module, aim), module, "remote"),
+                    hosted.Host.AccessFor(aim));
                 hosted.Host.RegisterRuntime(processor);
                 var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
                 hosted.Keys[aim] = key;

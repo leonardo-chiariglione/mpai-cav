@@ -37,7 +37,7 @@
   <div id="stage">
     <canvas id="canvas"></canvas>
     <div id="notice">Avatar by Ready Player Me (CC BY-NC-SA 4.0), used for demonstration. Other uses are subject to restrictions.</div>
-    <div id="loading">Loading the CAV's face…</div>
+    <div id="loading">Loading the Face…</div>
   </div>
   <div id="panel">
   <audio id="responseAudio" preload="auto"></audio>
@@ -66,6 +66,10 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 // external CDN is fetched at view time.
 // It is a realistic ReadyPlayerMe head with ARKit blendshapes + Oculus visemes.
 const AVATAR_URL = 'https://cavapp.local/cav-avatar.glb';
+// What the page says while the Face loads: the application names it (?name=ASM gives "Loading the ASM Face…"); with no name, "Loading the Face…".
+const FACE_NAME = new URLSearchParams(location.search).get('name');
+const FACE_LOADING = FACE_NAME ? `Loading the ${FACE_NAME} Face…` : 'Loading the Face…';
+document.getElementById('loading').textContent = FACE_LOADING;
 
 // ---- EM-FACS: emotion -> FACS Action Units (the same model as our C# core) ----
 const EMFACS = {
@@ -419,7 +423,7 @@ loader.load(AVATAR_URL, (gltf) => {
   avatarLoaded(true);
 }, (e) => {
   const pct = e.total ? Math.round(e.loaded/e.total*100) : 0;
-  document.getElementById('loading').textContent = `Loading the CAV's face… ${pct}%`;
+  document.getElementById('loading').textContent = `${FACE_LOADING} ${pct}%`;
 }, (err) => {
   document.getElementById('loading').textContent =
     'Could not load the avatar (network?). Check the console.';

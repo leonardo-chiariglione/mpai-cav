@@ -5,22 +5,22 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Eae;
 
-// CAE-NCM-V2.5, Noise Cancellation Module: the coefficients of the sound field (Audio Object, port 1), the sources in the transform domain (Audio Object, port 2), where the sources are (Audio
-// Scene Geometry) and the Audio Scene Reference in; the sources in the transform domain, with less noise, out.
+// CAE-NCM-V2.5, Noise Cancellation Module: the coefficients of the sound field (Audio Object, port 1), the sources in the transform domain (Audio Object, port 2) and where the sources are (Audio
+// Scene Geometry) in; the sources in the transform domain, with less noise, out.
 //
 // The noise is MEASURED where there is only noise: in the blocks in which no source is active (all the channels of the sources are silent, as Speech Detection and Separation leaves them).
 // There the mean power of each coefficient of the field, bin by bin, is the noise of the field; the noise of a source is what that gives through the beam that picks the source (the beam
 // weights are those Speech Detection and Separation used, found again from the directions of the Audio Scene Geometry), the coefficients taken as not related. The channel of a source then
 // loses the noise in each of the bins of the blocks where it is active, by spectral subtraction on the power (Over times the noise taken away, at most down to Floor of the power).
 // Where no block is silent the noise cannot be measured and the AIM is a passthrough, which the page allows. The page also says the module cancels the REVERBERATION: this stand-in does
-// not. The Audio Scene Reference is read for what the page says it is for and is not used: see Speech Detection and Separation.
-public sealed class NcmAimProcessor(string instanceId, string shdKey, string transformKey, string geometryKey, string asrKey, string outputKey) : IAimProcessor
+// not. The Audio Scene Reference comes from Access (Setting "AudioSceneReference"), is checked and is not used: see Speech Detection and Separation.
+public sealed class NcmAimProcessor(string instanceId, string shdKey, string transformKey, string geometryKey, string outputKey, IReadOnlyDictionary<string, string>? settings = null) : IAimProcessor
 {
     public string InstanceId { get; } = instanceId;
-    public string AudioSceneReferenceKey { get; } = asrKey;
     public double Over { get; init; } = 1.5;
     public double Floor { get; init; } = 0.05;
 
@@ -35,6 +35,8 @@ public sealed class NcmAimProcessor(string instanceId, string shdKey, string tra
             return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-NCM-V2.5: it needs the Spherical Harmonic Decomposition Coefficients, the Transform Audio and the Audio Scene Geometry."));
         try
         {
+            if (SettingFile.ReadText(settings ?? new Dictionary<string, string>(), SdsAimProcessor.AudioSceneReferenceSetting) is { } asr &&
+                (System.Text.Json.Nodes.JsonNode.Parse(asr) as System.Text.Json.Nodes.JsonObject)?["Header"]?.GetValue<string>() != "CAE-ASR-V1.0") throw new FormatException("The Audio Scene Reference given under the Setting is not a CAE-ASR-V1.0.");
             var (shd, _) = TransformObject.Read(shdJson); var (sources, geometry) = TransformObject.Read(transformJson);
             var directions = SceneDescriptors.Read(geometryJson).Select(s => (s.Azimuth, s.Elevation)).ToList();
             if (shd.Blocks.Count != sources.Blocks.Count || shd.BlockSize != sources.BlockSize) throw new FormatException("The coefficients and the sources are not of the same blocks.");

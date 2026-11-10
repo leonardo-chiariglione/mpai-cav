@@ -1,0 +1,408 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "MMC-CPS-V2.5-I01",
+    "AIMName": "1MMC-CPS-V2.5-I01"
+  },
+  "Header": "MMC-CPS-V2.5",
+  "APIProfile": "Basic",
+  "OnDegraded": "Continue",
+  "Description": "Conversation with Personal Status: a conversation with a machine that takes the personal status of the person into account. The Multimodal Frontend Description gives what the microphone and the camera deliver as Speech, Face, Body and other Visual Objects and the Visual Scene Descriptors; Visual Instance Identification gives the Identifiers of the Visual Instances; Automatic Speech Recognition gives the Recognised Text; Natural Language Understanding understands the Text with the Identifiers; Personal Status Extraction gives the Personal Status of the person from the Face, Body, Speech and Text; Entity Dialogue Processing gives the Machine Text and the Machine Personal Status; Portable Avatar Multiplexing gives the Portable Avatar.",
+  "InternalTypes": [
+    {
+      "Name": "RecognisedText",
+      "DataType": "OSD-BTO-V1.5"
+    },
+    {
+      "Name": "TextDescriptors",
+      "DataType": "MMC-TDO-V2.5"
+    },
+    {
+      "Name": "RefinedText",
+      "DataType": "OSD-BTO-V1.5"
+    },
+    {
+      "Name": "PersonalStatus",
+      "DataType": "MMC-EPS-V2.5"
+    },
+    {
+      "Name": "MachineText",
+      "DataType": "OSD-BTO-V1.5"
+    },
+    {
+      "Name": "MachinePersonalStatus",
+      "DataType": "MMC-EPS-V2.5"
+    }
+  ],
+  "ExternalPorts": [
+    {
+      "Name": "InputAudio",
+      "Direction": "Input",
+      "DataType": "OSD-BAO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "InputVisual",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "InputText",
+      "Direction": "Input",
+      "DataType": "OSD-BTO-V1.5",
+      "PortNumber": 1,
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MediaSelector",
+      "Direction": "Input",
+      "DataType": "OSD-SEL-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MachineID",
+      "Direction": "Input",
+      "DataType": "string",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "PortableAvatar",
+      "Direction": "Output",
+      "DataType": "PAF-PAV-V1.6",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "OSD-MFD-V1.5-I01",
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "CVE-VII-V1.0-I01",
+        "AIMName": "1CVE-VII-V1.0-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "MMC-ASR-V2.5-I02",
+        "AIMName": "1MMC-ASR-V2.5-I02",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "MMC-NLU-V2.5-I01",
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "MMC-PSE-V2.5-I02",
+        "AIMName": "1MMC-PSE-V2.5-I02",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "MMC-EDP-V2.5-I01",
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "Relation": "Internal"
+      }
+    },
+    {
+      "Identifier": {
+        "ImplementerID": "1",
+        "ImplementationID": "PAF-PMX-V1.6-I01",
+        "AIMName": "1PAF-PMX-V1.6-I01",
+        "Relation": "Internal"
+      }
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BAO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BAO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BVO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-ASR-V2.5-I02",
+        "DataType": "OSD-BSO-V1.5",
+        "PortNumber": 3
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BSO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-PSE-V2.5-I02",
+        "DataType": "OSD-BSO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1MMC-PSE-V2.5-I02",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "1MMC-PSE-V2.5-I02",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 2
+      },
+      "Input": {
+        "AIMName": "1CVE-VII-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVO-V1.5",
+        "PortNumber": 3
+      },
+      "Input": {
+        "AIMName": "1CVE-VII-V1.0-I01",
+        "DataType": "OSD-BVO-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1OSD-MFD-V1.5-I01",
+        "DataType": "OSD-BVS-V1.5"
+      },
+      "Input": {
+        "AIMName": "1CVE-VII-V1.0-I01",
+        "DataType": "OSD-BVS-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "OSD-SEL-V1.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "OSD-SEL-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1CVE-VII-V1.0-I01",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "OSD-IID-V1.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-ASR-V2.5-I02",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 1
+      },
+      "Input": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "MMC-TDO-V2.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "MMC-TDO-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-NLU-V2.5-I01",
+        "DataType": "OSD-IID-V1.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "OSD-IID-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-PSE-V2.5-I02",
+        "DataType": "MMC-EPS-V2.5"
+      },
+      "Input": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "MMC-EPS-V2.5",
+        "PortNumber": 1
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "MMC-EPS-V2.5"
+      },
+      "Input": {
+        "AIMName": "1PAF-PMX-V1.6-I01",
+        "DataType": "MMC-EPS-V2.5"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1MMC-EDP-V2.5-I01",
+        "DataType": "OSD-BTO-V1.5"
+      },
+      "Input": {
+        "AIMName": "1PAF-PMX-V1.6-I01",
+        "DataType": "OSD-BTO-V1.5",
+        "PortNumber": 2
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "DataType": "string"
+      },
+      "Input": {
+        "AIMName": "1PAF-PMX-V1.6-I01",
+        "DataType": "string"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "1PAF-PMX-V1.6-I01",
+        "DataType": "PAF-PAV-V1.6"
+      },
+      "Input": {
+        "AIMName": "",
+        "DataType": "PAF-PAV-V1.6"
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/AMDs",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Mmc.Cps",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "2.5",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "6 GB",
+      "Request": "8 GB",
+      "Maximum": "16 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Medium",
+      "Request": "High",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/conversation-with-personal-status/"
+    }
+  ]
+}

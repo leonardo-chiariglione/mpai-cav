@@ -16,12 +16,12 @@
     <ProjectReference Include="..\..\..\OSD\V1.5\BAS\Mpai.Osd.Bas.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\BVS\Mpai.Osd.Bvs.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\BLS\Mpai.Osd.Bls.csproj" />
-    <ProjectReference Include="..\..\..\OSD\V1.5\AVA\Mpai.Osd.Ava.csproj" />
+    <ProjectReference Include="..\..\..\OSD\V1.5\MAL\Mpai.Osd.Mal.csproj" />
     <ProjectReference Include="..\..\..\CAE3\V1.0\AUS\Mpai.Cae.Aus.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VII\Mpai.Osd.Vii.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />
-    <ProjectReference Include="..\..\..\CAE3\V1.0\ASI\Mpai.Cae.Asi.csproj" />
-    <ProjectReference Include="..\..\..\CAE3\V1.0\AII\Mpai.Cae.Aii.csproj" />
+    <ProjectReference Include="..\..\..\CAE1\V2.5\ASI\Mpai.Cae.Asi.csproj" />
+    <ProjectReference Include="..\..\..\CAE1\V2.5\AII\Mpai.Cae.Aii.csproj" />
     <ProjectReference Include="..\..\..\CAE3\V1.0\QCV\Mpai.Cae.Qcv.csproj" />
     <ProjectReference Include="..\..\..\CVE\V1.0\VSI\Mpai.Cve.Vsi.csproj" />
     <ProjectReference Include="..\..\..\PAF\V1.6\FIR\Mpai.Paf.Fir.csproj" />

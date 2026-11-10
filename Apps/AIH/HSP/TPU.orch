@@ -1,0 +1,49 @@
+# =============================================================================
+#  TPU.orch - the Third-Party User (AIH-HSP V1.1)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  A Third-Party User runs a Health Front End: the same Module (1AIH-HFE-V1.1-I01); what makes it
+#  a Third-Party User is the User Profile it registers with (a Third-Party User Profile, or a
+#  User Profile of an individual who is a member of an organisation). What the standard gives a
+#  Third-Party User to do (AIH-HSP V1.1, Architecture 2, Operation):
+#
+#    - registers with the Health Back End (the Back End gives it the Tokens of AIH Data Processing only);
+#    - processes the AIH Data in the Back End as the terms of the Smart Contract allow: the Back End's
+#      AIH Data Processing asks the Blockchain to confirm the licence, and answers with the processed
+#      AIH Data, or refuses;
+#    - uses the processed AIH Data as the Smart Contract allows (nothing the workflow does).
+#
+#  It makes and keeps no AIH Data, trains nothing, and asks for nothing else: a request for any
+#  other service (de-identification, audit, storage) is refused by its own Health Front End.
+#
+#  The workflow joins the Back End's service first (the Controller is admitted by the Trust
+#  Authority the Third-Party User decided to trust); the User Agent binds a device to each Port it uses:
+#
+#      RegisterIn         the registration request (the Third-Party User Profile)
+#      RequestIn          a request to process an AIH Data
+#      RegisterAnswerOut  the Back End's answer to the registration (the Tokens)
+#      ResponseOut        the answer to a request: the processed AIH Data, or the refusal
+#
+#  The Third-Party User's Controller and the Back End's exchange the request and the answer, signed.
+# =============================================================================
+
+workflow TPU over 1AIH-HFE-V1.1-I01
+
+on Start:
+
+    type    Vault (OSD-BTO-V1.5)
+    ask Controller to start
+    ask Controller to keep storage in "{Vault}"
+    ask Controller to join "AIH-HBE" role FrontEnd
+
+    stream  RegisterIn        (AIH-REG-V1.1:1) from device "RegisterIn"
+    stream  RequestIn         (AIH-AHP-V1.1:1) from device "RequestIn"
+
+    deliver RegisterAnswerOut (AIH-REG-V1.1:2) to device "RegisterAnswerOut"
+    deliver ResponseOut       (AIH-AHP-V1.1:2) to device "ResponseOut"
+
+    loop until Stop:
+        wait 1s
+
+on Stop:
+    ask Controller to stop

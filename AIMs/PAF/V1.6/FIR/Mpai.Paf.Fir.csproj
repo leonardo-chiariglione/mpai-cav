@@ -13,6 +13,7 @@
     <!-- PAF/V1.6/FIR -> Core is ..\..\..\ (up to AIMs); AIF is ..\..\..\..\.
          Consumes the OSD visual scene's face objects, so references VisualScene
          (OSD V1.5) cross-standard. -->
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
     <ProjectReference Include="..\..\..\Onnx\Mpai.Onnx.csproj" />
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\OSD\V1.5\VisualScene\Mpai.Osd.VisualScene.csproj" />

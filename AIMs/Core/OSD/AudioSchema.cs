@@ -195,6 +195,8 @@ public sealed class BasicAudioSceneDescriptors
     public JsonArray? ClosedSpace { get; init; }
     // The Scene part of the Acoustic Profile.
     public AcousticProfile? AcousticProfile { get; init; }
+    public string? RenderingMode { get; init; }      // Mono | Stereo | Multichannel | Binaural: how the Scene is rendered for the listener (none: binaural)
+    public int? ChannelCount { get; init; }          // of a Multichannel rendering: 4, 6 or 8
 
     public int AudioObjectCount { get; init; }
     // The schema's BasicAudioSceneDescriptorsData; named "...Entries" in C# so the
@@ -256,6 +258,8 @@ public sealed class AudioSceneDescriptors
     public PointOfView? UserPoV { get; init; }
     public JsonArray? ClosedSpace { get; init; }   // OSD-CSP, by ID or in full
 
+    public string? RenderingMode { get; init; }      // how the Scene is rendered for the listener (see the Basic Audio Scene Descriptors)
+    public int? ChannelCount { get; init; }
     public int? AudioObjectCount { get; init; }
     public List<AudioSceneObjectEntry>? AudioObjects { get; init; }
 

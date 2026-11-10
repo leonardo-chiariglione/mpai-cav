@@ -17,8 +17,6 @@ on Start:
 
     loop until Stop:
         offer   Capture   (OSD-BAO-V1.5) from device "Capture"
-        offer   Array     (CAE-MAG-V2.5) from device "Array"
-        offer   Reference (CAE-ASR-V1.0) from device "Reference"
         ask     Scene     (OSD-BAS-V1.5)
         present Scene
         prompt  "exchange over"

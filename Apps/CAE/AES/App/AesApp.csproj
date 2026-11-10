@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Add Emotion to Speech, the App: it runs the User Agent (AES.orch) on the Controller of the Module, whose AIMs run on an AIM host of their own. It takes speech and an emotion,
+       and writes the speech with emotion. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AesApp</AssemblyName>
+    <RootNamespace>Mpai.Cae.Aes</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Support\Mpai.Cae.Apps.csproj" />
+  </ItemGroup>
+
+</Project>

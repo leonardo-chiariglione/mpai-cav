@@ -15,7 +15,7 @@ using Mpai.Wdl;           // WorkflowReader
 namespace HciMac;
 
 // MAC User Agent - Multimodal Access Control, on its own: no MAS, no launcher. It does not follow its own steps: it executes the
-// Workflow Description of the App (Apps/MMC/MAC/MMC-MAC.orch) with the interpreter of the User Agent, handing it the Controller API of a
+// Workflow Description of the App (Apps/MMC/MAC/OSD-MAC.orch) with the interpreter of the User Agent, handing it the Controller API of a
 // Controller that runs the Module in this process. The workflow starts the Module, takes the Avatar Model, has the avatar welcome the
 // person and ask for the face and a spoken sentence (the words are the workflow's and the Module speaks them), and presents the Portable
 // Avatar that gives the verdict. This window supplies only the devices that serve the Data Types (the camera, the microphone, the Avatar
@@ -34,7 +34,7 @@ public partial class MainWindow : Window
     private static readonly string GalleryJson  = Mpai.Core.MpaiPaths.Gallery;
 
     // The workflow of the App: the one source, read where the repository keeps it.
-    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "MAC", "MMC-MAC.orch");
+    private static string WorkflowPath => Path.Combine(Mpai.Core.MpaiPaths.Root, "Apps", "MMC", "MAC", "OSD-MAC.orch");
 
     private IControllerApi?           _north;
     private AvatarUaHost?             _avatar;

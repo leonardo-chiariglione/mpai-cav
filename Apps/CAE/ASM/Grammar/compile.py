@@ -291,7 +291,7 @@ def coordinates():
                     pre = '(?:(?:%s) (?:%s )?|%s )' % (verbs, PRON, PRON)
                 pattern = pre + be + ('' if place else '(?:at |to )?') + forms
             else:
-                lead = '(?:(?:%s) )?(?:the )?(?<name>.+?)' % verbs
+                lead = '(?:(?:%s) )?(?:the )?(?<name>(?!%s\\b).+?)' % (verbs, NOTNAME)        # 'it' is not a name: it is the sound that waits, else the one spoken of last
                 pattern = lead + IS + (' ?' if place else '(?: (?:at|to))? ?') + forms
             zc = '{z}' if z is None else 0
             if t.add:
@@ -320,6 +320,21 @@ def remove_delete():
               {'UserCommandRQ': {'RemovedObjects': {'Objects': [{'ObjectID': '{name}'}]}}}))
     emit({'Pattern': '(?:' + V['Delete'] + ') (?:the )?(?<name>.+?)(?: from the (?:store|storage|library))?', 'Names': {'name': 'Kept'},
           'Command': {'UserCommandRQ': {'DeletedObjects': {'Objects': [{'ObjectID': '{name}'}]}}}})
+
+def rename_object():
+    """"rename the guitar as piano": the name of an object that is kept, by the verb first (the same command as "set the name of the guitar to piano")."""
+    emit({'Pattern': '(?:' + V['Rename'] + ') (?:the )?(?<name>.+?) (?:as|to|into)(?: be)? (?<text>.+)', 'Names': {'name': 'Kept'}, 'Raw': ['text'],
+          'Command': {'UserCommandRQ': {'ChangedObjects': {'Objects': [{'ObjectID': '{name}', 'Name': '{text}'}]}}}})
+
+def rendering():
+    """how the scene is heard: "play on headphones", "hear it on stereo speakers", "set the output to 5.1" - the Rendering Mode of the Scene (a property of the Basic Audio Scene Descriptors and the Audio Scene Descriptors; the Module's)."""
+    for row in G['Renderings']:
+        scene = {'RenderingMode': row['Mode']}
+        if 'ChannelCount' in row: scene['ChannelCount'] = row['ChannelCount']
+        command = {'UserCommandRQ': {'ModifiedScene': scene}}
+        words = alt(row['Words'])
+        emit({'Pattern': '(?:please )?(?:(?:play|hear|listen|render|output)(?: it| the scene| the sound)?|(?:set|change|switch)(?: the)?(?: sound| audio)? (?:output|rendering|playback))'
+                         '(?: (?:on|for|to|through|in|with|over))? (?:the |my )?' + words + '(?: output| rendering)?', 'Command': command})
 
 def undo_play():
     emit({'Pattern': 'undo(?: that| the last (?:command|thing))?|go back|take that back', 'Command': {'UserCommandRQ': {'RevokedUserCommandID': '{last}'}}})
@@ -478,6 +493,8 @@ def compile_rules():
     turn()
     level()
     remove_delete()
+    rename_object()
+    rendering()
     undo_play()
     raise_lower()
     approach()
@@ -502,6 +519,10 @@ def build():
     context = json.loads(json.dumps(BASE))
     context['Rules'] = compile_rules()
     context['Shortcuts'] = [{'Phrases': synonyms(l['Phrases']), 'Command': l['Command']} for l in G['Listings']]
+    # WHICH MATERIALS ARE AVAILABLE: asked, answered from the same list the rules are made from (what is not in it is not understood)
+    names = [k for k in G['Materials'] if k not in ('_', 'Bands')]
+    say = 'I know these materials: ' + ', '.join(names[:-1]) + ' and ' + names[-1] + '. Say for example: set the left wall to carpet, or cover the ceiling with foam.'
+    context.setdefault('Asks', []).insert(0, {'Words': ['which materials', 'what materials', 'list the materials', 'list materials', 'materials available', 'available materials', 'materials do you', 'materials can i', 'materials are there', 'show the materials', 'show materials'], 'Say': say})
     text = json.dumps(context, indent=2, ensure_ascii=False) + '\n'
     return text
 

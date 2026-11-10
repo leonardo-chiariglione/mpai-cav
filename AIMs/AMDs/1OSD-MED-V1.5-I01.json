@@ -1,0 +1,63 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "OSD-MED-V1.5-I01",
+    "AIMName": "1OSD-MED-V1.5-I01"
+  },
+  "Header": "OSD-MED-V1.5",
+  "APIProfile": "Basic",
+  "Description": "Multimodal Event Description. Collects the Basic Multimodal Scene Descriptors into the Multimodal Event Descriptors.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "MultimodalSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BMS-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MultimodalEventDescriptors",
+      "Direction": "Output",
+      "DataType": "OSD-MEV-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/OSD/V1.5/TMA",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Osd.Tma",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.5",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "1 GB",
+      "Request": "2 GB",
+      "Maximum": "4 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Specification",
+      "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/multimodal-event-description/"
+    }
+  ]
+}

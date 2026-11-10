@@ -13,7 +13,7 @@ namespace Mpai.Osd.Bls;
 // Basic LiDAR Object (OSD-BLO) - which carries its own 3D SpaceTime - and packages
 // it into a Basic LiDAR Scene Descriptors (OSD-BLS): a one-object scene whose entry
 // carries the object at its spatial attitude. In MMC-HCI the LiDAR scene is fused
-// by Audio-Visual Alignment to give the visual objects their (depth-resolved)
+// by Multimodal Alignment to give the visual objects their (depth-resolved)
 // points of view.
 public sealed class BlsAimProcessor : IAimProcessor
 {

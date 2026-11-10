@@ -49,9 +49,9 @@ User Agent  --drives-->  Controller  --builds & runs-->  Module (sub-AIMs)
 - The UA's behaviour is described by a **WDL** guidebook, the `.orch` file
   (`UserAgent/Orchestration/HCI-MAC.orch`), which the UA code realises.
 
-## 3. The MAC Module - `MMC-MAC-V2.5`
+## 3. The MAC Module - `OSD-MAC-V1.5`
 
-L3: `AIMs/AMDs/1MMC-MAC-V2.5-I01.json`. Sub-AIMs (leaves the provider builds):
+L3: `AIMs/AMDs/1OSD-MAC-V1.5-I01.json`. Sub-AIMs (leaves the provider builds):
 
 | Sub-AIM | Role | Engine |
 |---|---|---|
@@ -74,7 +74,7 @@ UserID or re-decide identity.
 voice legs agree** on the same subject; one modality alone, or disagreement,
 yields the coarse "person" identity -> *not identified*.
 
-The **gallery** is read from Shared Storage scope `"MMC-MAC-V2.5"`. FIR/SIR
+The **gallery** is read from Shared Storage scope `"OSD-MAC-V1.5"`. FIR/SIR
 compare a live probe embedding against enrolled subjects by cosine similarity.
 
 ## 4. The User Agent
@@ -82,7 +82,7 @@ compare a live probe embedding against enrolled subjects by cosine similarity.
 `MPAIApps/MmcApps/MacApp/src/` - namespace `HciMac`.
 
 - `MainWindow.xaml.cs` - realises `HCI-MAC.orch` via the **Controller API**:
-  `StartFlow("MMC-MAC-V2.5")` -> speak *"...Look at the camera."* (a one-shot **RSR**
+  `StartFlow("OSD-MAC-V1.5")` -> speak *"...Look at the camera."* (a one-shot **RSR**
   render) -> capture a webcam frame -> `Advance` with `(OSD-BVO)` -> the Module
   **suspends** for speech -> speak *"Speak your passphrase."* -> capture microphone
   -> `Advance` with `(OSD-BSO)` -> read outputs by type (`OSD-BTO` verdict,
@@ -103,7 +103,7 @@ Visual acquisition uses **native Windows Media Capture** (no OpenCV).
 - **UA library / Controller API:** `UserAgent/UaKit`; `AIF/ControllerApi` (`ControllerApi`)
 - **AIMs:** `AIMs/Core`, and the leaves `PAF/V1.6/FIR`, `MMC/V2.5/SIR`,
   `OSD/V1.5/IDR`, `PAF/V1.6/PSD`, `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; the Units (not AIMs) UNT-AOA, UNT-SOD and UNT-VOA are in `AIF/UserAgent/PhysicalLayer`
-- **L3s:** `AIMs/AMDs/1MMC-MAC-V2.5-I01.json` + the sub-AIM AMDs
+- **L3s:** `AIMs/AMDs/1OSD-MAC-V1.5-I01.json` + the sub-AIM AMDs
 - **Orchestration:** `UserAgent/Orchestration/HCI-MAC.orch`
 - **Schemas:** the JSON schemas under `schemas/` reachable from MAC's data types
 - **Settings:** `AIMs/aim-settings.json` - `MMC-TTS-V2.5` (Piper voice),

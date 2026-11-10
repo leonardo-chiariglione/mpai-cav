@@ -102,6 +102,9 @@
       "forget",
       "wipe"
     ],
+    "Rename": [
+      "rename"
+    ],
     "Listener": [
       "move",
       "put",
@@ -633,13 +636,25 @@
       0.8
     ]
   },
+  "Renderings": [
+    { "Mode": "Binaural",     "Words": [ "headphones", "headphone", "headset", "earphones", "earbuds", "binaural" ] },
+    { "Mode": "Stereo",       "Words": [ "stereo speakers", "stereo loudspeakers", "stereo", "speakers", "loudspeakers", "speaker" ] },
+    { "Mode": "Mono",         "Words": [ "mono", "one speaker" ] },
+    { "Mode": "Multichannel", "ChannelCount": 4, "Words": [ "quad", "quadraphonic", "4 speakers", "four speakers" ] },
+    { "Mode": "Multichannel", "ChannelCount": 6, "Words": [ "5.1", "5.1 surround", "surround", "six speakers" ] },
+    { "Mode": "Multichannel", "ChannelCount": 8, "Words": [ "7.1", "7.1 surround", "eight speakers" ] }
+  ],
   "Faces": {
     "floor": "Floor",
     "ceiling": "Ceiling",
     "left wall": "Left",
     "right wall": "Right",
     "front wall": "Front",
-    "back wall": "Back"
+    "back wall": "Back",
+    "west wall": "Left",
+    "east wall": "Right",
+    "north wall": "Front",
+    "south wall": "Back"
   },
   "Languages": {
     "english": "en",

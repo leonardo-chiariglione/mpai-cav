@@ -24,6 +24,11 @@
 #      ResponseOut     to the End User: the answer to a request (the AIH Data of the Vault, when asked for it)
 #      AraOut          to the End User: the ARA Data - the alert is the ARA Data, which carries the risk
 #
+#  WHO STARTS WHAT through this Front End: the End User's User Agent starts, with RequestIn, the upload of its AIH Data (Store) and a
+#  processing of its own AIH Data (AIHDataProcessing, as its Tokens allow); the Health Front End of a Third-Party User asks for a
+#  processing only (see TPU.orch). De-identification, anonymisation and audit are the End User's too, but the L2 of the Health Front
+#  End has no Port for them (proposal in MKG/pending-changes.md): they still go through the Back End's User Agent (HfeUserAgent.DeIdentify, Audit).
+#
 #  Where the AIH Data is kept (the Secure Data Vault) is the End User's: the User
 #  Agent asks the Controller to keep the storage there. It names no AIM; AIH Data
 #  Processing keeps the AIH Data there through the storage API (there is no Storage AIM).

@@ -1,0 +1,48 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-CAS-V2.5-I01", "AIMName": "1MMC-CAS-V2.5-I01"},
+  "Header":           "MMC-CAS-V2.5",
+
+  "APIProfile":       "Basic",
+  "OnDegraded":       "Continue",
+  "Description":      "Conversation About a Scene: Automatic Speech Recognition and Natural Language Understanding take what the person says (the Text Descriptors Object is the former Meaning); Personal Status Extraction gives the Personal Status of the person from the speech, the face and the body; Entity Dialogue Processing gives the answer and the Personal Status of the machine; Portable Avatar Multiplexing gives the Portable Avatar. Visual Scene Description / Speech Scene Description (OSD-BMS-V1.5 in the L2) and Visual Object Identification (CVE-DVI-V1.0 in the L2) have no code, so they are not Sub-AIMs of this instance: the Input Visual goes as it is to the face and the body description of Personal Status Extraction (it must show the one person who speaks, close enough for the face and the body to be read), the Speech Object is the Input Speech, and no Instance Identifier of an indicated object is given. The Multimodal Scene Description that the L2 sends to Portable Avatar Multiplexing is not produced either.",
+
+  "InternalTypes":   [{"Name": "RecognisedText", "DataType": "OSD-BTO-V1.5"},
+                      {"Name": "TextDescriptors", "DataType": "MMC-TDO-V2.5"},
+                      {"Name": "RefinedText", "DataType": "OSD-BTO-V1.5"},
+                      {"Name": "PersonalStatus", "DataType": "MMC-EPS-V2.5"},
+                      {"Name": "MachineText", "DataType": "OSD-BTO-V1.5"},
+                      {"Name": "MachinePersonalStatus", "DataType": "MMC-EPS-V2.5"}],
+
+  "ExternalPorts":   [{"Name": "InputSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputVisual", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [{"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-ASR-V2.5-I01", "AIMName": "1MMC-ASR-V2.5-I01", "Relation": "Internal"}},
+                      {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-NLU-V2.5-I01", "AIMName": "1MMC-NLU-V2.5-I01", "Relation": "Internal"}},
+                      {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-PSE-V2.5-I02", "AIMName": "1MMC-PSE-V2.5-I02", "Relation": "Internal"}},
+                      {"Identifier": {"ImplementerID": "1", "ImplementationID": "MMC-EDP-V2.5-I01", "AIMName": "1MMC-EDP-V2.5-I01", "Relation": "Internal"}},
+                      {"Identifier": {"ImplementerID": "1", "ImplementationID": "PAF-PMX-V1.6-I01", "AIMName": "1PAF-PMX-V1.6-I01", "Relation": "Internal"}}],
+
+  "Topology":        [{"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-PSE-V2.5-I02", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-PSE-V2.5-I02", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-PSE-V2.5-I02", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "1MMC-ASR-V2.5-I01", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "1MMC-ASR-V2.5-I01", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "1MMC-NLU-V2.5-I01", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "1MMC-NLU-V2.5-I01", "DataType": "MMC-TDO-V2.5"}, "Input": {"AIMName": "1MMC-EDP-V2.5-I01", "DataType": "MMC-TDO-V2.5"}},
+                      {"Output": {"AIMName": "1MMC-NLU-V2.5-I01", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1MMC-EDP-V2.5-I01", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "1MMC-NLU-V2.5-I01", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1MMC-PSE-V2.5-I02", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "1MMC-PSE-V2.5-I02", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "1MMC-EDP-V2.5-I01", "DataType": "MMC-EPS-V2.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "1MMC-EDP-V2.5-I01", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "1MMC-EDP-V2.5-I01", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "MMC-EPS-V2.5"}},
+                      {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "string"}},
+                      {"Output": {"AIMName": "1PAF-PMX-V1.6-I01", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}}],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/AMDs", "MASPort": 443, "BinaryName": "Mpai.Mmc.Cas", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "6 GB", "Request": "8 GB", "Maximum": "16 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/conversation-about-a-scene/"}]}

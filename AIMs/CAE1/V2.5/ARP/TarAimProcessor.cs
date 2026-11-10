@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Arp;
 
@@ -17,8 +18,12 @@ namespace Mpai.Cae.Usc.Arp;
 // have had over the one it had). It does not detect the errors: the analysis did. One restored file for each section corrected; the Editing List records what was applied to each.
 // The Irregularity File has no field for a tape read backwards, so the AIM does not reverse anything (ReadingBackwards is false in the Editing List).
 // When no irregularity needs a correction the AIM gives nothing.
-public sealed class TarAimProcessor(string instanceId, string irregularityKey, string audioKey, string editingListKey, string restoredKey) : IAimProcessor
+public sealed class TarAimProcessor(string instanceId, string irregularityKey, string audioKey, string editingListKey, string restoredKey, double marginSeconds = 1.0) : IAimProcessor
 {
+    // THE MARGIN OF TAPE the equalisation is corrected with. The correction has a low-frequency part with a long memory, so a block cut at the ends of a section is given back less well
+    // there: the section is corrected together with this much of the tape on each side (as much as the Preservation Audio File has) and cut back to the section.
+    public const double DefaultMarginSeconds = 1.0;      // the default of marginSeconds
+
     public string InstanceId { get; } = instanceId;
 
     // The AIM runs whenever a Message arrives (the Preservation Audio File comes once, the Irregularity File - the selected irregularities, which may be given more than once as the
@@ -59,7 +64,13 @@ public sealed class TarAimProcessor(string instanceId, string irregularityKey, s
                 var from = (int)Math.Round(start * audio.Rate); var to = Math.Min((int)Math.Round(end * audio.Rate), audio.Samples.Length);
                 if (to <= from) throw new FormatException("An irregularity covers no sample of the Preservation Audio File.");
                 var section = new Audio(audio.Samples[from..to], audio.Rate);
-                if (eqDiffers) section = Tape.CorrectEqualisation(section, readEq!, readSpeed ?? writeSpeed!.Value, writeEq!, writeSpeed ?? readSpeed!.Value);
+                if (eqDiffers)
+                {
+                    var margin = (int)Math.Round(marginSeconds * audio.Rate);
+                    var lo = Math.Max(0, from - margin); var hi = Math.Min(audio.Samples.Length, to + margin);
+                    var block = Tape.CorrectEqualisation(new Audio(audio.Samples[lo..hi], audio.Rate), readEq!, readSpeed ?? writeSpeed!.Value, writeEq!, writeSpeed ?? readSpeed!.Value);
+                    section = new Audio(block.Samples[(from - lo)..(from - lo + (to - from))], audio.Rate);
+                }
                 var applied = speedDiffers ? Tape.AppliedSamplingFrequency(audio.Rate, readSpeed!.Value, writeSpeed!.Value) : audio.Rate;
                 section = new Audio(section.Samples, applied);
 

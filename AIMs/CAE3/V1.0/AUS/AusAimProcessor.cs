@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Aif.PortData;
 using Mpai.Core;
 using Mpai.Core.OSD;
 using Mpai.Mmc.Sir;
@@ -100,7 +101,7 @@ public sealed class AusAimProcessor : IAimProcessor
             ["SpeechOverlapData"] = overlaps
         };
 
-        var speechJson = MpaiJson.ToJson(speech);
+        var speechJson = PortObjects.WriteSpeechObject(speech);
         var timeJson = MpaiJson.ToJson(time);
         return Task.FromResult(new Message
         {
@@ -121,8 +122,8 @@ public sealed class AusAimProcessor : IAimProcessor
     private static BasicSpeechObject? Basic(string json)
     {
         var header = (string?)JsonNode.Parse(json)?["Header"];
-        if (header is not null && header.StartsWith("OSD-BSO", StringComparison.Ordinal)) return MpaiJson.FromJson<BasicSpeechObject>(json);
-        var speech = MpaiJson.FromJson<SpeechObject>(json);
+        if (header is not null && header.StartsWith("OSD-BSO", StringComparison.Ordinal)) return PortObjects.ReadSpeech(json);
+        var speech = PortObjects.ReadSpeechObject(json);
         return speech?.BasicSpeechObjects?.FirstOrDefault()?.BSObjectIDOrBSObject
                ?? throw new InvalidOperationException("the Speech Object holds no Basic Speech Object.");
     }

@@ -19,8 +19,8 @@ using Mpai.Paf.Gfd;          // GfdAimProcessor
 
 namespace AcrApp;
 
-// Leaf provider for the MMC-ACR-V2.5 Module. The Controller builds the ACR
-// composite from its L3 (1MMC-ACR-V2.5-I01.json); this provider supplies ONLY
+// Leaf provider for the OSD-ACR-V1.5 Module. The Controller builds the ACR
+// composite from its L3 (1OSD-ACR-V1.5-I01.json); this provider supplies ONLY
 // the leaf AIMs the topology names:
 //   PAF-EFD - Entity Face Description  (SCRFD + ArcFace -> Face Descriptors)
 //   MMC-ESD - Entity Speech Description (ECAPA        -> Speech Descriptors)

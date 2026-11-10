@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Mpai.Cae.Apps;
 using Mpai.Cae.Usc;
 using Mpai.Ua;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Eae;
 
@@ -41,11 +42,8 @@ internal static class Program
             Console.WriteLine("Starting the Module (a first start takes a while)...");
             using var module = ModuleHost.Start(Module, null, Console.WriteLine);
             string? scene = null;
-            var reference = new JsonObject { ["Header"] = "CAE-ASR-V1.0", ["PolynomialVariable"] = "AngleSine", ["Polynomial"] = new JsonArray(new JsonObject { ["Coefficient"] = 1.0, ["Exponent"] = 0 }) }.ToJsonString();
             var devices = new DeviceRegistry()
                 .RegisterDevice("Capture", new GivenDevice("OSD-BAO-V1.5", AudioObject.MakeMultichannel("capture", audio, array)))
-                .RegisterDevice("Array", new GivenDevice("CAE-MAG-V2.5", array.ToJson().ToJsonString()))
-                .RegisterDevice("Reference", new GivenDevice("CAE-ASR-V1.0", reference))
                 .RegisterPresent("file", d => { if (d.TryGetValue("OSD-BAS-V1.5", out var s)) scene = s; return Task.CompletedTask; });            Console.WriteLine("Finding the speakers...");
             new WorkflowRun(module.Api, Path.Combine(ModuleHost.Root, "Apps", "CAE", "EAE", "EAE.orch"), devices, Environment.GetEnvironmentVariable("MPAI_DIAG") == "1" ? Console.WriteLine : null).Run();
 

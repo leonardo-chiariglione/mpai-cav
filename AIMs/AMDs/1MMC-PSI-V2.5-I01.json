@@ -1,0 +1,21 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-PSI-V2.5-I01", "AIMName": "1MMC-PSI-V2.5-I01"},
+  "Header":           "MMC-PSI-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "PS-Speech Interpretation: gives the Speech Personal Status from the Speech Descriptors Object of a speech (the valence, arousal and dominance of the instance I03 of Entity Speech Description). The interpretation is that of MMC-SPE: the (valence, arousal) point is mapped to an Emotion by the quadrants of the affective circumplex, and the dominance to a Social Attitude. A Speech Descriptors Object of another format (a voice embedding) is refused. The model that gives these descriptors (in the instance I03 of Entity Speech Description) is licensed for non-commercial use only (CC-BY-NC-SA-4.0).",
+
+  "ExternalPorts":   [{"Name": "SpeechDescriptors", "Direction": "Input", "DataType": "MMC-SDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechPersonalStatus", "Direction": "Output", "DataType": "MMC-SPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/PSI", "MASPort": 443, "BinaryName": "Mpai.Mmc.Psi", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/ps-speech-interpretation/"}]}

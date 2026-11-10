@@ -20,8 +20,8 @@ using Mpai.Paf.Gbd;         // GbdAimProcessor
 
 namespace Mpai.Providers;
 
-// Leaf provider for the MMC-MAC-V2.5 Module (Multimodal Access Control; M3245).
-// The Controller builds the MMC-MAC composite from its L3; this provider supplies
+// Leaf provider for the OSD-MAC-V1.5 Module (Multimodal Access Control; M3245).
+// The Controller builds the OSD-MAC composite from its L3; this provider supplies
 // ONLY the leaf AIMs the topology names:
 //   PAF-FIR - face recognition (SCRFD + ArcFace), against the gallery
 //   MMC-SIR - speaker recognition (ECAPA), against the gallery

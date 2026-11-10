@@ -6,10 +6,11 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Eae;
 
-// CAE-SFD-V2.5, Sound Field Description: the Microphone Array Geometry and the Audio Object in the transform domain (the blocks of the array's channels) in; the Audio Object of the
+// CAE-SFD-V2.5, Sound Field Description: the Audio Object in the transform domain (the blocks of the array's channels; the Microphone Array Geometry is in its Qualifier, which the Short-Time Fourier Transform carried on) in; the Audio Object of the
 // Spherical Harmonic Decomposition Coefficients out - the sound field as the coefficients of the spherical harmonics up to the order the array can resolve (an array of M microphones:
 // (N + 1)^2 <= M).
 //
@@ -18,20 +19,20 @@ namespace Mpai.Cae.Usc.Eae;
 // functions, and a microphone is taken as a point and an omnidirectional one: the specification does not say what the Implementation shall assume, and the arrays differ.
 // The decomposition is right while the wave number times the radius of the array is below about one: above it an array with few microphones cannot tell an order from a higher one
 // (spatial aliasing), whatever the Implementation.
-public sealed class SfdAimProcessor(string instanceId, string geometryKey, string transformKey, string outputKey) : IAimProcessor
+public sealed class SfdAimProcessor(string instanceId, string transformKey, string outputKey) : IAimProcessor
 {
     public const double SpeedOfSound = 343.0;
     public string InstanceId { get; } = instanceId;
 
     public Task<Message> ProcessAsync(Message message)
     {
-        if (!message.Ports.TryGetValue(geometryKey, out var geometryJson) || string.IsNullOrWhiteSpace(geometryJson) ||
-            !message.Ports.TryGetValue(transformKey, out var transformJson) || string.IsNullOrWhiteSpace(transformJson))
-            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-SFD-V2.5: it needs the Microphone Array Geometry and the Audio Object in the transform domain."));
+        if (!message.Ports.TryGetValue(transformKey, out var transformJson) || string.IsNullOrWhiteSpace(transformJson))
+            return Task.FromResult(Message.Error(message.MessageId, InstanceId, "CAE-SFD-V2.5: it needs the Audio Object in the transform domain."));
         try
         {
-            var geometry = ArrayGeometry.FromJson(JsonNode.Parse(geometryJson));
-            var (t, _) = TransformObject.Read(transformJson);
+            var (t, geometryNode) = TransformObject.Read(transformJson);
+            if (geometryNode is null) throw new FormatException("The Qualifier of the Audio Object carries no Microphone Array Geometry (Attributes.Device.MicrophoneArrayGeometry).");
+            var geometry = ArrayGeometry.FromJson(geometryNode);
             if (t.Channels != geometry.Count) throw new FormatException($"The array has {geometry.Count} microphones and the transform {t.Channels} channels.");
             var order = SphericalHarmonics.OrderOf(geometry.Count);
             var decoder = Decoder(geometry, order, t.Rate, t.BlockSize);                                   // for each bin, the matrix from the microphones to the coefficients
@@ -43,7 +44,7 @@ public sealed class SfdAimProcessor(string instanceId, string geometryKey, strin
                     for (var c = 0; c < k; c++) { Complex s = 0; for (var m = 0; m < geometry.Count; m++) s += decoder[b][c, m] * block[m][b]; result[c][b] = s; }
                 return result;
             }).ToList();
-            var text = TransformObject.Make("sfd-" + Guid.NewGuid().ToString("N")[..12], new TransformBlocks(t.Rate, t.BlockSize, t.Samples, blocks), "SHD", JsonNode.Parse(geometryJson));
+            var text = TransformObject.Make("sfd-" + Guid.NewGuid().ToString("N")[..12], new TransformBlocks(t.Rate, t.BlockSize, t.Samples, blocks), "SHD", geometryNode);
             return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "BasicAudioObject", DataType = AudioObject.Header, Payload = text, Ports = new Dictionary<string, string> { [outputKey] = text } });
         }
         catch (Exception ex) when (ex is FormatException or ArgumentException or InvalidOperationException)

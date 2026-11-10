@@ -29,6 +29,17 @@
 #    to the Blockchain -
 #      ContractOut, ConfirmOut, AuditConfirmOut
 #
+#  WHO STARTS WHAT (AIH-HSP V1.1; where the standard is silent, the simplest reading):
+#    - an audit and an AIH Data Processing are started by the Back End itself - a command of its operator device to this User Agent
+#      (HbeUserAgent.AuditOf, HbeUserAgent.ProcessData); the request goes to the Module on RequestIn / AuditIn, as the Back End's (it has
+#      no Tokens: it is not a user). The licence terms are not the workflow's business: AIH Data Processing, and Auditing, ask the
+#      Blockchain to confirm the licence (ConfirmOut, AuditConfirmOut), and a refusal is the answer.
+#    - the same functions are started by the responsible End User through its Health Front End: processing on RequestIn of the Front
+#      End (between the Controllers); de-identification, anonymisation and audit - see the note below.
+#    NOTE: the Ports of de-identification, anonymisation and audit (DeIdIn, DeIdOut, AuditIn, AuditOut, AhdDeIdOut) and the Back End's own
+#    questions to AIH Data Processing are still devices of this User Agent: the L2 of the Health Back End does not let them be remote and
+#    the L2 of the Health Front End has no such Ports. The proposal is in MKG/pending-changes.md; it is not applied.
+#
 #  Where the Secure Storage is kept is the Back End's: the User Agent asks the
 #  Controller to keep the storage there. It names no AIM; AIH Data Processing keeps
 #  the AIH Data there through the storage API (there is no Storage AIM), and gives it

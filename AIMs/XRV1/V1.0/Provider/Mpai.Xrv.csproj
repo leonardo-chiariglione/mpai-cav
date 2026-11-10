@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The AIMs of XRV-LTP V1.0 that are software so far (Action Generation and the three Status Interpretation AIMs), as the Controller asks for them by their AIM Instance. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ACG\Mpai.Xrv.Acg.csproj" />
+    <ProjectReference Include="..\PFI\Mpai.Xrv.Pfi.csproj" />
+    <ProjectReference Include="..\PTI\Mpai.Xrv.Pti.csproj" />
+    <ProjectReference Include="..\OSI\Mpai.Xrv.Osi.csproj" />
+  </ItemGroup>
+</Project>

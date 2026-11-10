@@ -10,6 +10,7 @@
                        {"Name": "IrregularityImages", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":          [],
   "Topology":         [],
+  "AccessSources":    [{"Name": "tape-irregularity-classifier", "Uri": "file:///D:/AI/Access/CAE/TapeIrregularityClassifier.onnx", "Sha256": "AAA72456FD1D010C6A537A76BEF9076EC09FDD9291862BD15002AA925EBEFC20", "Setting": "TicModel", "AsFile": "TapeIrregularityClassifier.onnx", "Terms": {"Licence": "BSD-3-Clause (made by this repository; trained on simulated impairments of public-domain and CC0 music)", "Uri": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/Test/Data/Music/README.md", "PersonalData": false}, "Description": "The trained classifier of Tape Irregularity Classification (ONNX, 8 classes; TRAINED ON SIMULATION, NOT ON REAL TAPES)."}],
   "Implementations":  [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/CAE1/V2.5/ARP", "MASPort": 443, "BinaryName": "Mpai.Cae.Usc.Arp", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
   "ResourcePolicies": [{"Name": "Memory", "Minimum": "0.5 GB", "Request": "2 GB", "Maximum": "8 GB"},
                        {"Name": "CPU:Class", "Minimum": "Low", "Request": "Medium", "Maximum": "High"}],

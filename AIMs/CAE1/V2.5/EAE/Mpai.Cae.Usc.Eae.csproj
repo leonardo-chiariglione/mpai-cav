@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The SubAIMs of Enhanced Audioconference Experience (CAE-EAE) of CAE-USC V2.5: Audio Analysis Transform, Sound Field Description, Speech Detection and Separation, Noise
+  <!-- The SubAIMs of Enhanced Audioconference Experience (CAE-EAE) of CAE-USC V2.5: Short-Time Fourier Transform, Sound Field Description, Speech Detection and Separation, Noise
        Cancellation Module, Audio Synthesis Transform and Audio Descriptors Multiplexing. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

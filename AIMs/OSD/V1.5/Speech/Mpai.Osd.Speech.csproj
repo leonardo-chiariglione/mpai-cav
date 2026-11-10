@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Basic Speech Object (OSD-BSO-V1.5) as a carrier of 16-bit PCM WAV audio, and WAV reading and writing. An OSD Data Type: every AIM that takes or gives speech uses it, whatever its standard. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

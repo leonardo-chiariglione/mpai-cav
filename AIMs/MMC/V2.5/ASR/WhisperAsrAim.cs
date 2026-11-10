@@ -61,11 +61,15 @@ public sealed class WhisperAsrAim : IAsrAim
 
     public WhisperAsrAim(WhisperAsrConfiguration config) => _config = config;
 
-    public async Task<BasicTextObject> ProcessAsync(BasicSpeechObject speech)
+    // CONTEXT: text that helps the recognition (the Auxiliary Text of a programme, for instance): it is whisper's initial prompt, after the prompt file, if there is one.
+    public Task<BasicTextObject> ProcessAsync(BasicSpeechObject speech) => ProcessAsync(speech, null);
+
+    public async Task<BasicTextObject> ProcessAsync(BasicSpeechObject speech, string? context)
     {
         var bytes = ToWavBytes(speech);
         int window = _config.AudioContext ?? Window(bytes);
         var hint = Hint();
+        if (context is { Length: > 0 }) hint = ((hint is null ? "" : hint + " ") + context.Replace("\"", "'")).Trim();
 
         if (_config.ServerPath is { Length: > 0 } server)
         {

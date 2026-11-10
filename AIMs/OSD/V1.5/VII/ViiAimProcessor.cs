@@ -32,7 +32,10 @@ namespace Mpai.Osd.Vii;
 // "Empty identification is not representable" (OSD-IID rule): if no object is
 // detected, VII returns a coarse candidate ["visual","object"] labelled "object"
 // with the top score (or zero), rather than an empty identifier.
-public sealed class ViiAimProcessor : IAimProcessor
+//
+// The Basic Visual Scene Descriptors (OSD-BVS) the objects stand in come in and go out unchanged, so that whoever follows has the scene and the identifiers together. The AIM identifies every object that arrives
+// (the runner), one Instance Identifier for each; run as a processor for one Message, it identifies the one object the Message carries.
+public sealed class ViiAimProcessor : IAimProcessor, IAimRunner
 {
     private const string IidHeader = "OSD-IID-V1.5";
 
@@ -40,6 +43,8 @@ public sealed class ViiAimProcessor : IAimProcessor
     private readonly YoloxObjectDetector _detector;
     private readonly string _inPort;
     private readonly string _outPort;
+    private readonly string _sceneIn, _sceneOut;
+    private const string Bvo = "OSD-BVO-V1.5", Bvs = "OSD-BVS-V1.5";
 
     public ViiAimProcessor(
         string instanceId,
@@ -50,50 +55,60 @@ public sealed class ViiAimProcessor : IAimProcessor
         _detector   = detector;
         _inPort     = ports.Input("OSD-BVO-V1.5");
         _outPort    = ports.Output("OSD-IID-V1.5");
+        _sceneIn    = ports.Input(Bvs);
+        _sceneOut   = ports.Output(Bvs);
     }
 
     public string InstanceId => _instanceId;
 
     public System.Threading.Tasks.Task<Message> ProcessAsync(Message message)
     {
-        if (!message.Ports.TryGetValue(_inPort, out var bvoJson))
+        var hasObject = message.Ports.TryGetValue(_inPort, out var bvoJson);
+        var hasScene = message.Ports.TryGetValue(_sceneIn, out var scene) && !string.IsNullOrWhiteSpace(scene);
+        if (!hasObject && !hasScene)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Target Visual Object on input port"));
 
-        var visual = MpaiJson.FromJson<BasicVisualObject>(bvoJson);
-        if (visual is null || visual.Data.Length == 0)
-            return System.Threading.Tasks.Task.FromResult(
-                Message.Error(message.MessageId, _instanceId, "empty Target Visual Object"));
+        var ports = new System.Collections.Generic.Dictionary<string, string>();
+        if (hasScene) ports[_sceneOut] = scene!;                                    // the scene goes on as it came
+        if (hasObject)
+        {
+            var iid = Identify(bvoJson!, out var error);
+            if (error is not null) return System.Threading.Tasks.Task.FromResult(Message.Error(message.MessageId, _instanceId, error));
+            if (iid is not null) ports[_outPort] = MpaiJson.ToJson(iid);            // none for a Face: FIR's
+        }
+        return System.Threading.Tasks.Task.FromResult(new Message { MessageId = message.MessageId, MessageType = message.MessageType, Ports = ports });
+    }
+
+    // THE RUNNER: the scenes that arrive go on as they are, and every object that arrives is identified, one Instance Identifier for each.
+    public async System.Threading.Tasks.Task RunAsync(IAimPorts ports, AimContext context)
+    {
+        while (await ports.SelectAsync(-1, (Bvs, 1), (Bvo, 1)) is { } port)
+        {
+            if (await ports.ReadAsync(port.DataType, 1, 0) is not { } message) continue;
+            if (port.DataType == Bvs) { await ports.WriteAsync(Bvs, 1, message.Json); continue; }
+            var iid = Identify(message.Json, out var error);
+            if (error is not null) { context.Report(error); continue; }
+            if (iid is not null) await ports.WriteAsync("OSD-IID-V1.5", 1, MpaiJson.ToJson(iid));
+        }
+    }
+
+    // What the object IS: its Instance Identifier; null and no error for a Face (FIR's), the reason where it could not be given.
+    private InstanceIdentifier? Identify(string bvoJson, out string? error)
+    {
+        error = null;
+        var visual = Mpai.Aif.PortData.PortObjects.ReadVisual(bvoJson);
+        if (visual is null || visual.Data.Length == 0) { error = "empty Target Visual Object"; return null; }
 
         // Type guard: VII identifies NON-FACE visual objects. Faces are FIR's; a
         // face-tagged object is declined here so EXACTLY ONE Instance Identifier is
         // produced per object. Untagged objects default to VII (generic).
-        var visualObjectType = visual.VisualQualifier?.Attributes?.VisualObjectType;
-        if (visualObjectType == "Face")
-            return System.Threading.Tasks.Task.FromResult(new Message
-            {
-                MessageId   = message.MessageId,
-                MessageType = message.MessageType,
-                Ports       = new System.Collections.Generic.Dictionary<string, string>()
-            });
+        if (visual.VisualQualifier?.Attributes?.VisualObjectType == "Face") return null;
 
         // Identify the object: run YOLOX, take the highest-confidence detection.
         var detections = _detector.Detect(visual.Data);
         var best = detections.OrderByDescending(d => d.Score).FirstOrDefault();
-
-        InstanceIdentifier iid = best is not null
-            ? Identify(best.ClassName, best.Score)
-            : Coarse();
-
-        return System.Threading.Tasks.Task.FromResult(new Message
-        {
-            MessageId = message.MessageId,
-            MessageType = message.MessageType,
-            Ports = new System.Collections.Generic.Dictionary<string, string>
-            {
-                [_outPort] = MpaiJson.ToJson(iid)
-            }
-        });
+        return best is not null ? Identify(best.ClassName, best.Score) : Coarse();
     }
 
     // A confident identification: label = COCO class, taxonomy = [visual, object, class].

@@ -57,16 +57,18 @@
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <Button x:Name="StopButton" Grid.Column="0" Content="Stop speaking (Esc)" Margin="0,0,8,0" Click="StopButton_Click" Style="{StaticResource StopButton}" Focusable="False"/>
-      <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone on" IsChecked="True" Margin="0,0,8,0" Click="MicButton_Click" Style="{StaticResource MicButton}" MinWidth="250"/>
+      <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone on" IsChecked="True" Margin="0,0,8,0" Click="MicButton_Click" Style="{StaticResource MicButton}" MinWidth="150"/>
       <Button x:Name="LoadButton" Grid.Column="2" Content="Load a sound..." Padding="12,4" Margin="0,0,8,0" Click="LoadButton_Click" IsEnabled="False"/>
       <Button x:Name="HearButton" Grid.Column="3" Content="Hear the scene" Padding="12,4" Margin="0,0,8,0" Click="HearButton_Click" IsEnabled="False"/>
       <Button x:Name="RoomButton" Grid.Column="4" Content="Room acoustics" Padding="12,4" Margin="0,0,8,0" Click="RoomButton_Click" IsEnabled="False"/>
-      <TextBox x:Name="InputBox" Grid.Column="5" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" IsEnabled="False"/>
-      <Button x:Name="SendButton" Grid.Column="6" Content="Send" Padding="16,4" Margin="8,0,0,0" IsEnabled="False" Click="SendButton_Click"/>
+      <Button x:Name="OutputButton" Grid.Column="5" Content="Sound output" Padding="12,4" Margin="0,0,8,0" Click="OutputButton_Click"/>
+      <TextBox x:Name="InputBox" Grid.Column="6" FontSize="14" VerticalContentAlignment="Center" Padding="6,2" IsEnabled="False"/>
+      <Button x:Name="SendButton" Grid.Column="7" Content="Send" Padding="16,4" Margin="8,0,0,0" IsEnabled="False" Click="SendButton_Click"/>
     </Grid>
     <!-- how long what is stored is kept: until the person deletes it, unless they give a date -->
     <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0" Visibility="Collapsed">

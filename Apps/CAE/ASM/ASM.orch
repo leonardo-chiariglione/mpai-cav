@@ -8,10 +8,11 @@
 #  the workflow, each to one Port, by Data Type and Port Number:
 #
 #    what the User gives the Module -
-#      ObjectIn                      an Audio Object: a sound the User captured, or an
-#                                    Audio Object the User read from outside
 #      ObjectCommand, SceneCommand   the commands of the editing of an Object and of
 #                                    the Scene; SceneIn the Audio Scene
+#                                    (the Module takes no Audio Object at its boundary: the
+#                                    Reference Model of 2026-10-26 has none; an Object enters as
+#                                    the member of a Scene, or is made by a command)
 #
 #    what the Module gives the User -
 #      ObjectOut, Scene, ObjectReport, the Audio Object and the Audio Scene as edited, and
@@ -31,7 +32,6 @@ on Start:
 
     ask Controller to start
 
-    stream  ObjectIn       (OSD-AUO-V1.5)   from device "ObjectIn"
     stream  ObjectCommand  (CAE-UCM-V1.0:1) from device "ObjectCommand"
     stream  SceneIn        (OSD-ASD-V1.5:1) from device "SceneIn"
     stream  SceneCommand   (CAE-UCM-V1.0:2) from device "SceneCommand"

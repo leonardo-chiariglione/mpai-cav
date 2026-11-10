@@ -1,0 +1,30 @@
+# =============================================================================
+#  AES.orch - Add Emotion to Speech (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes by exchange. Emotionless speech is
+#  given an emotion that is NAMED: Speech Feature Analysis 2 extracts the features of
+#  the emotionless speech (given the Mode Selector), Emotion Feature Production makes
+#  from them, from the Emotion List and in the Language Selector's language, the
+#  neural speech features of the emotion, and Neural Emotion Insertion gives them to
+#  the emotionless speech. The User Agent offers each datum to its Port, by Data Type
+#  and Port Number, from the device the App gave it.
+# =============================================================================
+
+workflow AES over 1CAE-AES-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    offer   ModeSelector     (OSD-SEL-V1.5:1) from device "ModeSelector"
+    offer   Language         (OSD-SEL-V1.5:2) from device "Language"
+    offer   Emotion          (MMC-EEM-V2.5:1) from device "Emotion"
+    offer   FeaturesSpeech   (OSD-BSO-V1.5:1) from device "FeaturesSpeech"
+    offer   Speech           (OSD-BSO-V1.5:2) from device "Speech"
+
+    ask     Result           (OSD-BSO-V1.5:1)
+    present Result
+
+on Stop:
+    ask Controller to stop

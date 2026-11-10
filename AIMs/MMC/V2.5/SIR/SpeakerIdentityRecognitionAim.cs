@@ -22,7 +22,7 @@ namespace Mpai.Mmc.Sir;
 //
 //  Twin of PAF-FIR: embed (ECAPA) -> match the enrolled SpeakerDatabase -> emit
 //  the identity. Identity-only: WHERE the speaker is is the audio scene's job;
-//  ALIGNING sight and sound is OSD-AVA's; SIR says WHO (or, failing that, WHAT
+//  ALIGNING sight and sound is OSD-MAL's; SIR says WHO (or, failing that, WHAT
 //  layer it could reach).
 // ---------------------------------------------------------------------------
 public sealed class SpeakerIdentityRecognitionAim : IDisposable

@@ -21,8 +21,8 @@ using Mpai.Paf.Gbd;         // GbdAimProcessor
 
 namespace Mpai.Providers;
 
-// Leaf provider for the MMC-ACR-V2.5 Module (Access Control Registration; M3245).
-// The Controller builds the MMC-ACR composite from its L3; this provider supplies
+// Leaf provider for the OSD-ACR-V1.5 Module (Access Control Registration; M3245).
+// The Controller builds the OSD-ACR composite from its L3; this provider supplies
 // ONLY the leaf AIMs the topology names:
 //   PAF-EFD - Entity Face Description   (SCRFD + ArcFace -> the face descriptors)
 //   MMC-ESD - Entity Speech Description (ECAPA           -> the speech descriptors)

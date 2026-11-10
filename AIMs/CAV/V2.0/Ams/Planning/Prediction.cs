@@ -72,6 +72,21 @@ public sealed class TrackedObject
     internal Dictionary<string, Remembered> Remembered { get; } = [];
     public IReadOnlyList<Hypothesis> Hypotheses { get; internal set; } = [];
     public Observation Last => History[^1];
+
+    // HOW HARD THE OBJECT HAS BEEN SEEN TO BRAKE, over the last second or so (m/s2): the least it may brake from here. What a driver is seen to do shows what he does: a vehicle that slows at
+    // 5 m/s2 to time its arrival may go on slowing at that, whatever the CAV takes drivers to brake at. Zero where it has not slowed.
+    public double ObservedBraking
+    {
+        get
+        {
+            if (History.Count < 3) return 0;
+            var last = History[^1];
+            var first = History.First(o => last.Time - o.Time <= 1.2);
+            var dt = last.Time - first.Time;
+            return dt < 0.4 ? 0 : Math.Max(0, (first.Speed - last.Speed) / dt);
+        }
+    }
+
     public bool Confirms { get; internal set; }       // at least one hypothesis made before has been borne out by what has been perceived since
 }
 

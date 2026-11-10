@@ -8,5 +8,6 @@
     <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
     <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
     <ProjectReference Include="..\Common\Mpai.Aih.Common.csproj" />
+    <ProjectReference Include="..\..\..\Onnx\Mpai.Onnx.csproj" />
   </ItemGroup>
 </Project>

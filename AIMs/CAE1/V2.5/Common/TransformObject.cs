@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc;
 

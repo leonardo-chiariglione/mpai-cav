@@ -1,0 +1,22 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-PTI-V2.5-I01", "AIMName": "1MMC-PTI-V2.5-I01"},
+  "Header":           "MMC-PTI-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "PS-Text Interpretation: gives the Text Personal Status from the Text Descriptors Object of a text (the 28 GoEmotions scores of Entity Text Description). Each label of GoEmotions is mapped to a label of the Emotion, Cognitive State or Social Attitude vocabulary; the label of each Factor with the highest score is given, with the score as Degree, if the score reaches 0.25. Desire, gratitude and neutral have no label in the vocabulary and are not given.",
+
+  "ExternalPorts":   [{"Name": "TextDescriptorsObject", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "EntityTextDescriptorsObject", "Direction": "Input", "DataType": "MMC-TDO-V2.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "TextPersonalStatus", "Direction": "Output", "DataType": "MMC-TPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/PTI", "MASPort": 443, "BinaryName": "Mpai.Mmc.Pti", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/ps-text-interpretation/"}]}

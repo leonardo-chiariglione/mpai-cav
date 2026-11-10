@@ -64,7 +64,7 @@ public sealed class EfdAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Face Object on input port"));
 
-        var picture = MpaiJson.FromJson<BasicVisualObject>(bvoJson);
+        var picture = Mpai.Aif.PortData.PortObjects.ReadVisual(bvoJson);
         if (picture is null || picture.Data.Length == 0)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "empty Face Object"));

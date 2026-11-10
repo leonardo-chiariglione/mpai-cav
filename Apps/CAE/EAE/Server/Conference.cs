@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Mpai.Cae.Apps;
 using Mpai.Cae.Usc;
 using Mpai.Ua;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Eae.Server;
 
@@ -23,7 +24,7 @@ public sealed class Conference(ModuleHost module, ArrayGeometry array, double se
     private readonly List<List<short>> _pending = Enumerable.Range(0, array.Count).Select(_ => new List<short>()).ToList();
     private readonly Tracker _speakers = new();
     private int _busy, _processed, _dropped;
-    private readonly QueueDevice _capture = new("OSD-BAO-V1.5"), _geometry = new("CAE-MAG-V2.5"), _reference = new("CAE-ASR-V1.0");
+    private readonly QueueDevice _capture = new("OSD-BAO-V1.5");
     private TaskCompletionSource<string?>? _exchange; private string? _scene;
     private readonly CancellationTokenSource _stop = new();
     private Thread? _user;
@@ -105,7 +106,7 @@ public sealed class Conference(ModuleHost module, ArrayGeometry array, double se
     public void Start()
     {
         var devices = new DeviceRegistry()
-            .RegisterDevice("Capture", _capture).RegisterDevice("Array", _geometry).RegisterDevice("Reference", _reference)
+            .RegisterDevice("Capture", _capture)
             .RegisterPresent("scene", d =>
             {
                 if (d.TryGetValue("OSD-BAS-V1.5", out var s)) _scene = s;
@@ -120,13 +121,11 @@ public sealed class Conference(ModuleHost module, ArrayGeometry array, double se
         _user.Start();
     }
 
-    private static readonly string Reference = new JsonObject { ["Header"] = "CAE-ASR-V1.0", ["PolynomialVariable"] = "AngleSine", ["Polynomial"] = new JsonArray(new JsonObject { ["Coefficient"] = 1.0, ["Exponent"] = 0 }) }.ToJsonString();
-
     private async Task Run(MultiAudio segment)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var done = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously); _exchange = done;
-        _capture.Give(AudioObject.MakeMultichannel("capture", segment, array)); _geometry.Give(array.ToJson().ToJsonString()); _reference.Give(Reference);
+        _capture.Give(AudioObject.MakeMultichannel("capture", segment, array));
         var finished = await Task.WhenAny(done.Task, Task.Delay(TimeSpan.FromSeconds(60)));
         if (finished != done.Task) throw new TimeoutException("the Module gave nothing in 60 s");
         var scene = await done.Task;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
@@ -35,13 +36,16 @@ public sealed class BvsAimProcessor : IAimProcessor
         if (!message.Ports.TryGetValue(_inPort, out var json) || string.IsNullOrWhiteSpace(json))
             return Task.FromResult(Message.Error(message.MessageId, _instanceId, "no Basic Visual Object on input port"));
 
-        var obj = MpaiJson.FromJson<BasicVisualObject>(json);
+        var obj = Mpai.Aif.PortData.PortObjects.ReadVisual(json);
         if (obj is null)
             return Task.FromResult(Message.Error(message.MessageId, _instanceId, "could not parse Basic Visual Object"));
 
         var scene = new BasicVisualSceneDescriptors
         {
             Header                          = "OSD-BVS-V1.5",
+            MInstanceID                     = (string?)System.Text.Json.Nodes.JsonNode.Parse(json)?["MInstanceID"] ?? _instanceId,
+            // When and where the Scene is: when and where its picture was acquired (the schema requires it).
+            BVSDescriptorsSpaceTime         = obj.BasicVisualObjectTime ?? new SpaceTime { SpaceTimeID = System.Guid.NewGuid().ToString() },
             BasicVisualSceneDescriptorsID   = System.Guid.NewGuid().ToString(),
             VisualObjectCount               = 1,
             // The camera's place is not known here: at the origin, looking ahead.
@@ -50,7 +54,7 @@ public sealed class BvsAimProcessor : IAimProcessor
             {
                 new BasicVisualSceneEntry
                 {
-                    VObjectIDOrVObject = obj   // placed downstream (AVA + LiDAR)
+                    VObjectIDOrVObject = obj   // placed downstream (MAL + LiDAR)
                 }
             }
         };
@@ -59,7 +63,19 @@ public sealed class BvsAimProcessor : IAimProcessor
         {
             MessageId   = message.MessageId,
             MessageType = message.MessageType,
-            Ports       = new Dictionary<string, string> { [_outPort] = MpaiJson.ToJson(scene) }
+            Ports       = new Dictionary<string, string> { [_outPort] = AsObjects(scene) }
         });
+    }
+
+    // The Scene for the Port: the Basic Visual Objects it holds are Objects of the schema's form (Data and Qualifier), as they cross any Port.
+    private static string AsObjects(BasicVisualSceneDescriptors scene)
+    {
+        var root = System.Text.Json.Nodes.JsonNode.Parse(MpaiJson.ToJson(scene))!.AsObject();
+        if (root["BasicVisualSceneDescriptors"] is System.Text.Json.Nodes.JsonArray entries)
+            foreach (var entry in entries.OfType<System.Text.Json.Nodes.JsonObject>())
+                if (entry["VObjectIDOrVObject"] is System.Text.Json.Nodes.JsonArray held)
+                    for (var i = 0; i < held.Count; i++)
+                        held[i] = System.Text.Json.Nodes.JsonNode.Parse(Mpai.Aif.PortData.PortObjects.WriteVisual(MpaiJson.FromJson<BasicVisualObject>(held[i]!.ToJsonString())));
+        return root.ToJsonString();
     }
 }

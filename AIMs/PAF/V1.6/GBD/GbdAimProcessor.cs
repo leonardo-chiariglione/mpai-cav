@@ -47,7 +47,7 @@ public sealed class GbdAimProcessor : IAimProcessor
         var text = message.Ports.TryGetValue(_textPort, out var tj) && !string.IsNullOrWhiteSpace(tj)
             ? MpaiJson.FromJson<BasicTextObject>(tj)?.GetText() ?? "" : "";
         var wav = message.Ports.TryGetValue(_speechPort, out var sj) && !string.IsNullOrWhiteSpace(sj)
-            ? MpaiJson.FromJson<BasicSpeechObject>(sj)?.Data ?? [] : [];
+            ? Mpai.Aif.PortData.PortObjects.ReadSpeech(sj)?.Data ?? [] : [];
         var (duration, envelope) = Speech.Envelope(wav, EnvelopeSeconds);
 
         var motion = BodyMotion.Generate(text, duration, envelope, emotion, degree);

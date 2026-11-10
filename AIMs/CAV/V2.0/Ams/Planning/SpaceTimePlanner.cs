@@ -236,7 +236,8 @@ public sealed class SpaceTimePlanner(PlannerSettings? settings = null, MotionCon
                 // TRAFFIC THAT KEEPS TO ITS LANE, along the route or against it, without moving sideways, is taken in the frame of the route: it goes on in the lane it is in, at the
                 // speed it has along the route. Where the CAV is beside it, the margin of its lane is kept; where it is in the CAV's way, the safe distance of the Motion Constraints. A line
                 // drawn from the heading that is perceived, a hundred metres on, would put it wherever the error of that heading puts it.
-                if (h.Told is null && straight)
+                // A way the road branches into - a vehicle that may turn off the lane at a junction, across the CAV's way - is NOT the lane: it is taken along its own line, with its reach, below.
+                if (h.Told is null && straight && !(h.Kind.StartsWith("Road:", StringComparison.Ordinal) && h.Kind != "Road:Lane"))
                 {
                     if (!lane.TryGetValue(o, out var l))
                     {
@@ -255,6 +256,14 @@ public sealed class SpaceTimePlanner(PlannerSettings? settings = null, MotionCon
                         {
                             var between = l.X + l.V * t - xk;
                             var gap = Math.Abs(between) - (p.EgoLength + o.Length) / 2;
+                            // A vehicle behind, going the same way, in the way of the CAV's place: the CAV does not take a place in front of it nearer than the one that makes its driver brake harder
+                            // than `FollowerBrake` (the same rule as for any vehicle behind, below, which this lane frame would otherwise skip).
+                            if (between <= 0 && l.V > 0 && k % 3 == 0)
+                            {
+                                var closingBehind = Math.Max(0, l.V - c.Speeds[k]);
+                                var wantedBehind = (p.FollowerGap + l.V * p.FollowerSeconds + l.V * closingBehind / (2 * Math.Sqrt(p.FollowerComfort * p.FollowerBrake))) * Math.Sqrt(p.FollowerComfort / p.FollowerBrake);
+                                c.FollowerDeficit = Math.Max(c.FollowerDeficit, wantedBehind - gap);
+                            }
                             var safe = between <= 0 ? 0 : l.V >= 0 ? constraints.SafeLongitudinal(c.Speeds[k], l.V) : constraints.SafeLongitudinalOpposite(c.Speeds[k], -l.V);
                             var clear = gap - safe;
                             if (clear < least) { least = clear; if (least < 0) { culprit = $"{o.Id}/{h.Kind}@{t:F1}s(in its lane, {gap:F0} m, safe distance {safe:F0})"; return (least, t); } }
@@ -280,10 +289,11 @@ public sealed class SpaceTimePlanner(PlannerSettings? settings = null, MotionCon
                         continue;
                     }
                 }
-                var (lo, hi) = h.Reach(t, p.ObjectBrake, p.ObjectSpeedUp);
+                var brake = Math.Max(p.ObjectBrake, Math.Min(p.MaxBrake, o.ObservedBraking));         // as hard as it has been seen to brake, if harder than drivers are taken to
+                var (lo, hi) = h.Reach(t, brake, p.ObjectSpeedUp);
                 // A vehicle that crosses the CAV's way keeps clear of it in time too: where it may be from a second before to a second after.
                 if (Math.Abs(Math.IEEERemainder(h.Path.At((lo + hi) / 2).Heading - c.Poses[k].Heading, Math.PI)) > 0.35 && p.CrossingSeconds > 0)
-                    (lo, hi) = (h.Reach(Math.Max(0, t - p.CrossingSeconds), p.ObjectBrake, p.ObjectSpeedUp).Lo, h.Reach(t + p.CrossingSeconds, p.ObjectBrake, p.ObjectSpeedUp).Hi);
+                    (lo, hi) = (h.Reach(Math.Max(0, t - p.CrossingSeconds), brake, p.ObjectSpeedUp).Lo, h.Reach(t + p.CrossingSeconds, brake, p.ObjectSpeedUp).Hi);
                 hi = Math.Max(hi, lo);
                 // A vehicle behind the CAV, in its way: where the CAV takes its place in front of it, it makes it brake. What a driver does is brake to keep the gap he
                 // keeps (the time gap, and more where he is closing): the CAV does not take a place nearer than the one that makes him brake harder than `FollowerBrake`.

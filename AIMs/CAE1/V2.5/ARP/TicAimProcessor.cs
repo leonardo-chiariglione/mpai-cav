@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Arp;
 
@@ -18,10 +19,15 @@ namespace Mpai.Cae.Usc.Arp;
 //     what a change of brightness of the film is).
 //   - heard only (Source a), by what its Audio File holds: a dropout of a second or more is pps, play, pause and stop (a silence between recordings); a shorter dropout or a click is da,
 //     damaged tape. A step in level cannot say whether it is a variation of the speed or of the equalisation standard (ssv, esv) or a signal backward (sb): it is not classified.
+// THE TRAINED CLASSIFIER (TapeIrregularityModel, an ONNX model the Controller gave under the Setting "TicModel"; trained on SIMULATED impairments of music, not on real tapes) decides what is heard
+// only (Source a) when the AIM has the model and the Audio File of the irregularity: dropout/click (da), dirt (di), play, pause and stop (pps), a change of speed (ssv) or equalisation (esv)
+// standard, a signal backward (sb), wow and flutter (wf) or none of them (not selected); an answer with a probability under MinProbability (0.8) is not an answer: the rules decide then. The rules above
+// remain for what the film shows, for an AIM that was given no model (or no Audio File for an irregularity) and for what the model is not sure of.
 // An irregularity it cannot classify is not relevant, and is not given. It gives the file again only if it is not what it gave last (the loop with the analyses ends).
-public sealed class TicAimProcessor(string instanceId, string audioFilesKey, string audioIrregularityKey, string imagesKey, string videoIrregularityKey, string irregularityKey, string outImagesKey, double? filmEndSeconds = null) : IAimProcessor
+public sealed class TicAimProcessor(string instanceId, string audioFilesKey, string audioIrregularityKey, string imagesKey, string videoIrregularityKey, string irregularityKey, string outImagesKey, double? filmEndSeconds = null, TapeIrregularityModel? model = null, double minProbability = 0.8) : IAimProcessor
 {
     public string InstanceId { get; } = instanceId;
+    public double MinProbability { get; } = minProbability;
 
     private IReadOnlyList<Irregularity> _audio = [], _video = [];
     private int? _offset;                                                           // milliseconds
@@ -69,6 +75,12 @@ public sealed class TicAimProcessor(string instanceId, string audioFilesKey, str
             return i with { Type = "sp" };
         }
         if (!_clips.TryGetValue(i.Id, out var clip)) return i;
+        if (model is not null)
+        {
+            var heard = model.Classify(clip, i.Start, i.End, Math.Max(0, i.Start - AapAimProcessor.Margin));
+            if (heard.Probability >= MinProbability) return heard.Class != "none" ? i with { Type = heard.Class } : i;
+            // The model is not sure (a probability under MinProbability: on the simulated test clips it answers 75 % of them at 0.8 and is right 96 % of those times): the rules decide.
+        }
         var kinds = AudioAnalysis.Detect(clip);
         if (kinds.Any(k => k.Kind == "dropout" && k.End - k.Start >= 1.0)) return i with { Type = "pps" };
         if (kinds.Any(k => k.Kind is "dropout" or "click")) return i with { Type = "da" };

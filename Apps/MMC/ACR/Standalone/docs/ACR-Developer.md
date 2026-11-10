@@ -29,8 +29,8 @@ gallery that **MAC** later reads. This document is for software developers.
 > it) changes nothing at runtime, because the loader resolves it to
 > `OSD-BTO-V1.5 #2` and the software routes by that. Verified by test.
 
-## 2. The ACR Module - `MMC-ACR-V2.5`
-L3: `AIMs/AMDs/1MMC-ACR-V2.5-I01.json`. Sub-AIMs (provider leaves):
+## 2. The ACR Module - `OSD-ACR-V1.5`
+L3: `AIMs/AMDs/1OSD-ACR-V1.5-I01.json`. Sub-AIMs (provider leaves):
 
 | Sub-AIM | Role | Engine |
 |---|---|---|
@@ -56,7 +56,7 @@ data type** and use it as the subject key. EFD writes the **face** half and ESD
 the **voice** half of `subject:<name>` into Shared Storage; the write is
 **per-subject** (`SubjectGallery.SaveSubject`), so an enrolment touches exactly
 one key and merges with any half already stored - it does not rewrite the whole
-gallery. The gallery scope is `"MMC-MAC-V2.5"` - the same scope MAC reads.
+gallery. The gallery scope is `"OSD-MAC-V1.5"` - the same scope MAC reads.
 
 ## 3. The User Agent
 `MPAIApps/MmcApps/AcrApp/src/` - provider `AcrProvider.cs`, UA
@@ -64,7 +64,7 @@ gallery. The gallery scope is `"MMC-MAC-V2.5"` - the same scope MAC reads.
 It drives the Module through the **Controller API** (`ControllerApi`), addressing data only
 by type:
 
-1. `StartFlow("MMC-ACR-V2.5")`.
+1. `StartFlow("OSD-ACR-V1.5")`.
 2. Prompt (a one-shot RSR render) -> user **types a name**.
 3. "Look at the camera." -> capture face -> `Advance` with
    `(OSD-BVO)` + `(OSD-STM,1)` + `(OSD-BTO,2)`=name. The flow **suspends** for speech.
@@ -84,7 +84,7 @@ Windows Media Capture** (no OpenCV). Real-world limbs come from `UserAgent/UaKit
 - **AIMs:** `AIMs/Core`; leaves `PAF/V1.6/EFD`, `MMC/V2.5/ESD`, `PAF/V1.6/PSD`,
   `MMC/V2.5/TTS`, `PAF/V1.6/GFD`; devices `CAE3/V1.0/AOA(.Windows)`,
   `MMC/V2.5/SOD(.Windows)`, `CVE/V1.0/VOA.Windows`
-- **L3s:** `1MMC-ACR-V2.5-I01.json` + the sub-AIM AMDs (`1PAF-EFD`, `1MMC-ESD`,
+- **L3s:** `1OSD-ACR-V1.5-I01.json` + the sub-AIM AMDs (`1PAF-EFD`, `1MMC-ESD`,
   `1PAF-RSR` and its leaves)
 - **Orchestration:** `UserAgent/Orchestration/HCI-ACR.orch`
 - **Schemas:** the JSON schemas reachable from ACR's data types

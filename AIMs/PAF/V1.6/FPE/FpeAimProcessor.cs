@@ -51,7 +51,7 @@ public sealed class FpeAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Basic Visual Object on input port"));
 
-        var visual = MpaiJson.FromJson<BasicVisualObject>(bvoJson);
+        var visual = Mpai.Aif.PortData.PortObjects.ReadVisual(bvoJson);
         if (visual is null || visual.Data.Length == 0)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "empty Basic Visual Object"));
@@ -79,7 +79,7 @@ public sealed class FpeAimProcessor : IAimProcessor
         });
     }
 
-    private static FacePersonalStatus ToFacePersonalStatus(FaceAffect a)
+    public static FacePersonalStatus ToFacePersonalStatus(FaceAffect a)
     {
         double degree = Math.Clamp(a.Confidence, 0.0, 1.0);
 

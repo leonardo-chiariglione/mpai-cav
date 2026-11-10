@@ -18,7 +18,7 @@ using Mpai.Mmc.Nlu;
 using Mpai.Mmc.Pmx;
 using Mpai.Mmc.Sir;
 using Mpai.Mmc.Spe;
-using Mpai.Osd.Ava;
+using Mpai.Osd.Mal;
 using Mpai.Cae.Aus;
 using Mpai.Osd.Bas;
 using Mpai.Osd.Bls;
@@ -61,7 +61,7 @@ public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDi
 
     private static readonly HashSet<string> Leaves =
     [
-        "1OSD-BAS-V1.5-I01", "1OSD-BVS-V1.5-I01", "1OSD-BLS-V1.5-I01", "1OSD-AVA-V1.5-I01", "1CAE-QCV-V1.0-I01", "1CAE-ASI-V2.5-I01", "1CAE-AUS-V1.0-I01",
+        "1OSD-BAS-V1.5-I01", "1OSD-BVS-V1.5-I01", "1OSD-BLS-V1.5-I01", "1OSD-MAL-V1.5-I01", "1CAE-QCV-V1.0-I01", "1CAE-ASI-V2.5-I01", "1CAE-AUS-V1.0-I01",
         "1CAE-AII-V2.5-I01", "1CVE-VSI-V1.0-I01", "1CVE-VII-V1.0-I01", "1PAF-FIR-V1.6-I01", "1MMC-SIR-V2.5-I01", "1OSD-IDR-V1.5-I01",
         "1MMC-ASR-V2.5-I01", "1MMC-NLU-V2.5-I01", "1MMC-SPE-V2.5-I01", "1PAF-FPE-V1.6-I01", "1MMC-PMX-V2.5-I01", "1MMC-EDP-V2.5-I01",
         "1MMC-PDX-V2.5-I01", "1MMC-TTS-V2.5-I01", "1PAF-GFD-V1.6-I01", "1PAF-GBD-V1.6-I01", "1PAF-PMX-V1.6-I01"
@@ -93,7 +93,7 @@ public sealed class HciProvider(AmdStore store, string root) : IAimProvider, IDi
             "1OSD-BAS-V1.5-I01" => new BasAimProcessor(aimName, ports),
             "1OSD-BVS-V1.5-I01" => new BvsAimProcessor(aimName, ports),
             "1OSD-BLS-V1.5-I01" => new BlsAimProcessor(aimName, ports),
-            "1OSD-AVA-V1.5-I01" => new OsdAvaAimProcessor(aimName, ports),
+            "1OSD-MAL-V1.5-I01" => new OsdMalAimProcessor(aimName, ports),
             "1CAE-QCV-V1.0-I01" => new QcvAimProcessor(aimName, ports),
             "1CAE-ASI-V2.5-I01" => new CaeAsiAimProcessor(aimName, soundAsi ??= new Mpai.Cae.Asi.SoundClassifier(Mpai.Core.MpaiPaths.Given(settings, "YamnetModel"), Mpai.Core.MpaiPaths.Given(settings, "YamnetClassMap")), ports),
             "1CAE-AII-V2.5-I01" => new CaeAiiAimProcessor(aimName, soundAii ??= new Mpai.Cae.Aii.SoundClassifier(Mpai.Core.MpaiPaths.Given(settings, "YamnetModel"), Mpai.Core.MpaiPaths.Given(settings, "YamnetClassMap")), ports),

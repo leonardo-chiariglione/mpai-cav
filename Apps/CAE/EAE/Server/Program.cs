@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Mpai.Cae.Apps;
 using Mpai.Cae.Eae.Server;
 using Mpai.Cae.Usc;
+using Mpai.Osd.Speech;
 
 // THE ENHANCED AUDIOCONFERENCE SERVER OF THE LIVE DEMO. HTTP on 5190 and HTTPS on 5191 (browsers allow the microphone only on localhost or over HTTPS: the certificate is the server's own, made
 // once for this machine's names and addresses - a participant accepts the warning once). PROTOCOL.md says what the browser client and the server say to each other.

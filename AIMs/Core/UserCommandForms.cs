@@ -61,34 +61,38 @@ public sealed class AcousticProfileOrIdConverter : JsonConverter<AcousticProfile
 
 // THE ACOUSTIC PROFILES THE MODULE KEEPS, by their AcousticProfileID: a profile given in full is kept under its identifier (a profile with the same identifier is replaced); a command
 // may then give the identifier alone. Listed by Audio Scene Editing (Kind Acoustic Profile, no ObjectID); deleted by DeletedObjects with an AcousticProfileID.
-public sealed class KeptProfiles(ISharedStorage storage)
+public sealed class KeptProfiles(ModuleStore store)
 {
-    private const string Prefix = "acp:";
+    private static string IdOf(string id) => id.Trim();
 
-    private static string KeyOf(string id) => Prefix + id.Trim();
-
-    // Keeps the profile under its identifier; false when it has none (nothing to keep it under).
+    // Keeps the profile under its identifier (CAE-ACP-V1.0#1/<AcousticProfileID>@<version>: a profile given again is a further version, the highest is in force); false when it has none
+    // (nothing to keep it under).
     public bool Keep(AcousticProfile profile)
     {
         if (string.IsNullOrWhiteSpace(profile.AcousticProfileID) || profile.Reference) return false;
-        storage.MPAI_AIFM_SharedStorage_Put(KeyOf(profile.AcousticProfileID), Encoding.UTF8.GetBytes(MpaiJson.ToJson(profile)));
+        var id = IdOf(profile.AcousticProfileID);
+        var bytes = Encoding.UTF8.GetBytes(MpaiJson.ToJson(profile));
+        var latest = store.Latest(Kinds.AcousticProfile, id);
+        if (latest > 0 && store.Get(Kinds.AcousticProfile, id)!.AsSpan().SequenceEqual(bytes)) return true;
+        store.Put(Kinds.AcousticProfile, id, latest + 1, bytes);
         return true;
     }
 
     public AcousticProfile? Get(string? id) =>
-        !string.IsNullOrWhiteSpace(id) && storage.MPAI_AIFM_SharedStorage_Exists(KeyOf(id))
-            ? MpaiJson.FromJson<AcousticProfile>(Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(KeyOf(id)))) : null;
+        !string.IsNullOrWhiteSpace(id) && store.Get(Kinds.AcousticProfile, IdOf(id)) is { } bytes
+            ? MpaiJson.FromJson<AcousticProfile>(Encoding.UTF8.GetString(bytes)) : null;
 
+    // False when none is kept; a profile that another AIM of the Module wrote is not deleted by this one (UnauthorizedAccessException).
     public bool Delete(string? id)
     {
-        if (string.IsNullOrWhiteSpace(id) || !storage.MPAI_AIFM_SharedStorage_Exists(KeyOf(id))) return false;
-        storage.MPAI_AIFM_SharedStorage_Delete(KeyOf(id));
+        if (string.IsNullOrWhiteSpace(id) || !store.Holds(Kinds.AcousticProfile, IdOf(id))) return false;
+        store.Delete(Kinds.AcousticProfile, IdOf(id));
         return true;
     }
 
     public IReadOnlyList<AcousticProfile> All() =>
-        storage.MPAI_AIFM_SharedStorage_List(Prefix)
-            .Select(k => MpaiJson.FromJson<AcousticProfile>(Encoding.UTF8.GetString(storage.MPAI_AIFM_SharedStorage_Get(k))))
+        store.All(Kinds.AcousticProfile)
+            .Select(p => MpaiJson.FromJson<AcousticProfile>(Encoding.UTF8.GetString(store.Get(Kinds.AcousticProfile, p.Id)!)))
             .OrderBy(p => p.AcousticProfileID, StringComparer.Ordinal).ToList();
 
     // The profile a command gives: the kept one when it gives an identifier alone (null, with the reason, when none is kept); else the profile given, which is kept under its identifier.

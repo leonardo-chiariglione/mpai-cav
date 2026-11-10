@@ -1,0 +1,22 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-PBI-V1.6-I01", "AIMName": "1PAF-PBI-V1.6-I01"},
+  "Header":           "PAF-PBI-V1.6",
+
+  "APIProfile":       "Basic",
+  "Description":      "PS-Body Interpretation: gives the Body Personal Status from the Body Descriptors Object of a body (the 33 keypoints of Entity Body Description). FIRST IMPLEMENTATION, BY SIMPLE RULES: no model reads the Personal Status from the keypoints; six postures and gestures (arms raised, hand at the face, arms crossed, hands on the hips, arms open, head dropped) are recognised from the geometry of the keypoints and each is given a label of the vocabulary. A posture that is not among them gives no Personal Status.",
+
+  "ExternalPorts":   [{"Name": "BodyDescriptorsObject", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "EntityBodyDescriptorsObject", "Direction": "Input", "DataType": "PAF-BDO-V1.6", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BodyPersonalStatus", "Direction": "Output", "DataType": "MMC-BPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/PBI", "MASPort": 443, "BinaryName": "Mpai.Paf.Pbi", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.6", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/ps-body-interpretation/"}]}

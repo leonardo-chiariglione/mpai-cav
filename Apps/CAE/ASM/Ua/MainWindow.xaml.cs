@@ -71,10 +71,12 @@ public partial class MainWindow : Window
     {
         try
         {
+            LoadOutput();
             SetStatus("Wait while the avatar loads.");
             if (TextModeButton.IsChecked == true) InputBox.Focus();          // typing works while she loads: what is typed waits for the Module
+            AvatarUaHost.Diagnose = App.Log;                                  // what the page of the Face meets is in the log
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
-            await _avatar.InitAsync();
+            await _avatar.InitAsync(faceName: "ASM");
             _ears = new SpeechListener(_avatar);
             await Task.Delay(TimeSpan.FromSeconds(2.0));          // let the avatar settle before it speaks
 
@@ -389,9 +391,84 @@ public partial class MainWindow : Window
         HeardText.Text = words;
         if (System.Text.RegularExpressions.Regex.IsMatch(words.ToLowerInvariant().TrimEnd('.', '!'), @"^(?:please )?(?:close|hide|remove)(?: the)? (?:acoustic )?(?:profile|properties|panel|room acoustics)(?: panel| window)?$"))
         { _panel?.Hide(); AnswerText.Text = "Done: the acoustic properties are closed."; return; }
+        if (TryOutputWords(words)) return;                                        // the sound output is the User Agent's: it does not go to the Module
         SetStatus("Thinking...");
         GiveText(words);
         WatchForAnAnswer();
+    }
+
+    // ---- HOW THE SCENE IS HEARD. The way it is rendered - headphones, loudspeakers - is the Module's: the Rendering Mode of the Acoustic Profile of the scene, said to it ("play on headphones") like any other
+    // property of the scene; the renderer reads it from the scene. The sound output of the machine it is played on is the User Agent's (the Loudspeaker Unit, the AOD): chosen here, kept for the next run, and not told to the Module. ----
+    private string? _deviceName;                                   // null: the output Windows uses
+    private OutputPanel? _outputPanel;
+    private static string OutputFile => System.IO.Path.Combine(AppContext.BaseDirectory, "asm-output.json");
+
+    private void LoadOutput()
+    {
+        try { if (JsonNode.Parse(File.ReadAllText(OutputFile)) is JsonObject saved) _deviceName = (string?)saved["Device"]; }
+        catch (Exception e) when (e is IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { }          // none kept yet: the output Windows uses
+    }
+
+    private void SaveOutput()
+    {
+        try { File.WriteAllText(OutputFile, new JsonObject { ["Device"] = _deviceName }.ToJsonString()); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { App.Log("[window] the sound output could not be kept: " + e.Message); }
+    }
+
+    // How the scene in the room is rendered now, as its Acoustic Profile says (binaural, the renderer's own, where it says nothing).
+    private Mpai.SpatialAudio.SpatialRenderer.Layout LayoutNow() => (_lastScene is { } scene ? Mpai.SpatialAudio.AudioRendering.LayoutOf(scene) : null) ?? Mpai.SpatialAudio.SpatialRenderer.Layout.Binaural;
+
+    private static string LayoutLabel(Mpai.SpatialAudio.SpatialRenderer.Layout layout) => OutputPanel.Layouts.First(l => l.Layout == layout).Label;
+
+    // A way of rendering chosen in the panel: said to the Module as the command a person could say.
+    private void GiveRendering(Mpai.SpatialAudio.SpatialRenderer.Layout layout)
+    {
+        var (mode, channels) = layout switch
+        {
+            Mpai.SpatialAudio.SpatialRenderer.Layout.Mono => ("Mono", (int?)null),
+            Mpai.SpatialAudio.SpatialRenderer.Layout.Stereo => ("Stereo", null),
+            Mpai.SpatialAudio.SpatialRenderer.Layout.Quad => ("Multichannel", 4),
+            Mpai.SpatialAudio.SpatialRenderer.Layout.Surround51 => ("Multichannel", 6),
+            Mpai.SpatialAudio.SpatialRenderer.Layout.Surround71 => ("Multichannel", 8),
+            _ => ("Binaural", null)
+        };
+        App.Log("[window] the scene is to be rendered for: " + LayoutLabel(layout));
+        _sceneCommand.Give(MpaiJson.ToJson(new UserCommand
+        {
+            UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+            UserCommandRQ = new UserCommandRQ { ModifiedScene = new SceneChange { RenderingMode = mode, ChannelCount = channels } }
+        }));
+    }
+
+    private void OutputButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_outputPanel is null)
+            _outputPanel = new OutputPanel(this, LayoutNow(), _deviceName, GiveRendering,
+                device => { _deviceName = device; SaveOutput(); App.Log("[window] the scene is played through: " + (device ?? OutputPanel.DefaultDevice)); });
+        else _outputPanel.Fill(LayoutNow(), _deviceName);
+        _outputPanel.Show(); _outputPanel.Activate();
+    }
+
+    // "play on <the name of an output>" and "which sound outputs are there": the User Agent's, answered here. "play on headphones" and the like are the Module's (the grammar has them). False when the words are not about this.
+    private bool TryOutputWords(string words)
+    {
+        var text = words.ToLowerInvariant().Trim().TrimEnd('.', '!', '?');
+        if (System.Text.RegularExpressions.Regex.IsMatch(text, @"^(?:please )?(?:which|what|list|show)(?: me)?(?: the| are the| is the)?(?: available)? (?:sound |audio )?(?:outputs?|output devices?|devices?)(?: are there| do you know| are available| can i use| i can use)?$"))
+        {
+            var devices = OutputPanel.Devices();
+            AnswerText.Text = "The sound outputs are: " + (devices.Count == 0 ? "none found" : string.Join("; ", devices)) + ". Now: " + (_deviceName ?? OutputPanel.DefaultDevice)
+                            + ". The scene is rendered for " + LayoutLabel(LayoutNow()).ToLowerInvariant() + ". Say for example: play on " + (devices.Count > 0 ? devices[0].ToLowerInvariant() : "headphones") + ", or play on stereo speakers.";
+            return true;
+        }
+        var play = System.Text.RegularExpressions.Regex.Match(text, @"^(?:please )?(?:play|hear|listen|render|output)(?: it| the scene| the sound)?(?: on| through| in| with| to| over)(?: the| my)? (?<what>.+)$");
+        if (!play.Success) return false;
+        var what = play.Groups["what"].Value.Trim();
+        if (OutputPanel.Layouts.Any(l => l.Words.Contains(what))) return false;     // a way of rendering: the Module's
+        var device = OutputPanel.Devices().FirstOrDefault(d => d.ToLowerInvariant().Contains(what));
+        if (device is null) return false;                                          // not an output of this machine: the Module is asked, as for any words
+        _deviceName = device; SaveOutput(); _outputPanel?.Fill(LayoutNow(), _deviceName);
+        AnswerText.Text = "Done: the scene is played through " + device + ".";
+        return true;
     }
 
     // A REQUEST THAT GETS NO WRITTEN ANSWER does not leave the window on "Thinking...": after 20 s the person is told, and the log says it (what came back, if anything, is in the log above this line).
@@ -413,9 +490,13 @@ public partial class MainWindow : Window
 
     private void RoomButton_Click(object sender, RoutedEventArgs e) => AskProfile();
 
+    // The request the Room acoustics button gave, so that its answer is known when it comes: the whole answer is logged, and when it holds no Acoustic Profile of the scene the person is told why (it was silent).
+    private string? _profileAsk;
+
     private void AskProfile()
     {
-        _sceneCommand.Give(MpaiJson.ToJson(new UserCommand { UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Acoustic Profile", ObjectID = _sceneName } } }));
+        _profileAsk = Guid.NewGuid().ToString("N")[..8];
+        _sceneCommand.Give(MpaiJson.ToJson(new UserCommand { UserCommandID = _profileAsk, UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Acoustic Profile", ObjectID = _sceneName } } }));
     }
 
     private void GiveText(string words)
@@ -508,6 +589,12 @@ public partial class MainWindow : Window
         try
         {
             if (JsonNode.Parse(json) is not JsonObject report || report["UserCommandRS"] is not JsonObject rs) return false;
+            if (_profileAsk is { } asked && (string?)report["UserCommandID"] == asked)
+            {
+                App.Log("[window] the answer to the Room acoustics request: " + json);
+                var has = rs["ListedObjects"] is JsonArray some && some.OfType<JsonObject>().Any(o => (string?)o["Kind"] == "Acoustic Profile");
+                if (!has) { _profileAsk = null; Dispatcher.Invoke(() => AnswerText.Text = "The room's acoustics could not be shown: " + ((string?)rs["Outcome"] ?? "no answer") + ". The answer is in the log."); return true; }
+            }
             if (rs["ListedObjects"] is JsonArray found && found.OfType<JsonObject>().FirstOrDefault(o => (string?)o["Kind"] == "Acoustic Profile") is { } listed)
             {
                 var profile = listed["AcousticProfile"] as JsonObject; var copy = (JsonObject?)profile?.DeepClone();
@@ -577,6 +664,13 @@ public partial class MainWindow : Window
                     UserCommandRQ = new UserCommandRQ { DeletedObjects = new ObjectPlacements { Objects = names.Select(n => new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = n } }).ToList() } }
                 }));
                 await Task.Delay(900);
+            }
+            // WHAT WAS DELETED IS NO LONGER SHOWN: the window showed the scene the Module held at the start, and the Module has none now - left on the screen, a scene that is not there is one the person
+            // goes on working with (and cannot save).
+            if (scenes.Count > 0 || sounds.Count > 0)
+            {
+                _lastScene = null; _sceneSounds = new HashSet<string>(StringComparer.Ordinal); _sceneDescription = "no sounds, no room";
+                Dispatcher.Invoke(() => Room.Show(new List<SceneView.Sound>()));
             }
             // what was saved is kept, and opened only when the person asks for it
             WriteSaved();                                                     // from now on there is an index: what it names is kept
@@ -730,14 +824,15 @@ public partial class MainWindow : Window
         try
         {
             SetStatus(only is null ? "Rendering the scene..." : $"Rendering {only}...");
-            var wav = await Task.Run(() => new Mpai.SpatialAudio.AudioRendering(AppContext.BaseDirectory).Render(scene).Data);
+            var deviceName = _deviceName;
+            var wav = await Task.Run(() => new Mpai.SpatialAudio.AudioRendering(AppContext.BaseDirectory).Render(scene).Data);          // rendered as the scene says (its Acoustic Profile)
             if (wav is not { Length: > 0 }) { await TellAsync("The scene gave no sound."); return; }
             SetStatus(only is null ? "Playing the scene." : $"Playing {only}.");
             _hearing = new CancellationTokenSource(); var heardToken = _hearing.Token;
             await Task.Run(() =>
             {
                 using var reader = new NAudio.Wave.WaveFileReader(new MemoryStream(wav));
-                using var output = new NAudio.Wave.WaveOutEvent();
+                using var output = new NAudio.Wave.WaveOutEvent { DeviceNumber = Mpai.PhysicalLayer.LoudspeakerUnit.DeviceNumberOf(deviceName) };
                 output.Init(reader); output.Play();
                 while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing && !heardToken.IsCancellationRequested) Thread.Sleep(100);
             });

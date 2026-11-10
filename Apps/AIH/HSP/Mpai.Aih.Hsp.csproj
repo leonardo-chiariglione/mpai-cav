@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Compile Remove="Demo\**" />
+    <Compile Remove="FlDemo\**" />
   </ItemGroup>
 
   <ItemGroup>

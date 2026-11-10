@@ -1,0 +1,24 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-ESD-V2.5-I03", "AIMName": "1MMC-ESD-V2.5-I03"},
+  "Header":           "MMC-ESD-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Entity Speech Description, the instance that describes the affect of the speech: gives the Speech Descriptors Object of a Speech Object. The descriptors are the three numbers that the wav2vec 2.0 model of audeering reads from the speech (valence, arousal, dominance), three numbers in this order; the Qualifier of the Object names the format (wav2vec 2.0 Dimensional Affect (valence, arousal, dominance)). PS-Speech Interpretation turns them into the Speech Personal Status. The instances I01 (ECAPA-TDNN) and I02 (OpenVoice) describe the voice, not the affect.",
+
+  "ExternalPorts":   [{"Name": "BasicSpeechObject", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechDescriptors", "Direction": "Output", "DataType": "MMC-SDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AccessSources":   [{"Name": "spe-model", "Uri": "https://zenodo.org/records/6221127/files/w2v2-L-robust-12.6bc4a7fd-1.1.0.zip", "Sha256": "9B6E449686C0DB86F5C607B8C9FA1D87468C27198A1F0A20280C4E258239763D", "Member": "model.onnx", "Setting": "W2v2Model", "AsFile": "model.onnx", "Terms": {"Licence": "CC-BY-NC-SA-4.0 (non-commercial use only)", "Uri": "https://zenodo.org/records/6221127", "PersonalData": false}, "Description": "The speech emotion model (wav2vec 2.0, dimensional: arousal, dominance, valence), published by audeering."},
+                      {"Name": "speaker-embedder", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx/resolve/main/ecapa-tdnn.onnx", "Sha256": "38FDFC7D2BC9E2925349BAAB9639FCAF4B4C755BE83EE7D616B6E3FBC9D5EAB3", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://huggingface.co/mpai-community/ecapa-tdnn-3dspeaker-onnx", "PersonalData": false}, "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings).", "IsOptional": true}],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/SPE", "MASPort": 443, "BinaryName": "Mpai.Mmc.Spe", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "2 GB", "Maximum": "4 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-speech-description/"}]}

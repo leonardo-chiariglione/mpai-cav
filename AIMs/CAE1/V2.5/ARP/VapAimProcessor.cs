@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Arp;
 

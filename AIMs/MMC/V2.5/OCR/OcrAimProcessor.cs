@@ -26,7 +26,7 @@ public sealed class OcrAimProcessor : IAimProcessor
     public async Task<Message> ProcessAsync(Message message)
     {
         var image = message.Ports.TryGetValue(_inputPort, out var json) && !string.IsNullOrWhiteSpace(json)
-            ? MpaiJson.FromJson<BasicVisualObject>(json) ?? new BasicVisualObject()
+            ? Mpai.Aif.PortData.PortObjects.ReadVisual(json) ?? new BasicVisualObject()
             : new BasicVisualObject();
         (double X, double Y)? around = null;
         if (_pointPort.Length > 0 && message.Ports.TryGetValue(_pointPort, out var pointJson) && !string.IsNullOrWhiteSpace(pointJson))

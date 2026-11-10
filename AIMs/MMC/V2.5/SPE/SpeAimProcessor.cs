@@ -74,7 +74,7 @@ public sealed class SpeAimProcessor : IAimProcessor
     //     near the centre -> CALMNESS/calm (low degree).
     //   Social Attitude from dominance: clearly high -> SOCIAL DOMINANCE/CONFIDENCE
     //     (confident); clearly low -> AGGRESSION/submissive; mid -> none.
-    private static SpeechPersonalStatus ToSpeechPersonalStatus(SpeechAffect a)
+    public static SpeechPersonalStatus ToSpeechPersonalStatus(SpeechAffect a)
     {
         double v = a.Valence, ar = a.Arousal, d = a.Dominance;
 

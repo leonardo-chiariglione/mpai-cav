@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- MMC-TSD-V2.5 Text-to-Speech with Descriptors, and the Entity Speech Description that gives it its descriptors (the tone-colour embedding of OpenVoice V2). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\PortData\Mpai.Aif.PortData.csproj" />
+    <ProjectReference Include="..\TTS\Mpai.Mmc.Tts.csproj" />
+    <ProjectReference Include="..\..\..\CAE1\V2.5\Common\Mpai.Cae.Usc.Common.csproj" />
+    <ProjectReference Include="..\..\..\CAE1\V2.5\Voice\Mpai.Cae.Usc.Voice.csproj" />
+  </ItemGroup>
+</Project>

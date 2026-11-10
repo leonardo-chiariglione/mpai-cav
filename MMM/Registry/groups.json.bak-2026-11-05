@@ -1,0 +1,57 @@
+[
+ {
+  "Id": "AIF",
+  "Name": "AIF - AI Framework",
+  "Room": "AIF-Room"
+ },
+ {
+  "Id": "AIH",
+  "Name": "AIH - AI for Health",
+  "Room": "AIH-Room"
+ },
+ {
+  "Id": "AIP",
+  "Name": "AIP - AI Passport",
+  "Room": "AIP-Room"
+ },
+ {
+  "Id": "CAE",
+  "Name": "CAE - Context-based Audio Enhancement",
+  "Room": "CAE-Room"
+ },
+ {
+  "Id": "EVC",
+  "Name": "EVC - AI-Enhanced Video Coding",
+  "Room": "EVC-Room"
+ },
+ {
+  "Id": "ISAC",
+  "Name": "ISAC",
+  "Room": "ISAC-Room"
+ },
+ {
+  "Id": "MMC",
+  "Name": "MMC - Multimodal Conversation",
+  "Room": "MMC-Room"
+ },
+ {
+  "Id": "MMM",
+  "Name": "MMM - MPAI Metaverse Model",
+  "Room": "MeetingRoom"
+ },
+ {
+  "Id": "NNW",
+  "Name": "NNW - Neural Network Watermarking",
+  "Room": "NNW-Room"
+ },
+ {
+  "Id": "PAF",
+  "Name": "PAF - Portable Avatar Format",
+  "Room": "PAF-Room"
+ },
+ {
+  "Id": "XRV",
+  "Name": "XRV - XR Venues",
+  "Room": "XRV-Room"
+ }
+]

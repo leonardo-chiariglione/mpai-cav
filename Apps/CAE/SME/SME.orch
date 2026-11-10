@@ -1,0 +1,27 @@
+# =============================================================================
+#  SME.orch - Speak Model with Emotion (CAE-USC V2.5)
+#  Workflow Description Language v0.3, AIF V3.0
+#
+#  One Controller, one Module, which executes by exchange. Emotionless speech takes
+#  the emotion of a MODEL UTTERANCE by its prosody: Speech Feature Analysis 1 extracts
+#  the prosodic features of the model utterance (given the Mode Selector), and
+#  Prosodic Emotion Insertion applies them to the emotionless speech. The User Agent
+#  offers each datum to its Port, by Data Type and Port Number, from the device the
+#  App gave it.
+# =============================================================================
+
+workflow SME over 1CAE-SME-V2.5-I01
+
+on Start:
+
+    ask Controller to start
+
+    offer   ModeSelector     (OSD-SEL-V1.5:1) from device "ModeSelector"
+    offer   Model            (OSD-BSO-V1.5:1) from device "Model"
+    offer   Speech           (OSD-BSO-V1.5:2) from device "Speech"
+
+    ask     Result           (OSD-BSO-V1.5:1)
+    present Result
+
+on Stop:
+    ask Controller to stop

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Mpai.Cae.Usc.Smc;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Usc.Voice;
 

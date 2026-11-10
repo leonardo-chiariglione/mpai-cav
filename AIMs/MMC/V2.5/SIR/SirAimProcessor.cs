@@ -2,6 +2,7 @@
 // The models and the databases it uses, and the data derived from them, are not part of it: each has its own licence, and some
 // restrict use (for example to non-commercial research). Read THIRD-PARTY-NOTICES.md and the Terms of the AccessSources of the AIM.
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using AIF.Controller;
@@ -32,6 +33,12 @@ public sealed class SirAimProcessor : IAimProcessor
     private readonly SubjectGallery                _gallery;
     private readonly AIF.SharedStorage.ISharedStorage? _galleryStore;
 
+    // TELEVISION MEDIA ANALYSIS (OSD-TMA). Optional Inputs of an instance that declares them: the Auxiliary Text (the names in it raise the candidates of those names, by TextBonus)
+    // and the Speech Overlap (noted in the log: speech that overlaps another is not told apart by this AIM yet). An instance that declares neither is as before.
+    private readonly string _textPort, _overlapPort;
+    private string? _text;
+    public const double TextBonus = 0.1;
+
     public string InstanceId { get; }
 
     public SirAimProcessor(
@@ -56,11 +63,15 @@ public sealed class SirAimProcessor : IAimProcessor
         _galleryStore   = galleryStore;
         _speechPort     = ports.Input("OSD-BSO-V1.5");
         _outputPort     = ports.Output("OSD-IID-V1.5");
+        _textPort       = ports.InputOrDefault("OSD-TXO-V1.5", 1, "");
+        _overlapPort    = ports.InputOrDefault("MMC-SOL-V2.5", 1, "");
     }
 
     public async Task<Message> ProcessAsync(Message message)
     {
         if (_galleryStore is not null) _gallery.Refresh(_galleryStore);
+        if (_textPort.Length > 0 && message.Ports.TryGetValue(_textPort, out var textJson)) _text = AuxiliaryText.Words(textJson);
+        if (_overlapPort.Length > 0 && message.Ports.ContainsKey(_overlapPort)) Sir("overlap information received");
         // Read the Basic Speech Object delivered on the speech input port.
         if (!message.Ports.TryGetValue(_speechPort, out var speechJson) ||
             string.IsNullOrWhiteSpace(speechJson))
@@ -98,6 +109,7 @@ public sealed class SirAimProcessor : IAimProcessor
         var _top = identity.InstanceIdentifierData is { Count: > 0 } _d ? _d[0] : null;
         Sir($"out: path={(_activated ? "Identify" : "CoarseSpeech-VADgate")} label=<{_top?.InstanceLabel ?? "<none>"}> conf={(_top?.LabelConfidenceLevel ?? 0f):F3} candidates={identity.InstanceIdentifierData.Count}");
 
+        if (_text is { Length: > 0 }) identity = AuxiliaryText.RaiseNamed(identity, _text, TextBonus);
         var json = MpaiJson.ToJson(identity);
         await Task.CompletedTask;
 

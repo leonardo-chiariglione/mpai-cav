@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Communicating Entities in Context (HMC-CEC V2.2): the provider that builds the Sub-AIMs of 1HMC-CEC-V2.2-I01 and of the composites it holds
+       (1OSD-MFD-V1.5-I01, 1HMC-ECU-V2.2-I01, and Text and Speech Translation, Personal Status Extraction). -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\Store\AIF.Store.csproj" />
+    <ProjectReference Include="..\..\..\Core\Mpai.Core.csproj" />
+    <ProjectReference Include="..\SID\Mpai.Hmc.Sid.csproj" />
+    <ProjectReference Include="..\..\..\OSD\V1.5\TMA\Mpai.Osd.Tma.csproj" />
+    <ProjectReference Include="..\..\..\MMC\V2.5\ASR\Mpai.Mmc.Asr.csproj" />
+    <ProjectReference Include="..\..\..\CAV\V2.0\Hci\Mpai.Cav.Hci.csproj" />
+    <ProjectReference Include="..\..\..\Providers\Mpai.Providers.csproj" />
+  </ItemGroup>
+
+</Project>

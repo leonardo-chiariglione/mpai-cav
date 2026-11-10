@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AIH-HSP, FEDERATED LEARNING, NARRATED (simulation: synthetic images, frozen random network, components called directly). -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AihFlDemo</AssemblyName>
+    <RootNamespace>Mpai.Aih.FlDemo</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Provider\Mpai.Aih.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Chain\Mpai.Aih.Chain.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\HFL\Mpai.Aih.Hfl.csproj" />
+    <ProjectReference Include="..\..\..\..\AIMs\AIH\V1.1\Nnm\Mpai.Aih.Nnm.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Controller\AIF.Controller.csproj" />
+    <ProjectReference Include="..\..\..\..\AIF\Metadata\AIF.Metadata.csproj" />
+  </ItemGroup>
+
+</Project>

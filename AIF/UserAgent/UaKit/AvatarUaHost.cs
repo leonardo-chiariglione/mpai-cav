@@ -61,7 +61,8 @@ public sealed class AvatarUaHost
     // Initialise the WebView2 renderer: allow audio autoplay (the speech plays from a
     // message handler, not an in-page click), map the assets virtual host, and load
     // the avatar viewer. Call once, after the window is loaded.
-    public async Task InitAsync(string viewerPage = "cav-webview.html")
+    // faceName: how the page calls the Face while it loads ("Loading the ASM Face..."); none gives "Loading the Face...".
+    public async Task InitAsync(string viewerPage = "cav-webview.html", string? faceName = null)
     {
         // A DEDICATED user-data folder per application. WebView2 reuses an existing
         // environment when the user-data folder matches, and the FIRST environment's
@@ -82,10 +83,31 @@ public sealed class AvatarUaHost
         _web.CoreWebView2.IsMuted = false;   // never mute the avatar's voice
         _web.CoreWebView2.SetVirtualHostNameToFolderMapping(
             _assetsHost, _assetsDir, CoreWebView2HostResourceAccessKind.Allow);
-        _web.CoreWebView2.Navigate($"https://{_assetsHost}/{viewerPage}");
+        if (Diagnose is { } log) await WatchAsync(log);
+        _web.CoreWebView2.Navigate($"https://{_assetsHost}/{viewerPage}" + (string.IsNullOrWhiteSpace(faceName) ? "" : "?name=" + Uri.EscapeDataString(faceName)));
 
         _renderer = new AvatarUnit(json =>
             _ui.InvokeAsync(() => _web.CoreWebView2.PostWebMessageAsJson(json)).Task);
+    }
+
+    // Where the page's own trouble is written when an application sets it (for example to its log): a page that does not load,
+    // a request that fails (a module of the page, the Face's file) and what the page itself reports as an error.
+    public static Action<string>? Diagnose { get; set; }
+
+    private async Task WatchAsync(Action<string> log)
+    {
+        var web = _web.CoreWebView2;
+        web.NavigationCompleted += (_, e) => log($"[avatar page] navigation completed: success={e.IsSuccess}, {e.WebErrorStatus}");
+        web.WebResourceResponseReceived += (_, e) =>
+        {
+            var status = e.Response.StatusCode;
+            if (status >= 400 || e.Request.Uri.EndsWith(".glb", StringComparison.OrdinalIgnoreCase)) log($"[avatar page] {status} {e.Request.Uri}");
+        };
+        void On(string name, string label) => web.GetDevToolsProtocolEventReceiver(name).DevToolsProtocolEventReceived += (_, e) => log($"[avatar page] {label}: {e.ParameterObjectAsJson}");
+        On("Runtime.exceptionThrown", "error");
+        On("Network.loadingFailed", "request failed");
+        await web.CallDevToolsProtocolMethodAsync("Runtime.enable", "{}");
+        await web.CallDevToolsProtocolMethodAsync("Network.enable", "{}");
     }
 
     // Present one utterance of the avatar on the renderer (used for a single turn, e.g. typed input).

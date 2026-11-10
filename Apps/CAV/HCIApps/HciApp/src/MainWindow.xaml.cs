@@ -18,7 +18,7 @@ namespace HciApp;
 
 // Human-CAV Interaction User Agent. The UA captures the AUDIO scene (BAO) and a
 // face (BVO) and hands them to the CAV-HCI Module through the Controller API. The
-// Module's front end (BAS/AVA/ASI) discriminates audio from speech: ASI scans the
+// Module's front end (BAS/MAL/ASI) discriminates audio from speech: ASI scans the
 // audio objects, converts a speech object (BAO -> BSO) and feeds ASR/SIR/PSE.
 // There is NO boundary speech input; the recogniser is always fed by ASI. The UA
 // captures sound; the Module decides what it is.
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
         {
             SetStatus("loading...");
             _avatar = new AvatarUaHost(Web, Dispatcher, AmdDir, AssetsDir);
-            await _avatar.InitAsync();
+            await _avatar.InitAsync(faceName: "CAV");
             _north = new RemoteControllerApi(Program.ControllerUrl);   // the Controller is a program of its own (HciController)
             _ready = true;
             InstructionText.Text = "Press Start to meet the CAV.";

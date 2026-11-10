@@ -1,0 +1,26 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-EFD-V1.6-I02", "AIMName": "1PAF-EFD-V1.6-I02"},
+  "Header":           "PAF-EFD-V1.6",
+
+  "APIProfile":       "Basic",
+  "Description":      "Entity Face Description, the instance that describes the expression of the face: gives the Face Descriptors Object of a Face Object (a picture of one face). The descriptors are the ten numbers that the HSEmotion model reads from the face: the probabilities of the eight emotions of AffectNet, then the valence and the arousal; the Qualifier of the Object names the format. PS-Face Interpretation turns them into the Face Personal Status. The instance I01 describes the identity of the face (ArcFace), not the expression.",
+
+  "ExternalPorts":   [{"Name": "FaceObject", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserName", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AccessSources":   [{"Name": "face-emotion", "Uri": "https://github.com/HSE-asavchenko/face-emotion-recognition/raw/main/models/affectnet_emotions/onnx/enet_b0_8_va_mtl.onnx", "Sha256": "C43E056AD388D4A8DC911832B8291435B2AF537F967E5870EBD731574EC7E812", "Setting": "HseModel", "AsFile": "hsemotion_enet_b0_8_va_mtl.onnx", "Terms": {"Licence": "Apache-2.0", "Uri": "https://github.com/HSE-asavchenko/face-emotion-recognition/blob/main/LICENSE", "PersonalData": false}, "Description": "The facial emotion model (HSEmotion, valence and arousal)."},
+                      {"Name": "face-detector", "Uri": "https://huggingface.co/deepghs/insightface/resolve/main/buffalo_l/det_10g.onnx", "Sha256": "5838F7FE053675B1C7A08B633DF49E7AF5495CEE0493C7DCF6697200B85B5B91", "Mirrors": ["https://huggingface.co/public-data/insightface/resolve/main/models/buffalo_l/det_10g.onnx", "https://huggingface.co/RuteNL/SCRFD-face-detection-ONNX/resolve/main/10g_bnkps.onnx", "https://huggingface.co/cromsc/scrfd-10g/resolve/main/scrfd_10g_bnkps.onnx"], "Setting": "ScrfdModel", "AsFile": "scrfd_10g_bnkps.onnx", "Terms": {"Licence": "InsightFace models: non-commercial research use", "Uri": "https://github.com/deepinsight/insightface#license", "PersonalData": false}, "Description": "The face detection model (SCRFD, 10 GFLOPs, with landmarks).", "IsOptional": true},
+                      {"Name": "face-embedder", "Uri": "https://huggingface.co/immich-app/antelopev2/resolve/main/recognition/model.onnx", "Sha256": "4AB1D6435D639628A6F3E5008DD4F929EDF4C4124B1A7169E1048F9FEF534CDF", "Mirrors": ["https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/glintr100.onnx", "https://huggingface.co/MonsterMMORPG/tools/resolve/main/glintr100.onnx", "https://huggingface.co/FrancisRing/StableAnimator/resolve/main/models/antelopev2/glintr100.onnx"], "Setting": "ArcFaceModel", "AsFile": "glintr100.onnx", "Terms": {"Licence": "InsightFace models: non-commercial research use", "Uri": "https://github.com/deepinsight/insightface#license", "PersonalData": false}, "Description": "The face recognition model (ArcFace, ResNet-100, 512-value embeddings) of the InsightFace release antelopev2.", "IsOptional": true}],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/FPE", "MASPort": 443, "BinaryName": "Mpai.Paf.Fpe", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.6", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "2 GB", "Maximum": "4 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/entity-face-description/"}]}

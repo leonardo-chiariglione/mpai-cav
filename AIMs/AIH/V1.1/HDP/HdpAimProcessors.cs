@@ -238,6 +238,22 @@ public sealed class BackEndHdpAimProcessor(string instanceId, AimPortReader read
         }
         var request = AihJson.RequestOf(process) ?? throw new FormatException("the request holds no Request.");
         var type = request["ProcessingType"]?.GetValue<string>() ?? "";
+        // THE BACK END'S OWN REQUESTS (its operator starts them): the Back End is not a user and has no Tokens. Its audit names the End User whose AIH Data is audited (the answer lists
+        // that user's AIH Data and the copies made of them, as for the user's own audit); its processing names one AIH Data and is subject to the licence terms, which the Blockchain
+        // confirms when asked (the requester is the Back End).
+        if (backEndId.Length > 0 && requester == backEndId && type == "Auditing" && (request["AIHDataOrAIHDataID"] as JsonArray)?.FirstOrDefault() is JsonValue auditedUser)
+        {
+            Put(outputs, P.AhpResponseOut, AihJson.ProcessResponse(requester, HeldFor(auditedUser.GetValue<string>()), true, requestId));
+            return;
+        }
+        if (backEndId.Length > 0 && requester == backEndId && type == "AIHDataProcessing" && (request["AIHDataOrAIHDataID"] as JsonArray) is { Count: 1 } one && one[0] is JsonValue backEndId1)
+        {
+            var wanted1 = backEndId1.GetValue<string>();
+            var ask = AihJson.LicenceConfirmRequest("", wanted1, type, requester);
+            processing[wanted1] = new Processing(requester, ask["LicenceConfirmID"]!.GetValue<string>(), requestId);
+            Put(outputs, P.LcfOut, ask);
+            return;
+        }
         var presented = AihJson.ServicesOf(request["Tokens"] as JsonObject);
         var items = (request["AIHDataOrAIHDataID"] as JsonArray)?.ToList() ?? [];
 

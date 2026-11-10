@@ -181,12 +181,24 @@ public sealed class LoudspeakerUnit
         return heard;
     }
 
-    // A WAV, played to the end.
-    public static async Task PlayAsync(byte[] wav)
+    // THE SOUND OUTPUTS OF THE MACHINE, by name, and the number Windows gives each: what the User Agent plays on is its own choice (the AOD has no device information in the standard yet), and the Module is not told.
+    public static List<string> OutputDevices()
+    {
+        var names = new List<string>();
+        try { for (var i = 0; i < NAudio.Wave.WaveOut.DeviceCount; i++) names.Add(NAudio.Wave.WaveOut.GetCapabilities(i).ProductName); }
+        catch (Exception e) when (e is NAudio.MmException or InvalidOperationException) { }
+        return names;
+    }
+
+    // The number of the output of that name; -1, the one Windows uses, when none is named or it is not there now (a headset unplugged).
+    public static int DeviceNumberOf(string? name) => name is null ? -1 : OutputDevices().IndexOf(name);
+
+    // A WAV, played to the end, on the output named (none: the one Windows uses).
+    public static async Task PlayAsync(byte[] wav, string? device = null)
     {
         if (wav.Length == 0) return;
         using var reader = new NAudio.Wave.WaveFileReader(new MemoryStream(wav));
-        using var output = new NAudio.Wave.WaveOutEvent();
+        using var output = new NAudio.Wave.WaveOutEvent { DeviceNumber = DeviceNumberOf(device) };
         output.Init(reader);
         output.Play();
         while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing)

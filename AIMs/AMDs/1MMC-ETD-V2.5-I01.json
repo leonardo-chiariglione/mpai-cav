@@ -1,0 +1,26 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "MMC-ETD-V2.5-I01", "AIMName": "1MMC-ETD-V2.5-I01"},
+  "Header":           "MMC-ETD-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Entity Text Description: gives the Text Descriptors Object of a Text Object. The descriptors are the 28 scores of a GoEmotions classifier (RoBERTa-base, 28 emotion labels, each score the probability that the text expresses that label), 28 numbers in the order of the labels of GoEmotions; the Qualifier of the Object names the format (GoEmotions Scores (RoBERTa-base, 28-d)). PS-Text Interpretation turns them into the Text Personal Status.",
+
+  "ExternalPorts":   [{"Name": "TextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputTextObject", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "TextDescriptors", "Direction": "Output", "DataType": "MMC-TDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AccessSources":   [{"Name": "text-emotion", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/onnx/model.onnx", "Sha256": "3BF605ADFA0E59AE36723F1136D37865ACB0EC4DED7831F7F7F5231EB032D60A", "Setting": "GoEmotionsModel", "AsFile": "go_emotions_roberta_base.onnx", "Terms": {"Licence": "MIT (the model, as its model page states); the licence of the GoEmotions training data is not stated on the model page", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx", "PersonalData": false}, "Description": "The text emotion model (RoBERTa-base fine-tuned on GoEmotions, 28 labels; full precision ONNX version of SamLowe/roberta-base-go_emotions-onnx)."},
+                      {"Name": "text-emotion-vocab", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/vocab.json", "Sha256": "ED19656EA1707DF69134C4AF35C8CEDA2CC9860BF2C3495026153A133670AB5E", "Setting": "GoEmotionsVocab", "AsFile": "go_emotions_vocab.json", "Terms": {"Licence": "MIT (the model, as its model page states); the licence of the GoEmotions training data is not stated on the model page", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx", "PersonalData": false}, "Description": "The vocabulary of the byte-level BPE tokeniser of the model."},
+                      {"Name": "text-emotion-merges", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/merges.txt", "Sha256": "FE36CAB26D4F4421ED725E10A2E9DDB7F799449C603A96E7F29B5A3C82A95862", "Setting": "GoEmotionsMerges", "AsFile": "go_emotions_merges.txt", "Terms": {"Licence": "MIT (the model, as its model page states); the licence of the GoEmotions training data is not stated on the model page", "Uri": "https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx", "PersonalData": false}, "Description": "The merge rules of the byte-level BPE tokeniser of the model."}],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/MMC/V2.5/ETD", "MASPort": 443, "BinaryName": "Mpai.Mmc.Etd", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "2.5", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "2 GB", "Maximum": "4 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/ai-modules/entity-text-description/"}]}

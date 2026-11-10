@@ -1,0 +1,22 @@
+{ "Identifier":       {"ImplementerID": "1", "ImplementationID": "PAF-PFI-V1.6-I01", "AIMName": "1PAF-PFI-V1.6-I01"},
+  "Header":           "PAF-PFI-V1.6",
+
+  "APIProfile":       "Basic",
+  "Description":      "PS-Face Interpretation: gives the Face Personal Status from the Face Descriptors Object of a face (the HSEmotion probabilities, valence and arousal of the instance I02 of Entity Face Description). The interpretation is that of PAF-FPE: the most probable emotion of AffectNet is mapped to an Emotion of the vocabulary (Surprise to the Cognitive State Surprise), with its probability as Degree. A Face Descriptors Object of another format (an identity embedding) is refused.",
+
+  "ExternalPorts":   [{"Name": "FaceDescriptorsObject", "Direction": "Input", "DataType": "PAF-FDO-V1.6", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "EntityFaceDescriptorsObject", "Direction": "Input", "DataType": "PAF-FDO-V1.6", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "FacePersonalStatus", "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "Implementations": [{"ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/PFI", "MASPort": 443, "BinaryName": "Mpai.Paf.Pfi", "Architecture": "x86-64", "OperatingSystem": "Windows", "Version": "1.6", "Source": "AIMStorage"}],
+
+  "ResourcePolicies":[{"Name": "Memory",    "Minimum": "1 GB", "Request": "1 GB", "Maximum": "2 GB"},
+                      {"Name": "CPU:Class", "Minimum": "Medium", "Request": "High", "Maximum": "High"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-paf/v1-6/ai-modules/ps-face-interpretation/"}]}

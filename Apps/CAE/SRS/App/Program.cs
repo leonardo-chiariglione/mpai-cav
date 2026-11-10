@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Mpai.Cae.Apps;
 using Mpai.Ua;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Srs;
 
@@ -79,7 +80,7 @@ internal static class Program
         foreach (var (start, end) in Inputs.Sections(sections))
             for (var i = (int)(start * audio.Rate); i < Math.Min(samples.Length, (int)(end * audio.Rate)); i++) samples[i] = 0;
         File.WriteAllBytes(Path.Combine(folder, "original.wav"), audio.ToWav());
-        File.WriteAllBytes(Path.Combine(folder, "damaged.wav"), new Mpai.Cae.Usc.Audio(samples, audio.Rate).ToWav());
+        File.WriteAllBytes(Path.Combine(folder, "damaged.wav"), new Mpai.Osd.Speech.Audio(samples, audio.Rate).ToWav());
         Console.WriteLine($"Written original.wav ({audio.Seconds:0.0} s) and damaged.wav (silent at {sections} s) in {folder}");
         return 0;
     }

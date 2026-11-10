@@ -25,12 +25,33 @@ public sealed class AudioRendering(string steamAudioFolder, SpatialRenderer.Layo
 {
     public bool Available => SpatialRenderer.Available(steamAudioFolder);
 
+    // HOW A SCENE IS TO BE RENDERED, as the scene says (RenderingMode, and ChannelCount for Multichannel: properties of the Audio Scene Descriptors, or of the first of its sub-scenes that states one);
+    // null when it says nothing usable, and the renderer's own default applies.
+    public static SpatialRenderer.Layout? LayoutOf(string sceneJson)
+    {
+        try
+        {
+            if (Stating(System.Text.Json.Nodes.JsonNode.Parse(sceneJson)) is not System.Text.Json.Nodes.JsonObject profile) return null;
+            var mode = (string?)profile["RenderingMode"];
+            var channels = profile["ChannelCount"] is System.Text.Json.Nodes.JsonValue c && c.TryGetValue<int>(out var n) ? n : (int?)null;
+            return mode switch
+            {
+                "Binaural" => SpatialRenderer.Layout.Binaural,
+                "Mono" => SpatialRenderer.Layout.Mono,
+                "Stereo" => SpatialRenderer.Layout.Stereo,
+                "Multichannel" => channels switch { 4 => SpatialRenderer.Layout.Quad, 6 => SpatialRenderer.Layout.Surround51, 8 => SpatialRenderer.Layout.Surround71, _ => null },
+                _ => null
+            };
+        }
+        catch (Exception e) when (e is System.Text.Json.JsonException or InvalidCastException or FormatException) { return null; }
+    }
+
     public BasicAudioObject Render(string json)
     {
         switch (HeaderOf(json))
         {
-            case "OSD-BAS-V1.5": return Render(SceneAudio.Members(MpaiJson.FromJson<BasicAudioSceneDescriptors>(json)).ToList(), "scene", RoomOf(json));
-            case "OSD-ASD-V1.5": return Render(SceneAudio.Members(MpaiJson.FromJson<AudioSceneDescriptors>(json)).ToList(), "scene", RoomOf(json));
+            case "OSD-BAS-V1.5": return Render(SceneAudio.Members(MpaiJson.FromJson<BasicAudioSceneDescriptors>(json)).ToList(), "scene", RoomOf(json), LayoutOf(json));
+            case "OSD-ASD-V1.5": return Render(SceneAudio.Members(MpaiJson.FromJson<AudioSceneDescriptors>(json)).ToList(), "scene", RoomOf(json), LayoutOf(json));
             case "OSD-AUO-V1.5":
                 var auo = MpaiJson.FromJson<AudioObject>(json);
                 return Render(SceneAudio.Members(auo).ToList(), auo.AudioObjectID);
@@ -42,14 +63,25 @@ public sealed class AudioRendering(string steamAudioFolder, SpatialRenderer.Layo
         }
     }
 
+    // The scene (or its first sub-scene, at any depth) that states a RenderingMode.
+    private static System.Text.Json.Nodes.JsonObject? Stating(System.Text.Json.Nodes.JsonNode? scene)
+    {
+        if (scene is not System.Text.Json.Nodes.JsonObject o) return null;
+        if (o["RenderingMode"] is not null) return o;
+        foreach (var entry in o["SubAudioScenes"] as System.Text.Json.Nodes.JsonArray ?? [])
+            if (entry?["SubASceneIDOrSubAScene"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } held && Stating(held[0]) is { } found) return found;
+        return null;
+    }
+
     // The members as the user hears them: each group of members heard from the same
     // place is rendered, and the groups are mixed.
-    private BasicAudioObject Render(IReadOnlyList<SceneAudio.Member> members, string what, RoomAcoustics? room = null)
+    private BasicAudioObject Render(IReadOnlyList<SceneAudio.Member> members, string what, RoomAcoustics? room = null, SpatialRenderer.Layout? asked = null)
     {
+        var use = asked ?? layout;
         if (!Available)
             throw new InvalidOperationException($"no spatial renderer - Steam Audio is not in {steamAudioFolder}.");
 
-        using var renderer = new SpatialRenderer(steamAudioFolder, layout);
+        using var renderer = new SpatialRenderer(steamAudioFolder, use);
         float[] mix = [];
         foreach (var group in members.GroupBy(m => m.User))
         {
@@ -88,7 +120,7 @@ public sealed class AudioRendering(string steamAudioFolder, SpatialRenderer.Layo
             BasicAudioObjectID = played.BasicAudioObjectID,
             BasicAudioObjectData = played.BasicAudioObjectData,
             AudioQualifier = played.AudioQualifier,
-            DescrMetadata = $"{what} rendered for the user ({layout})"
+            DescrMetadata = $"{what} rendered for the user ({use})"
         };
     }
 

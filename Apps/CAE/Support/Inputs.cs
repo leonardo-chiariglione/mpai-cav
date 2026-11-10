@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 
 using Mpai.Cae.Usc;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Cae.Apps;
 

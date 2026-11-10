@@ -1,0 +1,142 @@
+{
+  "Identifier": {
+    "ImplementerID": "1",
+    "ImplementationID": "PAF-FIR-V1.6-I02",
+    "AIMName": "1PAF-FIR-V1.6-I02"
+  },
+  "Header": "PAF-FIR-V1.6",
+  "APIProfile": "Basic",
+  "Description": "Face Identity Recognition: receives a Basic Visual Object, which carries the time it was acquired, and, optionally, the Basic Visual Scene Descriptors of the scene it was isolated from; detects the face, matches it against the Subject Gallery held in Shared Storage; and returns the face identity as an Instance Identifier - the coarse \"face\" layer when nobody matches, so that an identity is always returned for the face received - with the Bounding Box locating the face. The visual counterpart of Speaker Identity Recognition. Instance for Television Media Analysis: the Auxiliary Text raises the candidates named in it, and the pictures are taken without the Face tag.",
+  "InternalTypes": [],
+  "ExternalPorts": [
+    {
+      "Name": "VisualObject",
+      "Direction": "Input",
+      "DataType": "OSD-BVO-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "VisualSceneDescriptors",
+      "Direction": "Input",
+      "DataType": "OSD-BVS-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "FaceID",
+      "Direction": "Output",
+      "DataType": "OSD-IID-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "BoundingBox",
+      "Direction": "Output",
+      "DataType": "OSD-BBX-V1.5",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "AuxiliaryText",
+      "Direction": "Input",
+      "DataType": "OSD-TXO-V1.5",
+      "IsOptional": true,
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "SubAIMs": [],
+  "Topology": [],
+  "AccessSources": [
+    {
+      "Name": "face-detector",
+      "Uri": "https://huggingface.co/deepghs/insightface/resolve/main/buffalo_l/det_10g.onnx",
+      "Sha256": "5838F7FE053675B1C7A08B633DF49E7AF5495CEE0493C7DCF6697200B85B5B91",
+      "Mirrors": [
+        "https://huggingface.co/public-data/insightface/resolve/main/models/buffalo_l/det_10g.onnx",
+        "https://huggingface.co/RuteNL/SCRFD-face-detection-ONNX/resolve/main/10g_bnkps.onnx",
+        "https://huggingface.co/cromsc/scrfd-10g/resolve/main/scrfd_10g_bnkps.onnx"
+      ],
+      "Setting": "ScrfdModel",
+      "AsFile": "scrfd_10g_bnkps.onnx",
+      "Terms": {
+        "Licence": "InsightFace models: non-commercial research use",
+        "Uri": "https://github.com/deepinsight/insightface#license",
+        "PersonalData": false
+      },
+      "Description": "The face detection model (SCRFD, 10 GFLOPs, with landmarks)."
+    },
+    {
+      "Name": "face-embedder",
+      "Uri": "https://huggingface.co/immich-app/antelopev2/resolve/main/recognition/model.onnx",
+      "Sha256": "4AB1D6435D639628A6F3E5008DD4F929EDF4C4124B1A7169E1048F9FEF534CDF",
+      "Mirrors": [
+        "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/glintr100.onnx",
+        "https://huggingface.co/MonsterMMORPG/tools/resolve/main/glintr100.onnx",
+        "https://huggingface.co/FrancisRing/StableAnimator/resolve/main/models/antelopev2/glintr100.onnx"
+      ],
+      "Setting": "ArcFaceModel",
+      "AsFile": "glintr100.onnx",
+      "Terms": {
+        "Licence": "InsightFace models: non-commercial research use",
+        "Uri": "https://github.com/deepinsight/insightface#license",
+        "PersonalData": false
+      },
+      "Description": "The face recognition model (ArcFace, ResNet-100, 512-value embeddings) of the InsightFace release antelopev2."
+    },
+    {
+      "Name": "reference-faces",
+      "Uri": "https://raw.githubusercontent.com/leonardo-chiariglione/mpai-cav/main/AIMs/PAF/V1.6/FIR/Data/reference-faces.features",
+      "Sha256": "3A59923DF2D23F1A6486294C7713C42FF44F2455DA72AE56E9392AB6F3A885AA",
+      "ValidWith": [
+        "4AB1D6435D639628A6F3E5008DD4F929EDF4C4124B1A7169E1048F9FEF534CDF"
+      ],
+      "IsOptional": true,
+      "Terms": {
+        "Licence": "none stated; published for research",
+        "Uri": "https://vis-www.cs.umass.edu/lfw/",
+        "PersonalData": true
+      },
+      "Description": "The face features of 5,731 known people (Labeled Faces in the Wild), one 512-value ArcFace vector per person, against which a face is also matched; the people enrolled by ACR are in Shared Storage."
+    }
+  ],
+  "Implementations": [
+    {
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/tree/main/AIMs/PAF/V1.6/FIR",
+      "MASPort": 443,
+      "BinaryName": "Mpai.Paf.Fir",
+      "Architecture": "x86-64",
+      "OperatingSystem": "Windows",
+      "Version": "1.6",
+      "Source": "AIMStorage"
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "0.5 GB",
+      "Request": "1 GB",
+      "Maximum": "2 GB"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Request": "Medium",
+      "Maximum": "High"
+    }
+  ],
+  "DataXMData": {},
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-paf/"
+    }
+  ]
+}

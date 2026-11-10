@@ -54,7 +54,7 @@ public sealed class EsdAimProcessor : IAimProcessor
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "no Speech Object on input port"));
 
-        var speech = MpaiJson.FromJson<BasicSpeechObject>(bsoJson);
+        var speech = Mpai.Aif.PortData.PortObjects.ReadSpeech(bsoJson);
         if (speech is null || speech.Data.Length == 0)
             return System.Threading.Tasks.Task.FromResult(
                 Message.Error(message.MessageId, _instanceId, "empty Speech Object"));

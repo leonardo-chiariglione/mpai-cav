@@ -45,6 +45,12 @@ public sealed class FirAimProcessor : IAimProcessor
     // M3245): read again before each match.
     private readonly AIF.SharedStorage.ISharedStorage? _galleryStore;
 
+    // TELEVISION MEDIA ANALYSIS (OSD-TMA). An instance that declares the Auxiliary Text Input takes it as it arrives: the names in it raise the candidates of those names (TextBonus), and
+    // it takes the pictures that come to it - the first changed image of each scene - without the "Face" tag that CVE-VSI gives in the flows that have it. Without that Port the AIM is as before.
+    private readonly string _textPort;
+    private string? _text;
+    public const double TextBonus = 0.1;
+
     public string InstanceId { get; }
 
     public FirAimProcessor(
@@ -72,10 +78,12 @@ public sealed class FirAimProcessor : IAimProcessor
         _visualPort = ports.Input("OSD-BVO-V1.5");
         _iidPort    = ports.Output("OSD-IID-V1.5");
         _bbxPort    = ports.Output("OSD-BBX-V1.5");
+        _textPort   = ports.InputOrDefault("OSD-TXO-V1.5", 1, "");
     }
 
     public async Task<Message> ProcessAsync(Message message)
     {
+        if (_textPort.Length > 0 && message.Ports.TryGetValue(_textPort, out var textJson)) _text = AuxiliaryText.Words(textJson);
         if (!message.Ports.TryGetValue(_visualPort, out var visualJson) ||
             string.IsNullOrWhiteSpace(visualJson))
         {
@@ -83,7 +91,7 @@ public sealed class FirAimProcessor : IAimProcessor
                 $"PAF-FIR-V1.6: no visual object on input port '{_visualPort}'.");
         }
 
-        var picture = MpaiJson.FromJson<BasicVisualObject>(visualJson);
+        var picture = Mpai.Aif.PortData.PortObjects.ReadVisual(visualJson);
         if (picture is null || picture.Data is null || picture.Data.Length == 0)
         {
             return Message.Error(message.MessageId, InstanceId,
@@ -96,7 +104,7 @@ public sealed class FirAimProcessor : IAimProcessor
         // so EXACTLY ONE Instance Identifier is produced per object. FIR acts only
         // on "Face"; anything else (or untagged) it declines - VII identifies it.
         var visualObjectType = picture.VisualQualifier?.Attributes?.VisualObjectType;
-        if (visualObjectType != "Face")
+        if (visualObjectType != "Face" && !(_textPort.Length > 0 && visualObjectType is null))
         {
             return new Message
             {
@@ -168,6 +176,7 @@ public sealed class FirAimProcessor : IAimProcessor
         if (_galleryStore is not null) _gallery.Refresh(_galleryStore);
         var fir = new FaceIdentityRecognitionAim(_recogniser, _gallery);
         var iid = fir.Identify(crop);
+        if (iid is not null && _text is { Length: > 0 }) iid = AuxiliaryText.RaiseNamed(iid, _text, TextBonus);
         try { var __c = iid?.InstanceIdentifierData; var __top = (__c != null && __c.Count > 0) ? __c[0] : null; Mpai.Core.MpaiDiag.Append("mac-diag.log", "[FIR] IID label=" + (__top == null ? "nil" : __top.InstanceLabel) + " conf=" + (__top == null ? "nil" : __top.LabelConfidenceLevel.ToString("F3")) + " candidates=" + (__c == null ? 0 : __c.Count) + System.Environment.NewLine); } catch { }
         return iid;
     }

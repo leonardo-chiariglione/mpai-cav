@@ -20,6 +20,20 @@ public sealed class HflAimProcessor : IAimProcessor
     private int _expected, _round;
     private string _pre = "";
     private readonly List<float[]> _answers = new();
+    private readonly List<int> _cases = new();                                      // the number of cases each accepted answer learned from
+    private int _refused;                                                            // updates of this round that were refused
+    private readonly List<RoundRefusal> _refusals = new();
+
+    // The checks of a round (step 2): null means none (the first slice's behaviour). The model the round started from; what was refused and why.
+    public RoundPolicy? Policy { get; set; }
+    public float[]? Current { get; private set; }
+    public IReadOnlyList<RoundRefusal> Refusals => _refusals;
+    public int Round => _round;
+    private readonly List<RoundOutcome> _outcomes = new();
+    public IReadOnlyList<RoundOutcome> Outcomes => _outcomes;                          // what each round made (or did not make), without who sent what
+
+    // Sets the model the next round starts from (the Back End's current NN Model).
+    public void StartFrom(JsonObject model) { Current = Weights(model); }
 
     public string InstanceId { get; }
 
@@ -50,20 +64,38 @@ public sealed class HflAimProcessor : IAimProcessor
             else if (item["Response"] is JsonObject response)
             {
                 var weights = Weights(response["PostLearnNNModel"] as JsonObject);
-                if (_answers.Count > 0 && _answers[0].Length != weights.Length) throw new FormatException("a model of another size than the first answer.");
-                _answers.Add(weights);
-                if (_expected > 0 && _answers.Count >= _expected)
+                var why = Policy is null ? null : Policy.CheckUpdate(weights, Current ?? (_answers.Count > 0 ? _answers[0] : null));
+                if (Policy is null && _answers.Count > 0 && _answers[0].Length != weights.Length) throw new FormatException("a model of another size than the first answer.");
+                if (why is not null) { _refused++; _refusals.Add(new RoundRefusal(_round + 1, "update", why)); }
+                else { _answers.Add(weights); _cases.Add(Cases(response["PostLearnNNModel"] as JsonObject)); }
+                if (_expected > 0 && _answers.Count + _refused >= _expected)
                 {
-                    var mean = new float[weights.Length];
-                    foreach (var a in _answers) for (var i = 0; i < mean.Length; i++) mean[i] += a[i] / _answers.Count;
-                    var model = new JsonObject
+                    var taken = _answers.Count;
+                    float[]? mean = null;
+                    if (taken > 0)
                     {
-                        ["Header"] = "AIP-MLO-V1.0", ["MLModelObjectID"] = $"{_pre}-federated-{++_round}",
-                        ["MLModelData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(mean.SelectMany(BitConverter.GetBytes).ToArray()) }),
-                        ["DescrMetadata"] = $"Federated averaging of {_answers.Count} models"
-                    };
-                    outputs[_modelOut] = model.ToJsonString();
-                    _answers.Clear(); _expected = 0;
+                        // Weighted by the number of cases each model learned from (federated averaging).
+                        mean = new float[_answers[0].Length];
+                        var total = (double)_cases.Sum();
+                        for (var a = 0; a < taken; a++) for (var i = 0; i < mean.Length; i++) mean[i] += (float)(_answers[a][i] * (_cases[a] / total));
+                        var gate = Policy is null || Current is null ? null : Policy.CheckResult(Current, mean);
+                        if (gate is not null) { _refusals.Add(new RoundRefusal(_round + 1, "result", gate)); mean = null; }
+                    }
+                    else _refusals.Add(new RoundRefusal(_round + 1, "result", "no update of the round was acceptable."));
+                    if (mean is not null)
+                    {
+                        var model = new JsonObject
+                        {
+                            ["Header"] = "AIP-MLO-V1.0", ["MLModelObjectID"] = $"{_pre}-federated-{++_round}",
+                            ["MLModelData"] = new JsonArray(new JsonObject { ["Data"] = Convert.ToBase64String(mean.SelectMany(BitConverter.GetBytes).ToArray()) }),
+                            ["DescrMetadata"] = $"Federated averaging of {taken} models, weighted by the number of cases they learned from ({_cases.Sum()})"
+                        };
+                        outputs[_modelOut] = model.ToJsonString();
+                        Current = mean;
+                        _outcomes.Add(new RoundOutcome(_round, model["MLModelObjectID"]!.GetValue<string>(), _pre, taken, _cases.Sum(), true));
+                    }
+                    else { _round++; _outcomes.Add(new RoundOutcome(_round, null, _pre, taken, _cases.Sum(), false)); }   // the round is over; the old model stays
+                    _answers.Clear(); _cases.Clear(); _expected = 0; _refused = 0;
                 }
             }
             return Task.FromResult(new Message { MessageId = message.MessageId, MessageType = "FederatedLearn", DataType = AihJson.FederatedLearn, Payload = outputs.Values.FirstOrDefault() ?? "", Ports = outputs });
@@ -71,7 +103,17 @@ public sealed class HflAimProcessor : IAimProcessor
         catch (Exception ex) { return Task.FromResult(Message.Error(message.MessageId, InstanceId, "AIH-HFL-V1.1: " + ex.Message)); }
     }
 
-    private static float[] Weights(JsonObject? model)
+    // THE NUMBER OF CASES a model learned from. The Federated Learn schema (AIH-FDL-V1.1) and the ML Model Object (AIP-MLO-V1.0) have no field for it; the schemas allow
+    // more than one Data item in MLModelData, so the SECOND Data item carries it, as decimal text. A model without it counts as one case (a plain average).
+    public static int Cases(JsonObject? model)
+    {
+        var items = (model?["MLModelData"] as JsonArray)?.OfType<JsonObject>().Select(o => o["Data"]?.GetValue<string>()).Where(d => !string.IsNullOrEmpty(d)).ToList() ?? [];
+        if (items.Count < 2) return 1;
+        if (!int.TryParse(items[1], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n) || n < 1) throw new FormatException("the number of cases of the model (second Data item) is not a positive whole number.");
+        return n;
+    }
+
+    public static float[] Weights(JsonObject? model)
     {
         var data = (model?["MLModelData"] as JsonArray)?.OfType<JsonObject>().Select(o => o["Data"]?.GetValue<string>()).FirstOrDefault(d => !string.IsNullOrEmpty(d))
                    ?? throw new FormatException("the model carries no data.");
@@ -80,5 +122,45 @@ public sealed class HflAimProcessor : IAimProcessor
         var weights = new float[bytes.Length / 4];
         Buffer.BlockCopy(bytes, 0, weights, 0, bytes.Length);
         return weights;
+    }
+}
+
+// WHAT A ROUND MADE: its number, the NN Model it made (null if the result was refused), the model it started from, how many updates and cases it took.
+public sealed record RoundOutcome(int Round, string? ModelId, string StartedFrom, int Updates, int Cases, bool Accepted);
+
+// WHAT A ROUND REFUSED: the round (1, 2, ...), what was refused ("update" or "result") and why.
+public sealed record RoundRefusal(int Round, string What, string Reason);
+
+// THE CHECKS OF A ROUND (federated learning, step 2). Before an update is averaged: it has the size of the model, its values are finite, and it has not moved further than
+// MaxDistance (Euclidean) from the model the round started from. After averaging: the new model is evaluated (Evaluate: accuracy and log loss on a FIXED set) and
+// replaces the old one only if the accuracy has not fallen by more than MaxAccuracyDrop and the loss has not risen by more than MaxLossRise.
+public sealed class RoundPolicy
+{
+    public int? WeightCount { get; init; }
+    public double? MaxDistance { get; init; }
+    public Func<float[], (double Accuracy, double LogLoss)>? Evaluate { get; init; }
+    public double MaxAccuracyDrop { get; init; } = 0.05;
+    public double MaxLossRise { get; init; } = 0.10;
+
+    public string? CheckUpdate(float[] update, float[]? start)
+    {
+        var size = WeightCount ?? start?.Length;
+        if (size is not null && update.Length != size) return $"the update holds {update.Length} values, the model {size}.";
+        if (update.Any(v => !float.IsFinite(v))) return "the update holds values that are not finite.";
+        if (MaxDistance is double limit && start is not null)
+        {
+            var d = Math.Sqrt(update.Zip(start, (a, b) => (double)(a - b) * (a - b)).Sum());
+            if (d > limit) return $"the update moved {d:F3} from the model it started from (limit {limit:F3}).";
+        }
+        return null;
+    }
+
+    public string? CheckResult(float[] old, float[] result)
+    {
+        if (Evaluate is null) return null;
+        var before = Evaluate(old); var after = Evaluate(result);
+        if (after.Accuracy < before.Accuracy - MaxAccuracyDrop) return $"the new model's accuracy {after.Accuracy:P1} is more than {MaxAccuracyDrop:P1} below the old model's {before.Accuracy:P1}.";
+        if (after.LogLoss > before.LogLoss + MaxLossRise) return $"the new model's loss {after.LogLoss:F3} is more than {MaxLossRise:F3} above the old model's {before.LogLoss:F3}.";
+        return null;
     }
 }

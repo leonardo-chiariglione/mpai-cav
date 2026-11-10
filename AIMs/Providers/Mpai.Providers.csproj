@@ -42,6 +42,13 @@
     <ProjectReference Include="..\MMC\V2.5\SCM\Mpai.Mmc.Scm.csproj" />
     <ProjectReference Include="..\MMC\V2.5\OCR\Mpai.Mmc.Ocr.csproj" />
     <ProjectReference Include="..\MMC\V2.5\CTS\Mpai.Mmc.Cts.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\TSD\Mpai.Mmc.Tsd.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\ETD\Mpai.Mmc.Etd.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\PTI\Mpai.Mmc.Pti.csproj" />
+    <ProjectReference Include="..\MMC\V2.5\PSI\Mpai.Mmc.Psi.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\PFI\Mpai.Paf.Pfi.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\EBD\Mpai.Paf.Ebd.csproj" />
+    <ProjectReference Include="..\PAF\V1.6\PBI\Mpai.Paf.Pbi.csproj" />
   </ItemGroup>
 
 </Project>

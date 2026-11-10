@@ -14,7 +14,7 @@ using Mpai.Core;
 using Mpai.Osd.Bas;         // BasAimProcessor
 using Mpai.Osd.Bvs;         // BvsAimProcessor
 using Mpai.Osd.Bls;         // BlsAimProcessor
-using Mpai.Osd.Ava;         // OsdAvaAimProcessor
+using Mpai.Osd.Mal;         // OsdMalAimProcessor
 using Mpai.Cae.Qcv;         // QcvAimProcessor
 using Mpai.Cae.Asi;         // CaeAsiAimProcessor, SoundClassifier
 using Mpai.Cae.Aii;         // CaeAiiAimProcessor
@@ -44,7 +44,7 @@ namespace HciApp;
 // Leaf provider for the CAV-HCI-V2.0 Module (Human-CAV Interaction, full
 // reference). The Controller builds the HCI composite from its L3; this provider
 // supplies ONLY the 18 leaf AIMs the topology names, across three groups:
-//   scene front-end : BAS, BVS, BLS, AVA, QCV, ASI, VSI, AII, VII
+//   scene front-end : BAS, BVS, BLS, MAL, QCV, ASI, VSI, AII, VII
 //   recognisers     : FIR, SIR, IDR  (against the shared enrolment gallery)
 //   dialogue/render : ASR, NLU, SPE, FPE, PMX, EDP, PSD, TTS, GFD, GBD, PMX
 // Heavy engines are built once and shared: SCRFD (FIR + VSI), ArcFace, ECAPA,
@@ -71,11 +71,11 @@ internal sealed class HciProvider : IAimProvider, IDisposable
     {
         _store = store;
 
-        // Enrolment gallery in governed Shared Storage (scope MMC-MAC-V2.5, the
+        // Enrolment gallery in governed Shared Storage (scope OSD-MAC-V1.5, the
         // same gallery ACR enrols and MAC reads); one-time import of a legacy
         // gallery.json if the store is empty. FIR and SIR share this instance.
         var shared = new AIF.SharedStorage.FileSharedStorage(
-            Mpai.Core.MpaiPaths.SharedStorage, "MMC-MAC-V2.5", "local");
+            Mpai.Core.MpaiPaths.SharedStorage, "OSD-MAC-V1.5", "local");
         if (shared.MPAI_AIFM_SharedStorage_List(SubjectGallery.SubjectKeyPrefix).Count == 0 &&
             !string.IsNullOrWhiteSpace(galleryJsonPath) && File.Exists(galleryJsonPath))
         {
@@ -91,7 +91,7 @@ internal sealed class HciProvider : IAimProvider, IDisposable
             "OSD-BAS-V1.5" => new BasAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "OSD-BVS-V1.5" => new BvsAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "OSD-BLS-V1.5" => new BlsAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
-            "OSD-AVA-V1.5" => new OsdAvaAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
+            "OSD-MAL-V1.5" => new OsdMalAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "CAE-QCV-V1.0" => new QcvAimProcessor(aimName, AimPortReader.Load(_store, aimName)),
             "CAE-ASI-V2.5" => new CaeAsiAimProcessor(aimName, SoundAsi(settings), AimPortReader.Load(_store, aimName)),
             "CAE-AII-V2.5" => new CaeAiiAimProcessor(aimName, SoundAii(settings), AimPortReader.Load(_store, aimName)),
