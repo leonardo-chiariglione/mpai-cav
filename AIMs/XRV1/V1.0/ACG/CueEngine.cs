@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
@@ -16,7 +16,7 @@ public sealed record EngineEvent(EventKind Kind, string Id);
 // Conditions are all met (every Status target of the group is met by the latest Status of its kind) has its Actions executed - the RE and the VE Action IDs come out, in order - and the
 // show goes to the NextCue of the group, or, if it names none, to the next Cue of the Cue List; after the last Cue the show has ended. A new Cue forgets the Statuses held.
 //
-// THE SHOW IS in one of four states: not started, running, held, ended. A Status of the operator may carry a ShowControl: Go starts the show (at the first Cue) or resumes a held one;
+// THE SHOW IS in one of four states: not started, running, held, ended. A Status of the operator may carry a ShowControl: Go starts the show (at the first Cue), resumes a held one, or, in a running show, fires the current Cue (the operator moves on);
 // Hold holds it (no Cue Point ID and no Action until Go); Skip leaves the current Cue for the next one of the Cue List; Back returns to the Cue before the current one. A show whose
 // Script lists no operator console starts by itself and runs from the first to the last Cue. A Hold of the show is not a Pause of the Module: Statuses go on being received.
 public sealed class CueEngine
@@ -77,6 +77,10 @@ public sealed class CueEngine
                     State = ShowState.Running;
                     if (current is not null && !cueSent) { events.Add(new(EventKind.CuePoint, current.Id)); cueSent = true; }
                 }
+                // THE OPERATOR MOVES ON (the author, 2026-11-10): Go in a running show fires the current Cue as if its Conditions were met - its Actions are executed and the show goes to its
+                // next Cue. The group fired is the first one met, or else the first group of the Cue. A show with no operator has no one to move on: there Go changes nothing.
+                else if (State == ShowState.Running && script.HasOperator && current is not null && (current.Groups.FirstOrDefault(Met) ?? current.Groups.FirstOrDefault()) is { } forced)
+                    Fire(forced, events);
                 break;
             case "Hold":
                 if (State == ShowState.Running) State = ShowState.Held;
@@ -131,13 +135,20 @@ public sealed class CueEngine
         {
             var group = current.Groups.FirstOrDefault(Met);
             if (group is null) return;
-            foreach (var id in group.REActions) Action(EventKind.REAction, id, events);
-            foreach (var id in group.VEActions) Action(EventKind.VEAction, id, events);
-            var next = group.NextCue is { } named ? script.Find(named) : NextInList(current);
-            if (group.NextCue is not null && next is null) report($"the NextCue '{group.NextCue}' of Cue '{current.Id}' is not a Cue of the Script: the show ends");
-            history.Push(current);
-            if (next is null) End(); else MoveTo(next, events);
+            Fire(group, events);
         }
+    }
+
+    // A group of the current Cue fires: its RE Actions, then its VE Actions, then the show goes to its NextCue or to the next Cue of the list.
+    private void Fire(CueGroup group, List<EngineEvent> events)
+    {
+        if (current is null) return;
+        foreach (var id in group.REActions) Action(EventKind.REAction, id, events);
+        foreach (var id in group.VEActions) Action(EventKind.VEAction, id, events);
+        var next = group.NextCue is { } named ? script.Find(named) : NextInList(current);
+        if (group.NextCue is not null && next is null) report($"the NextCue '{group.NextCue}' of Cue '{current.Id}' is not a Cue of the Script: the show ends");
+        history.Push(current);
+        if (next is null) End(); else MoveTo(next, events);
     }
 
     // An Action ID identifies an Action of the Action Table; one it does not have is not executed. (A Mixed ID names the same entry as a plain one.)

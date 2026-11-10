@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIF.Controller;
@@ -158,13 +158,24 @@ public class XrvCueEngineTests
         Assert.Equal(ShowState.Running, engine.State);
     }
 
+    // THE OPERATOR MOVES ON (the author, 2026-11-10): Go in a running show fires the waiting Cue - its Actions, then the next Cue.
+    [Fact]
+    public void GoInARunningShowFiresTheWaitingCue()
+    {
+        var engine = Engine(WithOperator(""));
+        engine.Start(); engine.Control("Go");
+        Assert.Empty(Feed(engine, SBob));                                                       // C1 waits for Anna: Bob does not meet it
+        Assert.Equal(new[] { "re:RE-LIGHTS-UP", "cue:C2" }, Shown(engine.Control("Go")));       // the operator moves on: C1's Actions, then C2
+        Assert.Equal("C2", engine.CurrentCue);
+        Assert.Equal(ShowState.Running, engine.State);
+    }
+
     [Fact]
     public void ACueWhoseConditionsAreNeverMetWaitsForAGoOrASkip()
     {
         var engine = Engine(WithOperator(""));
         engine.Start(); engine.Control("Go");
         Assert.Empty(Feed(engine, SBob));
-        Assert.Empty(engine.Control("Go"));                                                     // a Go of a running show changes nothing
         Assert.Equal("C1", engine.CurrentCue);
         Assert.Equal(new[] { "cue:C2" }, Shown(engine.Control("Skip")));                        // Skip leaves the Cue: no Action of it
         Assert.Equal(new[] { "cue:C3" }, Shown(engine.Control("Skip")));
