@@ -1,13 +1,13 @@
 {
   "Identifier": {
     "ImplementerID": "1",
-    "ImplementationID": "PGM-MOG-V1.0-I01",
-    "AIMName": "1PGM-MOG-V1.0-I01"
+    "ImplementationID": "PGM-AOG-V1.0-I01",
+    "AIMName": "1PGM-AOG-V1.0-I01"
   },
-  "Header": "PGM-MOG-V1.0",
+  "Header": "PGM-AOG-V1.0",
   "APIProfile": "Basic",
   "OnDegraded": "Continue",
-  "Description": "The Motion Object Generation (PGM-MOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It receives the Final Response, which holds all the outputs of Basic Knowledge, and divides its Process Actions. A Process Action that concerns the A-User as an entity, that is, whose subject is the Persona of the A-User (its position, its movement, its gestures), is split into Face Motion Objects and Body Motion Objects, which it gives to Entity Face Description and Entity Body Description. A Process Action whose subject is another Item or Process is passed unchanged to A-User Control. It also derives Motion Objects from the Action Objects of the Final Response. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
+  "Description": "The Animation Object Generation (PGM-AOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It receives the Final Response, which holds all the outputs of Basic Knowledge, and divides its Process Actions. A Process Action that concerns the A-User as an entity, that is, whose subject is the Persona of the A-User (its position, its movement, its gestures), is split into Face Motion Objects and Body Motion Objects, which it gives to Entity Face Description and Entity Body Description. A Process Action whose subject is another Item or Process is passed unchanged to A-User Control. It also derives Motion Objects from the Action Objects of the Final Response. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
   "InternalTypes": [],
   "ExternalPorts": [
     {
@@ -27,17 +27,19 @@
       "IsRemote": false
     },
     {
-      "Name": "FaceMotionObject",
+      "Name": "FaceAnimationObject",
       "Direction": "Output",
-      "DataType": "PAF-FMO-V1.6",
+      "DataType": "PAF-AMO-V1.6",
+      "PortNumber": 1,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
     },
     {
-      "Name": "BodyMotionObject",
+      "Name": "BodyAnimationObject",
       "Direction": "Output",
-      "DataType": "PAF-BMO-V1.6",
+      "DataType": "PAF-AMO-V1.6",
+      "PortNumber": 2,
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -71,9 +73,9 @@
   "Topology": [],
   "Implementations": [
     {
-      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-MOG-V1.0-I01.json",
+      "ImplementationURI": "https://github.com/leonardo-chiariglione/mpai-cav/blob/main/AIMs/AMDs/1PGM-AOG-V1.0-I01.json",
       "MASPort": 443,
-      "BinaryName": "Mpai.Pgm.Mog",
+      "BinaryName": "Mpai.Pgm.Aog",
       "Architecture": "x86-64",
       "OperatingSystem": "Windows",
       "Version": "1.0",

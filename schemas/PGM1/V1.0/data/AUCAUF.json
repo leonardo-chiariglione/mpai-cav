@@ -1,7 +1,7 @@
 { "$schema":                     "https://json-schema.org/draft/2020-12/schema",
   "$id":                         "https://schemas.mpai.community/PGM1/V1.0/data/AUCAUF.json",
   "title":                       "AUC-AUF V1.0",
-  "description":                 "The Data Type exchanged between A-User Control (AUC) and A-User Formation (AUF). It has two modes, told apart by Mode: Request (RQ), sent by AUC to AUF, and Response (RS), sent by AUF to AUC. A-User Formation receives the Final Response of Basic Knowledge, which holds all the outputs of Basic Knowledge. A Sub-AIM of A-User Formation divides the Process Actions into those that concern the A-User as an entity (their subject is the Persona of the A-User), from which it generates Motion Objects for the rendering of the Portable Avatar, and those whose subject is another Item or Process, which A-User Formation passes to AUC. A-User Formation also forms the Portable Avatar and gives it to AUC. The Request controls the formation and each motion; the Response reports the outcome of each step, how the Process Actions have been divided and the progress of the motions. A-User Formation sends nothing to the M-Instance and the Portable Avatar leaves the A-User only if AUC authorises it. Every Request is answered by a Response.",
+  "description":                 "The Data Type exchanged between A-User Control (AUC) and A-User Formation (AUF). It has two modes, told apart by Mode: Request (RQ), sent by AUC to AUF, and Response (RS), sent by AUF to AUC. A-User Formation receives the Final Response of Basic Knowledge, which holds all the outputs of Basic Knowledge. A Sub-AIM of A-User Formation divides the Process Actions into those that concern the A-User as an entity (their subject is the Persona of the A-User), from which it generates Animation Objects for the rendering of the Portable Avatar, and those whose subject is another Item or Process, which A-User Formation passes to AUC. A-User Formation also forms the Portable Avatar and gives it to AUC. The Request controls the formation and each motion; the Response reports the outcome of each step, how the Process Actions have been divided and the progress of the motions. A-User Formation sends nothing to the M-Instance and the Portable Avatar leaves the A-User only if AUC authorises it. Every Request is answered by a Response.",
   "type":                        "object",
   "additionalProperties":        false,
   "required":                    [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "AUCAUFID", "AUCAUFTime" ],
@@ -31,7 +31,7 @@
       "ExpressiveDelivery":      { "type": "string", "enum": [ "enabled", "disabled" ] },
       "SpatialOutput":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json" } } },
 
-    "ProcessActionControl":      { "type": "array", "description": "Request only. For a Process Action that A-User Formation is turning into Motion Objects: proceed with the motion or stop it.", "items": { "type": "object", "additionalProperties": false, "required": [ "ProcessActionID", "Control" ], "properties": {
+    "ProcessActionControl":      { "type": "array", "description": "Request only. For a Process Action that A-User Formation is turning into Animation Objects: proceed with the motion or stop it.", "items": { "type": "object", "additionalProperties": false, "required": [ "ProcessActionID", "Control" ], "properties": {
       "ProcessActionID":         { "type": "string" },
       "Control":                 { "type": "string", "enum": [ "proceed", "stop" ] } } } },
 
@@ -75,12 +75,12 @@
 
     "Separation":                { "type": "object", "additionalProperties": false, "description": "Response only. How A-User Formation has divided the Process Actions of the Final Response. A Process Action is in exactly one of the two lists.", "properties": {
       "MotionProcessActions":    { "type": "array", "items": { "type": "string" },
-                                   "description": "Identifiers of the Process Actions whose subject is the Persona of the A-User (its avatar: position, movement, gestures), turned into Motion Objects." },
+                                   "description": "Identifiers of the Process Actions whose subject is the Persona of the A-User (its avatar: position, movement, gestures), turned into Animation Objects." },
 
       "ReturnedProcessActions":  { "type": "array", "items": { "type": "string" },
                                    "description": "Identifiers of the Process Actions whose subject is another Item or Process, passed to A-User Control unchanged." } } },
 
-    "ProcessActionStatus":       { "type": "array", "description": "Response only. Progress, with the PA Status, of the Process Actions turned into Motion Objects.", "items": { "type": "object", "additionalProperties": false, "required": [ "ProcessActionID", "PAStatus" ], "properties": {
+    "ProcessActionStatus":       { "type": "array", "description": "Response only. Progress, with the PA Status, of the Process Actions turned into Animation Objects.", "items": { "type": "object", "additionalProperties": false, "required": [ "ProcessActionID", "PAStatus" ], "properties": {
       "ProcessActionID":         { "type": "string" },
       "PAStatus":                { "type": "string" } } } },
 

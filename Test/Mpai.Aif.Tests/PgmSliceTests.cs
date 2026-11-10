@@ -17,7 +17,7 @@ public class PgmSliceTests
     private static readonly string[] All =
     [
         "1PGM-AUC-V1.0-I01", "1PGM-CXT-V1.0-I01", "1PGM-PRC-V1.0-I01", "1PGM-BKN-V1.0-I01", "1PGM-DAC-V1.0-I01", "1PGM-USR-V1.0-I01", "1PGM-PAL-V1.0-I01", "1PGM-AUF-V1.0-I01",
-        "1PGM-PSD-V1.0-I01", "1PGM-MOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"
+        "1PGM-PSD-V1.0-I01", "1PGM-AOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"
     ];
 
     public static IEnumerable<object[]> AimNames => All.Select(a => new object[] { a });
@@ -138,11 +138,11 @@ public class PgmSliceTests
         Assert.Empty(rig.At("OSD-BSO-V1.5"));
     }
 
-    // Motion Object Generation: the Persona's own Process Action becomes a Motion Object; the other goes on unchanged.
+    // Animation Object Generation: the Persona's own Process Action becomes an Animation Object; the other goes on unchanged.
     [Fact]
-    public async Task MotionObjectGenerationDividesTheProcessActions()
+    public async Task AnimationObjectGenerationDividesTheProcessActions()
     {
-        var mog = (MogAim)Make("1PGM-MOG-V1.0-I01");
+        var aog = (AogAim)Make("1PGM-AOG-V1.0-I01");
         var final = new JsonObject
         {
             ["Header"] = "PGM-FRS-V1.0", ["MInstance"] = "m", ["UEnvironment"] = "u", ["SessionID"] = "s", ["FinalResponseID"] = "f", ["FinalResponseTime"] = PgmAim.Time(),
@@ -164,11 +164,11 @@ public class PgmSliceTests
                 }
             }
         };
-        var result = await mog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [mog.InputKey("PGM-FRS-V1.0")] = final.ToJsonString() } });
-        var returned = JsonNode.Parse(result.Ports[mog.OutputKey("MMM-PAT-V2.2")])!;
+        var result = await aog.ProcessAsync(new Message { Ports = new Dictionary<string, string> { [aog.InputKey("PGM-FRS-V1.0")] = final.ToJsonString() } });
+        var returned = JsonNode.Parse(result.Ports[aog.OutputKey("MMM-PAT-V2.2")])!;
         Assert.Equal(["MU-Actuate"], returned["ProcessActions"]!.AsObject().Select(kv => kv.Key).ToArray());
-        Assert.True(result.Ports.ContainsKey(mog.OutputKey("PAF-BMO-V1.6")));
-        Assert.False(result.Ports.ContainsKey(mog.OutputKey("PAF-FMO-V1.6")));
+        Assert.True(result.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 2)));
+        Assert.False(result.Ports.ContainsKey(aog.OutputKey("PAF-AMO-V1.6", 1)));
         foreach (var (key, json) in result.Ports) Assert.Equal("valid", PgmRig.Check(JsonNode.Parse(json)!));
     }
 

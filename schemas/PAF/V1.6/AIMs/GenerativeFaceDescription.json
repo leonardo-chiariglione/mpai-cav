@@ -8,7 +8,7 @@
   "Description":          "Generative Face Description: produces the Machine Face Descriptors from the Text and the Machine Speech, and optionally a Face Personal Status for expression; when the Face Personal Status is absent the face carries visemes with a neutral expression.",
   "InternalTypes":        [],
   "ExternalPorts":        [{"Name": "FacePersonalStatus", "Direction": "Input", "DataType": "MMC-FPS-V2.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
-                          {"Name": "FaceMotionObject", "Direction": "Input", "DataType": "PAF-FMO-V1.6", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                          {"Name": "FaceAnimationObject", "Direction": "Input", "DataType": "PAF-AMO-V1.6", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "TextObject", "Direction": "Input", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "MachineSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                           {"Name": "MachineFaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "", "Protocol": "", "IsRemote": ""}],

@@ -36,12 +36,12 @@ public sealed class PsdAim : PgmAim
     }
 }
 
-// PGM-MOG-V1.0 - Motion Object Generation. Divides the Process Actions of the Final Response: a Process Action whose subject is the Persona of the A-User (its position, movement,
-// gestures) becomes a Face or a Body Motion Object; any other Process Action goes to A-User Control, unchanged (it leaves AUF as Process Actions).
+// PGM-AOG-V1.0 - Animation Object Generation. Divides the Process Actions of the Final Response: a Process Action whose subject is the Persona of the A-User (its position, movement,
+// gestures) becomes a Face or a Body Animation Object (PAF-AMO, Port 1 and Port 2); any other Process Action goes to A-User Control, unchanged (it leaves AUF as Process Actions).
 //
 // A Process Action is about the Persona when it moves or animates (MM-Move, MM-Animate, MU-Move, MU-Animate) the item that is the Persona: its RQ1.ItemID. Which of the Face and the
 // Body a gesture belongs to is the implementer's list in this slice (FaceGestures): the Specification has no motion vocabulary yet (decision of the author, 2026/11/03).
-public sealed class MogAim : PgmAim
+public sealed class AogAim : PgmAim
 {
     public static readonly string[] PersonaKinds = ["MM-Move", "MM-Animate", "MU-Move", "MU-Animate"];
     public static readonly string[] FaceGestures = ["smile", "frown", "blink", "wink", "nod", "shake", "raise-eyebrows"];
@@ -49,12 +49,21 @@ public sealed class MogAim : PgmAim
     private readonly string _request, _final, _face, _body, _actions, _response, _text;
     private readonly string _persona;
 
-    public MogAim(string instanceId, AimPortReader ports, string persona = "a-user-persona") : base(instanceId, ports)
+    public AogAim(string instanceId, AimPortReader ports, string persona = "a-user-persona") : base(instanceId, ports)
     {
         _persona = persona;
         _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0");
-        _face = Out("PAF-FMO-V1.6"); _body = Out("PAF-BMO-V1.6"); _actions = Out("MMM-PAT-V2.2"); _response = Out(Auc.Auf); _text = Out("OSD-BTO-V1.5");
+        _face = Out("PAF-AMO-V1.6", 1); _body = Out("PAF-AMO-V1.6", 2); _actions = Out("MMM-PAT-V2.2"); _response = Out(Auc.Auf); _text = Out("OSD-BTO-V1.5");
     }
+
+    // The gesture as an Animation Object (PAF-AMO): its Animation Qualifier names the content format. A STUB of this slice: the gesture is given by its name, a symbolic pose (PoseToken);
+    // the frames of the face (FACS) or of the body (BAP, BVH) are for Entity Face Description and Entity Body Description to make.
+    private JsonObject Animation(string idPrefix, string gesture) => new()
+    {
+        ["Header"] = "PAF-AMO-V1.6", ["AnimationObjectID"] = NewId(idPrefix),
+        ["AnimationObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }),
+        ["AnimationQualifier"] = new JsonObject { ["Header"] = "TFA-AMQ-V1.5", ["AnimationQualifierID"] = NewId("amq"), ["SubTypes"] = "Animation", ["Formats"] = new JsonObject { ["ContentFormat"] = "PoseToken" } }
+    };
 
     public override Task<Message> ProcessAsync(Message message)
     {
@@ -75,9 +84,9 @@ public sealed class MogAim : PgmAim
                         var gesture = (string?)action[kind.Replace("-", "") + "PARQ"]?["RQ4"]?["Stream"] ?? kind;
                         motionKinds.Add(kind);
                         if (FaceGestures.Contains(gesture))
-                            outputs.Add((_face, new JsonObject { ["Header"] = "PAF-FMO-V1.6", ["FaceMotionObjectID"] = NewId("fmo"), ["FaceMotionObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }) }));
+                            outputs.Add((_face, Animation("fan", gesture)));
                         else
-                            outputs.Add((_body, new JsonObject { ["Header"] = "PAF-BMO-V1.6", ["BodyMotionObjectID"] = NewId("bmo"), ["BodyMotionObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }) }));
+                            outputs.Add((_body, Animation("ban", gesture)));
                     }
                     else returned[kind] = action.DeepClone();
                 }
@@ -98,7 +107,7 @@ public sealed class MogAim : PgmAim
     }
 }
 
-// PGM-EFD-V1.0 - Entity Face Description. The Face Descriptors of the A-User: mostly from its speech, with the Face Motion Object and the Face Personal Status when there are.
+// PGM-EFD-V1.0 - Entity Face Description. The Face Descriptors of the A-User: mostly from its speech, with the Face Animation Object and the Face Personal Status when there are.
 // The descriptors are a STUB: a note of what the face is to do, in the Data property of the Face Descriptors Object.
 public sealed class EfdAim : PgmAim
 {
@@ -106,7 +115,7 @@ public sealed class EfdAim : PgmAim
 
     public EfdAim(string instanceId, AimPortReader ports) : base(instanceId, ports)
     {
-        _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0"); _speech = In("OSD-BSO-V1.5"); _motion = In("PAF-FMO-V1.6"); _status = In("MMC-FPS-V2.5");
+        _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0"); _speech = In("OSD-BSO-V1.5"); _motion = In("PAF-AMO-V1.6"); _status = In("MMC-FPS-V2.5");
         _face = Out("PAF-FDO-V1.6"); _response = Out(Auc.Auf);
     }
 
@@ -115,7 +124,7 @@ public sealed class EfdAim : PgmAim
         var outputs = new List<(string, JsonNode?)>();
         if (Read(message, _speech) is not null)
         {
-            var note = Read(message, _motion)?["FaceMotionObjectData"]?[0]?["Data"] is JsonValue g ? $"speaking; gesture {(string?)g}" : "speaking";
+            var note = Read(message, _motion)?["AnimationObjectData"]?[0]?["Data"] is JsonValue g ? $"speaking; gesture {(string?)g}" : "speaking";
             outputs.Add((_face, new JsonObject
             {
                 ["Header"] = "PAF-FDO-V1.6", ["FaceDescriptorsObjectID"] = NewId("fdo"),
@@ -127,14 +136,14 @@ public sealed class EfdAim : PgmAim
     }
 }
 
-// PGM-EBD-V1.0 - Entity Body Description. The Body Descriptors of the A-User: from the Body Motion Object and the Body Personal Status. A STUB: a note of what the body is to do.
+// PGM-EBD-V1.0 - Entity Body Description. The Body Descriptors of the A-User: from the Body Animation Object and the Body Personal Status. A STUB: a note of what the body is to do.
 public sealed class EbdAim : PgmAim
 {
     private readonly string _request, _final, _status, _motion, _body, _response;
 
     public EbdAim(string instanceId, AimPortReader ports) : base(instanceId, ports)
     {
-        _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0"); _status = In("MMC-BPS-V2.5"); _motion = In("PAF-BMO-V1.6");
+        _request = In(Auc.Auf); _final = In("PGM-FRS-V1.0"); _status = In("MMC-BPS-V2.5"); _motion = In("PAF-AMO-V1.6");
         _body = Out("PAF-BDO-V1.6"); _response = Out(Auc.Auf);
     }
 
@@ -143,7 +152,7 @@ public sealed class EbdAim : PgmAim
         var outputs = new List<(string, JsonNode?)>();
         if (Read(message, _final) is not null)
         {
-            var note = Read(message, _motion)?["BodyMotionObjectData"]?[0]?["Data"] is JsonValue g ? $"gesture {(string?)g}" : "at rest";
+            var note = Read(message, _motion)?["AnimationObjectData"]?[0]?["Data"] is JsonValue g ? $"gesture {(string?)g}" : "at rest";
             outputs.Add((_body, new JsonObject
             {
                 ["Header"] = "PAF-BDO-V1.6", ["BodyDescriptorsObjectID"] = NewId("bdo"),
@@ -168,18 +177,18 @@ public static class AufResponse
 
 // PGM-AUF-V1.0 - A-User Formation. The composite AIM: from the Final Response of Basic Knowledge and the A-User State it forms the Portable Avatar - the speech, the face and the body of
 // the A-User - and the Process Actions that are not the Persona's own. It gives them to A-User Control and to nothing else. Inside, in this order: Personal Status Demultiplexing,
-// Motion Object Generation, Text-To-Speech (the synthesiser given), Entity Face Description, Entity Body Description, and the multiplexing of the Portable Avatar.
+// Animation Object Generation, Text-To-Speech (the synthesiser given), Entity Face Description, Entity Body Description, and the multiplexing of the Portable Avatar.
 public sealed class AufAim : PgmAim
 {
     private readonly string _request, _model, _speechModel, _final, _state, _avatar, _response, _actions, _avatarIdPort;
-    private readonly PsdAim _psd; private readonly MogAim _mog; private readonly EfdAim _efd; private readonly EbdAim _ebd;
+    private readonly PsdAim _psd; private readonly AogAim _aog; private readonly EfdAim _efd; private readonly EbdAim _ebd;
     private readonly ISpeechSynthesiser _voice;
     private readonly string _avatarId;
     private JsonObject? _pendingRequest, _pendingFinal, _avatarModel, _aUserState, _speechModelObject;
 
-    public AufAim(string instanceId, AimPortReader ports, PsdAim psd, MogAim mog, EfdAim efd, EbdAim ebd, ISpeechSynthesiser voice, string avatarId = "a-user-avatar") : base(instanceId, ports)
+    public AufAim(string instanceId, AimPortReader ports, PsdAim psd, AogAim aog, EfdAim efd, EbdAim ebd, ISpeechSynthesiser voice, string avatarId = "a-user-avatar") : base(instanceId, ports)
     {
-        (_psd, _mog, _efd, _ebd, _voice, _avatarId) = (psd, mog, efd, ebd, voice, avatarId);
+        (_psd, _aog, _efd, _ebd, _voice, _avatarId) = (psd, aog, efd, ebd, voice, avatarId);
         _request = In(Auc.Auf); _model = In("OSD-B3O-V1.5"); _speechModel = In("AIP-MLO-V1.0"); _final = In("PGM-FRS-V1.0"); _state = In("MMC-EST-V2.5"); _avatarIdPort = In("OSD-IID-V1.5");
         _avatar = Out("PAF-PAV-V1.6"); _response = Out(Auc.Auf); _actions = Out("MMM-PAT-V2.2");
     }
@@ -204,22 +213,22 @@ public sealed class AufAim : PgmAim
         {
             Ports = With(_psd, (_psd.InputKey("MMC-EST-V2.5"), _aUserState), (_psd.InputKey(Auc.Auf), request))
         });
-        // 2. Motion Object Generation
-        var mog = await _mog.ProcessAsync(new Message { Ports = With(_mog, (_mog.InputKey(Auc.Auf), request), (_mog.InputKey("PGM-FRS-V1.0"), final)) });
-        var faceMotion = Take(mog, _mog, "PAF-FMO-V1.6"); var bodyMotion = Take(mog, _mog, "PAF-BMO-V1.6"); var others = Take(mog, _mog, "MMM-PAT-V2.2");
+        // 2. Animation Object Generation
+        var aog = await _aog.ProcessAsync(new Message { Ports = With(_aog, (_aog.InputKey(Auc.Auf), request), (_aog.InputKey("PGM-FRS-V1.0"), final)) });
+        var faceMotion = Take(aog, _aog, "PAF-AMO-V1.6", 1); var bodyMotion = Take(aog, _aog, "PAF-AMO-V1.6", 2); var others = Take(aog, _aog, "MMM-PAT-V2.2");
         // 3. Text-To-Speech
-        var words = TextOf(Take(mog, _mog, "OSD-BTO-V1.5") ?? final["Text"] as JsonObject) ?? "";
+        var words = TextOf(Take(aog, _aog, "OSD-BTO-V1.5") ?? final["Text"] as JsonObject) ?? "";
         var speech = words.Length > 0 ? await _voice.SynthesiseAsync(words) : null;
         // 4. Entity Face Description, 5. Entity Body Description
         var efd = await _efd.ProcessAsync(new Message
         {
             Ports = With(_efd, (_efd.InputKey(Auc.Auf), request), (_efd.InputKey("PGM-FRS-V1.0"), final), (_efd.InputKey("OSD-BSO-V1.5"), speech),
-                (_efd.InputKey("PAF-FMO-V1.6"), faceMotion), (_efd.InputKey("MMC-FPS-V2.5"), Take(psd, _psd, "MMC-FPS-V2.5")))
+                (_efd.InputKey("PAF-AMO-V1.6"), faceMotion), (_efd.InputKey("MMC-FPS-V2.5"), Take(psd, _psd, "MMC-FPS-V2.5")))
         });
         var ebd = await _ebd.ProcessAsync(new Message
         {
             Ports = With(_ebd, (_ebd.InputKey(Auc.Auf), request), (_ebd.InputKey("PGM-FRS-V1.0"), final), (_ebd.InputKey("MMC-BPS-V2.5"), Take(psd, _psd, "MMC-BPS-V2.5")),
-                (_ebd.InputKey("PAF-BMO-V1.6"), bodyMotion))
+                (_ebd.InputKey("PAF-AMO-V1.6"), bodyMotion))
         });
 
         // 6. Portable Avatar Multiplexing
@@ -244,7 +253,7 @@ public sealed class AufAim : PgmAim
             ["BodyDescription"] = new JsonObject { ["Outcome"] = pav.ContainsKey("BodyDescriptorsObject") ? "success" : "not_requested" },
             ["AvatarSynthesis"] = new JsonObject { ["Outcome"] = "success" }
         };
-        if (Read(mog, _mog.OutputKey(Auc.Auf)) is { } sep && sep["Separation"] is JsonNode s) response["Separation"] = s.DeepClone();
+        if (Read(aog, _aog.OutputKey(Auc.Auf)) is { } sep && sep["Separation"] is JsonNode s) response["Separation"] = s.DeepClone();
 
         return Give(message, [(_avatar, pav), (_response, response), (_actions, others)]);
     }

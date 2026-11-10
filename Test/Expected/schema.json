@@ -257,7 +257,7 @@
   "PGM1/V1.0/AIMs/InputPromptDemultiplexing.json": "valid",
   "PGM1/V1.0/AIMs/IntentandReferentAnalysis.json": "valid",
   "PGM1/V1.0/AIMs/LinguisticParalinguisticAnalysis.json": "valid",
-  "PGM1/V1.0/AIMs/MotionObjectGeneration.json": "valid",
+  "PGM1/V1.0/AIMs/AnimationObjectGeneration.json": "valid",
   "PGM1/V1.0/AIMs/MultimodalInputHarmonisation.json": "valid",
   "PGM1/V1.0/AIMs/PerceptualDomainAccess.json": "valid",
   "PGM1/V1.0/AIMs/PersonalStatusDemultiplexing.json": "valid",

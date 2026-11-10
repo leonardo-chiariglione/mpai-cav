@@ -35,9 +35,9 @@
       "IsRemote": false
     },
     {
-      "Name": "FaceMotionObject",
+      "Name": "FaceAnimationObject",
       "Direction": "Input",
-      "DataType": "PAF-FMO-V1.6",
+      "DataType": "PAF-AMO-V1.6",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

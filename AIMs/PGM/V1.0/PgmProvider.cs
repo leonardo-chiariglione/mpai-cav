@@ -13,7 +13,7 @@ public sealed class PgmProvider : IAimProvider
     public static readonly string[] Aims =
     [
         "1PGM-AUC-V1.0-I01", "1PGM-CXT-V1.0-I01", "1PGM-PRC-V1.0-I01", "1PGM-BKN-V1.0-I01", "1PGM-DAC-V1.0-I01", "1PGM-USR-V1.0-I01", "1PGM-PAL-V1.0-I01", "1PGM-AUF-V1.0-I01",
-        "1PGM-PSD-V1.0-I01", "1PGM-MOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"
+        "1PGM-PSD-V1.0-I01", "1PGM-AOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"
     ];
 
     private readonly AmdStore _store;
@@ -44,12 +44,12 @@ public sealed class PgmProvider : IAimProvider
             "1PGM-USR-V1.0-I01" => new UsrAim(aimName, Ports(aimName)),
             "1PGM-PAL-V1.0-I01" => new PalAim(aimName, Ports(aimName)),
             "1PGM-PSD-V1.0-I01" => new PsdAim(aimName, Ports(aimName)),
-            "1PGM-MOG-V1.0-I01" => new MogAim(aimName, Ports(aimName), persona),
+            "1PGM-AOG-V1.0-I01" => new AogAim(aimName, Ports(aimName), persona),
             "1PGM-EFD-V1.0-I01" => new EfdAim(aimName, Ports(aimName)),
             "1PGM-EBD-V1.0-I01" => new EbdAim(aimName, Ports(aimName)),
             // The composite builds its Sub-AIMs from their own Metadata.
             "1PGM-AUF-V1.0-I01" => new AufAim(aimName, Ports(aimName),
-                (PsdAim)Make("1PGM-PSD-V1.0-I01", settings), (MogAim)Make("1PGM-MOG-V1.0-I01", settings), (EfdAim)Make("1PGM-EFD-V1.0-I01", settings),
+                (PsdAim)Make("1PGM-PSD-V1.0-I01", settings), (AogAim)Make("1PGM-AOG-V1.0-I01", settings), (EfdAim)Make("1PGM-EFD-V1.0-I01", settings),
                 (EbdAim)Make("1PGM-EBD-V1.0-I01", settings), _voice, settings.TryGetValue("Avatar.Id", out var a) && a.Length > 0 ? a : "a-user-avatar"),
             _ => throw new NotSupportedException($"PgmProvider does not provide '{aimName}'.")
         };

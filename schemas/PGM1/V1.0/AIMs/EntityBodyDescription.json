@@ -9,7 +9,7 @@
   "ExternalPorts":   [{"Name": "AUCAUFRequest",      "Direction": "Input",  "DataType": "PGM-UCF-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "FinalResponse",      "Direction": "Input",  "DataType": "PGM-FRS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "BodyPersonalStatus", "Direction": "Input",  "DataType": "MMC-BPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                      {"Name": "BodyMotionObject",   "Direction": "Input",  "DataType": "PAF-BMO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BodyAnimationObject", "Direction": "Input",  "DataType": "PAF-AMO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "BodyDescriptors",    "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
                       {"Name": "AUCAUFResponse",     "Direction": "Output", "DataType": "PGM-UCF-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
