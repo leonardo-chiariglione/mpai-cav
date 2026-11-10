@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIF.Controller;
@@ -33,7 +33,7 @@ public class AsmTranslationTests
     }
 
     [SkippableFact]
-    public void ASpeechObjectTranslatedInPlace()
+    public void ASpeechObjectTranslatedUnderANewName()
     {
         var all = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "AIMs", "aim-settings.json")))!.AsObject();
         Skip.IfNot(TestModels.Can("ttt-encoder", "voice-it"), "the translation or the Italian voice model is absent.");
@@ -98,10 +98,13 @@ public class AsmTranslationTests
                 r["the translated speech"] = $"{(translated.Data.Length > 10_000 ? "speech" : "no speech")}, {(valid ? "valid" : "not valid")}, language {language.Split('-')[0]}";
             }
 
-            // The Speech Object kept under the original's identifier is now the translation.
-            var stored = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID);
-            r["the Speech Object under the original's identifier"] = stored is null ? "none"
-                : $"{(stored.Data.SequenceEqual(english.Data) ? "still the original" : "the translation")}, language {(stored.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
+            // The original is not kept; the translation is named as the original with -trans added.
+            var kept = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID);
+            r["the Speech Object under the original's identifier"] = kept is null ? "none"
+                : $"{(kept.Data.SequenceEqual(english.Data) ? "still the original" : "changed")}, language {(kept.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
+            var stored = Stored(api.SharedStorage(Asm), english.BasicSpeechObjectID + "-trans");
+            r["the Speech Object under the identifier with -trans"] = stored is null ? "none"
+                : $"{(stored.Data.SequenceEqual(english.Data) ? "the original" : "the translation")}, language {(stored.SpeechQualifier?.Attributes?.Metadata?.Language?.LanguageCode ?? "none").Split('-')[0]}";
         }
         finally
         {
@@ -111,8 +114,8 @@ public class AsmTranslationTests
         Expected.Match("asm-translation.json", r);
     }
 
-    // THE TRANSLATION REVOKED (the author, 2026/10/11): the User Command that translated is revoked by its ID; Speech Object Editing, which executed it, puts the original back
-    // under its identifier - in every Scene that holds it.
+    // THE TRANSLATION REVOKED (the author, 2026/10/11): the User Command that translated is revoked by its ID; Speech Object Editing, which executed it, puts the original back and deletes
+    // the translation.
     [SkippableFact]
     public void ATranslationIsRevoked()
     {
@@ -154,7 +157,9 @@ public class AsmTranslationTests
 
             var storage = api.SharedStorage(Asm)!;
             BasicSpeechObject? Stored() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID);
-            Assert.False(Stored()!.Data.SequenceEqual(english.Data));                                  // the translation stands under the original's identifier
+            Assert.Null(Stored());                                                                     // the original is not kept
+            BasicSpeechObject? Translation() => AsmTranslationTests.Stored(storage, english.BasicSpeechObjectID + "-trans");
+            Assert.False(Translation()!.Data.SequenceEqual(english.Data));                            // the translation stands under the identifier with -trans
 
             api.InputWrite(Asm, "CAE-UCM-V1.0", 3, MpaiJson.ToJson(new UserCommand
             {
@@ -165,6 +170,7 @@ public class AsmTranslationTests
             Assert.Equal(AifError.OK, report.Error);
             Assert.Equal("Done", MpaiJson.FromJson<UserCommand>(report.Json!).UserCommandRS!.Outcome);
             Assert.True(Stored()!.Data.SequenceEqual(english.Data));                                   // the original is back
+            Assert.Null(Translation());                                                                // the translation is gone
         }
         finally
         {

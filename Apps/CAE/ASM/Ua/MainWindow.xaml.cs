@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -39,7 +39,8 @@ public partial class MainWindow : Window
     private AvatarUaHost? _avatar;
     private SpeechListener? _ears;
     private VoiceDevice? _voiceDevice;
-    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0"), _sceneCommand = new("CAE-UCM-V1.0"), _sceneIn = new("OSD-ASD-V1.5"), _typedIn = new("OSD-BTO-V1.5");
+    private readonly GivingDevice _soundIn = new("CAE-UCM-V1.0"), _sceneCommand = new("CAE-UCM-V1.0"), _speechCommand = new("CAE-UCM-V1.0"), _sceneIn = new("OSD-ASD-V1.5"), _typedIn = new("OSD-BTO-V1.5");
+    private readonly GivingDevice _speechSceneCommand = new("CAE-UCM-V1.0");
     private int _answers;                                // how many answers have been written (a script waits for the next)
     private string _sceneDescription = "no sounds, no room";
     private CancellationTokenSource? _stopping;
@@ -62,7 +63,7 @@ public partial class MainWindow : Window
         PreviewKeyDown += (_, args) => { if (args.Key == Key.Escape) { StopButton_Click(this, new RoutedEventArgs()); args.Handled = true; } };
         StopButton.Background = IdleStop;                              // off (red) until she speaks
         TextModeButton.IsChecked = true; ApplyMode();          // the window starts in Text: the microphone off, and she does not speak
-        Room.ListenerDropped += (x, y, yaw) => Quiet(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"move me to x {x + 0.0:0.0#}, y {y + 0.0:0.0#}, facing {yaw + 0.0:0} degrees"));
+        Room.ListenerDropped += (x, y, yaw) => { _wantedListener = (x + 0.0, y + 0.0, yaw + 0.0); _wantedGiven = false; App.Log($"[window] the listener is put at {x:0.##}, {y:0.##}, facing {yaw:0}: kept until the Module's scene says the same"); Quiet(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"move me to x {x + 0.0:0.0#}, y {y + 0.0:0.0#}, facing {yaw + 0.0:0} degrees")); };
         Room.Dropped += (name, x, y, z) => Quiet(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"move {name} to x {x + 0.0:0.0#}, y {y + 0.0:0.0#}, z {z + 0.0:0.0#}"));
         InputBox.KeyDown += (_, e) => { if (e.Key == Key.Enter) Submit(); };
     }
@@ -97,7 +98,7 @@ public partial class MainWindow : Window
                 throw new InvalidOperationException("The Controller would not start the module. Is the Controller running at " + App.ControllerUrl + "?");
             }
             Dispatcher.Invoke(RestoreKeep);
-            _ready = true; LoadButton.IsEnabled = HearButton.IsEnabled = RoomButton.IsEnabled = true; ApplyMode();
+            _ready = true; LoadButton.IsEnabled = LoadSpeechButton.IsEnabled = HearButton.IsEnabled = RoomButton.IsEnabled = true; ApplyMode();
             SetStatus("Ready.");
             // NOTHING KEEPS FROM ONE SESSION TO THE NEXT UNLESS IT WAS SAVED: what the last session left and the person did not save is deleted, then the scene saved last is opened.
             _purging = true; _ = PurgeAndOpenAsync();
@@ -121,6 +122,8 @@ public partial class MainWindow : Window
         devices.RegisterDevice("SoundIn", _soundIn);
         devices.RegisterDevice("SceneIn", _sceneIn);
         devices.RegisterDevice("SceneCommand", _sceneCommand);
+        devices.RegisterDevice("SpeechCommand", _speechCommand);
+        devices.RegisterDevice("SpeechSceneCommand", _speechSceneCommand);
         devices.RegisterDevice("TypedIn", _typedIn);
 
         // THE WORDS HEARD: shown; the Module is now working out the command, which takes a few seconds.
@@ -185,16 +188,52 @@ public partial class MainWindow : Window
             var sounds = SoundsOf(json); var room = RoomOf(json);
             foreach (var s in sounds) WriteHint(s.Name);
             App.Log($"[window] scene: {sounds.Count} sound(s), room " + (room is null ? "none" : $"{room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m"));
+            _audioSounds = sounds; _lastRoom = room; _lastListener = ListenerOf(json);
+            sounds = [.. sounds, .. _speechSounds.Where(x => sounds.All(y => y.Name != x.Name))];
             _sceneSounds = sounds.Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
             _sceneDescription = (sounds.Count == 0 ? "no sounds" : string.Join("; ", sounds.Select(x => FormattableString.Invariant($"{x.Name} at {x.X:0.##}, {x.Y:0.##}, {x.Z:0.##}, facing {x.Yaw:0.##}")))) + ", "
                                 + (room is null ? "no room" : FormattableString.Invariant($"room {room.Width:0.##} x {room.Depth:0.##} m, ceiling {room.Height:0.##} m")) + (ListenerOf(json) is { } lis && (lis.X != 0 || lis.Y != 0 || lis.Yaw != 0) ? FormattableString.Invariant($", listener at {lis.X:0.##}, {lis.Y:0.##} looking {lis.Yaw:0.##}") : "");
-            Dispatcher.Invoke(() => Room.Show(sounds, room, ListenerOf(json)));
+            Dispatcher.Invoke(() => Room.Show(sounds, room, Wanted(ListenerOf(json))));
+            return Task.CompletedTask;
+        }));
+        // THE SPEECH SCENE: the speech segments with where they are, drawn with the sounds.
+        devices.RegisterDevice("SpeechScene", new ActingDevice("SpeechScene", json =>
+        {
+            var found = SpeechSoundsOf(json);
+            if (found.Select(x => (x.Name, x.X, x.Y, x.Z)).SequenceEqual(_speechSounds.Select(x => (x.Name, x.X, x.Y, x.Z)))) return Task.CompletedTask;
+            _speechSounds = found;
+            App.Log("[window] speech scene: " + found.Count + " speech segment(s): " + string.Join(", ", found.Select(x => x.Name)));
+            var all = _audioSounds.Concat(found.Where(x => _audioSounds.All(y => y.Name != x.Name))).ToList();
+            _sceneSounds = all.Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
+            var listener = ListenerOf(json) ?? _lastListener;          // where the scene that holds the speech says the listener is
+            App.Log("[window] speech scene listener: " + (listener is { } l ? $"{l.X:0.##}, {l.Y:0.##}, facing {l.Yaw:0.##}" : "not stated") + (ListenerOf(json) is null ? " (the speech scene states none; the audio scene's is kept)" : ""));
+            Dispatcher.Invoke(() => Room.Show(all, _lastRoom, Wanted(listener)));
             return Task.CompletedTask;
         }));
         devices.RegisterDevice("Unused", new ActingDevice("Unused", _ => Task.CompletedTask));
+        // THE SPEECH AS THE MODULE NOW HOLDS IT: kept by name, to be heard (a translation replaces the speech under its name; the scene keeps what it had).
+        devices.RegisterDevice("SpeechOut", new ActingDevice("SpeechOut", json =>
+        {
+            try
+            {
+                if (MpaiJson.FromJson<SpeechObject>(json) is { } so)
+                    foreach (var b in so.BasicSpeechObjects ?? [])
+                        if (b.BSObjectIDOrBSObject is { Data: { Length: > 0 } data } basic)
+                        {
+                            _speechHeard[basic.BasicSpeechObjectID] = data;
+                            App.Log($"[window] speech {basic.BasicSpeechObjectID} as the Module holds it: {data.Length} bytes, hash {Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data))[..12]}");
+                        }
+            }
+            catch (Exception e) { App.Record("speech out", e); }
+            return Task.CompletedTask;
+        }));
         // THE REPORTS OF THE OTHER EDITING AIMS (scenes, speech, multimodal): a scene saved or opened, and the lists of what the Module keeps.
         foreach (var reporting in new[] { "SceneReport", "SpeechReport", "SpeechSceneRep", "MultimodalRep" })
-            devices.RegisterDevice(reporting, new ActingDevice(reporting, json => { TakeReport(json); return Task.CompletedTask; }));
+            devices.RegisterDevice(reporting, new ActingDevice(reporting, async json =>
+            {
+                if (TakeReport(json)) return;
+                if (reporting == "SpeechReport") await SpeechLoadedAsync(json);      // the report of Speech Object Editing on a speech segment the person loaded
+            }));
 
         // THE MODULE'S REPORT ON A SOUND THE PERSON LOADED: told at once, written and said the same; then where to put it is asked.
         devices.RegisterDevice("ObjectReport", new ActingDevice("ObjectReport", async json =>
@@ -283,6 +322,59 @@ public partial class MainWindow : Window
             return root!.ToJsonString();
         }
         catch (Exception) { return json; }
+    }
+
+    // WHERE THE PERSON PUT THE LISTENER: kept by the window. A move made when the Module has no scene is not kept by it; the listener stays where the person put it, and the move is given
+    // again when a scene has come (once), so the person need not wait for one to move the listener.
+    private (double X, double Y, double Yaw)? _wantedListener; private bool _wantedGiven;
+    private (double X, double Y, double Yaw)? Wanted((double X, double Y, double Yaw)? stated)
+    {
+        if (_wantedListener is not { } w) return stated;
+        if (stated is { } s && Math.Abs(s.X - w.X) < 0.05 && Math.Abs(s.Y - w.Y) < 0.05 && Math.Abs(s.Yaw - w.Yaw) < 1) { _wantedListener = null; _wantedGiven = false; return stated; }
+        if (!_wantedGiven)
+        {
+            _wantedGiven = true;
+            App.Log($"[window] the scene states the listener at {(stated is { } t ? $"{t.X:0.##}, {t.Y:0.##}" : "nowhere")}; the person put it at {w.X:0.##}, {w.Y:0.##}: the move is given again");
+            Dispatcher.InvokeAsync(() => Quiet(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"move me to x {w.X:0.0#}, y {w.Y:0.0#}, facing {w.Yaw:0} degrees")));
+        }
+        return w;
+    }
+
+    private List<SceneView.Sound> _audioSounds = [], _speechSounds = [];
+    private SceneView.Room? _lastRoom; private (double X, double Y, double Yaw)? _lastListener;
+
+    // The speech segments of the Speech Scene Descriptors, with where they are.
+    internal static List<SceneView.Sound> SpeechSoundsOf(string json)
+    {
+        var found = new List<SceneView.Sound>();
+        void Walk(JsonNode? node)
+        {
+            switch (node)
+            {
+                case JsonObject o:
+                    foreach (var kv in o)
+                        if (kv.Key.EndsWith("SpaceTime", StringComparison.Ordinal) && kv.Value?["SpatialAttitude1"] is JsonObject attitude && attitude["Position"]?["CartPosition"] is JsonArray p && p.Count >= 3
+                            && IdOf(o) is { } name)
+                        {
+                            var yaw = attitude["Orientation"]?["Orientation"] is JsonArray a && a.Count >= 3 ? a[2]!.GetValue<double>() : 180;
+                            found.Add(new SceneView.Sound(name, p[0]!.GetValue<double>(), p[1]!.GetValue<double>(), p[2]!.GetValue<double>(), yaw));
+                        }
+                    foreach (var kv in o) Walk(kv.Value);
+                    break;
+                case JsonArray array:
+                    foreach (var element in array) Walk(element);
+                    break;
+            }
+        }
+        static string? IdOf(JsonObject o)
+        {
+            if (o["ObjectId"] is JsonValue v && v.TryGetValue<string>(out var id) && id.Length > 0) return id;
+            if (o["ObjectIDOrObject"] is JsonArray { Count: > 0 } first)
+                return first[0] is JsonValue fv && fv.TryGetValue<string>(out var s) ? s : (first[0]?["BasicSpeechObjectID"] ?? first[0]?["SpeechObjectID"])?.GetValue<string>();
+            return (o["BasicObject"]?["BasicSpeechObjectID"] ?? o["SpeechObject"]?["SpeechObjectID"])?.GetValue<string>();
+        }
+        try { Walk(JsonNode.Parse(json)); } catch (Exception) { }
+        return found.GroupBy(x => x.Name).Select(g => g.First()).ToList();
     }
 
     // The sounds of the scene, with where they are: read from the Audio Scene Descriptors.
@@ -617,6 +709,18 @@ public partial class MainWindow : Window
                             _saved.Scenes[saved] = _sceneSounds.ToList(); _saved.Last = saved; WriteSaved();
                             App.Log("[window] scene saved: " + saved);
                             break;
+                        // TRANSLATED: the translation (the name with -trans added) takes the place of the original, which is taken out of the scene; it is put at the centre, for the person to drag or place
+                        case "TranslatedObjects" when (string?)a["ResultID"] is { Length: > 0 } made:
+                            App.Log("[window] translated: " + made + " takes the place of " + (string?)a["ObjectID"]);
+                            if ((string?)a["ObjectID"] is { Length: > 0 } original && original != made)          // the original is gone: Speech Scene Editing takes it out of its Scene
+                                foreach (var scenes in new[] { _speechSceneCommand, _sceneCommand })          // out of the Speech Scene and of the Audio Scene that hold it: only the translation is left
+                                    scenes.Give(MpaiJson.ToJson(new UserCommand
+                                    {
+                                        UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+                                        UserCommandRQ = new UserCommandRQ { RemovedObjects = new ObjectPlacements { Objects = [new ObjectPlacement { ObjectID = new ManagedObject { ObjectID = original } }] } }
+                                    }));
+                            PlaceAtTheCentre(made, true);
+                            break;
                         case "ModifiedScene" when _panel is { IsVisible: true }:
                             AskProfile();
                             break;
@@ -646,6 +750,7 @@ public partial class MainWindow : Window
             _listId = Guid.NewGuid().ToString("N")[..8];
             _soundIn.Give(MpaiJson.ToJson(new UserCommand { UserCommandID = _listId, UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } } }));
             _sceneCommand.Give(MpaiJson.ToJson(new UserCommand { UserCommandID = _listId, UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "Audio Scene" } } }));
+            _speechCommand.Give(MpaiJson.ToJson(new UserCommand { UserCommandID = _listId, UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow), UserCommandRQ = new UserCommandRQ { ListedObjects = new ObjectListing { Kind = "All" } } }));          // the speech segments the last session left
             await Task.Delay(1800);
             List<JsonObject> items; lock (_listed) items = [.. _listed];
             var savedScenes = _saved.Scenes.Keys.ToHashSet(StringComparer.Ordinal);
@@ -653,9 +758,11 @@ public partial class MainWindow : Window
             string? Name(JsonObject o) => (string?)o["ObjectID"];
             bool IsScene(JsonObject o) => SceneKinds.Contains((string?)o["Kind"] ?? "");
             var scenes = items.Where(IsScene).Select(Name).OfType<string>().Where(n => !savedScenes.Contains(n)).Distinct().ToList();
-            var sounds = items.Where(o => !IsScene(o)).Select(Name).OfType<string>().Where(n => !savedScenes.Contains(n) && !savedSounds.Contains(n)).Distinct().ToList();
-            App.Log($"[window] the session before left {scenes.Count} scene(s) and {sounds.Count} sound(s) that were not saved: deleted");
-            foreach (var (names, port) in new[] { (scenes, _sceneCommand), (sounds, _soundIn) })
+            bool IsSpeech(JsonObject o) => ((string?)o["Kind"] ?? "").Contains("Speech", StringComparison.Ordinal);
+            var sounds = items.Where(o => !IsScene(o) && !IsSpeech(o)).Select(Name).OfType<string>().Where(n => !savedScenes.Contains(n) && !savedSounds.Contains(n)).Distinct().ToList();
+            var speeches = items.Where(o => !IsScene(o) && IsSpeech(o)).Select(Name).OfType<string>().Where(n => !savedScenes.Contains(n) && !savedSounds.Contains(n)).Distinct().ToList();
+            App.Log($"[window] the session before left {scenes.Count} scene(s), {sounds.Count} sound(s) and {speeches.Count} speech segment(s) that were not saved: deleted");
+            foreach (var (names, port) in new[] { (scenes, _sceneCommand), (sounds, _soundIn), (speeches, _speechCommand) })
             {
                 if (names.Count == 0) continue;
                 port.Give(MpaiJson.ToJson(new UserCommand
@@ -667,10 +774,10 @@ public partial class MainWindow : Window
             }
             // WHAT WAS DELETED IS NO LONGER SHOWN: the window showed the scene the Module held at the start, and the Module has none now - left on the screen, a scene that is not there is one the person
             // goes on working with (and cannot save).
-            if (scenes.Count > 0 || sounds.Count > 0)
+            if (scenes.Count > 0 || sounds.Count > 0 || speeches.Count > 0)
             {
                 _lastScene = null; _sceneSounds = new HashSet<string>(StringComparer.Ordinal); _sceneDescription = "no sounds, no room";
-                Dispatcher.Invoke(() => Room.Show(new List<SceneView.Sound>()));
+                Dispatcher.Invoke(() => Room.Show(new List<SceneView.Sound>(), null, _wantedListener));          // what was deleted is no longer shown; the listener stays where the person put it
             }
             // what was saved is kept, and opened only when the person asks for it
             WriteSaved();                                                     // from now on there is an index: what it names is kept
@@ -812,15 +919,91 @@ public partial class MainWindow : Window
         SetStatus($"The sound {name} is sent.");
     }
 
+    // A SPEECH SEGMENT FROM A FILE: chosen and named by the person like a sound, but brought in as a Basic Speech Object, which Speech Object Editing keeps and translates.
+    private async void LoadSpeechButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new OpenFileDialog { Title = "Choose a speech segment", Filter = "Speech (*.wav)|*.wav" };
+            if (dialog.ShowDialog(this) != true) return;
+            var bytes = await File.ReadAllBytesAsync(dialog.FileName);
+            _naming = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            ApplyMode();
+            InputBox.Text = Path.GetFileNameWithoutExtension(dialog.FileName); InputBox.SelectAll(); InputBox.Focus();
+            _ = TellAsync("What do I call it? Type the name and press Enter.");
+            var name = await _naming.Task;
+            _naming = null;
+            ApplyMode();
+            InputBox.Clear();
+            if (string.IsNullOrWhiteSpace(name)) return;
+            LoadSpeech(name, bytes);
+        }
+        catch (Exception ex) { _naming = null; App.Record("load speech", ex); SetStatus("The speech could not be loaded: " + ex.Message); }
+    }
+
+    // A speech segment with its name, sent to the Module in a User Command that acquires it as a Basic Speech Object (the file format and what the bytes hold are stated).
+    private void LoadSpeech(string name, byte[] bytes)
+    {
+        if (_purging) { lock (_held) _held.Add(() => LoadSpeech(name, bytes)); return; }
+        int rate = bytes.Length > 28 ? BitConverter.ToInt32(bytes, 24) : 22050, bits = bytes.Length > 36 ? BitConverter.ToInt16(bytes, 34) : 16;
+        var qualifier = new SpeechQualifier
+        {
+            SpeechQualifierID = Guid.NewGuid().ToString(),
+            Format = new SpeechFormat
+            {
+                ContentFormats = new SpeechContentFormats { RawData = new Pcm { SamplingFrequency = rate, Precision = bits } },
+                TransportFormats = new SpeechTransportFormats { FileFormat = SpeechFileFormat.Wav }
+            },
+            Attributes = new SpeechAttributes { Source = SpeechSource.Real }
+        };
+        var speech = new BasicSpeechObject
+        {
+            BasicSpeechObjectID = name, BasicSpeechObjectTime = SimpleTime.At(DateTimeOffset.UtcNow), DescrMetadata = name,
+            Data = bytes, SpeechQualifier = qualifier
+        };
+        var command = new UserCommand
+        {
+            UserCommandID = Guid.NewGuid().ToString("N")[..8], UserCommandTime = SimpleTime.At(DateTimeOffset.UtcNow),
+            UserCommandRQ = new UserCommandRQ { AcquiredObject = new ManagedObject { SpeechObject = speech } }
+        };
+        _loadingSpeech = (command.UserCommandID!, name);
+        _speechCommand.Give(MpaiJson.ToJson(command));         // to the Port of Speech Object Editing (CAE-UCM-V1.0:3), not to the one of Audio Object Editing
+        SetStatus($"The speech {name} is sent.");
+    }
+
+    // What is said when Speech Object Editing has answered the command that acquires a speech segment: that it is loaded and how to translate it, or why it is not.
+    private (string Id, string Name)? _loadingSpeech;
+    private async Task SpeechLoadedAsync(string json)
+    {
+        var loading = _loadingSpeech;
+        if (loading is null || LoadSaid(json, loading.Value.Id, loading.Value.Name) is not { } said) return;
+        _loadingSpeech = null;
+        var actual = StoredNameOf(json) ?? loading.Value.Name;
+        App.Log("[window] speech segment " + actual + ": " + said);
+        if (said.StartsWith("Loaded ", StringComparison.Ordinal))
+        {
+            said = $"Loaded the speech {actual}. To translate it, say: translate {actual} into french.";
+            PlaceAtTheCentre(actual, true);          // a speech segment is put in the scene like a sound
+        }
+        await TellAsync(said);
+    }
+
     // THE SCENE ON THE LOUDSPEAKERS: the Audio Scene Descriptors the Module gave, rendered as the listener hears them.
     private async void HearButton_Click(object sender, RoutedEventArgs e) => await HearAsync(null);
 
     // The scene as the listener hears it - or, with a name, the one sound of it that is named, where it is.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> _speechHeard = new(StringComparer.Ordinal);
     private async Task HearAsync(string? only)
     {
+        if (only is not null && _speechHeard.TryGetValue(only, out var spoken)) { await PlayWavAsync(spoken, $"Playing the speech {only}."); return; }
         var scene = _lastScene;
-        if (scene is null) { await TellAsync("There is nothing in the room to hear yet."); return; }
+        // THE SPEECH OF THE SCENE: the Speech Scene's segments, as the Module holds them, are heard after the sounds of the Audio Scene (they are played as they are, not placed in the room)
+        var speeches = only is null ? _speechSounds.Where(x => _speechHeard.ContainsKey(x.Name)).Select(x => x.Name).ToList() : [];
+        if (scene is null && speeches.Count == 0) { await TellAsync("There is nothing in the room to hear yet."); return; }
+        if (scene is not null && only is null && _audioSounds.Count == 0 && speeches.Count > 0) scene = null;          // only speech in the room: nothing of the Audio Scene to render
+        if (scene is null) { foreach (var name in speeches) await PlayWavAsync(_speechHeard[name], $"Playing the speech {name}."); return; }
         if (only is not null) scene = OnlyMember(scene, only);
+        scene = WithSpeechAsHeld(scene);
         try
         {
             SetStatus(only is null ? "Rendering the scene..." : $"Rendering {only}...");
@@ -836,9 +1019,56 @@ public partial class MainWindow : Window
                 output.Init(reader); output.Play();
                 while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing && !heardToken.IsCancellationRequested) Thread.Sleep(100);
             });
+            foreach (var name in speeches) await PlayWavAsync(_speechHeard[name], $"Playing the speech {name}.");
             SetStatus("Ready.");
         }
         catch (Exception ex) { App.Record("hear the scene", ex); SetStatus("The scene could not be heard: " + ex.Message); }
+    }
+
+    // The scene keeps the sound it was given when a member was put in it; a speech segment the Module has since translated is held by Speech Object Editing under its name: the scene is heard with
+    // the speech as the Module now holds it.
+    private string WithSpeechAsHeld(string json)
+    {
+        if (_speechHeard.IsEmpty) return json;
+        try
+        {
+            var root = JsonNode.Parse(json); var replaced = new List<string>();
+            void Walk(JsonNode? node)
+            {
+                switch (node)
+                {
+                    case JsonObject o:
+                        if (o["AObjectIDOrAObject"] is JsonArray { Count: > 0 } held && held[0] is JsonObject basic && basic["BasicAudioObjectID"]?.GetValue<string>() is { } id && basic["Data"] is not null && _speechHeard.TryGetValue(id, out var wav))
+                        { basic["Data"] = JsonValue.Create(Convert.ToBase64String(wav)); replaced.Add(id); }
+                        foreach (var kv in o.ToList()) Walk(kv.Value);
+                        break;
+                    case JsonArray array: foreach (var element in array.ToList()) Walk(element); break;
+                }
+            }
+            Walk(root);
+            App.Log("[window] the scene is heard with the speech as the Module holds it: " + (replaced.Count == 0 ? "no member of the scene is a speech segment" : string.Join(", ", replaced)));
+            return root!.ToJsonString();
+        }
+        catch (Exception) { return json; }
+    }
+
+    private async Task PlayWavAsync(byte[] wav, string status)
+    {
+        try
+        {
+            SetStatus(status);
+            var deviceName = _deviceName;
+            _hearing = new CancellationTokenSource(); var heardToken = _hearing.Token;
+            await Task.Run(() =>
+            {
+                using var reader = new NAudio.Wave.WaveFileReader(new MemoryStream(wav));
+                using var output = new NAudio.Wave.WaveOutEvent { DeviceNumber = Mpai.PhysicalLayer.LoudspeakerUnit.DeviceNumberOf(deviceName) };
+                output.Init(reader); output.Play();
+                while (output.PlaybackState == NAudio.Wave.PlaybackState.Playing && !heardToken.IsCancellationRequested) Thread.Sleep(100);
+            });
+            SetStatus("Ready.");
+        }
+        catch (Exception ex) { App.Record("hear the speech", ex); SetStatus("The speech could not be heard: " + ex.Message); }
     }
 
     // STOP SPEAKING: what she is saying and what is playing is cut off, and nothing else - the Module goes on, and the next request is answered as any other.

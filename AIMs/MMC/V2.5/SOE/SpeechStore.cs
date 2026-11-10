@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,9 +17,8 @@ namespace Mpai.Mmc.Soe;
 // storage key (BSO000001 ...) is private to it; the Module's NameBook is the table between
 // the two (the author, 2026/10/26). A name is unique among the Speech Objects the Module
 // keeps: a second Object given a name that is taken is "hello 2". An Object with no name
-// is not kept. Its translation replaces it under the same name - there is no Object in
-// two versions, nor two Objects at one place - so every Scene holding it then holds the
-// translation, at its place.
+// is not kept. Its translation takes its place, named as the original with "-trans" added
+// (the author, 2026/11/10); the original is not kept.
 public static class SpeechStore
 {
     public static bool Holds(ModuleStore storage, string? name) =>

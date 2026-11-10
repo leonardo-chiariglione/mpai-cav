@@ -63,7 +63,10 @@
       </Grid.ColumnDefinitions>
       <Button x:Name="StopButton" Grid.Column="0" Content="Stop speaking (Esc)" Margin="0,0,8,0" Click="StopButton_Click" Style="{StaticResource StopButton}" Focusable="False"/>
       <ToggleButton x:Name="MicButton" Grid.Column="1" Content="Microphone on" IsChecked="True" Margin="0,0,8,0" Click="MicButton_Click" Style="{StaticResource MicButton}" MinWidth="150"/>
-      <Button x:Name="LoadButton" Grid.Column="2" Content="Load a sound..." Padding="12,4" Margin="0,0,8,0" Click="LoadButton_Click" IsEnabled="False"/>
+      <StackPanel Grid.Column="2" Orientation="Horizontal">
+        <Button x:Name="LoadButton" Content="Load a sound..." Padding="12,4" Margin="0,0,8,0" Click="LoadButton_Click" IsEnabled="False"/>
+        <Button x:Name="LoadSpeechButton" Content="Load speech..." Padding="12,4" Margin="0,0,8,0" Click="LoadSpeechButton_Click" IsEnabled="False"/>
+      </StackPanel>
       <Button x:Name="HearButton" Grid.Column="3" Content="Hear the scene" Padding="12,4" Margin="0,0,8,0" Click="HearButton_Click" IsEnabled="False"/>
       <Button x:Name="RoomButton" Grid.Column="4" Content="Room acoustics" Padding="12,4" Margin="0,0,8,0" Click="RoomButton_Click" IsEnabled="False"/>
       <Button x:Name="OutputButton" Grid.Column="5" Content="Sound output" Padding="12,4" Margin="0,0,8,0" Click="OutputButton_Click"/>

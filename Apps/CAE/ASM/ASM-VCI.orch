@@ -12,6 +12,10 @@
 #      OSD-BSO-V1.5:1  what the person says (or types, spoken by the machine's voice)
 #      CAE-UCM-V1.0:1  a User Command, by hand: a sound loaded from a file arrives in AcquiredObject,
 #                      under the name the person gives it
+#      CAE-UCM-V1.0:3  a User Command for Speech Object Editing, by hand: a speech segment loaded from a
+#                      file arrives in AcquiredObject as a Basic Speech Object, under the name the person gives it
+#
+#      CAE-UCM-V1.0:4  a User Command for Speech Scene Editing, by hand: the original of a translated speech segment is taken out of the Speech Scene
 #
 #      OSD-ASD-V1.5:1  the scene to open, by its name (the one the Module kept from last time), given when the User Agent starts
 #
@@ -29,7 +33,9 @@ on Start:
     stream  Voice          (OSD-BSO-V1.5:1)  from device "Voice"
     stream  ObjectCommand  (CAE-UCM-V1.0:1)  from device "SoundIn"
     stream  SceneCommand   (CAE-UCM-V1.0:2)  from device "SceneCommand"
-    stream  OpenScene      (OSD-ASD-V1.5:1)  from device "SceneIn"
+    stream  SpeechCommand  (CAE-UCM-V1.0:3)  from device "SpeechCommand"
+    stream  SpeechSceneCommand (CAE-UCM-V1.0:4) from device "SpeechSceneCommand"
+    stream  OpenScene     (OSD-ASD-V1.5:1)  from device "SceneIn"
     stream  TypedText      (OSD-BTO-V1.5:1)  from device "TypedIn"
 
     deliver Heard          (OSD-BTO-V1.5:1)  to device "Heard"
@@ -40,8 +46,8 @@ on Start:
     deliver ObjectOut      (OSD-AUO-V1.5)    to device "Unused"
     deliver ObjectReport   (CAE-UCM-V1.0:1)  to device "ObjectReport"
     deliver SceneReport    (CAE-UCM-V1.0:2)  to device "SceneReport"
-    deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "Unused"
-    deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "Unused"
+    deliver SpeechOut      (OSD-SPO-V1.5:1)  to device "SpeechOut"
+    deliver SpeechSceneOut (OSD-SSD-V1.5)    to device "SpeechScene"
     deliver MultimodalOut  (OSD-MSD-V1.5)    to device "Unused"
     deliver SpeechReport   (CAE-UCM-V1.0:3)  to device "SpeechReport"
     deliver SpeechSceneRep (CAE-UCM-V1.0:4)  to device "SpeechSceneRep"

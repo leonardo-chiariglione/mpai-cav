@@ -100,9 +100,9 @@ public class AsmVoiceWorkflowTests
             var devices = new DeviceRegistry();
             devices.RegisterDevice("Voice", Voice).RegisterDevice("SoundIn", SoundIn).RegisterDevice("SceneIn", new PushDevice("OSD-ASD-V1.5")).RegisterDevice("TypedIn", new PushDevice("OSD-BTO-V1.5"))
                    .RegisterDevice("Heard", HeardText).RegisterDevice("ReplyText", ReplyText).RegisterDevice("ReplySpeech", ReplySpeech)
-                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused).RegisterDevice("ObjectReport", new RecordDevice())
+                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused).RegisterDevice("SpeechOut", Unused).RegisterDevice("SpeechScene", Unused).RegisterDevice("SpeechSceneCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("ObjectReport", new RecordDevice())
                    // The other User Command Ports of the Module (CAE-UCM Ports 2 to 5: scene, speech, speech scene and multimodal commands and their reports), which ASM-VCI.orch binds too.
-                   .RegisterDevice("SceneCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SceneReport", new RecordDevice()).RegisterDevice("SpeechReport", new RecordDevice())
+                   .RegisterDevice("SceneCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SpeechCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SceneReport", new RecordDevice()).RegisterDevice("SpeechReport", new RecordDevice())
                    .RegisterDevice("SpeechSceneRep", new RecordDevice()).RegisterDevice("MultimodalRep", new RecordDevice());
             devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) lock (Prompts) Prompts.Add(p); return Task.CompletedTask; });
             var workflow = new WorkflowReader().Read(File.ReadAllText(Orch));

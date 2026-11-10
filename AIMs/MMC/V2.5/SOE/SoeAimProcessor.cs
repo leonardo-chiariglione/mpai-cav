@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -140,12 +140,17 @@ public sealed class SoeAimProcessor : IAimProcessor
             var id = IdOf(pending.Entry.ObjectID);
             if (id is not null && SpeechStore.Get(_store, id) is { } original && MpaiJson.FromJson<BasicSpeechObject>(translationJson) is { } translation)
             {
-                SpeechStore.Put(_store, SpeechStore.Replacing(original, translation, pending.Entry.SpeechQualifier));
-                _open = id;
-                // what the translation replaced is kept: revoking the command puts the original back, in every Scene that holds it
-                _undo.Record(pending.Command.UserCommandID, () => true, () => { SpeechStore.Put(_store, original); return id; });
-                report.Done("TranslatedObjects", id, id);
-                Console.WriteLine($"[MMC-SOE-V2.5] {id} replaced by its translation into {pending.Entry.TargetLanguage}");
+                // THE TRANSLATION TAKES THE PLACE OF THE ORIGINAL, under the name of the original with "-trans" added (the author, 2026/11/10): the original is not kept - the person loads it again if
+                // they need it; the translation is of the Scene, not kept beyond it.
+                var translated = SpeechStore.With(SpeechStore.Replacing(original, translation, pending.Entry.SpeechQualifier), id: id + "-trans");
+                if (SpeechStore.Holds(_store, id + "-trans")) Delete(id + "-trans");          // translated again: the earlier translation is replaced, the name stays as it is
+                var made = SpeechStore.Keep(_store, translated);
+                Delete(id);
+                _open = made;
+                // revoking the command puts the original back and deletes the translation
+                _undo.Record(pending.Command.UserCommandID, () => true, () => { Delete(made); return SpeechStore.Keep(_store, original); });
+                report.Done("TranslatedObjects", id, made);
+                Console.WriteLine($"[MMC-SOE-V2.5] {id} replaced by its translation into {pending.Entry.TargetLanguage}: {made}");
             }
             else report.Failed("TranslatedObjects", id, "no such Speech Object to replace");
             if (_reportOut.Length > 0) outputs[_reportOut] = MpaiJson.ToJson(report.Report());
