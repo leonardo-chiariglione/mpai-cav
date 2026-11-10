@@ -71,11 +71,11 @@
                                   "description": "A part of the face, a 2D Right Parallelepiped on it; absent, the whole face." },
 
       "MaterialIDOrMaterial":   { "$ref": "#/$defs/MaterialIDOrMaterial" } } },
-  { "type": "object", "required": [ "Polygon", "MaterialIDOrMaterial" ], "additionalProperties": false, "properties": {
+                                { "type": "object", "required": [ "Polygon", "MaterialIDOrMaterial" ], "additionalProperties": false, "properties": {
       "Polygon":                { "type": "array", "minItems": 3, "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
                                   "description": "The vertices of a flat wall, in order round its edge, as (x, y, z) in metres in the frame of the Closed Space." },
 
       "MaterialIDOrMaterial":   { "$ref": "#/$defs/MaterialIDOrMaterial" } } },
-  { "type": "object", "required": [ "SurfaceID", "MaterialIDOrMaterial" ], "additionalProperties": false, "properties": {
+                                { "type": "object", "required": [ "SurfaceID", "MaterialIDOrMaterial" ], "additionalProperties": false, "properties": {
       "SurfaceID":              { "type": "string", "description": "The identifier of a surface of the Shape, when the Shape is not made of Right Parallelepipeds." },
       "MaterialIDOrMaterial":   { "$ref": "#/$defs/MaterialIDOrMaterial" } } } ] } } }

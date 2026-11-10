@@ -12,7 +12,7 @@
     "UEnvironmentID":                 { "type": "string" },
     "VEPerformanceStatusID":          { "type": "string" },
     "VEPerformanceStatusTime":        { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
-    "MultimodalSceneDescriptors":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
+    "MultimodalSceneDescriptors":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalSceneDescriptors.json" },
 
     "VEPerformanceStatusData":        { "type": "object", "additionalProperties": false, "properties": {
 
@@ -29,7 +29,7 @@
             "VisualBehaviour":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
             "PersonalStatus":         { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/PersonalStatus.json" },
 
-            "Brainwaves": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" },
+            "Brainwaves":             { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" },
 
             "BiometricData":          { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/BiometricData.json" } } } },
 
@@ -42,14 +42,14 @@
             "PrincipalAxisVariances": { "type": "array", "items": { "type": "number", "minimum": 0 }, "minItems": 3, "maxItems": 3, "description": "Variances along principal axes [V1, V2, V3]." },
             "PerformerPercentage":    { "type": "number", "minimum": 0, "maximum": 100 },
 
-            "Brainwaves": { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" },
-            "BiometricSynchrony":    { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/BiometricSynchrony.json" },
+            "Brainwaves":             { "$ref": "https://schemas.mpai.community/AIH1/V1.1/data/Brainwaves.json" },
+            "BiometricSynchrony":     { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/BiometricSynchrony.json" },
 
             "AudioBehaviour":         { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioBehaviour.json" },
             "VisualBehaviour":        { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VisualBehaviour.json" },
 
             "Performers":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "VEPerformerID" ], "properties": {
-              "VEPerformerID":          { "type": "string" },
+              "VEPerformerID":        { "type": "string" },
               "DistanceFromCentroid": { "type": "number", "minimum": 0 } } } } } } },
 
         "Objects":                    { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "VEObjectID" ], "properties": {
