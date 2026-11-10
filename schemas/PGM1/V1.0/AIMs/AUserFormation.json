@@ -2,7 +2,7 @@
   "Header":           "PGM-AUF-V1.0",
 
   "APIProfile":       "Basic",
-  "Description":      "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge: the text, the Action Objects and the Process Actions) with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. Its function is that of Response and Scene Rendering (PAF-RSR) of MPAI-PAF, to which it adds the Request",
+  "Description":      "The A-User Formation (PGM-AUF) AIM forms the Portable Avatar that utters the A-User's response. It combines the deliberated communicative content (the Final Response produced by Basic Knowledge: the text, the Action Objects and the Process Actions) with the A-User State produced by Personality Alignment. The Portable Avatar expresses the A-User's Personal Status across speech, face, and body. A-User Formation is driven by the AUC-AUF Request of A-User Control. Its function is that of Response and Scene Rendering (PAF-RSR) of MPAI-PAF, to which it adds the Request and the Response of the A-User Control AIM and the taking apart of the Final Response: the Process Actions are given to A-User Control unchanged, and the Action Objects become the Animation Objects of the face and the body.",
 
   "InternalTypes":   [ ],
 
@@ -18,6 +18,7 @@
 
   "SubAIMs":         [{"Header": "PGM-AOG-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
                       {"Header": "PGM-PSD-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-FRD-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
                       {"Header": "MMC-TTS-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
                       {"Header": "PGM-EFD-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
                       {"Header": "PGM-EBD-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
@@ -49,13 +50,16 @@
                       {"Output": {"AIMName": "PGM-EFD-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-FSM-V1.0", "DataType": "PGM-UCF-V1.0"}},
                       {"Output": {"AIMName": "PGM-EBD-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-FSM-V1.0", "DataType": "PGM-UCF-V1.0"}},
                       {"Output": {"AIMName": "", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-AOG-V1.0", "DataType": "PGM-UCF-V1.0"}},
-                      {"Output": {"AIMName": "", "DataType": "PGM-FRS-V1.0"}, "Input": {"AIMName": "PGM-AOG-V1.0", "DataType": "PGM-FRS-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-FRD-V1.0", "DataType": "PGM-UCF-V1.0"}},
+                      {"Output": {"AIMName": "PGM-FRD-V1.0", "DataType": "PGM-ACO-V1.0"}, "Input": {"AIMName": "PGM-AOG-V1.0", "DataType": "PGM-ACO-V1.0"}},
+                      {"Output": {"AIMName": "PGM-FRD-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-FSM-V1.0", "DataType": "PGM-UCF-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-FRS-V1.0"}, "Input": {"AIMName": "PGM-FRD-V1.0", "DataType": "PGM-FRS-V1.0"}},
                       {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "PAF-AMO-V1.6", "PortNumber": 1}, "Input": {"AIMName": "PGM-EFD-V1.0", "DataType": "PAF-AMO-V1.6"}},
                       {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "PAF-AMO-V1.6", "PortNumber": 2}, "Input": {"AIMName": "PGM-EBD-V1.0", "DataType": "PAF-AMO-V1.6"}},
-                      {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "MMM-PAT-V2.2"}, "Input": {"AIMName": "", "DataType": "MMM-PAT-V2.2"}},
+                      {"Output": {"AIMName": "PGM-FRD-V1.0", "DataType": "MMM-PAT-V2.2"}, "Input": {"AIMName": "", "DataType": "MMM-PAT-V2.2"}},
                       {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-FSM-V1.0", "DataType": "PGM-UCF-V1.0"}},
-                      {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
-                      {"Output": {"AIMName": "PGM-AOG-V1.0", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "PGM-FRD-V1.0", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTS-V2.5", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "PGM-FRD-V1.0", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5"}},
                       {"Output": {"AIMName": "", "DataType": "OSD-IID-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-IID-V1.5"}}],
 
   "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",

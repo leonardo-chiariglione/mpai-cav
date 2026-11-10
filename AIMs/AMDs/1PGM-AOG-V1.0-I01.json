@@ -7,7 +7,7 @@
   "Header": "PGM-AOG-V1.0",
   "APIProfile": "Basic",
   "OnDegraded": "Continue",
-  "Description": "The Animation Object Generation (PGM-AOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It receives the Final Response, which holds all the outputs of Basic Knowledge, and divides its Process Actions. A Process Action that concerns the A-User as an entity, that is, whose subject is the Persona of the A-User (its position, its movement, its gestures), is split into Face Motion Objects and Body Motion Objects, which it gives to Entity Face Description and Entity Body Description. A Process Action whose subject is another Item or Process is passed unchanged to A-User Control. It also derives Motion Objects from the Action Objects of the Final Response. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
+  "Description": "The Animation Object Generation (PGM-AOG) AIM is a Sub-AIM of A-User Formation (PGM-AUF). It generates the animation of the Persona of the A-User: from an Action Object, an action of the Persona with no effect on the M-Instance, it produces a Face Animation Object (Port Number 1) or a Body Animation Object (Port Number 2), Animation Objects (PAF-AMO) whose Animation Qualifier names the content format of the animation, which it gives to Entity Face Description and Entity Body Description. It is driven by the AUC-AUF Request and reports with an AUC-AUF Response.",
   "InternalTypes": [],
   "ExternalPorts": [
     {
@@ -19,9 +19,9 @@
       "IsRemote": false
     },
     {
-      "Name": "FinalResponse",
+      "Name": "ActionObject",
       "Direction": "Input",
-      "DataType": "PGM-FRS-V1.0",
+      "DataType": "PGM-ACO-V1.0",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -45,25 +45,9 @@
       "IsRemote": false
     },
     {
-      "Name": "ProcessActions",
-      "Direction": "Output",
-      "DataType": "MMM-PAT-V2.2",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
       "Name": "AUCAUFResponse",
       "Direction": "Output",
       "DataType": "PGM-UCF-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "Text",
-      "Direction": "Output",
-      "DataType": "OSD-BTO-V1.5",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false

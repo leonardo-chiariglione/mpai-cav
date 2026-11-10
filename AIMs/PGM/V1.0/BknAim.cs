@@ -124,23 +124,26 @@ public sealed class BknAim : PgmAim
                     ["Header"] = "MMM-3CP-V2.2", ["MUActuatePAID"] = NewId("pa" + ++n), ["Time"] = Time(),
                     ["MUActuatePARQ"] = new JsonObject { ["RQ1"] = new JsonObject { ["Complement"] = "Nil", ["ItemID"] = target } }
                 };
-        if (personaActions.Count > 0 && allowed.Contains("MM-Animate"))
-            pas["MM-Animate"] = new JsonObject
-            {
-                ["Header"] = "MMM-2AP-V2.2", ["MMAnimatePAID"] = NewId("pa" + ++n), ["Time"] = Time(),
-                ["MMAnimatePARQ"] = new JsonObject
+        // The gestures of the Persona have no effect on the M-Instance: they are Action Objects, not Process Actions.
+        if (personaActions.Count > 0)
+        {
+            var actionObjects = new JsonArray();
+            foreach (var gesture in personaActions)
+                actionObjects.Add(new JsonObject
                 {
-                    ["RQ1"] = new JsonObject { ["Complement"] = "Nil", ["ItemID"] = _persona },
-                    ["RQ4"] = new JsonObject { ["Complement"] = "With", ["Stream"] = personaActions[0] }
-                }
-            };
+                    ["Header"] = "PGM-ACO-V1.0", ["ActionObjectID"] = NewId("aco"), ["SubjectID"] = _persona,
+                    ["ActionObjectData"] = new JsonArray(new JsonObject { ["Data"] = gesture }),
+                    ["ActionQualifier"] = new JsonObject { ["Header"] = "TFA-ACQ-V1.5", ["ActionQualifierID"] = NewId("acq"), ["Formats"] = new JsonObject { ["ContentFormat"] = "GestureName" } }
+                });
+            fr["ActionObjects"] = actionObjects;
+        }
         if (pas.Count > 0)
             fr["ProcessActions"] = new JsonObject { ["Header"] = "MMM-PAT-V2.2", ["MEnvironmentTime"] = Time(), ["ProcessActions"] = pas };
 
         response["Outcome"] = "achieved";
         response["DeliberationState"] = "concluded";
         response["Conclusion"] = new JsonObject { ["Headline"] = reply, ["FinalResponseID"] = (string)fr["FinalResponseID"]! };
-        response["ActionsOutcome"] = new JsonObject { ["Outcome"] = pas.Count > 0 ? "produced" : "not_requested", ["StepCount"] = pas.Count };
+        response["ActionsOutcome"] = new JsonObject { ["Outcome"] = pas.Count + personaActions.Count > 0 ? "produced" : "not_requested", ["StepCount"] = pas.Count + personaActions.Count };
         return [(_final, fr), (_response, response)];
     }
 

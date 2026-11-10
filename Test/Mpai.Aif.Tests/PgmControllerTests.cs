@@ -30,7 +30,7 @@ public class PgmControllerTests : IDisposable
     private string Prepare()
     {
         Directory.CreateDirectory(_folder);
-        foreach (var aim in PgmRig.SliceAims.Append(PgmRig.Module).Concat(["1PGM-PSD-V1.0-I01", "1PGM-AOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"]))
+        foreach (var aim in PgmRig.SliceAims.Append(PgmRig.Module).Concat(["1PGM-PSD-V1.0-I01", "1PGM-FRD-V1.0-I01", "1PGM-AOG-V1.0-I01", "1PGM-EFD-V1.0-I01", "1PGM-EBD-V1.0-I01"]))
             File.Copy(Path.Combine(Repository.Amds, aim + ".json"), Path.Combine(_folder, aim + ".json"), overwrite: true);
         var settings = Path.Combine(_folder, "settings.json");
         File.WriteAllText(settings, "{}");
