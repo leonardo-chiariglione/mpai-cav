@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Arp;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 

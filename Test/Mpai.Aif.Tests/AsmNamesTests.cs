@@ -74,6 +74,7 @@ public class AsmNamesTests
     {
         public readonly string Root = Path.Combine(Path.GetTempPath(), "asm-names-" + Guid.NewGuid().ToString("N"));
         public readonly FileSharedStorage Storage;
+        public readonly AIF.SharedStorage.RuledStore Private;     // the Private Storage of the Module
         public readonly AimPortReader AoePorts, AsePorts, SoePorts, SsePorts, MsePorts;
         public IAimProcessor Aoe, Ase, Soe, Sse, Mse;
         public readonly List<string> Said = new();     // everything the AIMs gave, to be searched for keys
@@ -81,6 +82,7 @@ public class AsmNamesTests
         public Module()
         {
             Storage = new FileSharedStorage(Root, "CAE-ASM", "ASM-Names");
+            Private = AsmStorage.PrivateAt(Path.Combine(Root, "private"));
             var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
             AoePorts = AimPortReader.Load(store, "1CAE-AOE-V1.0-I01"); AsePorts = AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
             SoePorts = AimPortReader.Load(store, "1MMC-SOE-V2.5-I01"); SsePorts = AimPortReader.Load(store, "1MMC-SSE-V2.5-I01");
@@ -88,11 +90,15 @@ public class AsmNamesTests
             Aoe = NewAoe(); Ase = NewAse(); Soe = NewSoe(); Sse = NewSse(); Mse = NewMse();
         }
 
-        public IAimProcessor NewAoe() => new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(Storage), AoePorts);
-        public IAimProcessor NewAse() => new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(Storage), AsePorts);
-        public IAimProcessor NewSoe() => new SoeAimProcessor("1MMC-SOE-V2.5-I01", Storage, SoePorts);
-        public IAimProcessor NewSse() => new SseAimProcessor("1MMC-SSE-V2.5-I01", Storage, SsePorts);
-        public IAimProcessor NewMse() => new MseAimProcessor("1OSD-MSE-V1.5-I01", Storage, MsePorts, "ASM");
+        // What the Module keeps under a Data Type and Port (every version), in its Private Storage.
+        public IReadOnlyList<string> Keys(string prefix) => AsmStorage.Handle(Private, "1CAE-AOE-V1.0-I01").MPAI_AIFM_RuledStorage_List(null, prefix);
+        public int Kept(string prefix) => Keys(prefix).Count;
+
+        public IAimProcessor NewAoe() => new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(AsmStorage.Keep(Private, "1CAE-AOE-V1.0-I01", Storage)), AoePorts);
+        public IAimProcessor NewAse() => new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(AsmStorage.Keep(Private, "1CAE-ASE-V1.0-I01", Storage)), AsePorts);
+        public IAimProcessor NewSoe() => new SoeAimProcessor("1MMC-SOE-V2.5-I01", AsmStorage.Keep(Private, "1MMC-SOE-V2.5-I01", Storage), SoePorts);
+        public IAimProcessor NewSse() => new SseAimProcessor("1MMC-SSE-V2.5-I01", AsmStorage.Keep(Private, "1MMC-SSE-V2.5-I01", Storage), SsePorts);
+        public IAimProcessor NewMse() => new MseAimProcessor("1OSD-MSE-V1.5-I01", AsmStorage.Keep(Private, "1OSD-MSE-V1.5-I01", Storage), new FileSharedStorage(Path.Combine(Root, "own-mse"), "OSD-MSE", "MSE"), MsePorts, "ASM");
 
         public async Task<Message> Give(IAimProcessor aim, params (string Port, string Json)[] inputs)
         {
@@ -140,7 +146,7 @@ public class AsmNamesTests
         Assert.Equal("violin 2", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 2)))))));
         Assert.Equal("violin", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 1)))))));
         Assert.Equal("violin 3", Opened(await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("violin", 3)))))));
-        Assert.Equal(3, module.Storage.MPAI_AIFM_SharedStorage_List("BAO").Count);                        // three Objects, not four
+        Assert.Equal(3, module.Kept("OSD-BAO-V1.5#1/"));                        // three Objects, not four
 
         // An edit is a new version of the Object: it keeps its name, it is not a second Object.
         var edit = await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { ModifiedObjects = new ObjectChanges { Objects = [new ObjectChange { ObjectID = new ManagedObject { ObjectID = "violin 3" }, LUFS = -20 }] } }))));
@@ -368,7 +374,7 @@ public class AsmNamesTests
         Assert.Equal("AcquiredObject", said.Actions[0].Action);
         Assert.Contains("name is needed", said.Actions[0].Reason);
         Assert.False(unnamed.Ports.ContainsKey(module.AoeOut));
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BAO"));
+        Assert.Empty(module.Keys("OSD-BAO-V1.5#1/"));
         Assert.True(Valid("CAE3/V1.0/data/UserCommand.json", unnamed.Ports[module.AoeReport]));
 
         // Named, it is created; a name made of spaces is no name.
@@ -376,29 +382,29 @@ public class AsmNamesTests
         await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("drums", 2)))));
         var blank = await module.Give(module.Aoe, (module.AoeIn, Forms.Acquire(Forms.Auo(Sound("   ", 3)))));
         Assert.Contains("name is needed", Report(blank, module.AoeReport).Actions[0].Reason);
-        Assert.Equal(2, module.Storage.MPAI_AIFM_SharedStorage_List("BAO").Count);
+        Assert.Equal(2, module.Kept("OSD-BAO-V1.5#1/"));
 
         // An Audio Object made of Objects with no name given by the command: not made.
         var noName = await module.Give(module.Aoe, (module.AoeCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Put("violin", 0), Put("drums", 2)] } }))));
         Assert.Equal("Failed", Report(noName, module.AoeReport).Outcome);
         Assert.Contains("name is needed", Report(noName, module.AoeReport).Actions[0].Reason);
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("AUO"));
+        Assert.Empty(module.Keys("OSD-AUO-V1.5#1/"));
 
         // A Scene made with no name: not made, and no Scene is open.
         var noScene = await module.Give(module.Ase, (module.AseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Put("violin", 1)] } }))));
         Assert.Equal("Failed", Report(noScene, module.AseReport).Outcome);
         Assert.Contains("name is needed", Report(noScene, module.AseReport).Actions[0].Reason);
         Assert.False(noScene.Ports.ContainsKey(module.AseOut));
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BAS"));
+        Assert.Empty(module.Keys("OSD-ASD-V1.5#1/"));
 
         // Speech: an Object with no name is not kept, nor a Scene.
         var noSpeech = await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("")))));
         Assert.Contains("name is needed", Report(noSpeech, module.SoeReport).Actions[0].Reason);
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BSO"));
+        Assert.Empty(module.Keys("OSD-BSO-V1.5#2/"));
         await module.Give(module.Soe, (module.SoeIn, Forms.Acquire(MpaiJson.ToJson(Speech("hello")))));
         var noSpeechScene = await module.Give(module.Sse, (module.SseCommand, Json_(Command(new UserCommandRQ { AddedObjects = new ObjectPlacements { Objects = [Put("hello", 0)] } }))));
         Assert.Contains("name is needed", Report(noSpeechScene, module.SseReport).Actions[0].Reason);
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("BSS"));
+        Assert.Empty(module.Keys("OSD-SSD-V1.5#1/"));
 
         // A Multimodal Scene with no name: not made.
         await module.Give(module.Mse, (module.MseScene1, Forms.Asd(new BasicAudioSceneDescriptors { MInstanceID = "ASM", BasicAudioSceneDescriptorsID = "stage", BASSpaceTime = new SpaceTime() })),
@@ -407,7 +413,7 @@ public class AsmNamesTests
         Assert.Equal("Failed", Report(noMix, module.MseReport).Outcome);
         Assert.Contains("name is needed", Report(noMix, module.MseReport).Actions[0].Reason);
         Assert.False(noMix.Ports.ContainsKey(module.MseOut));
-        Assert.Empty(module.Storage.MPAI_AIFM_SharedStorage_List("MSD"));
+        Assert.Empty(module.Keys("OSD-MSD-V1.5#1/"));
 
         // Nothing was made up for the User: no name of any report or output is a storage key.
         Assert.Empty(module.Said.SelectMany(KeysIn));

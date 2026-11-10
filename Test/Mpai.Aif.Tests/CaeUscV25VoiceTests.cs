@@ -3,6 +3,7 @@ using AIF.Controller;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Smc;
 using Mpai.Cae.Usc.Voice;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 

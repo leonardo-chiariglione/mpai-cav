@@ -1,0 +1,113 @@
+{
+  "Header": "XRV-ATB-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "ActionTableID": "MiniShow-Actions",
+  "ActionTableTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "atb-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "ActionTableData": [
+    {
+      "ActionID": "RE-LIGHTS-UP",
+      "ActionName": "Both lamps to full",
+      "Action": [
+        {
+          "ActionCommand": {
+            "Protocol": "DMX",
+            "Universe": 1,
+            "Channel": 1,
+            "Value": 255
+          },
+          "ActionData": {}
+        },
+        {
+          "ActionCommand": {
+            "Protocol": "DMX",
+            "Universe": 1,
+            "Channel": 2,
+            "Value": 255
+          },
+          "ActionData": {}
+        }
+      ]
+    },
+    {
+      "ActionID": "RE-LIGHTS-OFF",
+      "ActionName": "Both lamps off",
+      "Action": [
+        {
+          "ActionCommand": {
+            "Protocol": "DMX",
+            "Universe": 1,
+            "Channel": 1,
+            "Value": 0
+          },
+          "ActionData": {}
+        },
+        {
+          "ActionCommand": {
+            "Protocol": "DMX",
+            "Universe": 1,
+            "Channel": 2,
+            "Value": 0
+          },
+          "ActionData": {}
+        }
+      ]
+    },
+    {
+      "ActionID": "VE-LAMP-ON",
+      "ActionName": "Virtual lamp to full",
+      "Action": [
+        {
+          "ActionCommand": {
+            "Object": "VLamp1",
+            "Property": "Intensity",
+            "Value": 1.0
+          },
+          "ActionData": {}
+        }
+      ]
+    },
+    {
+      "ActionID": "VE-LAMP-DIM",
+      "ActionName": "Virtual lamp to 30%",
+      "Action": [
+        {
+          "ActionCommand": {
+            "Object": "VLamp1",
+            "Property": "Intensity",
+            "Value": 0.3
+          },
+          "ActionData": {}
+        }
+      ]
+    },
+    {
+      "ActionID": "VE-LAMP-OFF",
+      "ActionName": "Virtual lamp off",
+      "Action": [
+        {
+          "ActionCommand": {
+            "Object": "VLamp1",
+            "Property": "Intensity",
+            "Value": 0.0
+          },
+          "ActionData": {}
+        }
+      ]
+    }
+  ]
+}

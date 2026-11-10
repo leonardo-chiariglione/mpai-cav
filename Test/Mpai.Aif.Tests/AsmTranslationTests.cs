@@ -24,12 +24,12 @@ public class AsmTranslationTests
 {
     private const string Asm = AsmProvider.Module;
 
-    // The Speech Object the Module keeps under a name: the key the Module's table of names gives for it is the Module's own, so it is looked up there.
+    // The Speech Object the Module offers under a name, as the User Agent reads it from the Shared Storage of the Module: <Module>/<Data Type>#<Port>/<ID>. The Module keeps its working
+    // copies in its Private Storage, which the User Agent does not read.
     private static BasicSpeechObject? Stored(AIF.SharedStorage.IRuledStorage? storage, string name)
     {
-        if (storage is null || storage.MPAI_AIFM_RuledStorage_Get($"name:SpeechObject:{name}", out var key).ToString() != "OK") return null;
-        return storage.MPAI_AIFM_RuledStorage_Get(Encoding.UTF8.GetString(key), out var bytes).ToString() == "OK"
-            ? MpaiJson.FromJson<BasicSpeechObject>(Encoding.UTF8.GetString(bytes)) : null;
+        if (storage is null || storage.MPAI_AIFM_RuledStorage_Get($"{Asm}/OSD-SPO-V1.5#1/{name}", out var bytes).ToString() != "OK") return null;
+        return Mpai.Mmc.Soe.SpeechStore.Alone(Mpai.Mmc.Soe.SpeechStore.Parse(Encoding.UTF8.GetString(bytes)));
     }
 
     [SkippableFact]

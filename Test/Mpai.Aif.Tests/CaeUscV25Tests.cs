@@ -2,7 +2,8 @@ using System.Text.Json;
 
 namespace Mpai.Aif.Tests;
 
-// CAE-USC V2.5: the four AI Workflows of V2.4 are Composite AIMs, so there are 28 AIMs (schemas/CAE1/V2.5/AIMs). Each is valid against the AIM Metadata schema (MetadataTests.Schema checks
+// CAE-USC V2.5: the four AI Workflows of V2.4 are Composite AIMs, and two AIMs are added beside Emotion Enhanced Speech, which stays (Add Emotion to Speech, CAE-AES; Speak Model with Emotion, CAE-SME: what dividing it into two Modules gives), so there are 31 AIMs
+// (schemas/CAE1/V2.5/AIMs; Audio Analysis Transform, CAE-AAT, is now Short-Time Fourier Transform, CAE-SFT). Each is valid against the AIM Metadata schema (MetadataTests.Schema checks
 // every L2); here the Composite AIMs are checked as a graph: every SubAIM has an L2, every connection joins an Output Port to an Input Port of the Data Type and Port Number it names, and the
 // Topology resolves.
 [Trait("Group", "Fast")]
@@ -43,10 +44,10 @@ public class CaeUscV25Tests
     }
 
     [Fact]
-    public void ThereAreTwentyEightAimsAndTheFourWorkflowsAreCompositeAims()
+    public void ThereAreThirtyOneAimsAndTheFourWorkflowsAreCompositeAims()
     {
         var files = Directory.EnumerateFiles(Folder, "*.json").ToList();
-        Assert.Equal(28, files.Count);
+        Assert.Equal(31, files.Count);
         foreach (var name in new[] { "AudioRecordingPreservation", "EmotionEnhancedSpeech", "EnhancedAudioconferenceExperience", "SpeechRestorationSystem" })
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(Folder, name + ".json")));

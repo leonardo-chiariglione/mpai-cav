@@ -1,0 +1,132 @@
+{
+  "Header": "XRV-SHD-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "ShowDescriptorsID": "MiniShow-SHD-1",
+  "ShowDescriptorsTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "shd-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "ShowDescriptors": {
+    "REPerformanceStatus": {
+      "Header": "XRV-RFS-V1.0",
+      "REPerformanceStatusID": "C1-target",
+      "UEnvironmentID": "UE1",
+      "REPerformanceStatusTime": {
+        "Header": "OSD-STM-V1.5",
+        "SimpleTimeID": "C1-target-t",
+        "SimpleTimeData": [
+          {
+            "FlagsByte": 3,
+            "StartTime": 0,
+            "EndTime": 0,
+            "AccuracyMode": "single",
+            "AccuracyPlusMinus": 0,
+            "TimeType": true,
+            "TimeUnit": "01"
+          }
+        ]
+      },
+      "REPerformanceStatusData": {
+        "IndividualStatuses": [
+          {
+            "REPerformerID": "Anna"
+          }
+        ]
+      }
+    },
+    "VEParticipantStatus": {
+      "Header": "XRV-VTS-V1.0",
+      "VEParticipantStatusID": "C2a-target",
+      "UEnvironmentID": "UE1",
+      "VEParticipantStatusTime": {
+        "Header": "OSD-STM-V1.5",
+        "SimpleTimeID": "C2a-target-t",
+        "SimpleTimeData": [
+          {
+            "FlagsByte": 3,
+            "StartTime": 0,
+            "EndTime": 0,
+            "AccuracyMode": "single",
+            "AccuracyPlusMinus": 0,
+            "TimeType": true,
+            "TimeUnit": "01"
+          }
+        ]
+      },
+      "VEParticipantStatusData": {
+        "IndividualStatuses": [
+          {
+            "VEParticipantID": "Guest1"
+          }
+        ]
+      }
+    },
+    "REParticipantStatus": {
+      "Header": "XRV-RTS-V1.0",
+      "REParticipantStatusID": "C3-target-re",
+      "UEnvironmentID": "UE1",
+      "REParticipantStatusTime": {
+        "Header": "OSD-STM-V1.5",
+        "SimpleTimeID": "C3-target-re-t",
+        "SimpleTimeData": [
+          {
+            "FlagsByte": 3,
+            "StartTime": 0,
+            "EndTime": 0,
+            "AccuracyMode": "single",
+            "AccuracyPlusMinus": 0,
+            "TimeType": true,
+            "TimeUnit": "01"
+          }
+        ]
+      },
+      "REParticipantStatusData": {
+        "IndividualStatuses": [
+          {
+            "REParticipantID": "P1",
+            "SeatID": "S1"
+          }
+        ]
+      }
+    },
+    "VEPerformanceStatus": {
+      "Header": "XRV-VFS-V1.0",
+      "VEPerformanceStatusID": "C3-target-ve",
+      "UEnvironmentID": "UE1",
+      "VEPerformanceStatusTime": {
+        "Header": "OSD-STM-V1.5",
+        "SimpleTimeID": "C3-target-ve-t",
+        "SimpleTimeData": [
+          {
+            "FlagsByte": 3,
+            "StartTime": 0,
+            "EndTime": 0,
+            "AccuracyMode": "single",
+            "AccuracyPlusMinus": 0,
+            "TimeType": true,
+            "TimeUnit": "01"
+          }
+        ]
+      },
+      "VEPerformanceStatusData": {
+        "IndividualStatuses": [
+          {
+            "VEPerformerID": "Bot"
+          }
+        ]
+      }
+    }
+  }
+}

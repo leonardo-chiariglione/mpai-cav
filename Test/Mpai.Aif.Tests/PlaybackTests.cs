@@ -163,7 +163,7 @@ public class PlaybackTests
         const string mps = "1TST-MPS-V1.0-I01";
         api.StartFlow(mps);
         api.SharedStorageInit(mps, Location());
-        api.Advance(mps, [new(Text, 1, "R9/header={}; category=Boundary")]);
+        api.Advance(mps, [new(Text, 1, "R9/header={}; category=Private")]);
         var closed = new DeviceRegistry().RegisterRecord("closed", new StoredRecord(api.ModuleStorage(mps)!, "R9"));
         result["a record the User Agent is not a reader of"] = await Run(closed, "stream A (TST-TXT-V1.0:1) from record \"closed\"");
         api.StopFlow(mps);

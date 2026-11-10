@@ -1,7 +1,7 @@
 {
-  "1MMC-ACR-V2.5-I01": "every boundary Port crosses",
   "1MMC-AMQ-V2.5-I01": "every boundary Port crosses",
-  "1MMC-MAC-V2.5-I01": "every boundary Port crosses",
+  "1OSD-ACR-V1.5-I01": "every boundary Port crosses",
+  "1OSD-MAC-V1.5-I01": "every boundary Port crosses",
   "the Avatar Model to the wire and back": "unchanged",
   "the Portable Avatar to the wire and back": "unchanged"
 }

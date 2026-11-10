@@ -11,5 +11,5 @@
   "5 the report": "Partly: RemovedObjects music Done -> stage, RemovedObjects nothing Failed, MovedObjects voice Done -> stage",
   "6 the User Commands": "valid",
   "6 the reports": "valid",
-  "7 versions kept in Shared Storage": "BAO 4, BAS 5"
+  "7 versions kept in the Private Storage of the Module": "OSD-BAO-V1.5#1 4, OSD-ASD-V1.5#1 5"
 }

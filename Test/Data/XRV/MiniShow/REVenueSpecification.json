@@ -1,0 +1,38 @@
+{
+  "Header": "XRV-RVS-V1.0",
+  "UEnvironmentID": "UE1",
+  "REVenueSpecificationID": "MiniShow-REVenue",
+  "REVenueSpecificationTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "rvs-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "DMXUniverses": [
+    {
+      "UniverseID": 1,
+      "Protocol": "DMX",
+      "Channels": [
+        {
+          "ChannelNumber": 1,
+          "ChannelDefinition": "Dimmer",
+          "FixtureID": "FX1"
+        },
+        {
+          "ChannelNumber": 2,
+          "ChannelDefinition": "Dimmer",
+          "FixtureID": "FX2"
+        }
+      ]
+    }
+  ]
+}

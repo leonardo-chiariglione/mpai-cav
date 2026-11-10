@@ -1,0 +1,145 @@
+{
+  "Header": "XRV-SVA-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "ScriptVenueAssociationsID": "MiniShow-Associations",
+  "ScriptVenueAssociationsTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "sva-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "REAssociations": {
+    "PerformanceDesignations": {
+      "Characters": [
+        {
+          "Name": "Anna",
+          "Mnemonic": "ANN",
+          "VenueElementID": "Anna",
+          "DataSourceQualifier": "performer"
+        }
+      ],
+      "TheatricalSetList": [
+        {
+          "Objects": [
+            {
+              "Name": "Lamp 1",
+              "VenueElementID": "FX1",
+              "DataSinkQualifier": "DMX:1:1"
+            },
+            {
+              "Name": "Lamp 2",
+              "VenueElementID": "FX2",
+              "DataSinkQualifier": "DMX:1:2"
+            }
+          ]
+        }
+      ],
+      "PerformanceStatusElements": [
+        {
+          "StatusElementID": "Presence",
+          "Parameters": [
+            "REPerformerID"
+          ],
+          "DataSourceQualifier": "performer"
+        }
+      ]
+    },
+    "ParticipantDesignations": {
+      "Participants": [
+        {
+          "MetaName": "Guest",
+          "VenueElementID": "P1",
+          "DataSourceQualifier": "seat"
+        }
+      ],
+      "ParticipantStatusElements": [
+        {
+          "StatusElementID": "SeatId",
+          "Parameters": [
+            "SeatID"
+          ],
+          "DataSourceQualifier": "seat"
+        }
+      ]
+    },
+    "ActionElements": [
+      {
+        "ActionID": "RE-LIGHTS-UP",
+        "Parameters": [
+          "Value"
+        ],
+        "DataSinkQualifier": "DMX:1"
+      },
+      {
+        "ActionID": "RE-LIGHTS-OFF",
+        "Parameters": [
+          "Value"
+        ],
+        "DataSinkQualifier": "DMX:1"
+      }
+    ]
+  },
+  "VEAssociations": {
+    "PerformanceDesignations": {
+      "Characters": [
+        {
+          "Name": "Anna",
+          "Mnemonic": "ANN",
+          "VenueElementID": "Bot"
+        }
+      ],
+      "TheatricalSetList": [
+        {
+          "Objects": [
+            {
+              "Name": "Lamp 1",
+              "VenueElementID": "VLamp1",
+              "DataSinkQualifier": "VLamp1"
+            }
+          ]
+        }
+      ]
+    },
+    "ParticipantDesignations": {
+      "Participants": [
+        {
+          "MetaName": "Guest",
+          "VenueElementID": "Guest1"
+        }
+      ]
+    },
+    "ActionElements": [
+      {
+        "ActionID": "VE-LAMP-ON",
+        "Parameters": [
+          "Intensity"
+        ],
+        "DataSinkQualifier": "VLamp1"
+      },
+      {
+        "ActionID": "VE-LAMP-DIM",
+        "Parameters": [
+          "Intensity"
+        ],
+        "DataSinkQualifier": "VLamp1"
+      },
+      {
+        "ActionID": "VE-LAMP-OFF",
+        "Parameters": [
+          "Intensity"
+        ],
+        "DataSinkQualifier": "VLamp1"
+      }
+    ]
+  }
+}

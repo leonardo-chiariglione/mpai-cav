@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIF.Controller;
 using AIF.SharedStorage;
 using Mpai.Aims.Ocr;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 
@@ -124,7 +125,7 @@ public class AccessModelsTests : IDisposable
         foreach (var e in entries) Assert.Equal(AccessOutcome.OK, fetcher.Ensure(e, "smc", out var why));
         var aim = new BoundAccess(store.As(new StorageHolder("M", "smc")), entries, fetcher, "smc");
         var settings = AccessEntry.Overlay(new Dictionary<string, string>(), entries, aim, "smc");
-        var embedding = new Mpai.Cae.Usc.Voice.OpenVoiceWorker(settings).Extract([Mpai.Cae.Usc.Audio.FromWav(File.ReadAllBytes(clip))]);
+        var embedding = new Mpai.Cae.Usc.Voice.OpenVoiceWorker(settings).Extract([Mpai.Osd.Speech.Audio.FromWav(File.ReadAllBytes(clip))]);
         Assert.Equal(256, embedding.Length);
         Assert.All(embedding, v => Assert.True(float.IsFinite(v)));
     }

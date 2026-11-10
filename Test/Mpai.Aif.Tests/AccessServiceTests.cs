@@ -64,14 +64,14 @@ public class AccessServiceTests
 
             const string author = "Leonardo", voice = "en_GB-alan-medium";
             var client = new RemoteControllerApi(Url);
-            foreach (var module in new[] { "1MMC-ACR-V2.5-I01", "1MMC-MAC-V2.5-I01" })
+            foreach (var module in new[] { "1OSD-ACR-V1.5-I01", "1OSD-MAC-V1.5-I01" })
                 if (client.StartFlow(module) is var started && started != AifError.OK) throw new InvalidOperationException($"{module}: {started}\n{log}");
-            var registered = client.Advance("1MMC-ACR-V2.5-I01",
+            var registered = client.Advance("1OSD-ACR-V1.5-I01",
                 [new("OSD-BVO-V1.5", 1, AccessTests.Face("Leonardo Speaking.jpg")), new("OSD-BSO-V1.5", 1, AccessTests.Voice("My name is Leonardo, and I want to register.", voice)),
                  new("OSD-BTO-V1.5", 2, AccessTests.Text(author)), new("OSD-BTO-V1.5", 1, AccessTests.Text("You are registered.")), TestAvatar.Datum]);
             bool? Check(RemoteControllerApi api)
             {
-                var r = api.Advance("1MMC-MAC-V2.5-I01",
+                var r = api.Advance("1OSD-MAC-V1.5-I01",
                     [new("OSD-BVO-V1.5", 1, AccessTests.Face("Leonardo Speaking.jpg")), new("OSD-BSO-V1.5", 1, AccessTests.Voice("Good morning, I would like to come in, please.", voice)), TestAvatar.Datum]);
                 return r.ByType("boolean") is { } b ? bool.Parse(b) : null;
             }
@@ -88,7 +88,7 @@ public class AccessServiceTests
             }
             result["the client left"] = !Kept() ? "his descriptors deleted" : "his descriptors still in the gallery";
             var another = new RemoteControllerApi(Url);
-            another.StartFlow("1MMC-MAC-V2.5-I01");
+            another.StartFlow("1OSD-MAC-V1.5-I01");
             result["then"] = Check(another) == false ? "access refused" : "access not refused";
         }
         finally

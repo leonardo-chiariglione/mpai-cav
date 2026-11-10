@@ -18,7 +18,8 @@ internal sealed class AsmRig : IDisposable
     public const string Ucm = "CAE-UCM-V1.0", Opv = "OSD-OPV-V1.5", Auo = "OSD-AUO-V1.5", Asd = "OSD-ASD-V1.5", Spo = "OSD-SPO-V1.5", Ssd = "OSD-SSD-V1.5", Msd = "OSD-MSD-V1.5";
 
     public readonly string Root = Path.Combine(Path.GetTempPath(), "asm-rig-" + Guid.NewGuid().ToString("N"));
-    public readonly FileSharedStorage Storage;
+    public readonly FileSharedStorage Storage;          // the Shared Storage of the Module: what it offers
+    public readonly RuledStore Private;                 // the Private Storage of the Module: what its AIMs edit
     public readonly AimPortReader AoePorts, AsePorts, SoePorts, SsePorts, MsePorts;
     public readonly IAimProcessor Aoe, Ase, Soe, Sse, Mse;
     public readonly List<string> Said = new();           // everything the AIMs gave, to be searched
@@ -30,6 +31,7 @@ internal sealed class AsmRig : IDisposable
     public AsmRig(string? schemasRoot = null)
     {
         Storage = new FileSharedStorage(Root, "CAE-ASM", "ASM-Rig");
+        Private = AsmStorage.PrivateAt(Path.Combine(Root, "private"));
         var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
         AoePorts = AimPortReader.Load(store, "1CAE-AOE-V1.0-I01"); AsePorts = AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
         SoePorts = AimPortReader.Load(store, "1MMC-SOE-V2.5-I01"); SsePorts = AimPortReader.Load(store, "1MMC-SSE-V2.5-I01");
@@ -38,9 +40,8 @@ internal sealed class AsmRig : IDisposable
         // The editing AIMs as the provider of the Module makes them, over the one Shared Storage.
         var provider = new AsmProvider(Repository.Amds);
         var settings = new Dictionary<string, string> { ["SchemasRoot"] = schemasRoot ?? Repository.Schemas };
-        Aoe = provider.Create(AsmProvider.Aoe, settings, Storage); Ase = provider.Create(AsmProvider.Ase, settings, Storage);
-        Soe = provider.Create(AsmProvider.Soe, settings, Storage); Sse = provider.Create(AsmProvider.Sse, settings, Storage);
-        Mse = provider.Create(AsmProvider.Mse, settings, Storage);
+        IAimProcessor Make(string aim) => provider.Create(aim, settings, Storage, new FileSharedStorage(Path.Combine(Root, "own-" + aim), "CAE-ASM", aim), AsmStorage.Handle(Private, aim));
+        Aoe = Make(AsmProvider.Aoe); Ase = Make(AsmProvider.Ase); Soe = Make(AsmProvider.Soe); Sse = Make(AsmProvider.Sse); Mse = Make(AsmProvider.Mse);
 
         // Where the data an editing AIM gives goes: to the AIM that takes it (its index, 0 to 4).
         _editors =

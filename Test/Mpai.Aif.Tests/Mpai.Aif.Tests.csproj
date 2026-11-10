@@ -43,6 +43,7 @@
     <ProjectReference Include="..\..\AIMs\PAF\V1.6\VCR\Mpai.Paf.Vcr.csproj" />
     <ProjectReference Include="..\..\AIMs\Providers\Mpai.Providers.csproj" />
     <ProjectReference Include="..\..\AIMs\PGM\V1.0\Mpai.Pgm.csproj" />
+    <ProjectReference Include="..\..\AIMs\OSD\V1.5\TMA\Mpai.Osd.Tma.csproj" />
     <ProjectReference Include="..\..\AIMs\PAF\V1.6\PDX\Mpai.Paf.Pdx.csproj" />
     <ProjectReference Include="..\..\MMM\Instance\Mpai.Mmm.csproj" />
     <ProjectReference Include="..\..\MMM\Server\Mpai.Mmm.Server.csproj" />
@@ -66,11 +67,24 @@
     <!-- the four Apps of CAE-USC, run as programs by CaeUscV25AppTests: built with the tests, their output not referenced -->
     <ProjectReference Include="..\..\Apps\CAE\SRS\App\SrsApp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\Apps\CAE\EES\App\EesApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CAE\SME\App\SmeApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Apps\CAE\AES\App\AesApp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\Apps\CAE\ARP\App\ArpApp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\Apps\CAE\EAE\App\EaeApp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\EAE\Mpai.Cae.Usc.Eae.csproj" />
     <ProjectReference Include="..\..\AIMs\CAE1\V2.5\Provider\Mpai.Cae.Usc.csproj" />
     <ProjectReference Include="..\..\Apps\CAE\ASM\Voice\AsmVoice.csproj" />
+    <ProjectReference Include="..\..\AIMs\OSD\V1.5\MDX\Mpai.Osd.Mdx.csproj" />
+    <ProjectReference Include="..\..\AIMs\HMC\V2.2\SID\Mpai.Hmc.Sid.csproj" />
+    <ProjectReference Include="..\..\AIMs\HMC\V2.2\Provider\Mpai.Hmc.Provider.csproj" />
+    <ProjectReference Include="..\..\AIMs\CVE\V1.0\VDI\Mpai.Cve.Vdi.csproj" />
+    <ProjectReference Include="..\..\AIMs\OSD\V1.5\VOE\Mpai.Osd.Voe.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\Common\Mpai.Xrv.Common.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\ACG\Mpai.Xrv.Acg.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\PFI\Mpai.Xrv.Pfi.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\PTI\Mpai.Xrv.Pti.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\OSI\Mpai.Xrv.Osi.csproj" />
+    <ProjectReference Include="..\..\AIMs\XRV1\V1.0\Provider\Mpai.Xrv.csproj" />
   </ItemGroup>
 
   <ItemGroup>

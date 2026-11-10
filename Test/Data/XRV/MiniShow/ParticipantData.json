@@ -1,0 +1,40 @@
+{
+  "Header": "XRV-PTD-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "ParticipantDataID": "MiniShow-PD-1",
+  "ParticipantDataTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "ptd-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "ParticipantID": "P1",
+  "ParticipantAttendanceHistory": [
+    {
+      "VisitNumber": 2,
+      "DateOfVisit": [
+        "2026-10-01",
+        "2026-11-07"
+      ],
+      "TicketClass": "Stalls",
+      "ParticipantCategory": "Adult",
+      "ParticipantAttributes": [
+        {
+          "AttributeID": "A1",
+          "AttributeMnemonic": "LANG",
+          "AttributeValue": "it"
+        }
+      ]
+    }
+  ]
+}

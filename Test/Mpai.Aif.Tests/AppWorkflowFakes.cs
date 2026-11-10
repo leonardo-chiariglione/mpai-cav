@@ -37,7 +37,7 @@ internal sealed class ScriptedController : IAsyncControllerApi
 internal static class AppWorkflow
 {
     public static Mpai.Wdl.Workflow Load(string app) =>
-        new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "MMC", app, $"MMC-{app}.orch")));
+        new Mpai.Wdl.WorkflowReader().Read(File.ReadAllText(Path.Combine(Repository.Root, "Apps", "MMC", app, $"{(app is "ACR" or "MAC" ? "OSD" : "MMC")}-{app}.orch")));      // ACR and MAC are OSD V1.5 AIMs; their Apps stay in this folder
 
     // Runs the workflow until it ends or the token is cancelled (the person's Stop); returns what the interpreter said, for the failure message.
     public static async Task<string> RunAsync(Mpai.Wdl.Workflow workflow, IAsyncControllerApi api, Mpai.Ua.DeviceRegistry devices, CancellationToken stop)

@@ -2,7 +2,7 @@ using Mpai.Aif.Api;
 
 namespace Mpai.Aif.Tests;
 
-// THE WORKFLOW OF ACCESS CONTROL REGISTRATION (Apps/MMC/ACR/MMC-ACR.orch) executed by the interpreter of the User Agent, as the standalone
+// THE WORKFLOW OF ACCESS CONTROL REGISTRATION (Apps/MMC/ACR/OSD-ACR.orch) executed by the interpreter of the User Agent, as the standalone
 // ACR window does, with simulated devices and a simulated Controller API: the avatar welcomes the person and asks for the name (typed),
 // asks to look at the camera (the face), asks for a sentence (the speech), and confirms the registration; the Module is given the face,
 // the speech and the name under OSD-BTO #2. The workflow runs once and ends by itself.
@@ -41,12 +41,12 @@ public class AcrWorkflowTests
 
         Assert.Equal(new[]
         {
-            "start 1MMC-ACR-V2.5-I01", "model",
-            "advance 1MMC-ACR-V2.5-I01", "avatar", "name",
-            "advance 1MMC-ACR-V2.5-I01", "avatar", "face True",
-            "advance 1MMC-ACR-V2.5-I01", "avatar", "speech",
-            "advance 1MMC-ACR-V2.5-I01", "avatar",
-            "stop 1MMC-ACR-V2.5-I01"
+            "start 1OSD-ACR-V1.5-I01", "model",
+            "advance 1OSD-ACR-V1.5-I01", "avatar", "name",
+            "advance 1OSD-ACR-V1.5-I01", "avatar", "face True",
+            "advance 1OSD-ACR-V1.5-I01", "avatar", "speech",
+            "advance 1OSD-ACR-V1.5-I01", "avatar",
+            "stop 1OSD-ACR-V1.5-I01"
         }, log);
 
         Assert.Equal(4, api.Turns.Count);

@@ -66,12 +66,13 @@ public class AsmEditingTests
         try
         {
             var storage = new FileSharedStorage(root, "CAE-ASM", "ASM-Test");
+            var priv = AsmStorage.PrivateAt(Path.Combine(root, "private"));
             var store = new AIF.Store.AmdStore(Repository.Amds);
             store.Scan();
             var aoePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-AOE-V1.0-I01");
             var asePorts = AIF.Controller.AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-            var AOE = new Aim(new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(storage), aoePorts));
-            var ASE = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(storage), asePorts));
+            var AOE = new Aim(new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(AsmStorage.Keep(priv, "1CAE-AOE-V1.0-I01", storage)), aoePorts));
+            var ASE = new Aim(new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(AsmStorage.Keep(priv, "1CAE-ASE-V1.0-I01", storage)), asePorts));
             var commands = new List<string>();
             var reports = new List<string>();
             string objectCommand = aoePorts.Input("CAE-UCM-V1.0"), objectOut = aoePorts.Output("OSD-AUO-V1.5"),
@@ -150,7 +151,7 @@ public class AsmEditingTests
 
             r["6 the User Commands"] = string.Join("; ", commands.Select(c => Valid("CAE3/V1.0/data/UserCommand.json", c)).Distinct());
             r["6 the reports"] = string.Join("; ", reports.Select(c => Valid("CAE3/V1.0/data/UserCommand.json", c)).Distinct());
-            r["7 versions kept in Shared Storage"] = string.Join(", ", new[] { "BAO", "BAS" }.Select(t => $"{t} {storage.MPAI_AIFM_SharedStorage_List(t).Count}"));
+            r["7 versions kept in the Private Storage of the Module"] = string.Join(", ", new[] { "OSD-BAO-V1.5#1", "OSD-ASD-V1.5#1" }.Select(t => $"{t} {AsmStorage.Handle(priv, "1CAE-AOE-V1.0-I01").MPAI_AIFM_RuledStorage_List(null, t + "/").Count}"));
             Expected.Match("asm-editing.json", r);
         }
         finally { try { Directory.Delete(root, true); } catch { } }

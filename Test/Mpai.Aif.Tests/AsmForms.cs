@@ -6,7 +6,7 @@ namespace Mpai.Aif.Tests;
 // THE FORMS OF THE PORTS OF AUDIO SCENE MANAGEMENT (CAE Reference Models, 2026/10/26). No Port of the Module or of Audio Object Editing, Audio Scene Editing, Speech Object
 // Editing and Speech Scene Editing has a Basic Data Type: they take and give the Audio Object (OSD-AUO), the Audio Scene Descriptors (OSD-ASD), the Speech Object (OSD-SPO)
 // and the Speech Scene Descriptors (OSD-SSD). The tests judge the editing of ONE Basic Object or Scene at a time, so they give a Basic Object as the Object that holds it
-// alone, and read the Basic Object an Object holds alone, with these.
+// alone, and read the Basic Object an Object holds alone, with these: the Basic case, which is the case of one part of a Full Object or Scene (AsmFullTests judges the Full ones).
 internal static class Forms
 {
     // An Object brought in by a User Command (AcquiredObject): the User Command the editing AIM takes it from, since no Port of the editing AIMs takes an Object.
@@ -57,4 +57,41 @@ internal static class Forms
     public static string Bss(string ssdJson) =>
         MpaiJson.FromJson<SpeechSceneDescriptors>(ssdJson).SubSpeechScenes?.FirstOrDefault(s => s.BasicScene is not null)?.BasicScene is { } bss ? MpaiJson.ToJson(bss)
         : throw new InvalidOperationException("The Speech Scene does not hold a Basic Speech Scene.");
+
+    // ---- THE FULL FORMS (the author, 2026/11/08: everything in ASM is Full, a Basic Object or Scene is the case of one part) -----------------------------------------------------
+    // The helpers above judge ONE Basic Object or Scene held alone: the case of one part. These make the Object or Scene of several parts.
+
+    // A Full Audio Object of Basic Audio Objects, the part n standing at x = n inside the Object.
+    public static string FullAuo(string name, params BasicAudioObject[] parts) => MpaiJson.ToJson(new AudioObject
+    {
+        AudioObjectID = name, AudioObjectSpaceTime = new SpaceTime(), BasicAudioObjectCount = parts.Length,
+        BasicAudioObjects = parts.Select((p, n) => new BasicAudioObjectEntry
+        {
+            BasicAudioObjectSpaceTime = new SpaceTime { SpatialAttitude1 = AsmRig.At(n, 0) }, BAObjectIDOrBAObject = p
+        }).ToList()
+    });
+
+    // A Full Audio Scene of Basic Audio Scenes (JSON of each).
+    public static string FullAsd(string name, params string[] basicScenes) => MpaiJson.ToJson(new AudioSceneDescriptors
+    {
+        AudioSceneDescriptorsID = name, AudioSceneDescriptorsSpaceTime = new SpaceTime(), SubAudioSceneCount = basicScenes.Length,
+        SubAudioScenes = basicScenes.Select(b => new SubAudioSceneEntry { SubAudioSceneSpaceTime = new SpaceTime(), BasicScene = MpaiJson.FromJson<BasicAudioSceneDescriptors>(b) }).ToList()
+    });
+
+    // A Speech Object of Basic Speech Objects, the part n standing at x = n inside the Object.
+    public static string FullSpo(string name, params BasicSpeechObject[] parts) => MpaiJson.ToJson(new SpeechObject
+    {
+        SpeechObjectID = name, SpeechObjectSpaceTime = new SpaceTime(), BasicSpeechObjectCount = parts.Length,
+        BasicSpeechObjects = parts.Select((p, n) => new BasicSpeechObjectEntry
+        {
+            BasicSpeechObjectSpaceTime = new SpaceTime { SpatialAttitude1 = AsmRig.At(n, 0) }, BSObjectIDOrBSObject = p
+        }).ToList()
+    });
+
+    // A Full Speech Scene of Basic Speech Scenes (JSON of each).
+    public static string FullSsd(string name, params string[] basicScenes) => MpaiJson.ToJson(new SpeechSceneDescriptors
+    {
+        SpeechSceneDescriptorsID = name, SpeechSceneDescriptorsSpaceTime = new SpaceTime(), SubSpeechSceneCount = basicScenes.Length,
+        SubSpeechScenes = basicScenes.Select(b => new SubSpeechSceneEntry { SubSpeechSceneSpaceTime = new SpaceTime(), BasicScene = MpaiJson.FromJson<BasicSpeechSceneDescriptors>(b) }).ToList()
+    });
 }

@@ -6,6 +6,7 @@ using AIF.Metadata;
 using Json.Schema;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Eae;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 
@@ -14,7 +15,7 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class CaeUscV25EaeNcmAmxTests
 {
-    private const string Shd = "OSD-BAO-V1.5#1", Tr = "OSD-BAO-V1.5#2", Geo = "OSD-BAS-V1.5#1", Asr = "CAE-ASR-V1.0#1", Out = "OSD-BAO-V1.5#9", Scene = "OSD-BAS-V1.5#9", Time = "OSD-SPT-V1.5#1";
+    private const string Shd = "OSD-BAO-V1.5#1", Tr = "OSD-BAO-V1.5#2", Geo = "OSD-BAS-V1.5#1", Out = "OSD-BAO-V1.5#9", Scene = "OSD-BAS-V1.5#9", Time = "OSD-SPT-V1.5#1";
     private const int Rate = 16000;
 
     private static bool Valid(string[] schema, string json)
@@ -44,15 +45,15 @@ public class CaeUscV25EaeNcmAmxTests
     private static async Task<(string Shd, string Sources, string Scene)> Before(MultiAudio audio)
     {
         var array = Array();
-        var transform = await new AatAimProcessor("aat", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
-        var shd = await new SfdAimProcessor("sfd", "g", "t", "o").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["g"] = array.ToJson().ToJsonString(), ["t"] = transform.Ports["out"] } });
-        var sds = await new SdsAimProcessor("sds", "s", "a", "t", "g", "r").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["s"] = shd.Ports["o"] } });
+        var transform = await new SftAimProcessor("sft", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
+        var shd = await new SfdAimProcessor("sfd", "t", "o").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["t"] = transform.Ports["out"] } });
+        var sds = await new SdsAimProcessor("sds", "s", "t", "g").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["s"] = shd.Ports["o"] } });
         Assert.False(sds.IsError, sds.Payload);
         return (shd.Ports["o"], sds.Ports["t"], sds.Ports["g"]);
     }
 
     private static Task<Message> Clean(string shd, string sources, string scene, NcmAimProcessor? ncm = null) =>
-        (ncm ?? new NcmAimProcessor("ncm", Shd, Tr, Geo, Asr, Out)).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = shd, [Tr] = sources, [Geo] = scene } });
+        (ncm ?? new NcmAimProcessor("ncm", Shd, Tr, Geo, Out)).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = shd, [Tr] = sources, [Geo] = scene } });
 
     private static double Power(TransformBlocks t, int channel, IEnumerable<int> blocks, int fromBin, int toBin) =>
         blocks.Average(n => Enumerable.Range(fromBin, toBin - fromBin + 1).Average(b => t.Blocks[n][channel][b].Magnitude * t.Blocks[n][channel][b].Magnitude));
@@ -89,9 +90,9 @@ public class CaeUscV25EaeNcmAmxTests
     public async Task TheNoiseCancellationModuleSaysWhatItCannotDo()
     {
         var (shd, sources, scene) = await Before(Room(0.3, 0.9, 300));
-        var quiet = await new NcmAimProcessor("ncm", Shd, Tr, Geo, Asr, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = shd } });
+        var quiet = await new NcmAimProcessor("ncm", Shd, Tr, Geo, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = shd } });
         Assert.False(quiet.IsError, quiet.Payload); Assert.Empty(quiet.Ports);                                                  // the sound field and no sources: a quiet room, nothing to clean
-        Assert.True((await new NcmAimProcessor("ncm", Shd, Tr, Geo, Asr, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Tr] = sources } })).IsError);        // sources and no sound field
+        Assert.True((await new NcmAimProcessor("ncm", Shd, Tr, Geo, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Tr] = sources } })).IsError);        // sources and no sound field
         var twoSources = SceneDescriptors.Make("x", [new("source-1", 0, 0, []), new("source-2", 90, 0, [])]);
         var mismatch = await Clean(shd, sources, twoSources);
         Assert.True(mismatch.IsError); Assert.Contains("2 sources and the Transform Audio 1 channels", mismatch.Payload);

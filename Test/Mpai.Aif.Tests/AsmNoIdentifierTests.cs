@@ -42,10 +42,11 @@ public class AsmNoIdentifierTests
         try
         {
             var storage = new FileSharedStorage(root, "CAE-ASM", "ASM-Test");
+            var priv = AsmStorage.PrivateAt(Path.Combine(root, "private"));
             var store = new AIF.Store.AmdStore(Repository.Amds); store.Scan();
             var aoePorts = AimPortReader.Load(store, "1CAE-AOE-V1.0-I01"); var asePorts = AimPortReader.Load(store, "1CAE-ASE-V1.0-I01");
-            var aoe = new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(storage), aoePorts);
-            var ase = new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(storage), asePorts);
+            var aoe = new AoeAimProcessor("1CAE-AOE-V1.0-I01", new AoeAim(AsmStorage.Keep(priv, "1CAE-AOE-V1.0-I01", storage)), aoePorts);
+            var ase = new AseAimProcessor("1CAE-ASE-V1.0-I01", new AseAim(AsmStorage.Keep(priv, "1CAE-ASE-V1.0-I01", storage)), asePorts);
 
             async Task<Message> Give(IAimProcessor aim, params (string Port, string Json)[] inputs) =>
                 await aim.ProcessAsync(new Message { MessageId = Guid.NewGuid().ToString(), Ports = inputs.ToDictionary(i => i.Port, i => i.Json) });

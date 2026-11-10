@@ -53,10 +53,10 @@ public class JsiGrammarTests
     }
 
     [Fact]
-    public async Task ATurnKeepsThePositionAndChangesTheYaw()
+    public async Task ATurnStatesOnlyTheYawAndSoKeepsThePosition()
     {
         var moved = (await Command("turn the piano to 90 degrees"))!["MovedObjects"]!["Objects"]![0]!;
-        Assert.Equal([-3.0, 0.0, 0.0], Numbers(moved["NewSpatialAttitude"]!["Position"]!["CartPosition"]));
+        Assert.Null(moved["NewSpatialAttitude"]!["Position"]);                                                      // a turn states only what it changes: nothing is read of the position (M3282)
         Assert.Equal(90.0, Numbers(moved["NewSpatialAttitude"]!["Orientation"]!["Orientation"])[2]);
     }
 
@@ -110,7 +110,7 @@ public class JsiGrammarTests
     {
         var rq = await Command(words);
         Assert.Null(rq!["MovedObjects"]);
-        Assert.Equal("stage", (string?)rq["AddedObjects"]!["ObjectID"]);                       // the Scene the room is made in, if none is open
+        Assert.Equal((string)JsiRig.Scene()["name"]!, (string?)rq["AddedObjects"]!["ObjectID"]);   // the Scene the room is made in: the one the Module is in (the default, "stage", where none is named)
         Assert.Empty(rq["AddedObjects"]!["Objects"]!.AsArray());
         var corners = rq["ClosedSpace"]![0]!["Shape"]![0]!["SimpleLocationData"]![0]!["RightParallelepiped"]!["CartPositions"]!.AsArray().Select(Numbers).ToList();
         Assert.Equal([-halfX, -halfY, 0.0], corners[0]); Assert.Equal([halfX, -halfY, 0.0], corners[1]); Assert.Equal([-halfX, halfY, 0.0], corners[2]); Assert.Equal(2.5, corners[3][2]);
@@ -146,7 +146,7 @@ public class JsiGrammarTests
     {
         var jsi = JsiRig.Processor((_, _, _) => Task.FromResult("{\"Problem\":\"the model was asked\"}"), JsiRig.Jsi, false, true);
         var answer = JsiRig.FactsOf(await jsi.ProcessAsync(JsiRig.Say(Ports, "banana split sunday", JsiRig.Context(JsiRig.Scene()))), Ports);
-        Assert.Contains("I did not understand: banana split sunday", answer);
+        Assert.Contains("I did not understand \"banana split sunday\"", answer);
     }
 
     [Theory]

@@ -7,6 +7,7 @@ using AIF.SharedStorage;
 using Mpai.Cae.Usc;
 using Mpai.Core;
 using Mpai.Mmc.Sir;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 

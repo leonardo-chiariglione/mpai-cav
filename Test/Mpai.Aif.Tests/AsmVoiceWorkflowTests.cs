@@ -100,7 +100,10 @@ public class AsmVoiceWorkflowTests
             var devices = new DeviceRegistry();
             devices.RegisterDevice("Voice", Voice).RegisterDevice("SoundIn", SoundIn).RegisterDevice("SceneIn", new PushDevice("OSD-ASD-V1.5")).RegisterDevice("TypedIn", new PushDevice("OSD-BTO-V1.5"))
                    .RegisterDevice("Heard", HeardText).RegisterDevice("ReplyText", ReplyText).RegisterDevice("ReplySpeech", ReplySpeech)
-                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused).RegisterDevice("ObjectReport", new RecordDevice());
+                   .RegisterDevice("Scene", Scene).RegisterDevice("Unused", Unused).RegisterDevice("ObjectReport", new RecordDevice())
+                   // The other User Command Ports of the Module (CAE-UCM Ports 2 to 5: scene, speech, speech scene and multimodal commands and their reports), which ASM-VCI.orch binds too.
+                   .RegisterDevice("SceneCommand", new PushDevice("CAE-UCM-V1.0")).RegisterDevice("SceneReport", new RecordDevice()).RegisterDevice("SpeechReport", new RecordDevice())
+                   .RegisterDevice("SpeechSceneRep", new RecordDevice()).RegisterDevice("MultimodalRep", new RecordDevice());
             devices.RegisterPresent("screen", data => { if (data.TryGetValue("Prompt", out var p)) lock (Prompts) Prompts.Add(p); return Task.CompletedTask; });
             var workflow = new WorkflowReader().Read(File.ReadAllText(Orch));
             var interpreter = new WorkflowInterpreter(Api.Async(), devices, line => { lock (this) Said += line + "\n"; });
@@ -291,6 +294,8 @@ public class AsmVoiceWorkflowTests
         Assert.Contains("2, 1, 0", reply); Assert.Contains("-1, 3, 0", reply);
 
         // 5. A sentence with no number: the reply asks for it, and the scene does not change.
+        // The Module may still be delivering scenes for the earlier commands: wait until the count is still for 2 s before it is taken (a late delivery of an earlier command is not a change made by this sentence).
+        for (int seen = -1, still = 0; still < 4; await Task.Delay(500)) { var now = rig.Scene.All().Count; still = now == seen ? still + 1 : 0; seen = now; }
         var positionsBefore = JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(rig.Positions()))!.ToJsonString();
         var scenesBefore = rig.Scene.All().Count;
         reply = await Say("move the violin a bit to the left", 1);

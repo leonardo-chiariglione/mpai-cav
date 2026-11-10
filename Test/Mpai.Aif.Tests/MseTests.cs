@@ -66,7 +66,7 @@ public class MseTests
             var store = new AIF.Store.AmdStore(Repository.Amds);
             store.Scan();
             var ports = AIF.Controller.AimPortReader.Load(store, "1OSD-MSE-V1.5-I01");
-            var mse = new MseAimProcessor("1OSD-MSE-V1.5-I01", new FileSharedStorage(root, "MSE", "MSE-Test"), ports, "M1");
+            var mse = new MseAimProcessor("1OSD-MSE-V1.5-I01", AsmStorage.Keep(AsmStorage.PrivateAt(Path.Combine(root, "private")), "1OSD-MSE-V1.5-I01", new FileSharedStorage(root, "MSE", "MSE-Test")), new FileSharedStorage(Path.Combine(root, "own"), "MSE", "MSE-Own"), ports, "M1");
             string first = ports.Input("OSD-ASD-V1.5", 1), second = ports.Input("OSD-ASD-V1.5", 2), command = ports.Input("CAE-UCM-V1.0"),
                    sceneOut = ports.Output("OSD-MSD-V1.5"), reportOut = ports.Output("CAE-UCM-V1.0");
             var reports = new List<string>();
@@ -127,7 +127,7 @@ public class MseTests
             var store = new AIF.Store.AmdStore(Repository.Amds);
             store.Scan();
             var ports = AIF.Controller.AimPortReader.Load(store, "1OSD-MSE-V1.5-I01");
-            var mse = new MseAimProcessor("1OSD-MSE-V1.5-I01", new FileSharedStorage(root, "MSE", "MSE-Test"), ports, "M1");
+            var mse = new MseAimProcessor("1OSD-MSE-V1.5-I01", AsmStorage.Keep(AsmStorage.PrivateAt(Path.Combine(root, "private")), "1OSD-MSE-V1.5-I01", new FileSharedStorage(root, "MSE", "MSE-Test")), new FileSharedStorage(Path.Combine(root, "own"), "MSE", "MSE-Own"), ports, "M1");
             string objectPort1 = ports.Input("OSD-AUO-V1.5", 1), objectPort2 = ports.Input("OSD-AUO-V1.5", 2), scenePort2 = ports.Input("OSD-ASD-V1.5", 2),
                    command = ports.Input("CAE-UCM-V1.0"), sceneOut = ports.Output("OSD-MSD-V1.5");
             async Task<string?> Run(params (string Port, string Json)[] inputs)

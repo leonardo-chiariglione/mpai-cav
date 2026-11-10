@@ -6,6 +6,7 @@ using Json.Schema;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Smc;
 using Mpai.Cae.Usc.Sra;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 

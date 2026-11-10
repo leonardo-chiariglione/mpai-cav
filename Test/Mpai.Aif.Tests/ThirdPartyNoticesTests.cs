@@ -85,6 +85,22 @@ public class ThirdPartyNoticesTests
         Assert.DoesNotContain("NOT STATED", generated);
     }
 
+    // MODELS.md: the same list, on a page of its own - which models and data the software obtains, from where, and under which licence.
+    [Fact]
+    public void ThePageOfTheModelsListsTheSameModelsWithTheirSourcesAndLicences()
+    {
+        var file = Path.Combine(Repository.Root, "MODELS.md");
+        var page = "# Models and data used by the software\n\n" +
+                   "This page lists every model and every piece of data that the software obtains from a public source: where it comes from (a link), its SHA-256, its licence (a link) and whether it concerns personal data. " +
+                   "The list is made from the `AccessSources` of the AIM Metadata (`AIMs/AMDs`) and is checked by the tests: a model that is declared and not listed makes a test fail. " +
+                   "The same list is in `THIRD-PARTY-NOTICES.md`, with the other files made by others.\n\n" +
+                   Section().Replace(Begin, "").Replace(End, "").Trim('\n') + "\n\n" +
+                   File.ReadAllText(Path.Combine(Repository.Root, "docs", "model-licence-findings.md")).ReplaceLineEndings("\n").Trim('\n') + "\n";
+        if (Environment.GetEnvironmentVariable("MPAI_UPDATE_EXPECTED") == "1") File.WriteAllText(file, page);
+        Assert.True(File.Exists(file), "MODELS.md is missing: run with MPAI_UPDATE_EXPECTED=1.");
+        Assert.Equal(page, File.ReadAllText(file).ReplaceLineEndings("\n"));
+    }
+
     [Fact]
     public void EverySourceFileThatUsesAModelOrDataSaysSoInItsFirstLines()
     {

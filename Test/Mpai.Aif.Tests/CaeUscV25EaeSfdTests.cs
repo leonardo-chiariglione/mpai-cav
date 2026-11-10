@@ -15,7 +15,7 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class CaeUscV25EaeSfdTests
 {
-    private const string Geometry = "CAE-MAG-V2.5#1", Transform = "OSD-BAO-V1.5#1", Out = "OSD-BAO-V1.5#9";
+    private const string Transform = "OSD-BAO-V1.5#1", Out = "OSD-BAO-V1.5#9";
     private const int Rate = 16000;
 
     private static bool Valid(string[] schema, string json)
@@ -55,9 +55,9 @@ public class CaeUscV25EaeSfdTests
 
     private static async Task<(TransformBlocks Blocks, string Json)> Decompose(ArrayGeometry array, MultiAudio audio)
     {
-        var transform = await new AatAimProcessor("aat", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
+        var transform = await new SftAimProcessor("sft", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
         Assert.False(transform.IsError, transform.Payload);
-        var reply = await new SfdAimProcessor("sfd", Geometry, Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Geometry] = array.ToJson().ToJsonString(), [Transform] = transform.Ports["out"] } });
+        var reply = await new SfdAimProcessor("sfd", Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Transform] = transform.Ports["out"] } });
         Assert.False(reply.IsError, reply.Payload);
         return (TransformObject.Read(reply.Ports[Out]).Blocks, reply.Ports[Out]);
     }
@@ -123,9 +123,10 @@ public class CaeUscV25EaeSfdTests
         var (blocks, _) = await Decompose(nine, PlaneWaves(nine, 0.5, (1000, 8000, 30, 10)));
         Assert.Equal(9, blocks.Channels);                                                    // nine microphones: order 2: nine coefficients
 
-        var transform = await new AatAimProcessor("aat", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", PlaneWaves(Octahedron(), 0.2, (1000, 8000, 0, 0)), Octahedron()) } });
-        var mismatch = await new SfdAimProcessor("sfd", Geometry, Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Geometry] = nine.ToJson().ToJsonString(), [Transform] = transform.Ports["out"] } });
+        var transform = await new SftAimProcessor("sft", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", PlaneWaves(Octahedron(), 0.2, (1000, 8000, 0, 0)), Octahedron()) } });
+        var (six, _) = TransformObject.Read(transform.Ports["out"]);                                  // six channels, with the geometry of nine microphones in the Qualifier
+        var mismatch = await new SfdAimProcessor("sfd", Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Transform] = TransformObject.Make("wrong", six, "Transform", nine.ToJson()) } });
         Assert.True(mismatch.IsError); Assert.Contains("9 microphones and the transform 6 channels", mismatch.Payload);
-        Assert.True((await new SfdAimProcessor("sfd", Geometry, Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Transform] = transform.Ports["out"] } })).IsError);          // no geometry
+        Assert.True((await new SfdAimProcessor("sfd", Transform, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Transform] = TransformObject.Make("bare", six, "Transform") } })).IsError);          // no geometry in the Qualifier
     }
 }

@@ -4,6 +4,7 @@ using AIF.Controller;
 using Mpai.Aif.Api;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Eae;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 
@@ -15,7 +16,7 @@ namespace Mpai.Aif.Tests;
 public class CaeUscV25EaeModuleTests : IDisposable
 {
     private const string Ees = "1CAE-EAE-V2.5-I01";
-    private static readonly string[] Aims = ["1CAE-AAT-V2.5-I01", "1CAE-SFD-V2.5-I01", "1CAE-SDS-V2.5-I01", "1CAE-NCM-V2.5-I01", "1CAE-AST-V2.5-I01", "1CAE-AMX-V2.5-I01"];
+    private static readonly string[] Aims = ["1CAE-SFT-V2.5-I01", "1CAE-SFD-V2.5-I01", "1CAE-SDS-V2.5-I01", "1CAE-NCM-V2.5-I01", "1CAE-AST-V2.5-I01", "1CAE-AMX-V2.5-I01"];
     private readonly string work = Path.Combine(Path.GetTempPath(), "cae-eae-" + Guid.NewGuid().ToString("N"));
     private readonly HostProcess process;
     private readonly ControllerApi api;
@@ -52,8 +53,6 @@ public class CaeUscV25EaeModuleTests : IDisposable
             return (short)((i < 0.8 * 16000 ? v : 0) + (i >= 0.5 * 16000 ? s2.Channels[m][i] : 0) + ((int)(state >> 8) % 401 - 200));      // the first until 0.8 s, the second from 0.5 s
         }).ToArray()).ToArray(), 16000);
 
-        Assert.Equal(AifError.OK, api.InputWrite(Ees, "CAE-MAG-V2.5", 1, array.ToJson().ToJsonString(), 10_000));
-        Assert.Equal(AifError.OK, api.InputWrite(Ees, "CAE-ASR-V1.0", 1, new JsonObject { ["Header"] = "CAE-ASR-V1.0", ["PolynomialVariable"] = "AngleSine", ["Polynomial"] = new JsonArray(new JsonObject { ["Coefficient"] = 1.0, ["Exponent"] = 0 }) }.ToJsonString(), 10_000));
         Assert.Equal(AifError.OK, api.InputWrite(Ees, "OSD-BAO-V1.5", 1, AudioObject.MakeMultichannel("capture", capture, array), 10_000));
 
         var read = api.OutputRead(Ees, "OSD-BAS-V1.5", 1, 60_000);

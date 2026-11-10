@@ -312,4 +312,70 @@ public class AihFirstSliceTests : IDisposable
         Assert.True(chain.Verify());
         Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "tpu-1" && e.AihDataId == "ahd-2" && !e.Allowed);
     }
+
+    // WHO STARTS WHAT. The End User starts processing of its own AIH Data (through its Health Front End); the Back End starts an audit and a processing itself - a command of its
+    // operator device - and the licence terms decide: AIH Data Processing and Auditing ask the Blockchain, the workflow does not.
+    [SkippableFact]
+    public void TheEndUserAndTheBackEndStartFunctions()
+    {
+        using var hbe = BackEnd();
+        var one = FrontEnd(hbe, "user-1");
+        var two = FrontEnd(hbe, "user-2");
+        foreach (var (front, user) in new[] { (one, "user-1"), (two, "user-2") })
+        {
+            var register = AihSamples.RegisterRequest(user); register["RegisterData"]![0]!["Request"]!["RequestedServices"] = new JsonArray(
+                new JsonObject { ["Service"] = "Store" }, new JsonObject { ["Service"] = "DeIDAndAnonym" }, new JsonObject { ["Service"] = "Auditing" }, new JsonObject { ["Service"] = "AIHDataProcessing" });
+            Assert.True(AihJson.RegisterResponseOf(front.Register(register))!["Success"]!.GetValue<bool>());
+        }
+        // user-1's licence lets the Back End (hbe-1) keep and process the AIH Data; user-2's names another Back End.
+        Assert.Null(one.Acquire(HealthData("user-1", 190), Licence("user-1", "ahd-1", licenseTpu: false)));
+        var other = Licence("user-2", "ahd-2", licenseTpu: false, backEndStatus: "Identified");
+        ((JsonObject)other["ModelLicenceData"]!["Specific"]![0]!["BackEndLicence"]!)["BackEndID"] = "another-back-end";
+        two.Acquire(HealthData("user-2", 190), other);
+        Assert.True(Done(one.Upload("ahd-1")));
+        Assert.True(Done(two.Upload("ahd-2")));
+
+        // The End User starts a processing of its own AIH Data: done; of another's: refused (an End User works on its own AIH Data only).
+        Assert.True(Done(one.Process("ahd-1")));
+        Assert.False(Done(one.Process("ahd-2")));
+
+        // The Back End starts a processing: done where the licence names it, refused where it does not (the Blockchain says).
+        Assert.True(Done(hbe.ProcessData("ahd-1")));
+        Assert.False(Done(hbe.ProcessData("ahd-2")));
+        Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "hbe-1" && e.AihDataId == "ahd-1" && e.Allowed);
+        Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "hbe-1" && e.AihDataId == "ahd-2" && !e.Allowed);
+
+        // The End User has an AIH Data de-identified (the Back End's licence says Pseudonymised for user-1); the Back End then starts an audit of user-1's AIH Data: nothing unlicensed.
+        Assert.True(AihJson.Parse(one.DeIdentify("ahd-1", "De-Identify", "Hashing").ToJsonString(), "r")["DeIDAndAnonymData"]![0]!["Response"]!["ProcessingState"]!.GetValue<bool>());
+        Assert.Empty(hbe.AuditOf("user-1")["Audit"]!["Response"]!["AIHDataIDs"]!.AsArray());
+        Assert.Empty(hbe.Errors);
+        Assert.True(chain.Verify());
+    }
+
+    // THE THIRD-PARTY USER'S WORKFLOW (TPU.orch): it registers, asks for a processing as the licence prescribes, and gets the answer or a refusal; for any other service its own Front End refuses.
+    [SkippableFact]
+    public void TheThirdPartyUserRegistersAndAsksForProcessing()
+    {
+        using var hbe = BackEnd();
+        var one = FrontEnd(hbe, "user-1");
+        var two = FrontEnd(hbe, "user-2");
+        foreach (var (front, user) in new[] { (one, "user-1"), (two, "user-2") })
+            Assert.True(AihJson.RegisterResponseOf(front.Register(AihSamples.RegisterRequest(user)))!["Success"]!.GetValue<bool>());
+        Assert.Null(one.Acquire(HealthData("user-1", 190), Licence("user-1", "ahd-1", licenseTpu: true)));
+        two.Acquire(HealthData("user-2", 190), Licence("user-2", "ahd-2", licenseTpu: false));
+        Assert.True(Done(one.Upload("ahd-1")));
+        Assert.True(Done(two.Upload("ahd-2")));
+
+        using var tpu = new TpuUserAgent(Controller("hfe-tpu-1", "FrontEnd"), "tpu-1", Orch("TPU.orch"), Path.Combine(work, "hfe-tpu-1", "secure-data-vault"), ServiceOf("tpu-1", name: "tpu-1"));
+        var registered = tpu.Register(AihSamples.ThirdPartyRegisterRequest("tpu-1"));
+        Assert.True(AihJson.RegisterResponseOf(registered)!["Success"]!.GetValue<bool>());
+        Assert.NotNull(tpu.Tokens);
+        Assert.Equal("Green", AihJson.ResponseOf(tpu.Process("ahd-1"))!["AIHDataOrAIHDataID"]![0]!["AIHData"]!["ARAData"]!["ARAData"]!["Risk"]!.ToString());   // inside its licence
+        Assert.False(Done(tpu.Process("ahd-2")));                                                                                   // outside it: refused
+        Assert.False(Done(tpu.Ask("DeIDAndAnonym", "ahd-1")));                                                                      // not a service of a Third-Party User
+        Assert.False(Done(tpu.Ask("Auditing", "ahd-1")));
+        Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "tpu-1" && e.AihDataId == "ahd-1" && e.Allowed);
+        Assert.Contains(chain.Ledger, e => e.Kind == "Confirm" && e.Requester == "tpu-1" && e.AihDataId == "ahd-2" && !e.Allowed);
+        Assert.True(chain.Verify());
+    }
 }

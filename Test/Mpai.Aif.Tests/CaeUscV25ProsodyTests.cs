@@ -1,5 +1,6 @@
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Ees;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 

@@ -6,10 +6,11 @@ using AIF.Metadata;
 using Json.Schema;
 using Mpai.Cae.Usc;
 using Mpai.Cae.Usc.Eae;
+using Mpai.Osd.Speech;
 
 namespace Mpai.Aif.Tests;
 
-// CAE-USC V2.5, Enhanced Audioconference Experience: the Audio Analysis Transform and the Audio Synthesis Transform, and the data they carry (the multichannel audio of an array, its
+// CAE-USC V2.5, Enhanced Audioconference Experience: the Short-Time Fourier Transform and the Audio Synthesis Transform, and the data they carry (the multichannel audio of an array, its
 // geometry, the transform in blocks).
 [Trait("Group", "Fast")]
 [Trait("Blocks", "Yes")]
@@ -68,7 +69,7 @@ public class CaeUscV25EaeTransformTests
     {
         var tone = new short[8000]; for (var i = 0; i < tone.Length; i++) tone[i] = (short)(10000 * Math.Sin(2 * Math.PI * 1000 * i / Rate));       // 1 kHz
         var audio = new MultiAudio([tone, tone, tone, tone, tone, tone], Rate);
-        var reply = await new AatAimProcessor("aat", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
+        var reply = await new SftAimProcessor("sft", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
         Assert.False(reply.IsError, reply.Payload);
         Assert.True(Valid(["OSD", "V1.5", "data", "BasicAudioObject.json"], reply.Ports[Out]));
         var (blocks, geometry) = TransformObject.Read(reply.Ports[Out]);
@@ -82,7 +83,7 @@ public class CaeUscV25EaeTransformTests
     public async Task TheSynthesisReturnsWhatTheAnalysisTook()
     {
         var audio = new MultiAudio(Noise(6, 8000 + 77, 2), Rate);                                 // not a whole number of blocks
-        var transform = await new AatAimProcessor("aat", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
+        var transform = await new SftAimProcessor("sft", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
         var back = await new AstAimProcessor("ast", In, Out).ProcessAsync(Of(transform.Ports[Out]));
         Assert.False(back.IsError, back.Payload);
         Assert.True(Valid(["OSD", "V1.5", "data", "BasicAudioObject.json"], back.Ports[Out]));
@@ -99,12 +100,12 @@ public class CaeUscV25EaeTransformTests
     public async Task TheTransformsSayWhatTheyCannotDo()
     {
         var audio = new MultiAudio(Noise(5, 500, 3), Rate);                                          // five channels for a six-microphone array
-        var mismatch = await new AatAimProcessor("aat", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
+        var mismatch = await new SftAimProcessor("sft", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", audio, Octahedron())));
         Assert.True(mismatch.IsError); Assert.Contains("6 microphones and the audio 5 channels", mismatch.Payload);
-        var badBlock = await new AatAimProcessor("aat", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", new MultiAudio(Noise(6, 500, 3), Rate), Octahedron(blockSize: 500))));
+        var badBlock = await new SftAimProcessor("sft", In, Out).ProcessAsync(Of(AudioObject.MakeMultichannel("capture", new MultiAudio(Noise(6, 500, 3), Rate), Octahedron(blockSize: 500))));
         Assert.True(badBlock.IsError); Assert.Contains("not a power of two", badBlock.Payload);
         var notTransform = await new AstAimProcessor("ast", In, Out).ProcessAsync(Of(AudioObject.Make("pcm", new Audio(new short[100], Rate))));
         Assert.True(notTransform.IsError); Assert.Contains("not in the transform domain", notTransform.Payload);
-        Assert.True((await new AatAimProcessor("aat", In, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() })).IsError);
+        Assert.True((await new SftAimProcessor("sft", In, Out).ProcessAsync(new Message { MessageId = "m", Ports = new() })).IsError);
     }
 }

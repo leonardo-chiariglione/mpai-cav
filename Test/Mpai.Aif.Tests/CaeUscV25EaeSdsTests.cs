@@ -15,7 +15,7 @@ namespace Mpai.Aif.Tests;
 [Trait("Blocks", "Yes")]
 public class CaeUscV25EaeSdsTests
 {
-    private const string Shd = "OSD-BAO-V1.5#1", Asr = "CAE-ASR-V1.0#1", OutAudio = "OSD-BAO-V1.5#9", OutScene = "OSD-BAS-V1.5#9", OutAsr = "CAE-ASR-V1.0#9";
+    private const string Shd = "OSD-BAO-V1.5#1", OutAudio = "OSD-BAO-V1.5#9", OutScene = "OSD-BAS-V1.5#9";
     private const int Rate = 16000;
 
     private static bool Valid(string[] schema, string json)
@@ -37,11 +37,11 @@ public class CaeUscV25EaeSdsTests
     private static async Task<Message> Separate(MultiAudio audio, string? asr = null, SdsAimProcessor? sds = null)
     {
         var array = Array();
-        var transform = await new AatAimProcessor("aat", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
-        var shd = await new SfdAimProcessor("sfd", "g", "t", "o").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["g"] = array.ToJson().ToJsonString(), ["t"] = transform.Ports["out"] } });
+        var transform = await new SftAimProcessor("sft", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", audio, array) } });
+        var shd = await new SfdAimProcessor("sfd", "t", "o").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["t"] = transform.Ports["out"] } });
         Assert.False(shd.IsError, shd.Payload);
-        var ports = new Dictionary<string, string> { [Shd] = shd.Ports["o"] }; if (asr is not null) ports[Asr] = asr;
-        return await (sds ?? new SdsAimProcessor("sds", Shd, Asr, OutAudio, OutScene, OutAsr)).ProcessAsync(new Message { MessageId = "m", Ports = ports });
+        var ports = new Dictionary<string, string> { [Shd] = shd.Ports["o"] };
+        return await (sds ?? new SdsAimProcessor("sds", Shd, OutAudio, OutScene, GivenUnderTheSetting(asr))).ProcessAsync(new Message { MessageId = "m", Ports = ports });
     }
 
     private static double[] Unit(double az, double el) => [Math.Cos(el * Math.PI / 180) * Math.Cos(az * Math.PI / 180), Math.Cos(el * Math.PI / 180) * Math.Sin(az * Math.PI / 180), Math.Sin(el * Math.PI / 180)];
@@ -90,15 +90,63 @@ public class CaeUscV25EaeSdsTests
         Assert.True(blocks.Blocks[(int)(0.2 * Rate / 256)][channelTwo].All(v => v.Magnitude == 0), "the second source is silent before 0.4 s");
     }
 
+    // The Audio Scene Reference is not an input: the Controller obtains it (AccessSources), checks its SHA-256 and gives the file under the Setting "AudioSceneReference". Here a file stands for it.
+    private static IReadOnlyDictionary<string, string> GivenUnderTheSetting(string? asr)
+    {
+        if (asr is null) return new Dictionary<string, string>();
+        var file = Path.Combine(Path.GetTempPath(), "asr-" + Guid.NewGuid().ToString("N") + ".json"); File.WriteAllText(file, asr);
+        return new Dictionary<string, string> { [SdsAimProcessor.AudioSceneReferenceSetting] = file };
+    }
+
     [Fact]
-    public async Task TheAudioSceneReferenceIsGivenOnAndABadOneIsRefused()
+    public async Task TheAudioSceneReferenceComesFromTheSettingAndABadOneIsRefused()
     {
         var asr = new JsonObject { ["Header"] = "CAE-ASR-V1.0", ["PolynomialVariable"] = "AngleSine", ["Polynomial"] = new JsonArray(new JsonObject { ["Coefficient"] = 1.0, ["Exponent"] = 0 }) }.ToJsonString();
         var reply = await Separate(TwoSources(), asr);
-        Assert.False(reply.IsError, reply.Payload); Assert.Equal(asr, reply.Ports[OutAsr]);
-        Assert.False((await Separate(TwoSources())).Ports.ContainsKey(OutAsr));                                // none in, none out
+        Assert.False(reply.IsError, reply.Payload); Assert.Equal(2, reply.Ports.Count);                           // the transform and the scene: no reference at a Port
+        Assert.False((await Separate(TwoSources())).IsError);                                                   // none given: it works as well
         var bad = await Separate(TwoSources(), "{\"Header\":\"OSD-BAS-V1.5\"}");
         Assert.True(bad.IsError); Assert.Contains("not a CAE-ASR-V1.0", bad.Payload);
+    }
+
+    // The L3s of Speech Detection and Separation and of Noise Cancellation Module declare the Audio Scene Reference in their AccessSources, the file exists, its SHA-256 is the one declared, it is a
+    // valid CAE-ASR-V1.0, and the Controller's way to give it (ModelFiles) gives a Setting with the file. They have no Port for it.
+    [Theory]
+    [InlineData("1CAE-SDS-V2.5-I01")]
+    [InlineData("1CAE-NCM-V2.5-I01")]
+    public void TheL3DeclaresTheAudioSceneReferenceInItsAccessSourcesAndTheControllerGivesItUnderItsSetting(string l3)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(Repository.Amds, l3 + ".json")));
+        var entry = document.RootElement.GetProperty("AccessSources").EnumerateArray().Single();
+        Assert.Equal("AudioSceneReference", entry.GetProperty("Setting").GetString());
+        var path = new Uri(entry.GetProperty("Uri").GetString()!).LocalPath;
+        Assert.True(File.Exists(path), path);
+        Assert.Equal(entry.GetProperty("Sha256").GetString(), Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))));
+        Assert.True(Valid(["CAE3", "V1.0", "data", "AudioSceneReference.json"], File.ReadAllText(path)));
+        var given = AIF.Controller.ModelFiles.SettingsOf(Repository.Root, l3, new Dictionary<string, string>());
+        Assert.True(given.ContainsKey("AudioSceneReference"), "the Controller gave no Setting");
+        Assert.Equal(File.ReadAllText(path), File.ReadAllText(given["AudioSceneReference"]));
+    }
+
+    // The EAE, SFD, SDS and NCM (L3 and schema) have no Port and no Topology entry for the Microphone Array Geometry or the Audio Scene Reference.
+    [Theory]
+    [InlineData("1CAE-EAE-V2.5-I01", "EnhancedAudioconferenceExperience")]
+    [InlineData("1CAE-SFD-V2.5-I01", "SoundFieldDescription")]
+    [InlineData("1CAE-SDS-V2.5-I01", "SpeechDetectionAndSeparation")]
+    [InlineData("1CAE-NCM-V2.5-I01", "NoiseCancellationModule")]
+    public void NoL3AndNoSchemaOfTheEnhancedAudioconferenceExperienceTakesTheGeometryOrTheReferenceAtAPort(string l3, string schema)
+    {
+        var gone = new[] { "CAE-MAG-V2.5", "CAE-ASR-V1.0" };
+        foreach (var text in new[] { File.ReadAllText(Path.Combine(Repository.Amds, l3 + ".json")), File.ReadAllText(Path.Combine(Repository.Schemas, "CAE1", "V2.5", "AIMs", schema + ".json")) })
+        {
+            using var document = JsonDocument.Parse(text);
+            foreach (var port in document.RootElement.GetProperty("ExternalPorts").EnumerateArray()) Assert.DoesNotContain(port.GetProperty("DataType").GetString(), gone);
+            foreach (var t in document.RootElement.GetProperty("Topology").EnumerateArray())
+            {
+                Assert.DoesNotContain(t.GetProperty("Output").GetProperty("DataType").GetString(), gone);
+                Assert.DoesNotContain(t.GetProperty("Input").GetProperty("DataType").GetString(), gone);
+            }
+        }
     }
 
     [Fact]
@@ -107,9 +155,9 @@ public class CaeUscV25EaeSdsTests
         var silence = await Separate(new MultiAudio(Enumerable.Range(0, 6).Select(_ => new short[8000]).ToArray(), Rate));
         Assert.False(silence.IsError, silence.Payload); Assert.Empty(silence.Ports);                                            // a quiet room: nothing is given, and it is not a fault
         var array = Array();                                                                                      // the six channels of the array are not (N + 1)^2 coefficients
-        var transform = await new AatAimProcessor("aat", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", TwoSources(), array) } });
-        var notShd = await new SdsAimProcessor("sds", Shd, Asr, OutAudio, OutScene, OutAsr).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = transform.Ports["out"] } });
+        var transform = await new SftAimProcessor("sft", "in", "out").ProcessAsync(new Message { MessageId = "m", Ports = new() { ["in"] = AudioObject.MakeMultichannel("capture", TwoSources(), array) } });
+        var notShd = await new SdsAimProcessor("sds", Shd, OutAudio, OutScene).ProcessAsync(new Message { MessageId = "m", Ports = new() { [Shd] = transform.Ports["out"] } });
         Assert.True(notShd.IsError); Assert.Contains("(N + 1)^2", notShd.Payload);
-        Assert.True((await new SdsAimProcessor("sds", Shd, Asr, OutAudio, OutScene, OutAsr).ProcessAsync(new Message { MessageId = "m", Ports = new() })).IsError);
+        Assert.True((await new SdsAimProcessor("sds", Shd, OutAudio, OutScene).ProcessAsync(new Message { MessageId = "m", Ports = new() })).IsError);
     }
 }

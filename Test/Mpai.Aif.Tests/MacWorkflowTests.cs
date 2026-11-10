@@ -2,7 +2,7 @@ using Mpai.Aif.Api;
 
 namespace Mpai.Aif.Tests;
 
-// THE WORKFLOW OF MULTIMODAL ACCESS CONTROL (Apps/MMC/MAC/MMC-MAC.orch) executed by the interpreter of the User Agent, as the standalone MAC
+// THE WORKFLOW OF MULTIMODAL ACCESS CONTROL (Apps/MMC/MAC/OSD-MAC.orch) executed by the interpreter of the User Agent, as the standalone MAC
 // window does, with simulated devices and a simulated Controller API: the avatar welcomes the person and asks to look at the camera (the
 // face), asks for a sentence (the speech), and the Module, given the face, the speech, the Avatar Model and the verdict request, answers
 // with the Identification (a Boolean) and the Portable Avatar, which is presented. The workflow runs once and ends by itself.
@@ -39,11 +39,11 @@ public class MacWorkflowTests
 
         Assert.Equal(new[]
         {
-            "start 1MMC-MAC-V2.5-I01", "model",
-            "advance 1MMC-MAC-V2.5-I01", "avatar", "face True",
-            "advance 1MMC-MAC-V2.5-I01", "avatar", "speech",
-            "advance 1MMC-MAC-V2.5-I01", "avatar",
-            "stop 1MMC-MAC-V2.5-I01"
+            "start 1OSD-MAC-V1.5-I01", "model",
+            "advance 1OSD-MAC-V1.5-I01", "avatar", "face True",
+            "advance 1OSD-MAC-V1.5-I01", "avatar", "speech",
+            "advance 1OSD-MAC-V1.5-I01", "avatar",
+            "stop 1OSD-MAC-V1.5-I01"
         }, log);
 
         Assert.Equal(3, api.Turns.Count);

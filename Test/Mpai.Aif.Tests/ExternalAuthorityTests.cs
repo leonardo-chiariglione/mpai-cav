@@ -440,7 +440,7 @@ public class ExternalAuthorityTests
                      "\"Name\": \"Input\",   \"Direction\": \"Input\",  \"DataType\": \"TST-TXT-V1.0\",                  \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true")
             .Replace("\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": false", "\"PortNumber\": 1, \"Technology\": \"Software\", \"Protocol\": \"\", \"IsRemote\": true"));
         var port = 41100 + Random.Shared.Next(800);
-        ControllerApi Make() => new(dir, Path.Combine(dir, "no-settings.json"), new ContinuousAims()) { ExternalAnnouncementPort = port, ExternalAnnouncementWait = TimeSpan.FromSeconds(3) };
+        ControllerApi Make() => new(dir, Path.Combine(dir, "no-settings.json"), new ContinuousAims()) { ExternalAnnouncementPort = port, ExternalAnnouncementWait = TimeSpan.FromSeconds(10) };      // the join returns as soon as the announcement is heard; the wait only has to outlast a loaded machine
         using var server = Make();
         using var client = Make();
         using var stranger = Make();

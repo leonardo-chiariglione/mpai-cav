@@ -1,0 +1,43 @@
+{
+  "Header": "XRV-VVS-V1.0",
+  "MInstanceID": "MI1",
+  "UEnvironmentID": "UE1",
+  "VEVenueSpecificationID": "MiniShow-VEVenue",
+  "VEVenueSpecificationTime": {
+    "Header": "OSD-STM-V1.5",
+    "SimpleTimeID": "vvs-t",
+    "SimpleTimeData": [
+      {
+        "FlagsByte": 3,
+        "StartTime": 0,
+        "EndTime": 0,
+        "AccuracyMode": "single",
+        "AccuracyPlusMinus": 0,
+        "TimeType": true,
+        "TimeUnit": "01"
+      }
+    ]
+  },
+  "VirtualObjects": [
+    {
+      "Header": "OSD-3DO-V1.5",
+      "MInstanceID": "MI1",
+      "3DModelObjectID": "VLamp1",
+      "3DModelObjectSpaceTime": {
+        "Header": "OSD-STM-V1.5",
+        "SimpleTimeID": "vlamp1-st",
+        "SimpleTimeData": [
+          {
+            "FlagsByte": 3,
+            "StartTime": 0,
+            "EndTime": 0,
+            "AccuracyMode": "single",
+            "AccuracyPlusMinus": 0,
+            "TimeType": true,
+            "TimeUnit": "01"
+          }
+        ]
+      }
+    }
+  ]
+}

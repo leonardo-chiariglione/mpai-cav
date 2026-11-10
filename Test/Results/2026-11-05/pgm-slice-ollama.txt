@@ -94,3 +94,23 @@ llama3.2:3b	run 3	2.45 s	ok | said "The doors are now open." | actions MU-Actuat
 llama3.2:3b	run 1	2.52 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
 llama3.2:3b	run 2	2.44 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
 llama3.2:3b	run 3	2.46 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+--- 2026-11-05T23:21:27
+llama3.2:3b	run 1	2.57 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 2	2.48 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 3	2.45 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+--- 2026-11-06T00:09:46
+llama3.2:3b	run 1	2.48 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 2	2.38 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 3	2.41 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+--- 2026-11-06T10:11:20
+llama3.2:3b	run 1	1.98 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 2	1.85 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 3	2.07 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+--- 2026-11-08T00:31:09
+llama3.2:3b	run 1	64.73 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 2	39.32 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+llama3.2:3b	run 3	81.28 s	ok | said "The doors are now open." | actions MU-Actuate,MM-Animate
+--- 2026-11-09T02:05:44
+llama3.2:3b	run 1	300.07 s	not accepted
+llama3.2:3b	run 2	301.64 s	not accepted
+llama3.2:3b	run 3	300.05 s	not accepted

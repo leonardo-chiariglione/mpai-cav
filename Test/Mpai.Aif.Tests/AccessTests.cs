@@ -10,7 +10,7 @@ namespace Mpai.Aif.Tests;
 
 // PHASE 16 (M3245): MAC and ACR, Apps of MAS-App.
 //
-// STEP 1: THE MODULES IN PROCESS. 1MMC-ACR-V2.5-I01 and 1MMC-MAC-V2.5-I01 under one
+// STEP 1: THE MODULES IN PROCESS. 1OSD-ACR-V1.5-I01 and 1OSD-MAC-V1.5-I01 under one
 // Controller, built by the providers of AIMs\Providers, their Shared Storage one
 // gallery - where ACR registers and MAC recognises. Two persons: the author and
 // Ronald Reagan, each a photograph and a voice (synthesised with Piper, a voice each).
@@ -28,7 +28,7 @@ namespace Mpai.Aif.Tests;
 [Collection(Timing.Name)]
 public class AccessTests
 {
-    private const string Acr = "1MMC-ACR-V2.5-I01", Mac = "1MMC-MAC-V2.5-I01";
+    private const string Acr = "1OSD-ACR-V1.5-I01", Mac = "1OSD-MAC-V1.5-I01";
     internal static readonly string Images = Environment.GetEnvironmentVariable("MPAI_TEST_IMAGES") ?? Path.Combine(Mpai.Core.MpaiPaths.TestData, "Images", "Author");
 
     internal static string Face(string file) =>
