@@ -1,210 +1,51 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PTF/V1.0/data/TrustMessage.json",
-  "title": "Trust Message V1.0",
-  "description": "A unified structure for Trust Requests and Trust Responses.",
-  "type": "object",
-  "required": [
-    "Header",
-    "MessageType",
-    "MessageID",
-    "MessageTime",
-    "Signature",
-    "KeyID"
-  ],
-  "additionalProperties": false,
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PTF-MSG-V1.0"
-    },
-    "MInstanceID": {
-      "type": "string"
-    },
-    "UEnvironmentID": {
-      "type": "string"
-    },
-    "MessageID": {
-      "type": "string",
-      "description": "Unique identifier of the trust message."
-    },
-    "MessageTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json"
-    },
-    "MessageType": {
-      "type": "string",
-      "enum": [
-        "TrustRequest",
-        "TrustResponse"
-      ],
-      "description": "Indicates whether this message is a request or a response."
-    },
-    "RequesterID": {
-      "type": "string",
-      "description": "Identifier of the entity making the request."
-    },
-    "ResponderID": {
-      "type": "string",
-      "description": "Identifier of the entity responding to the request."
-    },
-    "Request": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Operation": {
-          "type": "string",
-          "description": "Requested trust operation."
-        },
-        "TargetType": {
-          "type": "string",
-          "description": "Type of object the request concerns."
-        },
-        "TargetID": {
-          "type": "string",
-          "description": "Identifier of the target object."
-        }
-      }
-    },
-    "Response": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Status": {
-          "type": "string",
-          "enum": [
-            "Success",
-            "Failure"
-          ]
-        },
-        "Reason": {
-          "type": "string",
-          "description": "Optional reason for failure."
-        },
-        "Result": {
-          "type": "string",
-          "description": "Optional result payload."
-        }
-      }
-    },
-    "Presentation": {
-      "type": "object",
-      "additionalProperties": false,
-      "description": "What the sender presents to be trusted. A Process Instance: its identity, its credential, its lifecycle and evidence, and the CredentialChain from the issuer of its credential to a Trust Anchor. A party that is itself a Trust Anchor - in the AIF a Controller, or what executes AIMs apart from it - its Trust Anchor object and the evidence of what it runs; it is trusted as an anchor the receiver is configured with.",
-      "properties": {
-        "CII": {
-          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json"
-        },
-        "InstanceCredential": {
-          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/InstanceCredential.json"
-        },
-        "ProcessLifecycleCredential": {
-          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/ProcessLifecycleCredential.json"
-        },
-        "AttestationEvidence": {
-          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/AttestationEvidence.json"
-        },
-        "CredentialChain": {
-          "type": "array",
-          "description": "The issuers between the credential and a Trust Anchor, each its CII and the credential that entitles it to issue.",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "CII",
-              "InstanceCredential"
-            ],
-            "properties": {
-              "CII": {
-                "$ref": "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json"
-              },
-              "InstanceCredential": {
-                "$ref": "https://schemas.mpai.community/PTF/V1.0/data/InstanceCredential.json"
-              }
-            }
-          }
-        },
-        "TrustAnchor": {
-          "$ref": "https://schemas.mpai.community/PTF/V1.0/data/TrustAnchor.json"
-        }
-      },
-      "oneOf": [
-        {
-          "required": [
-            "CII",
-            "InstanceCredential"
-          ]
-        },
-        {
-          "required": [
-            "TrustAnchor"
-          ],
-          "not": {
-            "anyOf": [
-              {
-                "required": [
-                  "CII"
-                ]
-              },
-              {
-                "required": [
-                  "InstanceCredential"
-                ]
-              },
-              {
-                "required": [
-                  "CredentialChain"
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "Signature": {
-      "type": "string",
-      "pattern": "^([0-9A-F]{2})+$",
-      "description": "Hexadecimal ASCII-encoded signature over the canonical form (PTF-JSON-CANON-V1) of the object without its Signature, by the key KeyID names."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    },
-    "KeyID": {
-      "type": "string",
-      "description": "Identifier of the key that verifies the Signature; the key's identity states its algorithm."
-    }
-  },
-  "oneOf": [
-    {
-      "properties": {
-        "MessageType": {
-          "const": "TrustRequest"
-        },
-        "Request": {
-          "type": "object"
-        }
-      },
-      "required": [
-        "Request",
-        "RequesterID"
-      ]
-    },
-    {
-      "properties": {
-        "MessageType": {
-          "const": "TrustResponse"
-        },
-        "Response": {
-          "type": "object"
-        }
-      },
-      "required": [
-        "Response",
-        "ResponderID"
-      ]
-    }
-  ]
-}
+{ "$schema":                         "https://json-schema.org/draft/2020-12/schema",
+  "$id":                             "https://schemas.mpai.community/PTF/V1.0/data/TrustMessage.json",
+  "title":                           "Trust Message V1.0",
+  "description":                     "A unified structure for Trust Requests and Trust Responses.",
+  "type":                            "object",
+  "required":                        [ "Header", "MessageType", "MessageID", "MessageTime", "Signature", "KeyID" ],
+  "additionalProperties":            false,
+
+  "properties":                      {
+
+    "Header":                        { "type": "string", "const": "PTF-MSG-V1.0" },
+    "MInstanceID":                   { "type": "string" },
+    "UEnvironmentID":                { "type": "string" },
+    "MessageID":                     { "type": "string", "description": "Unique identifier of the trust message." },
+    "MessageTime":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "MessageType":                   { "type": "string", "enum": [ "TrustRequest", "TrustResponse" ], "description": "Indicates whether this message is a request or a response." },
+    "RequesterID":                   { "type": "string", "description": "Identifier of the entity making the request." },
+    "ResponderID":                   { "type": "string", "description": "Identifier of the entity responding to the request." },
+    "Request":                       { "type": "object", "additionalProperties": false, "properties": {
+      "Operation":                   { "type": "string", "description": "Requested trust operation." },
+      "TargetType":                  { "type": "string", "description": "Type of object the request concerns." },
+      "TargetID":                    { "type": "string", "description": "Identifier of the target object." } } },
+
+    "Response":                      { "type": "object", "additionalProperties": false, "properties": {
+      "Status":                      { "type": "string", "enum": [ "Success", "Failure" ] },
+      "Reason":                      { "type": "string", "description": "Optional reason for failure." },
+      "Result":                      { "type": "string", "description": "Optional result payload." } } },
+
+    "Presentation":                  { "type": "object", "additionalProperties": false, "description": "What the sender presents to be trusted. A Process Instance: its identity, its credential, its lifecycle and evidence, and the CredentialChain from the issuer of its credential to a Trust Anchor. A party that is itself a Trust Anchor - in the AIF a Controller, or what executes AIMs apart from it - its Trust Anchor object and the evidence of what it runs; it is trusted as an anchor the receiver is configured with.", "oneOf": [ { "required": [ "CII", "InstanceCredential" ] }, { "required": [ "TrustAnchor" ], "not": { "anyOf": [ { "required": [ "CII" ] }, { "required": [ "InstanceCredential" ] }, { "required": [ "CredentialChain" ] } ] } } ], "properties": {
+      "CII":                         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json" },
+      "InstanceCredential":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/InstanceCredential.json" },
+      "ProcessLifecycleCredential":  { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/ProcessLifecycleCredential.json" },
+      "AttestationEvidence":         { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/AttestationEvidence.json" },
+      "CredentialChain":             { "type": "array", "description": "The issuers between the credential and a Trust Anchor, each its CII and the credential that entitles it to issue.", "items": { "type": "object", "additionalProperties": false, "required": [ "CII", "InstanceCredential" ], "properties": {
+        "CII":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/CryptographicInstanceIdentity.json" },
+        "InstanceCredential":        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/InstanceCredential.json" } } } },
+
+      "TrustAnchor":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/TrustAnchor.json" } } },
+
+    "Signature":                     { "type": "string", "pattern": "^([0-9A-F]{2})+$",
+                                       "description": "Hexadecimal ASCII-encoded signature over the canonical form (PTF-JSON-CANON-V1) of the object without its Signature, by the key KeyID names." },
+
+    "DataXMData":                    { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                 { "type": "string", "maxLength": 2048 },
+    "KeyID":                         { "type": "string", "description": "Identifier of the key that verifies the Signature; the key's identity states its algorithm." } },
+  "oneOf":                           [ { "required": [ "Request", "RequesterID" ], "properties": {
+    "MessageType":                   { "const": "TrustRequest" },
+    "Request":                       { "type": "object" } } },
+  { "required": [ "Response", "ResponderID" ], "properties": {
+    "MessageType":                   { "const": "TrustResponse" },
+    "Response":                      { "type": "object" } } } ] }

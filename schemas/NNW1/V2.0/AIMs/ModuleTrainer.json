@@ -11,9 +11,9 @@
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "UntrainedParameters", "Direction": "Input", "DataType": "NNW-PRM-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "TrainingDataset", "Direction": "Input", "DataType": "NNW-DST-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "UnwatermarkedParameters", "Direction": "Output", "DataType": "NNW-PRM-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "ExternalPorts":        [{"Name": "UntrainedParameters",     "Direction": "Input", "DataType": "NNW-PRM-V2.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TrainingDataset",         "Direction": "Input", "DataType": "NNW-DST-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "UnwatermarkedParameters", "Direction": "Output", "DataType": "NNW-PRM-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
 

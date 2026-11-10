@@ -1,148 +1,36 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/SpatialCue.json",
-  "title": "Spatial Cue V1.5",
-  "description": "Information about position, orientation, spatial relationships and activation conditions within a defined reference frame, for absolute, relative, semantic, regional or constrained spatial targeting for multimodal interactions.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "SpatialCueID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-OSC-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "ID of the Virtual Space the cue refers to."
-    },
-    "SpatialCueID": {
-      "type": "string",
-      "description": "Unique identifier of the cue instance."
-    },
-    "SpatialCueData": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "CoordinateType": {
-          "type": "string",
-          "enum": [
-            "Cartesian",
-            "Spherical",
-            "Geodesic",
-            "Toroidal"
-          ],
-          "description": "Coordinate system used."
-        },
-        "ReferenceFrame": {
-          "type": "string",
-          "enum": [
-            "World",
-            "Entity",
-            "Device",
-            "Object"
-          ],
-          "description": "Spatial frame."
-        },
-        "CueType": {
-          "type": "string",
-          "enum": [
-            "absolute",
-            "relative",
-            "keyword",
-            "region",
-            "range"
-          ],
-          "description": "Type of cue."
-        },
-        "MediaType": {
-          "type": "string",
-          "description": "Rendering modality: Speech, Audio, Visual, etc."
-        },
-        "Time": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Time interval or instant when the cue is active."
-        },
-        "Trigger": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Type": {
-              "type": "string",
-              "enum": [
-                "TimeEvent",
-                "SpatialEvent",
-                "StateEvent"
-              ],
-              "description": "Category of trigger."
-            },
-            "TimeEvent": {
-              "type": "object",
-              "description": "Activates based on explicit time moments or delays."
-            },
-            "SpatialEvent": {
-              "type": "object",
-              "description": "Activates based on entering/exiting a region, distance thresholds, or inside/outside tests."
-            },
-            "StateEvent": {
-              "type": "object",
-              "description": "Activates when a named condition or external state becomes true."
-            }
-          },
-          "required": [
-            "Type"
-          ],
-          "description": "Structured event predicate that activates the cue."
-        },
-        "Position": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json",
-          "description": "Absolute 3D position."
-        },
-        "Orientation": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Orientation.json",
-          "description": "Absolute orientation."
-        },
-        "LocationRef": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json",
-          "description": "Reference to an external Location."
-        },
-        "RelativeExpression": {
-          "type": "string",
-          "description": "Relative direction expression (right, front, up, ...)."
-        },
-        "Keyword": {
-          "type": "string",
-          "description": "Semantic spatial term (near, inside, ...)."
-        },
-        "Region": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/GeometricSolid.json",
-          "description": "Geometric region (Right Parallelepiped, Sphere, Cylinder)."
-        },
-        "RangeConstraint": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RangeConstraints.json",
-          "description": "Numeric/directional constraint refinement."
-        },
-        "Confidence": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "Confidence score."
-        }
-      },
-      "required": [
-        "CueType"
-      ],
-      "description": "Contextual and structural components of the cue."
-    },
-    "Trace": {
-      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
-      "description": "AIF trace information."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                 "https://json-schema.org/draft/2020-12/schema",
+  "$id":                     "https://schemas.mpai.community/OSD/V1.5/data/SpatialCue.json",
+  "title":                   "Spatial Cue V1.5",
+  "description":             "Information about position, orientation, spatial relationships and activation conditions within a defined reference frame, for absolute, relative, semantic, regional or constrained spatial targeting for multimodal interactions.",
+  "type":                    "object",
+  "additionalProperties":    false,
+  "required":                [ "Header", "SpatialCueID" ],
+
+  "properties":              {
+
+    "Header":                { "type": "string", "const": "OSD-OSC-V1.5" },
+    "MInstanceID":           { "type": "string", "description": "ID of the Virtual Space the cue refers to." },
+    "SpatialCueID":          { "type": "string", "description": "Unique identifier of the cue instance." },
+    "SpatialCueData":        { "type": "object", "additionalProperties": false, "required": [ "CueType" ], "description": "Contextual and structural components of the cue.", "properties": {
+      "CoordinateType":      { "type": "string", "enum": [ "Cartesian", "Spherical", "Geodesic", "Toroidal" ], "description": "Coordinate system used." },
+      "ReferenceFrame":      { "type": "string", "enum": [ "World", "Entity", "Device", "Object" ], "description": "Spatial frame." },
+      "CueType":             { "type": "string", "enum": [ "absolute", "relative", "keyword", "region", "range" ], "description": "Type of cue." },
+      "MediaType":           { "type": "string", "description": "Rendering modality: Speech, Audio, Visual, etc." },
+      "Time":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time interval or instant when the cue is active." },
+      "Trigger":             { "type": "object", "additionalProperties": false, "required": [ "Type" ], "description": "Structured event predicate that activates the cue.", "properties": {
+        "Type":              { "type": "string", "enum": [ "TimeEvent", "SpatialEvent", "StateEvent" ], "description": "Category of trigger." },
+        "TimeEvent":         { "type": "object", "description": "Activates based on explicit time moments or delays." },
+        "SpatialEvent":      { "type": "object", "description": "Activates based on entering/exiting a region, distance thresholds, or inside/outside tests." },
+        "StateEvent":        { "type": "object", "description": "Activates when a named condition or external state becomes true." } } },
+
+      "Position":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json", "description": "Absolute 3D position." },
+      "Orientation":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Orientation.json", "description": "Absolute orientation." },
+      "LocationRef":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/LocationObject.json", "description": "Reference to an external Location." },
+      "RelativeExpression":  { "type": "string", "description": "Relative direction expression (right, front, up, ...)." },
+      "Keyword":             { "type": "string", "description": "Semantic spatial term (near, inside, ...)." },
+      "Region":              { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/GeometricSolid.json", "description": "Geometric region (Right Parallelepiped, Sphere, Cylinder)." },
+      "RangeConstraint":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RangeConstraints.json", "description": "Numeric/directional constraint refinement." },
+      "Confidence":          { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence score." } } },
+
+    "Trace":                 { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json", "description": "AIF trace information." },
+    "DescrMetadata":         { "type": "string", "maxLength": 2048 } } }

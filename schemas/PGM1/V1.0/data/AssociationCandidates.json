@@ -1,176 +1,42 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AssociationCandidates.json",
-  "title": "Association Candidates V1.0",
-  "description": "The admissible pairings of Audio Entities with Visual Entities proposed by Cross-Modal Candidate Association, each with its association score and the contribution of each kind of evidence. The association is many-to-many: no pairing is committed.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "AssociationCandidatesID",
-    "AssociationCandidatesTime",
-    "Candidates"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-ASC-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "AssociationCandidatesID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "AssociationCandidatesTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Candidates": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "AudioEntityID": {
-            "type": "string"
-          },
-          "VisualEntityID": {
-            "type": "string"
-          },
-          "AssociationScore": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Score of the pairing, 0 to 1, combining the four kinds of evidence."
-          },
-          "Evidence": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Spatial": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "Score": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "Score of this kind of evidence, 0 to 1."
-                  },
-                  "Available": {
-                    "type": "boolean",
-                    "description": "True if this kind of evidence was available for the pairing."
-                  }
-                },
-                "required": [
-                  "Available"
-                ],
-                "description": "Agreement between the direction of arrival and, where available, the distance of the Audio Entity and the position of the Visual Entity."
-              },
-              "Temporal": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "Score": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "Score of this kind of evidence, 0 to 1."
-                  },
-                  "Available": {
-                    "type": "boolean",
-                    "description": "True if this kind of evidence was available for the pairing."
-                  }
-                },
-                "required": [
-                  "Available"
-                ],
-                "description": "Agreement between the onset, offset and activity of the Audio Entity and the motion of the Visual Entity."
-              },
-              "MotionCorrelation": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "Score": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "Score of this kind of evidence, 0 to 1."
-                  },
-                  "Available": {
-                    "type": "boolean",
-                    "description": "True if this kind of evidence was available for the pairing."
-                  }
-                },
-                "required": [
-                  "Available"
-                ],
-                "description": "Agreement between the displacement of the Audio Entity and that of the Visual Entity over the capture interval."
-              },
-              "Precedence": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "Score": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "Score of this kind of evidence, 0 to 1."
-                  },
-                  "Available": {
-                    "type": "boolean",
-                    "description": "True if this kind of evidence was available for the pairing."
-                  }
-                },
-                "required": [
-                  "Available"
-                ],
-                "description": "Whether the same pairing was established in earlier captures of the session."
-              }
-            },
-            "description": "The contribution of each kind of evidence, with whether it was available."
-          },
-          "UnavailableEvidence": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "spatial",
-                "temporal",
-                "motion",
-                "precedence"
-              ]
-            },
-            "description": "Kinds of evidence that were unavailable for the pairing."
-          }
-        },
-        "required": [
-          "AudioEntityID",
-          "VisualEntityID",
-          "AssociationScore"
-        ]
-      },
-      "description": "The admissible pairings of an Audio Entity with a Visual Entity."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/PGM1/V1.0/data/AssociationCandidates.json",
+  "title":                        "Association Candidates V1.0",
+  "description":                  "The admissible pairings of Audio Entities with Visual Entities proposed by Cross-Modal Candidate Association, each with its association score and the contribution of each kind of evidence. The association is many-to-many: no pairing is committed.",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "MInstance", "UEnvironment", "SessionID", "AssociationCandidatesID", "AssociationCandidatesTime", "Candidates" ],
+
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "PGM-ASC-V1.0" },
+    "MInstance":                  { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":               { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                  { "type": "string", "description": "Identifier of the A-User session." },
+    "AssociationCandidatesID":    { "type": "string", "description": "Identifier of this instance." },
+    "AssociationCandidatesTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Candidates":                 { "type": "array", "description": "The admissible pairings of an Audio Entity with a Visual Entity.", "items": { "type": "object", "additionalProperties": false, "required": [ "AudioEntityID", "VisualEntityID", "AssociationScore" ], "properties": {
+      "AudioEntityID":            { "type": "string" },
+      "VisualEntityID":           { "type": "string" },
+      "AssociationScore":         { "type": "number", "minimum": 0, "maximum": 1, "description": "Score of the pairing, 0 to 1, combining the four kinds of evidence." },
+      "Evidence":                 { "type": "object", "additionalProperties": false, "description": "The contribution of each kind of evidence, with whether it was available.", "properties": {
+        "Spatial":                { "type": "object", "additionalProperties": false, "required": [ "Available" ], "description": "Agreement between the direction of arrival and, where available, the distance of the Audio Entity and the position of the Visual Entity.", "properties": {
+          "Score":                { "type": "number", "minimum": 0, "maximum": 1, "description": "Score of this kind of evidence, 0 to 1." },
+          "Available":            { "type": "boolean", "description": "True if this kind of evidence was available for the pairing." } } },
+
+        "Temporal":               { "type": "object", "additionalProperties": false, "required": [ "Available" ], "description": "Agreement between the onset, offset and activity of the Audio Entity and the motion of the Visual Entity.", "properties": {
+          "Score":                { "type": "number", "minimum": 0, "maximum": 1, "description": "Score of this kind of evidence, 0 to 1." },
+          "Available":            { "type": "boolean", "description": "True if this kind of evidence was available for the pairing." } } },
+
+        "MotionCorrelation":      { "type": "object", "additionalProperties": false, "required": [ "Available" ], "description": "Agreement between the displacement of the Audio Entity and that of the Visual Entity over the capture interval.", "properties": {
+          "Score":                { "type": "number", "minimum": 0, "maximum": 1, "description": "Score of this kind of evidence, 0 to 1." },
+          "Available":            { "type": "boolean", "description": "True if this kind of evidence was available for the pairing." } } },
+
+        "Precedence":             { "type": "object", "additionalProperties": false, "required": [ "Available" ], "description": "Whether the same pairing was established in earlier captures of the session.", "properties": {
+          "Score":                { "type": "number", "minimum": 0, "maximum": 1, "description": "Score of this kind of evidence, 0 to 1." },
+          "Available":            { "type": "boolean", "description": "True if this kind of evidence was available for the pairing." } } } } },
+
+      "UnavailableEvidence":      { "type": "array", "items": { "type": "string", "enum": [ "spatial", "temporal", "motion", "precedence" ] },
+                                    "description": "Kinds of evidence that were unavailable for the pairing." } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

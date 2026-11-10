@@ -8,7 +8,7 @@
 
   "ExternalPorts":   [{"Name": "BasicSpeechObject",      "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "SpeechDescriptors", "Direction": "Output", "DataType": "MMC-SDO-V2.5", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "UserName",          "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "UserName",          "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 
@@ -16,7 +16,7 @@
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 
-  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings)."}],
+  "AccessSources":   [{"Name": "speaker-embedder", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "EcapaModel", "AsFile": "ecapa-tdnn.onnx", "IsOptional": true, "Description": "The speaker recognition model (ECAPA-TDNN, 192-value embeddings), if the descriptors are ECAPA-TDNN embeddings; an Implementation that gives another descriptor format (e.g. the OpenVoice tone-colour embedding) declares the model of that format instead."}],
 
   "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
                         "BinaryName":       "/* provided by implementer */",

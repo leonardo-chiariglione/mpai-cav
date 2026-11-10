@@ -1,100 +1,26 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/SalientObjectMatrix.json",
-  "title": "Salient Object Matrix V1.0",
-  "description": "The Visual Objects ranked by perceptual importance and interaction relevance by Visual Salience Mapping. Each row is a Visual Object and each column a salience criterion.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "SalientObjectMatrixID",
-    "SalientObjectMatrixTime",
-    "Rows"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-SOM-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "SalientObjectMatrixID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "SalientObjectMatrixTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Criteria": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "The criteria that form the columns."
-    },
-    "Rows": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "VisualObjectID": {
-            "type": "string"
-          },
-          "Rank": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Position in the ranking, starting from 1."
-          },
-          "SalienceScore": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Salience score, 0 to 1."
-          },
-          "Scores": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 1
-            },
-            "description": "Score for each criterion of Criteria."
-          },
-          "InteractionRelevance": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Relevance of the interactions the object offers."
-          }
-        },
-        "required": [
-          "VisualObjectID",
-          "Rank",
-          "SalienceScore"
-        ]
-      },
-      "description": "The rows of the matrix, one for each Visual Object."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/PGM1/V1.0/data/SalientObjectMatrix.json",
+  "title":                      "Salient Object Matrix V1.0",
+  "description":                "The Visual Objects ranked by perceptual importance and interaction relevance by Visual Salience Mapping. Each row is a Visual Object and each column a salience criterion.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "MInstance", "UEnvironment", "SessionID", "SalientObjectMatrixID", "SalientObjectMatrixTime", "Rows" ],
+
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "PGM-SOM-V1.0" },
+    "MInstance":                { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":             { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                { "type": "string", "description": "Identifier of the A-User session." },
+    "SalientObjectMatrixID":    { "type": "string", "description": "Identifier of this instance." },
+    "SalientObjectMatrixTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Criteria":                 { "type": "array", "items": { "type": "string" }, "description": "The criteria that form the columns." },
+    "Rows":                     { "type": "array", "description": "The rows of the matrix, one for each Visual Object.", "items": { "type": "object", "additionalProperties": false, "required": [ "VisualObjectID", "Rank", "SalienceScore" ], "properties": {
+      "VisualObjectID":         { "type": "string" },
+      "Rank":                   { "type": "integer", "minimum": 1, "description": "Position in the ranking, starting from 1." },
+      "SalienceScore":          { "type": "number", "minimum": 0, "maximum": 1, "description": "Salience score, 0 to 1." },
+      "Scores":                 { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }, "description": "Score for each criterion of Criteria." },
+      "InteractionRelevance":   { "type": "number", "minimum": 0, "maximum": 1, "description": "Relevance of the interactions the object offers." } } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

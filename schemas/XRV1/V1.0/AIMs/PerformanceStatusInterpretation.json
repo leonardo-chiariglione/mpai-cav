@@ -9,16 +9,15 @@
   "APIProfile":           "Basic",
   "Description":          "The Performance Status Interpretation (XRV-PFI) AIM interprets the RE Performance Descriptors and VE Performance Descriptors to produce only the RE and VE Performance Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
 
-  "ExternalPorts":        [{"Name": "REPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-RFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VEPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-VFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "REPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-RFD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEPerformanceDescriptors", "Direction": "Input", "DataType": "XRV-VFD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "REPerformanceStatus",     "Direction": "Output", "DataType": "XRV-RFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VEPerformanceStatus",     "Direction": "Output", "DataType": "XRV-VFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "VEPerformanceStatus",     "Direction": "Output", "DataType": "XRV-VFS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

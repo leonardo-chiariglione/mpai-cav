@@ -9,15 +9,19 @@
   "APIProfile":           "Basic",
   "Description":          "Face Personal Status Extraction: extracts the Face Personal Status from the Face Object, optionally using the Face Descriptors.",
 
-  "InternalTypes":        [ ],
+  "InternalTypes":        [{"Name": "FaceDescriptors", "DataType": "PAF-FDO-V1.6"}],
 
   "ExternalPorts":        [{"Name": "FaceObject", "Direction": "Input", "DataType": ["OSD-BVO-V1.5", "OSD-VIO-V1.5"], "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "FaceDescriptors", "Direction": "Input", "DataType": "PAF-FDO-V1.6", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                           {"Name": "FacePersonalStatus", "Direction": "Output", "DataType": "MMC-FPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
-  "SubAIMs":              [ ],
+  "SubAIMs":              [{ "Header": "PAF-EFD-V1.6", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } },
+                          { "Header": "PAF-PFI-V1.6", "Identifier": { "ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "" } }],
 
-  "Topology":             [ ],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "PAF-EFD-V1.6", "DataType": "OSD-BVO-V1.5"}},
+                          {"Output": {"AIMName": "", "DataType": "PAF-FDO-V1.6", "PortNumber": 1}, "Input": {"AIMName": "PAF-PFI-V1.6", "DataType": "PAF-FDO-V1.6", "PortNumber": 2}},
+                          {"Output": {"AIMName": "PAF-EFD-V1.6", "DataType": "PAF-FDO-V1.6"}, "Input": {"AIMName": "PAF-PFI-V1.6", "DataType": "PAF-FDO-V1.6", "PortNumber": 1}},
+                          {"Output": {"AIMName": "PAF-PFI-V1.6", "DataType": "MMC-FPS-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-FPS-V2.5", "PortNumber": 1}}],
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
 

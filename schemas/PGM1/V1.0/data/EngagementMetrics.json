@@ -1,82 +1,23 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/EngagementMetrics.json",
-  "title": "Engagement Metrics V1.0",
-  "description": "The engagement of the User, its level and its mode, computed by Engagement Recalibration (User State Refinement) from the baseline User State, the cadence history and the AUC-USR Request.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "EngagementMetricsID",
-    "EngagementMetricsTime",
-    "Level",
-    "Mode"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-ENM-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "EngagementMetricsID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "EngagementMetricsTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "UserID": {
-      "type": "string",
-      "description": "Identifier of the User."
-    },
-    "Level": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Engagement level, 0 to 1."
-    },
-    "Mode": {
-      "type": "string",
-      "description": "Engagement mode."
-    },
-    "Basis": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "baseline_state",
-          "cadence_history",
-          "request"
-        ]
-      },
-      "description": "What the metrics rest on."
-    },
-    "Confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Confidence, 0 to 1."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/PGM1/V1.0/data/EngagementMetrics.json",
+  "title":                    "Engagement Metrics V1.0",
+  "description":              "The engagement of the User, its level and its mode, computed by Engagement Recalibration (User State Refinement) from the baseline User State, the cadence history and the AUC-USR Request.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "MInstance", "UEnvironment", "SessionID", "EngagementMetricsID", "EngagementMetricsTime", "Level", "Mode" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "PGM-ENM-V1.0" },
+    "MInstance":              { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":           { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":              { "type": "string", "description": "Identifier of the A-User session." },
+    "EngagementMetricsID":    { "type": "string", "description": "Identifier of this instance." },
+    "EngagementMetricsTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "UserID":                 { "type": "string", "description": "Identifier of the User." },
+    "Level":                  { "type": "number", "minimum": 0, "maximum": 1, "description": "Engagement level, 0 to 1." },
+    "Mode":                   { "type": "string", "description": "Engagement mode." },
+    "Basis":                  { "type": "array", "items": { "type": "string", "enum": [ "baseline_state", "cadence_history", "request" ] }, "description": "What the metrics rest on." },
+    "Confidence":             { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." },
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

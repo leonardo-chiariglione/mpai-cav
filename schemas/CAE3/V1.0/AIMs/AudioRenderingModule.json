@@ -1,0 +1,44 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/AudioRenderingModule.json",
+  "title":                "Audio Rendering Module V1.0",
+  "Header":               "CAE-ARM-V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Audio Rendering Module (CAE-ARM) of CAE-6DF V1.0: Rotates the TD Interpolated Total Sound Field according to the Orientation of the listener’s head and transcodes the rotated field, for the Position of the listener, into audio for headphones (binaural) and/or loudspeakers (multichannel), as Qualifier says.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "Qualifier", "Direction": "Input", "DataType": "CAE-QUA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "PointOfView", "Direction": "Input", "DataType": "OSD-OPV-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TimeDomainInterpolatedTotalSoundField", "Direction": "Input", "DataType": "CAE-TOT-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "HeadphoneAudioObject", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "LoudspeakerAudioObject", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [{"Header": "CAE-SFR-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "CAE-HLT-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "CAE-QUA-V1.0"}, "Input": {"AIMName": "CAE-HLT-V1.0", "DataType": "CAE-QUA-V1.0"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-OPV-V1.5"}, "Input": {"AIMName": "CAE-SFR-V1.0", "DataType": "OSD-OPV-V1.5"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-OPV-V1.5"}, "Input": {"AIMName": "CAE-HLT-V1.0", "DataType": "OSD-OPV-V1.5"}},
+                           {"Output": {"AIMName": "", "DataType": "CAE-TOT-V1.0"}, "Input": {"AIMName": "CAE-SFR-V1.0", "DataType": "CAE-TOT-V1.0"}},
+                           {"Output": {"AIMName": "CAE-SFR-V1.0", "DataType": "CAE-TRI-V1.0"}, "Input": {"AIMName": "CAE-HLT-V1.0", "DataType": "CAE-TRI-V1.0"}},
+                           {"Output": {"AIMName": "CAE-HLT-V1.0", "DataType": "OSD-BAO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "", "DataType": "OSD-BAO-V1.5", "PortNumber": 1}},
+                           {"Output": {"AIMName": "CAE-HLT-V1.0", "DataType": "OSD-BAO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "", "DataType": "OSD-BAO-V1.5", "PortNumber": 2}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

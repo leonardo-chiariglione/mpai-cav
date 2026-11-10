@@ -1,64 +1,22 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelSceneGeometry.json",
-  "title": "Basic3 DModel Scene Geometry V1.5",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "3DModelSceneGeometryID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-B3G-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "3DModelSceneGeometryID": {
-      "type": "string",
-      "description": "ID of this 3DModel Scene Geometry instance."
-    },
-    "3DModelSceneGeometryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "3DModelObjectCount": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of 3DModelObjects in Scene."
-    },
-    "3DModelSceneGeometrySpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-    },
-    "Basic3DModelSceneObjects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "3DModelSceneObjectQualifiers": {
-            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/3DModelQualifier.json"
-          },
-          "Basic3DModelSceneObjectSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-          }
-        }
-      },
-      "description": "Set of Data related to 3DModelObjects in the 3DModel Scene."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata"
-    }
-  }
-}
+{ "$schema":                               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                   "https://schemas.mpai.community/OSD/V1.5/data/Basic3DModelSceneGeometry.json",
+  "title":                                 "Basic3 DModel Scene Geometry V1.5",
+  "type":                                  "object",
+  "additionalProperties":                  false,
+  "required":                              [ "Header", "3DModelSceneGeometryID" ],
+
+  "properties":                            {
+
+    "Header":                              { "type": "string", "const": "OSD-B3G-V1.5" },
+    "MInstanceID":                         { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":                      { "type": "string", "description": "Identifier of the U-Environment." },
+    "3DModelSceneGeometryID":              { "type": "string", "description": "ID of this 3DModel Scene Geometry instance." },
+    "3DModelSceneGeometryTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "3DModelObjectCount":                  { "type": "integer", "minimum": 0, "description": "Number of 3DModelObjects in Scene." },
+    "3DModelSceneGeometrySpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "Basic3DModelSceneObjects":            { "type": "array", "description": "Set of Data related to 3DModelObjects in the 3DModel Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "3DModelSceneObjectQualifiers":      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/3DModelQualifier.json" },
+      "Basic3DModelSceneObjectSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "DataXMData":                          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                       { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata" } } }

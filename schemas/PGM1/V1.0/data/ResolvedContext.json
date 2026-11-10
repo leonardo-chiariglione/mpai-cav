@@ -1,88 +1,27 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/ResolvedContext.json",
-  "title": "Resolved Context V1.0",
-  "description": "The interaction context obtained by Context Resolution (Personality Alignment) and reconciled with the User State, so that the selection of the stance is context-aware.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "ResolvedContextID",
-    "ResolvedContextTime",
-    "InteractionContext"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-RCX-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "ResolvedContextID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "ResolvedContextTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "InteractionContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Setting": {
-          "type": "string"
-        },
-        "Participants": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Topic": {
-          "type": "string"
-        },
-        "Formality": {
-          "type": "string"
-        }
-      },
-      "description": "The interaction context: the setting, the participants, the topic and the formality of the exchange."
-    },
-    "UserState": {
-      "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
-      "description": "The User State with which the context was reconciled."
-    },
-    "Discrepancies": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Points where the context and the User State do not agree."
-    },
-    "Confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Confidence, 0 to 1."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/PGM1/V1.0/data/ResolvedContext.json",
+  "title":                  "Resolved Context V1.0",
+  "description":            "The interaction context obtained by Context Resolution (Personality Alignment) and reconciled with the User State, so that the selection of the stance is context-aware.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               [ "Header", "MInstance", "UEnvironment", "SessionID", "ResolvedContextID", "ResolvedContextTime", "InteractionContext" ],
+
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "PGM-RCX-V1.0" },
+    "MInstance":            { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":         { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":            { "type": "string", "description": "Identifier of the A-User session." },
+    "ResolvedContextID":    { "type": "string", "description": "Identifier of this instance." },
+    "ResolvedContextTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "InteractionContext":   { "type": "object", "additionalProperties": false, "description": "The interaction context: the setting, the participants, the topic and the formality of the exchange.", "properties": {
+      "Setting":            { "type": "string" },
+      "Participants":       { "type": "array", "items": { "type": "string" } },
+      "Topic":              { "type": "string" },
+      "Formality":          { "type": "string" } } },
+
+    "UserState":            { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json", "description": "The User State with which the context was reconciled." },
+    "Discrepancies":        { "type": "array", "items": { "type": "string" }, "description": "Points where the context and the User State do not agree." },
+    "Confidence":           { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." },
+    "DataXMData":           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

@@ -1,200 +1,50 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "PGM-ASR-V1.0",
-  "APIProfile": "Basic",
-  "Description": "The Automatic Speech Recognition (PGM-ASR) AIM extracts the text conveyed by an utterance and derives the paralinguistic features of the speech signal. The input speech may be accompanied by an auxiliary text, the identifier of the speaker, the Speech Overlap data type, and the time indicating the portion of the input speech that should be recognised. Operation is governed by the User CXT Request, which specifies scope, depth, and policy constraints. Processing outcome is reported via the User CXT Response. Domain knowledge and interaction history may be queried by issuing User Domain and User",
-  "InternalTypes": [],
-  "ExternalPorts": [
-    {
-      "Name": "LanguageSelector",
-      "Direction": "Input",
-      "DataType": "OSD-SEL-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AuxiliaryTextObject",
-      "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeechObject",
-      "Direction": "Input",
-      "DataType": "OSD-BSO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeakerIdentifier",
-      "Direction": "Input",
-      "DataType": "OSD-IID-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeechOverlap",
-      "Direction": "Input",
-      "DataType": "MMC-SOL-V2.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeakerTime",
-      "Direction": "Input",
-      "DataType": "OSD-STM-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserCXTRequest",
-      "Direction": "Input",
-      "DataType": "PGM-UCC-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserDomainResponse",
-      "Direction": "Input",
-      "DataType": "PGM-DOM-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserInteractionHistoryResponse",
-      "Direction": "Input",
-      "DataType": "PGM-IHI-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "RecognisedText",
-      "Direction": "Output",
-      "DataType": "OSD-BTO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeechDescriptors",
-      "Direction": "Output",
-      "DataType": "MMC-SDO-V2.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserCXTResponse",
-      "Direction": "Output",
-      "DataType": "PGM-UCC-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserDomainRequest",
-      "Direction": "Output",
-      "DataType": "PGM-DOM-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "UserInteractionHistoryRequest",
-      "Direction": "Output",
-      "DataType": "PGM-IHI-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    }
-  ],
-  "SubAIMs": [],
-  "Topology": [],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Specification",
-      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/automatic-speech-recognition/"
-    }
-  ]
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "PGM-ASR-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "The Automatic Speech Recognition (PGM-ASR) AIM extracts the text conveyed by an utterance and derives the paralinguistic features of the speech signal. The input speech may be accompanied by an auxiliary text, the identifier of the speaker, the Speech Overlap data type, and the time indicating the portion of the input speech that should be recognised. Operation is governed by the User CXT Request, which specifies scope, depth, and policy constraints. Processing outcome is reported via the User CXT Response. Domain knowledge and interaction history may be queried by issuing User Domain and User",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "LanguageSelector",               "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AuxiliaryTextObject",            "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechObject",                   "Direction": "Input",  "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeakerIdentifier",              "Direction": "Input",  "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechOverlap",                  "Direction": "Input",  "DataType": "MMC-SOL-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeakerTime",                    "Direction": "Input",  "DataType": "OSD-STM-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserCXTRequest",                 "Direction": "Input",  "DataType": "PGM-UCC-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserDomainResponse",             "Direction": "Input",  "DataType": "PGM-DOM-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserInteractionHistoryResponse", "Direction": "Input",  "DataType": "PGM-IHI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "RecognisedText",                 "Direction": "Output", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechDescriptors",              "Direction": "Output", "DataType": "MMC-SDO-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserCXTResponse",                "Direction": "Output", "DataType": "PGM-UCC-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserDomainRequest",              "Direction": "Output", "DataType": "PGM-DOM-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "UserInteractionHistoryRequest",  "Direction": "Output", "DataType": "PGM-IHI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/automatic-speech-recognition/"}]}

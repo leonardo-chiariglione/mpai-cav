@@ -547,6 +547,25 @@
           "properties": {
             "AcousticProfile": {
               "$ref": "#/$defs/SceneAcousticProfileOrID"
+            },
+            "RenderingMode": {
+              "type": "string",
+              "enum": [
+                "Mono",
+                "Stereo",
+                "Multichannel",
+                "Binaural"
+              ],
+              "description": "How the open Scene is rendered for the listener: Binaural for headphones or a headset; Stereo, Mono or Multichannel (ChannelCount: 4, 6 or 8) for loudspeakers. A property of the Scene itself (RenderingMode of OSD-BAS and OSD-ASD)."
+            },
+            "ChannelCount": {
+              "type": "integer",
+              "enum": [
+                4,
+                6,
+                8
+              ],
+              "description": "The number of loudspeakers of a Multichannel rendering: 4 (quad), 6 (5.1) or 8 (7.1)."
             }
           }
         },

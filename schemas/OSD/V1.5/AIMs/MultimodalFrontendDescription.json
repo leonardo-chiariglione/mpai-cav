@@ -1,0 +1,73 @@
+{ "$schema":          "https://json-schema.org/draft/2020-12/schema",
+
+  "$comment":         "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+
+  "$id":              "https://schemas.mpai.community/OSD/V1.5/AIMs/MultimodalFrontendDescription.json",
+
+  "title":            "Multimodal Frontend Description V1.5",
+
+  "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "OSD-MFD-V1.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Multimodal Frontend Description: from the Basic Audio, LiDAR and Visual Objects of the real world gives the Speech, Audio, Face, Body and other Visual Objects, typed, the aligned Audio and Visual Scene Descriptors. Basic Audio, LiDAR and Visual Scene Description give the Basic Scene Descriptors of each medium, Multimodal Alignment aligns them, Audio Scene Object Identification gives the Speech and the Audio Objects of the aligned Audio Scene, and Visual Scene Object Identification gives the Face, Body and other Visual Objects of the aligned Visual Scene.",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "BasicAudioObject", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BasicLiDARObject", "Direction": "Input", "DataType": "OSD-BLO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BasicVisualObject", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechObjects", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AudioObjects", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "FaceObjects", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BodyObjects", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "VisualObjects", "Direction": "Output", "DataType": "OSD-BVO-V1.5", "PortNumber": 3, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AudioSceneDescriptors", "Direction": "Output", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "VisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [{"Header": "OSD-BAS-V1.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "OSD-BLS-V1.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "OSD-BVS-V1.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "OSD-MAL-V1.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "CAE-ASI-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "CVE-VSI-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}}],
+
+  "Topology":        [{"Output": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "OSD-BAS-V1.5", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BLO-V1.5"}, "Input": {"AIMName": "OSD-BLS-V1.5", "DataType": "OSD-BLO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "OSD-BVS-V1.5", "DataType": "OSD-BVO-V1.5"}},
+                      {"Output": {"AIMName": "OSD-BAS-V1.5", "DataType": "OSD-BAS-V1.5"}, "Input": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BAS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-BLS-V1.5", "DataType": "OSD-BLS-V1.5"}, "Input": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BLS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-BVS-V1.5", "DataType": "OSD-BVS-V1.5"}, "Input": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BVS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BAS-V1.5"}, "Input": {"AIMName": "CAE-ASI-V2.5", "DataType": "OSD-BAS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BVS-V1.5"}, "Input": {"AIMName": "CVE-VSI-V1.0", "DataType": "OSD-BVS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BAS-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BAS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MAL-V1.5", "DataType": "OSD-BVS-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BVS-V1.5"}},
+                      {"Output": {"AIMName": "CAE-ASI-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "CAE-ASI-V2.5", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "CVE-VSI-V1.0", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "CVE-VSI-V1.0", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "CVE-VSI-V1.0", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}, "Input": {"AIMName": "", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}}],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-osd/v1-5/"}]}

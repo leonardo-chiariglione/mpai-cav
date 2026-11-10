@@ -1,4 +1,4 @@
-﻿{ "$id":                          "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json",
+{ "$id":                          "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json",
   "$schema":                      "https://json-schema.org/draft/2020-12/schema",
   "title":                        "Basic Multimodal Scene Descriptors V1.5",
   "type":                         "object",
@@ -41,7 +41,7 @@
     "BasicObjectsData":           { "type": "array", "minItems": 1, "description": "The Basic Objects placed in the Scene directly, of any medium - an Object not in a Basic Scene of its own medium.", "items": { "type": "object", "additionalProperties": false, "required": [ "BXOSpaceTime", "BXOOrBXOID" ], "properties": {
       "BXOSpaceTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
       "UserPoV":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/PointOfView.json", "description": "Where this member is heard and seen from in this Scene; absent, the Scene's UserPoV applies." },
-      "BXOOrBXOID":               { "description": "A Basic Object of any medium - audio, visual, speech, 3D Model, LiDAR, RADAR, ultrasound, offline map, or its ID.", "anyOf": [
+      "BXOOrBXOID":               { "description": "A Basic Object of any medium - audio, visual, speech, text, 3D Model, LiDAR, RADAR, ultrasound, offline map - or an Instance Identifier (for instance of a User), or the ID of an Object.", "anyOf": [
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSpeechObject.json" },
@@ -50,6 +50,8 @@
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicUltrasoundObject.json" },
                                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicOfflineMapObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicTextObject.json" },
+                                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/InstanceIdentifier.json" },
                                   { "type": "string" } ] } } } },
     "AlignedMMObjects":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "AlignmentCode", "AlignedObjects" ], "properties": {
       "AlignmentCode":            { "type": "string" },

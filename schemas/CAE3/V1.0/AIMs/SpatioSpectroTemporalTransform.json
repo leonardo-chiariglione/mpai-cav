@@ -1,0 +1,38 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/SpatioSpectroTemporalTransform.json",
+  "title":                "Spatio-Spectro-Temporal Transform V1.0",
+  "Header":               "CAE-SST-V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Spatio-Spectro-Temporal Transform (CAE-SST) of CAE-6DF V1.0: Converts HOA format Microphone Array Audio into the time-frequency domain via a sliding Hann window followed by FFT (Short-Time Fourier Transform, STFT) with overlap of at least 7/8 between blocks. The time frequency bin at frequency index, k and block time index n is indexed by the tuple (k, n). After that, Transform-domain HOA coefficients are converted to Transform-domain SHD coefficients.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "TimeDomainAudioObject", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "MicrophoneArrayGeometryAudioObject", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SHDTransformCoefficients", "Direction": "Output", "DataType": "CAE-STC-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [{"Header": "CAE-SFT-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "CAE-SFD-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-AUO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "CAE-SFT-V1.0", "DataType": "OSD-AUO-V1.5"}},
+                           {"Output": {"AIMName": "CAE-SFT-V1.0", "DataType": "OSD-AUO-V1.5"}, "Input": {"AIMName": "CAE-SFD-V1.0", "DataType": "OSD-AUO-V1.5"}},
+                           {"Output": {"AIMName": "CAE-SFD-V1.0", "DataType": "CAE-STC-V1.0"}, "Input": {"AIMName": "", "DataType": "CAE-STC-V1.0"}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

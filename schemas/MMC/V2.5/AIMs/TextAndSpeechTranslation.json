@@ -14,6 +14,7 @@
 
   "ExternalPorts":        [{"Name": "InputSpeech",      "Direction": "Input",  "DataType": ["OSD-BSO-V1.5", "OSD-SPO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "InputText",        "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "TextDescriptors",  "Direction": "Input",  "DataType": "MMC-TDO-V2.5",                   "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},                           
                            {"Name": "LanguageSelector", "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 1,                     "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "MediaSelector",    "Direction": "Input",  "DataType": "OSD-SEL-V1.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "OutputText",       "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                     "Technology": "Software", "Protocol": "", "IsRemote": false},

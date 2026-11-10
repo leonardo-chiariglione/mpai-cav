@@ -1,89 +1,24 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/UnmatchedEntities.json",
-  "title": "Unmatched Entities V1.0",
-  "description": "The Audio Entities and the Visual Entities left without counterpart in the other modality by Correspondence Resolution, each with the reason. An Unmatched Entity is an ordinary state of a Space, not a failure.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "UnmatchedEntitiesID",
-    "UnmatchedEntitiesTime",
-    "Entities"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-UME-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "UnmatchedEntitiesID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "UnmatchedEntitiesTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Entities": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Modality": {
-            "type": "string",
-            "enum": [
-              "audio",
-              "visual"
-            ],
-            "description": "The modality of the Entity."
-          },
-          "EntityID": {
-            "type": "string"
-          },
-          "Reason": {
-            "type": "string",
-            "enum": [
-              "no_candidate",
-              "lost_competing_claim",
-              "excluded_by_directive",
-              "other"
-            ],
-            "description": "The reason."
-          },
-          "Description": {
-            "type": "string",
-            "description": "Description of the reason."
-          }
-        },
-        "required": [
-          "Modality",
-          "EntityID",
-          "Reason"
-        ]
-      },
-      "description": "The Entities."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/PGM1/V1.0/data/UnmatchedEntities.json",
+  "title":                    "Unmatched Entities V1.0",
+  "description":              "The Audio Entities and the Visual Entities left without counterpart in the other modality by Correspondence Resolution, each with the reason. An Unmatched Entity is an ordinary state of a Space, not a failure.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "MInstance", "UEnvironment", "SessionID", "UnmatchedEntitiesID", "UnmatchedEntitiesTime", "Entities" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "PGM-UME-V1.0" },
+    "MInstance":              { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":           { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":              { "type": "string", "description": "Identifier of the A-User session." },
+    "UnmatchedEntitiesID":    { "type": "string", "description": "Identifier of this instance." },
+    "UnmatchedEntitiesTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Entities":               { "type": "array", "description": "The Entities.", "items": { "type": "object", "additionalProperties": false, "required": [ "Modality", "EntityID", "Reason" ], "properties": {
+      "Modality":             { "type": "string", "enum": [ "audio", "visual" ], "description": "The modality of the Entity." },
+      "EntityID":             { "type": "string" },
+      "Reason":               { "type": "string", "enum": [ "no_candidate", "lost_competing_claim", "excluded_by_directive", "other" ], "description": "The reason." },
+      "Description":          { "type": "string", "description": "Description of the reason." } } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

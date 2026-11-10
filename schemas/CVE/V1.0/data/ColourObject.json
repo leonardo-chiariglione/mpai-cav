@@ -1,82 +1,23 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/CVE/V1.0/data/ColourObject.json",
-  "title": "Colour Object V1.0",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "ColourObjectData"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "CVE-CLO-V1.0"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of M-Instance."
-    },
-    "ColourObjectData": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "Data"
-            ],
-            "properties": {
-              "Data": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "DataLength",
-              "DataURI"
-            ],
-            "properties": {
-              "DataLength": {
-                "type": "integer"
-              },
-              "DataURI": {
-                "type": "string",
-                "format": "uri"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "ID"
-            ],
-            "properties": {
-              "ID": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "description": "The Data of the Colour."
-    },
-    "ColourObjectQualifier": {
-      "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json"
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata"
-    }
-  },
-  "description": "The representation of colour information with added optional Qualifier."
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/CVE/V1.0/data/ColourObject.json",
+  "title":                    "Colour Object V1.0",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "ColourObjectData" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "CVE-CLO-V1.0" },
+    "MInstanceID":            { "type": "string", "description": "Identifier of M-Instance." },
+    "ColourObjectData":       { "type": "array", "description": "The Data of the Colour.", "items": { "anyOf": [ { "type": "object", "additionalProperties": false, "required": [ "Data" ], "properties": {
+      "Data":                 { "type": "string" } } },
+  { "type": "object", "additionalProperties": false, "required": [ "DataLength", "DataURI" ], "properties": {
+      "DataLength":           { "type": "integer" },
+      "DataURI":              { "type": "string", "format": "uri" } } },
+  { "type": "object", "additionalProperties": false, "required": [ "ID" ], "properties": {
+      "ID":                   { "type": "string" } } } ] } },
+
+    "ColourObjectQualifier":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/ColourQualifier.json" },
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata" } },
+  "description":              "The representation of colour information with added optional Qualifier." }

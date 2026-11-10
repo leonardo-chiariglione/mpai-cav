@@ -20,4 +20,6 @@
     { "const": "Word2Vec (300-d)",
       "description": "Static distributional word embedding (Mikolov et al. 2013); 300-dimension vectors capturing lexical semantics." },
     { "const": "GloVe (300-d)",
-      "description": "Global word-vector embedding from co-occurrence statistics (Pennington et al. 2014)." } ] }
+      "description": "Global word-vector embedding from co-occurrence statistics (Pennington et al. 2014)." },
+    { "const": "GoEmotions Scores (RoBERTa-base, 28-d)",
+      "description": "The 28 scores of the GoEmotions text emotion classifier (a RoBERTa-base model fine-tuned on the GoEmotions data, Demszky et al. 2020), each the probability that the text expresses one of the 28 labels of GoEmotions, in the order of the labels of the model: 28 numbers." } ] }

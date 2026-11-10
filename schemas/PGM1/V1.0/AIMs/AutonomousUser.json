@@ -1,864 +1,119 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "PGM-ATU-V1.0",
-  "APIProfile": "Basic",
-  "Description": "Autonomous User",
-  "InternalTypes": [],
-  "ExternalPorts": [
-    {
-      "Name": "HumanCommand",
-      "Direction": "Input",
-      "DataType": "PGM-HCM-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "ProcessActionResponse",
-      "Direction": "Input",
-      "DataType": "MMM-PAC-V2.2",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "TextObject",
-      "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AudioObject",
-      "Direction": "Input",
-      "DataType": "OSD-BAO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "VisualObject",
-      "Direction": "Input",
-      "DataType": "OSD-BVO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AUCAUSResponse",
-      "Direction": "Input",
-      "DataType": "PGM-UCS-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpeechObject",
-      "Direction": "Input",
-      "DataType": "OSD-BSO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InteractionHistoryResponse",
-      "Direction": "Input",
-      "DataType": "PGM-IHI-V1.0",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "StoredAvatarModel",
-      "Direction": "Input",
-      "DataType": "OSD-B3O-V1.5",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "StoredSpeechModel",
-      "Direction": "Input",
-      "DataType": "AIP-MLO-V1.0",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "StoredAvatarID",
-      "Direction": "Input",
-      "DataType": "OSD-IID-V1.5",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "HumanCommandResponse",
-      "Direction": "Output",
-      "DataType": "PGM-HCM-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "Action",
-      "Direction": "Output",
-      "DataType": "MMM-ACT-V2.2",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "ProcessActionRequest",
-      "Direction": "Output",
-      "DataType": "MMM-PAC-V2.2",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AUCAUSRequest",
-      "Direction": "Output",
-      "DataType": "PGM-UCS-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InteractionHistoryRequest",
-      "Direction": "Output",
-      "DataType": "PGM-IHI-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "PortableAvatar",
-      "Direction": "Output",
-      "DataType": "PAF-PAV-V1.6",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    }
-  ],
-  "SubAIMs": [
-    {
-      "Header": "PGM-AUC-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-CXT-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-PRC-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-BKN-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-DAC-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-USR-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-PAL-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-AUF-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-HCM-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-HCM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "MMM-ACT-V2.2"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMM-ACT-V2.2"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "MMM-PAC-V2.2"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMM-PAC-V2.2"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-HCM-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-HCM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMM-PAC-V2.2"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "MMM-PAC-V2.2"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-UCC-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCC-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-UCR-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCR-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-UCK-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCK-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-UCD-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCD-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-UCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "PGM-UCF-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCF-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BAO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "OSD-BAO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BVO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "OSD-BVO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCC-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-UCC-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-DOM-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-DOM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-CXD-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-CXD-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCR-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-UCR-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KPR-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-KPR-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCK-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-UCK-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-PCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-PCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-KPR-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KPR-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-KDA-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KDA-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-KPA-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KPA-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCD-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-UCD-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-DOM-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-DOM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KDA-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-KDA-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCP-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-UCP-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-KPA-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-KPA-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCF-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "PGM-UCF-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-BKN-V1.0",
-        "DataType": "PGM-FRS-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "PGM-FRS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "MMM-PAT-V2.2"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "MMM-PAT-V2.2"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCS-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-UCS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCS-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PGM-UCS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BSO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "OSD-BSO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-CXT-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PRC-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-DAC-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USR-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-PAL-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-B3O-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "OSD-B3O-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "AIP-MLO-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "AIP-MLO-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-AUC-V1.0",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-IID-V1.5"
-      },
-      "Input": {
-        "AIMName": "PGM-AUF-V1.0",
-        "DataType": "OSD-IID-V1.5"
-      }
-    }
-  ],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Specification",
-      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/autonomous-user/"
-    }
-  ],
-  "Execution": "Continuous",
-  "StorageControl": "1PGM-AUC-V1.0-I01"
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "PGM-ATU-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "Autonomous User",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "HumanCommand",               "Direction": "Input",  "DataType": "PGM-HCM-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "ProcessActionResponse",      "Direction": "Input",  "DataType": "MMM-PAC-V2.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "TextObject",                 "Direction": "Input",  "DataType": "OSD-BTO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AudioObject",                "Direction": "Input",  "DataType": "OSD-BAO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "VisualObject",               "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AUCAUSResponse",             "Direction": "Input",  "DataType": "PGM-UCS-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "SpeechObject",               "Direction": "Input",  "DataType": "OSD-BSO-V1.5",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InteractionHistoryResponse", "Direction": "Input",  "DataType": "PGM-IHI-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "StoredAvatarModel",          "Direction": "Input",  "DataType": "OSD-B3O-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "StoredSpeechModel",          "Direction": "Input",  "DataType": "AIP-MLO-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "StoredAvatarID",             "Direction": "Input",  "DataType": "OSD-IID-V1.5", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "HumanCommandResponse",       "Direction": "Output", "DataType": "PGM-HCM-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "Action",                     "Direction": "Output", "DataType": "MMM-ACT-V2.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "ProcessActionRequest",       "Direction": "Output", "DataType": "MMM-PAC-V2.2",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AUCAUSRequest",              "Direction": "Output", "DataType": "PGM-UCS-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InteractionHistoryRequest",  "Direction": "Output", "DataType": "PGM-IHI-V1.0",                     "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "PortableAvatar",             "Direction": "Output", "DataType": "PAF-PAV-V1.6",                     "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [{"Header": "PGM-AUC-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-CXT-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-PRC-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-BKN-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-DAC-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-USR-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-PAL-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-AUF-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}}],
+
+  "Topology":        [{"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-HCM-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-HCM-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "MMM-ACT-V2.2"}, "Input": {"AIMName": "", "DataType": "MMM-ACT-V2.2"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "MMM-PAC-V2.2"}, "Input": {"AIMName": "", "DataType": "MMM-PAC-V2.2"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-HCM-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-HCM-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "MMM-PAC-V2.2"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "MMM-PAC-V2.2"}},
+                      {"Output": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-UCC-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCC-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-UCR-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCR-V1.0"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-UCK-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCK-V1.0"}},
+                      {"Output": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-UCD-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCD-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-UCP-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCP-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUF-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCF-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "OSD-BVO-V1.5"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCC-V1.0"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-UCC-V1.0"}},
+                      {"Output": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-DOM-V1.0"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-DOM-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-CXD-V1.0"}, "Input": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-CXD-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCR-V1.0"}, "Input": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-UCR-V1.0"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KPR-V1.0"}, "Input": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-KPR-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCK-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-UCK-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-PCP-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-PCP-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-KPR-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KPR-V1.0"}},
+                      {"Output": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-KDA-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KDA-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-KUS-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KUS-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-KPA-V1.0"}, "Input": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KPA-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCD-V1.0"}, "Input": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-UCD-V1.0"}},
+                      {"Output": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-DOM-V1.0"}, "Input": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-DOM-V1.0"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KDA-V1.0"}, "Input": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-KDA-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KUS-V1.0"}, "Input": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-KUS-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCP-V1.0"}, "Input": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-UCP-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USR-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-PAL-V1.0", "DataType": "MMC-EST-V2.5"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-KPA-V1.0"}, "Input": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-KPA-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCF-V1.0"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "PGM-UCF-V1.0"}},
+                      {"Output": {"AIMName": "PGM-BKN-V1.0", "DataType": "PGM-FRS-V1.0"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "PGM-FRS-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PAL-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "MMC-EST-V2.5"}},
+                      {"Output": {"AIMName": "PGM-AUF-V1.0", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PAF-PAV-V1.6"}},
+                      {"Output": {"AIMName": "PGM-AUF-V1.0", "DataType": "MMM-PAT-V2.2"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "MMM-PAT-V2.2"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCS-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-UCS-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-UCS-V1.0"}, "Input": {"AIMName": "PGM-AUC-V1.0", "DataType": "PGM-UCS-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-CXT-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-PRC-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-DAC-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-USR-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-PAL-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "OSD-B3O-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "AIP-MLO-V1.0"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "AIP-MLO-V1.0"}},
+                      {"Output": {"AIMName": "PGM-AUC-V1.0", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-IID-V1.5"}, "Input": {"AIMName": "PGM-AUF-V1.0", "DataType": "OSD-IID-V1.5"}}],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/autonomous-user/"}],
+
+  "Execution":        "Continuous",
+
+  "StorageControl":   "1PGM-AUC-V1.0-I01"}

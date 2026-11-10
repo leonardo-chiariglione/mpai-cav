@@ -1,357 +1,62 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "PGM-USR-V1.0",
-  "APIProfile": "Basic",
-  "Description": "The User State Refinement (PGM-USR) AIM improves the A-User's understanding of the evolving User State. It refines the baseline User State produced by Context Description into an authoritative, up-to-date User State (represented by an Entity State) that it passes to Personality Alignment. It refines the Engagement (level and mode) and the Entity State. User State Refinement operates through one operative interface and one semantic interface:",
-  "InternalTypes": [],
-  "ExternalPorts": [
-    {
-      "Name": "AUCUSRRequest",
-      "Direction": "Input",
-      "DataType": "PGM-UCU-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false,
-      "IsOptional": true
-    },
-    {
-      "Name": "UserState",
-      "Direction": "Input",
-      "DataType": "MMC-EST-V2.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false,
-      "IsOptional": true
-    },
-    {
-      "Name": "BKNUSRRequest",
-      "Direction": "Input",
-      "DataType": "PGM-KUS-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false,
-      "IsOptional": true
-    },
-    {
-      "Name": "USRInteractionHistoryResponse",
-      "Direction": "Input",
-      "DataType": "PGM-IHI-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false,
-      "IsOptional": true
-    },
-    {
-      "Name": "UserState",
-      "Direction": "Output",
-      "DataType": "MMC-EST-V2.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AUCUSRResponse",
-      "Direction": "Output",
-      "DataType": "PGM-UCU-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "BKNUSRResponse",
-      "Direction": "Output",
-      "DataType": "PGM-KUS-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "USRInteractionHistoryRequest",
-      "Direction": "Output",
-      "DataType": "PGM-IHI-V1.0",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    }
-  ],
-  "SubAIMs": [
-    {
-      "Header": "PGM-ENG-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-ESR-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PGM-USY-V1.0",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-ENM-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "PGM-ENM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-KUS-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "PGM-KUS-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-UCU-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-UCU-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "MMC-EST-V2.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ENG-V1.0",
-        "DataType": "PGM-ENM-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-ENM-V1.0"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PGM-ESR-V1.0",
-        "DataType": "MMC-EST-V2.5"
-      },
-      "Input": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "MMC-EST-V2.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PGM-IHI-V1.0"
-      },
-      "Input": {
-        "AIMName": "PGM-USY-V1.0",
-        "DataType": "PGM-IHI-V1.0"
-      }
-    }
-  ],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Specification",
-      "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/user-state-refinement/"
-    }
-  ]
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "PGM-USR-V1.0",
+
+  "APIProfile":       "Basic",
+  "Description":      "The User State Refinement (PGM-USR) AIM improves the A-User's understanding of the evolving User State. It refines the baseline User State produced by Context Description into an authoritative, up-to-date User State (represented by an Entity State) that it passes to Personality Alignment. It refines the Engagement (level and mode) and the Entity State. User State Refinement operates through one operative interface and one semantic interface:",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "AUCUSRRequest",                 "Direction": "Input",  "DataType": "PGM-UCU-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "IsOptional": true},
+                      {"Name": "UserState",                     "Direction": "Input",  "DataType": "MMC-EST-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false, "IsOptional": true},
+                      {"Name": "BKNUSRRequest",                 "Direction": "Input",  "DataType": "PGM-KUS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "IsOptional": true},
+                      {"Name": "USRInteractionHistoryResponse", "Direction": "Input",  "DataType": "PGM-IHI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false, "IsOptional": true},
+                      {"Name": "UserState",                     "Direction": "Output", "DataType": "MMC-EST-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AUCUSRResponse",                "Direction": "Output", "DataType": "PGM-UCU-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "BKNUSRResponse",                "Direction": "Output", "DataType": "PGM-KUS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "USRInteractionHistoryRequest",  "Direction": "Output", "DataType": "PGM-IHI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [{"Header": "PGM-ENG-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-ESR-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PGM-USY-V1.0", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}}],
+
+  "Topology":        [{"Output": {"AIMName": "PGM-USY-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "", "DataType": "MMC-EST-V2.5"}},
+                      {"Output": {"AIMName": "PGM-USY-V1.0", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "PGM-ESR-V1.0", "DataType": "PGM-KUS-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-KUS-V1.0"}},
+                      {"Output": {"AIMName": "PGM-ENG-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USY-V1.0", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "PGM-ENG-V1.0", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USY-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-ENG-V1.0", "DataType": "MMC-EST-V2.5"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-ENG-V1.0", "DataType": "PGM-IHI-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "PGM-ESR-V1.0", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "PGM-USY-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-ESR-V1.0", "DataType": "MMC-EST-V2.5"}},
+                      {"Output": {"AIMName": "PGM-ENG-V1.0", "DataType": "PGM-ENM-V1.0"}, "Input": {"AIMName": "PGM-ESR-V1.0", "DataType": "PGM-ENM-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-KUS-V1.0"}, "Input": {"AIMName": "PGM-ESR-V1.0", "DataType": "PGM-KUS-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-UCU-V1.0"}, "Input": {"AIMName": "PGM-USY-V1.0", "DataType": "PGM-UCU-V1.0"}},
+                      {"Output": {"AIMName": "", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-USY-V1.0", "DataType": "MMC-EST-V2.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "PGM-ENG-V1.0", "DataType": "PGM-ENM-V1.0"}, "Input": {"AIMName": "PGM-USY-V1.0", "DataType": "PGM-ENM-V1.0"}},
+                      {"Output": {"AIMName": "PGM-ESR-V1.0", "DataType": "MMC-EST-V2.5"}, "Input": {"AIMName": "PGM-USY-V1.0", "DataType": "MMC-EST-V2.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "", "DataType": "PGM-IHI-V1.0"}, "Input": {"AIMName": "PGM-USY-V1.0", "DataType": "PGM-IHI-V1.0"}}],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-pgm/aua/v1-0/ai-modules/user-state-refinement/"}]}

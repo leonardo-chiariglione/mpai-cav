@@ -1,1112 +1,183 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/AUCPRC.json",
-  "title": "AUC-PRC V1.0",
-  "description": "The Data Type exchanged between A-User Control (AUC) and Prompt Creation (PRC). It has two modes, told apart by Mode: Request (RQ), sent by AUC to PRC (previously PRC Directive), and Response (RS), sent by PRC to AUC (previously PRC Status). Prompt Creation assembles the PC Prompt from Intent, Propositions, Goal and Personality, and does not perform perception, interpretation or reasoning. A-User Control drives each element at property level, whether Prompt Creation is Basic or Composite. Every Request is answered by a Response.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Mode",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "AUCPRCID",
-    "AUCPRCTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-UCR-V1.0"
-    },
-    "Mode": {
-      "type": "string",
-      "enum": [
-        "RQ",
-        "RS"
-      ],
-      "description": "RQ: Request (AUC to PRC), the old PRC Directive. RS: Response (PRC to AUC), the old PRC Status."
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "AUCPRCID": {
-      "type": "string",
-      "description": "Identifier of this Request or Response."
-    },
-    "AUCPRCTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Timeout": {
-      "type": "integer",
-      "exclusiveMinimum": 0,
-      "description": "Request only. The time, in milliseconds from the time of the Request, within which the Response shall be received. When it elapses without a Response, A-User Control treats the Request as not answered and the AIM shall not act on it any more."
-    },
-    "RequestID": {
-      "type": "string",
-      "description": "Response only. ID of the Request this Response answers."
-    },
-    "Instruction": {
-      "type": "string",
-      "enum": [
-        "PED",
-        "GLA",
-        "PKQ",
-        "GII",
-        "PRF",
-        "PCE",
-        "CME",
-        "AFR"
-      ],
-      "description": "Request only. The Instruction under which AUC issues the Request."
-    },
-    "Exchange": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Phase": {
-          "type": "string",
-          "enum": [
-            "new",
-            "continuation"
-          ]
-        },
-        "ResponseID": {
-          "type": "string",
-          "description": "ID of the Response to which a continuation Request follows."
-        }
-      },
-      "required": [
-        "Phase"
-      ],
-      "description": "Request only."
-    },
-    "Storage": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Write": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Category": {
-                "type": "string"
-              },
-              "Readers": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "Time": {
-                "type": "string",
-                "enum": [
-                  "module",
-                  "session",
-                  "persistent"
-                ]
-              }
-            },
-            "required": [
-              "Category"
-            ]
-          }
-        },
-        "Read": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "description": "Request only. What the AIM may write to and read from the Private Storage of the Module, under the rules set by AUC."
-    },
-    "ProcessActionOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "PAStatus": {
-          "type": "string"
-        },
-        "Complements": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Constraint": {
-          "type": "string",
-          "description": "Resulting constraint on the Goal."
-        }
-      },
-      "description": "Request only. Outcome of a Process Action performed by AUC in the M-Instance, conveyed so that the AIM operates knowing the current M-Instance state."
-    },
-    "Outcome": {
-      "type": "string",
-      "enum": [
-        "achieved",
-        "achieved_differently",
-        "not_achieved"
-      ],
-      "description": "Response only. The outcome reached."
-    },
-    "Reason": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Code": {
-          "type": "string",
-          "enum": [
-            "none",
-            "ambiguity_unresolved",
-            "partner_unavailable",
-            "constraint_conflict",
-            "insufficient_context",
-            "deadline_exceeded",
-            "not_permitted"
-          ]
-        },
-        "Description": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "Code"
-      ],
-      "description": "Response only. Structured reason, required when Outcome is not 'achieved'."
-    },
-    "StorageOutcome": {
-      "type": "array",
-      "description": "Response only. Outcome of the writes instructed by the Request.",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Category": {
-            "type": "string"
-          },
-          "Result": {
-            "type": "string",
-            "enum": [
-              "written",
-              "not_authorised",
-              "not_attempted"
-            ]
-          }
-        },
-        "required": [
-          "Category",
-          "Result"
-        ]
-      }
-    },
-    "Operation": {
-      "type": "string",
-      "enum": [
-        "generate",
-        "refine"
-      ],
-      "description": "Request only. Whether to generate or refine the PC Prompt."
-    },
-    "Goal": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Objective": {
-          "type": "string"
-        },
-        "Constraints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "Objective"
-      ],
-      "description": "Request only. Binding as to the objective and the constraints."
-    },
-    "ContextDescriptorsID": {
-      "type": "string",
-      "description": "Request only. Identifier of the Context Descriptors to use."
-    },
-    "ModalityAnchors": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "Text",
-          "Audio",
-          "Visual",
-          "Speech",
-          "User"
-        ]
-      },
-      "description": "Request only. Modality prioritisation, in decreasing order."
-    },
-    "Intent": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Requirement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "not_requested"
-          ]
-        },
-        "Properties": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "ResolvedElements": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "IntentToElementMapping": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "The properties to be produced, at property level."
-        }
-      },
-      "description": "Request only. Control of the Intent: the referents of the User's intentions in the Space."
-    },
-    "Propositions": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Requirement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "not_requested"
-          ]
-        },
-        "Properties": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Referents": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "SpatialPrimitives": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "SceneContextTags": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "The properties to be produced, at property level."
-        }
-      },
-      "description": "Request only. Control of the Propositions: the spatial and referential statements about the Space."
-    },
-    "PromptGoal": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Requirement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "not_requested"
-          ]
-        },
-        "Properties": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "PromptGoal": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "GoalConstraints": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "The properties to be produced, at property level."
-        },
-        "GoalType": {
-          "type": "string",
-          "enum": [
-            "clarify",
-            "elaborate",
-            "contrast",
-            "summarize"
-          ]
-        },
-        "TargetEntity": {
-          "type": "string"
-        },
-        "GoalConstraints": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "ConstraintType": {
-                "type": "string"
-              },
-              "ConstraintValue": {
-                "type": "string"
-              },
-              "PriorityScore": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              }
-            },
-            "required": [
-              "ConstraintType",
-              "ConstraintValue"
-            ]
-          }
-        }
-      },
-      "description": "Request only. Control of the Goal of the PC Prompt."
-    },
-    "Personality": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Requirement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "not_requested"
-          ]
-        },
-        "Properties": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "PersonalityFragments": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "The properties to be produced, at property level."
-        }
-      },
-      "description": "Request only. Control of the inclusion of the Personality in the PC Prompt."
-    },
-    "Actions": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Requirement": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "not_requested"
-          ]
-        },
-        "Properties": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Repertoire": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "Rights": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "Rules": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            },
-            "Affordances": {
-              "type": "string",
-              "enum": [
-                "required",
-                "optional",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "The properties to be produced, at property level."
-        },
-        "Allowed": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "Authenticate",
-              "Author",
-              "Convert",
-              "Discover",
-              "Execute",
-              "Hide",
-              "Identify",
-              "Interpret",
-              "License",
-              "MM-Add",
-              "MM-Animate",
-              "MM-Capture",
-              "MM-Move",
-              "MM-Send",
-              "Modify",
-              "MU-Actuate",
-              "MU-Add",
-              "MU-Animate",
-              "MU-Move",
-              "MU-Send",
-              "Post",
-              "Property Change",
-              "Register",
-              "Resolve",
-              "Rights Change",
-              "Transact",
-              "UM-Actuate",
-              "UM-Capture",
-              "UM-Send",
-              "Validate"
-            ]
-          }
-        }
-      },
-      "description": "Request only. Control of the Action context placed in the PC Prompt, so that Basic Knowledge can propose Process Actions."
-    },
-    "History": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Include": {
-          "type": "boolean"
-        },
-        "MaxTurns": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "TimeWindow": {
-          "type": "string"
-        }
-      },
-      "description": "How much of the Interaction History is used."
-    },
-    "Framing": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Style": {
-          "type": "string"
-        },
-        "Tone": {
-          "type": "string"
-        },
-        "Pacing": {
-          "type": "string",
-          "enum": [
-            "slow",
-            "steady",
-            "fast"
-          ]
-        }
-      },
-      "description": "Request only. Framing strategy for the construction of the PC Prompt."
-    },
-    "GoalUnderstood": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Objective": {
-          "type": "string"
-        },
-        "Constraints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "Objective"
-      ],
-      "description": "Response only. The goal as the AIM understood it."
-    },
-    "PromptState": {
-      "type": "string",
-      "enum": [
-        "ready",
-        "partial",
-        "failed"
-      ],
-      "description": "Response only."
-    },
-    "PCPromptID": {
-      "type": "string",
-      "description": "Response only. Identifier of the PC Prompt produced."
-    },
-    "BKNSessionOpened": {
-      "type": "boolean",
-      "description": "Response only. Whether the PC Prompt has been submitted to Basic Knowledge and the multi-turn session is open."
-    },
-    "IntentOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Outcome": {
-          "type": "string",
-          "enum": [
-            "produced",
-            "partial",
-            "failed",
-            "not_requested"
-          ]
-        },
-        "Reasons": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Reason": {
-                "type": "string",
-                "enum": [
-                  "ambiguity_unresolved",
-                  "partner_unavailable",
-                  "constraint_conflict",
-                  "insufficient_context",
-                  "deadline_exceeded",
-                  "not_permitted"
-                ]
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Reason"
-            ]
-          }
-        },
-        "PropertyFulfilment": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "ResolvedElements": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "IntentToElementMapping": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "Fulfilment of the requested properties."
-        }
-      },
-      "required": [
-        "Outcome"
-      ],
-      "description": "Response only. Outcome of the Intent."
-    },
-    "PropositionsOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Outcome": {
-          "type": "string",
-          "enum": [
-            "produced",
-            "partial",
-            "failed",
-            "not_requested"
-          ]
-        },
-        "Reasons": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Reason": {
-                "type": "string",
-                "enum": [
-                  "ambiguity_unresolved",
-                  "partner_unavailable",
-                  "constraint_conflict",
-                  "insufficient_context",
-                  "deadline_exceeded",
-                  "not_permitted"
-                ]
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Reason"
-            ]
-          }
-        },
-        "PropertyFulfilment": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Referents": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "SpatialPrimitives": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "SceneContextTags": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "Fulfilment of the requested properties."
-        }
-      },
-      "required": [
-        "Outcome"
-      ],
-      "description": "Response only. Outcome of the Propositions."
-    },
-    "PromptGoalOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Outcome": {
-          "type": "string",
-          "enum": [
-            "produced",
-            "partial",
-            "failed",
-            "not_requested"
-          ]
-        },
-        "Reasons": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Reason": {
-                "type": "string",
-                "enum": [
-                  "ambiguity_unresolved",
-                  "partner_unavailable",
-                  "constraint_conflict",
-                  "insufficient_context",
-                  "deadline_exceeded",
-                  "not_permitted"
-                ]
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Reason"
-            ]
-          }
-        },
-        "PropertyFulfilment": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "PromptGoal": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "GoalConstraints": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "Fulfilment of the requested properties."
-        },
-        "GoalType": {
-          "type": "string",
-          "enum": [
-            "clarify",
-            "elaborate",
-            "contrast",
-            "summarize"
-          ]
-        }
-      },
-      "required": [
-        "Outcome"
-      ],
-      "description": "Response only. Outcome of the Goal of the PC Prompt."
-    },
-    "PersonalityOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Outcome": {
-          "type": "string",
-          "enum": [
-            "produced",
-            "partial",
-            "failed",
-            "not_requested"
-          ]
-        },
-        "Reasons": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Reason": {
-                "type": "string",
-                "enum": [
-                  "ambiguity_unresolved",
-                  "partner_unavailable",
-                  "constraint_conflict",
-                  "insufficient_context",
-                  "deadline_exceeded",
-                  "not_permitted"
-                ]
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Reason"
-            ]
-          }
-        },
-        "PropertyFulfilment": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "PersonalityFragments": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "Fulfilment of the requested properties."
-        }
-      },
-      "required": [
-        "Outcome"
-      ],
-      "description": "Response only. Outcome of the inclusion of the Personality."
-    },
-    "ActionsOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Outcome": {
-          "type": "string",
-          "enum": [
-            "produced",
-            "partial",
-            "failed",
-            "not_requested"
-          ]
-        },
-        "Reasons": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Reason": {
-                "type": "string",
-                "enum": [
-                  "ambiguity_unresolved",
-                  "partner_unavailable",
-                  "constraint_conflict",
-                  "insufficient_context",
-                  "deadline_exceeded",
-                  "not_permitted"
-                ]
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Reason"
-            ]
-          }
-        },
-        "PropertyFulfilment": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Repertoire": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "Rights": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "Rules": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            },
-            "Affordances": {
-              "type": "string",
-              "enum": [
-                "produced",
-                "partial",
-                "missing",
-                "not_requested"
-              ]
-            }
-          },
-          "description": "Fulfilment of the requested properties."
-        }
-      },
-      "required": [
-        "Outcome"
-      ],
-      "description": "Response only. Outcome of the inclusion of the Action context."
-    },
-    "FramingOutcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Style": {
-          "type": "string"
-        },
-        "Tone": {
-          "type": "string"
-        },
-        "Pacing": {
-          "type": "string",
-          "enum": [
-            "slow",
-            "steady",
-            "fast"
-          ]
-        }
-      },
-      "description": "Response only. Framing of the PC Prompt as delivered."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "Mode": {
-            "const": "RQ"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "Instruction",
-          "Exchange",
-          "Operation",
-          "Goal"
-        ],
-        "properties": {
-          "RequestID": false,
-          "Outcome": false,
-          "Reason": false,
-          "StorageOutcome": false,
-          "GoalUnderstood": false,
-          "PromptState": false,
-          "PCPromptID": false,
-          "BKNSessionOpened": false,
-          "IntentOutcome": false,
-          "PropositionsOutcome": false,
-          "PromptGoalOutcome": false,
-          "PersonalityOutcome": false,
-          "ActionsOutcome": false,
-          "FramingOutcome": false
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Mode": {
-            "const": "RS"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "RequestID",
-          "Outcome",
-          "GoalUnderstood",
-          "PromptState"
-        ],
-        "properties": {
-          "Instruction": false,
-          "Exchange": false,
-          "Storage": false,
-          "ProcessActionOutcome": false,
-          "Operation": false,
-          "Goal": false,
-          "ContextDescriptorsID": false,
-          "ModalityAnchors": false,
-          "Intent": false,
-          "Propositions": false,
-          "PromptGoal": false,
-          "Personality": false,
-          "Actions": false,
-          "History": false,
-          "Framing": false
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Mode": {
-            "const": "RS"
-          },
-          "Outcome": {
-            "enum": [
-              "achieved_differently",
-              "not_achieved"
-            ]
-          }
-        },
-        "required": [
-          "Mode",
-          "Outcome"
-        ]
-      },
-      "then": {
-        "required": [
-          "Reason"
-        ]
-      }
-    }
-  ]
-}
+{ "$schema":                       "https://json-schema.org/draft/2020-12/schema",
+  "$id":                           "https://schemas.mpai.community/PGM1/V1.0/data/AUCPRC.json",
+  "title":                         "AUC-PRC V1.0",
+  "description":                   "The Data Type exchanged between A-User Control (AUC) and Prompt Creation (PRC). It has two modes, told apart by Mode: Request (RQ), sent by AUC to PRC (previously PRC Directive), and Response (RS), sent by PRC to AUC (previously PRC Status). Prompt Creation assembles the PC Prompt from Intent, Propositions, Goal and Personality, and does not perform perception, interpretation or reasoning. A-User Control drives each element at property level, whether Prompt Creation is Basic or Composite. Every Request is answered by a Response.",
+  "type":                          "object",
+  "additionalProperties":          false,
+  "required":                      [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "AUCPRCID", "AUCPRCTime" ],
+
+  "properties":                    {
+
+    "Header":                      { "type": "string", "const": "PGM-UCR-V1.0" },
+    "Mode":                        { "type": "string", "enum": [ "RQ", "RS" ], "description": "RQ: Request (AUC to PRC), the old PRC Directive. RS: Response (PRC to AUC), the old PRC Status." },
+    "MInstance":                   { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":                { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                   { "type": "string", "description": "Identifier of the A-User session." },
+    "AUCPRCID":                    { "type": "string", "description": "Identifier of this Request or Response." },
+    "AUCPRCTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Timeout":                     { "type": "integer", "exclusiveMinimum": 0,
+                                     "description": "Request only. The time, in milliseconds from the time of the Request, within which the Response shall be received. When it elapses without a Response, A-User Control treats the Request as not answered and the AIM shall not act on it any more." },
+
+    "RequestID":                   { "type": "string", "description": "Response only. ID of the Request this Response answers." },
+    "Instruction":                 { "type": "string", "enum": [ "PED", "GLA", "PKQ", "GII", "PRF", "PCE", "CME", "AFR" ],
+                                     "description": "Request only. The Instruction under which AUC issues the Request." },
+
+    "Exchange":                    { "type": "object", "additionalProperties": false, "required": [ "Phase" ], "description": "Request only.", "properties": {
+      "Phase":                     { "type": "string", "enum": [ "new", "continuation" ] },
+      "ResponseID":                { "type": "string", "description": "ID of the Response to which a continuation Request follows." } } },
+
+    "Storage":                     { "type": "object", "additionalProperties": false, "description": "Request only. What the AIM may write to and read from the Private Storage of the Module, under the rules set by AUC.", "properties": {
+      "Write":                     { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Category" ], "properties": {
+        "Category":                { "type": "string" },
+        "Readers":                 { "type": "array", "items": { "type": "string" } },
+        "Time":                    { "type": "string", "enum": [ "module", "session", "persistent" ] } } } },
+
+      "Read":                      { "type": "array", "items": { "type": "string" } } } },
+
+    "ProcessActionOutcome":        { "type": "object", "additionalProperties": false, "description": "Request only. Outcome of a Process Action performed by AUC in the M-Instance, conveyed so that the AIM operates knowing the current M-Instance state.", "properties": {
+      "PAStatus":                  { "type": "string" },
+      "Complements":               { "type": "array", "items": { "type": "string" } },
+      "Constraint":                { "type": "string", "description": "Resulting constraint on the Goal." } } },
+
+    "Outcome":                     { "type": "string", "enum": [ "achieved", "achieved_differently", "not_achieved" ], "description": "Response only. The outcome reached." },
+    "Reason":                      { "type": "object", "additionalProperties": false, "required": [ "Code" ], "description": "Response only. Structured reason, required when Outcome is not 'achieved'.", "properties": {
+      "Code":                      { "type": "string", "enum": [ "none", "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+      "Description":               { "type": "string" } } },
+
+    "StorageOutcome":              { "type": "array", "description": "Response only. Outcome of the writes instructed by the Request.", "items": { "type": "object", "additionalProperties": false, "required": [ "Category", "Result" ], "properties": {
+      "Category":                  { "type": "string" },
+      "Result":                    { "type": "string", "enum": [ "written", "not_authorised", "not_attempted" ] } } } },
+
+    "Operation":                   { "type": "string", "enum": [ "generate", "refine" ], "description": "Request only. Whether to generate or refine the PC Prompt." },
+    "Goal":                        { "type": "object", "additionalProperties": false, "required": [ "Objective" ], "description": "Request only. Binding as to the objective and the constraints.", "properties": {
+      "Objective":                 { "type": "string" },
+      "Constraints":               { "type": "array", "items": { "type": "string" } } } },
+
+    "ContextDescriptorsID":        { "type": "string", "description": "Request only. Identifier of the Context Descriptors to use." },
+    "ModalityAnchors":             { "type": "array", "items": { "type": "string", "enum": [ "Text", "Audio", "Visual", "Speech", "User" ] },
+                                     "description": "Request only. Modality prioritisation, in decreasing order." },
+
+    "Intent":                      { "type": "object", "additionalProperties": false, "description": "Request only. Control of the Intent: the referents of the User's intentions in the Space.", "properties": {
+      "Requirement":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+      "Properties":                { "type": "object", "additionalProperties": false, "description": "The properties to be produced, at property level.", "properties": {
+        "ResolvedElements":        { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "IntentToElementMapping":  { "type": "string", "enum": [ "required", "optional", "not_requested" ] } } } } },
+
+    "Propositions":                { "type": "object", "additionalProperties": false, "description": "Request only. Control of the Propositions: the spatial and referential statements about the Space.", "properties": {
+      "Requirement":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+      "Properties":                { "type": "object", "additionalProperties": false, "description": "The properties to be produced, at property level.", "properties": {
+        "Referents":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "SpatialPrimitives":       { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "SceneContextTags":        { "type": "string", "enum": [ "required", "optional", "not_requested" ] } } } } },
+
+    "PromptGoal":                  { "type": "object", "additionalProperties": false, "description": "Request only. Control of the Goal of the PC Prompt.", "properties": {
+      "Requirement":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+      "Properties":                { "type": "object", "additionalProperties": false, "description": "The properties to be produced, at property level.", "properties": {
+        "PromptGoal":              { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "GoalConstraints":         { "type": "string", "enum": [ "required", "optional", "not_requested" ] } } },
+
+      "GoalType":                  { "type": "string", "enum": [ "clarify", "elaborate", "contrast", "summarize" ] },
+      "TargetEntity":              { "type": "string" },
+      "GoalConstraints":           { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "ConstraintType", "ConstraintValue" ], "properties": {
+        "ConstraintType":          { "type": "string" },
+        "ConstraintValue":         { "type": "string" },
+        "PriorityScore":           { "type": "number", "minimum": 0, "maximum": 1 } } } } } },
+
+    "Personality":                 { "type": "object", "additionalProperties": false, "description": "Request only. Control of the inclusion of the Personality in the PC Prompt.", "properties": {
+      "Requirement":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+      "Properties":                { "type": "object", "additionalProperties": false, "description": "The properties to be produced, at property level.", "properties": {
+        "PersonalityFragments":    { "type": "string", "enum": [ "required", "optional", "not_requested" ] } } } } },
+
+    "Actions":                     { "type": "object", "additionalProperties": false, "description": "Request only. Control of the Action context placed in the PC Prompt, so that Basic Knowledge can propose Process Actions.", "properties": {
+      "Requirement":               { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+      "Properties":                { "type": "object", "additionalProperties": false, "description": "The properties to be produced, at property level.", "properties": {
+        "Repertoire":              { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "Rights":                  { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "Rules":                   { "type": "string", "enum": [ "required", "optional", "not_requested" ] },
+        "Affordances":             { "type": "string", "enum": [ "required", "optional", "not_requested" ] } } },
+
+      "Allowed":                   { "type": "array", "items": { "type": "string", "enum": [ "Authenticate", "Author", "Convert", "Discover", "Execute", "Hide", "Identify", "Interpret", "License", "MM-Add", "MM-Animate", "MM-Capture", "MM-Move", "MM-Send", "Modify", "MU-Actuate", "MU-Add", "MU-Animate", "MU-Move", "MU-Send", "Post", "Property Change", "Register", "Resolve", "Rights Change", "Transact", "UM-Actuate", "UM-Capture", "UM-Send", "Validate" ] } } } },
+
+    "History":                     { "type": "object", "additionalProperties": false, "description": "How much of the Interaction History is used.", "properties": {
+      "Include":                   { "type": "boolean" },
+      "MaxTurns":                  { "type": "integer", "minimum": 0 },
+      "TimeWindow":                { "type": "string" } } },
+
+    "Framing":                     { "type": "object", "additionalProperties": false, "description": "Request only. Framing strategy for the construction of the PC Prompt.", "properties": {
+      "Style":                     { "type": "string" },
+      "Tone":                      { "type": "string" },
+      "Pacing":                    { "type": "string", "enum": [ "slow", "steady", "fast" ] } } },
+
+    "GoalUnderstood":              { "type": "object", "additionalProperties": false, "required": [ "Objective" ], "description": "Response only. The goal as the AIM understood it.", "properties": {
+      "Objective":                 { "type": "string" },
+      "Constraints":               { "type": "array", "items": { "type": "string" } } } },
+
+    "PromptState":                 { "type": "string", "enum": [ "ready", "partial", "failed" ], "description": "Response only." },
+    "PCPromptID":                  { "type": "string", "description": "Response only. Identifier of the PC Prompt produced." },
+    "BKNSessionOpened":            { "type": "boolean", "description": "Response only. Whether the PC Prompt has been submitted to Basic Knowledge and the multi-turn session is open." },
+    "IntentOutcome":               { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "Response only. Outcome of the Intent.", "properties": {
+      "Outcome":                   { "type": "string", "enum": [ "produced", "partial", "failed", "not_requested" ] },
+      "Reasons":                   { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Reason" ], "properties": {
+        "Reason":                  { "type": "string", "enum": [ "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+        "Description":             { "type": "string" } } } },
+
+      "PropertyFulfilment":        { "type": "object", "additionalProperties": false, "description": "Fulfilment of the requested properties.", "properties": {
+        "ResolvedElements":        { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "IntentToElementMapping":  { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] } } } } },
+
+    "PropositionsOutcome":         { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "Response only. Outcome of the Propositions.", "properties": {
+      "Outcome":                   { "type": "string", "enum": [ "produced", "partial", "failed", "not_requested" ] },
+      "Reasons":                   { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Reason" ], "properties": {
+        "Reason":                  { "type": "string", "enum": [ "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+        "Description":             { "type": "string" } } } },
+
+      "PropertyFulfilment":        { "type": "object", "additionalProperties": false, "description": "Fulfilment of the requested properties.", "properties": {
+        "Referents":               { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "SpatialPrimitives":       { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "SceneContextTags":        { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] } } } } },
+
+    "PromptGoalOutcome":           { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "Response only. Outcome of the Goal of the PC Prompt.", "properties": {
+      "Outcome":                   { "type": "string", "enum": [ "produced", "partial", "failed", "not_requested" ] },
+      "Reasons":                   { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Reason" ], "properties": {
+        "Reason":                  { "type": "string", "enum": [ "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+        "Description":             { "type": "string" } } } },
+
+      "PropertyFulfilment":        { "type": "object", "additionalProperties": false, "description": "Fulfilment of the requested properties.", "properties": {
+        "PromptGoal":              { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "GoalConstraints":         { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] } } },
+
+      "GoalType":                  { "type": "string", "enum": [ "clarify", "elaborate", "contrast", "summarize" ] } } },
+
+    "PersonalityOutcome":          { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "Response only. Outcome of the inclusion of the Personality.", "properties": {
+      "Outcome":                   { "type": "string", "enum": [ "produced", "partial", "failed", "not_requested" ] },
+      "Reasons":                   { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Reason" ], "properties": {
+        "Reason":                  { "type": "string", "enum": [ "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+        "Description":             { "type": "string" } } } },
+
+      "PropertyFulfilment":        { "type": "object", "additionalProperties": false, "description": "Fulfilment of the requested properties.", "properties": {
+        "PersonalityFragments":    { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] } } } } },
+
+    "ActionsOutcome":              { "type": "object", "additionalProperties": false, "required": [ "Outcome" ], "description": "Response only. Outcome of the inclusion of the Action context.", "properties": {
+      "Outcome":                   { "type": "string", "enum": [ "produced", "partial", "failed", "not_requested" ] },
+      "Reasons":                   { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Reason" ], "properties": {
+        "Reason":                  { "type": "string", "enum": [ "ambiguity_unresolved", "partner_unavailable", "constraint_conflict", "insufficient_context", "deadline_exceeded", "not_permitted" ] },
+        "Description":             { "type": "string" } } } },
+
+      "PropertyFulfilment":        { "type": "object", "additionalProperties": false, "description": "Fulfilment of the requested properties.", "properties": {
+        "Repertoire":              { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "Rights":                  { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "Rules":                   { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] },
+        "Affordances":             { "type": "string", "enum": [ "produced", "partial", "missing", "not_requested" ] } } } } },
+
+    "FramingOutcome":              { "type": "object", "additionalProperties": false, "description": "Response only. Framing of the PC Prompt as delivered.", "properties": {
+      "Style":                     { "type": "string" },
+      "Tone":                      { "type": "string" },
+      "Pacing":                    { "type": "string", "enum": [ "slow", "steady", "fast" ] } } },
+
+    "DataXMData":                  { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":               { "type": "string", "maxLength": 2048 } },
+  "allOf":                         [ { "if": { "properties": { "Mode": { "const": "RQ" } } }, "then": { "required": [ "Instruction", "Exchange", "Operation", "Goal" ], "properties": { "RequestID": false, "Outcome": false, "Reason": false, "StorageOutcome": false, "GoalUnderstood": false, "PromptState": false, "PCPromptID": false, "BKNSessionOpened": false, "IntentOutcome": false, "PropositionsOutcome": false, "PromptGoalOutcome": false, "PersonalityOutcome": false, "ActionsOutcome": false, "FramingOutcome": false } } },
+  { "if": { "properties": { "Mode": { "const": "RS" } } }, "then": { "required": [ "RequestID", "Outcome", "GoalUnderstood", "PromptState" ], "properties": { "Instruction": false, "Exchange": false, "Storage": false, "ProcessActionOutcome": false, "Operation": false, "Goal": false, "ContextDescriptorsID": false, "ModalityAnchors": false, "Intent": false, "Propositions": false, "PromptGoal": false, "Personality": false, "Actions": false, "History": false, "Framing": false } } },
+  { "then": { "required": [ "Reason" ] }, "if": { "required": [ "Mode", "Outcome" ], "properties": {
+    "Mode":                        { "const": "RS" },
+    "Outcome":                     { "enum": [ "achieved_differently", "not_achieved" ] } } } } ] }

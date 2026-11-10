@@ -9,16 +9,15 @@
   "APIProfile":           "Basic",
   "Description":          "The Operator Status Interpretation (XRV-OSI) AIM interprets the RE Operator Descriptors and VE Operator Descriptors to produce the RE and VE Operator Status as required to determine if the Script's Cue Point Conditions of the current Cue Point ID are met.",
 
-  "ExternalPorts":        [{"Name": "REOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-ROD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VEOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-VOD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-IID-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "REOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-ROD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "VEOperatorDescriptors",   "Direction": "Input", "DataType": "XRV-VOD-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "CuePointID",              "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Depth": 1, "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ActionTable",             "Direction": "Input", "DataType": "XRV-ATB-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ScriptVenueAssociations", "Direction": "Input", "DataType": "XRV-SVA-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "REOperatorStatus",        "Direction": "Output", "DataType": "XRV-ROS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "VEOperatorStatus",        "Direction": "Output", "DataType": "XRV-VOS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "VEOperatorStatus",        "Direction": "Output", "DataType": "XRV-VOS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

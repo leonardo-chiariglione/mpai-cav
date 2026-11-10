@@ -1,180 +1,45 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "MMC-NLU-V2.5",
-  "APIProfile": "Basic",
-  "Description": "This AIM receives an Input Text or a Recognised Text and produces the Text Descriptors Object (carrying the Basic Text Descriptors), a Refined Text, and the Text Personal Status (a value for each Personal Status Factor carried by the text).",
-  "InternalTypes": [],
-  "ExternalPorts": [
-    {
-      "Name": "InputText",
-      "Direction": "Input",
-      "DataType": [
-        "OSD-BTO-V1.5",
-        "OSD-TXO-V1.5"
-      ],
-      "PortNumber": 1,
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "RecognisedText",
-      "Direction": "Input",
-      "DataType": [
-        "OSD-BTO-V1.5",
-        "OSD-TXO-V1.5"
-      ],
-      "PortNumber": 2,
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "InputSelector",
-      "Direction": "Input",
-      "DataType": "OSD-SEL-V1.5",
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "InstanceIdentifier",
-      "Direction": "Input",
-      "DataType": "OSD-IID-V1.5",
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "VisualSceneGeometry",
-      "Direction": "Input",
-      "DataType": [
-        "OSD-BVG-V1.5",
-        "OSD-BMS-V1.5"
-      ],
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "TextDescriptors",
-      "Direction": "Output",
-      "DataType": "MMC-TDO-V2.5",
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "RefinedText",
-      "Direction": "Output",
-      "DataType": [
-        "OSD-BTO-V1.5",
-        "OSD-TXO-V1.5"
-      ],
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "TextPersonalStatus",
-      "Direction": "Output",
-      "DataType": "MMC-TPS-V2.5",
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "OutputInstanceIdentifier",
-      "Direction": "Output",
-      "DataType": "OSD-IID-V1.5",
-      "IsOptional": true,
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    }
-  ],
-  "SubAIMs": [],
-  "Topology": [],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Tutorial",
-      "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"
-    }
-  ]
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "MMC-NLU-V2.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "This AIM receives an Input Text or a Recognised Text and produces the Text Descriptors Object (carrying the Basic Text Descriptors), a Refined Text, and the Text Personal Status (a value for each Personal Status Factor carried by the text).",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "InputText",                "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 1, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "RecognisedText",           "Direction": "Input",  "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"], "PortNumber": 2, "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "InputSelector",            "Direction": "Input",  "DataType": "OSD-SEL-V1.5",                                    "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "InstanceIdentifier",       "Direction": "Input",  "DataType": "OSD-IID-V1.5",                                    "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "VisualSceneGeometry",      "Direction": "Input",  "DataType": ["OSD-BVG-V1.5", "OSD-BMS-V1.5"],                  "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "TextDescriptors",          "Direction": "Output", "DataType": "MMC-TDO-V2.5",                                                        "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "RefinedText",              "Direction": "Output", "DataType": ["OSD-BTO-V1.5", "OSD-TXO-V1.5"],                                      "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "TextPersonalStatus",       "Direction": "Output", "DataType": "MMC-TPS-V2.5",                                                        "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "OutputInstanceIdentifier", "Direction": "Output", "DataType": "OSD-IID-V1.5",                                    "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Tutorial", "URI": "https://mpai.community/standards/mpai-mmc/v2-5/"}]}

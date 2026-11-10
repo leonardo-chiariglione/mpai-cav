@@ -1,59 +1,21 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicEventDescriptors.json",
-  "title": "Basic Event Descriptors V1.5",
-  "description": "An Item represented by a series of Basic Scene Descriptors for a certain duration (from a start Time to an end Time).",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "BasicEventDescriptorsID",
-    "BasicEventDescriptorsSpaceTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-BED-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "BasicEventDescriptorsID": {
-      "type": "string",
-      "description": "Identifier of this Basic Event Descriptors instance."
-    },
-    "BasicEventDescriptorsTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "BasicEventDescriptorsSpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json",
-      "description": "Start and end Space-Time of the event."
-    },
-    "BasicSceneDescriptors": {
-      "type": "array",
-      "description": "The Basic Scene Descriptors between the start Time and the end Time of the event, each embedded or given by its ID.",
-      "items": {
-        "oneOf": [
-          {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneDescriptors.json"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      }
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                           "https://json-schema.org/draft/2020-12/schema",
+  "$id":                               "https://schemas.mpai.community/OSD/V1.5/data/BasicEventDescriptors.json",
+  "title":                             "Basic Event Descriptors V1.5",
+  "description":                       "An Item represented by a series of Basic Scene Descriptors for a certain duration (from a start Time to an end Time).",
+  "type":                              "object",
+  "additionalProperties":              false,
+  "required":                          [ "Header", "BasicEventDescriptorsID", "BasicEventDescriptorsSpaceTime" ],
+
+  "properties":                        {
+
+    "Header":                          { "type": "string", "const": "OSD-BED-V1.5" },
+    "MInstanceID":                     { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":                  { "type": "string", "description": "Identifier of the U-Environment." },
+    "BasicEventDescriptorsID":         { "type": "string", "description": "Identifier of this Basic Event Descriptors instance." },
+    "BasicEventDescriptorsTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "BasicEventDescriptorsSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json", "description": "Start and end Space-Time of the event." },
+    "BasicSceneDescriptors":           { "type": "array", "items": { "oneOf": [ { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneDescriptors.json" }, { "type": "string" } ] },
+                                         "description": "The Basic Scene Descriptors between the start Time and the end Time of the event, each embedded or given by its ID." },
+
+    "DataXMData":                      { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                   { "type": "string", "maxLength": 2048 } } }

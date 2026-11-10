@@ -1,274 +1,76 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/Domain.json",
-  "title": "Domain V1.0",
-  "description": "The Data Type exchanged between any AIM of the A-User and Domain Access. It has two modes, told apart by Mode: Request (RQ), that supplies the evidence and the candidate interpretations to be checked together with the operations requested, and Response (RS), that returns the outcome, the validated interpretations with updated confidences and an explanation. SourceAIM states which AIM or Sub-AIM sends the Request or receives the Response, and Subject which medium or User it relates to. A Response carries the QueryID of its Request.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Mode",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "SourceAIM",
-    "Subject",
-    "QueryID",
-    "QueryTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-DOM-V1.0"
-    },
-    "Mode": {
-      "type": "string",
-      "enum": [
-        "RQ",
-        "RS"
-      ],
-      "description": "RQ: Request. RS: Response."
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "QueryID": {
-      "type": "string",
-      "description": "Identifier of this Request or Response."
-    },
-    "QueryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "RequestID": {
-      "type": "string",
-      "description": "Response only. ID of the Request this Response answers."
-    },
-    "CaptureIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Position of the capture within the session to which the exchange refers."
-    },
-    "SourceAIM": {
-      "type": "string",
-      "pattern": "^PGM-[A-Z]{3}-V1\\.0$",
-      "description": "Header of the AIM or Sub-AIM that sends the Request or the Response (e.g., PGM-ASD-V1.0), or of the AIM to which a Response is sent."
-    },
-    "Subject": {
-      "type": "string",
-      "enum": [
-        "audio",
-        "visual",
-        "user",
-        "ava",
-        "context",
-        "prompt",
-        "personality",
-        "deliberation"
-      ],
-      "description": "The medium or the entity the exchange relates to: the audio scene, the visual scene, the User, the alignment of audio and visual Entities, or the context, prompt, personality or deliberation of the A-User."
-    },
-    "UserIDs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Identifiers of the Users the exchange relates to, where the Subject is user."
-    },
-    "DomainID": {
-      "type": "string",
-      "description": "Request only. Identifier of the domain the Request concerns."
-    },
-    "Targets": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Request only. Identifiers of the entities the Request concerns."
-    },
-    "CandidateClasses": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Class": {
-            "type": "string",
-            "format": "uri"
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          }
-        },
-        "required": [
-          "Class"
-        ]
-      },
-      "description": "Request only. Candidate interpretations, each a Class (URI) with an optional Confidence."
-    },
-    "RequestedOperations": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "ResolveAmbiguities": {
-          "type": "boolean"
-        },
-        "ApplyConstraints": {
-          "type": "boolean"
-        },
-        "SemanticEnrichment": {
-          "type": "boolean"
-        },
-        "CrossModalResolution": {
-          "type": "boolean"
-        }
-      },
-      "description": "Request only. Operations requested."
-    },
-    "AudioSceneDescriptors": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "EnhancedAudioSceneDescriptors": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "VisualSceneDescriptors": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "EnhancedVisualSceneDescriptors": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "AudioVisualSceneDescriptors": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "UserState": {
-      "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
-      "description": "Request only. Evidence supplied, as appropriate to the Subject."
-    },
-    "Utterances": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Request only. Identifiers of the utterances the Request concerns."
-    },
-    "TemporalScope": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "StartTime": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-        },
-        "EndTime": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-        }
-      },
-      "description": "Request only. The interval considered."
-    },
-    "RegionOfInterest": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleLocation.json",
-      "description": "Request only. The region the Request concerns."
-    },
-    "Viewpoint": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json",
-      "description": "Request only. The viewpoint for the Request."
-    },
-    "ResponseStatus": {
-      "type": "string",
-      "enum": [
-        "Affirmed",
-        "Rejected",
-        "Conditional",
-        "Inconclusive"
-      ],
-      "description": "Response only. Outcome."
-    },
-    "ValidatedClasses": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "format": "uri"
-      },
-      "description": "Response only. Classes confirmed by Domain Access."
-    },
-    "UpdatedConfidences": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Class": {
-            "type": "string",
-            "format": "uri"
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          }
-        },
-        "required": [
-          "Class"
-        ]
-      },
-      "description": "Response only. Revised confidences."
-    },
-    "ResolvedTargets": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Response only. Identifiers of the entities resolved."
-    },
-    "ModalityWeights": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Audio": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "Visual": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        }
-      },
-      "description": "Response only. The relative weight the domain gives to what is heard and to what is seen."
-    },
-    "SalientClasses": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "format": "uri"
-      },
-      "description": "Response only. The classes of Entity that the setting makes salient."
-    },
-    "Explanation": {
-      "type": "string",
-      "description": "Response only. Human-readable explanation of the outcome."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                           "https://json-schema.org/draft/2020-12/schema",
+  "$id":                               "https://schemas.mpai.community/PGM1/V1.0/data/Domain.json",
+  "title":                             "Domain V1.0",
+  "description":                       "The Data Type exchanged between any AIM of the A-User and Domain Access. It has two modes, told apart by Mode: Request (RQ), that supplies the evidence and the candidate interpretations to be checked together with the operations requested, and Response (RS), that returns the outcome, the validated interpretations with updated confidences and an explanation. SourceAIM states which AIM or Sub-AIM sends the Request or receives the Response, and Subject which medium or User it relates to. A Response carries the QueryID of its Request.",
+  "type":                              "object",
+  "additionalProperties":              false,
+  "required":                          [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "SourceAIM", "Subject", "QueryID", "QueryTime" ],
+
+  "properties":                        {
+
+    "Header":                          { "type": "string", "const": "PGM-DOM-V1.0" },
+    "Mode":                            { "type": "string", "enum": [ "RQ", "RS" ], "description": "RQ: Request. RS: Response." },
+    "MInstance":                       { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":                    { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                       { "type": "string", "description": "Identifier of the A-User session." },
+    "QueryID":                         { "type": "string", "description": "Identifier of this Request or Response." },
+    "QueryTime":                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "RequestID":                       { "type": "string", "description": "Response only. ID of the Request this Response answers." },
+    "CaptureIndex":                    { "type": "integer", "minimum": 0, "description": "Position of the capture within the session to which the exchange refers." },
+    "SourceAIM":                       { "type": "string", "pattern": "^PGM-[A-Z]{3}-V1\\.0$",
+                                         "description": "Header of the AIM or Sub-AIM that sends the Request or the Response (e.g., PGM-ASD-V1.0), or of the AIM to which a Response is sent." },
+
+    "Subject":                         { "type": "string", "enum": [ "audio", "visual", "user", "ava", "context", "prompt", "personality", "deliberation" ],
+                                         "description": "The medium or the entity the exchange relates to: the audio scene, the visual scene, the User, the alignment of audio and visual Entities, or the context, prompt, personality or deliberation of the A-User." },
+
+    "UserIDs":                         { "type": "array", "items": { "type": "string" }, "description": "Identifiers of the Users the exchange relates to, where the Subject is user." },
+    "DomainID":                        { "type": "string", "description": "Request only. Identifier of the domain the Request concerns." },
+    "Targets":                         { "type": "array", "items": { "type": "string" }, "description": "Request only. Identifiers of the entities the Request concerns." },
+    "CandidateClasses":                { "type": "array", "description": "Request only. Candidate interpretations, each a Class (URI) with an optional Confidence.", "items": { "type": "object", "additionalProperties": false, "required": [ "Class" ], "properties": {
+      "Class":                         { "type": "string", "format": "uri" },
+      "Confidence":                    { "type": "number", "minimum": 0, "maximum": 1 } } } },
+
+    "RequestedOperations":             { "type": "object", "additionalProperties": false, "description": "Request only. Operations requested.", "properties": {
+      "ResolveAmbiguities":            { "type": "boolean" },
+      "ApplyConstraints":              { "type": "boolean" },
+      "SemanticEnrichment":            { "type": "boolean" },
+      "CrossModalResolution":          { "type": "boolean" } } },
+
+    "AudioSceneDescriptors":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicAudioSceneDescriptors.json",
+                                         "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+
+    "EnhancedAudioSceneDescriptors":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
+                                         "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+
+    "VisualSceneDescriptors":          { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicVisualSceneDescriptors.json",
+                                         "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+
+    "EnhancedVisualSceneDescriptors":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
+                                         "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+
+    "AudioVisualSceneDescriptors":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json",
+                                         "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+
+    "UserState":                       { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json", "description": "Request only. Evidence supplied, as appropriate to the Subject." },
+    "Utterances":                      { "type": "array", "items": { "type": "string" }, "description": "Request only. Identifiers of the utterances the Request concerns." },
+    "TemporalScope":                   { "type": "object", "additionalProperties": false, "description": "Request only. The interval considered.", "properties": {
+      "StartTime":                     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+      "EndTime":                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+    "RegionOfInterest":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleLocation.json", "description": "Request only. The region the Request concerns." },
+    "Viewpoint":                       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpatialAttitude.json", "description": "Request only. The viewpoint for the Request." },
+    "ResponseStatus":                  { "type": "string", "enum": [ "Affirmed", "Rejected", "Conditional", "Inconclusive" ], "description": "Response only. Outcome." },
+    "ValidatedClasses":                { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Response only. Classes confirmed by Domain Access." },
+    "UpdatedConfidences":              { "type": "array", "description": "Response only. Revised confidences.", "items": { "type": "object", "additionalProperties": false, "required": [ "Class" ], "properties": {
+      "Class":                         { "type": "string", "format": "uri" },
+      "Confidence":                    { "type": "number", "minimum": 0, "maximum": 1 } } } },
+
+    "ResolvedTargets":                 { "type": "array", "items": { "type": "string" }, "description": "Response only. Identifiers of the entities resolved." },
+    "ModalityWeights":                 { "type": "object", "additionalProperties": false, "description": "Response only. The relative weight the domain gives to what is heard and to what is seen.", "properties": {
+      "Audio":                         { "type": "number", "minimum": 0, "maximum": 1 },
+      "Visual":                        { "type": "number", "minimum": 0, "maximum": 1 } } },
+
+    "SalientClasses":                  { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Response only. The classes of Entity that the setting makes salient." },
+    "Explanation":                     { "type": "string", "description": "Response only. Human-readable explanation of the outcome." },
+    "DataXMData":                      { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                   { "type": "string", "maxLength": 2048 } } }

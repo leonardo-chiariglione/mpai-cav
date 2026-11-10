@@ -7,19 +7,19 @@
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
-  "Description":          "Speech Detection and Separation (CAE-SDS) of CAE-USC V2.5: receives SHDCoefficients, AudioSceneReference and produces TransformAudio, AudioSceneGeometry, AudioSceneReference.",
+  "Description":          "Speech Detection and Separation (CAE-SDS) of CAE-USC V2.5: receives SHDCoefficients and produces TransformAudio, AudioSceneGeometry. It reads the Audio Scene Reference from Access (AccessSources).",
 
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "SHDCoefficients", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneReference", "Direction": "Input", "DataType": "CAE-ASR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "TransformAudio", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneGeometry", "Direction": "Output", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "AudioSceneReference", "Direction": "Output", "DataType": "CAE-ASR-V1.0", "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "AudioSceneGeometry", "Direction": "Output", "DataType": "OSD-BAS-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":              [ ],
   "Topology":             [ ],
 
   "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "AccessSources":   [{"Name": "audio-scene-reference", "Uri": "/* URI of the file */", "Sha256": "/* SHA-256 */", "Setting": "AudioSceneReference", "AsFile": "AudioSceneReference.json", "Description": "The Audio Scene Reference (CAE-ASR-V1.0, a polynomial in the sine or cosine of an angle) the AIM reads: it comes from Access, it is not an input."}],
 
   "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
                             "BinaryName":       "/* BinaryName */",

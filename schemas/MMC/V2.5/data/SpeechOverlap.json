@@ -1,67 +1,26 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/MMC/V2.5/data/SpeechOverlap.json",
-  "title": "Speech Overlap V2.5",
-  "description": "The Speech Objects that overlap in time, with the time of each.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "SpeechOverlapID",
-    "SpeechOverlapData"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "MMC-SOL-V2.5",
-      "description": "Speech Overlap Header - Standard MMC-SOL-Vx.y"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance (Virtual Space) where this Speech Overlap is or is intended to be located."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment (Real Space) where this Speech Overlap is or is intended to be located."
-    },
-    "SpeechOverlapID": {
-      "type": "string",
-      "description": "Unique identifier of this Speech Overlap instance."
-    },
-    "SpeechOverlapTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
-      "description": "Time this Speech Overlap was produced."
-    },
-    "SpeechQualifier": {
-      "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json",
-      "description": "Qualifier providing information on Sub-Types, Formats and Attributes of the Speech."
-    },
-    "SpeechOverlapData": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "SpeechObjectID": {
-            "type": "string",
-            "description": "Identifier of the Speech Object."
-          },
-          "SpeechObjectTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json",
-            "description": "Time span of the Speech Object."
-          }
-        }
-      },
-      "description": "The Speech Objects that overlap."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
-      "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal and security information on the Data."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Human-readable descriptive metadata of the Speech Overlap (plain text, max 2048 characters)."
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/MMC/V2.5/data/SpeechOverlap.json",
+  "title":                 "Speech Overlap V2.5",
+  "description":           "The Speech Objects that overlap in time, with the time of each.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "SpeechOverlapID", "SpeechOverlapData" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "MMC-SOL-V2.5", "description": "Speech Overlap Header - Standard MMC-SOL-Vx.y" },
+    "MInstanceID":         { "type": "string", "description": "Identifier of the M-Instance (Virtual Space) where this Speech Overlap is or is intended to be located." },
+    "UEnvironmentID":      { "type": "string", "description": "Identifier of the U-Environment (Real Space) where this Speech Overlap is or is intended to be located." },
+    "SpeechOverlapID":     { "type": "string", "description": "Unique identifier of this Speech Overlap instance." },
+    "SpeechOverlapTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time this Speech Overlap was produced." },
+    "SpeechQualifier":     { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/SpeechQualifier.json",
+                             "description": "Qualifier providing information on Sub-Types, Formats and Attributes of the Speech." },
+
+    "SpeechOverlapData":   { "type": "array", "description": "The Speech Objects that overlap.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SpeechObjectID":    { "type": "string", "description": "Identifier of the Speech Object." },
+      "SpeechObjectTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json", "description": "Time span of the Speech Object." } } } },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                             "description": "MPAI-PTF Data Exchange Metadata providing provenance, authorisation, legal and security information on the Data." },
+
+    "DescrMetadata":       { "type": "string", "maxLength": 2048, "description": "Human-readable descriptive metadata of the Speech Overlap (plain text, max 2048 characters)." } } }

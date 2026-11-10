@@ -6,8 +6,10 @@
 
   "InternalTypes":   [ ],
 
-  "ExternalPorts":   [{"Name": "TargetVisualObject", "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "VisualInstanceID",   "Direction": "Output", "DataType": "OSD-IID-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+  "ExternalPorts":   [{"Name": "BasicVisualSceneDescriptors", "Direction": "Input",  "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "TargetVisualObjects",         "Direction": "Input",  "DataType": "OSD-BVO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "VisualInstanceIDs",           "Direction": "Output", "DataType": "OSD-IID-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "BasicVisualSceneDescriptors", "Direction": "Output", "DataType": "OSD-BVS-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

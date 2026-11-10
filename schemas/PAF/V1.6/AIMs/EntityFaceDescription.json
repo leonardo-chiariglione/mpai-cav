@@ -8,7 +8,7 @@
 
   "ExternalPorts":   [{"Name": "FaceObject",      "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""},
                      {"Name": "FaceDescriptors", "Direction": "Output", "DataType": "PAF-FDO-V1.6", "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "UserName",        "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "Technology": "", "Protocol": "", "IsRemote": ""}],
+                     {"Name": "UserName",        "Direction": "Input",  "DataType": "OSD-BTO-V1.5", "IsOptional": true, "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

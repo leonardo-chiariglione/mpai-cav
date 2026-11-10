@@ -1,396 +1,69 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/TimeExpression.json",
-  "title": "Time Expression V1.5",
-  "description": "How an event or time interval is expressed: an absolute time, an interval, a relative time, a coded time or a schedule (RFC 5545).",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Kind"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-TEX-V1.5"
-    },
-    "InstanceID": {
-      "type": "string",
-      "description": "Identifier of the TimeExpression instance (unique within its context)."
-    },
-    "TimeExpressionID": {
-      "type": "string",
-      "description": "Globally unique identifier for this TimeExpression definition."
-    },
-    "Kind": {
-      "type": "string",
-      "enum": [
-        "absolute",
-        "interval",
-        "relative",
-        "coded",
-        "schedule"
-      ],
-      "description": "Expression type selector."
-    },
-    "Absolute": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Value": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Time instant."
-        },
-        "Label": {
-          "type": "string",
-          "description": "Human-friendly label for the absolute time."
-        }
-      },
-      "required": [
-        "Value"
-      ],
-      "description": "Absolute Time. Required when Kind = absolute."
-    },
-    "Interval": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Start": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Start time."
-        },
-        "End": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "End time."
-        },
-        "Closed": {
-          "type": "string",
-          "enum": [
-            "both",
-            "left",
-            "right",
-            "none"
-          ],
-          "default": "both",
-          "description": "Endpoint inclusion semantics."
-        },
-        "Approximate": {
-          "type": "boolean",
-          "default": false,
-          "description": "Boundary times may be approximate."
-        }
-      },
-      "required": [
-        "Start",
-        "End"
-      ],
-      "description": "Time Interval. Required when Kind = interval."
-    },
-    "Relative": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Anchor": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Anchor time."
-        },
-        "Quantity": {
-          "type": "number",
-          "description": "Numeric offset magnitude."
-        },
-        "Unit": {
-          "type": "string",
-          "enum": [
-            "seconds",
-            "minutes",
-            "hours",
-            "days",
-            "weeks",
-            "months",
-            "quarters",
-            "years"
-          ],
-          "description": "Offset unit."
-        },
-        "Approximate": {
-          "type": "boolean",
-          "default": false,
-          "description": "Computed target may be approximate."
-        }
-      },
-      "required": [
-        "Anchor",
-        "Quantity",
-        "Unit"
-      ],
-      "description": "Relative Time. Required when Kind = relative."
-    },
-    "Coded": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Pattern": {
-          "type": "string",
-          "enum": [
-            "season_year",
-            "weekday_next_week",
-            "weekday_this_week",
-            "named_period"
-          ],
-          "description": "Coded pattern selector."
-        },
-        "Season": {
-          "type": "string",
-          "enum": [
-            "spring",
-            "summer",
-            "autumn",
-            "winter"
-          ],
-          "description": "Season for season_year."
-        },
-        "Year": {
-          "type": "integer",
-          "description": "Year for season_year."
-        },
-        "Weekday": {
-          "type": "string",
-          "enum": [
-            "MO",
-            "TU",
-            "WE",
-            "TH",
-            "FR",
-            "SA",
-            "SU"
-          ],
-          "description": "Weekday code."
-        },
-        "WeekOffset": {
-          "type": "integer",
-          "description": "Integer offset for next/this week patterns."
-        },
-        "Anchor": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Reference time used by certain coded computations."
-        },
-        "Named": {
-          "type": "string",
-          "enum": [
-            "end_of_month",
-            "start_of_quarter",
-            "end_of_quarter",
-            "start_of_year",
-            "end_of_year"
-          ],
-          "description": "Named period."
-        },
-        "Approximate": {
-          "type": "boolean",
-          "default": false,
-          "description": "Result may be approximate."
-        }
-      },
-      "required": [
-        "Pattern"
-      ],
-      "description": "Coded Time. Required when Kind = coded."
-    },
-    "Schedule": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Dtstart": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "Start date/time of the schedule."
-        },
-        "RruleObject": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Freq": {
-              "type": "string",
-              "enum": [
-                "DAILY",
-                "WEEKLY",
-                "MONTHLY",
-                "YEARLY"
-              ],
-              "description": "Frequency."
-            },
-            "Interval": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "description": "Interval between recurrences."
-            },
-            "Count": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "Number of occurrences."
-            },
-            "Until": {
-              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-              "description": "End date/time for recurrence."
-            },
-            "ByDay": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "MO",
-                  "TU",
-                  "WE",
-                  "TH",
-                  "FR",
-                  "SA",
-                  "SU"
-                ]
-              },
-              "description": "Array of weekdays."
-            },
-            "ByMonth": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 12
-              },
-              "description": "Array of months."
-            },
-            "ByMonthDay": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": -31,
-                "maximum": 31
-              },
-              "description": "Array of month days."
-            }
-          },
-          "required": [
-            "Freq"
-          ],
-          "description": "RRULE Object."
-        },
-        "RruleString": {
-          "type": "string",
-          "description": "RRULE per RFC 5545."
-        },
-        "Rdate": {
-          "type": "array",
-          "items": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json"
-          },
-          "description": "Array of explicitly included dates."
-        },
-        "Exdate": {
-          "type": "array",
-          "items": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json"
-          },
-          "description": "Array of explicitly excluded dates."
-        }
-      },
-      "required": [
-        "Dtstart"
-      ],
-      "description": "Time Schedule. Required when Kind = schedule."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
-      "description": "Metadata optionally supporting regulated or controlled exchange of this Time Expression instance, as defined by AIF V3.0."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "Kind": {
-            "const": "absolute"
-          }
-        },
-        "required": [
-          "Kind"
-        ]
-      },
-      "then": {
-        "required": [
-          "Absolute"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Kind": {
-            "const": "interval"
-          }
-        },
-        "required": [
-          "Kind"
-        ]
-      },
-      "then": {
-        "required": [
-          "Interval"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Kind": {
-            "const": "relative"
-          }
-        },
-        "required": [
-          "Kind"
-        ]
-      },
-      "then": {
-        "required": [
-          "Relative"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Kind": {
-            "const": "coded"
-          }
-        },
-        "required": [
-          "Kind"
-        ]
-      },
-      "then": {
-        "required": [
-          "Coded"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "Kind": {
-            "const": "schedule"
-          }
-        },
-        "required": [
-          "Kind"
-        ]
-      },
-      "then": {
-        "required": [
-          "Schedule"
-        ]
-      }
-    }
-  ]
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/OSD/V1.5/data/TimeExpression.json",
+  "title":                 "Time Expression V1.5",
+  "description":           "How an event or time interval is expressed: an absolute time, an interval, a relative time, a coded time or a schedule (RFC 5545).",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "Kind" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "OSD-TEX-V1.5" },
+    "InstanceID":          { "type": "string", "description": "Identifier of the TimeExpression instance (unique within its context)." },
+    "TimeExpressionID":    { "type": "string", "description": "Globally unique identifier for this TimeExpression definition." },
+    "Kind":                { "type": "string", "enum": [ "absolute", "interval", "relative", "coded", "schedule" ], "description": "Expression type selector." },
+    "Absolute":            { "type": "object", "additionalProperties": false, "required": [ "Value" ], "description": "Absolute Time. Required when Kind = absolute.", "properties": {
+      "Value":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Time instant." },
+      "Label":             { "type": "string", "description": "Human-friendly label for the absolute time." } } },
+
+    "Interval":            { "type": "object", "additionalProperties": false, "required": [ "Start", "End" ], "description": "Time Interval. Required when Kind = interval.", "properties": {
+      "Start":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Start time." },
+      "End":               { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "End time." },
+      "Closed":            { "type": "string", "enum": [ "both", "left", "right", "none" ], "default": "both", "description": "Endpoint inclusion semantics." },
+      "Approximate":       { "type": "boolean", "default": false, "description": "Boundary times may be approximate." } } },
+
+    "Relative":            { "type": "object", "additionalProperties": false, "required": [ "Anchor", "Quantity", "Unit" ], "description": "Relative Time. Required when Kind = relative.", "properties": {
+      "Anchor":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Anchor time." },
+      "Quantity":          { "type": "number", "description": "Numeric offset magnitude." },
+      "Unit":              { "type": "string", "enum": [ "seconds", "minutes", "hours", "days", "weeks", "months", "quarters", "years" ], "description": "Offset unit." },
+      "Approximate":       { "type": "boolean", "default": false, "description": "Computed target may be approximate." } } },
+
+    "Coded":               { "type": "object", "additionalProperties": false, "required": [ "Pattern" ], "description": "Coded Time. Required when Kind = coded.", "properties": {
+      "Pattern":           { "type": "string", "enum": [ "season_year", "weekday_next_week", "weekday_this_week", "named_period" ], "description": "Coded pattern selector." },
+      "Season":            { "type": "string", "enum": [ "spring", "summer", "autumn", "winter" ], "description": "Season for season_year." },
+      "Year":              { "type": "integer", "description": "Year for season_year." },
+      "Weekday":           { "type": "string", "enum": [ "MO", "TU", "WE", "TH", "FR", "SA", "SU" ], "description": "Weekday code." },
+      "WeekOffset":        { "type": "integer", "description": "Integer offset for next/this week patterns." },
+      "Anchor":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Reference time used by certain coded computations." },
+      "Named":             { "type": "string", "enum": [ "end_of_month", "start_of_quarter", "end_of_quarter", "start_of_year", "end_of_year" ], "description": "Named period." },
+      "Approximate":       { "type": "boolean", "default": false, "description": "Result may be approximate." } } },
+
+    "Schedule":            { "type": "object", "additionalProperties": false, "required": [ "Dtstart" ], "description": "Time Schedule. Required when Kind = schedule.", "properties": {
+      "Dtstart":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "Start date/time of the schedule." },
+      "RruleObject":       { "type": "object", "additionalProperties": false, "required": [ "Freq" ], "description": "RRULE Object.", "properties": {
+        "Freq":            { "type": "string", "enum": [ "DAILY", "WEEKLY", "MONTHLY", "YEARLY" ], "description": "Frequency." },
+        "Interval":        { "type": "integer", "minimum": 1, "default": 1, "description": "Interval between recurrences." },
+        "Count":           { "type": "integer", "minimum": 1, "description": "Number of occurrences." },
+        "Until":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "End date/time for recurrence." },
+        "ByDay":           { "type": "array", "items": { "type": "string", "enum": [ "MO", "TU", "WE", "TH", "FR", "SA", "SU" ] }, "description": "Array of weekdays." },
+        "ByMonth":         { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 12 }, "description": "Array of months." },
+        "ByMonthDay":      { "type": "array", "items": { "type": "integer", "minimum": -31, "maximum": 31 }, "description": "Array of month days." } } },
+
+      "RruleString":       { "type": "string", "description": "RRULE per RFC 5545." },
+      "Rdate":             { "type": "array", "items": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" }, "description": "Array of explicitly included dates." },
+      "Exdate":            { "type": "array", "items": { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" }, "description": "Array of explicitly excluded dates." } } },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json",
+                             "description": "Metadata optionally supporting regulated or controlled exchange of this Time Expression instance, as defined by AIF V3.0." },
+
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } },
+  "allOf":                 [ { "then": { "required": [ "Absolute" ] }, "if": { "required": [ "Kind" ], "properties": {
+    "Kind":                { "const": "absolute" } } } },
+  { "then": { "required": [ "Interval" ] }, "if": { "required": [ "Kind" ], "properties": {
+    "Kind":                { "const": "interval" } } } },
+  { "then": { "required": [ "Relative" ] }, "if": { "required": [ "Kind" ], "properties": {
+    "Kind":                { "const": "relative" } } } },
+  { "then": { "required": [ "Coded" ] }, "if": { "required": [ "Kind" ], "properties": {
+    "Kind":                { "const": "coded" } } } },
+  { "then": { "required": [ "Schedule" ] }, "if": { "required": [ "Kind" ], "properties": {
+    "Kind":                { "const": "schedule" } } } } ] }

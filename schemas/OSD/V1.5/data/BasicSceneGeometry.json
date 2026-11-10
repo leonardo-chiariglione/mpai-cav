@@ -1,58 +1,20 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneGeometry.json",
-  "title": "Basic Scene Geometry V1.5",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "BasicSceneGeometryID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-BSM-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of M-Instance."
-    },
-    "BasicSceneGeometryID": {
-      "type": "string",
-      "description": "Identifier of the Basic Scene Geometry."
-    },
-    "ObjectCount": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of Objects in Basic Scene."
-    },
-    "BasicSceneSpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-    },
-    "BasicSceneGeometry": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "ObjectID": {
-            "type": "string",
-            "description": "Object ID."
-          },
-          "ObjectSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-          }
-        }
-      },
-      "description": "Set of Basic Scene Geometry Data."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata."
-    }
-  }
-}
+{ "$schema":                 "https://json-schema.org/draft/2020-12/schema",
+  "$id":                     "https://schemas.mpai.community/OSD/V1.5/data/BasicSceneGeometry.json",
+  "title":                   "Basic Scene Geometry V1.5",
+  "type":                    "object",
+  "additionalProperties":    false,
+  "required":                [ "Header", "BasicSceneGeometryID" ],
+
+  "properties":              {
+
+    "Header":                { "type": "string", "const": "OSD-BSM-V1.5" },
+    "MInstanceID":           { "type": "string", "description": "Identifier of M-Instance." },
+    "BasicSceneGeometryID":  { "type": "string", "description": "Identifier of the Basic Scene Geometry." },
+    "ObjectCount":           { "type": "integer", "minimum": 0, "description": "Number of Objects in Basic Scene." },
+    "BasicSceneSpaceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "BasicSceneGeometry":    { "type": "array", "description": "Set of Basic Scene Geometry Data.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "ObjectID":            { "type": "string", "description": "Object ID." },
+      "ObjectSpaceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "DataXMData":            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":         { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata." } } }

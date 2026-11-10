@@ -1,129 +1,40 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "OSD-VOE-V1.5",
-  "APIProfile": "Basic",
-  "Description": "Visual Object Extraction: see https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-extraction/. The Visual Object Extraction (OSD-VOE) AIMs receives a Visual Scene Geometry with its Visual Objects and a Point of View and provides the Visual Object that is crossed by the Point of View:",
-  "InternalTypes": [],
-  "ExternalPorts": [
-    {
-      "Name": "PointofView",
-      "Direction": "Input",
-      "DataType": "OSD-OPV-V1.5",
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "VisualSceneGeometry",
-      "Direction": "Input",
-      "DataType": [
-        "OSD-VSG-V1.5",
-        "OSD-BMS-V1.5"
-      ],
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "VisualObjects",
-      "Direction": "Input",
-      "DataType": [
-        "OSD-VIO-V1.5",
-        "OSD-BVO-V1.5"
-      ],
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    },
-    {
-      "Name": "TargetVisualObject",
-      "Direction": "Output",
-      "DataType": [
-        "OSD-VIO-V1.5",
-        "OSD-BVO-V1.5"
-      ],
-      "Technology": "",
-      "Protocol": "",
-      "IsRemote": ""
-    }
-  ],
-  "SubAIMs": [],
-  "Topology": [],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Specification",
-      "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-extraction/"
-    }
-  ]
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "OSD-VOE-V1.5",
+
+  "APIProfile":       "Basic",
+  "Description":      "Visual Object Extraction: see https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-extraction/. The Visual Object Extraction (OSD-VOE) AIMs receives a Visual Scene Geometry with its Visual Objects and a Point of View and provides the Visual Object that is crossed by the Point of View:",
+
+  "InternalTypes":   [ ],
+
+  "ExternalPorts":   [{"Name": "PointofView",         "Direction": "Input",  "DataType": "OSD-OPV-V1.5",                   "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "VisualSceneGeometry", "Direction": "Input",  "DataType": ["OSD-VSG-V1.5", "OSD-BMS-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "VisualObjects",       "Direction": "Input",  "DataType": ["OSD-VIO-V1.5", "OSD-BVO-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""},
+                      {"Name": "TargetVisualObject",  "Direction": "Output", "DataType": ["OSD-VIO-V1.5", "OSD-BVO-V1.5"], "Technology": "", "Protocol": "", "IsRemote": ""}],
+
+  "SubAIMs":         [ ],
+
+  "Topology":        [ ],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-osd/v1-5/ai-modules/visual-object-extraction/"}]}

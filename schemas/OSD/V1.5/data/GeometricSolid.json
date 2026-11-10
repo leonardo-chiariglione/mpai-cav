@@ -1,104 +1,27 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/GeometricSolid.json",
-  "title": "Geometric Solid V1.5",
-  "description": "A geometric spatial region used to define areas of interest, constraints or target zones in a three-dimensional coordinate system: Right Parallelepiped, Sphere or Cylinder.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "SpatialCueID",
-    "SpatialCueData"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-GMS-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "ID of the Virtual Space the cue refers to."
-    },
-    "SpatialCueID": {
-      "type": "string",
-      "description": "Identifier of the Spatial Cue entry."
-    },
-    "SpatialCueData": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Type": {
-          "type": "string",
-          "enum": [
-            "RightParallelepiped",
-            "Sphere",
-            "Cylinder"
-          ],
-          "description": "Discriminator selecting the geometric region shape."
-        },
-        "RightParallelepiped": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RightParallelepiped.json",
-          "description": "Axis-aligned box region."
-        },
-        "Sphere": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Center": {
-              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json",
-              "description": "Reference point of the Sphere."
-            },
-            "Radius": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Non-negative radius in Position units (metres in OSD)."
-            }
-          },
-          "required": [
-            "Center",
-            "Radius"
-          ],
-          "description": "Region defined by a 3D center point and radius."
-        },
-        "Cylinder": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Center": {
-              "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json",
-              "description": "Reference point of the Cylinder."
-            },
-            "Radius": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Non-negative radius in Position units (metres in OSD)."
-            },
-            "Height": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Vertical extent of the Cylinder."
-            }
-          },
-          "required": [
-            "Center",
-            "Radius",
-            "Height"
-          ],
-          "description": "Vertical cylinder region aligned with the Z-axis."
-        }
-      },
-      "required": [
-        "Type"
-      ],
-      "description": "General descriptors for cue context."
-    },
-    "Trace": {
-      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
-      "description": "The AIF trace object providing metadata on the AIM instance and production time."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/OSD/V1.5/data/GeometricSolid.json",
+  "title":                    "Geometric Solid V1.5",
+  "description":              "A geometric spatial region used to define areas of interest, constraints or target zones in a three-dimensional coordinate system: Right Parallelepiped, Sphere or Cylinder.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "SpatialCueID", "SpatialCueData" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "OSD-GMS-V1.5" },
+    "MInstanceID":            { "type": "string", "description": "ID of the Virtual Space the cue refers to." },
+    "SpatialCueID":           { "type": "string", "description": "Identifier of the Spatial Cue entry." },
+    "SpatialCueData":         { "type": "object", "additionalProperties": false, "required": [ "Type" ], "description": "General descriptors for cue context.", "properties": {
+      "Type":                 { "type": "string", "enum": [ "RightParallelepiped", "Sphere", "Cylinder" ], "description": "Discriminator selecting the geometric region shape." },
+      "RightParallelepiped":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/RightParallelepiped.json", "description": "Axis-aligned box region." },
+      "Sphere":               { "type": "object", "additionalProperties": false, "required": [ "Center", "Radius" ], "description": "Region defined by a 3D center point and radius.", "properties": {
+        "Center":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json", "description": "Reference point of the Sphere." },
+        "Radius":             { "type": "number", "minimum": 0, "description": "Non-negative radius in Position units (metres in OSD)." } } },
+
+      "Cylinder":             { "type": "object", "additionalProperties": false, "required": [ "Center", "Radius", "Height" ], "description": "Vertical cylinder region aligned with the Z-axis.", "properties": {
+        "Center":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Position.json", "description": "Reference point of the Cylinder." },
+        "Radius":             { "type": "number", "minimum": 0, "description": "Non-negative radius in Position units (metres in OSD)." },
+        "Height":             { "type": "number", "minimum": 0, "description": "Vertical extent of the Cylinder." } } } } },
+
+    "Trace":                  { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json", "description": "The AIF trace object providing metadata on the AIM instance and production time." },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

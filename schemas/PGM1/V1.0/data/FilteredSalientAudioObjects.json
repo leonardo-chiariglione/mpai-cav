@@ -1,92 +1,26 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/FilteredSalientAudioObjects.json",
-  "title": "Filtered Salient Audio Objects V1.0",
-  "description": "The subset of the Audio Objects retained by Audio Salience Mapping after adaptive salience thresholding.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "FilteredSalientAudioObjectsID",
-    "FilteredSalientAudioObjectsTime",
-    "Objects"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-FSA-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "FilteredSalientAudioObjectsID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "FilteredSalientAudioObjectsTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Threshold": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Value": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "Value of the threshold, 0 to 1."
-        },
-        "Adaptive": {
-          "type": "boolean",
-          "description": "True if the threshold was adapted to the scene."
-        }
-      },
-      "required": [
-        "Value"
-      ],
-      "description": "The threshold applied."
-    },
-    "Objects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "AudioObjectID": {
-            "type": "string"
-          },
-          "SalienceScore": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Salience score, 0 to 1."
-          }
-        },
-        "required": [
-          "AudioObjectID",
-          "SalienceScore"
-        ]
-      },
-      "description": "The objects retained."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/PGM1/V1.0/data/FilteredSalientAudioObjects.json",
+  "title":                              "Filtered Salient Audio Objects V1.0",
+  "description":                        "The subset of the Audio Objects retained by Audio Salience Mapping after adaptive salience thresholding.",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "MInstance", "UEnvironment", "SessionID", "FilteredSalientAudioObjectsID", "FilteredSalientAudioObjectsTime", "Objects" ],
+
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "PGM-FSA-V1.0" },
+    "MInstance":                        { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":                     { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                        { "type": "string", "description": "Identifier of the A-User session." },
+    "FilteredSalientAudioObjectsID":    { "type": "string", "description": "Identifier of this instance." },
+    "FilteredSalientAudioObjectsTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Threshold":                        { "type": "object", "additionalProperties": false, "required": [ "Value" ], "description": "The threshold applied.", "properties": {
+      "Value":                          { "type": "number", "minimum": 0, "maximum": 1, "description": "Value of the threshold, 0 to 1." },
+      "Adaptive":                       { "type": "boolean", "description": "True if the threshold was adapted to the scene." } } },
+
+    "Objects":                          { "type": "array", "description": "The objects retained.", "items": { "type": "object", "additionalProperties": false, "required": [ "AudioObjectID", "SalienceScore" ], "properties": {
+      "AudioObjectID":                  { "type": "string" },
+      "SalienceScore":                  { "type": "number", "minimum": 0, "maximum": 1, "description": "Salience score, 0 to 1." } } } },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048 } } }

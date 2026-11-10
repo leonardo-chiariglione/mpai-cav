@@ -1,270 +1,69 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/LinguisticParalinguisticEvidence.json",
-  "title": "Linguistic-Paralinguistic Evidence V1.0",
-  "description": "The evidence borne by the content of the utterances of an Entity and by the manner of their delivery, with the agreement between the two, produced by Linguistic-Paralinguistic Analysis. Evidence that cannot be attributed to an Entity is reported but not asserted of any Entity.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "LinguisticParalinguisticEvidenceID",
-    "LinguisticParalinguisticEvidenceTime",
-    "Utterances"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-LPE-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "LinguisticParalinguisticEvidenceID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "LinguisticParalinguisticEvidenceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Utterances": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "UtteranceID": {
-            "type": "string"
-          },
-          "EntityID": {
-            "type": "string",
-            "description": "Entity to which the Harmonised Multimodal Context attributed the utterance; absent if unattributed."
-          },
-          "Interval": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "StartTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              },
-              "EndTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              }
-            },
-            "description": "Time interval, on the time base of the capture."
-          },
-          "Linguistic": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Content": {
-                "type": "string",
-                "description": "Propositional content."
-              },
-              "SpeechAct": {
-                "type": "string",
-                "enum": [
-                  "asserting",
-                  "asking",
-                  "requesting",
-                  "promising",
-                  "declining",
-                  "acknowledging",
-                  "other"
-                ],
-                "description": "The speech act the utterance performs."
-              },
-              "ReferringExpressions": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "Text": {
-                      "type": "string",
-                      "description": "Text of the referring expression."
-                    },
-                    "EntityIDs": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Identifiers of the Entities."
-                    }
-                  },
-                  "required": [
-                    "Text"
-                  ]
-                },
-                "description": "The referring expressions of the utterance and the Entities they denote."
-              },
-              "DiscourseRole": {
-                "type": "string",
-                "enum": [
-                  "opening",
-                  "responding",
-                  "continuing",
-                  "closing",
-                  "interrupting"
-                ],
-                "description": "Role of the utterance in the exchange."
-              },
-              "Sentiment": {
-                "type": "string",
-                "description": "Sentiment expressed by the words."
-              },
-              "Stance": {
-                "type": "string",
-                "description": "Stance expressed by the words."
-              },
-              "Language": {
-                "type": "string",
-                "description": "Language of the utterance."
-              },
-              "Register": {
-                "type": "string",
-                "description": "Register of the utterance."
-              },
-              "Formality": {
-                "type": "string",
-                "description": "Formality of the utterance."
-              }
-            },
-            "description": "Evidence borne by the words of the utterance."
-          },
-          "Paralinguistic": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Prosody": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "PitchContour": {
-                    "type": "string",
-                    "description": "Pitch contour."
-                  },
-                  "Stress": {
-                    "type": "string",
-                    "description": "Stress."
-                  },
-                  "Intonation": {
-                    "type": "string",
-                    "description": "Intonation."
-                  }
-                },
-                "description": "Prosody of the delivery."
-              },
-              "Timing": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "SpeechRate": {
-                    "type": "number",
-                    "description": "Speech rate."
-                  },
-                  "Pausing": {
-                    "type": "string",
-                    "description": "Pausing."
-                  },
-                  "Hesitation": {
-                    "type": "string",
-                    "description": "Hesitation."
-                  }
-                },
-                "description": "Timing of the delivery."
-              },
-              "VoiceQuality": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "Intensity": {
-                    "type": "string",
-                    "description": "Intensity."
-                  },
-                  "Breathiness": {
-                    "type": "string",
-                    "description": "Breathiness."
-                  },
-                  "Tension": {
-                    "type": "string",
-                    "description": "Tension."
-                  },
-                  "Tremor": {
-                    "type": "string",
-                    "description": "Tremor."
-                  }
-                },
-                "description": "Voice quality."
-              },
-              "Disfluency": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": [
-                    "repetition",
-                    "repair",
-                    "filled_pause"
-                  ]
-                },
-                "description": "Disfluencies found in the utterance."
-              },
-              "NonVerbal": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "enum": [
-                    "laughter",
-                    "sigh",
-                    "throat_clearing",
-                    "other"
-                  ]
-                },
-                "description": "Non-verbal vocalisations found in the utterance."
-              }
-            },
-            "description": "Evidence borne by the manner of delivery of the utterance."
-          },
-          "Agreement": {
-            "type": "string",
-            "enum": [
-              "reinforcing",
-              "at_variance",
-              "one_absent"
-            ],
-            "description": "Whether the delivery reinforces the content, is at variance with it, or one of the two is absent or unusable."
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence, 0 to 1."
-          }
-        },
-        "required": [
-          "UtteranceID",
-          "Interval"
-        ]
-      },
-      "description": "The utterances."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                                 "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                     "https://schemas.mpai.community/PGM1/V1.0/data/LinguisticParalinguisticEvidence.json",
+  "title":                                   "Linguistic-Paralinguistic Evidence V1.0",
+  "description":                             "The evidence borne by the content of the utterances of an Entity and by the manner of their delivery, with the agreement between the two, produced by Linguistic-Paralinguistic Analysis. Evidence that cannot be attributed to an Entity is reported but not asserted of any Entity.",
+  "type":                                    "object",
+  "additionalProperties":                    false,
+  "required":                                [ "Header", "MInstance", "UEnvironment", "SessionID", "LinguisticParalinguisticEvidenceID", "LinguisticParalinguisticEvidenceTime", "Utterances" ],
+
+  "properties":                              {
+
+    "Header":                                { "type": "string", "const": "PGM-LPE-V1.0" },
+    "MInstance":                             { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":                          { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                             { "type": "string", "description": "Identifier of the A-User session." },
+    "LinguisticParalinguisticEvidenceID":    { "type": "string", "description": "Identifier of this instance." },
+    "LinguisticParalinguisticEvidenceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Utterances":                            { "type": "array", "description": "The utterances.", "items": { "type": "object", "additionalProperties": false, "required": [ "UtteranceID", "Interval" ], "properties": {
+      "UtteranceID":                         { "type": "string" },
+      "EntityID":                            { "type": "string", "description": "Entity to which the Harmonised Multimodal Context attributed the utterance; absent if unattributed." },
+      "Interval":                            { "type": "object", "additionalProperties": false, "description": "Time interval, on the time base of the capture.", "properties": {
+        "StartTime":                         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+        "EndTime":                           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+      "Linguistic":                          { "type": "object", "additionalProperties": false, "description": "Evidence borne by the words of the utterance.", "properties": {
+        "Content":                           { "type": "string", "description": "Propositional content." },
+        "SpeechAct":                         { "type": "string", "enum": [ "asserting", "asking", "requesting", "promising", "declining", "acknowledging", "other" ],
+                                               "description": "The speech act the utterance performs." },
+
+        "ReferringExpressions":              { "type": "array", "description": "The referring expressions of the utterance and the Entities they denote.", "items": { "type": "object", "additionalProperties": false, "required": [ "Text" ], "properties": {
+          "Text":                            { "type": "string", "description": "Text of the referring expression." },
+          "EntityIDs":                       { "type": "array", "items": { "type": "string" }, "description": "Identifiers of the Entities." } } } },
+
+        "DiscourseRole":                     { "type": "string", "enum": [ "opening", "responding", "continuing", "closing", "interrupting" ], "description": "Role of the utterance in the exchange." },
+        "Sentiment":                         { "type": "string", "description": "Sentiment expressed by the words." },
+        "Stance":                            { "type": "string", "description": "Stance expressed by the words." },
+        "Language":                          { "type": "string", "description": "Language of the utterance." },
+        "Register":                          { "type": "string", "description": "Register of the utterance." },
+        "Formality":                         { "type": "string", "description": "Formality of the utterance." } } },
+
+      "Paralinguistic":                      { "type": "object", "additionalProperties": false, "description": "Evidence borne by the manner of delivery of the utterance.", "properties": {
+        "Prosody":                           { "type": "object", "additionalProperties": false, "description": "Prosody of the delivery.", "properties": {
+          "PitchContour":                    { "type": "string", "description": "Pitch contour." },
+          "Stress":                          { "type": "string", "description": "Stress." },
+          "Intonation":                      { "type": "string", "description": "Intonation." } } },
+
+        "Timing":                            { "type": "object", "additionalProperties": false, "description": "Timing of the delivery.", "properties": {
+          "SpeechRate":                      { "type": "number", "description": "Speech rate." },
+          "Pausing":                         { "type": "string", "description": "Pausing." },
+          "Hesitation":                      { "type": "string", "description": "Hesitation." } } },
+
+        "VoiceQuality":                      { "type": "object", "additionalProperties": false, "description": "Voice quality.", "properties": {
+          "Intensity":                       { "type": "string", "description": "Intensity." },
+          "Breathiness":                     { "type": "string", "description": "Breathiness." },
+          "Tension":                         { "type": "string", "description": "Tension." },
+          "Tremor":                          { "type": "string", "description": "Tremor." } } },
+
+        "Disfluency":                        { "type": "array", "items": { "type": "string", "enum": [ "repetition", "repair", "filled_pause" ] },
+                                               "description": "Disfluencies found in the utterance." },
+
+        "NonVerbal":                         { "type": "array", "items": { "type": "string", "enum": [ "laughter", "sigh", "throat_clearing", "other" ] },
+                                               "description": "Non-verbal vocalisations found in the utterance." } } },
+
+      "Agreement":                           { "type": "string", "enum": [ "reinforcing", "at_variance", "one_absent" ],
+                                               "description": "Whether the delivery reinforces the content, is at variance with it, or one of the two is absent or unusable." },
+
+      "Confidence":                          { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." } } } },
+
+    "DataXMData":                            { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                         { "type": "string", "maxLength": 2048 } } }

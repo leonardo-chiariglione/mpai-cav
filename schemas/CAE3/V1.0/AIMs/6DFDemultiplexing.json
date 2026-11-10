@@ -1,0 +1,36 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/6DFDemultiplexing.json",
+  "title":                "6DF Demultiplexing V1.0",
+  "Header":               "CAE-6DX-V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "6DF Demultiplexing (CAE-6DX) of CAE-6DF V1.0: Demultiplexes the direct and diffuse components as well as the Device Scene Geometry in the 6DF Audio Object.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "AudioObject", "Direction": "Input", "DataType": "OSD-AUO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "CompressedDiffuseField", "Direction": "Output", "DataType": "CAE-CDF-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "DominantPlaneWave", "Direction": "Output", "DataType": "CAE-DPW-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "DeviceSceneGeometry", "Direction": "Output", "DataType": "OSD-DSG-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [ ],
+  "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

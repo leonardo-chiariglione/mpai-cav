@@ -1,63 +1,17 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/MMM4/V2.2/data/Actions.json",
-  "title": "Action V2.2",
-  "description": "One of the Actions of MMM-TEC V2.2, each of which is the keyword of a Process Action.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Action"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "MMM-ACT-V2.2"
-    },
-    "MInstanceID": {
-      "type": "string"
-    },
-    "MEnvironmentID": {
-      "type": "string"
-    },
-    "Action": {
-      "type": "string",
-      "enum": [
-        "Authenticate",
-        "Author",
-        "Convert",
-        "Discover",
-        "Execute",
-        "Hide",
-        "Identify",
-        "Interpret",
-        "License",
-        "MM-Add",
-        "MM-Animate",
-        "MM-Capture",
-        "MM-Move",
-        "MM-Send",
-        "Modify",
-        "MU-Actuate",
-        "MU-Add",
-        "MU-Animate",
-        "MU-Move",
-        "MU-Send",
-        "Post",
-        "Property Change",
-        "Register",
-        "Resolve",
-        "Rights Change",
-        "Transact",
-        "UM-Actuate",
-        "UM-Capture",
-        "UM-Send",
-        "Validate"
-      ],
-      "description": "The keyword of a Process Action: one of the 30 Actions of Table 2 of MMM-TEC V2.2, as listed by the action_keyword production of the grammar."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/MMM4/V2.2/data/Actions.json",
+  "title":                 "Action V2.2",
+  "description":           "One of the Actions of MMM-TEC V2.2, each of which is the keyword of a Process Action.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "Action" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "MMM-ACT-V2.2" },
+    "MInstanceID":         { "type": "string" },
+    "MEnvironmentID":      { "type": "string" },
+    "Action":              { "type": "string", "enum": [ "Authenticate", "Author", "Convert", "Discover", "Execute", "Hide", "Identify", "Interpret", "License", "MM-Add", "MM-Animate", "MM-Capture", "MM-Move", "MM-Send", "Modify", "MU-Actuate", "MU-Add", "MU-Animate", "MU-Move", "MU-Send", "Post", "Property Change", "Register", "Resolve", "Rights Change", "Transact", "UM-Actuate", "UM-Capture", "UM-Send", "Validate" ],
+                             "description": "The keyword of a Process Action: one of the 30 Actions of Table 2 of MMM-TEC V2.2, as listed by the action_keyword production of the grammar." },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" } } }

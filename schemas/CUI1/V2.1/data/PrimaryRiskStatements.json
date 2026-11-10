@@ -1,37 +1,16 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/CUI1/V2.1/data/PrimaryRiskStatements.json",
-  "title": "Primary Risk Statements V2.1",
-  "type": "object",
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "CUI-PRS-V2.1"
-    },
-    "MInstanceID": {
-      "type": "string"
-    },
-    "RiskStatementTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json"
-    },
-    "PrimaryRiskStatementData": {
-      "type": "object",
-      "description": "Set of different types of Risk Statements.",
-      "properties": {
-        "CyberRiskStatements": {
-          "$ref": "https://schemas.mpai.community/CUI1/V2.1/data/CyberRiskStatements.json"
-        },
-        "ClimateRiskStatements": {
-          "$ref": "https://schemas.mpai.community/CUI1/V2.1/data/ClimateRiskStatements.json"
-        }
-      }
-    },
-    "DescrMetadata": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "Header",
-    "MInstanceID"
-  ]
-}
+{ "$schema":                     "https://json-schema.org/draft/2020-12/schema",
+  "$id":                         "https://schemas.mpai.community/CUI1/V2.1/data/PrimaryRiskStatements.json",
+  "title":                       "Primary Risk Statements V2.1",
+  "type":                        "object",
+
+  "properties":                  {
+
+    "Header":                    { "type": "string", "const": "CUI-PRS-V2.1" },
+    "MInstanceID":               { "type": "string" },
+    "RiskStatementTime":         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json" },
+    "PrimaryRiskStatementData":  { "type": "object", "description": "Set of different types of Risk Statements.", "properties": {
+      "CyberRiskStatements":     { "$ref": "https://schemas.mpai.community/CUI1/V2.1/data/CyberRiskStatements.json" },
+      "ClimateRiskStatements":   { "$ref": "https://schemas.mpai.community/CUI1/V2.1/data/ClimateRiskStatements.json" } } },
+
+    "DescrMetadata":             { "type": "string" } },
+  "required":                    [ "Header", "MInstanceID" ] }

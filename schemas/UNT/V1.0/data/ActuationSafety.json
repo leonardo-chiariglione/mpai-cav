@@ -1,151 +1,47 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/UNT/V1.0/data/ActuationSafety.json",
-  "title": "Actuation Safety Declaration V1.0",
-  "description": "What the Implementer of an Actuation Unit declares for its vehicle: the safe state it takes the vehicle to, when it does so, and the limits it keeps. The Unit shall have a declaration, and none of the required properties may be omitted: the safety rules of the Unit are fixed by its Specification, the values are the Implementer's.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "UnitID",
-    "SafeState",
-    "CommandTimeout",
-    "MaxCommandAge",
-    "ResponsePeriod",
-    "Limits",
-    "ReArm"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "UNT-ASD-V1.0"
-    },
-    "UnitID": {
-      "type": "string",
-      "description": "Identifier of the Unit, and of the vehicle it acts on."
-    },
-    "SafeState": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "Kind",
-        "StopDeceleration",
-        "HoldMethod",
-        "TimeToSafeState"
-      ],
-      "description": "The state the Unit takes the vehicle to, without the Module, from any state.",
-      "properties": {
-        "Kind": {
-          "type": "string",
-          "const": "ControlledStop",
-          "description": "The vehicle is brought to a standstill within its limits and held. A vehicle in motion is never left as it was last told. Any other manoeuvre, such as pulling over, is the Module's."
-        },
-        "StopDeceleration": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Deceleration (m/s2) with which the vehicle is brought to a standstill in the safe state."
-        },
-        "HoldMethod": {
-          "type": "string",
-          "description": "How the vehicle is held once it stands: parking brake, brake pressure, and the like."
-        },
-        "TimeToSafeState": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "The longest time (s) from the cause to the vehicle standing, from the speed at which the vehicle is allowed to move. It is bounded and declared."
-        }
-      }
-    },
-    "CommandTimeout": {
-      "type": "integer",
-      "exclusiveMinimum": 0,
-      "description": "Milliseconds without a valid command, after which the Unit takes the vehicle to its safe state. It is shorter than the margin the vehicle has to stop."
-    },
-    "MaxCommandAge": {
-      "type": "integer",
-      "exclusiveMinimum": 0,
-      "description": "Milliseconds. A command older than this, by its time stamp, is not executed: it is discarded and counted."
-    },
-    "ResponsePeriod": {
-      "type": "integer",
-      "exclusiveMinimum": 0,
-      "description": "Milliseconds between the Responses the Unit gives. A Response that is not given within it is a fault of the Unit."
-    },
-    "Limits": {
-      "type": "object",
-      "additionalProperties": false,
-      "description": "What the vehicle can be asked to do. A command beyond a limit is limited to it, and recorded.",
-      "required": [
-        "MaxDeceleration"
-      ],
-      "properties": {
-        "MaxDeceleration": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "m/s2."
-        },
-        "MaxJerk": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "m/s3."
-        },
-        "MaxAcceleration": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "m/s2."
-        },
-        "MaxTorque": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "N m."
-        },
-        "MaxSpeed": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "m/s."
-        },
-        "MaxSteeringAngle": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Degrees, each side."
-        },
-        "MaxSteeringRate": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Degrees per second."
-        }
-      }
-    },
-    "ReArm": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "Authority",
-        "Procedure"
-      ],
-      "description": "How the Unit takes commands again after it has been in its safe state.",
-      "properties": {
-        "Authority": {
-          "type": "string",
-          "const": "UserAgent",
-          "description": "Only the User Agent re-arms the Unit, on an act of a person. The Module cannot, and the Unit does not re-arm itself."
-        },
-        "Procedure": {
-          "type": "string",
-          "description": "What the act is, and what the Unit checks before it takes a command."
-        }
-      }
-    },
-    "Override": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "The sources of a human override of the vehicle - a pedal, a wheel, a button -, which always prevail over the commands, and which the Unit reports."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/UNT/V1.0/data/ActuationSafety.json",
+  "title":                 "Actuation Safety Declaration V1.0",
+  "description":           "What the Implementer of an Actuation Unit declares for its vehicle: the safe state it takes the vehicle to, when it does so, and the limits it keeps. The Unit shall have a declaration, and none of the required properties may be omitted: the safety rules of the Unit are fixed by its Specification, the values are the Implementer's.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "UnitID", "SafeState", "CommandTimeout", "MaxCommandAge", "ResponsePeriod", "Limits", "ReArm" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "UNT-ASD-V1.0" },
+    "UnitID":              { "type": "string", "description": "Identifier of the Unit, and of the vehicle it acts on." },
+    "SafeState":           { "type": "object", "additionalProperties": false, "required": [ "Kind", "StopDeceleration", "HoldMethod", "TimeToSafeState" ], "description": "The state the Unit takes the vehicle to, without the Module, from any state.", "properties": {
+      "Kind":              { "type": "string", "const": "ControlledStop",
+                             "description": "The vehicle is brought to a standstill within its limits and held. A vehicle in motion is never left as it was last told. Any other manoeuvre, such as pulling over, is the Module's." },
+
+      "StopDeceleration":  { "type": "number", "exclusiveMinimum": 0, "description": "Deceleration (m/s2) with which the vehicle is brought to a standstill in the safe state." },
+      "HoldMethod":        { "type": "string", "description": "How the vehicle is held once it stands: parking brake, brake pressure, and the like." },
+      "TimeToSafeState":   { "type": "number", "exclusiveMinimum": 0,
+                             "description": "The longest time (s) from the cause to the vehicle standing, from the speed at which the vehicle is allowed to move. It is bounded and declared." } } },
+
+    "CommandTimeout":      { "type": "integer", "exclusiveMinimum": 0,
+                             "description": "Milliseconds without a valid command, after which the Unit takes the vehicle to its safe state. It is shorter than the margin the vehicle has to stop." },
+
+    "MaxCommandAge":       { "type": "integer", "exclusiveMinimum": 0, "description": "Milliseconds. A command older than this, by its time stamp, is not executed: it is discarded and counted." },
+    "ResponsePeriod":      { "type": "integer", "exclusiveMinimum": 0,
+                             "description": "Milliseconds between the Responses the Unit gives. A Response that is not given within it is a fault of the Unit." },
+
+    "Limits":              { "type": "object", "additionalProperties": false, "description": "What the vehicle can be asked to do. A command beyond a limit is limited to it, and recorded.", "required": [ "MaxDeceleration" ], "properties": {
+      "MaxDeceleration":   { "type": "number", "exclusiveMinimum": 0, "description": "m/s2." },
+      "MaxJerk":           { "type": "number", "exclusiveMinimum": 0, "description": "m/s3." },
+      "MaxAcceleration":   { "type": "number", "exclusiveMinimum": 0, "description": "m/s2." },
+      "MaxTorque":         { "type": "number", "exclusiveMinimum": 0, "description": "N m." },
+      "MaxSpeed":          { "type": "number", "exclusiveMinimum": 0, "description": "m/s." },
+      "MaxSteeringAngle":  { "type": "number", "exclusiveMinimum": 0, "description": "Degrees, each side." },
+      "MaxSteeringRate":   { "type": "number", "exclusiveMinimum": 0, "description": "Degrees per second." } } },
+
+    "ReArm":               { "type": "object", "additionalProperties": false, "required": [ "Authority", "Procedure" ], "description": "How the Unit takes commands again after it has been in its safe state.", "properties": {
+      "Authority":         { "type": "string", "const": "UserAgent",
+                             "description": "Only the User Agent re-arms the Unit, on an act of a person. The Module cannot, and the Unit does not re-arm itself." },
+
+      "Procedure":         { "type": "string", "description": "What the act is, and what the Unit checks before it takes a command." } } },
+
+    "Override":            { "type": "array", "items": { "type": "string" },
+                             "description": "The sources of a human override of the vehicle - a pedal, a wheel, a button -, which always prevail over the commands, and which the Unit reports." },
+
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

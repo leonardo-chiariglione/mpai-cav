@@ -1,92 +1,25 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/VisualObjectTypes.json",
-  "title": "Visual Object Types V1.0",
-  "description": "The semantic object-type labels assigned to the Visual Objects of the scene by Visual Instance Identification. They travel as identifiers of the types (Visual Object Type IDs).",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "VisualObjectTypesID",
-    "VisualObjectTypesTime",
-    "Types"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-VOT-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "VisualObjectTypesID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "VisualObjectTypesTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Types": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "VisualObjectID": {
-            "type": "string"
-          },
-          "ObjectTypeID": {
-            "type": "string",
-            "description": "Identifier of the type assigned."
-          },
-          "ObjectType": {
-            "type": "string",
-            "description": "Label or class (URI) of the type."
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence, 0 to 1."
-          },
-          "Basis": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "classification",
-                "domain",
-                "history"
-              ]
-            },
-            "description": "What the assignment rests on."
-          }
-        },
-        "required": [
-          "VisualObjectID",
-          "ObjectTypeID"
-        ]
-      },
-      "description": "The object types assigned, one for each object of the scene."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/PGM1/V1.0/data/VisualObjectTypes.json",
+  "title":                    "Visual Object Types V1.0",
+  "description":              "The semantic object-type labels assigned to the Visual Objects of the scene by Visual Instance Identification. They travel as identifiers of the types (Visual Object Type IDs).",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "MInstance", "UEnvironment", "SessionID", "VisualObjectTypesID", "VisualObjectTypesTime", "Types" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "PGM-VOT-V1.0" },
+    "MInstance":              { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":           { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":              { "type": "string", "description": "Identifier of the A-User session." },
+    "VisualObjectTypesID":    { "type": "string", "description": "Identifier of this instance." },
+    "VisualObjectTypesTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Types":                  { "type": "array", "description": "The object types assigned, one for each object of the scene.", "items": { "type": "object", "additionalProperties": false, "required": [ "VisualObjectID", "ObjectTypeID" ], "properties": {
+      "VisualObjectID":       { "type": "string" },
+      "ObjectTypeID":         { "type": "string", "description": "Identifier of the type assigned." },
+      "ObjectType":           { "type": "string", "description": "Label or class (URI) of the type." },
+      "Confidence":           { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." },
+      "Basis":                { "type": "array", "items": { "type": "string", "enum": [ "classification", "domain", "history" ] }, "description": "What the assignment rests on." } } } },
+
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

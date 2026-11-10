@@ -1,111 +1,27 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/RangeConstraints.json",
-  "title": "Range Constraints V1.5",
-  "description": "Constraint on the spatial interpretation of a Spatial Cue by limiting the allowable distance, directional displacement or semantic range relative to a spatial anchor.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "SpatialCueID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-RCN-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "ID of the Virtual Space the cue refers to."
-    },
-    "SpatialCueID": {
-      "type": "string",
-      "description": "Identifier of the Spatial Cue entry."
-    },
-    "SpatialCueData": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Distance": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Min": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Minimum allowable distance in metres."
-            },
-            "Max": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Maximum allowable distance in metres."
-            }
-          },
-          "description": "Allowable range between the anchor and the cue target, in metres."
-        },
-        "DirectionalOffset": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Direction": {
-              "type": "string",
-              "enum": [
-                "right",
-                "left",
-                "front",
-                "back",
-                "up",
-                "down"
-              ],
-              "description": "Orientation of displacement relative to the defined reference frame."
-            },
-            "Value": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Numeric magnitude of displacement."
-            },
-            "Unit": {
-              "type": "string",
-              "enum": [
-                "m",
-                "cm"
-              ],
-              "description": "Measurement unit for displacement."
-            }
-          },
-          "required": [
-            "Direction",
-            "Value",
-            "Unit"
-          ],
-          "description": "Displacement relative to an anchor."
-        },
-        "KeywordRange": {
-          "type": "string",
-          "enum": [
-            "near",
-            "far",
-            "inside",
-            "outside",
-            "left",
-            "right",
-            "front",
-            "back",
-            "up",
-            "down"
-          ],
-          "description": "Semantic spatial constraint."
-        }
-      },
-      "description": "General descriptors for cue context."
-    },
-    "Trace": {
-      "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json",
-      "description": "AIF trace object indicating AIM instance and timestamp of production."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                    "https://schemas.mpai.community/OSD/V1.5/data/RangeConstraints.json",
+  "title":                  "Range Constraints V1.5",
+  "description":            "Constraint on the spatial interpretation of a Spatial Cue by limiting the allowable distance, directional displacement or semantic range relative to a spatial anchor.",
+  "type":                   "object",
+  "additionalProperties":   false,
+  "required":               [ "Header", "SpatialCueID" ],
+
+  "properties":             {
+
+    "Header":               { "type": "string", "const": "OSD-RCN-V1.5" },
+    "MInstanceID":          { "type": "string", "description": "ID of the Virtual Space the cue refers to." },
+    "SpatialCueID":         { "type": "string", "description": "Identifier of the Spatial Cue entry." },
+    "SpatialCueData":       { "type": "object", "additionalProperties": false, "description": "General descriptors for cue context.", "properties": {
+      "Distance":           { "type": "object", "additionalProperties": false, "description": "Allowable range between the anchor and the cue target, in metres.", "properties": {
+        "Min":              { "type": "number", "minimum": 0, "description": "Minimum allowable distance in metres." },
+        "Max":              { "type": "number", "minimum": 0, "description": "Maximum allowable distance in metres." } } },
+
+      "DirectionalOffset":  { "type": "object", "additionalProperties": false, "required": [ "Direction", "Value", "Unit" ], "description": "Displacement relative to an anchor.", "properties": {
+        "Direction":        { "type": "string", "enum": [ "right", "left", "front", "back", "up", "down" ], "description": "Orientation of displacement relative to the defined reference frame." },
+        "Value":            { "type": "number", "minimum": 0, "description": "Numeric magnitude of displacement." },
+        "Unit":             { "type": "string", "enum": [ "m", "cm" ], "description": "Measurement unit for displacement." } } },
+
+      "KeywordRange":       { "type": "string", "enum": [ "near", "far", "inside", "outside", "left", "right", "front", "back", "up", "down" ], "description": "Semantic spatial constraint." } } },
+
+    "Trace":                { "$ref": "https://schemas.mpai.community/AIF/V3.0/data/Trace.json", "description": "AIF trace object indicating AIM instance and timestamp of production." },
+    "DescrMetadata":        { "type": "string", "maxLength": 2048 } } }

@@ -9,9 +9,9 @@
   "APIProfile":           "Basic",
   "Description":          "The Environment Description (XRV-END) AIM captures raw Data from the Real and Virtual Environments including audio, visual, and other data in a variety of formats defined by the Qualifier standard; using Script-Venue Associations, identifies and separates the Performance elements, Participant elements and Operator elements that are relevant to subsequent processing; packages them into Performance, Participant, and Operator Descriptors for both the Real and Virtual Environments, and a combination of all Descriptors called Show Descriptors; and passes the Descriptors to downstream AIMs.",
 
-  "ExternalPorts":        [{"Name": "VEDataIn",                "Direction": "Input", "DataType": "XRV-VDI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "VEDataIn",                "Direction": "Input", "DataType": "XRV-VDI-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "VEVenueSpecification",    "Direction": "Input", "DataType": "XRV-VVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "REDataIn",                "Direction": "Input", "DataType": "XRV-RDI-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "REDataIn",                "Direction": "Input", "DataType": "XRV-RDI-V1.0", "Overflow": "DropOldest", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "REVenueSpecification",    "Direction": "Input", "DataType": "XRV-RVS-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "ParticipantData",         "Direction": "Input", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "Script",                  "Direction": "Input", "DataType": "XRV-SCR-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
@@ -23,8 +23,7 @@
                            {"Name": "VEParticipantDescriptors", "Direction": "Output", "DataType": "XRV-VTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "REOperatorDescriptors",   "Direction": "Output", "DataType": "XRV-ROD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "VEOperatorDescriptors",   "Direction": "Output", "DataType": "XRV-VOD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ShowDescriptors",         "Direction": "Output", "DataType": "XRV-SHD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "ParticipantData",         "Direction": "Output", "DataType": "XRV-PTD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "ShowDescriptors",         "Direction": "Output", "DataType": "XRV-SHD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],
 

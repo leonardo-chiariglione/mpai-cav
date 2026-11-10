@@ -12,7 +12,7 @@
   "InternalTypes":        [ ],
 
   "ExternalPorts":        [{"Name": "ModifiedInference", "Direction": "Input", "DataType": "NNW-INF-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                          {"Name": "RetrievedPayload", "Direction": "Output", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+                           {"Name": "RetrievedPayload", "Direction": "Output", "DataType": "NNW-PLD-V2.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [],
 

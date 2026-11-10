@@ -11,7 +11,7 @@
   "Description":          "This AIM extracts the Text Personal Status from the Text Descriptors Object: the one supplied from outside (Port 1) and the one derived by the Entity Text Description (Port 2).",
 
   "ExternalPorts":        [{"Name": "TextDescriptorsObject",       "Direction": "Input",  "DataType": "MMC-TDO-V2.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "EntityTextDescriptorsObject", "Direction": "Input",  "DataType": "MMC-TDO-V2.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EntityTextDescriptorsObject", "Direction": "Input",  "DataType": "MMC-TDO-V2.5", "PortNumber": 2, "IsOptional": true, "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "TextPersonalStatus",          "Direction": "Output", "DataType": "MMC-TPS-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],

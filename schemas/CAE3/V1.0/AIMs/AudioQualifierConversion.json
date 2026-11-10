@@ -7,7 +7,7 @@
   "InternalTypes":   [ ],
 
   "ExternalPorts":   [{"Name": "InputAudioObject",  "Direction": "Input",  "DataType": "OSD-BAO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""},
-                     {"Name": "OutputAudioObject", "Direction": "Output", "DataType": "OSD-BAO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
+                      {"Name": "OutputAudioObject", "Direction": "Output", "DataType": "OSD-BAO-V1.5",                     "Technology": "", "Protocol": "", "IsRemote": ""}],
 
   "SubAIMs":         [ ],
 

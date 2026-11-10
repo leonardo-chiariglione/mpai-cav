@@ -21,6 +21,12 @@
     "ClosedSpace":                      { "$ref": "#/$defs/ClosedSpaceIDOrClosedSpace",
                                           "description": "The Closed Space the Scene is in, placed by AudioSceneDescriptorsSpaceTime. A Basic Audio Scene Descriptors in this Scene with a Closed Space of its own keeps it for its members." },
 
+    "RenderingMode":                    { "type": "string", "enum": [ "Mono", "Stereo", "Multichannel", "Binaural" ],
+                                        "description": "How the Scene is rendered for the listener: Binaural for headphones or a headset; Stereo, Mono or Multichannel (ChannelCount: 4, 6 or 8) for loudspeakers. The values are those of RenderingMode in the RenderConfiguration of the Audio Qualifier (TFA-AUQ), less Ambisonics. Absent, the renderer renders binaural. In Audio Scene Descriptors it applies to the whole Scene, its sub-scenes included." },
+
+    "ChannelCount":                     { "type": "integer", "enum": [ 4, 6, 8 ],
+                                        "description": "The number of loudspeakers of a Multichannel rendering: 4 (quad), 6 (5.1) or 8 (7.1)." },
+
     "AudioObjectCount":                 { "type": "integer", "minimum": 0, "description": "Number of Audio Objects in the Audio Scene." },
 
     "AudioObjects":                     { "type": "array", "minItems": 0, "description": "Set of Audio Objects in the Audio Scene.",

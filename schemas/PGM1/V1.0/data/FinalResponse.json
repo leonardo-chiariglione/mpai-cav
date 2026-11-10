@@ -1,88 +1,28 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/FinalResponse.json",
-  "title": "Final Response V1.0",
-  "description": "The deliberated content produced by Basic Knowledge: the text to be uttered, the Action Objects with the actions of the face and body that accompany it and the Process Actions that carry out the response. It is the only output of Basic Knowledge, apart from the AUC-BKN Response and the exchanges with its partners, and it is sent to A-User Formation.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "FinalResponseID",
-    "FinalResponseTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-FRS-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "FinalResponseID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "FinalResponseTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "AUCBKNRequestID": {
-      "type": "string",
-      "description": "Identifier of the AUC-BKN Request to which the Final Response answers."
-    },
-    "DialogID": {
-      "type": "string",
-      "description": "Identifier of the dialogue (the Model Context Protocol session) in which the Final Response was deliberated."
-    },
-    "Text": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicTextObject.json",
-      "description": "The text to be uttered by the A-User."
-    },
-    "ActionObjects": {
-      "type": "array",
-      "items": {
-        "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/ActionObject.json"
-      },
-      "description": "The Action Objects that carry the actions of the face and body of the A-User that accompany the text, each in the vocabulary named by its Qualifier."
-    },
-    "ProcessActions": {
-      "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessActions.json",
-      "description": "The Process Actions, in the syntax of MMM-TEC V2.2, that carry out the response. Present only if A-User Control asked for them."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  },
-  "anyOf": [
-    {
-      "required": [
-        "Text"
-      ]
-    },
-    {
-      "required": [
-        "ActionObjects"
-      ]
-    },
-    {
-      "required": [
-        "ProcessActions"
-      ]
-    }
-  ]
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/PGM1/V1.0/data/FinalResponse.json",
+  "title":                 "Final Response V1.0",
+  "description":           "The deliberated content produced by Basic Knowledge: the text to be uttered, the Action Objects with the actions of the face and body that accompany it and the Process Actions that carry out the response. It is the only output of Basic Knowledge, apart from the AUC-BKN Response and the exchanges with its partners, and it is sent to A-User Formation.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "MInstance", "UEnvironment", "SessionID", "FinalResponseID", "FinalResponseTime" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "PGM-FRS-V1.0" },
+    "MInstance":           { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":        { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":           { "type": "string", "description": "Identifier of the A-User session." },
+    "FinalResponseID":     { "type": "string", "description": "Identifier of this instance." },
+    "FinalResponseTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "AUCBKNRequestID":     { "type": "string", "description": "Identifier of the AUC-BKN Request to which the Final Response answers." },
+    "DialogID":            { "type": "string", "description": "Identifier of the dialogue (the Model Context Protocol session) in which the Final Response was deliberated." },
+    "Text":                { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicTextObject.json", "description": "The text to be uttered by the A-User." },
+    "ActionObjects":       { "type": "array", "items": { "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/ActionObject.json" },
+                             "description": "The Action Objects that carry the actions of the face and body of the A-User that accompany the text, each in the vocabulary named by its Qualifier." },
+
+    "ProcessActions":      { "$ref": "https://schemas.mpai.community/MMM4/V2.2/data/ProcessActions.json",
+                             "description": "The Process Actions, in the syntax of MMM-TEC V2.2, that carry out the response. Present only if A-User Control asked for them." },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } },
+  "anyOf":                 [ { "required": [ "Text" ] }, { "required": [ "ActionObjects" ] }, { "required": [ "ProcessActions" ] } ] }

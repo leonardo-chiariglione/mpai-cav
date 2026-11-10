@@ -16,7 +16,8 @@
       "AudioConsole":          { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/AudioConsole.json" },
       "VideoConsole":          { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/VideoConsole.json" },
       "ShowConsole":           { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/ShowConsole.json" },
-      "LightingConsole":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/LightingConsole.json" } } },
+      "LightingConsole":       { "$ref": "https://schemas.mpai.community/XRV1/V1.0/data/LightingConsole.json" },
+      "ShowControl":           { "type": "string", "enum": [ "Go", "Hold", "Skip", "Back" ] } } },
 
     "DataXMData":              { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
     "DescrMetadata":           { "type": "string", "maxLength": 2048 } } }

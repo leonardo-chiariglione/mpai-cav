@@ -1,97 +1,24 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/RRULE.json",
-  "title": "RRULE V1.5",
-  "description": "How an event or time interval repeats over time, based on RFC 5545.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "RRULEID",
-    "RRULEData"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-RRL-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the RRULE instance (unique within its context)."
-    },
-    "RRULEID": {
-      "type": "string",
-      "description": "Globally unique identifier for this RRULE definition."
-    },
-    "RRULEData": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "FREQ": {
-          "type": "string",
-          "enum": [
-            "SECONDLY",
-            "MINUTELY",
-            "HOURLY",
-            "DAILY",
-            "WEEKLY",
-            "MONTHLY",
-            "YEARLY"
-          ],
-          "description": "Frequency of recurrence."
-        },
-        "INTERVAL": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1,
-          "description": "Interval between recurrences."
-        },
-        "UNTIL": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json",
-          "description": "End date/time for recurrence."
-        },
-        "COUNT": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Number of occurrences."
-        },
-        "BYxxx": {
-          "type": "object",
-          "description": "Arrays for filtering (BYDAY, BYMONTHDAY, BYMONTH, etc.).",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": [
-                "string",
-                "integer"
-              ]
-            }
-          }
-        },
-        "WKST": {
-          "type": "string",
-          "enum": [
-            "MO",
-            "TU",
-            "WE",
-            "TH",
-            "FR",
-            "SA",
-            "SU"
-          ],
-          "default": "MO",
-          "description": "Week start day."
-        }
-      },
-      "required": [
-        "FREQ"
-      ],
-      "description": "Core recurrence rule data."
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive metadata about this RRULE instance (e.g., human-readable label, notes, provenance)."
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/OSD/V1.5/data/RRULE.json",
+  "title":                 "RRULE V1.5",
+  "description":           "How an event or time interval repeats over time, based on RFC 5545.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "RRULEID", "RRULEData" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "OSD-RRL-V1.5" },
+    "MInstanceID":         { "type": "string", "description": "Identifier of the RRULE instance (unique within its context)." },
+    "RRULEID":             { "type": "string", "description": "Globally unique identifier for this RRULE definition." },
+    "RRULEData":           { "type": "object", "additionalProperties": false, "required": [ "FREQ" ], "description": "Core recurrence rule data.", "properties": {
+      "FREQ":              { "type": "string", "enum": [ "SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY" ], "description": "Frequency of recurrence." },
+      "INTERVAL":          { "type": "integer", "minimum": 1, "default": 1, "description": "Interval between recurrences." },
+      "UNTIL":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/Time.json", "description": "End date/time for recurrence." },
+      "COUNT":             { "type": "integer", "minimum": 1, "description": "Number of occurrences." },
+      "BYxxx":             { "type": "object", "additionalProperties": { "type": "array", "items": { "type": [ "string", "integer" ] } },
+                             "description": "Arrays for filtering (BYDAY, BYMONTHDAY, BYMONTH, etc.)." },
+
+      "WKST":              { "type": "string", "enum": [ "MO", "TU", "WE", "TH", "FR", "SA", "SU" ], "default": "MO", "description": "Week start day." } } },
+
+    "DescrMetadata":       { "type": "string", "maxLength": 2048, "description": "Descriptive metadata about this RRULE instance (e.g., human-readable label, notes, provenance)." } } }

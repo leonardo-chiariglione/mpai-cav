@@ -1,57 +1,24 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/TFA/V1.5/data/BodyMotionQualifier.json",
-  "title": "Body Motion Qualifier V1.5",
-  "description": "Qualifier of the Body Motion Object: it names the vocabulary (Format) in which a motion of the body of the Persona (approach, reach, grasp, gesture) is expressed and carries the Attributes of the vocabulary used.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "BodyMotionQualifierID",
-    "Formats"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "TFA-BMQ-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string"
-    },
-    "UEnvironmentID": {
-      "type": "string"
-    },
-    "BodyMotionQualifierID": {
-      "type": "string"
-    },
-    "BodyMotionQualifierTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Formats": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ContentFormat"
-      ],
-      "properties": {
-        "ContentFormat": {
-          "type": "string",
-          "description": "Identifier (name or URI) of the vocabulary or format of the content of the Object. MPAI recognises the identifiers it needs; this Data Type does not enumerate them."
-        },
-        "TransportFormat": {
-          "type": "string"
-        }
-      }
-    },
-    "Attributes": {
-      "type": "object"
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/TFA/V1.5/data/BodyMotionQualifier.json",
+  "title":                      "Body Motion Qualifier V1.5",
+  "description":                "Qualifier of the Body Motion Object: it names the vocabulary (Format) in which a motion of the body of the Persona (approach, reach, grasp, gesture) is expressed and carries the Attributes of the vocabulary used.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "BodyMotionQualifierID", "Formats" ],
+
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "TFA-BMQ-V1.5" },
+    "MInstanceID":              { "type": "string" },
+    "UEnvironmentID":           { "type": "string" },
+    "BodyMotionQualifierID":    { "type": "string" },
+    "BodyMotionQualifierTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Formats":                  { "type": "object", "additionalProperties": false, "required": [ "ContentFormat" ], "properties": {
+      "ContentFormat":          { "type": "string",
+                                  "description": "Identifier (name or URI) of the vocabulary or format of the content of the Object. MPAI recognises the identifiers it needs; this Data Type does not enumerate them." },
+
+      "TransportFormat":        { "type": "string" } } },
+
+    "Attributes":               { "type": "object" },
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

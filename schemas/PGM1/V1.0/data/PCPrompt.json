@@ -1,205 +1,53 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/PCPrompt.json",
-  "title": "PC Prompt V1.0",
-  "description": "The structured prompt that Prompt Creation submits to Basic Knowledge to open the Model Context Protocol session. It carries the representation of the scene context, of the Intent of the User, of the resolved referents, of the constraints of the Goal and of the expressive configuration of the A-User and, when A-User Control so requires, the Action context that Basic Knowledge needs to produce Process Actions and Action Objects.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "PCPromptID",
-    "PCPromptTime",
-    "DialogID",
-    "Prompt"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-PCP-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "PCPromptID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "PCPromptTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "DialogID": {
-      "type": "string",
-      "description": "Identifier of the dialogue (the Model Context Protocol session) that the PC Prompt opens."
-    },
-    "Prompt": {
-      "type": "string",
-      "description": "The prompt, in natural language."
-    },
-    "SceneContext": {
-      "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/ContextDescriptors.json",
-      "description": "The scene context, as given by the Context Descriptors."
-    },
-    "Intent": {
-      "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Intent.json",
-      "description": "The Intent of the User."
-    },
-    "Propositions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Subject": {
-            "type": "string"
-          },
-          "Predicate": {
-            "type": "string"
-          },
-          "Object": {
-            "type": "string"
-          },
-          "Spatial": {
-            "type": "string"
-          },
-          "Temporal": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "Subject",
-          "Predicate"
-        ]
-      },
-      "description": "Propositions linking subjects, predicates and objects with their spatial and temporal context."
-    },
-    "ResolvedReferents": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Expression": {
-            "type": "string"
-          },
-          "EntityID": {
-            "type": "string"
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence, 0 to 1."
-          }
-        },
-        "required": [
-          "Expression"
-        ]
-      },
-      "description": "Referring expressions resolved to Entities of the scene."
-    },
-    "GoalConstraints": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Constraints that the Goal imposes on the response."
-    },
-    "ExpressiveConfiguration": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Personality": {
-          "type": "string"
-        },
-        "Role": {
-          "type": "string"
-        },
-        "Locale": {
-          "type": "string"
-        },
-        "Constraints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "description": "The expressive configuration of the A-User."
-    },
-    "ActionContext": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Repertoire": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The Process Actions that may be used."
-        },
-        "Vocabularies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)."
-        },
-        "MaxSteps": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "MLocations": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "RightsRefs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Identifiers of the Rights that the A-User holds."
-        },
-        "WalletLimit": {
-          "type": "number",
-          "minimum": 0
-        },
-        "Rules": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Rules of the M-Instance that apply."
-        },
-        "Affordances": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Affordances of the Space, obtained from Domain Access."
-        }
-      },
-      "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                    "https://json-schema.org/draft/2020-12/schema",
+  "$id":                        "https://schemas.mpai.community/PGM1/V1.0/data/PCPrompt.json",
+  "title":                      "PC Prompt V1.0",
+  "description":                "The structured prompt that Prompt Creation submits to Basic Knowledge to open the Model Context Protocol session. It carries the representation of the scene context, of the Intent of the User, of the resolved referents, of the constraints of the Goal and of the expressive configuration of the A-User and, when A-User Control so requires, the Action context that Basic Knowledge needs to produce Process Actions and Action Objects.",
+  "type":                       "object",
+  "additionalProperties":       false,
+  "required":                   [ "Header", "MInstance", "UEnvironment", "SessionID", "PCPromptID", "PCPromptTime", "DialogID", "Prompt" ],
+
+  "properties":                 {
+
+    "Header":                   { "type": "string", "const": "PGM-PCP-V1.0" },
+    "MInstance":                { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":             { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                { "type": "string", "description": "Identifier of the A-User session." },
+    "PCPromptID":               { "type": "string", "description": "Identifier of this instance." },
+    "PCPromptTime":             { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "DialogID":                 { "type": "string", "description": "Identifier of the dialogue (the Model Context Protocol session) that the PC Prompt opens." },
+    "Prompt":                   { "type": "string", "description": "The prompt, in natural language." },
+    "SceneContext":             { "$ref": "https://schemas.mpai.community/PGM1/V1.0/data/ContextDescriptors.json", "description": "The scene context, as given by the Context Descriptors." },
+    "Intent":                   { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Intent.json", "description": "The Intent of the User." },
+    "Propositions":             { "type": "array", "description": "Propositions linking subjects, predicates and objects with their spatial and temporal context.", "items": { "type": "object", "additionalProperties": false, "required": [ "Subject", "Predicate" ], "properties": {
+      "Subject":                { "type": "string" },
+      "Predicate":              { "type": "string" },
+      "Object":                 { "type": "string" },
+      "Spatial":                { "type": "string" },
+      "Temporal":               { "type": "string" } } } },
+
+    "ResolvedReferents":        { "type": "array", "description": "Referring expressions resolved to Entities of the scene.", "items": { "type": "object", "additionalProperties": false, "required": [ "Expression" ], "properties": {
+      "Expression":             { "type": "string" },
+      "EntityID":               { "type": "string" },
+      "Confidence":             { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." } } } },
+
+    "GoalConstraints":          { "type": "array", "items": { "type": "string" }, "description": "Constraints that the Goal imposes on the response." },
+    "ExpressiveConfiguration":  { "type": "object", "additionalProperties": false, "description": "The expressive configuration of the A-User.", "properties": {
+      "Personality":            { "type": "string" },
+      "Role":                   { "type": "string" },
+      "Locale":                 { "type": "string" },
+      "Constraints":            { "type": "array", "items": { "type": "string" } } } },
+
+    "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects.", "properties": {
+      "Repertoire":             { "type": "array", "items": { "type": "string" }, "description": "The Process Actions that may be used." },
+      "Vocabularies":           { "type": "array", "items": { "type": "string" },
+                                  "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)." },
+
+      "MaxSteps":               { "type": "integer", "minimum": 0 },
+      "MLocations":             { "type": "array", "items": { "type": "string" } },
+      "RightsRefs":             { "type": "array", "items": { "type": "string" }, "description": "Identifiers of the Rights that the A-User holds." },
+      "WalletLimit":            { "type": "number", "minimum": 0 },
+      "Rules":                  { "type": "array", "items": { "type": "string" }, "description": "Rules of the M-Instance that apply." },
+      "Affordances":            { "type": "array", "items": { "type": "string" }, "description": "Affordances of the Space, obtained from Domain Access." } } },
+
+    "DataXMData":               { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":            { "type": "string", "maxLength": 2048 } } }

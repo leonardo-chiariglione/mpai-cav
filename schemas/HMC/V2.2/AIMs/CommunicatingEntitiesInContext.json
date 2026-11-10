@@ -1,633 +1,94 @@
-{
-  "Identifier": {
-    "ImplementerID": "/* String assigned by IIDRA */",
-    "ImplementationID": "/* String assigned by Implementer */",
-    "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"
-  },
-  "Header": "HMC-CEC-V2.2",
-  "APIProfile": "Basic",
-  "Description": "Communicating Entities in Context: an Entity - a human in a real audio-visual scene or a Machine represented by a Portable Avatar - communicates with a Machine, possibly in a different Context (language, culture). The scene is described and integrated, Entity and Context Understanding understands the Entity and its Context, Text-and-Speech Translation translates its speech or text, Entity Dialogue Processing produces the response of the Machine, Text-to-Text Translation translates it, and Response and Scene Rendering makes the Portable Avatar that utters it.",
-  "InternalTypes": [
-    {
-      "Name": "TextInMachineLanguage",
-      "DataType": "OSD-BTO-V1.5",
-      "Output": 1
-    }
-  ],
-  "ExternalPorts": [
-    {
-      "Name": "InputPortableAvatar",
-      "Direction": "Input",
-      "DataType": "PAF-PAV-V1.6",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InputSelector",
-      "Direction": "Input",
-      "DataType": "OSD-SEL-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InputText",
-      "Direction": "Input",
-      "DataType": "OSD-BTO-V1.5",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InputAudio",
-      "Direction": "Input",
-      "DataType": "OSD-BAO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "InputVisual",
-      "Direction": "Input",
-      "DataType": "OSD-BVO-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "SpaceTime",
-      "Direction": "Input",
-      "DataType": "OSD-SPT-V1.5",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MultimodalObject",
-      "Direction": "Input",
-      "DataType": "OSD-MMO-V1.5",
-      "IsOptional": true,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "AvatarModel",
-      "Direction": "Input",
-      "DataType": "OSD-B3O-V1.5",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MachineID",
-      "Direction": "Input",
-      "DataType": "string",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "PortableAvatar",
-      "Direction": "Output",
-      "DataType": "PAF-PAV-V1.6",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MachineText",
-      "Direction": "Output",
-      "DataType": "OSD-BTO-V1.5",
-      "PortNumber": 1,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "TranslatedMachineText",
-      "Direction": "Output",
-      "DataType": "OSD-BTO-V1.5",
-      "PortNumber": 2,
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    }
-  ],
-  "SubAIMs": [
-    {
-      "Header": "HMC-SID-V2.2",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "OSD-BMS-V1.5",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "HMC-ECU-V2.2",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "MMC-TST-V2.5",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "MMC-EDP-V2.5",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "MMC-TTT-V2.5",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    },
-    {
-      "Header": "PAF-RSR-V1.6",
-      "Identifier": {
-        "ImplementerID": "/* String assigned by IIDRA */",
-        "ImplementationID": "/* String assigned by Implementer */",
-        "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */",
-        "Relation": ""
-      }
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "HMC-SID-V2.2",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-SID-V2.2",
-        "DataType": "OSD-BMS-V1.5"
-      },
-      "Input": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BMS-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BAO-V1.5"
-      },
-      "Input": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-BAO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BVO-V1.5"
-      },
-      "Input": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-BVO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SPT-V1.5"
-      },
-      "Input": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-SPT-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-MMO-V1.5"
-      },
-      "Input": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-MMO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-BMS-V1.5"
-      },
-      "Input": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BMS-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "OSD-BMS-V1.5",
-        "DataType": "OSD-BSO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-TST-V2.5",
-        "DataType": "OSD-BSO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-SEL-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TST-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TST-V2.5",
-        "DataType": "OSD-SEL-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TST-V2.5",
-        "DataType": "OSD-SEL-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-SEL-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-SEL-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-SEL-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 3
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "MMC-TDO-V2.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-TDO-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "MMC-TDO-V2.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "MMC-TDO-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "MMC-EPS-V2.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-EPS-V2.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 1
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 3
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 2
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-IID-V1.5",
-        "PortNumber": 3
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BVG-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BVG-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "HMC-ECU-V2.2",
-        "DataType": "OSD-BAG-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BAG-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TST-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-EDP-V2.5",
-        "DataType": "MMC-EPS-V2.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "MMC-EPS-V2.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 1
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MMC-TTT-V2.5",
-        "DataType": "OSD-BTO-V1.5"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "OSD-BTO-V1.5",
-        "PortNumber": 2
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "OSD-B3O-V1.5"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "OSD-B3O-V1.5"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "DataType": "string"
-      },
-      "Input": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "string"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "PAF-RSR-V1.6",
-        "DataType": "PAF-PAV-V1.6"
-      },
-      "Input": {
-        "AIMName": "",
-        "DataType": "PAF-PAV-V1.6"
-      }
-    }
-  ],
-  "AIMLicence": "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
-  "Implementations": [
-    {
-      "ImplementationURI": "/* absolute URI locating the Implementation */",
-      "BinaryName": "/* provided by implementer */",
-      "Architecture": "/* x86-64 | ARM64 */",
-      "MASPort": 443,
-      "Firewall": [
-        {
-          "Protocol": "TCP | UDP",
-          "Version": "IPV4 | IPV6",
-          "Direction": "Ingress | Egress | Both",
-          "Range": "9990[-9999]",
-          "Source": "0.0.0.0/0"
-        }
-      ],
-      "OperatingSystem": "/* Windows | Linux | MacOS */",
-      "Version": "/* implementer version */",
-      "Source": "/* AIMStorage | MPAIStore */",
-      "Destination": "/* provided by implementer */"
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "CPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:Number",
-      "Minimum": "/* integer, 0=all */",
-      "Maximum": "/* integer, 0=all */",
-      "Request": "/* integer */"
-    },
-    {
-      "Name": "GPU:CUDA:Class",
-      "Minimum": "/* string */",
-      "Maximum": "/* string */",
-      "Request": "/* string */"
-    },
-    {
-      "Name": "GPU:CUDA:FrameBuffer",
-      "Minimum": "/* GB */",
-      "Maximum": "/* GB */",
-      "Request": "/* GB */"
-    },
-    {
-      "Name": "GPU:CUDA:MemorySpeed",
-      "Minimum": "/* GB/s */",
-      "Maximum": "/* GB/s */",
-      "Request": "/* GB/s */"
-    }
-  ],
-  "DataXMData": {},
-  "Documentation": [
-    {
-      "Type": "Specification",
-      "URI": "https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/communicating-entities-in-context/"
-    }
-  ]
-}
+{ "Identifier":       {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+  "Header":           "HMC-CEC-V2.2",
+
+  "APIProfile":       "Basic",
+  "Description":      "Communicating Entities in Context: Multimodal Scene Integration and Description gives the Objects and the Scene Descriptors of the Scene of the Input Portable Avatar and Multimodal Frontend Description those of the real world; Entity and Context Understanding understands them with the Input Text; Text-and-Speech Translation translates the Speech and the Text; Entity Dialogue Processing gives the Machine Text, the Machine Personal Status and the Machine Text; Text-to-Text Translation translates the Machine Text; Portable Avatar Multiplexing gives the Portable Avatar.",
+
+  "InternalTypes":   [{"Name": "TextInMachineLanguage", "DataType": "OSD-BTO-V1.5", "Output": 1}],
+
+  "ExternalPorts":   [{"Name": "InputPortableAvatar", "Direction": "Input", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputSelector", "Direction": "Input", "DataType": "OSD-SEL-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputText", "Direction": "Input", "DataType": "OSD-BTO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputVisual", "Direction": "Input", "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "InputLiDAR", "Direction": "Input", "DataType": "OSD-BLO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "AvatarModel", "Direction": "Input", "DataType": "OSD-B3O-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "MachineID", "Direction": "Input", "DataType": "string", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "PortableAvatar", "Direction": "Output", "DataType": "PAF-PAV-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "MachineText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                      {"Name": "TranslatedMachineText", "Direction": "Output", "DataType": "OSD-BTO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+
+  "SubAIMs":         [{"Header": "HMC-SID-V2.2", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "OSD-MFD-V1.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "HMC-ECU-V2.2", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "MMC-TST-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "MMC-EDP-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "MMC-TTT-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}},
+                      {"Header": "PAF-PMX-V1.6", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": ""}}],
+
+  "Topology":        [{"Output": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "HMC-SID-V2.2", "DataType": "PAF-PAV-V1.6"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BVO-V1.5"}, "Input": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BVO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BLO-V1.5"}, "Input": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BLO-V1.5"}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BVS-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVS-V1.5"}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "HMC-SID-V2.2", "DataType": "OSD-BAS-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BAS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVO-V1.5", "PortNumber": 3}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BVS-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BVS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BAO-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BAO-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BAS-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BAS-V1.5"}},
+                      {"Output": {"AIMName": "OSD-MFD-V1.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "MMC-TST-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-SEL-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "MMC-TST-V2.5", "DataType": "OSD-SEL-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "MMC-TST-V2.5", "DataType": "OSD-SEL-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-SEL-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5"}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-SEL-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TST-V2.5", "DataType": "OSD-BTO-V1.5"}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "MMC-TDO-V2.5"}, "Input": {"AIMName": "MMC-TST-V2.5", "DataType": "MMC-TDO-V2.5"}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 3}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-IID-V1.5", "PortNumber": 3}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-IID-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-IID-V1.5", "PortNumber": 1}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-IID-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-IID-V1.5", "PortNumber": 2}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-IID-V1.5", "PortNumber": 3}},
+                      {"Output": {"AIMName": "HMC-ECU-V2.2", "DataType": "OSD-BMS-V1.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BMS-V1.5"}},
+                      {"Output": {"AIMName": "MMC-TST-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 1}},
+                      {"Output": {"AIMName": "MMC-EDP-V2.5", "DataType": "MMC-EPS-V2.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "MMC-EPS-V2.5"}},
+                      {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "MMC-TTT-V2.5", "DataType": "OSD-BTO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BTO-V1.5", "PortNumber": 2}},
+                      {"Output": {"AIMName": "", "DataType": "OSD-B3O-V1.5"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "OSD-B3O-V1.5"}},
+                      {"Output": {"AIMName": "", "DataType": "string"}, "Input": {"AIMName": "PAF-PMX-V1.6", "DataType": "string"}},
+                      {"Output": {"AIMName": "PAF-PMX-V1.6", "DataType": "PAF-PAV-V1.6"}, "Input": {"AIMName": "", "DataType": "PAF-PAV-V1.6"}}],
+
+  "AIMLicence":       "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations": [{ "ImplementationURI":"/* absolute URI locating the Implementation */",
+                        "BinaryName":       "/* provided by implementer */",
+                        "Architecture":     "/* x86-64 | ARM64 */",
+                        "MASPort":          443,
+                        "Firewall":         [{ "Protocol": "TCP | UDP", "Version": "IPV4 | IPV6", "Direction": "Ingress | Egress | Both", "Range": "9990[-9999]", "Source": "0.0.0.0/0" }],
+                        "OperatingSystem":  "/* Windows | Linux | MacOS */",
+                        "Version":          "/* implementer version */",
+                        "Source":           "/* AIMStorage | MPAIStore */",
+                        "Destination":      "/* provided by implementer */" }],
+
+  "ResourcePolicies":[{"Name": "Memory",               "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "CPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "CPU:Class",            "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:Number",           "Minimum": "/* integer, 0=all */", "Maximum": "/* integer, 0=all */", "Request": "/* integer */"},
+                      {"Name": "GPU:CUDA:Class",       "Minimum": "/* string */",         "Maximum": "/* string */",         "Request": "/* string */"},
+                      {"Name": "GPU:CUDA:FrameBuffer", "Minimum": "/* GB */",             "Maximum": "/* GB */",             "Request": "/* GB */"},
+                      {"Name": "GPU:CUDA:MemorySpeed", "Minimum": "/* GB/s */",           "Maximum": "/* GB/s */",           "Request": "/* GB/s */"}],
+
+  "DataXMData":       { },
+
+  "Documentation":   [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-hmc/v2-2/ai-modules/communicating-entities-in-context/"}]}

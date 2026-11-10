@@ -1,254 +1,62 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/BKNPRC.json",
-  "title": "BKN-PRC V1.0",
-  "description": "The Data Type exchanged between Basic Knowledge and Prompt Creation through the Model Context Protocol, during the dialogue that the PC Prompt opens. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that asks for additional context or a clarification, and Response (RS), sent by Prompt Creation, that returns a more complete or different representation of the understanding of the context. The exchanges of one dialogue are told apart by TurnIndex within the DialogID.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Mode",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "DialogID",
-    "TurnIndex",
-    "QueryID",
-    "QueryTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-KPR-V1.0"
-    },
-    "Mode": {
-      "type": "string",
-      "enum": [
-        "RQ",
-        "RS"
-      ],
-      "description": "RQ: Request. RS: Response."
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "QueryID": {
-      "type": "string",
-      "description": "Identifier of this Request or Response."
-    },
-    "QueryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "RequestID": {
-      "type": "string",
-      "description": "Response only. ID of the Request this Response answers."
-    },
-    "DialogID": {
-      "type": "string",
-      "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs."
-    },
-    "TurnIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request."
-    },
-    "Kind": {
-      "type": "string",
-      "enum": [
-        "more_context",
-        "clarification",
-        "referents",
-        "intent",
-        "propositions",
-        "goal_constraints",
-        "action_context"
-      ],
-      "description": "Request only. What Basic Knowledge asks for."
-    },
-    "Question": {
-      "type": "string",
-      "description": "Request only. The question of Basic Knowledge, in natural language."
-    },
-    "EntityIDs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Request only. Identifiers of the Entities and Items the Request concerns."
-    },
-    "Outcome": {
-      "type": "string",
-      "enum": [
-        "answered",
-        "partially_answered",
-        "not_answered"
-      ],
-      "description": "Response only. The outcome."
-    },
-    "Representation": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Text": {
-          "type": "string"
-        },
-        "Intent": {
-          "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Intent.json"
-        },
-        "Propositions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Subject": {
-                "type": "string"
-              },
-              "Predicate": {
-                "type": "string"
-              },
-              "Object": {
-                "type": "string"
-              },
-              "Spatial": {
-                "type": "string"
-              },
-              "Temporal": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "Subject",
-              "Predicate"
-            ]
-          }
-        },
-        "ResolvedReferents": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Expression": {
-                "type": "string"
-              },
-              "EntityID": {
-                "type": "string"
-              },
-              "Confidence": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1,
-                "description": "Confidence, 0 to 1."
-              }
-            },
-            "required": [
-              "Expression"
-            ]
-          }
-        },
-        "GoalConstraints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ExpressiveConfiguration": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Personality": {
-              "type": "string"
-            },
-            "Role": {
-              "type": "string"
-            },
-            "Locale": {
-              "type": "string"
-            },
-            "Constraints": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "description": "The expressive configuration of the A-User."
-        },
-        "ActionContext": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "Repertoire": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "The Process Actions that may be used."
-            },
-            "Vocabularies": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)."
-            },
-            "MaxSteps": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "MLocations": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "RightsRefs": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Identifiers of the Rights that the A-User holds."
-            },
-            "WalletLimit": {
-              "type": "number",
-              "minimum": 0
-            },
-            "Rules": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Rules of the M-Instance that apply."
-            },
-            "Affordances": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Affordances of the Space, obtained from Domain Access."
-            }
-          },
-          "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects."
-        }
-      },
-      "description": "Response only. A more complete or different representation of the understanding of the context, as appropriate to the Kind of the Request."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                      "https://json-schema.org/draft/2020-12/schema",
+  "$id":                          "https://schemas.mpai.community/PGM1/V1.0/data/BKNPRC.json",
+  "title":                        "BKN-PRC V1.0",
+  "description":                  "The Data Type exchanged between Basic Knowledge and Prompt Creation through the Model Context Protocol, during the dialogue that the PC Prompt opens. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that asks for additional context or a clarification, and Response (RS), sent by Prompt Creation, that returns a more complete or different representation of the understanding of the context. The exchanges of one dialogue are told apart by TurnIndex within the DialogID.",
+  "type":                         "object",
+  "additionalProperties":         false,
+  "required":                     [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "DialogID", "TurnIndex", "QueryID", "QueryTime" ],
+
+  "properties":                   {
+
+    "Header":                     { "type": "string", "const": "PGM-KPR-V1.0" },
+    "Mode":                       { "type": "string", "enum": [ "RQ", "RS" ], "description": "RQ: Request. RS: Response." },
+    "MInstance":                  { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":               { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                  { "type": "string", "description": "Identifier of the A-User session." },
+    "QueryID":                    { "type": "string", "description": "Identifier of this Request or Response." },
+    "QueryTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "RequestID":                  { "type": "string", "description": "Response only. ID of the Request this Response answers." },
+    "DialogID":                   { "type": "string", "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs." },
+    "TurnIndex":                  { "type": "integer", "minimum": 0, "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request." },
+    "Kind":                       { "type": "string", "enum": [ "more_context", "clarification", "referents", "intent", "propositions", "goal_constraints", "action_context" ],
+                                    "description": "Request only. What Basic Knowledge asks for." },
+
+    "Question":                   { "type": "string", "description": "Request only. The question of Basic Knowledge, in natural language." },
+    "EntityIDs":                  { "type": "array", "items": { "type": "string" }, "description": "Request only. Identifiers of the Entities and Items the Request concerns." },
+    "Outcome":                    { "type": "string", "enum": [ "answered", "partially_answered", "not_answered" ], "description": "Response only. The outcome." },
+    "Representation":             { "type": "object", "additionalProperties": false, "description": "Response only. A more complete or different representation of the understanding of the context, as appropriate to the Kind of the Request.", "properties": {
+      "Text":                     { "type": "string" },
+      "Intent":                   { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/Intent.json" },
+      "Propositions":             { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Subject", "Predicate" ], "properties": {
+        "Subject":                { "type": "string" },
+        "Predicate":              { "type": "string" },
+        "Object":                 { "type": "string" },
+        "Spatial":                { "type": "string" },
+        "Temporal":               { "type": "string" } } } },
+
+      "ResolvedReferents":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "Expression" ], "properties": {
+        "Expression":             { "type": "string" },
+        "EntityID":               { "type": "string" },
+        "Confidence":             { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." } } } },
+
+      "GoalConstraints":          { "type": "array", "items": { "type": "string" } },
+      "ExpressiveConfiguration":  { "type": "object", "additionalProperties": false, "description": "The expressive configuration of the A-User.", "properties": {
+        "Personality":            { "type": "string" },
+        "Role":                   { "type": "string" },
+        "Locale":                 { "type": "string" },
+        "Constraints":            { "type": "array", "items": { "type": "string" } } } },
+
+      "ActionContext":            { "type": "object", "additionalProperties": false, "description": "The context that Basic Knowledge needs to produce Process Actions and Action Objects.", "properties": {
+        "Repertoire":             { "type": "array", "items": { "type": "string" }, "description": "The Process Actions that may be used." },
+        "Vocabularies":           { "type": "array", "items": { "type": "string" },
+                                    "description": "The vocabularies in which the actions of the Portable Avatar may be expressed (the identifiers named by the Qualifier of the Action Objects)." },
+
+        "MaxSteps":               { "type": "integer", "minimum": 0 },
+        "MLocations":             { "type": "array", "items": { "type": "string" } },
+        "RightsRefs":             { "type": "array", "items": { "type": "string" }, "description": "Identifiers of the Rights that the A-User holds." },
+        "WalletLimit":            { "type": "number", "minimum": 0 },
+        "Rules":                  { "type": "array", "items": { "type": "string" }, "description": "Rules of the M-Instance that apply." },
+        "Affordances":            { "type": "array", "items": { "type": "string" }, "description": "Affordances of the Space, obtained from Domain Access." } } } } },
+
+    "DataXMData":                 { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":              { "type": "string", "maxLength": 2048 } } }

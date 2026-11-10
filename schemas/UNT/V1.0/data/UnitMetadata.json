@@ -1,117 +1,27 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
-  "title": "Unit Metadata V1.0",
-  "description": "The description of a Unit of the User Agent's Physical Layer: what it acquires from, or delivers to, the real world, and the Data Types of its Ports. A Unit is not an AIM: it has no Implementations, Resource Policies or AIM Licence, and no Controller is involved.",
-  "type": "object",
-  "required": [
-    "Header",
-    "Group",
-    "Category",
-    "Description",
-    "ExternalPorts"
-  ],
-  "additionalProperties": false,
-  "properties": {
-    "Header": {
-      "type": "string",
-      "pattern": "^UNT-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$"
-    },
-    "Group": {
-      "type": "string",
-      "enum": [
-        "Acquisition",
-        "Delivery",
-        "Actuation"
-      ]
-    },
-    "Category": {
-      "type": "string",
-      "enum": [
-        "Media",
-        "Space",
-        "Pointing",
-        "Weather",
-        "Health",
-        "Motion"
-      ]
-    },
-    "Description": {
-      "type": "string"
-    },
-    "ExternalPorts": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": [
-          "Name",
-          "Direction",
-          "DataType",
-          "Technology"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "Name": {
-            "type": "string"
-          },
-          "Direction": {
-            "type": "string",
-            "enum": [
-              "Input",
-              "Output"
-            ]
-          },
-          "DataType": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "string",
-              "pattern": "^[A-Z0-9]{3}-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$"
-            }
-          },
-          "PortNumber": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "IsOptional": {
-            "type": "boolean"
-          },
-          "Technology": {
-            "type": "string",
-            "enum": [
-              "Hardware",
-              "Software"
-            ]
-          },
-          "Protocol": {
-            "type": "string"
-          },
-          "IsRemote": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "Documentation": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "Type",
-          "URI"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "Type": {
-            "type": "string"
-          },
-          "URI": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      }
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/UNT/V1.0/data/UnitMetadata.json",
+  "title":                 "Unit Metadata V1.0",
+  "description":           "The description of a Unit of the User Agent's Physical Layer: what it acquires from, or delivers to, the real world, and the Data Types of its Ports. A Unit is not an AIM: it has no Implementations, Resource Policies or AIM Licence, and no Controller is involved.",
+  "type":                  "object",
+  "required":              [ "Header", "Group", "Category", "Description", "ExternalPorts" ],
+  "additionalProperties":  false,
+
+  "properties":            {
+
+    "Header":              { "type": "string", "pattern": "^UNT-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$" },
+    "Group":               { "type": "string", "enum": [ "Acquisition", "Delivery", "Actuation" ] },
+    "Category":            { "type": "string", "enum": [ "Media", "Space", "Pointing", "Weather", "Health", "Motion" ] },
+    "Description":         { "type": "string" },
+    "ExternalPorts":       { "type": "array", "minItems": 1, "items": { "type": "object", "required": [ "Name", "Direction", "DataType", "Technology" ], "additionalProperties": false, "properties": {
+      "Name":              { "type": "string" },
+      "Direction":         { "type": "string", "enum": [ "Input", "Output" ] },
+      "DataType":          { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[A-Z0-9]{3}-[A-Z0-9]{3}-V[0-9]+\\.[0-9]+$" } },
+      "PortNumber":        { "type": "integer", "minimum": 1 },
+      "IsOptional":        { "type": "boolean" },
+      "Technology":        { "type": "string", "enum": [ "Hardware", "Software" ] },
+      "Protocol":          { "type": "string" },
+      "IsRemote":          { "type": "boolean" } } } },
+
+    "Documentation":       { "type": "array", "items": { "type": "object", "required": [ "Type", "URI" ], "additionalProperties": false, "properties": {
+      "Type":              { "type": "string" },
+      "URI":               { "type": "string", "format": "uri" } } } } } }

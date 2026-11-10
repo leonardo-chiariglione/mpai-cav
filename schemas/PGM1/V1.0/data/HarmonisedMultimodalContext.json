@@ -1,285 +1,69 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/HarmonisedMultimodalContext.json",
-  "title": "Harmonised Multimodal Context V1.0",
-  "description": "The audio, visual, textual and paralinguistic evidence of the scene placed on a common time base and attributed to harmonised Entities by Multimodal Input Harmonisation, with a record of the evidence that could not be harmonised. It states what was observed, when and by whom, without interpreting it.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "HarmonisedMultimodalContextID",
-    "HarmonisedMultimodalContextTime",
-    "TimeBase",
-    "Entities"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-MIH-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "HarmonisedMultimodalContextID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "HarmonisedMultimodalContextTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "TimeBase": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Origin": {
-          "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-        },
-        "Tolerance": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Tolerance on the common time base, in seconds."
-        },
-        "Streams": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Stream": {
-                "type": "string",
-                "enum": [
-                  "audio",
-                  "visual",
-                  "text",
-                  "speech"
-                ],
-                "description": "The stream."
-              },
-              "Rate": {
-                "type": "number",
-                "description": "Rate at which the stream is produced."
-              },
-              "Offset": {
-                "type": "number",
-                "description": "Offset of the stream with respect to the common time base."
-              },
-              "AbsentIntervals": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "StartTime": {
-                      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-                    },
-                    "EndTime": {
-                      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-                    }
-                  },
-                  "description": "Time interval, on the time base of the capture."
-                },
-                "description": "Intervals for which the stream is absent."
-              }
-            },
-            "required": [
-              "Stream"
-            ]
-          },
-          "description": "How each stream refers to the common time base."
-        }
-      },
-      "description": "The common time base and how each stream refers to it."
-    },
-    "Entities": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "HarmonisedEntityID": {
-            "type": "string"
-          },
-          "UserID": {
-            "type": "string",
-            "description": "The User, where identified by the User CXT Request."
-          },
-          "OriginalIDs": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "Audio": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Identifiers used by the audio modality."
-              },
-              "Visual": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Identifiers used by the visual modality."
-              },
-              "Text": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Text of the referring expression."
-              },
-              "Speech": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Identifiers used by the speech."
-              }
-            },
-            "description": "The identifier of each modality, retained."
-          }
-        },
-        "required": [
-          "HarmonisedEntityID"
-        ]
-      },
-      "description": "The Entities."
-    },
-    "Utterances": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "UtteranceID": {
-            "type": "string"
-          },
-          "HarmonisedEntityID": {
-            "type": "string"
-          },
-          "Interval": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "StartTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              },
-              "EndTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              }
-            },
-            "description": "Time interval, on the time base of the capture."
-          },
-          "TextDescriptors": {
-            "$ref": "https://schemas.mpai.community/MMC/V2.5/data/TextDescriptorsObject.json"
-          },
-          "SpeechDescriptors": {
-            "$ref": "https://schemas.mpai.community/MMC/V2.5/data/SpeechDescriptorsObject.json"
-          }
-        },
-        "required": [
-          "UtteranceID",
-          "Interval"
-        ]
-      },
-      "description": "The utterances."
-    },
-    "AudioEvidence": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
-      "description": "Enhanced Audio Scene Descriptors on the common time base."
-    },
-    "VisualEvidence": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
-      "description": "Enhanced Visual Scene Descriptors on the common time base."
-    },
-    "Unattributed": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Stream": {
-            "type": "string",
-            "description": "The stream."
-          },
-          "ItemID": {
-            "type": "string"
-          },
-          "Interval": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "StartTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              },
-              "EndTime": {
-                "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-              }
-            },
-            "description": "Time interval, on the time base of the capture."
-          }
-        },
-        "required": [
-          "Stream"
-        ]
-      },
-      "description": "Evidence that could not be attributed to any Entity."
-    },
-    "Disagreements": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "Modalities": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "The modalities that disagree."
-          },
-          "HarmonisedEntityID": {
-            "type": "string"
-          },
-          "Description": {
-            "type": "string",
-            "description": "Description of the reason."
-          }
-        }
-      },
-      "description": "Disagreements between modalities about an Entity."
-    },
-    "AbsentStreams": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "audio",
-          "visual",
-          "text",
-          "speech"
-        ]
-      },
-      "description": "Streams that are absent, incomplete or outside the tolerance."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                            "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                "https://schemas.mpai.community/PGM1/V1.0/data/HarmonisedMultimodalContext.json",
+  "title":                              "Harmonised Multimodal Context V1.0",
+  "description":                        "The audio, visual, textual and paralinguistic evidence of the scene placed on a common time base and attributed to harmonised Entities by Multimodal Input Harmonisation, with a record of the evidence that could not be harmonised. It states what was observed, when and by whom, without interpreting it.",
+  "type":                               "object",
+  "additionalProperties":               false,
+  "required":                           [ "Header", "MInstance", "UEnvironment", "SessionID", "HarmonisedMultimodalContextID", "HarmonisedMultimodalContextTime", "TimeBase", "Entities" ],
+
+  "properties":                         {
+
+    "Header":                           { "type": "string", "const": "PGM-MIH-V1.0" },
+    "MInstance":                        { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":                     { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":                        { "type": "string", "description": "Identifier of the A-User session." },
+    "HarmonisedMultimodalContextID":    { "type": "string", "description": "Identifier of this instance." },
+    "HarmonisedMultimodalContextTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "TimeBase":                         { "type": "object", "additionalProperties": false, "description": "The common time base and how each stream refers to it.", "properties": {
+      "Origin":                         { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+      "Tolerance":                      { "type": "number", "minimum": 0, "description": "Tolerance on the common time base, in seconds." },
+      "Streams":                        { "type": "array", "description": "How each stream refers to the common time base.", "items": { "type": "object", "additionalProperties": false, "required": [ "Stream" ], "properties": {
+        "Stream":                       { "type": "string", "enum": [ "audio", "visual", "text", "speech" ], "description": "The stream." },
+        "Rate":                         { "type": "number", "description": "Rate at which the stream is produced." },
+        "Offset":                       { "type": "number", "description": "Offset of the stream with respect to the common time base." },
+        "AbsentIntervals":              { "type": "array", "description": "Intervals for which the stream is absent.", "items": { "type": "object", "additionalProperties": false, "description": "Time interval, on the time base of the capture.", "properties": {
+          "StartTime":                  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+          "EndTime":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } } } } } } } },
+
+    "Entities":                         { "type": "array", "description": "The Entities.", "items": { "type": "object", "additionalProperties": false, "required": [ "HarmonisedEntityID" ], "properties": {
+      "HarmonisedEntityID":             { "type": "string" },
+      "UserID":                         { "type": "string", "description": "The User, where identified by the User CXT Request." },
+      "OriginalIDs":                    { "type": "object", "additionalProperties": false, "description": "The identifier of each modality, retained.", "properties": {
+        "Audio":                        { "type": "array", "items": { "type": "string" }, "description": "Identifiers used by the audio modality." },
+        "Visual":                       { "type": "array", "items": { "type": "string" }, "description": "Identifiers used by the visual modality." },
+        "Text":                         { "type": "array", "items": { "type": "string" }, "description": "Text of the referring expression." },
+        "Speech":                       { "type": "array", "items": { "type": "string" }, "description": "Identifiers used by the speech." } } } } } },
+
+    "Utterances":                       { "type": "array", "description": "The utterances.", "items": { "type": "object", "additionalProperties": false, "required": [ "UtteranceID", "Interval" ], "properties": {
+      "UtteranceID":                    { "type": "string" },
+      "HarmonisedEntityID":             { "type": "string" },
+      "Interval":                       { "type": "object", "additionalProperties": false, "description": "Time interval, on the time base of the capture.", "properties": {
+        "StartTime":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+        "EndTime":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } },
+
+      "TextDescriptors":                { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/TextDescriptorsObject.json" },
+      "SpeechDescriptors":              { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/SpeechDescriptorsObject.json" } } } },
+
+    "AudioEvidence":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedAudioSceneDescriptors.json",
+                                          "description": "Enhanced Audio Scene Descriptors on the common time base." },
+
+    "VisualEvidence":                   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/EnhancedVisualSceneDescriptors.json",
+                                          "description": "Enhanced Visual Scene Descriptors on the common time base." },
+
+    "Unattributed":                     { "type": "array", "description": "Evidence that could not be attributed to any Entity.", "items": { "type": "object", "additionalProperties": false, "required": [ "Stream" ], "properties": {
+      "Stream":                         { "type": "string", "description": "The stream." },
+      "ItemID":                         { "type": "string" },
+      "Interval":                       { "type": "object", "additionalProperties": false, "description": "Time interval, on the time base of the capture.", "properties": {
+        "StartTime":                    { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+        "EndTime":                      { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" } } } } } },
+
+    "Disagreements":                    { "type": "array", "description": "Disagreements between modalities about an Entity.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "Modalities":                     { "type": "array", "items": { "type": "string" }, "description": "The modalities that disagree." },
+      "HarmonisedEntityID":             { "type": "string" },
+      "Description":                    { "type": "string", "description": "Description of the reason." } } } },
+
+    "AbsentStreams":                    { "type": "array", "items": { "type": "string", "enum": [ "audio", "visual", "text", "speech" ] },
+                                          "description": "Streams that are absent, incomplete or outside the tolerance." },
+
+    "DataXMData":                       { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                    { "type": "string", "maxLength": 2048 } } }

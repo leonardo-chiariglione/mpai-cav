@@ -1,105 +1,29 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/Proposition.json",
-  "title": "Proposition V1.0",
-  "description": "Propositions produced by Prompt Creation. A Proposition links a subject to an object through a predicate, with spatial and temporal context where applicable. Intent and Referent Analysis uses Propositions to express the resolution of the referring expressions (pronouns, definite descriptions, demonstratives, deictic gestures); Prompt Contextualisation adds Propositions that represent contextual facts, timing guidance and phrasing constraints.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "PropositionID",
-    "PropositionTime",
-    "Propositions"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-PRP-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "PropositionID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "PropositionTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Propositions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "PropositionID": {
-            "type": "string"
-          },
-          "Kind": {
-            "type": "string",
-            "enum": [
-              "referent_resolution",
-              "contextual_fact",
-              "timing_guidance",
-              "phrasing_constraint"
-            ],
-            "description": "What the Proposition expresses."
-          },
-          "Subject": {
-            "type": "string",
-            "description": "Identifier of the subject (an Entity of the scene) or an expression."
-          },
-          "Predicate": {
-            "type": "string"
-          },
-          "Object": {
-            "type": "string",
-            "description": "Identifier of the object (an Entity or Item of the scene) or an expression."
-          },
-          "Expression": {
-            "type": "string",
-            "description": "For a referent resolution, the referring expression that was resolved."
-          },
-          "Spatial": {
-            "type": "string",
-            "description": "Spatial context."
-          },
-          "Temporal": {
-            "type": "string",
-            "description": "Temporal context."
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence, 0 to 1."
-          }
-        },
-        "required": [
-          "PropositionID",
-          "Subject",
-          "Predicate"
-        ]
-      }
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/PGM1/V1.0/data/Proposition.json",
+  "title":                 "Proposition V1.0",
+  "description":           "Propositions produced by Prompt Creation. A Proposition links a subject to an object through a predicate, with spatial and temporal context where applicable. Intent and Referent Analysis uses Propositions to express the resolution of the referring expressions (pronouns, definite descriptions, demonstratives, deictic gestures); Prompt Contextualisation adds Propositions that represent contextual facts, timing guidance and phrasing constraints.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "MInstance", "UEnvironment", "SessionID", "PropositionID", "PropositionTime", "Propositions" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "PGM-PRP-V1.0" },
+    "MInstance":           { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":        { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":           { "type": "string", "description": "Identifier of the A-User session." },
+    "PropositionID":       { "type": "string", "description": "Identifier of this instance." },
+    "PropositionTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Propositions":        { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": [ "PropositionID", "Subject", "Predicate" ], "properties": {
+      "PropositionID":     { "type": "string" },
+      "Kind":              { "type": "string", "enum": [ "referent_resolution", "contextual_fact", "timing_guidance", "phrasing_constraint" ], "description": "What the Proposition expresses." },
+      "Subject":           { "type": "string", "description": "Identifier of the subject (an Entity of the scene) or an expression." },
+      "Predicate":         { "type": "string" },
+      "Object":            { "type": "string", "description": "Identifier of the object (an Entity or Item of the scene) or an expression." },
+      "Expression":        { "type": "string", "description": "For a referent resolution, the referring expression that was resolved." },
+      "Spatial":           { "type": "string", "description": "Spatial context." },
+      "Temporal":          { "type": "string", "description": "Temporal context." },
+      "Confidence":        { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." } } } },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

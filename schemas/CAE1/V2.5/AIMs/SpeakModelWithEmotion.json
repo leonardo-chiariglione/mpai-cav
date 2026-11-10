@@ -1,0 +1,44 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE1/V2.5/AIMs/SpeakModelWithEmotion.json",
+  "title":                "Speak Model with Emotion V2.5",
+  "Header":               "CAE-SME-V2.5",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Execution":            "Exchange",
+  "Description":          "Speak Model with Emotion (CAE-SME) of CAE-USC V2.5: gives emotionless speech the emotion of a model utterance by its prosody. Speech Feature Analysis 1 (CAE-SFA) extracts the prosodic features of the model utterance, selected by the Mode Selector, and Prosodic Emotion Insertion (CAE-PEI) applies them to the emotionless speech, with the Emotion List, and gives the Speech with Emotion.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "ModeSelector", "Direction": "Input", "DataType": "OSD-SEL-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "ModelUtterance", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EmotionList", "Direction": "Input", "DataType": "MMC-EEM-V2.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "EmotionlessSpeech", "Direction": "Input", "DataType": "OSD-BSO-V1.5", "PortNumber": 2, "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "SpeechWithEmotion", "Direction": "Output", "DataType": "OSD-BSO-V1.5", "PortNumber": 1, "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [{"Header": "CAE-SFA-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}},
+                           {"Header": "CAE-PEI-V2.5", "Identifier": {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */", "Relation": "Internal"}}],
+  "Topology":             [{"Output": {"AIMName": "", "DataType": "OSD-SEL-V1.5", "PortNumber": 1}, "Input": {"AIMName": "CAE-SFA-V2.5", "DataType": "OSD-SEL-V1.5"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}, "Input": {"AIMName": "CAE-SFA-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                           {"Output": {"AIMName": "CAE-SFA-V2.5", "DataType": "MMC-SDO-V2.5"}, "Input": {"AIMName": "CAE-PEI-V2.5", "DataType": "MMC-SDO-V2.5"}},
+                           {"Output": {"AIMName": "", "DataType": "MMC-EEM-V2.5", "PortNumber": 1}, "Input": {"AIMName": "CAE-PEI-V2.5", "DataType": "MMC-EEM-V2.5"}},
+                           {"Output": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 2}, "Input": {"AIMName": "CAE-PEI-V2.5", "DataType": "OSD-BSO-V1.5"}},
+                           {"Output": {"AIMName": "CAE-PEI-V2.5", "DataType": "OSD-BSO-V1.5"}, "Input": {"AIMName": "", "DataType": "OSD-BSO-V1.5", "PortNumber": 1}}],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/usc/v2-5/ai-modules/speak-model-with-emotion/"}]}

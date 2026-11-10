@@ -31,4 +31,6 @@
     { "const": "MagFace (512-d)",
       "description": "ArcFace variant whose embedding magnitude encodes face quality (Meng et al. 2021); a 512-dimension descriptor." },
     { "const": "AdaFace (512-d)",
-      "description": "Quality-adaptive margin face embedding (Kim et al. 2022) robust to low-quality images; a 512-dimension descriptor." } ] }
+      "description": "Quality-adaptive margin face embedding (Kim et al. 2022) robust to low-quality images; a 512-dimension descriptor." },
+    { "const": "HSEmotion EfficientNet-B0 (8 emotion probabilities, valence, arousal)",
+      "description": "The output of the HSEmotion EfficientNet-B0 multi-task model trained on AffectNet (Savchenko 2022): the probabilities of the eight emotions of AffectNet (Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise, in this order), then the valence and the arousal: ten numbers." } ] }

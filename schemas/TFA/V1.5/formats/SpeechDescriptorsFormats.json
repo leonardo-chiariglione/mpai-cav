@@ -26,4 +26,8 @@
     { "const": "WavLM Speaker Embedding",
       "description": "Speaker embedding derived from the self-supervised WavLM foundation model (Chen et al. 2022), typically pooled from transformer representations." },
     { "const": "Wav2Vec 2.0 Speaker Embedding",
-      "description": "Speaker embedding derived from the self-supervised Wav2Vec 2.0 foundation model (Baevski et al. 2020)." } ] }
+      "description": "Speaker embedding derived from the self-supervised Wav2Vec 2.0 foundation model (Baevski et al. 2020)." },
+    { "const": "OpenVoice Tone-Colour Embedding (256-d)",
+      "description": "Tone-colour (voice) embedding of the reference encoder of the OpenVoice V2 tone-colour converter (Qin et al. 2023): 256 numbers, the mean over the speech given, that the converter applies to speech in order to give it the voice described." },
+    { "const": "wav2vec 2.0 Dimensional Affect (valence, arousal, dominance)",
+      "description": "The valence, the arousal and the dominance of the speech, each about 0 to 1, as read by a wav2vec 2.0 model fine-tuned on dimensional speech emotion (audeering, Wagner et al. 2023): three numbers in this order." } ] }

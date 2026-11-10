@@ -1,0 +1,34 @@
+{ "$schema":              "https://json-schema.org/draft/2020-12/schema",
+  "$comment":             "https://schemas.mpai.community/AIF/V3.0/data/AIMMetadata.json",
+  "$id":                  "https://schemas.mpai.community/CAE3/V1.0/AIMs/PlaneWaveSynthesis.json",
+  "title":                "Plane Wave Synthesis V1.0",
+  "Header":               "CAE-PWS-V1.0",
+
+  "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
+
+  "APIProfile":           "Basic",
+  "Description":          "Plane Wave Synthesis (CAE-PWS) of CAE-6DF V1.0: The PWS AIM reconstructs a continuous physical sound field at the user's virtual coordinates by synthesizing discrete directional plane waves from the interpolated parameters provided by the PWI. These synthesized plane waves are mathematically projected onto target rendering formats.",
+
+  "InternalTypes":        [ ],
+
+  "ExternalPorts":        [{"Name": "InterpolatedSparsePlaneWave", "Direction": "Input", "DataType": "CAE-ISW-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false},
+                           {"Name": "InterpolatedFrequencyDomainDirectDominantField", "Direction": "Output", "DataType": "CAE-IFD-V1.0", "Technology": "Software", "Protocol": "", "IsRemote": false}],
+  "SubAIMs":              [ ],
+  "Topology":             [ ],
+
+  "AIMLicence":          "/* AIM Licence offered by the Implementer (AIF-LIC-V3.0): Grant, Term, Updates, Payment, TermsURI - or omit it if the AIM needs no AIM Licence */",
+
+  "Implementations":      [{"ImplementationURI": "/* URI storing Implementation */",
+                            "BinaryName":       "/* BinaryName */",
+                            "Architecture":     "/* x86 | x86-64 | ARM | ARM64 | MIPS | RISC-V */",
+                            "OperatingSystem":  "/* Windows | Linux | MacOS | Debian | Ubuntu | RedHat | Android | Zephyr | RTOS | Oniro | iOS */",
+                            "Version":          "/* Version */",
+                            "Source":           "/* AIMStorage | MPAIStore | AIMURL */",
+                            "Destination":      "/* Destination URI */"}],
+
+  "ResourcePolicies":     [{"Name": "Memory",    "Minimum": "/* GB */",                  "Request": "/* GB */",                  "Maximum": "/* GB */"},
+                           {"Name": "CPU:Class", "Minimum": "/* Low | Medium | High */", "Request": "/* Low | Medium | High */", "Maximum": "/* Low | Medium | High */"}],
+
+  "DataXMData":           { },
+
+  "Documentation":        [{"Type": "Specification", "URI": "https://mpai.community/standards/mpai-cae/"}]}

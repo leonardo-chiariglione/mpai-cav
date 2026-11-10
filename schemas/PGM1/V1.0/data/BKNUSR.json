@@ -1,130 +1,35 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/BKNUSR.json",
-  "title": "BKN-USR V1.0",
-  "description": "The Data Type exchanged between Basic Knowledge and User State Refinement through the Model Context Protocol. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that carries the deliberation feedback, and Response (RS), sent by User State Refinement, that returns the refined User State for the next deliberation cycle. The exchanges of one dialogue are told apart by TurnIndex within the DialogID.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "Mode",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "DialogID",
-    "TurnIndex",
-    "QueryID",
-    "QueryTime"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-KUS-V1.0"
-    },
-    "Mode": {
-      "type": "string",
-      "enum": [
-        "RQ",
-        "RS"
-      ],
-      "description": "RQ: Request. RS: Response."
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "QueryID": {
-      "type": "string",
-      "description": "Identifier of this Request or Response."
-    },
-    "QueryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "RequestID": {
-      "type": "string",
-      "description": "Response only. ID of the Request this Response answers."
-    },
-    "DialogID": {
-      "type": "string",
-      "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs."
-    },
-    "TurnIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request."
-    },
-    "Feedback": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Hypothesis": {
-          "type": "string"
-        },
-        "Conflicts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Question": {
-          "type": "string"
-        }
-      },
-      "description": "Request only. The deliberation feedback of Basic Knowledge: what it assumes about the User, the evidence that conflicts with it, and what it asks."
-    },
-    "UserID": {
-      "type": "string",
-      "description": "Request only. Identifier of the User the Request concerns."
-    },
-    "Outcome": {
-      "type": "string",
-      "enum": [
-        "answered",
-        "partially_answered",
-        "not_answered"
-      ],
-      "description": "Response only. The outcome."
-    },
-    "RefinedUserState": {
-      "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json",
-      "description": "Response only. The refined User State, for the next deliberation cycle."
-    },
-    "Engagement": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "Level": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "Mode": {
-          "type": "string"
-        }
-      },
-      "description": "Response only. The engagement of the User."
-    },
-    "Provenance": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Response only. The provenance of the refinement."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/PGM1/V1.0/data/BKNUSR.json",
+  "title":                 "BKN-USR V1.0",
+  "description":           "The Data Type exchanged between Basic Knowledge and User State Refinement through the Model Context Protocol. It has two modes, told apart by Mode: Request (RQ), sent by Basic Knowledge, that carries the deliberation feedback, and Response (RS), sent by User State Refinement, that returns the refined User State for the next deliberation cycle. The exchanges of one dialogue are told apart by TurnIndex within the DialogID.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "Mode", "MInstance", "UEnvironment", "SessionID", "DialogID", "TurnIndex", "QueryID", "QueryTime" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "PGM-KUS-V1.0" },
+    "Mode":                { "type": "string", "enum": [ "RQ", "RS" ], "description": "RQ: Request. RS: Response." },
+    "MInstance":           { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":        { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":           { "type": "string", "description": "Identifier of the A-User session." },
+    "QueryID":             { "type": "string", "description": "Identifier of this Request or Response." },
+    "QueryTime":           { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "RequestID":           { "type": "string", "description": "Response only. ID of the Request this Response answers." },
+    "DialogID":            { "type": "string", "description": "Identifier of the dialogue (the Model Context Protocol session) to which the exchange belongs." },
+    "TurnIndex":           { "type": "integer", "minimum": 0, "description": "Ordinal position of the exchange in the dialogue, starting from 0. A Response has the TurnIndex of its Request." },
+    "Feedback":            { "type": "object", "additionalProperties": false, "description": "Request only. The deliberation feedback of Basic Knowledge: what it assumes about the User, the evidence that conflicts with it, and what it asks.", "properties": {
+      "Hypothesis":        { "type": "string" },
+      "Conflicts":         { "type": "array", "items": { "type": "string" } },
+      "Question":          { "type": "string" } } },
+
+    "UserID":              { "type": "string", "description": "Request only. Identifier of the User the Request concerns." },
+    "Outcome":             { "type": "string", "enum": [ "answered", "partially_answered", "not_answered" ], "description": "Response only. The outcome." },
+    "RefinedUserState":    { "$ref": "https://schemas.mpai.community/MMC/V2.5/data/EntityState.json", "description": "Response only. The refined User State, for the next deliberation cycle." },
+    "Engagement":          { "type": "object", "additionalProperties": false, "description": "Response only. The engagement of the User.", "properties": {
+      "Level":             { "type": "number", "minimum": 0, "maximum": 1 },
+      "Mode":              { "type": "string" } } },
+
+    "Provenance":          { "type": "array", "items": { "type": "string" }, "description": "Response only. The provenance of the refinement." },
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

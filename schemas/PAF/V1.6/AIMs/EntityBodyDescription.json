@@ -11,7 +11,7 @@
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "BodyObject",        "Direction": "Input",  "DataType": "OSD-VIO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "BodyObject",        "Direction": "Input",  "DataType": "OSD-BVO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "BodyDescriptorsObject",    "Direction": "Output", "DataType": "PAF-BDO-V1.6", "Technology": "Software", "Protocol": "", "IsRemote": false}],
 
   "SubAIMs":              [ ],

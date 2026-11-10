@@ -1,78 +1,25 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/SelectedStance.json",
-  "title": "Selected Stance V1.0",
-  "description": "The personality stance selected for the A-User by Stance Selection (Personality Alignment), with its role and locale constraints. The stance is not necessarily a mirror of the User State.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "SelectedStanceID",
-    "SelectedStanceTime",
-    "Label"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-STN-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "SelectedStanceID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "SelectedStanceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Label": {
-      "type": "string",
-      "description": "The stance."
-    },
-    "Role": {
-      "type": "string"
-    },
-    "Locale": {
-      "type": "string"
-    },
-    "ExpressiveConstraints": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "MirrorsUserState": {
-      "type": "boolean",
-      "description": "True if the stance mirrors the User State."
-    },
-    "Rationale": {
-      "type": "string"
-    },
-    "Confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Confidence, 0 to 1."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":                  "https://json-schema.org/draft/2020-12/schema",
+  "$id":                      "https://schemas.mpai.community/PGM1/V1.0/data/SelectedStance.json",
+  "title":                    "Selected Stance V1.0",
+  "description":              "The personality stance selected for the A-User by Stance Selection (Personality Alignment), with its role and locale constraints. The stance is not necessarily a mirror of the User State.",
+  "type":                     "object",
+  "additionalProperties":     false,
+  "required":                 [ "Header", "MInstance", "UEnvironment", "SessionID", "SelectedStanceID", "SelectedStanceTime", "Label" ],
+
+  "properties":               {
+
+    "Header":                 { "type": "string", "const": "PGM-STN-V1.0" },
+    "MInstance":              { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":           { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":              { "type": "string", "description": "Identifier of the A-User session." },
+    "SelectedStanceID":       { "type": "string", "description": "Identifier of this instance." },
+    "SelectedStanceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Label":                  { "type": "string", "description": "The stance." },
+    "Role":                   { "type": "string" },
+    "Locale":                 { "type": "string" },
+    "ExpressiveConstraints":  { "type": "array", "items": { "type": "string" } },
+    "MirrorsUserState":       { "type": "boolean", "description": "True if the stance mirrors the User State." },
+    "Rationale":              { "type": "string" },
+    "Confidence":             { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." },
+    "DataXMData":             { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":          { "type": "string", "maxLength": 2048 } } }

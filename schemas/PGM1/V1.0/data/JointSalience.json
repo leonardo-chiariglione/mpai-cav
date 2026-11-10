@@ -1,119 +1,29 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/PGM1/V1.0/data/JointSalience.json",
-  "title": "Joint Salience V1.0",
-  "description": "The ranking of the AV Entities by joint salience produced by Audio-Visual Salience Reconciliation, each rank with its ground and confidence. A divergence between the modalities is recorded, not removed.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MInstance",
-    "UEnvironment",
-    "SessionID",
-    "JointSalienceID",
-    "JointSalienceTime",
-    "Ranking"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "PGM-JSL-V1.0"
-    },
-    "MInstance": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironment": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "SessionID": {
-      "type": "string",
-      "description": "Identifier of the A-User session."
-    },
-    "JointSalienceID": {
-      "type": "string",
-      "description": "Identifier of this instance."
-    },
-    "JointSalienceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "Ranking": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "AVEntityID": {
-            "type": "string"
-          },
-          "Rank": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Position in the ranking, starting from 1."
-          },
-          "JointSalience": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Joint salience of the AV Entity, 0 to 1."
-          },
-          "Ground": {
-            "type": "string",
-            "enum": [
-              "concurrence",
-              "single_modality",
-              "divergence"
-            ],
-            "description": "The ground on which the rank holds."
-          },
-          "Modality": {
-            "type": "string",
-            "enum": [
-              "audio",
-              "visual"
-            ],
-            "description": "For Ground single_modality, the modality on which the rank rests."
-          },
-          "AudioSalience": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Audio salience, weighted by the conditions of observation."
-          },
-          "VisualSalience": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Visual salience, weighted by the conditions of observation."
-          },
-          "Divergence": {
-            "type": "number",
-            "minimum": 0,
-            "description": "For Ground divergence, the difference between the qualified saliences."
-          },
-          "Confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence, 0 to 1."
-          }
-        },
-        "required": [
-          "AVEntityID",
-          "Rank",
-          "JointSalience",
-          "Ground"
-        ]
-      },
-      "description": "The ranking, in order of rank."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048
-    }
-  }
-}
+{ "$schema":               "https://json-schema.org/draft/2020-12/schema",
+  "$id":                   "https://schemas.mpai.community/PGM1/V1.0/data/JointSalience.json",
+  "title":                 "Joint Salience V1.0",
+  "description":           "The ranking of the AV Entities by joint salience produced by Audio-Visual Salience Reconciliation, each rank with its ground and confidence. A divergence between the modalities is recorded, not removed.",
+  "type":                  "object",
+  "additionalProperties":  false,
+  "required":              [ "Header", "MInstance", "UEnvironment", "SessionID", "JointSalienceID", "JointSalienceTime", "Ranking" ],
+
+  "properties":            {
+
+    "Header":              { "type": "string", "const": "PGM-JSL-V1.0" },
+    "MInstance":           { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironment":        { "type": "string", "description": "Identifier of the U-Environment." },
+    "SessionID":           { "type": "string", "description": "Identifier of the A-User session." },
+    "JointSalienceID":     { "type": "string", "description": "Identifier of this instance." },
+    "JointSalienceTime":   { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "Ranking":             { "type": "array", "description": "The ranking, in order of rank.", "items": { "type": "object", "additionalProperties": false, "required": [ "AVEntityID", "Rank", "JointSalience", "Ground" ], "properties": {
+      "AVEntityID":        { "type": "string" },
+      "Rank":              { "type": "integer", "minimum": 1, "description": "Position in the ranking, starting from 1." },
+      "JointSalience":     { "type": "number", "minimum": 0, "maximum": 1, "description": "Joint salience of the AV Entity, 0 to 1." },
+      "Ground":            { "type": "string", "enum": [ "concurrence", "single_modality", "divergence" ], "description": "The ground on which the rank holds." },
+      "Modality":          { "type": "string", "enum": [ "audio", "visual" ], "description": "For Ground single_modality, the modality on which the rank rests." },
+      "AudioSalience":     { "type": "number", "minimum": 0, "maximum": 1, "description": "Audio salience, weighted by the conditions of observation." },
+      "VisualSalience":    { "type": "number", "minimum": 0, "maximum": 1, "description": "Visual salience, weighted by the conditions of observation." },
+      "Divergence":        { "type": "number", "minimum": 0, "description": "For Ground divergence, the difference between the qualified saliences." },
+      "Confidence":        { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence, 0 to 1." } } } },
+
+    "DataXMData":          { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":       { "type": "string", "maxLength": 2048 } } }

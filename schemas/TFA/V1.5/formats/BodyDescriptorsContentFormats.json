@@ -3,5 +3,6 @@
   "title":   "Body Descriptors Content Formats V1.5",
   "type":    "string",  "enum": [ "BVH", "FBX", "glTF", "MHX2", "Mixamo FBX", "Reallusion CC3", "Reallusion CC4", "SMPL",
                                   "SMPL-X", "STAR", "USD", "USDZ", "VRML (ISO/IEC 14772)", "X3D (ISO/IEC 19775-1)",
-                                  "OSA (Spatial Attitudes of the nodes between joints, OSD-OSA-V1.5)" ] }
+                                  "OSA (Spatial Attitudes of the nodes between joints, OSD-OSA-V1.5)",
+                                  "MediaPipe BlazePose Landmarks (33 keypoints: x, y, z, visibility)" ] }
 

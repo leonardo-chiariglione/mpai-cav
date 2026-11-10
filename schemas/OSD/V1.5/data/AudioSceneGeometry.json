@@ -1,82 +1,26 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/AudioSceneGeometry.json",
-  "title": "Audio Scene Geometry V1.5",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "AudioSceneGeometryID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-ASG-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "AudioSceneGeometryID": {
-      "type": "string",
-      "description": "ID of this Audio Scene Geometry instance."
-    },
-    "AudioSceneGeometryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "AudioSceneGeometrySpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-    },
-    "ObjectCount": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of Objects in Audio Scene."
-    },
-    "AudioSceneObjects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "AudioSceneObjectSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-          },
-          "AudioSceneObjectQualifier": {
-            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json"
-          }
-        }
-      },
-      "description": "Set of Data related to Audio Objects in the Audio Scene."
-    },
-    "SubAudioSceneCount": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of Sub-Audio Scenes in the Audio Scene."
-    },
-    "SubAudioScenes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "SubAudioSceneSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-          }
-        }
-      },
-      "description": "Set of Data related to Audio Objects in the Audio Scene."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata"
-    }
-  }
-}
+{ "$schema":                        "https://json-schema.org/draft/2020-12/schema",
+  "$id":                            "https://schemas.mpai.community/OSD/V1.5/data/AudioSceneGeometry.json",
+  "title":                          "Audio Scene Geometry V1.5",
+  "type":                           "object",
+  "additionalProperties":           false,
+  "required":                       [ "Header", "AudioSceneGeometryID" ],
+
+  "properties":                     {
+
+    "Header":                       { "type": "string", "const": "OSD-ASG-V1.5" },
+    "MInstanceID":                  { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":               { "type": "string", "description": "Identifier of the U-Environment." },
+    "AudioSceneGeometryID":         { "type": "string", "description": "ID of this Audio Scene Geometry instance." },
+    "AudioSceneGeometryTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "AudioSceneGeometrySpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "ObjectCount":                  { "type": "integer", "minimum": 0, "description": "Number of Objects in Audio Scene." },
+    "AudioSceneObjects":            { "type": "array", "description": "Set of Data related to Audio Objects in the Audio Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "AudioSceneObjectSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+      "AudioSceneObjectQualifier":  { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/AudioQualifier.json" } } } },
+
+    "SubAudioSceneCount":           { "type": "integer", "minimum": 0, "description": "Number of Sub-Audio Scenes in the Audio Scene." },
+    "SubAudioScenes":               { "type": "array", "description": "Set of Data related to Audio Objects in the Audio Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "SubAudioSceneSpaceTime":     { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "DataXMData":                   { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata" } } }

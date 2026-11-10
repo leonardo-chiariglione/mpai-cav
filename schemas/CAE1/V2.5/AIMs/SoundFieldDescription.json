@@ -7,12 +7,11 @@
   "Identifier":           {"ImplementerID": "/* String assigned by IIDRA */", "ImplementationID": "/* String assigned by Implementer */", "AIMName": "/* The name of the AIM, given by the concatenation of the two strings ImplementerID and ImplementationID, in this order, with no space and no character between them. */"},
 
   "APIProfile":           "Basic",
-  "Description":          "Sound Field Description (CAE-SFD) of CAE-USC V2.5: receives MicrophoneArrayGeometry, TransformMultichannelAudio and produces SHDCoefficients.",
+  "Description":          "Sound Field Description (CAE-SFD) of CAE-USC V2.5: receives TransformMultichannelAudio and produces SHDCoefficients.",
 
   "InternalTypes":        [ ],
 
-  "ExternalPorts":        [{"Name": "MicrophoneArrayGeometry", "Direction": "Input", "DataType": "CAE-MAG-V2.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
-                           {"Name": "TransformMultichannelAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
+  "ExternalPorts":        [{"Name": "TransformMultichannelAudio", "Direction": "Input", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false},
                            {"Name": "SHDCoefficients", "Direction": "Output", "DataType": "OSD-BAO-V1.5", "Technology": "Software", "Protocol": "", "IsRemote": false}],
   "SubAIMs":              [ ],
   "Topology":             [ ],

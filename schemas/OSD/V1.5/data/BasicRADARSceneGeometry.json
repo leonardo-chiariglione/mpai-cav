@@ -1,64 +1,22 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARSceneGeometry.json",
-  "title": "Basic RADARScene Geometry V1.5",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "RADARSceneGeometryID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-BRG-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "RADARSceneGeometryID": {
-      "type": "string",
-      "description": "ID of this RADAR Scene Geometry instance."
-    },
-    "RADARSceneGeometryTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "RADARObjectCount": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of RADARObjects in Scene."
-    },
-    "RADARSceneGeometrySpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-    },
-    "BasicRADARSceneObjects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "RADARSceneObjectQualifiers": {
-            "$ref": "https://schemas.mpai.community/TFA/V1.5/data/RADARQualifier.json"
-          },
-          "BasicRADARSceneObjectSpaceTime": {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-          }
-        }
-      },
-      "description": "Set of Data related to RADARObjects in the RADAR Scene."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata"
-    }
-  }
-}
+{ "$schema":                             "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                 "https://schemas.mpai.community/OSD/V1.5/data/BasicRADARSceneGeometry.json",
+  "title":                               "Basic RADARScene Geometry V1.5",
+  "type":                                "object",
+  "additionalProperties":                false,
+  "required":                            [ "Header", "RADARSceneGeometryID" ],
+
+  "properties":                          {
+
+    "Header":                            { "type": "string", "const": "OSD-BRG-V1.5" },
+    "MInstanceID":                       { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":                    { "type": "string", "description": "Identifier of the U-Environment." },
+    "RADARSceneGeometryID":              { "type": "string", "description": "ID of this RADAR Scene Geometry instance." },
+    "RADARSceneGeometryTime":            { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "RADARObjectCount":                  { "type": "integer", "minimum": 0, "description": "Number of RADARObjects in Scene." },
+    "RADARSceneGeometrySpaceTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "BasicRADARSceneObjects":            { "type": "array", "description": "Set of Data related to RADARObjects in the RADAR Scene.", "items": { "type": "object", "additionalProperties": false, "properties": {
+      "RADARSceneObjectQualifiers":      { "$ref": "https://schemas.mpai.community/TFA/V1.5/data/RADARQualifier.json" },
+      "BasicRADARSceneObjectSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" } } } },
+
+    "DataXMData":                        { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                     { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata" } } }

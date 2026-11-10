@@ -1,57 +1,20 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mpai.community/OSD/V1.5/data/MultimodalEventDescriptors.json",
-  "title": "Multimodal Event Descriptors V1.5",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "Header",
-    "MultimodalEventDescriptorsID"
-  ],
-  "properties": {
-    "Header": {
-      "type": "string",
-      "const": "OSD-MEV-V1.5"
-    },
-    "MInstanceID": {
-      "type": "string",
-      "description": "Identifier of the M-Instance."
-    },
-    "UEnvironmentID": {
-      "type": "string",
-      "description": "Identifier of the U-Environment."
-    },
-    "MultimodalEventDescriptorsID": {
-      "type": "string",
-      "description": "ID of this Multimodal Event Descriptors instance."
-    },
-    "MultimodalEventDescriptorsTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json"
-    },
-    "MultimodalEventDescriptorsSpaceTime": {
-      "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json"
-    },
-    "MultimodalSceneDescriptors": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SceneDescriptors.json"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "description": "Set of Multimodal Scene Descriptors in the Multimodal Event."
-    },
-    "DataXMData": {
-      "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json"
-    },
-    "DescrMetadata": {
-      "type": "string",
-      "maxLength": 2048,
-      "description": "Descriptive Metadata"
-    }
-  }
-}
+{ "$schema":                                "https://json-schema.org/draft/2020-12/schema",
+  "$id":                                    "https://schemas.mpai.community/OSD/V1.5/data/MultimodalEventDescriptors.json",
+  "title":                                  "Multimodal Event Descriptors V1.5",
+  "type":                                   "object",
+  "additionalProperties":                   false,
+  "required":                               [ "Header", "MultimodalEventDescriptorsID" ],
+
+  "properties":                             {
+
+    "Header":                               { "type": "string", "const": "OSD-MEV-V1.5" },
+    "MInstanceID":                          { "type": "string", "description": "Identifier of the M-Instance." },
+    "UEnvironmentID":                       { "type": "string", "description": "Identifier of the U-Environment." },
+    "MultimodalEventDescriptorsID":         { "type": "string", "description": "ID of this Multimodal Event Descriptors instance." },
+    "MultimodalEventDescriptorsTime":       { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SimpleTime.json" },
+    "MultimodalEventDescriptorsSpaceTime":  { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SpaceTime.json" },
+    "MultimodalSceneDescriptors":           { "type": "array", "items": { "oneOf": [ { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/SceneDescriptors.json" }, { "$ref": "https://schemas.mpai.community/OSD/V1.5/data/BasicMultimodalSceneDescriptors.json" }, { "type": "string" } ] },
+                                              "description": "Set of Multimodal Scene Descriptors in the Multimodal Event: Scene Descriptors, Basic Multimodal Scene Descriptors, or the ID of one." },
+
+    "DataXMData":                           { "$ref": "https://schemas.mpai.community/PTF/V1.0/data/DataExchangeMetadata.json" },
+    "DescrMetadata":                        { "type": "string", "maxLength": 2048, "description": "Descriptive Metadata" } } }
